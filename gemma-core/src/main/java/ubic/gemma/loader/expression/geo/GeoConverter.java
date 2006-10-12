@@ -453,10 +453,23 @@ public class GeoConverter implements Converter {
 
         convertDatasetDescriptions( geoDataset, expExp );
 
-        ArrayDesign ad = seenPlatforms.get( geoDataset.getPlatform().getGeoAccession() );
+        GeoPlatform platform = geoDataset.getPlatform();
+        ArrayDesign ad = seenPlatforms.get( platform.getGeoAccession() );
         if ( ad == null ) {
             throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
                     + geoDataset.getPlatform() );
+        }
+
+        ad.setDescription( platform.getGeoAccession() + " Last Updated: " + platform.getLastUpdateDate() );
+
+        LocalFile arrayDesignRawFile = convertSupplementaryFileToLocalFile( platform );
+        if ( arrayDesignRawFile != null ) {
+            Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
+            if ( arrayDesignLocalFiles == null ) {
+                arrayDesignLocalFiles = new HashSet<LocalFile>();
+            }
+            arrayDesignLocalFiles.add( arrayDesignRawFile );
+            ad.setLocalFiles( arrayDesignLocalFiles );
         }
 
         convertDataSetDataVectors( geoDataset, expExp );
@@ -1168,12 +1181,11 @@ public class GeoConverter implements Converter {
             expExp = resultToAddTo;
         }
 
-        if ( series.getLastUpdateDate() == null ) {
-            series.setLastUpdateDate( "not available" );
-        }
+        expExp.setDescription( series.getSummaries() + ".\nDate " + series.getGeoAccession() );
 
-        expExp.setDescription( series.getSummaries() + ".\nDate " + series.getGeoAccession() + " Last Updated: "
-                + series.getLastUpdateDate() + "\n" );
+        if ( series.getLastUpdateDate() != null ) {
+            expExp.setDescription( expExp.getDescription() + " Last Updated: " + series.getLastUpdateDate() + "\n" );
+        }
 
         expExp.setName( series.getTitle() );
 
@@ -1181,15 +1193,8 @@ public class GeoConverter implements Converter {
 
         expExp.setAccession( convertDatabaseEntry( series ) );
 
-        URL remoteUrl = null;
-        try {
-            remoteUrl = new URL( series.getSupplementaryFile() );
-            LocalFile expExpRawDataFile = LocalFile.Factory.newInstance();
-            expExpRawDataFile.setRemoteURL( remoteUrl );
-            expExp.setRawDataFile( expExpRawDataFile );
-        } catch ( MalformedURLException e ) {
-            log.error( "Problems with url: " + remoteUrl + ".  Will not store the url of the raw data file." );
-        }
+        LocalFile expExpRawDataFile = convertSupplementaryFileToLocalFile( series );
+        expExp.setRawDataFile( expExpRawDataFile );
 
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
         design.setDescription( "" );
@@ -1262,6 +1267,11 @@ public class GeoConverter implements Converter {
 
                     if ( accession.equals( cSample ) ) {
                         BioAssay ba = convertSample( sample, bioMaterial );
+
+                        LocalFile rawDataFile = convertSupplementaryFileToLocalFile( sample );
+                        ba.setRawDataFile( rawDataFile );// deal with null at UI
+
+                        ba.setDescription( sample.getGeoAccession() + "Last Updated: " + sample.getLastUpdateDate() );
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
@@ -1301,6 +1311,70 @@ public class GeoConverter implements Converter {
         }
 
         return expExp;
+    }
+
+    /**
+     * Converts a supplementary file to a LocalFile object. If the supplementary file is null, the LocalFile=null is
+     * returned.
+     * 
+     * @param object
+     * @return LocalFile
+     */
+    public LocalFile convertSupplementaryFileToLocalFile( Object object ) {
+
+        URL remoteFileUrl = null;
+        LocalFile remoteFile = null;
+
+        if ( object instanceof GeoSeries ) {
+            GeoSeries series = ( GeoSeries ) object;
+            if ( !StringUtils.isEmpty( series.getSupplementaryFile() ) ) {
+                try {
+                    remoteFile = LocalFile.Factory.newInstance();
+                    remoteFileUrl = new URL( series.getSupplementaryFile() );
+                } catch ( MalformedURLException e ) {
+                    reportUrlError( remoteFileUrl, e );
+                }
+            }
+        }
+
+        else if ( object instanceof GeoSample ) {
+            GeoSample sample = ( GeoSample ) object;
+            if ( !StringUtils.isEmpty( sample.getSupplementaryFile() ) ) {
+                try {
+                    remoteFile = LocalFile.Factory.newInstance();
+                    remoteFileUrl = new URL( sample.getSupplementaryFile() );
+                } catch ( MalformedURLException e ) {
+                    reportUrlError( remoteFileUrl, e );
+                }
+            }
+        }
+
+        else if ( object instanceof GeoPlatform ) {
+            GeoPlatform platform = ( GeoPlatform ) object;
+            if ( !StringUtils.isEmpty( platform.getSupplementaryFile() ) ) {
+                try {
+                    remoteFile = LocalFile.Factory.newInstance();
+                    remoteFileUrl = new URL( platform.getSupplementaryFile() );
+                } catch ( MalformedURLException e ) {
+                    reportUrlError( remoteFileUrl, e );
+                }
+            }
+        }
+
+        /* nulls allowed in remoteFile ... deal with later. */
+        if ( remoteFile != null ) remoteFile.setRemoteURL( remoteFileUrl );
+
+        return remoteFile;
+    }
+
+    /**
+     * @param remoteFileUrl
+     * @param e
+     */
+    private void reportUrlError( URL remoteFileUrl, MalformedURLException e ) {
+        log.error( "Problems with url: " + remoteFileUrl
+                + ".  Will not store the url of the raw data file.  Full error is: " );
+        e.printStackTrace();
     }
 
     /**
@@ -1370,7 +1444,8 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Subsets are the main way we get factors.
+     * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an
+     * experimental design, and adds the factor value to each BioMaterial of a specific BioAssay.
      * 
      * @param expExp
      * @param geoSubSet
