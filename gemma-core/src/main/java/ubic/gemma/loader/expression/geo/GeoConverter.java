@@ -663,12 +663,6 @@ public class GeoConverter implements Converter {
             expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
                     + ": " + geoDataset.getTitle() + ".\n" );
         }
-
-        GeoPlatform platform = geoDataset.getPlatform();
-        if ( platform != null ) {
-            expExp.setDescription( expExp.getDescription() + "Platform " + platform.getGeoAccession()
-                    + " Last Updated: " + platform.getLastUpdateDate() + "\n" );
-        }
     }
 
     /**
