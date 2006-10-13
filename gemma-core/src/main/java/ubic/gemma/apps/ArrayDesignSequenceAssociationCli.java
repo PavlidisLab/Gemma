@@ -39,7 +39,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
+public class ArrayDesignSequenceAssociationCli extends AbstractSpringAwareCLI {
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
     TaxonService taxonService;
     ArrayDesignService arrayDesignService;
@@ -49,7 +49,7 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
     private String sequenceFile;
 
     public static void main( String[] args ) {
-        ArrayDesiginSequenceAssociationCli p = new ArrayDesiginSequenceAssociationCli();
+        ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
