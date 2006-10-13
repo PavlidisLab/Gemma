@@ -278,10 +278,7 @@ public class GeoConverter implements Converter {
         for ( String characteristic : channel.getCharacteristics() ) {
             Characteristic gemmaChar = Characteristic.Factory.newInstance();
 
-            if ( characteristic.length() > 255 ) {
-                log.warn( "** Characteristic too long: " + characteristic + " - will truncate - ****" );
-                characteristic = characteristic.substring( 0, 199 ) + " (truncated at 200 characters)";
-            }
+            characteristic = trimString( characteristic );
 
             gemmaChar.setCategory( "GEO Sample characteristic" );
             gemmaChar.setValue( characteristic );
@@ -291,7 +288,8 @@ public class GeoConverter implements Converter {
         if ( channel.getSourceName() != null ) {
             Characteristic sourceChar = Characteristic.Factory.newInstance();
             sourceChar.setCategory( "GEO Sample source" );
-            sourceChar.setValue( channel.getSourceName() );
+            String characteristic = trimString( channel.getSourceName() );
+            sourceChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( sourceChar );
         }
 
@@ -304,18 +302,28 @@ public class GeoConverter implements Converter {
         if ( channel.getMolecule() != null ) {
             Characteristic moleculeChar = Characteristic.Factory.newInstance();
             moleculeChar.setCategory( "GEO Sample molecule" );
-            moleculeChar.setValue( channel.getMolecule().toString() );
+            String characteristic = trimString( channel.getMolecule().toString() );
+            moleculeChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( moleculeChar );
         }
 
         if ( channel.getLabel() != null ) {
             Characteristic labelChar = Characteristic.Factory.newInstance();
             labelChar.setCategory( "GEO Sample label" );
-            labelChar.setValue( channel.getLabel() );
+            String characteristic = trimString( channel.getLabel() );
+            labelChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( labelChar );
         }
 
         return bioMaterial;
+    }
+
+    private String trimString( String characteristic ) {
+        if ( characteristic.length() > 255 ) {
+            log.warn( "** Characteristic too long: " + characteristic + " - will truncate - ****" );
+            characteristic = characteristic.substring( 0, 199 ) + " (truncated at 200 characters)";
+        }
+        return characteristic;
     }
 
     /**
@@ -1294,7 +1302,8 @@ public class GeoConverter implements Converter {
             bioMaterial.setDescription( bioMaterialDescription );
         }
 
-        LoggingSupport.progressLog( log, "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays" );
+        LoggingSupport.progressLog( log, "Expression Experiment from " + series + " has "
+                + expExp.getBioAssays().size() + " bioassays" );
 
         // Dataset has additional information about the samples.
         Collection<GeoDataset> dataSets = series.getDatasets();
@@ -1494,8 +1503,8 @@ public class GeoConverter implements Converter {
                     // ....how do we figure this out!
                     for ( BioMaterial material : bioMaterials ) {
                         if ( log.isInfoEnabled() ) {
-                            LoggingSupport.progressLog( log, "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
-                                    + material );
+                            LoggingSupport.progressLog( log, "Adding " + factorValue.getExperimentalFactor() + " : "
+                                    + factorValue + " to " + material );
                         }
                         material.getFactorValues().add( factorValue );
                     }
@@ -1896,9 +1905,9 @@ public class GeoConverter implements Converter {
         qt.setIsBackground( isBackground );
 
         if ( log.isInfoEnabled() ) {
-            LoggingSupport.progressLog( log, "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
-                    + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
-                    + " Encoding=" + pType );
+            LoggingSupport.progressLog( log, "Inferred that quantitation type \"" + name + "\" (Description: \""
+                    + description + "\") corresponds to: " + qType + ",  " + sType
+                    + ( qt.getIsBackground() ? " (Background) " : "" ) + " Encoding=" + pType );
         }
     }
 

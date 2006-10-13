@@ -211,12 +211,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
 
                 for ( BioAssayDimension dim : dims ) {
-
                     session.delete( dim );
-
                 }
 
-                // session.flush();
                 // Delete BioMaterials
                 for ( BioAssay ba : toDeletePers.getBioAssays() ) {
 
@@ -224,21 +221,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     // Not happy about this at all. but what to do?
                     ba.getArrayDesignUsed().getCompositeSequences().size();
 
-                    // Delete Biomaterial
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        // //fixme Cascade happens for treatment and Protocol application but not protocol.
-                        // for (Treatment treat : bm.getTreatments())
-                        // for (ProtocolApplication protoApp : treat.getProtocolApplications()) {
-                        // if (protoApp.getProtocol() != null) {
-                        // at = protoApp.getProtocol().getAuditTrail();
-                        // if ( at != null ) {
-                        // for ( AuditEvent event : at.getEvents() )
-                        // session.delete( event );
-                        // session.delete( at );
-                        // }
-                        // session.delete( protoApp.getProtocol() );
-                        // }
-                        // }
                         session.delete( bm );
                     }
                     // delete references to files on disk
@@ -269,9 +252,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
 
                 session.delete( toDeletePers );
-                session.flush();
-                session.clear();
-
                 return null;
             }
         }, true );
