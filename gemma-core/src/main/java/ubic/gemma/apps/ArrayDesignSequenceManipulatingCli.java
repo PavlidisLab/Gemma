@@ -48,6 +48,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
                 session.lock( arrayDesign, LockMode.READ );
                 arrayDesign.getCompositeSequences().size();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                    if ( cs.getBiologicalCharacteristic() == null ) continue;
                     cs.getBiologicalCharacteristic().getTaxon();
                 }
                 return null;
