@@ -40,7 +40,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignBlatCli extends AbstractSpringAwareCLI {
+public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
     TaxonService taxonService;
     ArrayDesignService arrayDesignService;
@@ -104,21 +104,8 @@ public class ArrayDesignBlatCli extends AbstractSpringAwareCLI {
             bail( ErrorCode.INVALID_OPTION );
         }
 
-        // All this to avoid lazy load errors.
-        HibernateDaoSupport hds = new HibernateDaoSupport() {
-        };
-        hds.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
-        HibernateTemplate templ = hds.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( arrayDesign, LockMode.READ );
-                arrayDesign.getCompositeSequences().size();
-                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    cs.getBiologicalCharacteristic().getTaxon();
-                }
-                return null;
-            }
-        }, true );
+        unlazifyArrayDesign( arrayDesign );
+         
 
         arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon );
 

@@ -18,13 +18,17 @@
  */
 package ubic.gemma.apps;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -39,7 +43,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignSequenceAssociationCli extends AbstractSpringAwareCLI {
+public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
     TaxonService taxonService;
     ArrayDesignService arrayDesignService;
@@ -133,7 +137,9 @@ public class ArrayDesignSequenceAssociationCli extends AbstractSpringAwareCLI {
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( arrayDesignName );
+            final ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( arrayDesignName );
+
+            unlazifyArrayDesign( arrayDesign );
 
             if ( arrayDesign == null ) {
                 log.error( "No arrayDesign " + arrayDesignName + " found" );
@@ -148,12 +154,14 @@ public class ArrayDesignSequenceAssociationCli extends AbstractSpringAwareCLI {
             }
 
             if ( this.hasOption( 'f' ) ) {
-                InputStream sequenceFileIs = new FileInputStream( sequenceFile );
+                InputStream sequenceFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( sequenceFile );
 
                 if ( sequenceFileIs == null ) {
                     log.error( "No file " + sequenceFile + " was readable" );
                     bail( ErrorCode.INVALID_OPTION );
                 }
+
+                log.info( "Processing ArrayDesign..." );
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn,
                         taxon );
                 sequenceFileIs.close();
@@ -169,5 +177,7 @@ public class ArrayDesignSequenceAssociationCli extends AbstractSpringAwareCLI {
         }
         return null;
     }
+
+   
 
 }

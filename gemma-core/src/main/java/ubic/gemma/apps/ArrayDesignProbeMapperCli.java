@@ -33,7 +33,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignProbeMapperCli extends AbstractSpringAwareCLI {
+public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignProbeMapperService arrayDesignProbeMapperService;
     TaxonService taxonService;
     ArrayDesignService arrayDesignService;
@@ -96,22 +96,7 @@ public class ArrayDesignProbeMapperCli extends AbstractSpringAwareCLI {
             bail( ErrorCode.INVALID_OPTION );
         }
 
-        // All this to avoid lazy load errors.
-        // FIXME shared by at least two CLIs - refactor.
-        HibernateDaoSupport hds = new HibernateDaoSupport() {
-        };
-        hds.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
-        HibernateTemplate templ = hds.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( arrayDesign, LockMode.READ );
-                arrayDesign.getCompositeSequences().size();
-                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    cs.getBiologicalCharacteristic().getTaxon();
-                }
-                return null;
-            }
-        }, true );
+        unlazifyArrayDesign( arrayDesign );
 
         arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon );
 
