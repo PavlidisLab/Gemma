@@ -129,10 +129,11 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum );
                 model.put( "arrayDesigns", arrayDesigns ); // FIXME view should be different than default.
 
-                job.setForwardingURL( "/Gemma/arrayDesign/showArrayDesign.html?id="
+                job.setForwardingURL( "/Gemma/arrays/showAllArrayDesigns.html?id="
                         + arrayDesigns.iterator().next().getId() );
 
             } else {
+                geoDatasetService.setLoadPlatformOnly( false );
                 Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum );
                 if ( result.size() == 1 ) {
                     ExpressionExperiment loaded = result.iterator().next();
