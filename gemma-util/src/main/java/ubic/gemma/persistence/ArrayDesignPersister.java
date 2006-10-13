@@ -162,6 +162,15 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
+     * 
+     *
+     */
+    protected void clearArrayDesignCache() {
+        this.arrayDesignCache.clear();
+        this.designElementCache.clear();
+    }
+
+    /**
      * Persist an array design.
      * 
      * @param arrayDesign
@@ -324,8 +333,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
-        LoggingSupport.progressLog( log, "Persisting " + arrayDesign);
-        
+        LoggingSupport.progressLog( log, "Persisting " + arrayDesign );
+
         arrayDesignService.update( arrayDesign );
 
         // now have persistent CS

@@ -62,7 +62,7 @@ import ubic.gemma.util.progress.LoggingSupport;
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name="compoundService" ref="compoundService"
- * @spring.property name="experimentalDesignService" ref="experimentalDesignService" *
+ * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
  * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  * @author pavlidis
  * @version $Id$
@@ -321,6 +321,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param entity
      */
     private void processBioAssays( ExpressionExperiment entity ) {
+        bioAssayDimensionCache.clear();
+        clearArrayDesignCache();
+        
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
         if ( entity.getDesignElementDataVectors().size() > 0 ) {
