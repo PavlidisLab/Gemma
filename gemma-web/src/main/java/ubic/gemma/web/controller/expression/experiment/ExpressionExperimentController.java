@@ -258,8 +258,10 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      * @return ModelAndView
      */
     private ModelAndView doDelete( HttpServletRequest request, HttpServletResponse response, ExpressionExperiment expressionExperiment ) {
-        expressionExperimentService.delete( expressionExperiment );
         addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getId() } );
+        expressionExperimentService.delete( expressionExperiment );
+        expressionExperiment = null;
+        
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ));
     }
 }
