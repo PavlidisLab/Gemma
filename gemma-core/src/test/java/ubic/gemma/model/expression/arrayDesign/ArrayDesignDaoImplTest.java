@@ -39,9 +39,9 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @version $Id$
  */
 public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
-    
+
     private static final String DEFAULT_TAXON = "Mus musculus";
-    
+
     ArrayDesign ad;
     ArrayDesignDao arrayDesignDao;
     ExternalDatabaseDao externalDatabaseDao;
@@ -70,14 +70,15 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         assertNotNull( cs.getArrayDesign().getId() );
     }
 
-    public void testCascadeDeleteOrphanCompositeSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
-        ad.getCompositeSequences().remove( cs );
-        cs.setArrayDesign( null );
-        arrayDesignDao.update( ad );
-        assertEquals( 3, ad.getCompositeSequences().size() );
-    }
+    // This test disabled because we do not set all-delete-orphan cascade style set for this currently.
+    // public void testCascadeDeleteOrphanCompositeSequences() {
+    // ad = ( ArrayDesign ) persisterHelper.persist( ad );
+    // CompositeSequence cs = ad.getCompositeSequences().iterator().next();
+    // ad.getCompositeSequences().remove( cs );
+    // cs.setArrayDesign( null );
+    // arrayDesignDao.update( ad );
+    // assertEquals( 3, ad.getCompositeSequences().size() );
+    // }
 
     // FIXME: Need to add a meaning test of reporters
     // public void testCascadeDeleteOrphanReporters() {
@@ -191,18 +192,17 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         }
 
     }
-    
-    
+
     /*
-     * A test of getting a taxon assciated with an arrayDesign.  
-     *todo: this test should use an actual array design that has many bioSequences assciated with it.
+     * A test of getting a taxon assciated with an arrayDesign. todo: this test should use an actual array design that
+     * has many bioSequences assciated with it.
      */
     public void testGetTaxon() {
-        
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );        
+
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Taxon tax = arrayDesignDao.getTaxon( ad.getId() );
         assertEquals( DEFAULT_TAXON, tax.getScientificName() );
-        
+
     }
 
     /*
@@ -245,13 +245,13 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         c1.getComponentReporters().add( r1 );
         c2.getComponentReporters().add( r2 );
         c3.getComponentReporters().add( r3 );
-                
+
         Taxon tax = Taxon.Factory.newInstance();
-        tax.setScientificName( DEFAULT_TAXON);
-        BioSequence bs = BioSequence.Factory.newInstance( tax );    
+        tax.setScientificName( DEFAULT_TAXON );
+        BioSequence bs = BioSequence.Factory.newInstance( tax );
         bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
-        bs.setTaxon(tax);
-        
+        bs.setTaxon( tax );
+
         c1.setBiologicalCharacteristic( bs );
         c2.setBiologicalCharacteristic( bs );
         c3.setBiologicalCharacteristic( bs );
