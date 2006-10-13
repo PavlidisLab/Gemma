@@ -426,6 +426,25 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         testMatrixValue( matrix, "878", "GSM21254", 0.6135323 );
 
     }
+    
+    
+    @SuppressWarnings("unchecked")
+    public void testLoadDeleteLoadGSE3434() throws Exception {
+        endTransaction();
+       String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "GSE3434" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE3434" );
+        ee = ( ExpressionExperiment ) results.iterator().next();
+        eeService.delete( ee );
+        ee = null;
+        
+        results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE3434" );
+        ee = ( ExpressionExperiment ) results.iterator().next();
+        
+        
+    }
 
     private void testMatrixValue( DoubleMatrixNamed matrix, String probeToTest, String sampleToTest,
             double expectedValue ) {
