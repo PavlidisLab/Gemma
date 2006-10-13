@@ -23,10 +23,6 @@ import java.io.InputStream;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
@@ -35,7 +31,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Attach sequences to array design, fetching from BLAST database if requested.
@@ -177,7 +172,5 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         }
         return null;
     }
-
-   
 
 }

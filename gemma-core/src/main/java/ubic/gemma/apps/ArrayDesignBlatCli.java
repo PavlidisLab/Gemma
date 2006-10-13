@@ -20,18 +20,12 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -105,7 +99,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         }
 
         unlazifyArrayDesign( arrayDesign );
-         
 
         arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon );
 
