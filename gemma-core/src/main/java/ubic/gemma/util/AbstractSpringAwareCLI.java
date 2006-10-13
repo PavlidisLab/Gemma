@@ -102,11 +102,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /** check if using test or production context */
     void createSpringContext() {
-        if ( hasOption( "testing" ) ) {
-            ctx = SpringContextUtil.getApplicationContext( true, false );
-        } else {
-            ctx = SpringContextUtil.getApplicationContext( false, false );
-        }
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false );
     }
 
     public void setCtx( BeanFactory ctx ) {

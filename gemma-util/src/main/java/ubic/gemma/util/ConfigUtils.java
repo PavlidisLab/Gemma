@@ -30,6 +30,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,6 +59,17 @@ public class ConfigUtils {
         } catch ( ConfigurationException e ) {
             // that's okay, but warn
             log.warn( "build.properties not found" );
+        }
+
+        try {
+            String gemmaAppDataHome = config.getString( "gemma.appdata.home" );
+            if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
+                config.addConfiguration( new PropertiesConfiguration( gemmaAppDataHome + File.separatorChar
+                        + "local.properties" ) );
+            }
+        } catch ( ConfigurationException e ) {
+            // that's okay, but warn
+            log.warn( "local.properties not found" );
         }
 
         try {

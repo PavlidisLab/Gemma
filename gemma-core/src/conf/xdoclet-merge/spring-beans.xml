@@ -106,29 +106,8 @@
 	</property>
 </bean>
 
-<!-- ========================= COMPASS START ========================= -->
-
-	 <!-- COMPASS HIBERNATE DEFINITIONS -->
-	 <bean id="compass" class="org.compass.spring.LocalCompassBean">
-        <property name="resourceLocations">
-            <list>
-                <!-- <value>classpath:org/compass/expression/experiment/expressionExperiment.cmd.xml</value>-->
-                <value>classpath:ubic/gemma/compass/expression/experiment/expressionExperiment.cpm.xml</value>
-            </list>   
-        </property>
-        <property name="compassSettings">
-            <props>
-                <prop key="compass.engine.connection">file://${user.home}/compass/gemma</prop>
-                <prop key="compass.engine.lockFile">file://${user.home}/compass/gemma.lock</prop>
-                <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
-                <prop key="compass.transaction.lockTimeout">20</prop>
-            </props>
-        </property>
-        <property name="transactionManager">
-            <ref bean="transactionManager" />
-        </property>
-    </bean>
-	 <bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
+<!-- Generic compass configuration bean - for the rest see compass.xml and compasstest.xml -->
+<bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
 	   <property name="name"><value>hibernateDevice</value></property>
 	   <property name="sessionFactory"><ref bean="sessionFactory" /></property>
 	 </bean>
@@ -142,7 +121,7 @@
 	     </list>
 	   </property>
 	 </bean>
-     <!-- COMPASS END -->
+
 
 <!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->

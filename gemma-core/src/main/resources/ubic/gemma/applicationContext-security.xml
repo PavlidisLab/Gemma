@@ -96,7 +96,6 @@
     
     <bean id="daoAuthenticationProvider" class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
         <property name="userDetailsService" ref="userDetailsService"/>
-        <property name="userCache" ref="userCache"/>
         <property name="saltSource" ref="saltSource"/>
         <property name="passwordEncoder" ref="passwordEncoder"/>
     </bean>
@@ -117,18 +116,7 @@
         <property name="userService" ref="userService"/>
     </bean>
     
-    <bean id="userCache" class="org.acegisecurity.providers.dao.cache.EhCacheBasedUserCache">
-        <property name="cache">
-            <bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
-                <property name="cacheManager">
-                    <bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"/>
-                </property>
-                <property name="cacheName">
-                    <value>userCache</value>
-                </property>
-            </bean>
-        </property>
-    </bean>
+   
     
     <bean id="anonymousAuthenticationProvider" class="org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
         <property name="key">

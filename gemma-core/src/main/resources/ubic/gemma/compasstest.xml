@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+<!-- ========================= COMPASS START ========================= -->
+
+	 <!-- COMPASS HIBERNATE DEFINITIONS - test environment -->
+	 <bean id="compass" class="org.compass.spring.LocalCompassBean">
+        <property name="resourceLocations">
+            <list>
+                <value>classpath:ubic/gemma/compass/expression/experiment/expressionExperiment.cpm.xml</value>
+            </list>   
+        </property>
+        <property name="compassSettings">
+            <props>
+                <prop key="compass.engine.connection">file://${gemma.appdata.home}/test/compass/gemma</prop>
+                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/test/compass/gemma.lock</prop>
+                <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
+                <prop key="compass.transaction.lockTimeout">20</prop>
+            </props>
+        </property>
+        <property name="transactionManager">
+            <ref bean="transactionManager" />
+        </property>
+    </bean>
+	
+     <!-- COMPASS END -->
+</beans>

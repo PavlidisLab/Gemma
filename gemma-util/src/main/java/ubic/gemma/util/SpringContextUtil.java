@@ -89,6 +89,7 @@ public class SpringContextUtil {
     private static String[] getStandardConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/compass.xml" );
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }
@@ -116,6 +117,7 @@ public class SpringContextUtil {
     private static String[] getTestConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/localTestDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/compasstest.xml" );
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }

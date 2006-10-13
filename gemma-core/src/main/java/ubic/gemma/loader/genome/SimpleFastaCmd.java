@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,9 +43,11 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class SimpleFastaCmd implements FastaCmd {
 
+    private static final String FASTA_CMD_ENV_VAR = "fastaCmd.exe";
+
     private static Log log = LogFactory.getLog( SimpleFastaCmd.class.getName() );
 
-    private static String fastaCmdExecutable = ConfigUtils.getString( "fastaCmd.exe" );
+    private static String fastaCmdExecutable = ConfigUtils.getString( FASTA_CMD_ENV_VAR );
 
     private static String blastDbHome = System.getenv( "BLASTDB" );
 
@@ -98,6 +101,10 @@ public class SimpleFastaCmd implements FastaCmd {
      */
     private Collection<BioSequence> getMultiple( Collection<? extends Object> keys, String database, String blastHome )
             throws IOException {
+
+        if ( StringUtils.isBlank( fastaCmdExecutable ) )
+            throw new IllegalStateException( "No fastacmd executable: You must set " + FASTA_CMD_ENV_VAR + " in your environment." );
+
         if ( blastHome == null ) {
             throw new IllegalArgumentException();
         }
