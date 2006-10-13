@@ -237,6 +237,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ee = ( ExpressionExperiment ) results.iterator().next();
         assertEquals( 34, ee.getBioAssays().size() );
 
+        assertEquals( 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
+
+        assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().size() );
+
         assertEquals( 3 * expectedValue, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
 
     }

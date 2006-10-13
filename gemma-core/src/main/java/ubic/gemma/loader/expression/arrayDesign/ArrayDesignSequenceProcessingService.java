@@ -38,6 +38,7 @@ import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,6 +50,7 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.util.progress.LoggingSupport;
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressManager;
 
@@ -128,7 +130,8 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
 
-        log.info( sequences.size() + " sequences processed for " + designElements.size() + " design elements" );
+        LoggingSupport.progressLog( log, sequences.size() + " sequences processed for " + designElements.size()
+                + " design elements" );
         if ( numNotFound > 0 ) {
             log.warn( numNotFound + " probes had no matching sequence" );
         }
@@ -217,7 +220,7 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException {
 
-        log.info( "Processing Affymetrix design" );
+        LoggingSupport.progressLog( log, "Processing Affymetrix design" );
 
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
@@ -317,7 +320,11 @@ public class ArrayDesignSequenceProcessingService {
             InputStream probeSequenceFile, Taxon taxon ) throws IOException {
         ArrayDesign result = ArrayDesign.Factory.newInstance();
         result.setName( arrayDesignName );
-        // FIXME add manufacturer.
+
+        Contact contact = Contact.Factory.newInstance();
+        contact.setName( "Affymetrix" );
+        result.setDesignProvider( contact );
+
         result = arrayDesignService.create( result );
 
         CompositeSequenceParser csp = new CompositeSequenceParser();
@@ -412,14 +419,13 @@ public class ArrayDesignSequenceProcessingService {
     private void logMissingSequences( ArrayDesign arrayDesign, Collection<String> notFound ) {
         log.warn( notFound.size() + " sequences were not found for " + arrayDesign );
         StringBuilder buf = new StringBuilder();
-        buf
-                .append( "Missing sequences for following accessions at version numbers up to " + MAX_VERSION_NUMBER
-                        + " : " );
+        buf.append( "Missing sequences for following accessions " + "at version numbers up to " + MAX_VERSION_NUMBER
+                + " : " );
         for ( String string : notFound ) {
             string = string.replaceFirst( "\\.\\d$", "" );
             buf.append( string + " " );
         }
-        log.info( buf );
+        LoggingSupport.progressLog( log, buf.toString() );
     }
 
     /**
@@ -562,7 +568,7 @@ public class ArrayDesignSequenceProcessingService {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
         }
 
-        log.info( "Processing non-Affymetrix design" );
+        LoggingSupport.progressLog( log, "Processing non-Affymetrix design" );
 
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
@@ -633,7 +639,7 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
 
-        log.info( "Updating sequences on arrayDesign" );
+        LoggingSupport.progressLog( log, "Updating sequences on arrayDesign" );
         arrayDesignService.update( arrayDesign );
 
         return bioSequences;

@@ -1470,6 +1470,7 @@ public class GeoConverter implements Converter {
         for ( ExperimentalFactor existingExperimentalFactor : existingExperimentalFactors ) {
             if ( ( experimentalFactor.getName() ).equalsIgnoreCase( existingExperimentalFactor.getName() ) ) {
                 duplicateExists = true;
+                experimentalFactor = existingExperimentalFactor;
                 if ( log.isDebugEnabled() )
                     log.debug( experimentalFactor.getName()
                             + " already exists.  Not adding to list of experimental factors." );
@@ -1484,13 +1485,24 @@ public class GeoConverter implements Converter {
         /* bi-directional ... don't forget this. */
         experimentalFactor.setExperimentalDesign( experimentalDesign );
 
+        FactorValue factorValue = convertSubsetDescriptionToFactorValue( geoSubSet, experimentalFactor );
+
+        // would be preferable.
+        experimentalFactor.getFactorValues().add( factorValue );
+
+        addFactorValueToBioMaterial( expExp, geoSubSet, factorValue );
+    }
+
+    private FactorValue convertSubsetDescriptionToFactorValue( GeoSubset geoSubSet,
+            ExperimentalFactor experimentalFactor ) {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
         factorValue.setExperimentalFactor( experimentalFactor );
         factorValue.setValue( StringUtils.strip( geoSubSet.getDescription() ) ); // :( OntologyEntry or Measurement
-        // would be preferable.
-        experimentalFactor.getFactorValues().add( factorValue );
+        return factorValue;
+    }
 
+    private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet, FactorValue factorValue ) {
         // fill in biomaterial-->factorvalue.
         for ( GeoSample sample : geoSubSet.getSamples() ) {
 
