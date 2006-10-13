@@ -1276,7 +1276,7 @@ public class GeoConverter implements Converter {
                         LocalFile rawDataFile = convertSupplementaryFileToLocalFile( sample );
                         ba.setRawDataFile( rawDataFile );// deal with null at UI
 
-                        ba.setDescription( sample.getGeoAccession() + "Last Updated: " + sample.getLastUpdateDate() );
+                        ba.setDescription( sample.getGeoAccession() + " Last Updated: " + sample.getLastUpdateDate() );
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
