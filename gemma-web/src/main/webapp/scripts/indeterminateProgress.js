@@ -3,7 +3,7 @@ function refreshProgress() {
 	HttpProgressMonitor.getProgressStatus(updateProgress);
 }
 function updateProgress(data) {
-	document.getElementById("progressBarText").innerHTML = data.description + "  :";
+	document.getElementById("progressBarText").innerHTML = data.description + " ";
 	if (data.done && data.forwardingURL != null) {
 			window.location = data.forwardingURL;
 	} else {

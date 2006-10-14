@@ -109,9 +109,14 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "accession", "GDS999" );
         request.setParameter( "loadPlatformOnly", "false" );
         request.setRemoteUser( "administrator" );
+
         ModelAndView mv = controller.handleRequest( request, response );
+
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) mv.getModel().get(
                 "expressionExperiments" );
+
+        assertNotNull( results );
+
         ee = results.iterator().next();
 
         // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
@@ -135,8 +140,12 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "loadPlatformOnly", "false" );
         request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
+
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) mv.getModel().get(
                 "expressionExperiments" );
+
+        assertNotNull( results );
+
         ee = results.iterator().next();
 
         // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();

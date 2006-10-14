@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.CancellationException;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;
@@ -88,7 +89,6 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.util.progress.LoggingSupport;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.
@@ -117,7 +117,7 @@ public class GeoConverter implements Converter {
      */
     private static final int LOGGING_VECTOR_COUNT_UPDATE = 2000;
 
-    private static Log log = LogFactory.getLog( GeoConverter.class.getName() );
+    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
     /**
      * Initial guess at how many designelementdatavectors to allocate space for.
@@ -458,7 +458,7 @@ public class GeoConverter implements Converter {
      * @param expExp
      */
     private ExpressionExperiment convertDataset( GeoDataset geoDataset, ExpressionExperiment expExp ) {
-        LoggingSupport.progressLog( log, "Converting dataset:" + geoDataset );
+        log.info( "Converting dataset:" + geoDataset );
 
         convertDatasetDescriptions( geoDataset, expExp );
 
@@ -1174,7 +1174,7 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private ExpressionExperiment convertSeries( GeoSeries series, ExpressionExperiment resultToAddTo ) {
         if ( series == null ) return null;
-        LoggingSupport.progressLog( log, "Converting series: " + series.getGeoAccession() );
+        log.info( "Converting series: " + series.getGeoAccession() );
 
         ExpressionExperiment expExp;
 
@@ -1302,8 +1302,7 @@ public class GeoConverter implements Converter {
             bioMaterial.setDescription( bioMaterialDescription );
         }
 
-        LoggingSupport.progressLog( log, "Expression Experiment from " + series + " has "
-                + expExp.getBioAssays().size() + " bioassays" );
+        log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays" );
 
         // Dataset has additional information about the samples.
         Collection<GeoDataset> dataSets = series.getDatasets();
@@ -1515,8 +1514,8 @@ public class GeoConverter implements Converter {
                     // ....how do we figure this out!
                     for ( BioMaterial material : bioMaterials ) {
                         if ( log.isInfoEnabled() ) {
-                            LoggingSupport.progressLog( log, "Adding " + factorValue.getExperimentalFactor() + " : "
-                                    + factorValue + " to " + material );
+                            log.info( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
+                                    + material );
                         }
                         material.getFactorValues().add( factorValue );
                     }
@@ -1917,9 +1916,9 @@ public class GeoConverter implements Converter {
         qt.setIsBackground( isBackground );
 
         if ( log.isInfoEnabled() ) {
-            LoggingSupport.progressLog( log, "Inferred that quantitation type \"" + name + "\" (Description: \""
-                    + description + "\") corresponds to: " + qType + ",  " + sType
-                    + ( qt.getIsBackground() ? " (Background) " : "" ) + " Encoding=" + pType );
+            log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
+                    + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
+                    + " Encoding=" + pType );
         }
     }
 

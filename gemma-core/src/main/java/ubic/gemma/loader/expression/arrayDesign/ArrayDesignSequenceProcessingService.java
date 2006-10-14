@@ -50,7 +50,6 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.progress.LoggingSupport;
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressManager;
 
@@ -130,8 +129,7 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
 
-        LoggingSupport.progressLog( log, sequences.size() + " sequences processed for " + designElements.size()
-                + " design elements" );
+        log.info( sequences.size() + " sequences processed for " + designElements.size() + " design elements" );
         if ( numNotFound > 0 ) {
             log.warn( numNotFound + " probes had no matching sequence" );
         }
@@ -220,7 +218,7 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException {
 
-        LoggingSupport.progressLog( log, "Processing Affymetrix design" );
+        log.info( "Processing Affymetrix design" );
 
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
@@ -425,7 +423,7 @@ public class ArrayDesignSequenceProcessingService {
             string = string.replaceFirst( "\\.\\d$", "" );
             buf.append( string + " " );
         }
-        LoggingSupport.progressLog( log, buf.toString() );
+        log.info( buf.toString() );
     }
 
     /**
@@ -568,7 +566,7 @@ public class ArrayDesignSequenceProcessingService {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
         }
 
-        LoggingSupport.progressLog( log, "Processing non-Affymetrix design" );
+        log.info( "Processing non-Affymetrix design" );
 
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
@@ -639,7 +637,7 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
 
-        LoggingSupport.progressLog( log, "Updating sequences on arrayDesign" );
+        log.info( "Updating sequences on arrayDesign" );
         arrayDesignService.update( arrayDesign );
 
         return bioSequences;
@@ -647,6 +645,8 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
+     * FIXME - factor this out, it might be useful elsewhere.
+     * 
      * @param totalThingsToDo
      * @param howManyAreDone
      * @param percentDoneLastTimeWeChecked

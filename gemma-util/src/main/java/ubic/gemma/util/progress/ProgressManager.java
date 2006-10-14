@@ -209,7 +209,7 @@ public class ProgressManager {
         logger.info( "ProgressJobsById Dump:  " );
         for ( Iterator iter = progressJobsById.keySet().iterator(); iter.hasNext(); ) {
             Long id = ( Long ) iter.next();
-            logger.info( "  Id: " + id + "  ProgressJob: " + progressJobsById.get( id ) );
+            logger.info( " Id: " + id + " ProgressJob: " + progressJobsById.get( id ) );
 
         }
 
@@ -251,6 +251,8 @@ public class ProgressManager {
 
         Long id = currentJob.get();
         threadsJob = progressJobsById.get( id );
+
+        if ( threadsJob == null ) return false;
 
         threadsJob.updateProgress( message );
 

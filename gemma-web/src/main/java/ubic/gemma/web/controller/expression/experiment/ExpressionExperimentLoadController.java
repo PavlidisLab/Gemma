@@ -36,7 +36,6 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.progress.LoggingSupport;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
@@ -117,7 +116,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
             accesionNum = StringUtils.strip( accesionNum );
             accesionNum = StringUtils.upperCase( accesionNum );
 
-            LoggingSupport.progressLog( log, "Loading " + accesionNum );
+            log.info( "Loading " + accesionNum );
 
             if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                 geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.designElement.ReporterService;
-import ubic.gemma.util.progress.LoggingSupport;
 
 /**
  * This class handles persisting array designs. This is a bit of a special case, because Arraydesigns are very large
@@ -198,7 +197,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     @SuppressWarnings("unchecked")
     private ArrayDesign persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getCompositeSequences().size() == 0 ) return arrayDesign;
-        LoggingSupport.progressLog( log, "Filling in or updating sequences in composite seqences for " + arrayDesign );
+        log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
         int persistedBioSequences = 0;
 
@@ -212,8 +211,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     .getBiologicalCharacteristic() ) );
 
             if ( ++persistedBioSequences % numElementsPerUpdate == 0 ) {
-                LoggingSupport.progressLog( log, persistedBioSequences + " compositeSequence sequences examined for "
-                        + arrayDesign );
+                log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
             }
 
             if ( persistedBioSequences % SESSION_BATCH_SIZE == 0 ) {
@@ -223,8 +221,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         if ( persistedBioSequences > 0 ) {
-            LoggingSupport.progressLog( log, "Total of " + persistedBioSequences
-                    + " compositeSequence sequences examined for " + arrayDesign );
+            log.info( "Total of " + persistedBioSequences + " compositeSequence sequences examined for "
+                    + arrayDesign );
         }
 
         return arrayDesign;
@@ -304,8 +302,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         for ( CompositeSequence sequence : c ) {
             sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
             if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
-                LoggingSupport.progressLog( log, count + " compositeSequence biologicalCharacteristics checked for "
-                        + arrayDesign + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
+                log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
+                        + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
             }
             if ( count % SESSION_BATCH_SIZE == 0 ) {
                 this.getCurrentSession().flush();
@@ -313,8 +311,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
         }
 
-        LoggingSupport.progressLog( log, count + " compositeSequence biologicalCharacteristics checked for "
-                + arrayDesign + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
+        log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
+                + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
 
         arrayDesign.setCompositeSequences( null );
 
@@ -333,7 +331,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
-        LoggingSupport.progressLog( log, "Persisting " + arrayDesign );
+        log.info( "Persisting " + arrayDesign );
 
         arrayDesignService.update( arrayDesign );
 

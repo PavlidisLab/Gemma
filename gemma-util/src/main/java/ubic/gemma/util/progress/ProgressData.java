@@ -17,18 +17,11 @@
 package ubic.gemma.util.progress;
 
 import java.io.Serializable;
-import java.net.URL;
-
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2006 UBC Pavlab
- * 
  * @author klc
  * @version $Id$
  */
-
 public class ProgressData implements Serializable {
 
     private static final long serialVersionUID = -4303625064082352461L;
@@ -57,11 +50,11 @@ public class ProgressData implements Serializable {
         this( per, descrip, false );
     }
 
-    //dwr doesn't work right without blank constructor
+    // dwr doesn't work right without blank constructor
     public ProgressData() {
-                
+
     }
-    
+
     /**
      * @param per int value of percent
      * @param descrip string a description of the progress
@@ -69,10 +62,10 @@ public class ProgressData implements Serializable {
      * @param forwardingURL the URL that will be forwarded to when the the progress bar is finished
      */
     public ProgressData( int per, String descrip, boolean finished, String forwardingURL ) {
-        this(per,descrip,finished);
+        this( per, descrip, finished );
         this.forwardingURL = forwardingURL;
     }
-    
+
     public String getDescription() {
         return description;
     }

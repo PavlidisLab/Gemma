@@ -40,6 +40,7 @@ import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
@@ -52,7 +53,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
     private String excludePattern;
 
-    protected static Log log = LogFactory.getLog( FtpArchiveFetcher.class.getName() );
+    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
     public Expand expander;
     protected boolean doDelete = false;
     protected FTPClient f;

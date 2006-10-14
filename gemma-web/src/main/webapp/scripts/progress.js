@@ -4,7 +4,7 @@ function refreshProgress() {
 }
 function updateProgress( data ) {
 
-    document.getElementById("progressBarText").innerHTML = data.description + "  :" + data.percent + "%"; 
+    document.getElementById("progressBarText").innerHTML = data.description + " " + data.percent + "%"; 
     document.getElementById("progressBarBoxContent").style.width = parseInt(data.percent * 3.5) + "px";	
 
     if (data.done) {
@@ -23,7 +23,7 @@ function startProgress() {
     document.getElementById("progressBarText").innerHTML = "In progress...";
     
 
-    // wait a little while to make sure the upload has started ..
+    // wait a little while to make sure the job has started ..
     window.setTimeout("refreshProgress()", 1000);
     return true;
 }

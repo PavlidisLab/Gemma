@@ -40,6 +40,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import ubic.gemma.Constants;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.util.MailEngine;
@@ -54,7 +55,7 @@ import ubic.gemma.util.MailEngine;
  * @version $Id$
  */
 public abstract class BaseFormController extends SimpleFormController {
-    protected Log log = LogFactory.getLog( getClass() );
+    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
     protected MailEngine mailEngine = null;
     protected SimpleMailMessage mailMessage = null;
     protected String templateName = null;

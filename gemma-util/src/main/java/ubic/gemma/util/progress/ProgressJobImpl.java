@@ -23,29 +23,9 @@ import java.util.Observable;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
 /**
- * <hr>
  * Implementation of the ProgressJob interface. Used by the client to add hooks for providing feedback to any users
- * <p>
- * Copyright (c) 2006 UBC Pavlab
  * 
  * @author klc
- * @version $Id$
- */
-/**
- * TODO - DOCUMENT ME
- * 
- * @author pavlidis
- * @version $Id$
- */
-/**
- * TODO - DOCUMENT ME
- * 
- * @author pavlidis
- * @version $Id$
- */
-/**
- * TODO - DOCUMENT ME
- * 
  * @author pavlidis
  * @version $Id$
  */

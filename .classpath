@@ -29,7 +29,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="M2_REPO/spring/spring-binding/1.0-dev-20050727232106/spring-binding-1.0-dev-20050727232106.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbutils/commons-dbutils/1.0/commons-dbutils-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar">
+	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar" sourcepath="/JAR_SOURCE/commons-logging-1.0.4-src/src/java">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jakarta.apache.org/commons/logging/commons-logging-1.1/apidocs/"/>
 		</attributes>
@@ -71,7 +71,7 @@
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/ehcache/ehcache/1.1/ehcache-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/transaction/jta/1.0.1B/jta-1.0.1B.jar"/>
-	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.8/log4j-1.2.8.jar">
+	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.8/log4j-1.2.8.jar" sourcepath="/JAR_SOURCE/logging-log4j-1.2.13/src/java">
 		<attributes>
 			<attribute name="javadoc_location" value="http://logging.apache.org/log4j/docs/api/"/>
 		</attributes>

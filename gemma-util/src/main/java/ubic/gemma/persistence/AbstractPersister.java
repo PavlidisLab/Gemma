@@ -30,9 +30,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import ubic.gemma.util.progress.LoggingSupport;
-
-// import ubic.gemma.security.interceptor.CrudInterceptorUtils;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 
 /**
  * Base class for persisters, provides session management.
@@ -48,7 +46,7 @@ public abstract class AbstractPersister implements Persister {
      */
     private static final int COLLECTION_INFO_FREQUENCY = 10;
 
-    protected static Log log = LogFactory.getLog( AbstractPersister.class.getName() );
+    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
     /**
      * This should match the JDBC batch size for Hibernate.
@@ -98,7 +96,8 @@ public abstract class AbstractPersister implements Persister {
         assert col != null && col.size() > 0;
         if ( increment ) ++count;
         if ( ( !increment || count % numElementsPerUpdate == 0 ) && log.isInfoEnabled() ) {
-            LoggingSupport.progressLog( log, "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
+            log
+                    .info( "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
                             + "'s" );
         }
         return count;

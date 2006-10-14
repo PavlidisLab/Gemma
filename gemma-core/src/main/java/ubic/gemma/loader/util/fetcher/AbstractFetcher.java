@@ -28,8 +28,8 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.util.progress.LoggingSupport; 
 
 /**
  * @author pavlidis
@@ -37,7 +37,7 @@ import ubic.gemma.util.progress.LoggingSupport;
  */
 public abstract class AbstractFetcher implements Fetcher {
 
-    protected Log log = LogFactory.getLog( getClass() );
+    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
     protected String localBasePath = null;
     protected String remoteBaseDir = null;
     protected boolean force = false;
@@ -72,8 +72,7 @@ public abstract class AbstractFetcher implements Fetcher {
             }
 
             if ( log.isInfoEnabled() ) {
-                LoggingSupport.progressLog( log,
-                        ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
             }
         }
     }

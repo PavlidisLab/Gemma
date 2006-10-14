@@ -50,7 +50,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.util.progress.LoggingSupport;
 
 /**
  * Expression experiment is a top-level persister. That is, it contains only outbound associations.
@@ -152,7 +151,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
 
-        LoggingSupport.progressLog( log, "Filling in DesignElementDataVectors..." );
+        log.info( "Filling in DesignElementDataVectors..." );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
@@ -163,12 +162,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             bioAssays.addAll( baDim.getBioAssays() );
 
             if ( ++count % 10000 == 0 ) {
-                LoggingSupport.progressLog( log, "Filled in " + count + " DesignElementDataVectors" );
+                log.info( "Filled in " + count + " DesignElementDataVectors" );
             }
 
         }
-        LoggingSupport.progressLog( log, "Done, filled in " + count + " DesignElementDataVectors, " + bioAssays.size()
-                + " bioassays" );
+        log.info( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
         return bioAssays;
     }
 
@@ -279,7 +277,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
-        LoggingSupport.progressLog( log, "Persisting " + entity );
+        log.info( "Persisting " + entity );
 
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
@@ -307,11 +305,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setExperimentalDesign( experimentalDesign );
         }
 
-        if ( log.isInfoEnabled() )
-            LoggingSupport.progressLog( log, entity.getBioAssays().size() + " bioAssays in " + entity );
+        if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
 
         processBioAssays( entity );
 
+        log.info( "Persisting expression experiment" );
         return expressionExperimentService.create( entity );
     }
 
@@ -323,7 +321,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private void processBioAssays( ExpressionExperiment entity ) {
         bioAssayDimensionCache.clear();
         clearArrayDesignCache();
-        
+
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
         if ( entity.getDesignElementDataVectors().size() > 0 ) {
