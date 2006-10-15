@@ -13,8 +13,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchCommand;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchController;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationCommand;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationController;
 
 /**
  * @author joseph
