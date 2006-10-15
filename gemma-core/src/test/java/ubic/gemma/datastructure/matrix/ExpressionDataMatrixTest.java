@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.StringConverter;
 import ubic.gemma.loader.util.parser.TabDelimParser;
@@ -38,8 +39,8 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
-import ubic.gemma.visualization.MatrixVisualizer;
 
 /**
  * @author keshav
@@ -145,11 +146,11 @@ public class ExpressionDataMatrixTest extends TestCase {
 
         File tmp = File.createTempFile( "testOut", ".png" );
 
-        MatrixVisualizer visualizer = new ExpressionDataMatrixVisualizer( matrixData, tmp.getAbsolutePath() );
+        ExpressionDataMatrixVisualizer visualizer = new DefaultExpressionDataMatrixVisualizer( matrixData, tmp.getAbsolutePath() );
 
-        visualizer.createVisualization( matrixData );
+        ColorMatrix colorMatrix = visualizer.createColorMatrix( matrixData );
 
-        visualizer.saveImage( tmp );
+        visualizer.saveImage( tmp, colorMatrix );
 
         tmp.deleteOnExit();
 

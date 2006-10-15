@@ -27,7 +27,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
  * @author keshav
  * @version $Id$
  */
-public class HttpExpressionDataMatrixVisualizer extends ExpressionDataMatrixVisualizer {
+public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMatrixVisualizer {
 
     private static final long serialVersionUID = -1502097627023644747L;
 

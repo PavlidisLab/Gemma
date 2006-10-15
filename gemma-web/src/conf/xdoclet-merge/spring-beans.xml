@@ -48,8 +48,8 @@
 			<prop key="/expressionExperiment/*">expressionExperimentController</prop>
 			<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
 			<prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
-			<prop key="/expressionExperiment/searchExpressionExperiment.html">
-				expressionExperimentSearchController
+			<prop key="/expressionExperiment/expressionExperimentVisualization.html">
+				expressionExperimentVisualizationController
 			</prop>
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
 			<prop key="/geneDetail.html">geneController</prop>

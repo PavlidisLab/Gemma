@@ -29,13 +29,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.gui.ColorMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
-import ubic.gemma.visualization.MatrixVisualizer;
 
 /**
- * @jsp.tag name="matrixVisualizer" body-content="empty"
+ * @jsp.tag name="expressionDataMatrixVisualizer" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -56,14 +57,14 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
 
-    private MatrixVisualizer matrixVisualizer = null;
+    private ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
 
     /**
      * @jsp.attribute description="The visualizer object" required="true" rtexprvalue="true"
-     * @param matrixVisualizer
+     * @param expressionDataMatrixVisualizer
      */
-    public void setMatrixVisualizer( MatrixVisualizer matrixVisualizer ) {
-        this.matrixVisualizer = matrixVisualizer;
+    public void setExpressionDataMatrixVisualizer( ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer ) {
+        this.expressionDataMatrixVisualizer = expressionDataMatrixVisualizer;
     }
 
     /*
@@ -77,23 +78,26 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         log.debug( "start tag" );
         try {
             /* get metadata from MatrixVisualizer */
-            ExpressionDataMatrix expressionDataMatrix = matrixVisualizer.getExpressionDataMatrix();
-            String imageFile = matrixVisualizer.getImageFile();
+            ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
+            String imageFile = expressionDataMatrixVisualizer.getImageFile();
 
             Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
-            matrixVisualizer.createVisualization( expressionDataMatrix );
+            ColorMatrix colorMatrix = expressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
 
-            List<String> designElementNames = matrixVisualizer.getRowLabels();
+            List<String> designElementNames = expressionDataMatrixVisualizer.getRowLabels();
 
-            matrixVisualizer.saveImage( new File( imageFile ) );/* remove me when using dynamic images */
+            /*
+             * remove me when using dynamic images
+             */
+            expressionDataMatrixVisualizer.saveImage( new File( imageFile ), colorMatrix );
 
             /* Cannot use \ in non internet explorer browsers. Using / instead. */
             imageFile = StringUtils.replace( imageFile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
 
-            String urlPrefix = ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getProtocol() + "://"
-                    + ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getServer() + ":"
-                    + ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getPort() + "/";
+            String urlPrefix = ( ( HttpExpressionDataMatrixVisualizer ) expressionDataMatrixVisualizer ).getProtocol()
+                    + "://" + ( ( HttpExpressionDataMatrixVisualizer ) expressionDataMatrixVisualizer ).getServer()
+                    + ":" + ( ( HttpExpressionDataMatrixVisualizer ) expressionDataMatrixVisualizer ).getPort() + "/";
             imageFile = StringUtils.replace( imageFile,
                     StringUtils.splitByWholeSeparator( imageFile, "visualization" )[0], urlPrefix );
 
@@ -101,7 +105,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
             StringBuilder buf = new StringBuilder();
 
-            if ( matrixVisualizer.isSuppressVisualizations() ) {
+            if ( expressionDataMatrixVisualizer.isSuppressVisualizations() ) {
                 buf.append( "Visualizations suppressed." );
             } else if ( expressionDataMatrix == null || m.size() == 0 ) {
                 buf.append( "No data to display" );

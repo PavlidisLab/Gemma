@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import junit.framework.TestCase;
+import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -40,7 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
-    private ExpressionDataMatrixVisualizer matrixVisualizer = null;
+    private DefaultExpressionDataMatrixVisualizer matrixVisualizer = null;
 
     private ExpressionDataMatrix expressionDataMatrix = null;
 
@@ -104,7 +105,7 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
         expressionDataMatrix = new ExpressionDataMatrix( ExpressionExperiment.Factory.newInstance(), designElements );
 
-        matrixVisualizer = new ExpressionDataMatrixVisualizer( expressionDataMatrix, tmp.getAbsolutePath() );
+        matrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix, tmp.getAbsolutePath() );
 
         matrixVisualizer.setRowLabels( rowLabelsList );
         matrixVisualizer.setColLabels( colLabelsList );
@@ -128,9 +129,9 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
     public void testCreateVisualization() {
 
-        matrixVisualizer.createVisualization( expressionDataMatrix );
+        ColorMatrix colorMatrix = matrixVisualizer.createColorMatrix( expressionDataMatrix );
 
-        assertNotNull( matrixVisualizer.getColorMatrix() );
+        assertNotNull( colorMatrix );
 
     }
 
@@ -150,9 +151,9 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
         matrixVisualizer.setRowLabels( rowLabelsList );
         matrixVisualizer.setColLabels( colLabelsList );
 
-        matrixVisualizer.createVisualization( expressionDataMatrix );
+        ColorMatrix colorMatrix = matrixVisualizer.createColorMatrix( expressionDataMatrix );
 
-        matrixVisualizer.saveImage( tmp );
+        matrixVisualizer.saveImage( tmp, colorMatrix );
         FileInputStream fis = new FileInputStream( tmp );
 
         assertNotNull( fis );

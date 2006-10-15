@@ -46,12 +46,12 @@
             </field>
         </form>
         
-        <form name="expressionExperimentSearchCommand">
+        <form name="expressionExperimentVisualizationCommand">
             <field property="searchString" depends="required">
-                <arg0 key="expressionExperimentSearchCommand.searchString"/>
+                <arg0 key="expressionExperimentVisualizationCommand.searchString"/>
             </field>
             <field property="stringency" depends="required">
-                <arg0 key="expressionExperimentSearchCommand.stringency"/>
+                <arg0 key="expressionExperimentVisualizationCommand.stringency"/>
             </field>
         </form>
         
