@@ -36,7 +36,7 @@ import ubic.gemma.testing.AbstractExpressionExperimentTest;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentSearchControllerIntegrationTest extends AbstractExpressionExperimentTest {
+public class ExpressionExperimentVisualizationControllerIntegrationTest extends AbstractExpressionExperimentTest {
 
     /**
      * @throws Exception
@@ -45,12 +45,12 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
     public void testOnSubmit() throws Exception {
         ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
 
-        ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this
+        ExpressionExperimentVisualizationController controller = ( ExpressionExperimentVisualizationController ) this
                 .getBean( "expressionExperimentSearchController" );
 
         HttpServletRequest request = new MockHttpServletRequest();
         HttpServletResponse response = new MockHttpServletResponse();
-        ExpressionExperimentSearchCommand command = new ExpressionExperimentSearchCommand();
+        ExpressionExperimentVisualizationCommand command = new ExpressionExperimentVisualizationCommand();
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "0_at, 1_at" );
         // command.setFilename( "build/Gemma/images/outImage.png" );
@@ -60,8 +60,8 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
         setComplete();// leave data in database
 
         BindException errors = new BindException( command, "ExpressionExperimentSearchCommand" );
-        searchController.processFormSubmission( request, response, command, errors );
-        ModelAndView mav = searchController.onSubmit( request, response, command, errors );
+        controller.processFormSubmission( request, response, command, errors );
+        ModelAndView mav = controller.onSubmit( request, response, command, errors );
         assertEquals( "showExpressionExperimentSearchResults", mav.getViewName() );
 
     }
