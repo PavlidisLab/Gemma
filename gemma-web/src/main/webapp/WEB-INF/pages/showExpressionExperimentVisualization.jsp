@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<jsp:useBean id="matrixVisualizer" scope="request"
+<jsp:useBean id="expressionDataMatrixVisualizer" scope="request"
     class="ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer" />
 <html>
     <body>
@@ -27,7 +27,7 @@
             	<%expressionDataMatrixVisualization.drawDynamicImage( stream);%>
             	<%response.setContentType( "image/jpg" );%>
   				--%>
-                <Gemma:matrixVisualizer matrixVisualizer="<%=matrixVisualizer%>"/>
+                <Gemma:expressionDataMatrixVisualizer expressionDataMatrixVisualizer="<%=expressionDataMatrixVisualizer%>"/>
                 
             </a>
         </div>

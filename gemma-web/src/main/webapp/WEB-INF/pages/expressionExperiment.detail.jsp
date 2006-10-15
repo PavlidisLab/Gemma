@@ -243,7 +243,7 @@
 
 				<td COLSPAN="2">
 					<div align="left">
-						<input type="button" onclick="location.href='searchExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>'"
+						<input type="button" onclick="location.href='expressionExperimentVisualization.html?id=<%=request.getAttribute( "id" )%>'"
 							value="Visual">
 					</div>
 				</td>
