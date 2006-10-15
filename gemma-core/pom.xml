@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma Core</name>
 	<description>Module containing core gemma functionality.</description>
@@ -29,7 +28,7 @@
 			<artifactId>gemma-testing</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<type>jar</type>
-		<!--	<scope>test</scope> -->
+			<!--	<scope>test</scope> -->
 		</dependency>
 		<dependency>
 			<groupId>hibernate</groupId>
@@ -372,6 +371,18 @@
 			<version>2.0.0</version>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+			<groupId>jfree</groupId>
+			<artifactId>jfreechart</artifactId>
+			<version>1.0.2</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>jfree</groupId>
+			<artifactId>jcommon</artifactId>
+			<version>1.0.5</version>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 	<build>
 		<directory>target</directory>
@@ -412,17 +423,17 @@
 				</includes>
 			</testResource>
 		</testResources>
-		<plugins> 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>**/*Abstract*</exclude>
-                        <exclude>**/*IntegrationTest.java</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/*Abstract*</exclude>
+						<exclude>**/*IntegrationTest.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>xdoclet-maven-plugin</artifactId>
 				<groupId>org.codehaus.mojo</groupId>
@@ -435,13 +446,9 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet
-									destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" validating="false" force="false">
+								<springdoclet destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" validating="false" force="false">
 									<fileset dir="${basedir}/src/main/java" includes="**/*.java" />
-									<springxml
-										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma"
-										mergeDir="${basedir}/src/conf/xdoclet-merge" destinationFile="applicationContext-serviceBeans.xml"
-										useIds="true" />
+									<springxml destDir="${project.build.directory}/generated-sources/resources/ubic/gemma" mergeDir="${basedir}/src/conf/xdoclet-merge" destinationFile="applicationContext-serviceBeans.xml" useIds="true" />
 								</springdoclet>
 							</tasks>
 						</configuration>
@@ -472,31 +479,31 @@
 			</plugin>
 		</plugins>
 	</build>
-    <profiles>
-        <profile>
-            <id>Slow tests</id>
-            <activation>
+	<profiles>
+		<profile>
+			<id>Slow tests</id>
+			<activation>
 				<activeByDefault>false</activeByDefault>
 				<property>
 					<name>alltests</name>
 				</property>
 			</activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/*Abstract*</exclude>
-                            </excludes>
-                            <includes>
-                                <include>**/*Test.java</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludes>
+								<exclude>**/*Abstract*</exclude>
+							</excludes>
+							<includes>
+								<include>**/*Test.java</include>
+							</includes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
