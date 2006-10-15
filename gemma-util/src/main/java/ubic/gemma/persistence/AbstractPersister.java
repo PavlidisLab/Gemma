@@ -30,8 +30,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-
 /**
  * Base class for persisters, provides session management.
  * 
@@ -46,7 +44,7 @@ public abstract class AbstractPersister implements Persister {
      */
     private static final int COLLECTION_INFO_FREQUENCY = 10;
 
-    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
+    protected static Log log = LogFactory.getLog( AbstractPersister.class.getName() );
 
     /**
      * This should match the JDBC batch size for Hibernate.
