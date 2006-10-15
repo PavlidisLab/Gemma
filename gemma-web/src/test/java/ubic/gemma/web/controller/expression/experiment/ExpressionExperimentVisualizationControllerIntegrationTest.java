@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**
- * Tests the expressionExperimentSearchController functionality. For this to work, data must be left in the database,
+ * Tests the expressionExperimentVisualizationController functionality. For this to work, data must be left in the database,
  * hence the integration test naming convention.
  * 
  * @author keshav
