@@ -21,12 +21,12 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.io.Serializable;
 
 /**
- * Expression experiment command object that wraps expression experiment search preferences.
+ * Expression experiment command object that wraps expression experiment visualization preferences.
  * 
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentSearchCommand implements Serializable {
+public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private static final long serialVersionUID = 2166768356457316142L;
 
@@ -45,7 +45,7 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     private boolean suppressVisualizations;
 
     private String filename = null;
-    
+
     private String species = null;
 
     /**
@@ -61,7 +61,7 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     public void setFilename( String filename ) {
         this.filename = filename;
     }
-    
+
     /**
      * @return Returns the species.
      */
