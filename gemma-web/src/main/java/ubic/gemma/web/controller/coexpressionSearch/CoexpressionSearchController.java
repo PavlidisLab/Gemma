@@ -22,9 +22,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List; 
+import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,8 +44,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
-import ubic.gemma.visualization.MatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -155,7 +156,7 @@ public class CoexpressionSearchController extends BaseFormController {
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
         Collection foundGenes = null;
         ExpressionDataMatrix expressionDataMatrix = null;
-        MatrixVisualizer matrixVisualizer = null;
+        ExpressionDataMatrixVisualizer matrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( Long.decode( "1" ) );
             expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
