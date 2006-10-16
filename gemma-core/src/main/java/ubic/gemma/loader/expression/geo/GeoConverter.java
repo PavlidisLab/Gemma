@@ -53,6 +53,7 @@ import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.expression.geo.model.GeoVariable;
+import ubic.gemma.loader.expression.geo.model.GeoDataset.ExperimentType;
 import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
@@ -1176,6 +1177,14 @@ public class GeoConverter implements Converter {
         if ( series == null ) return null;
         log.info( "Converting series: " + series.getGeoAccession() );
 
+        Collection<GeoDataset> dataSets = series.getDatasets();
+        Collection<String> dataSetsToSkip = new HashSet<String>();
+        Collection<GeoSample> samplesToSkip = new HashSet<GeoSample>();
+        checkForDataToSkip( dataSets, dataSetsToSkip, samplesToSkip );
+        if ( dataSetsToSkip.size() == dataSets.size() ) {
+            return null;
+        }
+
         ExpressionExperiment expExp;
 
         if ( resultToAddTo == null ) {
@@ -1268,6 +1277,10 @@ public class GeoConverter implements Converter {
                         continue;
                     }
 
+                    if ( samplesToSkip.contains( sample ) ) {
+                        continue;
+                    }
+
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
@@ -1305,17 +1318,47 @@ public class GeoConverter implements Converter {
         log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays" );
 
         // Dataset has additional information about the samples.
-        Collection<GeoDataset> dataSets = series.getDatasets();
+
         if ( dataSets.size() == 0 ) {
             // we miss extra description and the subset information.
             convertSeriesDataVectors( series, expExp );
         } else {
             for ( GeoDataset dataset : dataSets ) {
+                if ( dataSetsToSkip.contains( dataset.getGeoAccession() ) ) continue;
                 convertDataset( dataset, expExp );
             }
         }
 
         return expExp;
+    }
+
+    /**
+     * Flag as unneeded data that are not from experiments types that we support, such as ChIP.
+     * 
+     * @param dataSets
+     * @param dataSetsToSkip
+     * @param samplesToSkip
+     */
+    private void checkForDataToSkip( Collection<GeoDataset> dataSets, Collection<String> dataSetsToSkip,
+            Collection<GeoSample> samplesToSkip ) {
+        for ( GeoDataset dataset : dataSets ) {
+
+            // This doesn't cover every possibility...
+            if ( dataset.getExperimentType() == ExperimentType.arrayCGH
+                    || dataset.getExperimentType() == ExperimentType.ChIPChip
+                    || dataset.getExperimentType() == ExperimentType.geneExpressionSAGEbased ) {
+                log.warn( "Gemma does not know how to handle " + dataset.getExperimentType() );
+
+                if ( dataSets.size() == 1 ) {
+                    log.warn( "Because the experiment type cannot be handled, "
+                            + "and there is only one data set in this series, nothing will be returned!" );
+                }
+                samplesToSkip.addAll( this.getDatasetSamples( dataset ) );
+                dataSetsToSkip.add( dataset.getGeoAccession() );
+            } else {
+                log.info( "Data from " + dataset + " is " + dataset.getExperimentType() );
+            }
+        }
     }
 
     /**

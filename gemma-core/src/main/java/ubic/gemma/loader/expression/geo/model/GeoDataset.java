@@ -207,6 +207,8 @@ public class GeoDataset extends GeoData {
      */
     public void setDatasetType( String datasetType ) {
         this.datasetType = datasetType;
+        // FIXME - this is underhanded, there is some confusion about how to treat datasetType vs experimentType
+        this.experimentType = convertStringToExperimentType( datasetType );
     }
 
     /**
