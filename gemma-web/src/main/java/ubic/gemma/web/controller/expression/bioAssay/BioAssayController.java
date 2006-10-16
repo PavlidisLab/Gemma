@@ -31,7 +31,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -92,7 +91,7 @@ public class BioAssayController extends BaseMultiActionController {
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         String sId = request.getParameter( "id" );
         Collection<BioAssay> bioAssays = new ArrayList<BioAssay>();

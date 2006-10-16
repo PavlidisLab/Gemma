@@ -154,9 +154,17 @@ public class AssayViewTag extends TagSupport {
                     for ( BioAssay assay : assays ) {
                         ids.add( assay.getId() );
                     }
-                    String link = "<a href='/Gemma/bioAssay/showAllBioAssays.html?id=" + 
-                        StringUtils.join(ids.toArray()) + "'> (list) </a>";
-                    buf.append( "<td>" +  assayMap.get( design ).size() + link + "</td>" );
+                    if (assayMap.get( design ).size() > 1 ) { 
+                        String link = "<a href='/Gemma/bioAssay/showAllBioAssays.html?id=" + 
+                            StringUtils.join(ids.toArray()) + "'> (list) </a>";
+                        buf.append( "<td>" +  assayMap.get( design ).size() + link + "</td>" );
+                    }
+                    else {
+                        BioAssay assay = ((ArrayList<BioAssay>)assayMap.get( design )).get( 0 );
+                        String link = "<a href='/Gemma/bioAssay/showBioAssay.html?id=" + 
+                        assay.getId() + "'>" + assay.getName() + "</a>";
+                        buf.append( "<td>" + link + "</td>" );          
+                    }
                 }
             }          
             buf.append( "</tr>" );
