@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -72,7 +73,15 @@ public class BlatResultParser extends BasicLineParser {
     private static final int QSTARTS_FIELD = 19;
     private static final int TSTARTS_FIELD = 20;
 
+    /**
+     * Reference to the taxon for that was searched.
+     */
     private Taxon taxon;
+
+    /**
+     * Reference to the sequence database that was searched.
+     */
+    private ExternalDatabase searchedDatabase = null;
 
     private Collection<BlatResult> results = new HashSet<BlatResult>();
     private double scoreThreshold = 0.0;
@@ -162,6 +171,10 @@ public class BlatResultParser extends BasicLineParser {
                 result.getTargetChromosome().getSequence().setTaxon( taxon );
             }
 
+            if ( searchedDatabase != null ) {
+                result.setSearchedDatabase( searchedDatabase );
+            }
+
             if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
                 return null;
             }
@@ -208,5 +221,19 @@ public class BlatResultParser extends BasicLineParser {
      */
     public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
+    }
+
+    /**
+     * @return the searchedDatabase
+     */
+    public ExternalDatabase getSearchedDatabase() {
+        return this.searchedDatabase;
+    }
+
+    /**
+     * @param searchedDatabase the searchedDatabase to set
+     */
+    public void setSearchedDatabase( ExternalDatabase searchedDatabase ) {
+        this.searchedDatabase = searchedDatabase;
     }
 }

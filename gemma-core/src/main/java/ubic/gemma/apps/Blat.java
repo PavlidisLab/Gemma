@@ -36,6 +36,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -186,6 +188,11 @@ public class Blat {
 
         Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
 
+        ExternalDatabase searchedDatabase = this.getSearchedGenome( genome );
+        for ( BlatResult result : results ) {
+            result.setSearchedDatabase( searchedDatabase );
+        }
+
         cleanUpTmpFiles( querySequenceFile, outputPath );
         return results;
 
@@ -249,6 +256,7 @@ public class Blat {
 
     /**
      * @param sequences
+     * @param genome The genome which will be searched.
      * @return map of the input sequence names to a corresponding collection of blat result(s)
      * @throws IOException
      */
@@ -281,7 +289,11 @@ public class Blat {
 
         log.debug( "Got" + rawresults.size() + " raw blat results" );
 
+        ExternalDatabase searchedDatabase = getSearchedGenome( genome );
+
         for ( BlatResult blatResult : rawresults ) {
+            blatResult.setSearchedDatabase( searchedDatabase );
+
             String name = blatResult.getQuerySequence().getName();
 
             if ( !results.containsKey( name ) ) {
@@ -293,6 +305,17 @@ public class Blat {
 
         querySequenceFile.delete();
         return results;
+    }
+
+    /**
+     * @param genome
+     * @return
+     */
+    private ExternalDatabase getSearchedGenome( BlattableGenome genome ) {
+        ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
+        searchedDatabase.setType( DatabaseType.SEQUENCE );
+        searchedDatabase.setName( genome.toString().toLowerCase() );
+        return searchedDatabase;
     }
 
     /**
