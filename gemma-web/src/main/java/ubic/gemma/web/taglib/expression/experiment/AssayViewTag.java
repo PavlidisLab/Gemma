@@ -122,7 +122,7 @@ public class AssayViewTag extends TagSupport {
         buf.append( "<td>BioMaterial</td>" );
         // display arraydesigns
         for ( ArrayDesign design : designs  ) {
-            buf.append( "<td>" + design.getName() + "</td>" );
+            buf.append( "<td>" + design.getShortName() + "</td>" );
         }
         buf.append( "</tr>" );
         
