@@ -19,23 +19,15 @@
 package ubic.gemma.web.taglib.displaytag.expression.experiment;
 
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
-import org.springframework.beans.factory.BeanFactory;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.SpringContextUtil;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -49,7 +41,6 @@ import ubic.gemma.util.SpringContextUtil;
  */
 public class ExpressionExperimentWrapper extends TableDecorator {
 
-    private ExpressionExperimentService expressionExperimentService = null;
 
     Log log = LogFactory.getLog( this.getClass() );
 

@@ -225,9 +225,10 @@
 			<display:column property="qtValue" sortable="true" maxWords="20" titleKey="quantitationType.countVectors" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
-
-
-
+		
+		<b> Biomaterials and Assays </b>
+		<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
+		
 		<br />
 
 		<hr />

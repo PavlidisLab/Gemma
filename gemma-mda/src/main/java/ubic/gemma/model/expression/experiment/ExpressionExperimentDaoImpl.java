@@ -18,12 +18,14 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -138,16 +140,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public long handleGetDesignElementDataVectorCountById( long Id ) {
         long count = 0;
 
-        final String queryString = "select count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id";
+        final String queryString = "select count(*) from EXPRESSION_EXPERIMENT ee inner join DESIGN_ELEMENT_DATA_VECTOR dedv on dedv.EXPRESSION_EXPERIMENT_FK=ee.ID where ee.ID = :id";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setLong( "id", Id );
+            queryObject.setMaxResults( 1 );
+            /*org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "id", Id );
-            ScrollableResults list = queryObject.scroll();
-            while ( list.next() ) {
-                int c = list.getInteger( 0 );
-                count = Long.parseLong( ( new Integer( c ) ).toString() );
-            }
+            queryObject.setMaxResults( 1 );
+            */
+            count = ((BigInteger) queryObject.uniqueResult()).longValue();
+            
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -164,16 +168,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public long handleGetBioAssayCountById( long Id ) {
         long count = 0;
 
-        final String queryString = "select count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.bioAssays as bioAssays where ee.id = :id";
+        final String queryString = "select count(*) from EXPRESSION_EXPERIMENT ee inner join BIO_ASSAY ba on ba.EXPRESSION_EXPERIMENT_FK=ee.ID where ee.ID = :id";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setLong( "id", Id );
+            queryObject.setMaxResults( 1 );
+            /*org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "id", Id );
-            ScrollableResults list = queryObject.scroll();
-            while ( list.next() ) {
-                int c = list.getInteger( 0 );
-                count = Long.parseLong( ( new Integer( c ) ).toString() );
-            }
+            queryObject.setMaxResults( 1 );*/
+            count = ((BigInteger) queryObject.uniqueResult()).longValue();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -290,10 +294,23 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     public String getTaxon( ExpressionExperiment object ) {
 
+        
+        final String queryString = "select sample.sourceTaxon from ExpressionExperimentImpl ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample inner join sample.sourceTaxon where ee.id = :id";
+
+        Taxon taxon = (Taxon) queryByIdReturnObject(object.getId(), queryString);
+        
+        if (taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ){
+            return "Taxon unavailable";
+        }
+        return taxon.getScientificName();
+        
+//        return ((Taxon) queryByIdReturnObject(object.getId(), queryString)).getScientificName();
+
+        /*
         if ( object == null ) {
             return "Taxon unavailable";
         }
-
+    
         Collection bioAssayCol = object.getBioAssays();
         BioAssay bioAssay = null;
         Taxon taxon = null;
@@ -315,6 +332,25 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( taxon != null ) return taxon.getScientificName();
 
         return "Taxon unavailable";
+        */
+    }
+    
+    private Object queryByIdReturnObject( Long id, final String queryString ) {
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setFirstResult( 1 );
+            queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
+                                            // collection returned
+            queryObject.setParameter( "id", id );
+            java.util.List results = queryObject.list();
+
+            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
+
+            return results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

@@ -28,7 +28,7 @@ import org.apache.commons.lang.time.DateFormatUtils;
 
 /**
  * @jsp.tag name="lastModified" body-content="empty"
- * @author pavlidis
+ * @author joseph
  * @version $Id$
  */
 public class LastModifiedTag extends TagSupport {

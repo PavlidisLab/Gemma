@@ -18,15 +18,20 @@
  */
 package ubic.gemma.web.controller.expression.bioAssay;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -89,7 +94,23 @@ public class BioAssayController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService.loadAll() );
+        String sId = request.getParameter( "id" );
+        Collection<BioAssay> bioAssays = new ArrayList<BioAssay>();
+        if ( sId == null ) {
+            bioAssays = bioAssayService.loadAll();
+        }
+        else {
+            String[] idList = StringUtils.split( sId, ',' );
+            for (int i = 0; i < idList.length; i++) {
+                Long id = Long.parseLong( idList[i] );
+                BioAssay bioAssay = bioAssayService.findById( id );
+                if ( bioAssay == null ) {
+                    throw new EntityNotFoundException( id + " not found" );
+                }
+                bioAssays.add( bioAssay );
+            }
+        }
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
     }
 
     /**
