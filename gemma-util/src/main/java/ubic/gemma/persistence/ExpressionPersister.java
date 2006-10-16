@@ -316,26 +316,25 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     /**
      * Handle persisting of the bioassays on the way to persisting the expression experiment.
      * 
-     * @param entity
+     * @param expressionExperiment
      */
-    private void processBioAssays( ExpressionExperiment entity ) {
+    private void processBioAssays( ExpressionExperiment expressionExperiment ) {
         bioAssayDimensionCache.clear();
         clearArrayDesignCache();
 
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
-        if ( entity.getDesignElementDataVectors().size() > 0 ) {
-            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( entity );
-            // these are persistent! So we don't use the cascade.
-            entity.setBioAssays( alreadyFilled );
+        if ( expressionExperiment.getDesignElementDataVectors().size() > 0 ) {
+            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment );
+            expressionExperiment.setBioAssays( alreadyFilled );
         } else {
-            for ( BioAssay bA : entity.getBioAssays() ) {
+            for ( BioAssay bA : expressionExperiment.getBioAssays() ) {
                 fillInBioAssayAssociations( bA );
                 alreadyFilled.add( bA );
             }
         }
 
-        for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
+        for ( ExpressionExperimentSubSet subset : expressionExperiment.getSubsets() ) {
             for ( BioAssay bA : subset.getBioAssays() ) {
                 bA.setId( persistBioAssay( bA ).getId() );
                 assert bA.getArrayDesignUsed().getId() != null;
