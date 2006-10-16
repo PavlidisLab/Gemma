@@ -59,6 +59,7 @@ import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.loader.util.converter.Converter;
+import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.description.Characteristic;
@@ -832,10 +833,19 @@ public class GeoConverter implements Converter {
                 bs.setPolymerType( PolymerType.DNA );
                 bs.setType( SequenceType.DNA );
 
-                bs.setName( externalRef );
-                DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-                dbe.setAccession( externalRef );
-                dbe.setExternalDatabase( externalDb );
+                DatabaseEntry dbe;
+                if ( externalDb.getName().equalsIgnoreCase( "genbank" ) ) {
+                    // deal with accessions in the form XXXXX.N
+                    dbe = ExternalDatabaseUtils.getGenbankAccession( externalRef );
+                    dbe.setExternalDatabase( externalDb ); // make sure it matches the one used here.
+                    bs.setName( dbe.getAccession() ); // trimmed version.
+                } else {
+                    bs.setName( externalRef );
+                    dbe = DatabaseEntry.Factory.newInstance();
+                    dbe.setAccession( externalRef );
+                    dbe.setExternalDatabase( externalDb );
+                }
+
                 bs.setSequenceDatabaseEntry( dbe );
                 cs.setBiologicalCharacteristic( bs );
             }
@@ -1289,7 +1299,8 @@ public class GeoConverter implements Converter {
                         LocalFile rawDataFile = convertSupplementaryFileToLocalFile( sample );
                         ba.setRawDataFile( rawDataFile );// deal with null at UI
 
-                        ba.setDescription( sample.getGeoAccession() + " Last Updated: " + sample.getLastUpdateDate() );
+                        ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession()
+                                + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
