@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.ConfigUtils;
@@ -62,9 +63,9 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
                     .getString( "gemma.home" )
                     + "/gemma-core/src/test/resources/data/loader/genome/blast" );
         } catch ( IllegalStateException e ) {
-          if (e.getMessage().startsWith("No fastacmd executable:")) {
-              return;
-          }
+            if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
+                return;
+            }
         }
 
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this

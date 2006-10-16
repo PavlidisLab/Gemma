@@ -167,6 +167,22 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // geoService.fetchAndLoad( "GDS994" );
     // }
     //
+    // 
+    /**
+     * GDS1830 (GSE2221) - bombs silently after or during parsing. Huge data set, and includes CGH and expression data.
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGDS1830() throws Exception {
+        endTransaction();
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse2221Short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS1830" );
+        assertEquals( 2, results.size() );
+
+    }
+
     /**
      * Has multiple species (mouse and human, one and two platforms respectively)
      */
@@ -191,7 +207,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE3434" );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = results.iterator().next();
         assertEquals( 4, ee.getBioAssays().size() );
         assertEquals( 532, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
         //
@@ -215,7 +231,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS775" );
 
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = results.iterator().next();
         assertEquals( 4, ee.getBioAssays().size() );
         assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
         //
@@ -234,7 +250,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS999" );
 
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = results.iterator().next();
         assertEquals( 34, ee.getBioAssays().size() );
 
         assertEquals( 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
@@ -256,7 +272,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS22" );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = results.iterator().next();
         assertEquals( 80, ee.getBioAssays().size() );
         assertEquals( 410, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
@@ -273,7 +289,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gds994Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS994" );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = results.iterator().next();
         assertEquals( 12, ee.getBioAssays().size() );
         assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
@@ -297,7 +313,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          */
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS472" );
-        final ExpressionExperiment newee = ( ExpressionExperiment ) results.iterator().next();
+        final ExpressionExperiment newee = results.iterator().next();
         // get the data back out.
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
@@ -357,7 +373,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "complexShortTest" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS825" );
-        ExpressionExperiment newee = ( ExpressionExperiment ) results.iterator().next();
+        ExpressionExperiment newee = results.iterator().next();
         // get the data back out.
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
@@ -426,24 +442,22 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         testMatrixValue( matrix, "878", "GSM21254", 0.6135323 );
 
     }
-    
-    
+
     @SuppressWarnings("unchecked")
     public void testLoadDeleteLoadGSE3434() throws Exception {
         endTransaction();
-       String path = getTestFileBasePath();
+        String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE3434" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE3434" );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = results.iterator().next();
         eeService.delete( ee );
         ee = null;
-        
+
         results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE3434" );
-        ee = ( ExpressionExperiment ) results.iterator().next();
-        
-        
+        ee = results.iterator().next();
+
     }
 
     private void testMatrixValue( DoubleMatrixNamed matrix, String probeToTest, String sampleToTest,
@@ -455,9 +469,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 double k = vals[matrix.getColIndexByName( ( String ) colName )];
                 assertEquals( expectedValue, k, 0.00001 );
                 return;
-            } else {
-                continue;
             }
+            continue;
 
         }
         fail( "didn't find values for " + sampleToTest );
