@@ -18,7 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection;
+import java.util.Observable;
+import java.util.Observer;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -33,6 +34,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * @author pavlidis
@@ -40,6 +43,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractGeoServiceTest {
     protected static final String GEO_TEST_DATA_ROOT = "/gemma-core/src/test/resources/data/loader/expression/geo/";
+    private static final long TIMEOUT = 60000; // 60 second timeout
 
     private ExpressionExperimentLoadController controller;
     ExpressionExperiment ee = null;
@@ -108,19 +112,14 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
 
         request.setParameter( "accession", "GDS999" );
         request.setParameter( "loadPlatformOnly", "false" );
-        request.setRemoteUser( "administrator" );
 
-        ModelAndView mv = controller.handleRequest( request, response );
+        controller.handleRequest( request, response );
 
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) mv.getModel().get(
-                "expressionExperiments" );
+        ProgressData finalPd = monitorLoad();
 
-        assertNotNull( results );
+        String forwardURL = finalPd.getForwardingURL().trim();
 
-        ee = results.iterator().next();
-
-        // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
+        assert ( forwardURL.startsWith( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" ) );
 
     }
 
@@ -138,18 +137,17 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         controller.setGeoDatasetService( ( GeoDatasetService ) geoService );
         request.setParameter( "accession", "GDS266" );
         request.setParameter( "loadPlatformOnly", "false" );
-        request.setRemoteUser( "test" );
-        ModelAndView mv = controller.handleRequest( request, response );
 
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) mv.getModel().get(
-                "expressionExperiments" );
+        controller.handleRequest( request, response );
 
-        assertNotNull( results );
+        ProgressData finalPd = monitorLoad();
+        String forwardURL = finalPd.getForwardingURL().trim();
 
-        ee = results.iterator().next();
+        // forwardURL.getChars( srcBegin, srcEnd, dst, dstBegin )forwardURL.charAt('=');
+        // long id = forwardURL. todo: get the id of the EE and load it to really see if it worked. Can get the id from
+        // end of the fowarding url
 
-        // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
+        assert ( forwardURL.startsWith( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" ) );
 
     }
 
@@ -169,6 +167,86 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         // request.setParameter( "loadPlatformOnly", "false" );
         ModelAndView mv = controller.handleRequest( request, response );
         assertEquals( "Returned incorrect view name", "loadExpressionExperimentForm", mv.getViewName() );
+
+    }
+
+    /**
+     * monitors the a loading progress that was started and returns after 60 seconds or when the data is finished
+     * loading
+     * 
+     * @return ProgressData the last progress data that the load sent
+     */
+    private ProgressData monitorLoad() {
+
+        // Need to wait to see if the expression experiment loaded correctly.
+        // But as the load controller runs in a serpate thread, it will return before its done.
+        MockClient mc = new MockClient();
+        long start = System.currentTimeMillis();
+        long elapsed = 0;
+        boolean done = false;
+
+       //Need a short pause to make sure the job is started before we try and monitor it
+        try {
+            long numMillisecondsToSleep = 3000; // 3 seconds
+            Thread.sleep( numMillisecondsToSleep );
+        } catch ( InterruptedException e ) {
+        }
+
+        // fixme: I'm not sure why the user is set to 'test'. If this changes this test will break
+        ProgressManager.addToNotification( "test", mc );
+
+        while ( !done && !( TIMEOUT < elapsed ) ) {
+            if ( mc.getProgressData() != null ) {
+                done = mc.getProgressData().isDone();
+                log.info( mc.getProgressData().getDescription() );
+                log.info( "Elapsed time: " + elapsed );
+            }
+
+            elapsed = System.currentTimeMillis() - start;
+        }
+
+        // forwardURL.getChars( srcBegin, srcEnd, dst, dstBegin )forwardURL.charAt('=');
+        // long id = forwardURL. todo: get the id of the EE and load it to really see if it worked. Can get the id from
+        // end of the fowarding url
+
+        assert ( done );
+        return mc.getProgressData();
+    }
+
+    /**
+     * <hr>
+     * Just a mock client inner class to ease testing
+     * <p>
+     * Copyright (c) 2006 UBC Pavlab
+     * 
+     * @author klc
+     * @version $Id$
+     */
+
+    class MockClient implements Observer {
+
+        private int update;
+        private ProgressData pData;
+
+        public MockClient() {
+            super();
+            this.update = 0;
+        }
+
+        @SuppressWarnings("unused")
+        public void update( Observable o, Object pd ) {
+            pData = ( ProgressData ) pd;
+            update++;
+        }
+
+        public int upDateTimes() {
+            return this.update;
+
+        }
+
+        public ProgressData getProgressData() {
+            return pData;
+        }
 
     }
 

@@ -89,7 +89,7 @@
 -->
 <!-- ==================================================== -->
 <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/mainMenu.html /flushCache.html /loadExpressionExperimentProgress.html" />
+	name="/mainMenu.html /flushCache.html /processProgress.html" />
 <!-- ==================================================== -->
 <!-- Exception handler. -->
 <!-- ==================================================== -->

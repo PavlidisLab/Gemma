@@ -1,7 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="command" scope="request"
-   class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
-
 
 <html>
     <head>
@@ -24,7 +21,6 @@
 </style>
     </head>
     <body>
-
 
 
 
