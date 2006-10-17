@@ -18,6 +18,7 @@
  */
 package ubic.gemma.visualization;
 
+import java.awt.Font;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -37,6 +38,9 @@ import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.xy.MatrixSeries;
+import org.jfree.data.xy.MatrixSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -104,25 +108,28 @@ public class VisualizeDataSetApp {
 
         if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
 
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", null,
-                PlotOrientation.VERTICAL, false, false, false );
-
         if ( dataCol.size() < numProfiles ) {
             log.info( "Collection smaller than number of elements.  Will display first " + DEFAULT_MAX_SIZE
                     + " profiles." );
             numProfiles = DEFAULT_MAX_SIZE;
         }
 
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         Iterator iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
             double[] data = ( double[] ) iter.next();
-            XYSeries series = new XYSeries( "" );
+            XYSeries series = new XYSeries( j, true, true );
             for ( int i = 0; i < data.length; i++ ) {
                 series.add( i, data[i] );
             }
-            XYPlot plot = chart.getXYPlot();
-            plot.setDataset( j, new XYSeriesCollection( series ) );
+            xySeriesCollection.addSeries( series );
         }
+
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", xySeriesCollection,
+                PlotOrientation.VERTICAL, false, false, false );
+        chart.addSubtitle( new TextTitle( "(Raw data values)", new Font( "SansSerif", Font.BOLD, 14 ) ) );
+
+        // XYPlot plot = chart.getXYPlot();
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
@@ -166,6 +173,30 @@ public class VisualizeDataSetApp {
     // frame.pack();
     // frame.setVisible( true );
     // }
+
+    /**
+     * @param title
+     * @param dataCol
+     * @param numProfiles
+     */
+    public void showProfilesBubbleChartView( String title, double[][] dataMatrix, int numProfiles ) {
+
+        if ( dataMatrix == null ) throw new RuntimeException( "dataMatrix cannot be " + null );
+
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", null,
+                PlotOrientation.VERTICAL, false, false, false );
+
+        MatrixSeries series = new MatrixSeries( title, dataMatrix[0].length, dataMatrix.length );
+        XYPlot plot = chart.getXYPlot();
+        plot.setDataset( new MatrixSeriesCollection( series ) );
+
+        ChartFrame frame = new ChartFrame( title, chart, true );
+
+        // Display the window.
+        frame.setLocationRelativeTo( null );
+        frame.pack();
+        frame.setVisible( true );
+    }
 
     /**
      * @param headerExists
