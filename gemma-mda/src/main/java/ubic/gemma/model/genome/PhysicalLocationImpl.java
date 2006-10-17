@@ -42,4 +42,11 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
                 this.getNucleotide(), other.getNucleotide() ).toComparison();
     }
 
+    /**
+     * @see ubic.gemma.model.genome.PhysicalLocation#nearlyEquals(Object)
+     */
+    public boolean nearlyEquals( java.lang.Object object ) {
+        throw new RuntimeException( "Method not yet implented." );
+    }
+
 }
