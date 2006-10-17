@@ -18,14 +18,9 @@
  */
 package ubic.gemma.apps;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -36,10 +31,6 @@ import ubic.gemma.model.genome.TaxonService;
  */
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
-    TaxonService taxonService;
-    ArrayDesignService arrayDesignService;
-    private String commonName;
-    private String arrayDesignName;
 
     /*
      * (non-Javadoc)
@@ -49,16 +40,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon name" ).withDescription(
-                "Taxon common name, e.g., 'rat'" ).withLongOpt( "taxon" ).create( 't' );
-
-        addOption( taxonOption );
-
-        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array design" ).withDescription(
-                "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
-
-        addOption( arrayDesignOption );
-
+        super.buildOptions();
     }
 
     public static void main( String[] args ) {
@@ -91,12 +73,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             bail( ErrorCode.INVALID_OPTION );
         }
 
-        final ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( arrayDesignName );
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + arrayDesignName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
+        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
         unlazifyArrayDesign( arrayDesign );
 
@@ -110,16 +87,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         super.processOptions();
         arrayDesignSequenceAlignmentService = ( ArrayDesignSequenceAlignmentService ) this
                 .getBean( "arrayDesignSequenceAlignmentService" );
-        taxonService = ( TaxonService ) this.getBean( "taxonService" );
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-
-        if ( this.hasOption( 't' ) ) {
-            commonName = this.getOptionValue( 't' );
-        }
-
-        if ( this.hasOption( 'a' ) ) {
-            this.arrayDesignName = this.getOptionValue( 'a' );
-        }
 
     }
 

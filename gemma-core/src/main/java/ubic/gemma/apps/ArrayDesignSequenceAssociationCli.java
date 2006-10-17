@@ -27,7 +27,6 @@ import org.apache.commons.lang.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -41,9 +40,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
     TaxonService taxonService;
-    ArrayDesignService arrayDesignService;
-    private String commonName;
-    private String arrayDesignName;
+
     private String sequenceType;
     private String sequenceFile;
 
@@ -62,20 +59,12 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon name" ).withDescription(
-                "Taxon common name, e.g., 'rat'" ).withLongOpt( "taxon" ).create( 't' );
-
-        addOption( taxonOption );
+        super.buildOptions();
 
         Option fileOption = OptionBuilder.hasArg().withArgName( "Input sequence file" ).withDescription(
                 "Path to file (FASTA)" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
-
-        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array design" ).withDescription(
-                "Array design name" ).withLongOpt( "array" ).create( 'a' );
-
-        addOption( arrayDesignOption );
 
         StringBuffer buf = new StringBuffer();
 
@@ -98,12 +87,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         super.processOptions();
         arrayDesignSequenceProcessingService = ( ArrayDesignSequenceProcessingService ) this
                 .getBean( "arrayDesignSequenceProcessingService" );
-        taxonService = ( TaxonService ) this.getBean( "taxonService" );
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-
-        if ( this.hasOption( 't' ) ) {
-            commonName = this.getOptionValue( 't' );
-        }
 
         if ( this.hasOption( 'y' ) ) {
             sequenceType = this.getOptionValue( 'y' );
@@ -111,10 +94,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         if ( this.hasOption( 'f' ) ) {
             this.sequenceFile = this.getOptionValue( 'f' );
-        }
-
-        if ( this.hasOption( 'a' ) ) {
-            this.arrayDesignName = this.getOptionValue( 'a' );
         }
 
     }
@@ -132,7 +111,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            final ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( arrayDesignName );
+            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
             unlazifyArrayDesign( arrayDesign );
 

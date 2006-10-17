@@ -18,13 +18,12 @@
  */
 package ubic.gemma.apps;
 
-import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -33,26 +32,56 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringAwareCLI {
 
-    protected void unlazifyArrayDesign( final ArrayDesign arrayDesign ) {
-        // unlazify the arrayDesign.
-        HibernateDaoSupport hds = new HibernateDaoSupport() {
-        };
+    ArrayDesignService arrayDesignService;
+    String arrayDesignName = null;
+    String commonName;
+    TaxonService taxonService;
 
-        hds.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon name" ).withDescription(
+                "Taxon common name, e.g., 'rat'" ).withLongOpt( "taxon" ).create( 't' );
 
-        HibernateTemplate templ = hds.getHibernateTemplate();
+        addOption( taxonOption );
 
-        log.info( "Unlazifying ArrayDesign..." );
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( arrayDesign, LockMode.READ );
-                arrayDesign.getCompositeSequences().size();
-                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    if ( cs.getBiologicalCharacteristic() == null ) continue;
-                    cs.getBiologicalCharacteristic().getTaxon();
-                }
-                return null;
-            }
-        }, true );
+        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array design" ).withDescription(
+                "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
+
+        addOption( arrayDesignOption );
+
     }
+
+    protected void unlazifyArrayDesign( final ArrayDesign arrayDesign ) {
+        arrayDesignService.thaw( arrayDesign );
+    }
+
+    protected ArrayDesign locateArrayDesign( String arrayDesignName ) {
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( arrayDesignName );
+
+        if ( arrayDesign == null ) {
+            arrayDesign = arrayDesignService.findByShortName( arrayDesignName );
+        }
+
+        if ( arrayDesign == null ) {
+            log.error( "No arrayDesign " + arrayDesignName + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return arrayDesign;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 't' ) ) {
+            commonName = this.getOptionValue( 't' );
+        }
+
+        if ( this.hasOption( 'a' ) ) {
+            this.arrayDesignName = this.getOptionValue( 'a' );
+        }
+        taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+    }
+
 }
