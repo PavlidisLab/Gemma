@@ -1190,7 +1190,7 @@ public class GeoConverter implements Converter {
         Collection<String> dataSetsToSkip = new HashSet<String>();
         Collection<GeoSample> samplesToSkip = new HashSet<GeoSample>();
         checkForDataToSkip( dataSets, dataSetsToSkip, samplesToSkip );
-        if ( dataSetsToSkip.size() == dataSets.size() ) {
+        if ( dataSets.size() > 0 && dataSetsToSkip.size() == dataSets.size() ) {
             return null;
         }
 

@@ -455,6 +455,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE3434" );
         ee = results.iterator().next();
+        assertNotNull( ee );
         eeService.delete( ee );
         ee = null;
 
