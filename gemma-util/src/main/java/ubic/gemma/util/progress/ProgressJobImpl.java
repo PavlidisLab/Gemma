@@ -101,7 +101,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      */
     public void updateProgress( ProgressData pd ) {
         setProgressData( pd );
-        this.jInfo.setDescription( pd.getDescription() );
+        setDescription( pd.getDescription() );
+        updateDescriptionHistory(pd.getDescription());
         setChanged();
         notifyObservers( pData );
     }
@@ -124,6 +125,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      */
     public void updateProgress( String newDescription ) {
         pData.setDescription( newDescription );
+        setDescription( newDescription );
+        updateDescriptionHistory(newDescription);
         setChanged();
         notifyObservers( pData );
     }
@@ -194,6 +197,11 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      */
     public void setForwardingURL( String forwardingURL ) {
         this.forwardingURL = forwardingURL;
+    }
+    
+    private void updateDescriptionHistory(String message)
+    {
+        this.jInfo.setMessages( this.jInfo.getMessages() + "\n" + message );
     }
 
 }

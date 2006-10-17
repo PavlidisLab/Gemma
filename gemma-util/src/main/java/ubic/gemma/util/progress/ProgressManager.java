@@ -191,25 +191,25 @@ public class ProgressManager {
     // As the progress manager is a singleton leaks and strange behavior are likely.
     // i made this to get a peek at what was going on under the hood at runtime.
     public static synchronized void dump() {
-        logger.info( "Dump ProgressMangagers State:" );
+        logger.debug( "Dump ProgressMangagers State:" );
 
-        logger.info( "Thread Local variable: " + currentJob.get() );
+        logger.debug( "Thread Local variable: " + currentJob.get() );
 
-        logger.info( "ProgressJobs Dump:  " );
+        logger.debug( "ProgressJobs Dump:  " );
         for ( Iterator iter = progressJobs.keySet().iterator(); iter.hasNext(); ) {
             String name = ( String ) iter.next();
-            logger.info( "name: " + name );
+            logger.debug( "name: " + name );
 
             for ( Iterator values = progressJobs.get( name ).iterator(); values.hasNext(); ) {
                 ProgressJob job = ( ProgressJob ) values.next();
-                logger.info( "====> progressJob: " + job );
+                logger.debug( "====> progressJob: " + job );
             }
         }
 
-        logger.info( "ProgressJobsById Dump:  " );
+        logger.debug( "ProgressJobsById Dump:  " );
         for ( Iterator iter = progressJobsById.keySet().iterator(); iter.hasNext(); ) {
             Long id = ( Long ) iter.next();
-            logger.info( " Id: " + id + " ProgressJob: " + progressJobsById.get( id ) );
+            logger.debug( " Id: " + id + " ProgressJob: " + progressJobsById.get( id ) );
 
         }
 
