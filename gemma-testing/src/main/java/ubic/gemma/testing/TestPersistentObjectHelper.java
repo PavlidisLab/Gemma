@@ -162,17 +162,18 @@ public class TestPersistentObjectHelper {
         ed.setName( "Experimental Design " + RandomStringUtils.randomNumeric( 10 ) );
         ed.setDescription( RandomStringUtils.randomNumeric( 10 ) + ": A test experimental design." );
         log.debug( "experimental design => experimental factors" );
-        ed.setExperimentalFactors( getExperimentalFactors() ); // set test experimental factors
+        ed.setExperimentalFactors( getExperimentalFactors( ed ) ); // set test experimental factors
         return ed;
     }
 
     /**
      * @return
      */
-    public Collection<ExperimentalFactor> getExperimentalFactors() {
+    public Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed ) {
         Collection<ExperimentalFactor> efCol = new HashSet<ExperimentalFactor>();
         for ( int i = 0; i < NUM_EXPERIMENTAL_FACTORS; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+            ef.setExperimentalDesign( ed );
             ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
             ef.setDescription( i + ": A test experimental factor" );
             log.debug( "experimental factor => factor values" );
