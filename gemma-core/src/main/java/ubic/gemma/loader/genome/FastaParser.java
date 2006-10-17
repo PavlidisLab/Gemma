@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  */
 public class FastaParser extends RecordParser {
+
     Pattern pattern;
 
     private Collection<BioSequence> results = new ArrayList<BioSequence>();
@@ -80,27 +81,27 @@ public class FastaParser extends RecordParser {
      * Recognizes Defline format as described at {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
      * 
      * <pre>
-     *                                                                                                       GenBank                           gi|gi-number|gb|accession|locus
-     *                                                                                                       EMBL Data Library                 gi|gi-number|emb|accession|locus
-     *                                                                                                       DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
-     *                                                                                                       NBRF PIR                          pir||entry
-     *                                                                                                       Protein Research Foundation       prf||name
-     *                                                                                                       SWISS-PROT                        sp|accession|name
-     *                                                                                                       Brookhaven Protein Data Bank (1)  pdb|entry|chain
-     *                                                                                                       Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
-     *                                                                                                       Patents                           pat|country|number 
-     *                                                                                                       GenInfo Backbone Id               bbs|number 
-     *                                                                                                       General database identifier       gnl|database|identifier
-     *                                                                                                       NCBI Reference Sequence           ref|accession|locus
-     *                                                                                                       Local Sequence identifier         lcl|identifier
+     *                                                                                                             GenBank                           gi|gi-number|gb|accession|locus
+     *                                                                                                             EMBL Data Library                 gi|gi-number|emb|accession|locus
+     *                                                                                                             DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
+     *                                                                                                             NBRF PIR                          pir||entry
+     *                                                                                                             Protein Research Foundation       prf||name
+     *                                                                                                             SWISS-PROT                        sp|accession|name
+     *                                                                                                             Brookhaven Protein Data Bank (1)  pdb|entry|chain
+     *                                                                                                             Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
+     *                                                                                                             Patents                           pat|country|number 
+     *                                                                                                             GenInfo Backbone Id               bbs|number 
+     *                                                                                                             General database identifier       gnl|database|identifier
+     *                                                                                                             NCBI Reference Sequence           ref|accession|locus
+     *                                                                                                             Local Sequence identifier         lcl|identifier
      * </pre>
      * 
      * Our amendments:
      * 
      * <pre>
-     *                                                                                                       Affymetrix targets or collapsed sequence     target:array:probeset;
-     *                                                                                                       Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
-     *                                                                                                       Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     *                                                                                                             Affymetrix targets or collapsed sequence     target:array:probeset;
+     *                                                                                                             Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
+     *                                                                                                             Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
      * 
      * FIXME: recognize multi-line headers separated by ^A.
@@ -141,11 +142,10 @@ public class FastaParser extends RecordParser {
             // FIXME check for array lengths, throw illegal argument exceptions.
 
             if ( firstTag.equals( "gi" ) ) {
-                bioSequence.setName( split[3] );
                 bioSequence.setDescription( split[4] );
-
-                String genbankAcc = split[3];
+                String genbankAcc = split[3]; // with version number, possibly
                 DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+                bioSequence.setName( genbank.getAccession() ); // without version number.
                 bioSequence.setSequenceDatabaseEntry( genbank );
 
             } else if ( firstTag.equals( "pir" ) ) {
@@ -198,6 +198,7 @@ public class FastaParser extends RecordParser {
                     String[] splits = StringUtils.split( string, ":|" );
                     String genbankAcc = splits[1];
                     DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+                    bioSequence.setName( genbank.getAccession() );
                     bioSequence.setSequenceDatabaseEntry( genbank );
                     if ( log.isDebugEnabled() )
                         log.debug( "Got genbank accession " + genbankAcc + " for " + bioSequence.getName() );

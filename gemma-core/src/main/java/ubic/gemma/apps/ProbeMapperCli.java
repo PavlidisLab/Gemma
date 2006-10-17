@@ -222,7 +222,7 @@ public class ProbeMapperCli extends AbstractCLI {
         writeHeader( writer );
 
         for ( String probe : results.keySet() ) {
-            BlatAssociation best = probeMapper.selectBest( results.get( probe ) );
+            BlatAssociation best = probeMapper.scoreResults( results.get( probe ) );
             writeDesignElementBlatAssociation( writer, best );
         }
 

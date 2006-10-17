@@ -27,6 +27,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -83,6 +84,21 @@ abstract public class GenomePersister extends CommonPersister {
     protected Map<Object, Chromosome> seenChromosomes = new HashMap<Object, Chromosome>();
 
     protected boolean firstBioSequence = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
+     */
+    public Object persistOrUpdate( Object entity ) {
+        if ( entity == null ) return null;
+
+        if ( entity instanceof BioSequence ) {
+            return this.persistOrUpdateBioSequence( ( BioSequence ) entity );
+        }
+
+        return super.persistOrUpdate( entity );
+    }
 
     /*
      * (non-Javadoc)
@@ -144,6 +160,29 @@ abstract public class GenomePersister extends CommonPersister {
 
     /**
      * @param bioSequence
+     * @return
+     */
+    protected BioSequence persistOrUpdateBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null ) return null;
+
+        BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
+
+        if ( existingBioSequence == null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+            return persistNewBioSequence( bioSequence );
+        }
+
+        if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
+        bioSequence.setId( existingBioSequence.getId() );
+        persistBioSequenceAssociations( bioSequence );
+        bioSequenceService.update( bioSequence );
+
+        return bioSequence;
+
+    }
+
+    /**
+     * @param bioSequence
      */
     protected BioSequence persistBioSequence( BioSequence bioSequence ) {
         if ( bioSequence == null || !isTransient( bioSequence ) ) return bioSequence;
@@ -156,8 +195,26 @@ abstract public class GenomePersister extends CommonPersister {
             return existingBioSequence;
         }
 
+        return persistNewBioSequence( bioSequence );
+    }
+
+    /**
+     * @param bioSequence
+     * @return
+     */
+    private BioSequence persistNewBioSequence( BioSequence bioSequence ) {
         if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
 
+        persistBioSequenceAssociations( bioSequence );
+
+        assert bioSequence.getTaxon().getId() != null;
+        return bioSequenceService.create( bioSequence );
+    }
+
+    /**
+     * @param bioSequence
+     */
+    private void persistBioSequenceAssociations( BioSequence bioSequence ) {
         fillInBioSequenceTaxon( bioSequence );
 
         if ( bioSequence.getSequenceDatabaseEntry() != null
@@ -169,9 +226,6 @@ abstract public class GenomePersister extends CommonPersister {
         for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
             bioSequence2GeneProduct = persistBioSequence2GeneProduct( bioSequence2GeneProduct );
         }
-
-        assert bioSequence.getTaxon().getId() != null;
-        return bioSequenceService.create( bioSequence );
     }
 
     /**
@@ -268,6 +322,9 @@ abstract public class GenomePersister extends CommonPersister {
         if ( isTransient( blatResult ) ) {
             blatResult = blatResultService.create( blatResult );
         }
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Persisting " + association );
+        }
         association.setGeneProduct( persistGeneProduct( association.getGeneProduct() ) );
         association.setBioSequence( persistBioSequence( association.getBioSequence() ) );
         return blatAssociationService.create( association );
@@ -277,11 +334,41 @@ abstract public class GenomePersister extends CommonPersister {
      * @param geneProduct
      * @return
      */
-    private GeneProduct persistGeneProduct( GeneProduct geneProduct ) {
+    protected GeneProduct persistGeneProduct( GeneProduct geneProduct ) {
         if ( geneProduct == null ) return null;
         if ( !isTransient( geneProduct ) ) return geneProduct;
 
-        return geneProductService.create( geneProduct );
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Persisting " + geneProduct );
+        }
+
+        if ( geneProduct.getCdsPhysicalLocation() != null ) {
+            geneProduct.getCdsPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
+        }
+
+        if ( geneProduct.getPhysicalLocation() != null ) {
+            geneProduct.getPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
+        }
+
+        if ( geneProduct.getExons() != null ) {
+            for ( PhysicalLocation exon : geneProduct.getExons() ) {
+                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
+            }
+        }
+
+        // careful, circular trap?
+        if ( isTransient( geneProduct.getGene() ) ) {
+            geneProduct.setGene( persistGene( geneProduct.getGene() ) );
+        }
+
+        // going via gene will persist it.
+        if ( isTransient( geneProduct ) ) {
+            geneProduct = geneProductService.findOrCreate( geneProduct );
+        }
+
+        return geneProduct;
     }
 
     /**

@@ -37,6 +37,7 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
     @Override
     public Double score() {
         assert this.getQuerySequence() != null;
+        assert this.getQuerySequence().getLength() != null : this;
         return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
                 / this.getQuerySequence().getLength();
     }

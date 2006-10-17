@@ -38,7 +38,7 @@ public interface Persister {
     /**
      * Persist all the objects in a collection. Non-nullable dependencies are checked and persisted first, if the
      * reference is detached, or converted into a reference to a persistent object identified by the objects business
-     * key.
+     * key. Matching instances are not changed.
      * 
      * @param col
      * @return The persistent versions of the objects.
@@ -47,11 +47,26 @@ public interface Persister {
 
     /**
      * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
-     * or converted into a reference to a persistent object identified by the objects business key.
+     * or converted into a reference to a persistent object identified by the objects business key. If a matching object
+     * already exists, it will not be changed.
      * 
      * @param obj
      * @resutln the persistent version of the object.
      */
     public Object persist( Object obj );
+
+    /**
+     * Persist or update a single object. If the object already exists in the system, it will be replaced with the
+     * supplied instance. This means that any existing data may be lost. Otherwise a new persistent instance will be
+     * created from the supplied instance. Non-nullable dependencies will be replaced with exsiting persistent ones or
+     * created anew: <strong>Associated objects will not be updated if they already exist</strong>. Therefore this
+     * method has limited usefulness: when the provided object has new data but the associated objects are either new or
+     * already existing. If you want to update associated objects you must update them explicitly (perhaps with a call
+     * to persistOrUpdate on them).
+     * 
+     * @param obj
+     * @return the persistent version of the object.
+     */
+    public Object persistOrUpdate( Object obj );
 
 }

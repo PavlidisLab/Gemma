@@ -19,7 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
+
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -32,21 +33,10 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
     public Contact find( Contact contact ) {
         try {
 
-            if ( contact == null
-                    || ( contact.getName() == null && contact.getAddress() == null && contact.getEmail() == null && contact
-                            .getPhone() == null ) ) {
-                throw new IllegalArgumentException( "Contact must have at least some information filled in!" );
-            }
-
+            BusinessKey.checkKey( contact );
             Criteria queryObject = super.getSession( false ).createCriteria( Contact.class );
 
-            if ( contact.getName() != null ) queryObject.add( Restrictions.eq( "name", contact.getName() ) );
-
-            if ( contact.getAddress() != null ) queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
-
-            if ( contact.getEmail() != null ) queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
-
-            if ( contact.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
+            BusinessKey.addRestrictions( queryObject, contact );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -55,7 +45,8 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
                                     + ubic.gemma.model.common.auditAndSecurity.Contact.class.getName()
-                                    + "' was found when executing query" );
+                                    + "' was found when executing query; query was " + contact + ", query object was "
+                                    + queryObject );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -70,9 +61,9 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
     @Override
     public Contact findOrCreate( Contact contact ) {
 
-        Contact newContact = find( contact );
-        if ( newContact != null ) {
-            return newContact;
+        Contact existingContact = find( contact );
+        if ( existingContact != null ) {
+            return existingContact;
         }
         return ( Contact ) create( contact );
     }

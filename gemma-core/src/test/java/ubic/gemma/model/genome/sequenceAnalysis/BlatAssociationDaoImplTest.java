@@ -39,7 +39,7 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
     private String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
 
     String testSequence = RandomStringUtils.random( 35, "ATGC" );
-
+    String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
     private BlatAssociationDao blatAssociationDao;
 
     BlatResultDao blatResultDao;
@@ -63,6 +63,7 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
             BioSequence bs = this.getTestPersistentBioSequence();
             if ( i == 11 ) {
                 bs.setSequence( testSequence );
+                bs.setName( testSequenceName );
                 this.bioSequenceDao.update( bs );
             }
 
@@ -102,12 +103,13 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
         t.setScientificName( "Mus musculus" ); // has to match what the testpersistent object is.
         bs.setSequence( testSequence );
         bs.setTaxon( t );
+        bs.setName( testSequenceName );
 
         BioSequence bsIn = this.bioSequenceDao.find( bs );
         assertNotNull( "Did not find " + bs, bsIn );
 
         Collection res = this.blatAssociationDao.find( bs );
-        assertEquals( "Was seeking blatresults for sequence " + testSequence, 1, res.size() );
+        assertEquals( "Was seeking blatresults for sequence " + testSequenceName, 1, res.size() );
     }
 
     public final void testFindGene() {

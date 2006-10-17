@@ -31,6 +31,55 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
      */
     private static final long serialVersionUID = 6920404001701683807L;
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Taxon ) ) {
+            return false;
+        }
+        final Taxon that = ( Taxon ) object;
+
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+
+            // use ncbi id OR scientific name.
+            if ( ( this.getNcbiId() == null || that.getNcbiId() == null )
+                    && ( this.getScientificName() == null || that.getScientificName() == null ) ) {
+                return false;
+            }
+
+            if ( this.getNcbiId() != null ) {
+                return this.getNcbiId().equals( that.getNcbiId() );
+            } else {
+                return this.getScientificName().equals( that.getScientificName() );
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() );
+
+        return hashCode;
+    }
+
+    private int computeHashCode() {
+        int hashCode = 0;
+
+        if ( this.getNcbiId() != null ) {
+            hashCode += this.getNcbiId().hashCode();
+        } else if ( this.getScientificName() != null ) {
+            hashCode += this.getScientificName().hashCode();
+        } else {
+            hashCode += super.hashCode();
+        }
+
+        return hashCode;
+    }
+
     /**
      * @see ubic.gemma.model.genome.Taxon#toString()
      */

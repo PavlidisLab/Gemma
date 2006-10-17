@@ -32,6 +32,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
     String testSequence = RandomStringUtils.random( 100, "ATCG" );
+    String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
     BlatResultDao blatResultDao;
 
     /*
@@ -48,6 +49,7 @@ public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
             BioSequence bs = this.getTestPersistentBioSequence();
             if ( i == 10 ) {
                 bs.setSequence( testSequence );
+                bs.setName( testSequenceName );
             }
             BlatResult br = this.getTestPersistentBlatResult( bs );
 
@@ -63,6 +65,7 @@ public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         bs.setSequence( testSequence );
+        bs.setName( testSequenceName );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" ); // has to match what is used in the getTestPersistentBioSequence method.

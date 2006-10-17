@@ -54,13 +54,19 @@ public class GoldenPath {
 
     private String databaseName = null;
 
+    private Taxon taxon;
+
+    public Taxon getTaxon() {
+        return taxon;
+    }
+
     /**
      * Get golden path for the default database (human);
      */
     public GoldenPath() throws SQLException {
-        Taxon taxon = Taxon.Factory.newInstance();
+        this.taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
-        init( taxon );
+        init();
     }
 
     /**
@@ -72,6 +78,19 @@ public class GoldenPath {
      */
     public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException {
         this.databaseName = databaseName;
+
+        // This is a little dumb
+        this.taxon = Taxon.Factory.newInstance();
+        if ( databaseName.startsWith( "hg" ) ) {
+            taxon.setCommonName( "human" );
+        } else if ( databaseName.startsWith( "mm" ) ) {
+            taxon.setCommonName( "mouse" );
+        } else if ( databaseName.startsWith( "rn" ) ) {
+            taxon.setCommonName( "rat" );
+        } else {
+            throw new IllegalArgumentException( "Cannot infer taxon for " + databaseName );
+        }
+
         init( port, host, user, password );
     }
 
@@ -81,7 +100,8 @@ public class GoldenPath {
      * @param taxon
      */
     public GoldenPath( Taxon taxon ) throws SQLException {
-        init( taxon );
+        this.taxon = taxon;
+        init();
     }
 
     /**
@@ -97,7 +117,7 @@ public class GoldenPath {
         jt = new JdbcTemplate( dataSource );
 
         String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
-        log.info( "Connecting to Golden Path : " + url );
+        log.info( "Connecting to Golden Path : " + url + " as " + user );
 
         dataSource.setDriverClassName( "com.mysql.jdbc.Driver" );
         dataSource.setUrl( url );
@@ -121,7 +141,7 @@ public class GoldenPath {
         qr = new QueryRunner();
     }
 
-    private void init( Taxon taxon ) throws SQLException {
+    private void init() throws SQLException {
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
             databaseName = "mm8"; // FIXME get these names from an external source.

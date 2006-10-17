@@ -28,6 +28,7 @@ import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -38,6 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -52,6 +54,14 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 public class BusinessKey {
 
     private static Log log = LogFactory.getLog( BusinessKey.class.getName() );
+
+    /**
+     * @param queryObject
+     * @param describable
+     */
+    private static void addNameRestriction( Criteria queryObject, Describable describable ) {
+        if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
+    }
 
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
         addNameRestriction( queryObject, arrayDesign );
@@ -78,6 +88,58 @@ public class BusinessKey {
     }
 
     /**
+     * @param innerQuery
+     * @param bioSequence
+     */
+    public static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
+
+        if ( bioSequence.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", bioSequence.getId() ) );
+            return;
+        }
+
+        if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
+            addNameRestriction( queryObject, bioSequence );
+        }
+
+        attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
+
+        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
+            queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
+                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
+        }
+
+    }
+
+    /**
+     * @param queryObject
+     * @param chromosome
+     */
+    public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
+        queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
+        attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
+    }
+
+    /**
+     * @param queryObject
+     * @param contact
+     */
+    public static void addRestrictions( Criteria queryObject, Contact contact ) {
+        if ( StringUtils.isNotBlank( contact.getName() ) )
+            queryObject.add( Restrictions.eq( "name", contact.getName() ) );
+
+        if ( StringUtils.isNotBlank( contact.getAddress() ) )
+            queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
+
+        if ( StringUtils.isNotBlank( contact.getEmail() ) )
+            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+
+        if ( StringUtils.isNotBlank( contact.getPhone() ) )
+            queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
+
+    }
+
+    /**
      * @param queryObject
      * @param experimentalFactor
      */
@@ -96,12 +158,63 @@ public class BusinessKey {
     }
 
     /**
+     * @param innerQuery
+     * @param gene
+     */
+    public static void addRestrictions( Criteria queryObject, Gene gene ) {
+        if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
+            queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
+            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
+
+            attachCriteria( queryObject, gene.getTaxon(), "taxon" );
+
+            if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
+                queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
+            } else if ( gene.getPhysicalLocation() != null ) { // go by physical location.
+                attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
+            }
+
+        } else {
+            throw new IllegalArgumentException( "No valid key " + gene );
+        }
+    }
+
+    /**
      * @param queryObject
      * @param gene2GOAssociation
      */
     public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
         attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
         attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry(), "ontologyEntry" );
+    }
+
+    /**
+     * @param queryObject
+     * @param ontologyEntry
+     */
+    public static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
+        if ( StringUtils.isNotBlank( ontologyEntry.getAccession() ) && ontologyEntry.getExternalDatabase() != null ) {
+            queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
+                    "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
+        }
+
+        if ( StringUtils.isNotBlank( ontologyEntry.getCategory() ) && StringUtils.isNotBlank( ontologyEntry.getValue() ) ) {
+            queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
+                    Restrictions.ilike( "value", ontologyEntry.getValue() ) );
+        }
+    }
+
+    /**
+     * Assumes parameter name is 'taxon'.
+     * 
+     * @param queryObject
+     * @param taxon
+     */
+    public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
+        checkValidKey( taxon );
+        queryObject.createCriteria( "taxon" );
+        attachCriteria( queryObject, taxon );
     }
 
     /**
@@ -144,6 +257,41 @@ public class BusinessKey {
     }
 
     /**
+     * @param queryObject
+     * @param physicalLocation
+     * @param attributeName
+     */
+    public static void attachCriteria( Criteria queryObject, PhysicalLocation physicalLocation, String attributeName ) {
+        Criteria nestedCriteria = queryObject.createCriteria( attributeName );
+
+        if ( physicalLocation.getChromosome().getId() != null ) {
+            nestedCriteria.createCriteria( "chromosome" ).add(
+                    Restrictions.eq( "id", physicalLocation.getChromosome().getId() ) );
+        } else {
+            // FIXME should add taxon to this.
+            nestedCriteria.createCriteria( "chromosome" ).add(
+                    Restrictions.eq( "name", physicalLocation.getChromosome().getName() ) );
+        }
+
+        nestedCriteria.add( Restrictions.eq( "nucleotide", physicalLocation.getNucleotide() ) );
+
+    }
+
+    /**
+     * @param queryObject
+     * @param taxon
+     */
+    private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
+        if ( taxon.getNcbiId() != null ) {
+            queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
+            queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
+        } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
+            queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
+        }
+    }
+
+    /**
      * Restricts query to the given Taxon.
      * 
      * @param queryObject
@@ -164,6 +312,17 @@ public class BusinessKey {
                 || bibliographicReference.getPubAccession().getAccession() == null ) {
             throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
                     + bibliographicReference );
+        }
+    }
+
+    /**
+     * @param contact
+     */
+    public static void checkKey( Contact contact ) {
+        if ( contact == null
+                || ( StringUtils.isBlank( contact.getName() ) && StringUtils.isBlank( contact.getAddress() )
+                        && StringUtils.isBlank( contact.getEmail() ) && StringUtils.isBlank( contact.getPhone() ) ) ) {
+            throw new IllegalArgumentException( "Contact must have at least some information filled in!" );
         }
     }
 
@@ -191,7 +350,8 @@ public class BusinessKey {
      */
     public static void checkKey( Gene gene ) {
         if ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getNcbiId() == null ) {
-            throw new IllegalArgumentException( "Gene must have official symbol with taxon, or ncbiId" );
+            throw new IllegalArgumentException( "No valid key for " + gene
+                    + ": Gene must have official symbol and name with taxon, or ncbiId" );
         }
 
     }
@@ -201,7 +361,7 @@ public class BusinessKey {
      */
     public static void checkKey( GeneProduct geneProduct ) {
         if ( geneProduct.getNcbiId() == null ) {
-            throw new IllegalArgumentException( "Gene must have ncbiId" );
+            throw new IllegalArgumentException( "GeneProduct must have ncbiId" );
         }
     }
 
@@ -245,6 +405,16 @@ public class BusinessKey {
     }
 
     /**
+     * @param chromosome
+     */
+    public static void checkValidKey( Chromosome chromosome ) {
+        if ( StringUtils.isBlank( chromosome.getName() ) ) {
+            throw new IllegalArgumentException( "Chromosome did not have a valid key" );
+        }
+        checkValidKey( chromosome.getTaxon() );
+    }
+
+    /**
      * @param databaseEntry
      */
     public static void checkValidKey( DatabaseEntry databaseEntry ) {
@@ -268,8 +438,10 @@ public class BusinessKey {
      */
     public static void checkValidKey( Gene gene ) {
         if ( gene == null
-                || ( gene.getNcbiId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() ) || gene.getTaxon() == null ) ) ) {
-            throw new IllegalArgumentException( "Gene does not have valid key" );
+                || ( gene.getNcbiId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() )
+                        || gene.getTaxon() == null || StringUtils.isBlank( gene.getOfficialName() ) ) ) ) {
+            throw new IllegalArgumentException(
+                    "Gene does not have valid key (needs NCBI numeric id or Official Symbol + Official Name + Taxon" );
         }
     }
 
@@ -339,12 +511,10 @@ public class BusinessKey {
      * @param gene
      */
     public static void createQueryObject( Criteria queryObject, Gene gene ) {
-        // prefeerred key is NCBI.
-        if ( gene.getNcbiId() != null ) {
-            queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
-        } else if ( gene.getOfficialSymbol() != null && gene.getTaxon() != null ) {
-            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) ).add(
-                    Restrictions.eq( "taxon", gene.getTaxon() ) );
+        if ( gene.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", gene.getId() ) );
+        } else {
+            addRestrictions( queryObject, gene );
         }
 
     }
@@ -388,111 +558,5 @@ public class BusinessKey {
         Criteria queryObject = session.createCriteria( OntologyEntry.class );
         addRestrictions( queryObject, ontologyEntry );
         return queryObject;
-    }
-
-    /**
-     * @param queryObject
-     * @param describable
-     */
-    private static void addNameRestriction( Criteria queryObject, Describable describable ) {
-        if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
-    }
-
-    /**
-     * @param innerQuery
-     * @param bioSequence
-     */
-    public static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
-
-        if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-            addNameRestriction( queryObject, bioSequence );
-        }
-
-        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-        }
-
-        attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
-
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-            queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
-                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-        }
-
-    }
-
-    /**
-     * @param innerQuery
-     * @param gene
-     */
-    public static void addRestrictions( Criteria queryObject, Gene gene ) {
-        if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
-            queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
-        } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
-            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
-            attachCriteria( queryObject, gene.getTaxon(), "taxon" );
-        }
-    }
-
-    /**
-     * @param queryObject
-     * @param ontologyEntry
-     */
-    public static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
-        if ( StringUtils.isNotBlank( ontologyEntry.getAccession() ) && ontologyEntry.getExternalDatabase() != null ) {
-            queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
-                    "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
-        }
-
-        if ( StringUtils.isNotBlank( ontologyEntry.getCategory() ) && StringUtils.isNotBlank( ontologyEntry.getValue() ) ) {
-            queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
-                    Restrictions.ilike( "value", ontologyEntry.getValue() ) );
-        }
-    }
-
-    /**
-     * Assumes parameter name is 'taxon'.
-     * 
-     * @param queryObject
-     * @param taxon
-     */
-    public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
-        checkValidKey( taxon );
-        queryObject.createCriteria( "taxon" );
-        attachCriteria( queryObject, taxon );
-    }
-
-    /**
-     * @param queryObject
-     * @param taxon
-     */
-    private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
-        if ( taxon.getNcbiId() != null ) {
-            queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
-        } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
-            queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
-        } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
-            queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
-        }
-    }
-
-    /**
-     * @param chromosome
-     */
-    public static void checkValidKey( Chromosome chromosome ) {
-        if ( StringUtils.isBlank( chromosome.getName() ) ) {
-            throw new IllegalArgumentException( "Chromosome did not have a valid key" );
-        }
-        checkValidKey( chromosome.getTaxon() );
-    }
-
-    /**
-     * @param queryObject
-     * @param chromosome
-     */
-    public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
-        queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
-        attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
-        log.info( queryObject );
     }
 }

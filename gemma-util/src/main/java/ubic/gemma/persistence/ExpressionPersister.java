@@ -88,101 +88,22 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
-    public Object persist( Object entity ) {
-        if ( entity == null ) return null;
-
-        if ( entity instanceof ExpressionExperiment ) {
-            return persistExpressionExperiment( ( ExpressionExperiment ) entity );
-        } else if ( entity instanceof BioAssayDimension ) {
-            return persistBioAssayDimension( ( BioAssayDimension ) entity );
-        } else if ( entity instanceof BioMaterial ) {
-            return persistBioMaterial( ( BioMaterial ) entity );
-        } else if ( entity instanceof BioAssay ) {
-            return persistBioAssay( ( BioAssay ) entity );
-        } else if ( entity instanceof Compound ) {
-            return persistCompound( ( Compound ) entity );
-        } else if ( entity instanceof DesignElementDataVector ) {
-            return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
-        }
-        return super.persist( entity );
-
-    }
-
     /**
+     * @param bioAssayDimensionCache
      * @param vect
      */
-    private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
-        DesignElement designElement = vect.getDesignElement();
-
-        assert designElement != null;
-
-        ArrayDesign ad = designElement.getArrayDesign();
-        assert ad != null : designElement + " does not have an array design";
-
-        ad = cacheArrayDesign( ad );
-
-        String key = designElement.getName() + DESIGN_ELEMENT_KEY_SEPARATOR + ad.getName();
-
-        if ( designElementCache.containsKey( key ) ) {
-            designElement = designElementCache.get( key );
+    private BioAssayDimension checkBioAssayDimensionCache( DesignElementDataVector vect ) {
+        if ( !isTransient( vect.getBioAssayDimension() ) ) return vect.getBioAssayDimension();
+        assert bioAssayDimensionCache != null;
+        String dimensionName = vect.getBioAssayDimension().getName();
+        if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
+            vect.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
         } else {
-            // means the array design is lacking it.
-            designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+            BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
+            bioAssayDimensionCache.put( dimensionName, bAd );
+            vect.setBioAssayDimension( bAd );
         }
-
-        assert designElement != null && designElement.getId() != null;
-        vect.setDesignElement( designElement ); // shouldn't have to do this. Some kind of hibernate weirdness.s
-
-        BioAssayDimension baDim = checkBioAssayDimensionCache( vect );
-
-        assert vect.getQuantitationType() != null;
-        vect.setQuantitationType( persistQuantitationType( vect.getQuantitationType() ) );
-
-        return baDim;
-    }
-
-    /**
-     * @param entity
-     */
-    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
-
-        log.info( "Filling in DesignElementDataVectors..." );
-
-        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-
-        int count = 0;
-        for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
-
-            BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
-            bioAssays.addAll( baDim.getBioAssays() );
-
-            if ( ++count % 10000 == 0 ) {
-                log.info( "Filled in " + count + " DesignElementDataVectors" );
-            }
-
-        }
-        log.info( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
-        return bioAssays;
-    }
-
-    /**
-     * @param assay
-     */
-    private BioAssay persistBioAssay( BioAssay assay ) {
-
-        if ( assay == null ) return null;
-
-        fillInBioAssayAssociations( assay );
-
-        if ( !isTransient( assay ) ) return assay;
-        if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
-
-        return bioAssayService.findOrCreate( assay );
+        return bioAssayDimensionCache.get( dimensionName );
     }
 
     /**
@@ -223,6 +144,143 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             file = persistLocalFile( file );
         }
 
+    }
+
+    /**
+     * @param vect
+     */
+    private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
+        DesignElement designElement = vect.getDesignElement();
+
+        assert designElement != null;
+
+        ArrayDesign ad = designElement.getArrayDesign();
+        assert ad != null : designElement + " does not have an array design";
+
+        ad = cacheArrayDesign( ad );
+
+        String key = designElement.getName() + DESIGN_ELEMENT_KEY_SEPARATOR + ad.getName();
+
+        if ( designElementCache.containsKey( key ) ) {
+            designElement = designElementCache.get( key );
+        } else {
+            // means the array design is lacking it.
+            designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+        }
+
+        assert designElement != null && designElement.getId() != null;
+        vect.setDesignElement( designElement ); // shouldn't have to do this. Some kind of hibernate weirdness.s
+
+        BioAssayDimension baDim = checkBioAssayDimensionCache( vect );
+
+        assert vect.getQuantitationType() != null;
+        vect.setQuantitationType( persistQuantitationType( vect.getQuantitationType() ) );
+
+        return baDim;
+    }
+
+    /**
+     * @param experimentalFactor
+     * @return
+     */
+    private ExperimentalFactor fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor ) {
+        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
+
+        persistCollectionElements( experimentalFactor.getAnnotations() );
+
+        OntologyEntry category = experimentalFactor.getCategory();
+        if ( category != null ) {
+            experimentalFactor.setCategory( persistOntologyEntry( category ) );
+        }
+        return experimentalFactor;
+    }
+
+    /**
+     * @param entity
+     */
+    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
+
+        log.info( "Filling in DesignElementDataVectors..." );
+
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+
+        int count = 0;
+        for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
+
+            BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
+            bioAssays.addAll( baDim.getBioAssays() );
+
+            if ( ++count % 10000 == 0 ) {
+                log.info( "Filled in " + count + " DesignElementDataVectors" );
+            }
+
+        }
+        log.info( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
+        return bioAssays;
+    }
+
+    /**
+     * @param factorValue
+     */
+    private void fillInFactorValueAssociations( FactorValue factorValue ) {
+
+        fillInExperimentalFactorAssociations( factorValue.getExperimentalFactor() );
+
+        factorValue.setExperimentalFactor( persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
+
+        if ( factorValue.getOntologyEntry() != null ) {
+            if ( factorValue.getMeasurement() != null ) {
+                throw new IllegalStateException(
+                        "FactorValue can only have one of a value, ontology entry, or measurement." );
+            }
+            OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
+            factorValue.setOntologyEntry( persistOntologyEntry( ontologyEntry ) );
+        } else if ( factorValue.getValue() != null ) {
+            if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
+                throw new IllegalStateException(
+                        "FactorValue can only have one of a value, ontology entry, or measurement." );
+            }
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
+     */
+    public Object persist( Object entity ) {
+        if ( entity == null ) return null;
+
+        if ( entity instanceof ExpressionExperiment ) {
+            return persistExpressionExperiment( ( ExpressionExperiment ) entity );
+        } else if ( entity instanceof BioAssayDimension ) {
+            return persistBioAssayDimension( ( BioAssayDimension ) entity );
+        } else if ( entity instanceof BioMaterial ) {
+            return persistBioMaterial( ( BioMaterial ) entity );
+        } else if ( entity instanceof BioAssay ) {
+            return persistBioAssay( ( BioAssay ) entity );
+        } else if ( entity instanceof Compound ) {
+            return persistCompound( ( Compound ) entity );
+        } else if ( entity instanceof DesignElementDataVector ) {
+            return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
+        }
+        return super.persist( entity );
+
+    }
+
+    /**
+     * @param assay
+     */
+    private BioAssay persistBioAssay( BioAssay assay ) {
+
+        if ( assay == null ) return null;
+
+        fillInBioAssayAssociations( assay );
+
+        if ( !isTransient( assay ) ) return assay;
+        if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
+
+        return bioAssayService.findOrCreate( assay );
     }
 
     /**
@@ -272,6 +330,44 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
+     * @param compound
+     * @return
+     */
+    private Compound persistCompound( Compound compound ) {
+        if ( compound == null ) return null;
+        compound.setCompoundIndices( persistOntologyEntry( compound.getCompoundIndices() ) );
+        if ( compound.getIsSolvent() == null )
+            throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
+        return compoundService.findOrCreate( compound );
+    }
+
+    /**
+     * This is used when creating vectors "one by one" rather than by composition with an ExpressionExperiment. Not
+     * normally used.
+     * 
+     * @param vector
+     * @return
+     */
+    private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
+        if ( vector == null ) return null;
+        this.fillInDesignElementDataVectorAssociations( vector );
+        vector.setExpressionExperiment( persistExpressionExperiment( vector.getExpressionExperiment() ) );
+        return designElementDataVectorService.findOrCreate( vector );
+    }
+
+    /**
+     * Note that this uses 'create', not 'findOrCreate'.
+     * 
+     * @param experimentalFactor
+     * @return
+     */
+    private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor ) {
+        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
+        fillInExperimentalFactorAssociations( experimentalFactor );
+        return experimentalFactorService.create( experimentalFactor );
+    }
+
+    /**
      * @param entity
      * @return
      */
@@ -311,6 +407,33 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         log.info( "Persisting expression experiment" );
         return expressionExperimentService.create( entity );
+    }
+
+    /**
+     * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
+     * 
+     * @param factorValue
+     * @return
+     */
+    private FactorValue persistFactorValue( FactorValue factorValue ) {
+        if ( factorValue == null ) return null;
+        if ( !isTransient( factorValue ) ) return factorValue;
+
+        fillInFactorValueAssociations( factorValue );
+
+        // we use create because factor values are specific to this design.
+        return factorValueService.create( factorValue );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
+     */
+    public Object persistOrUpdate( Object entity ) {
+        if ( entity == null ) return null;
+        return super.persistOrUpdate( entity );
     }
 
     /**
@@ -379,119 +502,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param experimentalFactor
-     * @return
-     */
-    private ExperimentalFactor fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor ) {
-        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
-
-        persistCollectionElements( experimentalFactor.getAnnotations() );
-
-        OntologyEntry category = experimentalFactor.getCategory();
-        if ( category != null ) {
-            experimentalFactor.setCategory( persistOntologyEntry( category ) );
-        }
-        return experimentalFactor;
-    }
-
-    /**
-     * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
-     * 
-     * @param factorValue
-     * @return
-     */
-    private FactorValue persistFactorValue( FactorValue factorValue ) {
-        if ( factorValue == null ) return null;
-        if ( !isTransient( factorValue ) ) return factorValue;
-
-        fillInFactorValueAssociations( factorValue );
-
-        // we use create because factor values are specific to this design.
-        return factorValueService.create( factorValue );
-
-    }
-
-    /**
-     * @param factorValue
-     */
-    private void fillInFactorValueAssociations( FactorValue factorValue ) {
-
-        fillInExperimentalFactorAssociations( factorValue.getExperimentalFactor() );
-
-        factorValue.setExperimentalFactor( persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
-
-        if ( factorValue.getOntologyEntry() != null ) {
-            if ( factorValue.getMeasurement() != null ) {
-                throw new IllegalStateException(
-                        "FactorValue can only have one of a value, ontology entry, or measurement." );
-            }
-            OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
-            factorValue.setOntologyEntry( persistOntologyEntry( ontologyEntry ) );
-        } else if ( factorValue.getValue() != null ) {
-            if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
-                throw new IllegalStateException(
-                        "FactorValue can only have one of a value, ontology entry, or measurement." );
-            }
-        }
-    }
-
-    /**
-     * Note that this uses 'create', not 'findOrCreate'.
-     * 
-     * @param experimentalFactor
-     * @return
-     */
-    private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor ) {
-        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
-        fillInExperimentalFactorAssociations( experimentalFactor );
-        return experimentalFactorService.create( experimentalFactor );
-    }
-
-    /**
-     * This is used when creating vectors "one by one" rather than by composition with an ExpressionExperiment. Not
-     * normally used.
-     * 
-     * @param vector
-     * @return
-     */
-    private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
-        if ( vector == null ) return null;
-        this.fillInDesignElementDataVectorAssociations( vector );
-        vector.setExpressionExperiment( persistExpressionExperiment( vector.getExpressionExperiment() ) );
-        return designElementDataVectorService.findOrCreate( vector );
-    }
-
-    /**
-     * @param bioAssayDimensionCache
-     * @param vect
-     */
-    private BioAssayDimension checkBioAssayDimensionCache( DesignElementDataVector vect ) {
-        if ( !isTransient( vect.getBioAssayDimension() ) ) return vect.getBioAssayDimension();
-        assert bioAssayDimensionCache != null;
-        String dimensionName = vect.getBioAssayDimension().getName();
-        if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
-            vect.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
-        } else {
-            BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
-            bioAssayDimensionCache.put( dimensionName, bAd );
-            vect.setBioAssayDimension( bAd );
-        }
-        return bioAssayDimensionCache.get( dimensionName );
-    }
-
-    /**
-     * @param compound
-     * @return
-     */
-    private Compound persistCompound( Compound compound ) {
-        if ( compound == null ) return null;
-        compound.setCompoundIndices( persistOntologyEntry( compound.getCompoundIndices() ) );
-        if ( compound.getIsSolvent() == null )
-            throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
-        return compoundService.findOrCreate( compound );
-    }
-
-    /**
      * @param bioAssayDimensionService The bioAssayDimensionService to set.
      */
     public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
@@ -527,6 +537,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
+     * @param experimentalDesignService the experimentalDesignService to set
+     */
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
+    }
+
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
+    }
+
+    /**
      * @param expressionExperimentService The expressionExperimentService to set.
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -538,17 +559,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     public void setFactorValueService( FactorValueService factorValueService ) {
         this.factorValueService = factorValueService;
-    }
-
-    /**
-     * @param experimentalDesignService the experimentalDesignService to set
-     */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
-    }
-
-    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
-        this.experimentalFactorService = experimentalFactorService;
     }
 
 }

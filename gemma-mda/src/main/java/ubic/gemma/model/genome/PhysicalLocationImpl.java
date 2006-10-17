@@ -23,10 +23,6 @@ package ubic.gemma.model.genome;
 import org.apache.commons.lang.builder.CompareToBuilder;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.genome.PhysicalLocation
@@ -42,11 +38,70 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
                 this.getNucleotide(), other.getNucleotide() ).toComparison();
     }
 
-    /**
-     * @see ubic.gemma.model.genome.PhysicalLocation#nearlyEquals(Object)
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof PhysicalLocation ) ) {
+            return false;
+        }
+        final PhysicalLocation that = ( PhysicalLocation ) object;
+
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+            return this.getChromosome().equals( that.getChromosome() )
+                    && this.getNucleotide().equals( that.getNucleotide() );
+        }
+        return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.PhysicalLocation#nearlyEquals(java.lang.Object)
      */
-    public boolean nearlyEquals( java.lang.Object object ) {
-        throw new RuntimeException( "Method not yet implented." );
+    public boolean nearlyEquals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof PhysicalLocation ) ) {
+            return false;
+        }
+        final PhysicalLocation that = ( PhysicalLocation ) object;
+
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+            if ( !this.getChromosome().equals( that.getChromosome() ) ) return false;
+
+            // FIXME this needs to check for overlaps etc...
+            if ( Math.abs( this.getNucleotide() - that.getNucleotide() ) < 1000L ) return true;
+
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29
+                * hashCode
+                + ( this.getId() == null ? this.getChromosome().hashCode() + this.getNucleotide().hashCode() : this
+                        .getId().hashCode() );
+
+        return hashCode;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+
+        if ( this.getId() != null ) {
+            buf.append( " Id = " + this.getId() );
+        }
+        buf.append( this.getChromosome().getTaxon().getScientificName() + " chromosome "
+                + this.getChromosome().getName() + ":" + this.getNucleotide() + " on " + this.getStrand() + " strand" );
+
+        return buf.toString();
     }
 
 }

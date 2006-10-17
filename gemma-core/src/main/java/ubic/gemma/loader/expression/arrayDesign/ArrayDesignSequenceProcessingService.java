@@ -65,8 +65,17 @@ import ubic.gemma.util.progress.ProgressManager;
  */
 public class ArrayDesignSequenceProcessingService {
 
+    /**
+     * After seeing more than this number of compositeSequences lacking sequences we don't give a detailed warning.
+     */
+    private static final int MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS = 20;
+
     private static final int BATCH_SIZE = 100;
 
+    /**
+     * When checking a BLAST database for sequences, we stop after checking Genbank accessions versions up to this value
+     * (e.g, AA22930.1)
+     */
     private static final int MAX_VERSION_NUMBER = 10;
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
@@ -265,6 +274,8 @@ public class ArrayDesignSequenceProcessingService {
         updateProgress( total, done, percent );
 
         if ( !wasOriginallyLackingCompositeSequences ) {
+            percent = 0;
+            done = 0;
             for ( CompositeSequence originalCompositeSequence : arrayDesign.getCompositeSequences() ) {
                 // go back and fill this information into the composite sequences, namely the database entry
                 // information.
@@ -281,12 +292,16 @@ public class ArrayDesignSequenceProcessingService {
 
                 originalCompositeSequence.setArrayDesign( compositeSequenceFromParse.getArrayDesign() );
 
+                if ( ++done % 1000 == 0 ) {
+                    percent = updateProgress( total, done, percent );
+                }
             }
         }
 
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
+        log.info( "Updating " + arrayDesign );
         arrayDesignService.update( arrayDesign );
-
+        log.info( "Done adding sequence information!" );
         return bioSequences;
     }
 
@@ -321,8 +336,9 @@ public class ArrayDesignSequenceProcessingService {
 
         Contact contact = Contact.Factory.newInstance();
         contact.setName( "Affymetrix" );
-        result.setDesignProvider( contact );
+        contact = ( Contact ) persisterHelper.persist( contact );
 
+        result.setDesignProvider( contact );
         result = arrayDesignService.create( result );
 
         CompositeSequenceParser csp = new CompositeSequenceParser();
@@ -440,7 +456,7 @@ public class ArrayDesignSequenceProcessingService {
                 continue;
             }
             String accession = bs.getSequenceDatabaseEntry().getAccession();
-            accession = addVersionNumber( accession, versionNumber ); // wild guess - we don't know the version.
+            // accession = addVersionNumber( accession, versionNumber ); // wild guess - we don't know the version.
             accessionsToFetch.put( accession, bs );
         }
     }
@@ -481,6 +497,10 @@ public class ArrayDesignSequenceProcessingService {
 
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             BioSequence old = accessionsToFetch.get( accession );
+
+            if ( old == null ) {
+                throw new IllegalArgumentException( "accessionsToFetch did not contain " + accession );
+            }
 
             old.setSequence( sequenceString );
             old.setLength( new Long( sequence.getSequence().length() ) );
@@ -587,32 +607,27 @@ public class ArrayDesignSequenceProcessingService {
         int done = 0;
         int percent = 0;
         for ( BioSequence sequence : bioSequences ) {
+
             sequence.setType( sequenceType );
             sequence.setPolymerType( PolymerType.DNA );
             sequence.setTaxon( taxon );
 
-            // find and update?
-            sequence = ( BioSequence ) persisterHelper.persist( sequence );
+            sequence = persistSequence( sequence );
 
-            nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
-
-            if ( sequence.getSequenceDatabaseEntry() != null ) {
-                gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
-            } else {
-                if ( log.isWarnEnabled() ) log.warn( "No sequence database entry for " + sequence.getName() );
-            }
+            addToMaps( gbIdMap, nameMap, sequence );
 
             if ( ++done % 1000 == 0 ) {
                 percent = updateProgress( total, done, percent );
             }
-
         }
 
+        int numWithNoSequence = 0;
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
             // go back and fill information into the composite sequences, namely the database entry information.
             BioSequence match = null;
             if ( nameMap.containsKey( compositeSequence.getName() ) ) {
+                if ( log.isDebugEnabled() ) log.debug( "Found match by name" );
                 match = nameMap.get( compositeSequence.getName() );
             } else if ( compositeSequence.getBiologicalCharacteristic() != null
                     && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null
@@ -620,15 +635,23 @@ public class ArrayDesignSequenceProcessingService {
                             .getAccession() ) ) {
                 match = gbIdMap.get( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
                         .getAccession() );
+                if ( log.isDebugEnabled() ) log.debug( "Found match by accession" );
             } else {
-                throw new IllegalStateException( "No match for " + compositeSequence );
+                numWithNoSequence++;
+                if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
+                    log.warn( "More than " + 20
+                            + " compositeSequences do not have biologicalCharacteristics, skipping further details." );
+                } else if ( numWithNoSequence < 20 ) {
+                    log.warn( "No sequence match for " + compositeSequence
+                            + "; it will not have a biologicalCharacteristic!" );
+                }
             }
 
-            assert match.getId() != null;
-
-            // overwrite the existing characteristic if necessary.
-            compositeSequence.setBiologicalCharacteristic( match );
-            compositeSequence.setArrayDesign( arrayDesign );
+            if ( match != null ) {
+                // overwrite the existing characteristic if necessary.
+                compositeSequence.setBiologicalCharacteristic( match );
+                compositeSequence.setArrayDesign( arrayDesign );
+            }
 
             // addReporter( compositeSequence );
 
@@ -637,11 +660,40 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
 
+        if ( numWithNoSequence > 0 )
+            log.info( "There were " + numWithNoSequence
+                    + " composite sequences with no associated biological characteristic" );
+
         log.info( "Updating sequences on arrayDesign" );
         arrayDesignService.update( arrayDesign );
 
         return bioSequences;
 
+    }
+
+    /**
+     * If the sequence already exists, we have to update it.
+     * 
+     * @param sequence
+     * @return
+     */
+    private BioSequence persistSequence( BioSequence sequence ) {
+        return ( BioSequence ) persisterHelper.persistOrUpdate( sequence );
+    }
+
+    /**
+     * @param gbIdMap
+     * @param nameMap
+     * @param sequence
+     */
+    private void addToMaps( Map<String, BioSequence> gbIdMap, Map<String, BioSequence> nameMap, BioSequence sequence ) {
+        nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
+
+        if ( sequence.getSequenceDatabaseEntry() != null ) {
+            gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
+        } else {
+            if ( log.isWarnEnabled() ) log.warn( "No sequence database entry for " + sequence.getName() );
+        }
     }
 
     /**

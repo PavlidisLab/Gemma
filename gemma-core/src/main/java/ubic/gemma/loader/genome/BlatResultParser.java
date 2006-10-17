@@ -120,15 +120,17 @@ public class BlatResultParser extends BasicLineParser {
             String[] f = line.split( "\t" );
             if ( f.length == 0 ) return null;
             if ( f.length != NUM_BLAT_FIELDS )
-                throw new IllegalArgumentException( "Only" + f.length + " fields in line (starts with "
-                        + line.substring( 0, Math.max( line.length(), 25 ) ) );
+                throw new IllegalArgumentException( f.length + " fields in line, expected " + NUM_BLAT_FIELDS
+                        + " (starts with " + line.substring( 0, Math.max( line.length(), 25 ) ) );
 
             BlatResult result = BlatResult.Factory.newInstance();
 
             String name = ( "BlatResult:" + f[QNAME_FIELD] + ":" + f[QSTART_FIELD] + ":" + f[TSTART_FIELD] + ":" + f[TNAME_FIELD] );
             result.setId( new Long( name.hashCode() ) );
             result.setQuerySequence( BioSequence.Factory.newInstance() );
-            result.getQuerySequence().setLength( Long.parseLong( f[QSIZE_FIELD] ) );
+            Long queryLength = Long.parseLong( f[QSIZE_FIELD] );
+            assert queryLength != null;
+            result.getQuerySequence().setLength( queryLength );
 
             result.setMatches( Integer.parseInt( f[MATCHES_FIELD] ) );
             result.setMismatches( Integer.parseInt( f[MISMATCHES_FIELD] ) );
@@ -145,8 +147,11 @@ public class BlatResultParser extends BasicLineParser {
             result.setTargetStart( Long.parseLong( f[TSTART_FIELD] ) );
             result.setTargetEnd( Long.parseLong( f[TEND_FIELD] ) );
             result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
-            result.setBlockSizes( f[BLOCKSIZES_FIELD] ); // FIXME - there should be an aligned regions
+
+            // these fields are comman-delimited lists
+            // FIXME - there should be an aligned regions
             // association.
+            result.setBlockSizes( f[BLOCKSIZES_FIELD] );
             result.setQueryStarts( f[QSTARTS_FIELD] );
             result.setTargetStarts( f[TSTARTS_FIELD] );
 

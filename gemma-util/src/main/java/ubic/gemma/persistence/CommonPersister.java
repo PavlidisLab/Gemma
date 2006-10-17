@@ -153,6 +153,11 @@ abstract public class CommonPersister extends AbstractPersister {
         throw new UnsupportedOperationException( "Don't know how to persist a " + entity.getClass().getName() );
     }
 
+    public Object persistOrUpdate( Object entity ) {
+        if ( entity == null ) return null;
+        throw new UnsupportedOperationException( "Don't know how to persistOrUpdate a " + entity.getClass().getName() );
+    }
+
     /**
      * @param auditTrailService The auditTrailService to set.
      */

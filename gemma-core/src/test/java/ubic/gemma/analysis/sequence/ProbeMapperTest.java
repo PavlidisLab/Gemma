@@ -83,6 +83,7 @@ public class ProbeMapperTest extends TestCase {
         try {
             GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser,
                     databasePassword );
+            
             if ( gp == null ) {
                 log.warn( "Could not get Goldenpath database connection, skipping test" );
                 return;

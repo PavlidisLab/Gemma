@@ -148,9 +148,8 @@ public class NcbiGeneLoader {
                 persisterHelper.persist( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 ) {
-                    log
-                            .info( "Loaded " + loadedGeneCount + " genes. Current queue has " + geneQueue.size()
-                                    + " items." );
+                    log.info( "Loaded " + loadedGeneCount + " genes. " + "Current queue has " + geneQueue.size()
+                            + " items." );
                 }
 
             } catch ( Exception e ) {

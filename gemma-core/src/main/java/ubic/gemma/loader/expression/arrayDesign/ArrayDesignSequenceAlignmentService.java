@@ -64,14 +64,25 @@ public class ArrayDesignSequenceAlignmentService {
 
     /**
      * @param ad
+     * @param rawBlatResults
+     * @param taxon
+     * @return persisted BlatResults.
+     */
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults, Taxon taxon ) {
+        Map<String, BioSequence> sequencesToBlat = getSequenceMap( ad );
+
+        Collection<BlatResult> allResults = new HashSet<BlatResult>();
+
+        persistBlatResults( taxon, sequencesToBlat, allResults, rawBlatResults );
+
+        return allResults;
+    }
+
+    /**
+     * @param ad
      */
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon ) {
-        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        Map<String, BioSequence> sequencesToBlat = new HashMap<String, BioSequence>();
-        for ( CompositeSequence sequence : compositeSequences ) {
-            BioSequence bs = sequence.getBiologicalCharacteristic();
-            sequencesToBlat.put( bs.getSequenceDatabaseEntry().getAccession(), bs );
-        }
+        Map<String, BioSequence> sequencesToBlat = getSequenceMap( ad );
 
         Blat blat = new Blat();
         BlattableGenome bg = BlattableGenome.MOUSE;
@@ -86,36 +97,65 @@ public class ArrayDesignSequenceAlignmentService {
 
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
-        try {
-            Map<String, Collection<BlatResult>> results = blat.blatQuery( sequencesToBlat.values(), bg );
+        Map<String, Collection<BlatResult>> results = runBlat( sequencesToBlat, blat, bg );
 
-            log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
+        log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
 
-            for ( String key : results.keySet() ) {
-                Collection<BlatResult> brs = results.get( key );
-                for ( BlatResult br : brs ) {
-                    String acc = br.getQuerySequence().getName();
-                    assert acc != null && sequencesToBlat.containsKey( acc );
-
-                    // FIXME: the blatter should set the taxon for us. Parser supports this.
-                    br.getQuerySequence().setTaxon( taxon );
-                    br.getTargetChromosome().setTaxon( taxon );
-                    br.getTargetChromosome().getSequence().setTaxon( taxon );
-
-                    br.setTargetChromosome( ( Chromosome ) persisterHelper.persist( br.getTargetChromosome() ) );
-                    br.setQuerySequence( sequencesToBlat.get( acc ) );
-                    br = blatResultService.create( br );
-                    allResults.add( br );
-                }
-
-            }
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+        for ( String key : results.keySet() ) {
+            Collection<BlatResult> brs = results.get( key );
+            persistBlatResults( taxon, sequencesToBlat, allResults, brs );
         }
 
         return allResults;
 
+    }
+
+    private void persistBlatResults( Taxon taxon, Map<String, BioSequence> sequencesToBlat,
+            Collection<BlatResult> allResults, Collection<BlatResult> brs ) {
+        for ( BlatResult br : brs ) {
+            String acc = br.getQuerySequence().getName();
+            assert acc != null && sequencesToBlat.containsKey( acc );
+
+            // // FIXME: the blatter should set the taxon for us. Parser supports this.
+            // br.getQuerySequence().setTaxon( taxon );
+            br.getTargetChromosome().setTaxon( taxon );
+            br.getTargetChromosome().getSequence().setTaxon( taxon );
+            br.setTargetChromosome( ( Chromosome ) persisterHelper.persist( br.getTargetChromosome() ) );
+            br.setQuerySequence( sequencesToBlat.get( acc ) );
+            br = blatResultService.create( br );
+            allResults.add( br );
+        }
+    }
+
+    /**
+     * @param sequencesToBlat
+     * @param blat
+     * @param bg
+     * @return
+     */
+    private Map<String, Collection<BlatResult>> runBlat( Map<String, BioSequence> sequencesToBlat, Blat blat,
+            BlattableGenome bg ) {
+        Map<String, Collection<BlatResult>> results = null;
+        try {
+            results = blat.blatQuery( sequencesToBlat.values(), bg );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        return results;
+    }
+
+    /**
+     * @param ad
+     * @return
+     */
+    private Map<String, BioSequence> getSequenceMap( ArrayDesign ad ) {
+        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
+        Map<String, BioSequence> sequencesToBlat = new HashMap<String, BioSequence>();
+        for ( CompositeSequence sequence : compositeSequences ) {
+            BioSequence bs = sequence.getBiologicalCharacteristic();
+            sequencesToBlat.put( bs.getName(), bs );
+        }
+        return sequencesToBlat;
     }
 
     /**

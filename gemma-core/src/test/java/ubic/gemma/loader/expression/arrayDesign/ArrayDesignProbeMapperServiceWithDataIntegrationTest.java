@@ -28,25 +28,17 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignProbeMapperServiceWithDataIntegrationTest extends BaseSpringContextTest {
+public class ArrayDesignProbeMapperServiceWithDataIntegrationTest extends AbstractArrayDesignProcessingTest {
 
     /**
      * @throws Exception
      */
     public final void testProbeMappingForArrayDesign() throws Exception {
-
-        // this test works on HG-U133A with real blat results loaded (pain)
-        // load the test chromosome entities
-        // load the test sequence data
-        // load the test blat results
-        // load the test array design (refers to the sequences)
-        // need audit trail...
 
         // process it.
         ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );

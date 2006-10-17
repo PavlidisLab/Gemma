@@ -471,7 +471,8 @@ public class GeoConverter implements Converter {
                     + geoDataset.getPlatform() );
         }
 
-        ad.setDescription( platform.getGeoAccession() + " Last Updated: " + platform.getLastUpdateDate() );
+        ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: "
+                + platform.getLastUpdateDate() );
 
         LocalFile arrayDesignRawFile = convertSupplementaryFileToLocalFile( platform );
         if ( arrayDesignRawFile != null ) {
@@ -860,13 +861,11 @@ public class GeoConverter implements Converter {
         // We don't get reporters from GEO SOFT files.
         // arrayDesign.setReporters( new HashSet() );
 
-        Contact manufacturer = Contact.Factory.newInstance();
-        if ( platform.getManufacturer() != null ) {
+        if ( StringUtils.isNotBlank( platform.getManufacturer() ) ) {
+            Contact manufacturer = Contact.Factory.newInstance();
             manufacturer.setName( platform.getManufacturer() );
-        } else {
-            manufacturer.setName( "Unknown" );
+            arrayDesign.setDesignProvider( manufacturer );
         }
-        arrayDesign.setDesignProvider( manufacturer );
 
         arrayDesign.getExternalReferences().add( convertDatabaseEntry( platform ) );
 

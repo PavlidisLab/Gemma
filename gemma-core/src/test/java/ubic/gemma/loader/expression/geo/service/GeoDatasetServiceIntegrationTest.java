@@ -169,7 +169,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     //
     // 
     /**
-     * GDS1830 (GSE2221) - bombs silently after or during parsing. Huge data set, and includes CGH and expression data.
+     * GDS1830 (GSE2221) - bombs silently after or during parsing. Real data set is huge, and includes CGH and
+     * expression data.
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS1830() throws Exception {
@@ -179,7 +180,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gse2221Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS1830" );
-        assertEquals( 2, results.size() );
+        assertEquals( 1, results.size() );
 
     }
 
@@ -208,6 +209,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE3434" );
         ee = results.iterator().next();
+        assertNotNull( ee );
+        assertNotNull( ee.getBioAssays() );
         assertEquals( 4, ee.getBioAssays().size() );
         assertEquals( 532, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
         //

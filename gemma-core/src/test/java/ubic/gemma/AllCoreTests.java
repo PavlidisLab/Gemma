@@ -39,6 +39,7 @@ import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDeleteTest;
 import ubic.gemma.persistence.CrudUtilsTest;
+import ubic.gemma.persistence.GenomePersisterTest;
 import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
@@ -87,6 +88,7 @@ public class AllCoreTests {
         suite.addTestSuite( ProgressIntegrationTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );
+        suite.addTestSuite( GenomePersisterTest.class );
 
         suite.addTestSuite( ExpressionExperimentDeleteTest.class );
 

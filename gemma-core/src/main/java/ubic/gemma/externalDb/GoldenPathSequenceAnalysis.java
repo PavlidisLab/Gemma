@@ -21,13 +21,12 @@ package ubic.gemma.externalDb;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
@@ -73,8 +72,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param chromosome
      * @return
      */
-    private List<PhysicalLocation> blocksToPhysicalLocations( int[] blockSizes, int[] blockStarts, Chromosome chromosome ) {
-        List<PhysicalLocation> blocks = new ArrayList<PhysicalLocation>();
+    private Collection<PhysicalLocation> blocksToPhysicalLocations( int[] blockSizes, int[] blockStarts,
+            Chromosome chromosome ) {
+        Collection<PhysicalLocation> blocks = new HashSet<PhysicalLocation>();
         for ( int i = 0; i < blockSizes.length; i++ ) {
             long exonStart = blockStarts[i];
             int exonSize = blockSizes[i];
@@ -105,24 +105,25 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap ) {
-        List<Gene> mRNAs = findRNAs( chromosome, queryStart, queryEnd );
+        Collection<Gene> mRNAs = findRNAs( chromosome, queryStart, queryEnd );
 
         if ( mRNAs.size() > 0 ) {
-            log.debug( mRNAs.size() + " mRNAs found at chr" + chromosome + ":" + queryStart + "-" + queryEnd
-                    + ", trying to improve overlap of  " + exonOverlap );
+            if ( log.isDebugEnabled() )
+                log.debug( mRNAs.size() + " mRNAs found at chr" + chromosome + ":" + queryStart + "-" + queryEnd
+                        + ", trying to improve overlap of  " + exonOverlap );
 
             int maxOverlap = exonOverlap;
             for ( Gene mRNA : mRNAs ) {
                 int overlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, mRNA );
-                log.debug( "overlap with " + mRNA.getNcbiId() + "=" + overlap );
+                if ( log.isDebugEnabled() ) log.debug( "overlap with " + mRNA.getNcbiId() + "=" + overlap );
                 if ( overlap > maxOverlap ) {
-                    log.debug( "Best mRNA overlap=" + overlap );
+                    if ( log.isDebugEnabled() ) log.debug( "Best mRNA overlap=" + overlap );
                     maxOverlap = overlap;
                 }
             }
 
             exonOverlap = maxOverlap;
-            log.debug( "Overlap with mRNAs is now " + exonOverlap );
+            if ( log.isDebugEnabled() ) log.debug( "Overlap with mRNAs is now " + exonOverlap );
         }
         return exonOverlap;
     }
@@ -152,6 +153,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         BlatAssociation blatAssociation = BlatAssociation.Factory.newInstance();
         blatAssociation.setGeneProduct( geneProduct );
+        blatAssociation.setThreePrimeDistanceMeasurementMethod( method );
         PhysicalLocation geneLoc = geneProduct.getPhysicalLocation();
 
         assert geneLoc != null : "PhysicalLocation for GeneProduct " + geneProduct + " is null";
@@ -211,7 +213,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @throws SQLException
      */
     @SuppressWarnings("unchecked")
-    private List<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
+    private Collection<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
             String query ) {
         // Cases:
         // 1. gene is contained within the region: txStart > start & txEnd < end;
@@ -228,19 +230,21 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
             }
 
-            return ( List<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Collection<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
 
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
-                    List<GeneProduct> r = new ArrayList<GeneProduct>();
+                    Collection<GeneProduct> r = new HashSet<GeneProduct>();
                     while ( rs.next() ) {
 
                         GeneProduct product = GeneProduct.Factory.newInstance();
-                        product.setNcbiId( rs.getString( 1 ) ); // transcript identifier, not gene...or set accessions?
+                        String ncbiId = rs.getString( 1 );
+                        product.setNcbiId( ncbiId ); // transcript identifier, not gene...or set accessions?
 
                         Gene gene = Gene.Factory.newInstance();
                         gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setName( gene.getOfficialSymbol() ); // doesn't hurt.
+                        gene.setName( gene.getOfficialSymbol() );
+                        gene.setTaxon( getTaxon() );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
                         pl.setNucleotide( rs.getLong( 3 ) );
@@ -249,19 +253,23 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                        c.setTaxon( getTaxon() );
                         pl.setChromosome( c );
 
-                        // note that we aren't setting the chromosome here; we already know that.
                         gene.setPhysicalLocation( pl );
 
-                        product.setName( rs.getString( 1 ) );
+                        if ( StringUtils.isNotBlank( ncbiId ) ) {
+                            product.setName( ncbiId );
+                        } else {
+                            product.setName( "Product of " + gene.getOfficialSymbol() );
+                        }
+
                         product.setDescription( "Product of " + gene.getOfficialSymbol() );
                         product.setPhysicalLocation( pl );
                         product.setGene( gene );
 
                         Blob exonStarts = rs.getBlob( 6 );
                         Blob exonEnds = rs.getBlob( 7 );
-                        product.setName( gene.getNcbiId() );
                         product.setExons( getExons( c, exonStarts, exonEnds ) );
 
                         r.add( product );
@@ -286,7 +294,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param strand
      * @return
      */
-    public List<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
+    public Collection<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds "
                 + " FROM knownGene as kg INNER JOIN"
@@ -311,19 +319,20 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Set<BlatResult> findLocationsByQuery( final String query, final Object[] params ) {
+    private Collection<BlatResult> findLocationsByQuery( final String query, final Object[] params ) {
         try {
             return ( Set<BlatResult> ) qr.query( conn, query, params, new ResultSetHandler() {
 
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
-                    Set<BlatResult> r = new HashSet<BlatResult>();
+                    Collection<BlatResult> r = new HashSet<BlatResult>();
                     while ( rs.next() ) {
 
                         BlatResult blatResult = BlatResult.Factory.newInstance();
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
+                        c.setTaxon( getTaxon() );
                         blatResult.setTargetChromosome( c );
 
                         Blob blockSizes = rs.getBlob( 2 );
@@ -373,7 +382,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param strand
      * @param end
      */
-    public List<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
+    public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
                 + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
@@ -399,7 +408,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The number of mRNAs which overlap the query region.
      */
     @SuppressWarnings("unchecked")
-    private List<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
+    private Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT mrna.qName, mrna.qName, mrna.tStart, mrna.tEnd, mrna.strand, mrna.blockSizes, mrna.tStarts  "
@@ -412,19 +421,18 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         Object[] params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
                 regionStart, regionEnd, searchChrom };
         try {
-            return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
-                    List<Gene> r = new ArrayList<Gene>();
+                    Collection<Gene> r = new HashSet<Gene>();
                     while ( rs.next() ) {
 
                         Gene gene = Gene.Factory.newInstance();
 
                         gene.setNcbiId( rs.getString( 1 ) );
-
                         gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
+                        gene.setName( gene.getOfficialSymbol() );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
                         pl.setNucleotide( rs.getLong( 3 ) );
@@ -433,6 +441,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                        c.setTaxon( getTaxon() );
                         pl.setChromosome( c );
 
                         // note that we aren't setting the chromosome here; we already know that.
@@ -461,7 +470,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return Set containing Lists of PhysicalLocation representing places GoldenPath says the sequence referred to by
      *         the identifier aligns. If no results are found the Set will be empty.
      */
-    public Set<BlatResult> findSequenceLocations( String identifier ) {
+    public Collection<BlatResult> findSequenceLocations( String identifier ) {
 
         Object[] params = new Object[] { identifier };
         String query = "";
@@ -492,7 +501,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param exonEnds
      * @throws SQLException
      */
-    private List<PhysicalLocation> getExons( Chromosome chrom, Blob exonStarts, Blob exonEnds ) throws SQLException {
+    private Collection<PhysicalLocation> getExons( Chromosome chrom, Blob exonStarts, Blob exonEnds )
+            throws SQLException {
 
         if ( exonStarts == null || exonEnds == null ) return null;
 
@@ -505,13 +515,14 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         assert exonStartsInts.length == exonEndsInts.length;
 
         // GeneProduct gp = GeneProduct.Factory.newInstance();
-        List<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
+        Collection<PhysicalLocation> exons = new HashSet<PhysicalLocation>();
         for ( int i = 0; i < exonEndsInts.length; i++ ) {
             int exonStart = exonStartsInts[i];
             int exonEnd = exonEndsInts[i];
             PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
 
             exon.setChromosome( chrom );
+            assert chrom.getTaxon() != null;
 
             exon.setNucleotide( new Long( exonStart ) );
             exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
@@ -551,7 +562,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      *         sequence overhangs the found genes (rather than providing a negative distance). If no genes are found,
      *         the result is null;
      */
-    public List<BlatAssociation> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
+    public Collection<BlatAssociation> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
             String starts, String sizes, String strand, ThreePrimeDistanceMethod method ) {
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
@@ -564,8 +575,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         if ( geneProducts.size() == 0 ) return null;
 
-        List<BlatAssociation> results = new ArrayList<BlatAssociation>();
+        Collection<BlatAssociation> results = new HashSet<BlatAssociation>();
         for ( GeneProduct geneProduct : geneProducts ) {
+            if ( log.isDebugEnabled() ) log.debug( geneProduct + ", gene=" + geneProduct.getGene() );
+
             BlatAssociation blatAssociation = computeLocationInGene( chromosome, queryStart, queryEnd, starts, sizes,
                     geneProduct, method );
             results.add( blatAssociation );
@@ -577,9 +590,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param identifier
      * @return
      */
-    public List<BioSequence2GeneProduct> getThreePrimeDistances( String identifier, ThreePrimeDistanceMethod method ) {
-        Set<BlatResult> locations = findSequenceLocations( identifier );
-        List<BioSequence2GeneProduct> results = new ArrayList<BioSequence2GeneProduct>();
+    public Collection<BioSequence2GeneProduct> getThreePrimeDistances( String identifier,
+            ThreePrimeDistanceMethod method ) {
+        Collection<BlatResult> locations = findSequenceLocations( identifier );
+        Collection<BioSequence2GeneProduct> results = new HashSet<BioSequence2GeneProduct>();
         for ( BlatResult br : locations ) {
             results.addAll( getThreePrimeDistances( br, method ) );
         }

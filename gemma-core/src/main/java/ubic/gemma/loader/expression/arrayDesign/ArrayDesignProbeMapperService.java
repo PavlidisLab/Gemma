@@ -79,20 +79,42 @@ public class ArrayDesignProbeMapperService {
         probeMapper.setScoreThreshold( scoreThreshold );
         probeMapper.setBlatScoreThreshold( blatScoreThreshold );
 
+        int count = 0;
+        int hits = 0;
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = compositeSequence.getBiologicalCharacteristic();
+
+            if ( bs == null ) continue;
+
             final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+
+            if ( blatResults == null || blatResults.isEmpty() ) continue;
 
             Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
                     blatResults );
 
             if ( log.isDebugEnabled() ) log.debug( "Found " + results.size() + " mappings for " + compositeSequence );
 
-            for ( String key : results.keySet() ) {
-                persisterHelper.persist( results.get( key ) );
+            // FIXME:possibly use a queue to enable simultaneous searching and persisting; this might save memory and
+            // could also be faster.
+
+            for ( Collection<BlatAssociation> col : results.values() ) {
+                for ( BlatAssociation association : col ) {
+                    if ( log.isDebugEnabled() ) log.debug( association );
+                }
+
+                persisterHelper.persist( col );
+                ++hits;
+            }
+
+            if ( ++count % 100 == 0 ) {
+                log.info( "Processed " + count + " composite sequences" + " with blat results; " + hits
+                        + " mappings found." );
             }
 
         }
+
+        log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
     }
 
     /**

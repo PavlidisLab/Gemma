@@ -23,6 +23,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -30,9 +31,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Very simple class to produce String versions of beans. The entire hierarchy of associations for each object is
- * printed in a tree-like format. This is primarily used for testing. Beans that are not part of this project are
- * ignored.
+ * Very simple class to produce String versions of beans and other objects.
+ * <p>
+ * For beans, the entire hierarchy of associations for each object is printed in a tree-like format. This is primarily
+ * used for testing.
  * 
  * @author pavlidis
  * @version $Id$
@@ -48,6 +50,32 @@ public class PrettyPrinter {
     }
 
     protected static final Log log = LogFactory.getLog( PrettyPrinter.class );
+
+    /**
+     * Format an array of integers for printing.
+     * 
+     * @param ints
+     * @return
+     */
+    public static String print( int[] ints ) {
+        if ( ints == null || ints.length == 0 ) return "(empty)";
+        StringBuffer buf = new StringBuffer();
+        for ( int i : ints ) {
+            buf.append( i + " " );
+        }
+        buf.append( "\n" );
+        return buf.toString();
+    }
+
+    /**
+     * Print out a collection of objects in a relatively pleasing format.
+     * 
+     * @param beans Collection of beans.
+     * @return String representing the objects.
+     */
+    public static String print( Object[] objects ) {
+        return print( Arrays.asList( objects ) );
+    }
 
     /**
      * Print out a collection of beans in a relatively pleasing format.
@@ -78,7 +106,7 @@ public class PrettyPrinter {
     }
 
     /**
-     * Pretty-print a single bean
+     * Pretty-print a single bean. Beans that are not part of this project are ignored.
      * 
      * @param gemmaObj
      * @return String representing the object.

@@ -48,13 +48,6 @@ public class RelationshipPersister extends ExpressionPersister {
     }
 
     /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /**
      * @param association
      * @return
      */
@@ -66,6 +59,23 @@ public class RelationshipPersister extends ExpressionPersister {
         association.setGene( persistGene( association.getGene() ) );
         association.setOntologyEntry( persistOntologyEntry( association.getOntologyEntry() ) );
         return gene2GOAssociationService.findOrCreate( association );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
+     */
+    public Object persistOrUpdate( Object entity ) {
+        if ( entity == null ) return null;
+        return super.persistOrUpdate( entity );
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
     }
 
 }

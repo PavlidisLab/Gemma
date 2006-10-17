@@ -41,11 +41,11 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
     @SuppressWarnings("unchecked")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
         try {
-            // finally the real business. There are 243 sequences on the array, but one is not going to be found ()
+            // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
                     "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
                     + "/gemma-core/src/test/resources/data/loader/genome/blast" );
-            assertEquals( 242, res.size() );
+            assertEquals( 243, res.size() );
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 return;

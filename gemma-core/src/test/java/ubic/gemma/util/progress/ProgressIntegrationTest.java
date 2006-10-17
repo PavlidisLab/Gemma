@@ -318,7 +318,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
             e.printStackTrace();
 
         }
-        assertEquals( mc.upDateTimes(), 100 );
+        assertEquals( 100, mc.upDateTimes() );
     }
 
     /*

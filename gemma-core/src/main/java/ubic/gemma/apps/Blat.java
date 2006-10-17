@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -564,15 +565,28 @@ public class Blat {
     }
 
     /**
-     * @param outputPath to the Blat output file in psl format
+     * @param filePath to the Blat output file in psl format
      * @return processed results.
      */
-    private Collection<BlatResult> processPsl( String outputPath, Taxon taxon ) throws IOException {
-        log.debug( "Processing " + outputPath );
+    private Collection<BlatResult> processPsl( String filePath, Taxon taxon ) throws IOException {
+        log.debug( "Processing " + filePath );
         BlatResultParser brp = new BlatResultParser();
         brp.setTaxon( taxon );
         brp.setScoreThreshold( this.blatScoreThreshold );
-        brp.parse( outputPath );
+        brp.parse( filePath );
+        return brp.getResults();
+    }
+
+    /**
+     * @param inputStream to the Blat output file in psl format
+     * @return processed results.
+     */
+    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
+        log.debug( "Processing " + inputStream );
+        BlatResultParser brp = new BlatResultParser();
+        brp.setTaxon( taxon );
+        brp.setScoreThreshold( this.blatScoreThreshold );
+        brp.parse( inputStream );
         return brp.getResults();
     }
 

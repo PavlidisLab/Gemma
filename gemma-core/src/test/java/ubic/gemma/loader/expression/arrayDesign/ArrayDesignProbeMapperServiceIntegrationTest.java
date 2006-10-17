@@ -18,10 +18,16 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.zip.GZIPInputStream;
+
 import ubic.gemma.apps.Blat;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -33,22 +39,9 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     Blat blat = new Blat();
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-
-        // blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
-     */
-    @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
-        // blat.stopServer( ConfigUtils.getInt( "gfClient.humanServerPort" ) );
+        // TODO: delete blat results that were loaded.
     }
 
     /**
@@ -74,11 +67,52 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         // see also the ArrayDesignSequenceAlignementTest.
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
         ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
-        aligner.processArrayDesign( ad, taxon );
+
+        try {
+            aligner.processArrayDesign( ad, taxon );
+        } catch ( RuntimeException e ) {
+            Throwable ec = e.getCause();
+            if ( ec instanceof IOException && ec.getMessage().startsWith( "No bytes available" ) ) {
+                // blat presumably isn't running.
+                log.warn( "Blat server not available? Skipping test" );
+                return;
+            }
+        }
 
         // real stuff.
         arrayDesignProbeMapperService.processArrayDesign( ad, taxon );
 
     }
 
+    /**
+     * This test uses 'real' data. A human blat server must be available on the configured port.
+     * 
+     * @throws Exception
+     */
+    public final void testProcessArrayDesignWithData() throws Exception {
+
+        Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
+
+        // needed to fill in the sequence information for blat scoring.
+        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        app.processArrayDesign( ad, sequenceFile, SequenceType.EST, taxon );
+
+        // fill in the blat results. Note that each time you run this test you get the results loaded again (so they
+        // pile up)
+        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
+
+        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
+
+        Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
+
+        aligner.processArrayDesign( ad, results, taxon );
+
+        // real stuff.
+        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
+                .getBean( "arrayDesignProbeMapperService" );
+        arrayDesignProbeMapperService.processArrayDesign( ad, taxon );
+
+    }
 }

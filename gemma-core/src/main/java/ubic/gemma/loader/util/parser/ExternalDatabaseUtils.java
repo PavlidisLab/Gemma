@@ -75,13 +75,19 @@ public class ExternalDatabaseUtils {
     }
 
     /**
-     * @param accession
-     * @return
+     * @param accession in the form XXXXXX or XXXXX.N where N is a version number. The first part becomes the accession,
+     *        the second the version
+     * @return a DatabaseEntry representing the genbank accession.
      */
     public static DatabaseEntry getGenbankAccession( String accession ) {
         DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
 
-        dbEntry.setAccession( accession );
+        String[] split = accession.split( "\\." );
+
+        dbEntry.setAccession( split[0] );
+
+        if ( split.length == 2 ) dbEntry.setAccessionVersion( split[1] );
+
         dbEntry.setExternalDatabase( getGenbank() );
 
         return dbEntry;

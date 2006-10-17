@@ -25,9 +25,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
  */
-public class BlatAssociationImpl
-    extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
-{
+public class BlatAssociationImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -36,10 +34,20 @@ public class BlatAssociationImpl
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation#toString()
      */
-    public java.lang.String toString()
-    {
-        // @todo implement public java.lang.String toString()
-        return null;
-    }
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
 
+        buf.append( this.getClass().getSimpleName() );
+
+        if ( this.getId() != null ) {
+            buf.append( " Id=" + this.getId() );
+        } else {
+            buf.append( " Score=" + this.getScore() + " Specific=" + this.getSpecificity() + " Between " );
+        }
+
+        buf.append( this.getBioSequence() + " ---> " + this.getGeneProduct() );
+
+        return buf.toString();
+    }
 }

@@ -82,7 +82,7 @@ public abstract class BasicLineParser implements LineParser {
                 // if ( log.isDebugEnabled() ) log.debug( "Got null parse from " + line );
                 nullLines++;
             }
-            
+
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + linesParsed + " lines...";
                 ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
@@ -90,8 +90,11 @@ public abstract class BasicLineParser implements LineParser {
             }
 
         }
-        log.info( "Parsed " + linesParsed + " lines. "
-                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+
+        if ( linesParsed > MIN_PARSED_LINES_FOR_UPDATE ) {
+            log.info( "Parsed " + linesParsed + " lines. "
+                    + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+        }
     }
 
     /*

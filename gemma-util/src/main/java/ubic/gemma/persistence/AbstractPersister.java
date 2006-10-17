@@ -52,6 +52,11 @@ public abstract class AbstractPersister implements Persister {
     protected static final int SESSION_BATCH_SIZE = 50;
 
     /**
+     * Collections smaller than this don't result in logging about progress.
+     */
+    public static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
+
+    /**
      * This is here only to allow optimization of hibernate.
      */
     protected SessionFactory sessionFactory;
@@ -73,6 +78,9 @@ public abstract class AbstractPersister implements Persister {
             log.debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
             int numElementsPerUpdate = numElementsPerUpdate( col );
             for ( Object entity : col ) {
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "Persisting: " + entity );
+                }
                 result.add( persist( entity ) );
                 count = iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
             }
@@ -93,10 +101,11 @@ public abstract class AbstractPersister implements Persister {
     protected int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
         assert col != null && col.size() > 0;
         if ( increment ) ++count;
-        if ( ( !increment || count % numElementsPerUpdate == 0 ) && log.isInfoEnabled() ) {
-            log
-                    .info( "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
-                            + "'s" );
+
+        if ( col.size() >= MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS && log.isInfoEnabled()
+                && ( !increment || count % numElementsPerUpdate == 0 ) ) {
+            String collectionItemsClassName = col.iterator().next().getClass().getName();
+            log.info( "Processed " + count + "/" + col.size() + " " + collectionItemsClassName + "'s" );
         }
         return count;
     }

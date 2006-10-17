@@ -489,7 +489,8 @@ public class TestPersistentObjectHelper {
      */
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = GeneProduct.Factory.newInstance();
-
+        gp.setNcbiId( RandomStringUtils.randomAlphanumeric( 10 ) );
+        gp.setName( RandomStringUtils.randomAlphanumeric( 6 ) );
         return ( GeneProduct ) persisterHelper.persist( gp );
     }
 

@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
 /**
- * Convenient methods for manipulating BioSequences.
+ * Convenient methods for manipulating BioSequences and PhysicalLocations
  * 
  * @author pavlidis
  * @version $Id$
@@ -194,7 +194,9 @@ public class SequenceManipulation {
         int[] startArray = blatLocationsToIntArray( starts );
         int[] sizesArray = blatLocationsToIntArray( sizes );
 
-        assert startArray.length == sizesArray.length;
+        // this was happening when data was truncated by the database!
+        assert startArray.length == sizesArray.length : startArray.length + " starts and " + sizesArray.length
+                + " sizes (expected equal numbers)";
 
         int totalOverlap = 0;
         int totalLength = 0;
@@ -264,50 +266,66 @@ public class SequenceManipulation {
      * 4. exon&nbsp;&nbsp;&nbsp;&nbsp; -------<br>
      * &nbsp; &nbsp; &nbsp;input ---------------- <br>
      * 
-     * @param start
-     * @param end
-     * @param exonStart
-     * @param exonEnd
+     * @param starta
+     * @param enda
+     * @param startb
+     * @param endb
      * @return
      */
-    private static int computeOverlap( int start, int end, int exonStart, int exonEnd ) {
-        if ( exonStart > exonEnd ) throw new IllegalArgumentException( "Exon start must be before end" );
-        if ( start > end ) throw new IllegalArgumentException( "Start must be before end" );
+    private static int computeOverlap( long starta, long enda, long startb, long endb ) {
+        if ( starta > enda ) throw new IllegalArgumentException( "Start " + starta + " must be before end " + enda );
+        if ( startb > endb ) throw new IllegalArgumentException( "Start " + startb + " must be before end " + endb );
 
-        log.debug( "Comparing query length " + ( end - start ) + ", location: " + start + "-->" + end
-                + " to exon length " + ( exonEnd - exonStart ) + ", location: " + exonStart + "--->" + exonEnd );
+        if ( log.isDebugEnabled() )
+            log.debug( "Comparing query length " + ( enda - starta ) + ", location: " + starta + "-->" + enda
+                    + " to target length " + ( endb - startb ) + ", location: " + startb + "--->" + endb );
 
-        int overlap = 0;
-        if ( exonEnd < start || end < exonStart ) {
-            log.debug( "Exon doesn't overlap" );
+        long overlap = 0;
+        if ( endb < starta || enda < startb ) {
             overlap = 0;
-        } else if ( start <= exonStart ) {
-            if ( end < exonEnd ) {
-                overlap = end - exonStart; // overhang on the left
+        } else if ( starta <= startb ) {
+            if ( enda < endb ) {
+                overlap = enda - startb; // overhang on the left
             } else {
-                overlap = exonEnd - exonStart; // includes entire exon
+                overlap = endb - startb; // includes entire target
             }
-        } else if ( end < exonEnd ) { // entirely contained within exon.
-            overlap = end - start; // length of our test sequence.
+        } else if ( enda < endb ) { // entirely contained within target.
+            overlap = enda - starta; // length of our test sequence.
         } else {
-            overlap = exonEnd - start; // overhang on the right
+            overlap = endb - starta; // overhang on the right
         }
 
         assert overlap >= 0 : "Negative overlap";
-        assert ( double ) overlap / ( double ) ( end - start ) <= 1.0 : "Overlap longer than sequence";
-        log.debug( "Overlap=" + overlap );
-        return overlap;
+        assert ( double ) overlap / ( double ) ( enda - starta ) <= 1.0 : "Overlap longer than sequence";
+        if ( log.isDebugEnabled() ) log.debug( "Overlap=" + overlap );
+        return ( int ) overlap;
     }
 
-    // /**
-    // * @param compositeSequence
-    // * @return Collection of Reporters for this compositesequence.
-    // */
-    // private static Collection<Reporter> copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
-    // if ( compositeSequence == null ) throw new IllegalArgumentException( "CompositeSequence cannot be null" );
-    // assert compositeSequence.getComponentReporters() != null : "Null reporters for composite sequence";
-    // return copyReporters( compositeSequence.getComponentReporters() );
-    // }
+    /**
+     * Compute the overlap between two physical locations. If both do not have a length the overlap is zero unless they
+     * point to exactly the same nucleotide location, in which case the overlap is 1.
+     * 
+     * @param a
+     * @param b
+     * @return
+     */
+    public static int computeOverlap( PhysicalLocation a, PhysicalLocation b ) {
+        if ( !a.getChromosome().equals( b.getChromosome() ) ) {
+            return 0;
+        }
+
+        if ( a.getNucleotideLength() == null && b.getNucleotideLength() == null ) {
+            if ( a.getNucleotide() == b.getNucleotide() ) {
+                return 1;
+            }
+            return 0;
+        }
+
+        return computeOverlap( a.getNucleotide(), a.getNucleotide() + a.getNucleotideLength(), b.getNucleotide(), b
+                .getNucleotide()
+                + b.getNucleotideLength() );
+
+    }
 
     /**
      * @param reporters
@@ -323,24 +341,6 @@ public class SequenceManipulation {
         }
         return copyReporters;
     }
-
-    //
-    // /**
-    // * Make a shallow copy of a collectoin of sequences. This is used only internally to allow desctructive
-    // manipulation
-    // * of the sequence strings.
-    // *
-    // * @return
-    // */
-    // private static Collection<BioSequence> copyBioSequences( Collection<BioSequence> sequences ) {
-    // Collection<BioSequence> copy = new HashSet<BioSequence>();
-    // for ( BioSequence sequence : sequences ) {
-    // BioSequence copySeq = BioSequence.Factory.newInstance();
-    // copySeq.setSequence( sequence.getSequence() );
-    // }
-    //
-    // return copy;
-    // }
 
     /**
      * Find the index of the aligned base in the center exon that is the center of the query.
