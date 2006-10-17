@@ -130,7 +130,7 @@ public class NcbiGeneLoader {
                 doLoad( geneQueue );
             }
 
-        } );
+        }, "Loading" );
         loadThread.start();
     }
 

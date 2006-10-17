@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
  * Convert NCBIGene2Accession objects into Gemma Gene objects.
  * 
  * @author pavlidis
+ * @author jrsantos
  * @version $Id$
  */
 public class NcbiGeneConverter implements Converter {
@@ -202,7 +203,7 @@ public class NcbiGeneConverter implements Converter {
                 }
                 producerDone.set( true );
             }
-        } );
+        }, "Converter" );
 
         convertThread.start();
     }

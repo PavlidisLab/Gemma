@@ -169,7 +169,7 @@ public class GoldenPathBioSequenceLoader {
                 log.info( "Done dumping" );
                 producerDone = true;
             }
-        } );
+        }, "Parser" );
 
         parseThread.start();
 
@@ -179,7 +179,7 @@ public class GoldenPathBioSequenceLoader {
                 log.info( "Starting loading" );
                 load( queue );
             }
-        } );
+        }, "Loader" );
 
         loadThread.start();
 

@@ -73,28 +73,11 @@ public class GeoDatasetService extends AbstractGeoService {
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
-        // for ( ExpressionExperiment experiment : result ) {
-        // for ( BioAssay bioAssay : experiment.getBioAssays() ) {
-        // ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
-        // checkArrayDesign( arrayDesign );
-        // }
-        // }
-
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
         Collection persistedResult = persisterHelper.persist( result );
         this.geoConverter.clear();
         return persistedResult;
     }
-
-    // /**
-    // * @param arrayDesigns
-    // */
-    // private void checkArrayDesign( ArrayDesign arrayDesign ) {
-    // ArrayDesign existing = arrayDesignService.find( arrayDesign );
-    // if ( existing != null ) {
-    // log.debug( arrayDesign + " already exists in the system" );
-    // }
-    // }
 
 }

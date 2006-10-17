@@ -211,7 +211,11 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         for ( NCBIGeneInfo o : remainingGenes ) {
             NcbiGeneData geneCollection = new NcbiGeneData();
             geneCollection.setGeneInfo( o );
-            queue.add( geneCollection );
+            try {
+                queue.put( geneCollection );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException();
+            }
         }
     }
 

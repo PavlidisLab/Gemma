@@ -209,14 +209,11 @@ public class BusinessKey {
     }
 
     /**
-     * Assumes parameter name is 'taxon'.
-     * 
      * @param queryObject
      * @param taxon
      */
     public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
         checkValidKey( taxon );
-        queryObject.createCriteria( "taxon" );
         attachCriteria( queryObject, taxon );
     }
 

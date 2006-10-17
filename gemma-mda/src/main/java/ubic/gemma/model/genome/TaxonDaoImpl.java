@@ -23,16 +23,11 @@ package ubic.gemma.model.genome;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.common.protocol.ProtocolDaoImpl;
 import ubic.gemma.util.BusinessKey;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.genome.Taxon
@@ -54,16 +49,8 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
             BusinessKey.checkValidKey( taxon );
 
             Criteria queryObject = super.getSession( false ).createCriteria( Taxon.class );
-            if ( taxon.getNcbiId() != null ) {
-                queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
-            } else if ( taxon.getScientificName() != null ) {
-                queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
-            } else if ( taxon.getCommonName() != null ) {
-                queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
-            } else {
-                throw new IllegalArgumentException(
-                        "No valid fields filled in for finding. Must supply NCBI Id, scientific name, or common name." );
-            }
+
+            BusinessKey.addRestrictions( queryObject, taxon );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -92,10 +79,10 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
     public Taxon findOrCreate( Taxon taxon ) {
         Taxon existingTaxon = find( taxon );
         if ( existingTaxon != null ) {
-            log.debug( "Found existing taxon: " + taxon );
+            if ( log.isDebugEnabled() ) log.debug( "Found existing taxon: " + taxon );
             return existingTaxon;
         }
-        log.warn( "Creating new taxon: " + taxon );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new taxon: " + taxon );
         return create( taxon );
     }
 

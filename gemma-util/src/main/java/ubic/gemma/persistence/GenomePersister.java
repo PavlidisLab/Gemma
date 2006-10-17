@@ -406,7 +406,7 @@ abstract public class GenomePersister extends CommonPersister {
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
-            log.info( "Fetched or created taxon " + fTaxon );
+            if ( log.isDebugEnabled() ) log.debug( "Fetched or created taxon " + fTaxon );
 
             if ( fTaxon.getScientificName() != null ) {
                 seenTaxa.put( fTaxon.getScientificName().toLowerCase(), fTaxon );

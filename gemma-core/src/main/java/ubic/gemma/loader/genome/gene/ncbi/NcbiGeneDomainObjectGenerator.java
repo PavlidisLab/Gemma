@@ -117,7 +117,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
      */
     private Collection<NCBIGene2Accession> processLocalFiles( final LocalFile geneInfoFile,
             LocalFile gene2AccessionFile, final BlockingQueue<NcbiGeneData> geneDataQueue, boolean filter ) {
-        log.info( "Parsing geneinfo=" + geneInfoFile.asFile().getAbsolutePath() + " and gene2accession="
+        log.debug( "Parsing geneinfo=" + geneInfoFile.asFile().getAbsolutePath() + " and gene2accession="
                 + gene2AccessionFile.asFile().getAbsolutePath() );
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
@@ -125,11 +125,6 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
         final NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
         final File gene2accessionFileHandle = gene2AccessionFile.asFile();
 
-        // // parse GeneInfo file into Hashtable (initialization)
-        // final BlockingQueue<String> geneInfoNameQueue = new ArrayBlockingQueue<String>( 30000 );
-        //
-        // new Thread( new Runnable() {
-        // public void run() {
         try {
             InputStream is = FileTools
                     .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() );
@@ -139,9 +134,6 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
             // infoProducerDone.set( true );
             throw new RuntimeException( e );
         }
-        // }
-        //
-        // } ).start();
 
         Collection<NCBIGeneInfo> geneInfoList = infoParser.getResults();
         // put into HashMap
@@ -156,7 +148,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
         }
 
         for ( Integer taxId : taxCount.keySet() ) {
-            log.info( "Taxon " + taxId + ": " + taxCount.get( taxId ) + " genes" );
+            log.debug( "Taxon " + taxId + ": " + taxCount.get( taxId ) + " genes" );
         }
 
         // 1) use a producer-consumer model for Gene2Accession conversion
@@ -173,7 +165,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
                 producerDone.set( true );
                 log.debug( "Domain object generator done" );
             }
-        } );
+        }, "gene2accession parser" );
 
         parseThread.start();
 
@@ -183,10 +175,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
 
         // 2) use producer-consumer model for Gene persistence
         // 2a) as elements get added to genePersistence, persist Gene and associated entries.
-        /*
-         * Collection<NCBIGene2Accession> ncbiGenes = accParser.getResults(); for ( NCBIGene2Accession o : ncbiGenes ) {
-         * NCBIGeneInfo info = infoParser.get( o.getGeneId() ); o.setInfo( info ); }
-         */
+
         return null;
     }
 

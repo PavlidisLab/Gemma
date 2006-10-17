@@ -38,6 +38,7 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest {
+
     public void testGeneDomainObjectLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
 
@@ -90,6 +91,30 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         assertTrue( geneQueue.size() == 100 );
     }
 
+    /**
+     * @throws Exception
+     */
+    public void testGeneConverterBigger() throws Exception {
+        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
+
+        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.biggersample.gz";
+        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.biggersample.gz";
+
+        // threaded load
+        String basePath = ConfigUtils.getString( "gemma.home" );
+        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
+
+        // wait until the loader is done.
+        while ( !loader.isLoaderDone() ) {
+            Thread.sleep( 100 );
+        }
+
+        // loader is done.
+        // check if it loaded 100 elements to the database
+        log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
+        assertEquals( 1999, loader.getLoadedGeneCount() );
+    }
+
     @SuppressWarnings("unchecked")
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
@@ -115,7 +140,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         // grab one gene and check its information
         // (depends on information in gene_info and gene2accession file
         // gene_info
-         Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
+        Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
         Iterator<Gene> geneIterator = geneCollection.iterator();
         Gene g = geneIterator.next();
         Collection<GeneProduct> products = g.getProducts();
