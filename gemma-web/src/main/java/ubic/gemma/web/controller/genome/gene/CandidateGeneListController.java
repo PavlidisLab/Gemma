@@ -184,7 +184,7 @@ public class CandidateGeneListController extends BaseCommandController {
 
         if ( action.compareTo( "addgenetocandidatelist" ) == 0 ) {
             CandidateGeneList cgl = this.getCandidateGeneListService().findByID( listID );
-            Gene g = this.getGeneService().findByID( geneID );
+            Gene g = this.getGeneService().load( geneID );
             cg = cgl.addCandidate( g );
             cg.setAuditTrail( AuditTrail.Factory.newInstance() );
             cg.getAuditTrail().start( "CandidateGene Created.", usr );

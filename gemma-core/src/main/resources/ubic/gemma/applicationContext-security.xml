@@ -404,7 +404,6 @@
                 ubic.gemma.model.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.gene.GeneService.findByOfficialSymbol=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.gene.GeneService.findByOfficialSymbolInexact=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.GeneService.findByID=user,admin.ROLE_ANONYMOUS 
                 ubic.gemma.model.genome.gene.GeneService.findOrCreate=user,admin
                 ubic.gemma.model.genome.gene.GeneService.remove=user,admin
                 ubic.gemma.model.genome.gene.GeneProductService.create=user,admin

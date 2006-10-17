@@ -8,6 +8,7 @@
 <%@ page import="ubic.gemma.model.genome.gene.GeneProduct"%>
 <%@ page import="java.util.Iterator"%>
 <%@ page import="java.util.Map"%>
+<!-- Deprecated -->
 <html>
 	<head>
 		<title>Gene Detail</title>

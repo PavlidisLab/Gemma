@@ -142,5 +142,11 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().create( genes );
 
     }
+
+    @Override
+    protected Gene handleLoad( long id ) throws Exception {
+        return (Gene) this.getGeneDao().load( id );
+    }
+   
     
 }
