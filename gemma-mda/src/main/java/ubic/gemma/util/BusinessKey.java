@@ -66,6 +66,9 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
         addNameRestriction( queryObject, arrayDesign );
 
+        if ( arrayDesign.getShortName() != null )
+            queryObject.add( Restrictions.eq( "shortName", arrayDesign.getShortName() ) );
+
         /*
          * Test whether ANY of the associated external references match any of the given external references.
          */
@@ -387,7 +390,8 @@ public class BusinessKey {
 
     public static void checkValidKey( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null
-                || ( StringUtils.isBlank( arrayDesign.getName() ) && arrayDesign.getExternalReferences().size() == 0 ) ) {
+                || ( StringUtils.isBlank( arrayDesign.getName() ) && StringUtils.isBlank( arrayDesign.getShortName() ) && arrayDesign
+                        .getExternalReferences().size() == 0 ) ) {
             throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
         }
     }

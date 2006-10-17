@@ -30,9 +30,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -146,12 +148,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
             queryObject.setLong( "id", Id );
             queryObject.setMaxResults( 1 );
-            /*org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "id", Id );
-            queryObject.setMaxResults( 1 );
-            */
-            count = ((BigInteger) queryObject.uniqueResult()).longValue();
-            
+            /*
+             * org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+             * queryObject.setParameter( "id", Id ); queryObject.setMaxResults( 1 );
+             */
+            count = ( ( BigInteger ) queryObject.uniqueResult() ).longValue();
+
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -174,10 +176,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
             queryObject.setLong( "id", Id );
             queryObject.setMaxResults( 1 );
-            /*org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "id", Id );
-            queryObject.setMaxResults( 1 );*/
-            count = ((BigInteger) queryObject.uniqueResult()).longValue();
+            /*
+             * org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+             * queryObject.setParameter( "id", Id ); queryObject.setMaxResults( 1 );
+             */
+            count = ( ( BigInteger ) queryObject.uniqueResult() ).longValue();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -294,53 +297,34 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     public String getTaxon( ExpressionExperiment object ) {
 
-        
         final String queryString = "select sample.sourceTaxon from ExpressionExperimentImpl ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample inner join sample.sourceTaxon where ee.id = :id";
 
-        Taxon taxon = (Taxon) queryByIdReturnObject(object.getId(), queryString);
-        
-        if (taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ){
+        Taxon taxon = ( Taxon ) queryByIdReturnObject( object.getId(), queryString );
+
+        if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
             return "Taxon unavailable";
         }
         return taxon.getScientificName();
-        
-//        return ((Taxon) queryByIdReturnObject(object.getId(), queryString)).getScientificName();
+
+        // return ((Taxon) queryByIdReturnObject(object.getId(), queryString)).getScientificName();
 
         /*
-        if ( object == null ) {
-            return "Taxon unavailable";
-        }
-    
-        Collection bioAssayCol = object.getBioAssays();
-        BioAssay bioAssay = null;
-        Taxon taxon = null;
-
-        if ( bioAssayCol != null && bioAssayCol.size() > 0 ) {
-            bioAssay = ( BioAssay ) bioAssayCol.iterator().next();
-        } else {
-            return "Taxon unavailable";
-        }
-
-        Collection bioMaterialCol = bioAssay.getSamplesUsed();
-        if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) {
-            BioMaterial bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next();
-            taxon = bioMaterial.getSourceTaxon();
-        } else {
-            return "Taxon unavailable";
-        }
-
-        if ( taxon != null ) return taxon.getScientificName();
-
-        return "Taxon unavailable";
-        */
+         * if ( object == null ) { return "Taxon unavailable"; } Collection bioAssayCol = object.getBioAssays();
+         * BioAssay bioAssay = null; Taxon taxon = null; if ( bioAssayCol != null && bioAssayCol.size() > 0 ) { bioAssay = (
+         * BioAssay ) bioAssayCol.iterator().next(); } else { return "Taxon unavailable"; } Collection bioMaterialCol =
+         * bioAssay.getSamplesUsed(); if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) { BioMaterial
+         * bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next(); taxon = bioMaterial.getSourceTaxon(); } else {
+         * return "Taxon unavailable"; } if ( taxon != null ) return taxon.getScientificName(); return "Taxon
+         * unavailable";
+         */
     }
-    
+
     private Object queryByIdReturnObject( Long id, final String queryString ) {
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setFirstResult( 1 );
             queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
-                                            // collection returned
+            // collection returned
             queryObject.setParameter( "id", id );
             java.util.List results = queryObject.list();
 
@@ -351,6 +335,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @Override
+    protected void handleThaw( final ExpressionExperiment expressionExperiment ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( expressionExperiment, LockMode.READ );
+                expressionExperiment.getDesignElementDataVectors().size();
+                expressionExperiment.getBioAssays().size();
+                return null;
+            }
+        }, true );
+
     }
 
 }

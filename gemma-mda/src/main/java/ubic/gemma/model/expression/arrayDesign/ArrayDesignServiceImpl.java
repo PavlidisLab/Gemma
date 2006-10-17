@@ -25,17 +25,9 @@ import java.util.Collection;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * @author pavlidis
- * @version $Id$
- * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
- */
-/**
- * 
- *
- * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
  * @author klc
  * @version $Id$
+ * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
 
@@ -136,31 +128,44 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoad(long)
      */
     @Override
     protected ArrayDesign handleLoad( long id ) throws Exception {
-        return ( ArrayDesign) this.getArrayDesignDao().load( id );
+        return ( ArrayDesign ) this.getArrayDesignDao().load( id );
     }
-    
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.expression.arrayDesign.handleGetAllAssociatedBioAssays(long)
-     */
-    @Override
-   protected java.util.Collection handleGetAllAssociatedBioAssays(java.lang.Long id){
-       return this.getArrayDesignDao().getAllAssociatedBioAssays(id);
-       
-   }
 
     /*
      * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.handleGetAllAssociatedBioAssays(long)
+     */
+    @Override
+    protected java.util.Collection handleGetAllAssociatedBioAssays( java.lang.Long id ) {
+        return this.getArrayDesignDao().getAllAssociatedBioAssays( id );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
      */
     @Override
-   protected Taxon handleGetTaxon(java.lang.Long id){
-       return this.getArrayDesignDao().getTaxon(id);
-       
-   }
-    
+    protected Taxon handleGetTaxon( java.lang.Long id ) {
+        return this.getArrayDesignDao().getTaxon( id );
+
+    }
+
+    @Override
+    protected ArrayDesign handleFindByShortName( String shortName ) throws Exception {
+        return this.getArrayDesignDao().findByShortName( shortName );
+    }
+
+    @Override
+    protected void handleThaw( ArrayDesign arrayDesign ) throws Exception {
+        this.getArrayDesignDao().thaw( arrayDesign );
+    }
+
 }

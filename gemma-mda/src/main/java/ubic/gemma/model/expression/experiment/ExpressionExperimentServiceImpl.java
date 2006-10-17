@@ -22,9 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,7 +35,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  */
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
-    private Log log = LogFactory.getLog( this.getClass() );
 
     /*
      * (non-Javadoc)
@@ -159,8 +155,6 @@ public class ExpressionExperimentServiceImpl extends
     protected Map handleGetQuantitationTypeCountById( Long Id ) throws Exception {
         return this.getExpressionExperimentDao().getQuantitationTypeCountById( Id );
     }
-    
-    
 
     /*
      * (non-Javadoc)
@@ -182,8 +176,19 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected ExpressionExperimentValueObject handleToExpressionExperimentValueObject( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected ExpressionExperimentValueObject handleToExpressionExperimentValueObject(
+            ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().toExpressionExperimentValueObject( expressionExperiment );
+    }
+
+    @Override
+    protected ExpressionExperiment handleFindByShortName( String shortName ) throws Exception {
+        return this.getExpressionExperimentDao().findByShortName( shortName );
+    }
+
+    @Override
+    protected void handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
+        this.getExpressionExperimentDao().thaw( expressionExperiment );
     }
 
 }

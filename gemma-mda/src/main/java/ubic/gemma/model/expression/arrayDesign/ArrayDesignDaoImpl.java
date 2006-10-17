@@ -24,7 +24,10 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.LockMode;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
@@ -138,7 +141,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setFirstResult( 1 );
             queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
-                                            // collection returned
+            // collection returned
             queryObject.setParameter( "id", id );
             java.util.List results = queryObject.list();
 
@@ -202,16 +205,32 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      * 
-     * This only returns 1 taxon, the 1st taxon as decided by the join which ever that is.
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long) This only returns
+     *      1 taxon, the 1st taxon as decided by the join which ever that is.
      */
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
-        
+
         final String queryString = "select bioC.taxon from ArrayDesignImpl as arrayD inner join arrayD.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon where arrayD.id = :id";
 
-        return (Taxon) queryByIdReturnObject(id, queryString);
+        return ( Taxon ) queryByIdReturnObject( id, queryString );
+
+    }
+
+    @Override
+    protected void handleThaw( final ArrayDesign arrayDesign ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( arrayDesign, LockMode.READ );
+                arrayDesign.getCompositeSequences().size();
+                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                    cs.getBiologicalCharacteristic().getTaxon();
+                }
+                return null;
+            }
+        }, true );
 
     }
 

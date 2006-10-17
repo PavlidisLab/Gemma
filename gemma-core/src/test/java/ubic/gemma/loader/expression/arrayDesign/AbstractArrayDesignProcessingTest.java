@@ -20,15 +20,10 @@ package ubic.gemma.loader.expression.arrayDesign;
 
 import java.util.Collection;
 
-import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -67,21 +62,9 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession );
         ad = ads.iterator().next();
 
-        // All this to avoid lazy load errors.
-        HibernateDaoSupport hds = new HibernateDaoSupport() {
-        };
-        hds.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
-        HibernateTemplate templ = hds.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( ad, LockMode.READ );
-                ad.getCompositeSequences().size();
-                for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-                    cs.getBiologicalCharacteristic().getTaxon();
-                }
-                return null;
-            }
-        }, true );
+        ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+
+        arrayDesignService.thaw( ad );
 
     }
 

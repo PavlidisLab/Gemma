@@ -55,7 +55,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         addOption( taxonOption );
 
         Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array design" ).withDescription(
-                "Array design name" ).withLongOpt( "array" ).create( 'a' );
+                "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
 
