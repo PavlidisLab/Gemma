@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -45,6 +46,11 @@ public class GeneWrapper extends TableDecorator {
     public String getTaxon() {
         Gene object = ( Gene ) getCurrentRowObject();
         return object.getTaxon().getScientificName();
+    }
+    
+    public String getAccession() {
+        DatabaseEntry object = (DatabaseEntry) getCurrentRowObject();
+        return object.getAccession() + "." + object.getAccessionVersion();
     }
     
 }

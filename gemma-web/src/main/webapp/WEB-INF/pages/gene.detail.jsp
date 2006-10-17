@@ -37,6 +37,22 @@
                     }%>
                 </td>
             </tr>
-         </table>  
+         </table>
+        <%
+		if ( gene.getAccessions().size() > 0 ) {
+		%>
+         <h3>
+			<fmt:message key="gene.accessions" />
+		</h3>
+		<% 
+		} 
+		%>
+
+         <display:table name="gene.accessions" class="list" requestURI="" id="accessionsList" 
+			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
+			<display:column property="accession" sortable="true" maxWords="20"/>
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>  
+		
     </body>
 </html>
