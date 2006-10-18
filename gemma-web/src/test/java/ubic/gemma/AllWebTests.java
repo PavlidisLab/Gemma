@@ -35,6 +35,7 @@ import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadC
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationControllerIntegrationTest;
 import ubic.gemma.web.controller.testdata.TestDataAddingControllerTest;
 import ubic.gemma.web.listener.StartupListenerTest;
+import ubic.gemma.web.util.ConfigurationCookieTest;
 import ubic.gemma.web.validation.ValidationTest;
 
 /**
@@ -67,6 +68,8 @@ public class AllWebTests extends TestSuite {
 
         suite.addTestSuite( StartupListenerTest.class );
         suite.addTestSuite( ValidationTest.class );
+
+        suite.addTestSuite( ConfigurationCookieTest.class );
 
         System.out.print( "----------------------\nGemma Web Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );
