@@ -57,9 +57,9 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
             if ( bothHaveSymbol && bothHaveGene && this.getName().equals( that.getName() )
                     && this.getGene().equals( that.getGene() ) ) {
                 return true;
-            } else {
-                return false; // 
             }
+            return false; // 
+
         }
         return true;
     }
@@ -96,10 +96,10 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
             buf.append( " " );
         }
 
-        buf.append( this.getName() + " (Gene = "  + this.getGene() + ")");
+        buf.append( this.getName() + " (Gene = " + this.getGene() + ")" );
 
         return buf.toString();
-    
+
     }
 
 }

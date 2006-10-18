@@ -901,26 +901,25 @@ public class GeoConverter implements Converter {
         }
 
         /* if not, either create a new one and persist, or get from db and put in map. */
-        else {
 
-            if ( organism.toLowerCase().startsWith( GeoConverter.RAT ) ) {
-                organism = GeoConverter.RAT; // we don't distinguish between species.
-            }
-
-            Taxon taxon = Taxon.Factory.newInstance();
-
-            taxon.setScientificName( organism );
-
-            if ( taxonService != null ) {
-                Taxon t = taxonService.findOrCreate( taxon );
-                if ( t != null ) {
-                    taxon = t;
-                }
-            }
-
-            platformTaxonMap.put( organism, taxon );
-            return taxon;
+        if ( organism.toLowerCase().startsWith( GeoConverter.RAT ) ) {
+            organism = GeoConverter.RAT; // we don't distinguish between species.
         }
+
+        Taxon taxon = Taxon.Factory.newInstance();
+
+        taxon.setScientificName( organism );
+
+        if ( taxonService != null ) {
+            Taxon t = taxonService.findOrCreate( taxon );
+            if ( t != null ) {
+                taxon = t;
+            }
+        }
+
+        platformTaxonMap.put( organism, taxon );
+        return taxon;
+
     }
 
     /**

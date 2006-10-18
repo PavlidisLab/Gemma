@@ -68,9 +68,9 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
                 } else {
                     return false; // can't decide, assume unequal.
                 }
-            } else {
-                return false; // 
             }
+            return false; // 
+
         }
         return true;
 

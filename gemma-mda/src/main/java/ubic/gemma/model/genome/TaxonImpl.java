@@ -51,9 +51,9 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
 
             if ( this.getNcbiId() != null ) {
                 return this.getNcbiId().equals( that.getNcbiId() );
-            } else {
-                return this.getScientificName().equals( that.getScientificName() );
             }
+            return this.getScientificName().equals( that.getScientificName() );
+
         }
         return true;
     }
