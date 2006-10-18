@@ -94,12 +94,11 @@ public class ProbeMapper {
      */
     public BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
 
-        /**
+        /*
          * Break results down by gene product, and throw out duplicates (only allow one result per gene product)
          */
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
-        organizeBlatAssociationsByGeneProduct( blatAssociations, geneProducts );
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = organizeBlatAssociationsByGeneProduct( blatAssociations );
 
         BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts );
 
@@ -242,8 +241,9 @@ public class ProbeMapper {
      * @param geneProducts
      * @return
      */
-    private BioSequence organizeBlatAssociationsByGeneProduct( Collection<BlatAssociation> blatAssociations,
-            Map<GeneProduct, Collection<BlatAssociation>> geneProducts ) {
+    private Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProduct(
+            Collection<BlatAssociation> blatAssociations ) {
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
         Collection<BioSequence> sequences = new HashSet<BioSequence>();
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             assert blatAssociation.getBioSequence() != null;
@@ -264,8 +264,7 @@ public class ProbeMapper {
             blatAssociation.setSpecificity( 1.0 );
         }
 
-        BioSequence querySequence = sequences.iterator().next(); // already enforced only a single one.
-        return querySequence;
+        return geneProducts;
     }
 
     /**
@@ -487,7 +486,7 @@ public class ProbeMapper {
         int count = 0;
         int skipped = 0;
 
-        // group them together by BioSequence
+        // group results together by BioSequence
         Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
 
         for ( BlatResult blatResult : blatResults ) {
