@@ -20,10 +20,14 @@
  */
 package ubic.gemma.model.genome;
 
+import java.math.BigInteger;
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -85,6 +89,45 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new gene: " + gene.getName() );
         return ( Gene ) create( gene );
+    }
+
+    @Override
+    protected long handleGetCompositeSequenceCountById( long id ) throws Exception {
+        long count = 0;
+
+        final String queryString = "select count(*) from BioSequence2GeneProductImpl as bs2gp,CompositeSequenceImpl as compositeSequence "
+                + "where bs2gp.geneProduct.id in (select gene.products.id from GeneImpl as gene where gene.id = :id) and "
+                + "bs2gp.bioSequence = compositeSequence.biologicalCharacteristic";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", id );
+            queryObject.setMaxResults( 1 );
+
+            count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return count;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetCompositeSequencesById( long id ) throws Exception {
+        Collection<CompositeSequence> compSeq = null;
+        final String queryString = "select compositeSequence from BioSequence2GeneProductImpl as bs2gp,CompositeSequenceImpl as compositeSequence "
+                + "where bs2gp.geneProduct.id in (select gene.products.id from GeneImpl as gene where gene.id = :id) and "
+                + "bs2gp.bioSequence = compositeSequence.biologicalCharacteristic";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", id );
+            compSeq = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compSeq;
     }
 
 }

@@ -47,12 +47,18 @@
 		<% 
 		} 
 		%>
-
+		
          <display:table name="gene.accessions" class="list" requestURI="" id="accessionsList" 
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
 			<display:column property="accession" sortable="true" maxWords="20"/>
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>  
 		
+		<br />
+		There are <b>
+		<c:out value="${compositeSequenceCount}"/> 
+		</b>
+		composite sequences associated with this gene.
+		<br />
     </body>
 </html>

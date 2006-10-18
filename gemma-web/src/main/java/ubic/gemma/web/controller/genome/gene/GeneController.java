@@ -153,6 +153,10 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        return new ModelAndView( "gene.detail" ).addObject( "gene", gene );
+        ModelAndView mav = new ModelAndView("gene.detail");
+        mav.addObject( "gene", gene );
+        Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
+        mav.addObject( "compositeSequenceCount", compositeSequenceCount );
+        return mav;
     }
 }
