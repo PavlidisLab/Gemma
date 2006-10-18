@@ -14,7 +14,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationCommand;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationController;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationFormController;
 
 /**
  * @author joseph

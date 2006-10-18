@@ -45,7 +45,7 @@ public class ExpressionExperimentVisualizationControllerIntegrationTest extends 
     public void testOnSubmit() throws Exception {
         ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
 
-        ExpressionExperimentVisualizationController controller = ( ExpressionExperimentVisualizationController ) this
+        ExpressionExperimentVisualizationFormController controller = ( ExpressionExperimentVisualizationFormController ) this
                 .getBean( "expressionExperimentSearchController" );
 
         HttpServletRequest request = new MockHttpServletRequest();
