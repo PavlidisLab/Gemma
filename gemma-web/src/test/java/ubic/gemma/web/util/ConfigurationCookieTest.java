@@ -49,4 +49,19 @@ public class ConfigurationCookieTest extends TestCase {
         assertEquals( 1, actualValue );
     }
 
+    public void testConfigurationCookieD() throws Exception {
+        ConfigurationCookie cookie = new ConfigurationCookie( "foo" );
+        cookie.addProperty( "arg", "bla" );
+        String actualValue = cookie.getValue();
+        assertTrue( "Got " + actualValue, actualValue.contains( "arg = bla" ) );
+    }
+
+    public void testConfigurationCookieE() throws Exception {
+        String value = "# written by PropertiesConfiguration # Tue Oct 17 23:30:31 PDT 2006 dummy=foo @@ sequenceType = AFFY_COLLAPSED @@ taxon = Rattus norvegicus";
+        Cookie plainCookie = new Cookie( "foo", value );
+        ConfigurationCookie cookie = new ConfigurationCookie( plainCookie );
+        String actualValue = cookie.getString( "sequenceType" );
+        assertEquals( "AFFY_COLLAPSED", actualValue );
+    }
+
 }

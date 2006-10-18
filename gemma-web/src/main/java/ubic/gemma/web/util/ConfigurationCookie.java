@@ -37,6 +37,11 @@ import org.apache.commons.configuration.PropertiesConfiguration;
  */
 public class ConfigurationCookie extends Cookie {
 
+    /**
+     * Used to delimit what would normally be separate lines in a properties file.
+     */
+    private static final String PROPERTY_DELIMITER = "@@";
+
     PropertiesConfiguration configuration;
 
     /**
@@ -49,7 +54,7 @@ public class ConfigurationCookie extends Cookie {
         super( cookie.getName(), cookie.getValue() );
 
         // turn the value into properties.
-        StringReader reader = new StringReader( this.getValue() );
+        StringReader reader = new StringReader( this.getValue().replaceAll( PROPERTY_DELIMITER, "\n" ) );
         configuration = new PropertiesConfiguration();
         configuration.load( reader );
     }
@@ -66,9 +71,7 @@ public class ConfigurationCookie extends Cookie {
     }
 
     /**
-     * Don't use this method if you can help it!
-     * 
-     * @deprecated Use setProperty instead.
+     * Don't use this method if you can help it! Use setProperty instead.
      */
     @Override
     public final void setValue( String value ) {
@@ -90,7 +93,7 @@ public class ConfigurationCookie extends Cookie {
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }
-        setValue( writer.toString() );
+        setValue( PROPERTY_DELIMITER + writer.toString().replaceAll( "\n", PROPERTY_DELIMITER ) );
     }
 
     /**
@@ -100,6 +103,14 @@ public class ConfigurationCookie extends Cookie {
      */
     public void addProperty( String key, Object value ) {
         this.configuration.addProperty( key, value );
+        // Rewrite the value.
+        StringWriter writer = new StringWriter();
+        try {
+            configuration.save( writer );
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+        setValue( writer.toString().replaceAll( "\n", PROPERTY_DELIMITER ) );
     }
 
     /**

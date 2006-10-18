@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -50,6 +51,7 @@ import ubic.gemma.web.controller.BackgroundProcessingFormController;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
+import ubic.gemma.web.util.ConfigurationCookie;
 import ubic.gemma.web.util.upload.CommonsMultipartFile;
 import ubic.gemma.web.util.upload.FileUploadUtil;
 
@@ -71,6 +73,8 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  */
 public class ArrayDesignSequenceAddController extends BackgroundProcessingFormController {
 
+    private static final String COOKIE_NAME = "arrayDesignSequenceAddCookie";
+
     TaxonService taxonService;
 
     ArrayDesignService arrayDesignService;
@@ -86,7 +90,30 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
     @SuppressWarnings("unused")
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
+        loadCookie( request, adsac );
         return adsac;
+    }
+
+    /**
+     * @param request
+     * @param adsac
+     */
+    private void loadCookie( HttpServletRequest request, ArrayDesignSequenceAddCommand adsac ) {
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    TaxonPropertyEditor taxed = new TaxonPropertyEditor( taxonService );
+                    taxed.setAsText( cookie.getString( "taxon" ) );
+
+                    adsac.setSequenceType( ( SequenceType.fromString( cookie.getString( "sequenceType" ) ) ) );
+                    adsac.setTaxon( ( Taxon ) taxed.getValue() );
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
     }
 
     /*
@@ -112,6 +139,9 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
+        Cookie cookie = new ArrayDesignSequenceAddCookie( commandObject );
+        response.addCookie( cookie );
+
         FileUpload fileUpload = commandObject.getSequenceFile();
 
         ArrayDesign arrayDesign = commandObject.getArrayDesign();
@@ -141,9 +171,22 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         ProgressManager.destroyProgressJob( job );
 
         Map<String, Object> model = new HashMap<String, Object>();
+
         model.put( "numSequencesProcessed", bioSequences.size() );
 
         return new ModelAndView( this.getSuccessView(), model );
+
+    }
+
+    class ArrayDesignSequenceAddCookie extends ConfigurationCookie {
+
+        public ArrayDesignSequenceAddCookie( ArrayDesignSequenceAddCommand command ) {
+            super( COOKIE_NAME );
+            this.setProperty( "sequenceType", command.getSequenceType().toString() );
+            this.setProperty( "taxon", command.getTaxon().getScientificName() );
+            this.setMaxAge( 100000 );
+            this.setComment( "Information for the Array Design sequence association form" );
+        }
 
     }
 
