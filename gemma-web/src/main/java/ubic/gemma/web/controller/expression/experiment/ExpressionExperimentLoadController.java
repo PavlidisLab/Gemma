@@ -63,7 +63,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
         ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
 
-        startJob( eeLoadCommand, "Loading " + eeLoadCommand.getAccession() );
+        startJob( eeLoadCommand, "Loading " + eeLoadCommand.getAccession(), request.getSession() );
 
         return new ModelAndView( new RedirectView( "processProgress.html" ) );
     }

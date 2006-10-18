@@ -3,7 +3,8 @@ function refreshProgress() {
 	HttpProgressMonitor.getProgressStatus(updateProgress);
 }
 function updateProgress(data) {
-	document.getElementById("progressBarText").innerHTML = data.description + " ";
+	document.getElementById("progressTextArea").value = data.description + document.getElementById("progressTextArea").value;
+	
 	if (data.done && data.forwardingURL != null) {
 			window.location = data.forwardingURL;
 	} else {
@@ -13,7 +14,7 @@ function updateProgress(data) {
 }
 function startProgress() {
 	document.getElementById("progressBar").style.display = "block";
-	document.getElementById("progressBarText").innerHTML = "In progress...";
+	document.getElementById("progressTextArea").value = "Monitoring Progress...";
    
 
     // wait a little while to make sure the progress job has started ..
@@ -28,9 +29,13 @@ function moveProgress(count) {
 	document.getElementById("progressBarBoxContent").style.width = parseInt(count * 35) + "px";
 }
 function progressMotion() {
+
+   //move forward
 	for (i = 0; i < 10; i++) {
 		window.setTimeout("moveProgress(" + i + ")", 50 * i);
 	}
+	
+	//move backwards
 	for (j = 10; j > -1; j--) {
 		window.setTimeout("moveProgress(" + j + ")", (50 * (10 - j)) + 500);
 	}

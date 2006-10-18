@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller;
 
+import javax.servlet.http.HttpSession;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 
@@ -33,7 +35,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
     /**
      * @param eeLoadCommand
      */
-    protected void startJob( Object command, String description ) {
+    protected void startJob( Object command, String description, HttpSession session ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -41,7 +43,10 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
 
         BackgroundControllerJob runner = getRunner( context, command, description );
 
-        new Thread( runner ).start();
+        Thread job = new Thread( runner );
+        session.setAttribute( "threadId", job.getId() ); // this needs to be set in case the thread needs to be
+                                                            // canceled
+        job.start();
     }
 
     /**
