@@ -220,13 +220,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected void handleThaw( final ArrayDesign arrayDesign ) throws Exception {
+        if ( arrayDesign == null ) return;
+        if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( arrayDesign, LockMode.READ );
+                if ( arrayDesign.getCompositeSequences() == null ) return null;
                 arrayDesign.getCompositeSequences().size();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    cs.getBiologicalCharacteristic().getTaxon();
+                    if ( cs.getBiologicalCharacteristic() != null ) cs.getBiologicalCharacteristic().getTaxon();
                 }
                 return null;
             }
