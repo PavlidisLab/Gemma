@@ -125,7 +125,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                     }
 
                     if ( platformOnly ) {
-                        Collection designs = ( Collection ) geoService.fetchAndLoad( accession );
+                        Collection designs = geoService.fetchAndLoad( accession );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             persistedObjects.add( ( ( Describable ) object ).getName()
@@ -134,8 +134,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                                             .getAccession() + ")" );
                         }
                     } else {
-                        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService
-                                .fetchAndLoad( accession );
+                        Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession );
                         for ( Object object : ees ) {
                             assert object instanceof ExpressionExperiment;
                             persistedObjects.add( ( ( Describable ) object ).getName() + " ("

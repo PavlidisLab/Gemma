@@ -528,11 +528,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
             exons.add( exon );
         }
-        // gp.setExons( exons );
-        // gp.setName( gene.getNcbiId() );
-        // Collection<GeneProduct> products = new HashSet<GeneProduct>();
-        // products.add( gp );
-        // gene.setProducts( products );
+
         return exons;
     }
 

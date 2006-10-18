@@ -95,9 +95,6 @@ public class ArrayDesignProbeMapperService {
 
             if ( log.isDebugEnabled() ) log.debug( "Found " + results.size() + " mappings for " + compositeSequence );
 
-            // FIXME:possibly use a queue to enable simultaneous searching and persisting; this might save memory and
-            // could also be faster.
-
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
                     if ( log.isDebugEnabled() ) log.debug( association );
