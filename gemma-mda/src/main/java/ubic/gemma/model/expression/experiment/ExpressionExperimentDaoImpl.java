@@ -350,5 +350,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }, true );
 
     }
+    
+    protected Taxon handleGetTaxon( Long id ) throws Exception {
+
+        final String queryString = "select SU.taxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.taxon where EE.id = :id";
+
+        return ( Taxon ) queryByIdReturnObject( id, queryString );
+        
+    }
+
+    
 
 }
