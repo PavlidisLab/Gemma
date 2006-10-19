@@ -1,0 +1,263 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.loader.expression.simple;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.persistence.PersisterHelper;
+
+/**
+ * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
+ * 
+ * @author pavlidis
+ * @version $Id$
+ * @spring.bean id="simpleExpressionDataLoaderService"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="taxonService" ref="taxonService"
+ */
+public class SimpleExpressionDataLoaderService {
+
+    private static Log log = LogFactory.getLog( SimpleExpressionDataLoaderService.class.getName() );
+
+    PersisterHelper persisterHelper;
+
+    ArrayDesignService arrayDesignService;
+
+    TaxonService taxonService;
+
+    /**
+     * @param metaData
+     * @param data tab-delimited file with row names corresponding to CompositeSequence names and column names
+     *        corresponding to BioAssay names.
+     * @return
+     * @throws IOException
+     */
+    public ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData, InputStream data )
+            throws IOException {
+
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+        DoubleMatrixNamed matrix = ( DoubleMatrixNamed ) reader.read( data );
+
+        Taxon taxon = convertTaxon( metaData.getTaxonName() );
+
+        ArrayDesign arrayDesign = convertArrayDesign( metaData, matrix );
+
+        ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
+        experiment.setName( metaData.getName() );
+        experiment.setDescription( metaData.getDescription() );
+        experiment.setSource( "Import via matrix flat file" );
+
+        if ( metaData.getPubMedId() != null ) {
+            PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
+            BibliographicReference ref = pubfetch.retrieveByHTTP( metaData.getPubMedId() );
+            experiment.setPrimaryPublication( ref );
+        }
+
+        QuantitationType quantitationType = convertQuantitationType( metaData );
+        BioAssayDimension bad = convertBioAssayDimension( experiment, arrayDesign, taxon, matrix );
+        Collection<DesignElementDataVector> vectors = convertDesignElementDataVectors( experiment, bad, arrayDesign,
+                quantitationType, matrix );
+        experiment.setDesignElementDataVectors( vectors );
+
+        return ( ExpressionExperiment ) persisterHelper.persist( experiment );
+
+    }
+
+    /**
+     * @param taxonName
+     * @return
+     */
+    private Taxon convertTaxon( String taxonName ) {
+        Taxon taxon = taxonService.findByScientificName( taxonName );
+        if ( taxon == null ) {
+            taxon = taxonService.findByCommonName( taxonName );
+        }
+
+        if ( taxon == null ) {
+            taxon = Taxon.Factory.newInstance();
+            taxon.setScientificName( taxonName );
+            taxon = ( Taxon ) persisterHelper.persist( taxon );
+        }
+
+        return taxon;
+    }
+
+    private ArrayDesign convertArrayDesign( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
+        String arrayDesignName = metaData.getArrayDesignName();
+
+        ArrayDesign result;
+        ArrayDesign existing = arrayDesignService.findArrayDesignByName( arrayDesignName );
+        if ( existing == null ) {
+            existing = arrayDesignService.findByShortName( arrayDesignName );
+        }
+
+        if ( existing == null ) {
+            log.info( "Creating new ArrayDesign " + arrayDesignName );
+            result = ArrayDesign.Factory.newInstance();
+            result.setName( arrayDesignName );
+            result.setShortName( arrayDesignName );
+            result.setDescription( metaData.getArrayDesignDescription() );
+
+            for ( int i = 0; i < matrix.rows(); i++ ) {
+                CompositeSequence cs = CompositeSequence.Factory.newInstance();
+                cs.setName( matrix.getRowName( i ) );
+                result.getCompositeSequences().add( cs );
+            }
+
+            result = ( ArrayDesign ) persisterHelper.persist( result );
+
+        } else {
+            log.info( "Found existing " + existing );
+            result = existing;
+        }
+
+        arrayDesignService.thaw( result );
+
+        return result;
+
+    }
+
+    /**
+     * @param metaData
+     * @return
+     */
+    private QuantitationType convertQuantitationType( SimpleExpressionExperimentMetaData metaData ) {
+        QuantitationType result = QuantitationType.Factory.newInstance();
+        result.setName( metaData.getQuantitationTypeName() );
+        result.setDescription( metaData.getQuantitationTypeDescription() );
+        result.setGeneralType( metaData.getGeneralType() );
+        result.setType( metaData.getType() );
+        result.setRepresentation( PrimitiveType.DOUBLE );
+        result.setScale( metaData.getScale() );
+        result.setIsBackground( false );
+        return result;
+    }
+
+    private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
+            DoubleMatrixNamed matrix ) {
+
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        bad.setName( "For " + ee.getName() );
+        bad.setDescription( "Generated from flat file" );
+
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            String columnName = matrix.getColName( i );
+
+            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+            bioMaterial.setName( columnName );
+            bioMaterial.setSourceTaxon( taxon );
+            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
+            bioMaterials.add( bioMaterial );
+
+            BioAssay assay = BioAssay.Factory.newInstance();
+            assay.setName( columnName );
+            assay.setArrayDesignUsed( arrayDesign );
+            assay.setSamplesUsed( bioMaterials );
+
+            bad.getBioAssays().add( assay );
+        }
+
+        log.info( "Created " + bad.getBioAssays().size() + " bioAssays" );
+
+        return bad;
+    }
+
+    private Collection<DesignElementDataVector> convertDesignElementDataVectors(
+            ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
+            QuantitationType quantitationType, DoubleMatrixNamed matrix ) {
+        ByteArrayConverter bArrayConverter = new ByteArrayConverter();
+
+        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+
+        Map<String, CompositeSequence> csMap = new HashMap<String, CompositeSequence>();
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            csMap.put( cs.getName(), cs );
+        }
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
+
+            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            vector.setData( bdata );
+
+            CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
+            if ( cs == null ) {
+                continue;
+            }
+            vector.setDesignElement( cs );
+            vector.setQuantitationType( quantitationType );
+            vector.setExpressionExperiment( expressionExperiment );
+            vector.setBioAssayDimension( bioAssayDimension );
+
+            vectors.add( vector );
+
+        }
+        log.info( "Created " + vectors.size() + " data vectors" );
+        return vectors;
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+}
