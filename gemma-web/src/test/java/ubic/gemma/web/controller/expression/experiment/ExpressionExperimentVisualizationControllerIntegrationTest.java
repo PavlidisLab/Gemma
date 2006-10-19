@@ -28,6 +28,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.AbstractExpressionExperimentTest;
+import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand;
+import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationFormController;
 
 /**
  * Tests the expressionExperimentVisualizationController functionality. For this to work, data must be left in the database,

@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <jsp:useBean id="expressionExperimentVisualizationCommand" scope="request"
-	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationCommand" />
+	class="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand" />
 
 <spring:bind path="expressionExperimentVisualizationCommand.*">
 	<c:if test="${not empty status.errorMessages}">
