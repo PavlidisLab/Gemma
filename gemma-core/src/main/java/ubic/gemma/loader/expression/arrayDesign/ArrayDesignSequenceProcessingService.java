@@ -276,13 +276,15 @@ public class ArrayDesignSequenceProcessingService {
         if ( !wasOriginallyLackingCompositeSequences ) {
             percent = 0;
             done = 0;
+            int numWithNoSequence = 0;
             for ( CompositeSequence originalCompositeSequence : arrayDesign.getCompositeSequences() ) {
                 // go back and fill this information into the composite sequences, namely the database entry
                 // information.
                 CompositeSequence compositeSequenceFromParse = quickFindMap.get( originalCompositeSequence.getName() );
                 if ( compositeSequenceFromParse == null ) {
-                    throw new IllegalArgumentException( "Array Design file did not contain "
-                            + originalCompositeSequence.getName() );
+                    numWithNoSequence++;
+                    notifyAboutMissingSequences( numWithNoSequence, originalCompositeSequence );
+                    continue;
                 }
 
                 originalCompositeSequence.setBiologicalCharacteristic( compositeSequenceFromParse
@@ -303,6 +305,15 @@ public class ArrayDesignSequenceProcessingService {
         arrayDesignService.update( arrayDesign );
         log.info( "Done adding sequence information!" );
         return bioSequences;
+    }
+
+    private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
+        if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
+            log.warn( "More than " + 20 + " compositeSequences do not have"
+                    + " biologicalCharacteristics, skipping further details." );
+        } else if ( numWithNoSequence < 20 ) {
+            log.warn( "No sequence match for " + compositeSequence + "; it will not have a biologicalCharacteristic!" );
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -638,13 +649,7 @@ public class ArrayDesignSequenceProcessingService {
                 if ( log.isDebugEnabled() ) log.debug( "Found match by accession" );
             } else {
                 numWithNoSequence++;
-                if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
-                    log.warn( "More than " + 20
-                            + " compositeSequences do not have biologicalCharacteristics, skipping further details." );
-                } else if ( numWithNoSequence < 20 ) {
-                    log.warn( "No sequence match for " + compositeSequence
-                            + "; it will not have a biologicalCharacteristic!" );
-                }
+                notifyAboutMissingSequences( numWithNoSequence, compositeSequence );
             }
 
             if ( match != null ) {

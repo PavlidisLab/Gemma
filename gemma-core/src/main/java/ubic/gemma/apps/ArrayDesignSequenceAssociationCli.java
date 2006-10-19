@@ -28,7 +28,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
@@ -39,7 +38,6 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  */
 public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
-    TaxonService taxonService;
 
     private String sequenceType;
     private String sequenceFile;
