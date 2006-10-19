@@ -5,7 +5,24 @@
 <%@ page import="java.util.Collection" %>
 <html>
 <body>
-From here you can search the Gemma database for existing Genes.<BR><BR>
+From here you can search the Gemma database for existing Genes.
+<BR />
+The search will be by:
+<BR />
+<BR />
+- official symbol (implemented)
+<BR />
+- synonym/Gene alias
+<BR /> 
+- genes that have gene products with that name or GI number
+<BR />
+- genes that have bioSequences with that name or GI number
+<BR /><BR />
+
+<form name="geneSearch" action="geneFinder.html" method="POST">
+<input type="text" name="searchString" />
+<input type="submit" value="Search">
+</form>
 
 
 </body>

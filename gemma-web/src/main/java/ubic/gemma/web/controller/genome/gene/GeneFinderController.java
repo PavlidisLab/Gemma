@@ -29,6 +29,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.CandidateGeneListService;
 import ubic.gemma.model.genome.gene.GeneService;
 
@@ -39,11 +40,9 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="geneService" ref="geneService"
- * @spring.property name="candidateGeneListService" ref="candidateGeneListService"
  */
 public class GeneFinderController extends SimpleFormController {
     private GeneService geneService;
-    public CandidateGeneListService candidateGeneListService;
 
     /**
      * @return Returns the bibliographicReferenceService.
@@ -59,49 +58,18 @@ public class GeneFinderController extends SimpleFormController {
         this.geneService = geneService;
     }
 
-    /**
-     * @return Returns the candidateGeneListService.
-     */
-    public CandidateGeneListService getCandidateGeneListService() {
-        return candidateGeneListService;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setCandidateGeneListService( CandidateGeneListService candidateGeneListService ) {
-        this.candidateGeneListService = candidateGeneListService;
-    }
-
     @Override
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        String view = "geneFinder";
-        String act = request.getParameter( "action" );
-        String searchType = request.getParameter( "searchtype" );
-        String lookup = request.getParameter( "lookup" );
-        String geneID = request.getParameter( "geneID" );
-        String listID = request.getParameter( "listID" );
-        if ( act == null ) act = "all";
-        Map<String, Collection> geneModel = new HashMap<String, Collection>();
+        String searchString = request.getParameter( "searchString" );
 
-        if ( searchType.compareTo( "all" ) == 0 ) {
-            geneModel.put( "genes", this.getGeneService().loadAll() );
-        }
-        if ( searchType.compareTo( "bySymbol" ) == 0 ) {
-            geneModel.put( "genes", this.getGeneService().findByOfficialSymbol( lookup ) );
-        }
-        if ( searchType.compareTo( "bySymbolInexact" ) == 0 ) {
-            lookup = "%" + lookup + "%";
-            geneModel.put( "genes", this.getGeneService().findByOfficialSymbolInexact( lookup ) );
-        }
-        if ( searchType.compareTo( "byName" ) == 0 ) {
-            geneModel.put( "genes", this.getGeneService().findByOfficialName( lookup ) );
-        }
-
-        return new ModelAndView( view, "model", geneModel );
+        // search by inexact symbol
+        Collection<Gene> genes = this.getGeneService().findByOfficialSymbolInexact( searchString );
+        ModelAndView mav = new ModelAndView("genes");
+        mav.addObject( "genes", genes );
+        return mav;
 
     }
 

@@ -36,6 +36,9 @@
 	<li>
 		<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a>
 	</li>
+	<li>
+		<a href="<c:url value="/geneFinder.html"/>"> <fmt:message key="menu.GeneFinder" /> </a>
+	</li>
 	<authz:authorize ifAnyGranted="user,admin">
 		<li>
 			<a href="<c:url value="/editProfile.html"/>"> <fmt:message key="menu.user" /> </a>

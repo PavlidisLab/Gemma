@@ -34,6 +34,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -159,4 +160,27 @@ public class GeneController extends BaseMultiActionController {
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         return mav;
     }
+    
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings({ "unused", "unchecked" })
+    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        Gene gene = geneService.load( id );
+        if ( gene == null ) {
+            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+            return new ModelAndView( "mainMenu.html" );
+        }
+        ModelAndView mav = new ModelAndView("compositeSequences");
+        mav.addObject( "gene", gene );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
+        mav.addObject( "compositeSequences", compositeSequences );
+        return mav;
+    }
+    
+    
 }

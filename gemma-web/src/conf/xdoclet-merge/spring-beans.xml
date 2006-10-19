@@ -208,6 +208,7 @@
 		<props>
 			<prop key="/gene/showAllGenes.html">showAll</prop>
 			<prop key="/gene/showGene.html">show</prop>
+			<prop key="/gene/showCompositeSequences.html">showCompositeSequences</prop>
 		</props>
 	</property>
 </bean>

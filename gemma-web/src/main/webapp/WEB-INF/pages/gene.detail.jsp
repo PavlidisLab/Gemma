@@ -56,7 +56,7 @@
 		
 		<br />
 		There are <b>
-		<c:out value="${compositeSequenceCount}"/> 
+		<a href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><c:out value="${compositeSequenceCount}"/> </a>
 		</b>
 		composite sequences associated with this gene.
 		<br />
