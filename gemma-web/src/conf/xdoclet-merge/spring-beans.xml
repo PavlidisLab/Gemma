@@ -48,9 +48,8 @@
 			<prop key="/expressionExperiment/*">expressionExperimentController</prop>
 			<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
 			<prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
-			<prop key="/expressionExperiment/expressionExperimentVisualization.html">
-				expressionExperimentVisualizationFormController
-			</prop>
+			<prop key="/expressionExperiment/expressionExperimentVisualization.html">expressionExperimentVisualizationFormController</prop>
+			<prop key="/expressionExperiment/visualizeDataMatrix.html">expressionExperimentVisualizationController</prop>
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
 			<prop key="/gene/*">geneController</prop>
 			<prop key="/geneFinder.html">geneFinderController</prop>
@@ -182,6 +181,14 @@
 			<prop key="/expressionExperiment/showExpressionExperiment.html">show</prop>
 			<prop key="/expressionExperiment/showBioAssaysFromExpressionExperiment.html">showBioAssays</prop>
 			<prop key="/expressionExperiment/showExpressionExperimentSubSet.html">showSubSet</prop>
+		</props>
+	</property>
+</bean>
+<bean id="expressionExperimentVisualizationActions"
+	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+	<property name="mappings">
+		<props>
+			<prop key="/expressionExperiment/visualizeDataMatrix.html">show</prop>
 		</props>
 	</property>
 </bean>
