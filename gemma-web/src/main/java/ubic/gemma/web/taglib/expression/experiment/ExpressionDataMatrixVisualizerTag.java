@@ -40,7 +40,7 @@ import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
  * @author keshav
  * @version $Id$
  */
-public class HtmlMatrixVisualizerTag extends TagSupport {
+public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private static final long serialVersionUID = 6403196597063627020L;
 
@@ -121,7 +121,8 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
-                buf.append( "<img src=\"" + imageFile + "\">" );
+                //buf.append( "<img src=\"" + imageFile + "\">" );
+                buf.append( "<img src=\"visualizeDataMatrix.html?type=bar \"border=1 width=400 height=300/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( String name : designElementNames ) {
@@ -139,7 +140,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
-            throw new JspException( "HtmlMatrixVisualizationTag: " + ex.getMessage() );
+            throw new JspException( "ExpressionDataMatrixVisualizationTag: " + ex.getMessage() );
         }
 
         log.debug( "return SKIP_BODY" );

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.expression.experiment;
+package ubic.gemma.web.controller.visualization;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.bean id="expressionExperimentVisualizationFormController"  
  * @spring.property name = "commandName" value="expressionExperimentVisualizationCommand"
  * @spring.property name = "commandClass"
- *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationCommand"
+ *                  value="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand"
  * @spring.property name = "formView" value="expressionExperimentVisualizationForm"
  * @spring.property name = "successView" value="showExpressionExperimentVisualization"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
@@ -253,7 +253,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             // call service which produces expression data image based on gene symbol search criteria
         }
 
-        log.debug( "here" );
         return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer", expressionDataMatrixVisualizer );
     }
 
