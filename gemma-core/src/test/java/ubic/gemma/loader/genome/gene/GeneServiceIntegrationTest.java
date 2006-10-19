@@ -13,6 +13,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -27,6 +28,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     String officialName = "PPARA";
     String accession = "GPL140";
     
+    @SuppressWarnings("unchecked")
     public void testGetCompositeSequenceCountById() throws Exception {
 
         // get geneService
@@ -38,8 +40,21 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         assert ( count != 0 );
     }
     
+    @SuppressWarnings("unchecked")
+    public void testGetCompositeSequencesById() throws Exception {
+
+        // get geneService
+        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        // get a gene to get the id
+        Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
+        Gene g = geneCollection.iterator().next();
+        Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
+        assert ( compSequences.size() != 0 );
+    }
+    
     
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
+    @SuppressWarnings("unchecked")
     protected void onSetUp() throws Exception {
             super.onSetUp();
             
