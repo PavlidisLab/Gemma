@@ -6,12 +6,17 @@ function updateProgress(data) {
 	document.getElementById("progressTextArea").value = data.description + document.getElementById("progressTextArea").value;
 	
 	if (data.done && data.forwardingURL != null) {
-			window.location = data.forwardingURL;
+			redirect( data.forwardingURL );
 	} else {
 		window.setTimeout("refreshProgress()", 1000);
 	}
 	return true;
 }
+
+function redirect(url) {
+   window.location = url;
+}
+
 function startProgress() {
 	document.getElementById("progressBar").style.display = "block";
 	document.getElementById("progressTextArea").value = "Monitoring Progress...";

@@ -18,6 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +40,9 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -138,44 +145,45 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+        log.info( "Entering onSubmit" );
         ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
         Cookie cookie = new ArrayDesignSequenceAddCookie( commandObject );
         response.addCookie( cookie );
 
-        FileUpload fileUpload = commandObject.getSequenceFile();
-
         ArrayDesign arrayDesign = commandObject.getArrayDesign();
-        SequenceType sequenceType = commandObject.getSequenceType();
-        Taxon taxon = commandObject.getTaxon();
 
         if ( arrayDesignService.getCompositeSequenceCount( arrayDesign ) == 0 ) {
             errors.rejectValue( "arrayDesign", "arrayDesign.nocompositesequences",
                     "Array design did not have any compositesequences" );
             return showForm( request, response, errors );
         }
+        ProgressJob job = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
+                .getName(), "Processing " + arrayDesign );
 
+        log.info( "thawing " + arrayDesign );
+        arrayDesignService.thaw( arrayDesign );
+        log.info( "done thawing" );
         // validate a file was entered
+        FileUpload fileUpload = commandObject.getSequenceFile();
         if ( fileUpload.getName() != null && fileUpload.getFile().length == 0 ) {
             Object[] args = new Object[] { getText( "arrayDesignSequenceAddCommand.file", request.getLocale() ) };
             errors.rejectValue( "file", "errors.required", args, "File" );
             return showForm( request, response, errors );
         }
 
-        ProgressJob job = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
-                .getName(), "Loading data from " + fileUpload.getName() );
-        CommonsMultipartFile sequenceFile = FileUploadUtil.uploadFile( request, fileUpload, "sequenceFile.file" );
+        ProgressManager.updateCurrentThreadsProgressJob( "Copying file" );
+        File file = FileUploadUtil.copyUploadedFile( request, fileUpload, "sequenceFile.file" );
 
-        Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
-                sequenceFile.getInputStream(), sequenceType, taxon );
+        if ( !file.canRead() ) {
+            errors.rejectValue( "file", "errors.required", "File was not uploaded successfully?" );
+            return showForm( request, response, errors );
+        }
 
         ProgressManager.destroyProgressJob( job );
 
-        Map<String, Object> model = new HashMap<String, Object>();
+        startJob( commandObject, request, "Loading sequences for " + commandObject.getArrayDesign().getName() );
 
-        model.put( "numSequencesProcessed", bioSequences.size() );
-
-        return new ModelAndView( this.getSuccessView(), model );
-
+        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html" ) );
     }
 
     class ArrayDesignSequenceAddCookie extends ConfigurationCookie {
@@ -264,9 +272,56 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
      *      java.lang.Object, java.lang.String)
      */
     @Override
-    protected BackgroundControllerJob getRunner( SecurityContext securityContext, Object command, String jobDescription ) {
-        // TODO Auto-generated method stub
-        return null;
+    protected BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
+            Object command, String jobDescription ) {
+        return new ArrayDesignSequenceAddJob( securityContext, request, command, jobDescription );
     }
 
+    class ArrayDesignSequenceAddJob extends BackgroundControllerJob {
+
+        public ArrayDesignSequenceAddJob( SecurityContext securityContext, HttpServletRequest request, Object command,
+                String jobDescription ) {
+
+            init( securityContext, request, command, jobDescription );
+        }
+
+        public void run() {
+            SecurityContextHolder.setContext( securityContext );
+
+            ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
+
+            FileUpload fileUpload = commandObject.getSequenceFile();
+
+            ArrayDesign arrayDesign = commandObject.getArrayDesign();
+            SequenceType sequenceType = commandObject.getSequenceType();
+            Taxon taxon = commandObject.getTaxon();
+
+            ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
+                    "Loading data from " + fileUpload.getName() );
+
+            job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
+
+            try {
+
+                File file = fileUpload.getLocalPath();
+
+                assert file != null;
+
+                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+
+                Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
+                        arrayDesign, stream, sequenceType, taxon );
+
+                stream.close();
+
+                this.saveMessage( this.session, "Successfully loaded " + bioSequences.size() + " sequences for "
+                        + arrayDesign );
+
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            ProgressManager.destroyProgressJob( job );
+        }
+    }
 }

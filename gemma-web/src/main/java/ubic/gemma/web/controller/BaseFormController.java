@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -164,7 +165,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param msg
      */
     @SuppressWarnings("unchecked")
-    private void saveMessage( HttpServletRequest request, String msg ) {
+    public void saveMessage( HttpServletRequest request, String msg ) {
         List<String> messages = ( List<String> ) request.getSession().getAttribute( "messages" );
 
         if ( messages == null ) {
@@ -173,6 +174,18 @@ public abstract class BaseFormController extends SimpleFormController {
 
         messages.add( msg );
         request.getSession().setAttribute( "messages", messages );
+    }
+
+    @SuppressWarnings("unchecked")
+    public void saveMessage( HttpSession session, String msg ) {
+        List<String> messages = ( List<String> ) session.getAttribute( "messages" );
+
+        if ( messages == null ) {
+            messages = new ArrayList<String>();
+        }
+
+        messages.add( msg );
+        session.setAttribute( "messages", messages );
     }
 
     /**

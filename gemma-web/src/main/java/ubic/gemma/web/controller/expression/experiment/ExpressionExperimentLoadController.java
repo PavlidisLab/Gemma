@@ -63,7 +63,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
         ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
 
-        startJob( eeLoadCommand, "Loading " + eeLoadCommand.getAccession(), request.getSession() );
+        startJob( eeLoadCommand, request, "Loading " + eeLoadCommand.getAccession() );
 
         return new ModelAndView( new RedirectView( "processProgress.html" ) );
     }
@@ -95,15 +95,17 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
      *      java.lang.Object, java.lang.String)
      */
     @Override
-    protected BackgroundControllerJob getRunner( SecurityContext securityContext, Object command, String jobDescription ) {
-        return new ExpressionExperimentLoadRun( securityContext, command, jobDescription );
+    protected BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
+            Object command, String jobDescription ) {
+        return new ExpressionExperimentLoadRun( securityContext, request, command, jobDescription );
     }
 
     @SuppressWarnings("unchecked")
     class ExpressionExperimentLoadRun extends BackgroundControllerJob {
 
-        public ExpressionExperimentLoadRun( SecurityContext securityContext, Object command, String jobDescription ) {
-            init( securityContext, command, jobDescription );
+        public ExpressionExperimentLoadRun( SecurityContext securityContext, HttpServletRequest request,
+                Object command, String jobDescription ) {
+            init( securityContext, request, command, jobDescription );
         }
 
         public void run() {

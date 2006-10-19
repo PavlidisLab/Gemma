@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
@@ -30,26 +33,31 @@ import ubic.gemma.util.progress.ProgressManager;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class BackgroundControllerJob implements Runnable {
+public abstract class BackgroundControllerJob extends BaseFormController implements Runnable {
 
     Log loadLog = LogFactory.getLog( this.getClass().getName() );
 
     protected Object command;
     protected ProgressJob job;
     protected SecurityContext securityContext;
+    protected HttpSession session;
 
     /**
      * @param securityContext
      * @param command
      * @param jobDescription
      */
-    protected void init( SecurityContext parentSecurityContext, Object commandObj, String jobDescription ) {
-        this.job = ProgressManager.createProgressJob( parentSecurityContext.getAuthentication().getName(), jobDescription );
+    protected void init( SecurityContext parentSecurityContext, HttpServletRequest request, Object commandObj,
+            String jobDescription ) {
+        this.job = ProgressManager.createProgressJob( parentSecurityContext.getAuthentication().getName(),
+                jobDescription );
 
         this.securityContext = parentSecurityContext;
 
-        // SecurityContextHolder.setContext( securityContext ); // so that acegi doesn't deny the thread permission
+        SecurityContextHolder.setContext( securityContext ); // so that acegi doesn't deny the thread permission
         this.command = commandObj;
+
+        this.session = request.getSession();
     }
 
 }

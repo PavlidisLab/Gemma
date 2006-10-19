@@ -27,10 +27,13 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
@@ -41,7 +44,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  */
 public class FileUploadUtil {
 
-    private static final int BUF_SIZE = 8192;
+    private static final int BUF_SIZE = 81920;
 
     /**
      * @param request
@@ -51,7 +54,7 @@ public class FileUploadUtil {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public static CommonsMultipartFile uploadFile( HttpServletRequest request, FileUpload fileUpload, String key )
+    public static File copyUploadedFile( HttpServletRequest request, FileUpload fileUpload, String key )
             throws IOException, FileNotFoundException {
         MultipartHttpServletRequest multipartRequest = ( MultipartHttpServletRequest ) request;
         CommonsMultipartFile file = ( CommonsMultipartFile ) multipartRequest.getFile( key );
@@ -69,12 +72,18 @@ public class FileUploadUtil {
         // retrieve the file data
         InputStream stream = file.getInputStream();
 
+        File copiedFile = new File( uploadDir + File.separatorChar + file.getOriginalFilename() );
+
+        fileUpload.setLocalPath( copiedFile );
+
         // write the file to the file specified
-        OutputStream bos = new FileOutputStream( uploadDir + file.getOriginalFilename() );
+        OutputStream bos = new FileOutputStream( copiedFile );
         int bytesRead = 0;
         byte[] buffer = new byte[BUF_SIZE];
 
-        while ( ( bytesRead = stream.read( buffer, 0, 8192 ) ) != -1 ) {
+        ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, "Copying file" ) );
+
+        while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
             bos.write( buffer, 0, bytesRead );
         }
 
@@ -92,7 +101,7 @@ public class FileUploadUtil {
         request.setAttribute( "contentType", file.getContentType() );
         request.setAttribute( "size", file.getSize() + " bytes" );
         request.setAttribute( "location", dirPath.getAbsolutePath() + File.separatorChar + file.getOriginalFilename() );
-        return file;
+        return copiedFile;
     }
 
     /**
@@ -100,7 +109,8 @@ public class FileUploadUtil {
      * @return
      */
     public static String getUploadPath( HttpServletRequest request ) {
-        return ConfigUtils.getDownloadPath() + request.getRemoteUser();
+        String id = RandomStringUtils.randomAlphanumeric( 20 );
+        return ConfigUtils.getDownloadPath() + id;
     }
 
     /**

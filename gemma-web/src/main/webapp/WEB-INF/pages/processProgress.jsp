@@ -2,14 +2,7 @@
 
 <html>
 	<head>
-		<title><fmt:message key="expressionExperiment.load.title" />
-		</title>
-		<content tag="heading">
-		<fmt:message key="expressionExperiment.load.title" />
-		</content>
-
-
-
+		<title>Wait...</title>
 		<script type='text/javascript'
 			src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
@@ -25,17 +18,22 @@
 	</head>
 	<body>
 
-
+		<h1>
+			Please wait...
+		</h1>
 
 		<div id="progressBar" style="display:none;">
 			<div id="theMeter">
-				<div id="progressBarText">  <textarea id="progressTextArea" name="" rows=5 cols=60 readonly=true> </textarea </div>
+				<div id="progressBarText">
+					<textarea id="progressTextArea" name="" rows=5 cols=60
+						readonly=true> </textarea
+				</div>
 				<div id="progressBarBox">
 					<div id="progressBarBoxContent"></div>
 				</div>
 			</div>
 		</div>
-		
+
 
 		<script type="text/javascript">
 	startProgress();

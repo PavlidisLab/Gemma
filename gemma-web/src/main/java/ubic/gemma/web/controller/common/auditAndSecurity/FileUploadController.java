@@ -62,7 +62,7 @@ public class FileUploadController extends BaseFormController {
             return showForm( request, response, errors );
         }
 
-        FileUploadUtil.uploadFile( request, fileUpload, "file" );
+        FileUploadUtil.copyUploadedFile( request, fileUpload, "file" );
         log.info( "Uploaded file!" );
 
         return new ModelAndView( getSuccessView() );

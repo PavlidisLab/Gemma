@@ -227,14 +227,22 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( arrayDesign, LockMode.READ );
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
-                arrayDesign.getCompositeSequences().size();
+                int numToDo = arrayDesign.getCompositeSequences().size();
+                int i = 0;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                     if ( cs.getBiologicalCharacteristic() != null ) cs.getBiologicalCharacteristic().getTaxon();
+                    if ( ++i % 2000 == 0 ) {
+                        log.info( "Progress: " + i + "/" + numToDo + "..." );
+                        try {
+                            Thread.sleep( 100 );
+                        } catch ( InterruptedException e ) {
+                            //
+                        }
+                    }
                 }
                 return null;
             }
         }, true );
 
     }
-
 }

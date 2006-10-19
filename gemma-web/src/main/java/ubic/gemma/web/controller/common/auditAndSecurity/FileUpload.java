@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import java.io.File;
 import java.io.Serializable;
 
 /**
@@ -35,6 +36,8 @@ public class FileUpload implements Serializable {
     private String name;
 
     private byte[] file;
+
+    private File localPath;
 
     /**
      * @return Returns the name.
@@ -64,4 +67,11 @@ public class FileUpload implements Serializable {
         this.name = name;
     }
 
+    public void setLocalPath( File file ) {
+        this.localPath = file;
+    }
+
+    public File getLocalPath() {
+        return localPath;
+    }
 }

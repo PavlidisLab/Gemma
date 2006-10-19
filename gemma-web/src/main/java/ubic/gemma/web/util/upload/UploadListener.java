@@ -102,7 +102,6 @@ public class UploadListener implements OutputStreamListener {
      */
     @SuppressWarnings("unused")
     public void error( String message ) {
-        //pJob.updateProgress( new ProgressData( ( totalBytesRead / totalToRead ) * 100, "Failed to upload", true ) );
         log.error( "There was an error in uploading a file in " + this );
     }
 

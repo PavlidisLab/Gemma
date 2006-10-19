@@ -24,8 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import uk.ltd.getahead.dwr.WebContextFactory;
 
 /**
- * <hr
- * <p>
  * This class is exposed on the client web side for ajax call backs. Notice this object has no member variables or state
  * information. DWR does not gaurantee that the same "object" will be called everytime from the client. In fact, dwr
  * seams to create a new instance of the server side object everytime it makes a call back from the client side.
@@ -33,7 +31,6 @@ import uk.ltd.getahead.dwr.WebContextFactory;
  * @author klc
  * @version $Id$
  */
-
 public class HttpProgressMonitor {
 
     protected static final Log logger = LogFactory.getLog( HttpProgressMonitor.class );
@@ -47,7 +44,17 @@ public class HttpProgressMonitor {
         // if observer not in the session means 1st time through. Add to session and move on.
         if ( po == null ) {
             po = new HttpProgressObserver();
+
+            /*
+             * If we don't have a live job, we'll check again later.
+             */
+            if (!po.hasLiveJob() ) {
+                po = null;
+                return new ProgressData();
+            }
+            
             session.setAttribute( PROGRESS_ATTRIBUTE, po );
+
         }
 
         ProgressData pd = po.getProgressData();
@@ -56,11 +63,11 @@ public class HttpProgressMonitor {
         // itself.
         if ( pd.isDone() ) {
             po.finished();
+            po = null;
             session.removeAttribute( PROGRESS_ATTRIBUTE );
         }
 
         return pd;
 
     }
-
 }

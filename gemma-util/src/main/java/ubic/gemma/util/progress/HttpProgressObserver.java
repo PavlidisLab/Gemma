@@ -27,21 +27,23 @@ import org.apache.commons.logging.LogFactory;
 import uk.ltd.getahead.dwr.WebContextFactory;
 
 /**
- * <hr
- * <p>
  * This class is intended to be stored in the web session for a given user. Receives updates for progressJobs and stores
  * the current progressData.
  * 
  * @author klc
  * @version $Id$
  */
-
 public class HttpProgressObserver implements Observer, Serializable {
 
     private static final long serialVersionUID = -1346814251664733438L;
     protected static final Log logger = LogFactory.getLog( HttpProgressObserver.class );
 
     protected ProgressData pData;
+
+    /**
+     * Indicates whether this has a live ProgressJob
+     */
+    private boolean hasLiveJob = false;
 
     /**
      * Generaly use constructor. Will automatically register for observer the current users progress jobs. todo add
@@ -52,16 +54,22 @@ public class HttpProgressObserver implements Observer, Serializable {
         pData = new ProgressData( 0, "Initializing", false );
         // Not sure the best way to do this. Perpaps subclassing for different types of monitors...
 
-        // not sure how to tell if the user is anonymous. So just see if it fails then try with the session id
-        if ( !ProgressManager.addToRecentNotification(
-                SecurityContextHolder.getContext().getAuthentication().getName(), this ) ) {
+        this.hasLiveJob = ProgressManager.addToRecentNotification( SecurityContextHolder.getContext()
+                .getAuthentication().getName(), this );
+
+        /*
+         * Can fail to get a live job if 1) there is no job or 2) there is no user.
+         */
+        if ( !hasLiveJob ) {
+
             String sessionId = WebContextFactory.get().getSession().getId();
-            boolean failed = ProgressManager.addToRecentNotification( sessionId, this );
-            logger.info( "No user asscioated with security context.  Tried to use session id: " + sessionId
-                    + "  successful = " + failed );
+            this.hasLiveJob = ProgressManager.addToRecentNotification( sessionId, this );
+
+            logger.info( "No user associated with security context.  Tried to use session id: " + sessionId
+                    + "  successful = " + hasLiveJob );
 
         }
-        // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
+
     }
 
     /**
@@ -90,5 +98,9 @@ public class HttpProgressObserver implements Observer, Serializable {
      */
     public void finished() {
 
+    }
+
+    public boolean hasLiveJob() {
+        return hasLiveJob;
     }
 }
