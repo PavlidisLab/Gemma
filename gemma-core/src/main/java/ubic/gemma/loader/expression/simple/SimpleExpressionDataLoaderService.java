@@ -25,8 +25,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xml.sax.SAXException;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
@@ -92,8 +95,17 @@ public class SimpleExpressionDataLoaderService {
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
-            BibliographicReference ref = pubfetch.retrieveByHTTP( metaData.getPubMedId() );
-            experiment.setPrimaryPublication( ref );
+
+            BibliographicReference ref;
+            try {
+                ref = pubfetch.retrieveByHTTP( metaData.getPubMedId() );
+                experiment.setPrimaryPublication( ref );
+            } catch ( Exception e ) {
+                log.error( "Problems retrieving " + metaData.getPubMedId() + ". Error is: " );
+                e.printStackTrace();
+
+                throw new RuntimeException( "Problems retrieving " + metaData.getPubMedId() );
+            }
         }
 
         QuantitationType quantitationType = convertQuantitationType( metaData );
