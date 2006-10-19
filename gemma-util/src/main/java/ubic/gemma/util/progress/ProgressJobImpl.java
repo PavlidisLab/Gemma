@@ -201,7 +201,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     
     private void updateDescriptionHistory(String message)
     {
-        this.jInfo.setMessages( this.jInfo.getMessages() + "\n" + message );
+        this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
     }
 
 }

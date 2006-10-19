@@ -3,8 +3,9 @@ function refreshProgress() {
 	HttpProgressMonitor.getProgressStatus(updateProgress);
 }
 function updateProgress(data) {
-	document.getElementById("progressTextArea").value = data.description + document.getElementById("progressTextArea").value;
-	
+	document.getElementById("progressTextArea").value += data.description + "\n";	
+   document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
+
 	if (data.done && data.forwardingURL != null) {
 			redirect( data.forwardingURL );
 	} else {
