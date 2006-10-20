@@ -32,6 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -63,6 +64,10 @@ public class BusinessKey {
         if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
     }
 
+    /**
+     * @param queryObject
+     * @param arrayDesign
+     */
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
         addNameRestriction( queryObject, arrayDesign );
 
@@ -77,6 +82,7 @@ public class BusinessKey {
             Disjunction disjunction = Restrictions.disjunction();
             for ( DatabaseEntry databaseEntry : arrayDesign.getExternalReferences() ) {
                 disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
+                // FIXME this should include the ExternalDatabase in the criteria.
             }
             externalRef.add( disjunction );
         }
@@ -88,6 +94,17 @@ public class BusinessKey {
         }
 
         if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
+    }
+
+    /**
+     * @param queryObject
+     * @param databaseEntry
+     * @param attributeName
+     */
+    public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
+        Criteria externalRef = queryObject.createCriteria( attributeName );
+        externalRef.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
+        if ( log.isDebugEnabled() ) log.debug( queryObject );
     }
 
     /**
@@ -560,4 +577,27 @@ public class BusinessKey {
         addRestrictions( queryObject, ontologyEntry );
         return queryObject;
     }
+
+    /**
+     * @param accession
+     */
+    public static void checkKey( DatabaseEntry accession ) {
+        if ( accession.getId() != null ) return;
+        if ( StringUtils.isBlank( accession.getAccession() ) ) {
+            throw new IllegalArgumentException( accession + " did not have an accession" );
+        }
+        checkKey( accession.getExternalDatabase() );
+
+    }
+
+    /**
+     * @param externalDatabase
+     */
+    public static void checkKey( ExternalDatabase externalDatabase ) {
+        if ( externalDatabase.getId() != null ) return;
+        if ( StringUtils.isBlank( externalDatabase.getName() ) ) {
+            throw new IllegalArgumentException( externalDatabase + " did not have a name" );
+        }
+    }
+
 }

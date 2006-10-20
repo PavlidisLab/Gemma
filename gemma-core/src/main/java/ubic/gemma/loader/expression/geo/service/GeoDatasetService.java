@@ -21,7 +21,10 @@ package ubic.gemma.loader.expression.geo.service;
 import java.util.Collection;
 
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
@@ -29,12 +32,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="geoDatasetService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  */
 public class GeoDatasetService extends AbstractGeoService {
 
+    ExpressionExperimentService expressionExperimentService;
+
     /**
-     * Given a GEO GSE or GDS:
+     * Given a GEO GSE or GDS (or GPL, but support might not be complete)
      * <ol>
+     * <li>Check that it doesn't already exist in the system</li>
      * <li>Download and parse GDS files and GSE file needed</li>
      * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
      * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
@@ -48,6 +55,10 @@ public class GeoDatasetService extends AbstractGeoService {
         this.geoConverter.clear();
         geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
+
+        Collection<DatabaseEntry> projectedAccessions = geoDomainObjectGenerator.getProjectedAccessions( geoAccession );
+
+        checkForExisting( projectedAccessions );
 
         if ( this.loadPlatformOnly ) {
             Collection<?> platforms = geoDomainObjectGenerator.generate( geoAccession );
@@ -79,6 +90,28 @@ public class GeoDatasetService extends AbstractGeoService {
         log.info( "Persisted " + series.getGeoAccession() );
         this.geoConverter.clear();
         return persistedResult;
+    }
+
+    /**
+     * @param projectedAccessions
+     */
+    private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
+        for ( DatabaseEntry entry : projectedAccessions ) {
+            ExpressionExperiment existing = expressionExperimentService.findByAccession( entry );
+            if ( existing != null ) {
+                String message = "There is already an expression experiment that matches " + entry.getAccession()
+                        + ", " + existing.getName();
+                log.info( message );
+                throw new AlreadyExistsInSystemException( message );
+            }
+        }
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
 }

@@ -38,12 +38,14 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -276,10 +278,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject();
 
         vo.setId( entity.getId().toString() );
-        vo.setAccession( entity.getAccession().getAccession() );
+
+        if ( entity.getAccession() != null ) {
+            vo.setAccession( entity.getAccession().getAccession() );
+            vo.setExternalDatabase( entity.getAccession().getExternalDatabase().getName() );
+            vo.setExternalUri( entity.getAccession().getExternalDatabase().getWebUri() );
+        }
+
         vo.setName( entity.getName() );
-        vo.setExternalDatabase( entity.getAccession().getExternalDatabase().getName() );
-        vo.setExternalUri( entity.getAccession().getExternalDatabase().getWebUri() );
+
         vo.setSource( entity.getSource() );
         vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
         vo.setTaxon( getTaxon( entity ) );
@@ -350,15 +357,44 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }, true );
 
     }
-    
+
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
         final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon where EE.id = :id";
 
         return ( Taxon ) queryByIdReturnObject( id, queryString );
-        
+
     }
 
-    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
+     */
+    @Override
+    public ExpressionExperiment findByAccession( DatabaseEntry accession ) {
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( ExpressionExperiment.class );
+
+            BusinessKey.checkKey( accession );
+            BusinessKey.attachCriteria( queryObject, accession, "accession" );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + ExpressionExperiment.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( ExpressionExperiment ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
 }

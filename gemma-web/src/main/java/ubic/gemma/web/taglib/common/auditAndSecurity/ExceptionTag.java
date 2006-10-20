@@ -32,6 +32,8 @@ public class ExceptionTag extends TagSupport {
 
     Exception exception;
 
+    Boolean showStackTrace = true;
+
     /*
      * (non-Javadoc)
      * 
@@ -58,14 +60,17 @@ public class ExceptionTag extends TagSupport {
                 buf.append( "<p>" );
                 buf.append( exception.getMessage() );
                 buf.append( "</p>" );
-                buf
-                        .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
-                if ( exception.getStackTrace() != null ) {
-                    buf.append( ExceptionUtils.getFullStackTrace( exception ) );
-                } else {
-                    buf.append( "There was no stack trace!" );
+
+                if ( showStackTrace ) {
+                    buf
+                            .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
+                    if ( exception.getStackTrace() != null ) {
+                        buf.append( ExceptionUtils.getFullStackTrace( exception ) );
+                    } else {
+                        buf.append( "There was no stack trace!" );
+                    }
+                    buf.append( "</textarea>" );
                 }
-                buf.append( "</textarea>" );
             }
 
             pageContext.getOut().print( buf.toString() );
@@ -81,6 +86,14 @@ public class ExceptionTag extends TagSupport {
      */
     public void setException( Exception exception ) {
         this.exception = exception;
+    }
+
+    /**
+     * @jsp.attribute description="Should the full stack trace be displayed?" required="false" rtexprvalue="true"
+     * @param showStackTrace the showStackTrace to set
+     */
+    public void setShowStackTrace( Boolean showStackTrace ) {
+        this.showStackTrace = showStackTrace;
     }
 
 }

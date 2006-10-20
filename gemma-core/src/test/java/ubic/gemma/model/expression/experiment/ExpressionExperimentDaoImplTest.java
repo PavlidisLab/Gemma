@@ -18,40 +18,52 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
- * @author Kiran Keshav
+ * @author kkeshav
+ * @author pavlidis
  * @version $Id$
  */
 public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringContextTest {
 
     ExpressionExperimentDao expressionExperimentDao;
-    
+
     /**
      * 
      */
-    private static final String EE_NAME = "Expression Experiment with Contact";
+    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     ContactService cs = null;
     ExpressionExperiment ee = null;
+    ExternalDatabase ed;
+    String accession;
+    String contactName;
 
     /**
      * @exception Exception
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
+
         super.onSetUpInTransaction();
 
         ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( EE_NAME );
 
-        Contact c = Contact.Factory.newInstance();
-        c.setName( "Foobar Barfoo" );
+        DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
+        accession = accessionEntry.getAccession();
+        ed = accessionEntry.getExternalDatabase();
+        ee.setAccession( accessionEntry );
 
-        cs = ( ContactService ) getBean( "contactService" );
-        c = cs.findOrCreate( c );
+        Contact c = this.getTestPersistentContact();
+        this.contactName = c.getName();
+
         ee.setOwner( c );
 
         ee = expressionExperimentDao.findOrCreate( ee );
@@ -63,11 +75,17 @@ public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringCont
      * @throws Exception
      */
     public void testGetOwner() throws Exception {
-        // FIXME not a good test?
+        // what is this testing exactly?
         ExpressionExperiment expressionExperiment = expressionExperimentDao.findByName( EE_NAME );
         assertNotNull( expressionExperiment );
-        log.debug( "Contact: " + expressionExperiment.getOwner() );
+    }
 
+    public final void testFindByAccession() throws Exception {
+        DatabaseEntry accessionEntry = DatabaseEntry.Factory.newInstance( ed );
+        accessionEntry.setAccession( accession );
+
+        ExpressionExperiment expressionExperiment = expressionExperimentDao.findByAccession( accessionEntry );
+        assertNotNull( expressionExperiment );
     }
 
     /**

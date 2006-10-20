@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,6 +36,8 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.util.fetcher.Fetcher;
 import ubic.gemma.loader.util.sdo.SourceDomainObjectGenerator;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
@@ -150,8 +153,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     // for ( String accession : datasetsToProcess ) {
     // result.add( processDataSet( accession ) );
     // }
-    //        return result;
-    //    }
+    // return result;
+    // }
 
     /**
      * @param geoAccession
@@ -301,8 +304,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @param series
      */
     private void processRawData( GeoSeries series ) {
+        if ( StringUtils.isBlank( series.getSupplementaryFile() ) ) {
+            return;
+        }
+
         RawDataFetcher rawFetcher = new RawDataFetcher();
-        Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getGeoAccession() );
+        Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getSupplementaryFile() );
         if ( rawFiles != null ) {
             // FIXME maybe do something more. These are usually (always?) CEL files so they can be parsed and
             // assembled or left alone.
@@ -338,37 +345,40 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         this.platformFetcher = platformFetcher;
     }
 
-}
-
-class NoDatasetForSeriesException extends RuntimeException {
-
     /**
+     * Determine the set of external accession values that will be generated during parsing. This can be used to
+     * pre-empt time-consuming fetch and download of data we already have.
      * 
+     * @param geoAccession
+     * @return
      */
-    public NoDatasetForSeriesException() {
-        super();
-    }
+    public Collection<DatabaseEntry> getProjectedAccessions( String geoAccession ) {
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setName( "GEO" );
+        Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
+        // DatabaseEntry
 
-    /**
-     * @param message
-     * @param cause
-     */
-    public NoDatasetForSeriesException( String message, Throwable cause ) {
-        super( message, cause );
-    }
+        String seriesAccession;
+        if ( geoAccession.startsWith( "GSE" ) ) {
+            seriesAccession = geoAccession;
+        } else if ( geoAccession.startsWith( "GPL" ) ) {
+            // hmm.. FIXME
+            log.warn( "Determining if the data already exist for a GPL (" + geoAccession + ") is not implemented." );
+            return null;
+        } else if ( geoAccession.startsWith( "GDS" ) ) {
+            seriesAccession = DatasetCombiner.findGSEforGDS( geoAccession );
+            if ( seriesAccession == null ) {
+                throw new InvalidAccessionException( "There is no series (GSE) for the accession " + geoAccession );
+            }
+        } else {
+            throw new InvalidAccessionException( geoAccession
+                    + " is not understood by Gemma; must be a GSE, GDS or GPL" );
+        }
 
-    /**
-     * @param message
-     */
-    public NoDatasetForSeriesException( String message ) {
-        super( message );
-    }
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance( ed );
+        de.setAccession( seriesAccession );
+        accessions.add( de );
 
-    /**
-     * @param cause
-     */
-    public NoDatasetForSeriesException( Throwable cause ) {
-        super( cause );
+        return accessions;
     }
-
 }

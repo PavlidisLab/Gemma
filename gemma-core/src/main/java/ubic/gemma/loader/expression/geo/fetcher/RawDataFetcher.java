@@ -54,14 +54,14 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         this.netDataSourceUtil = new GeoUtil();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /**
+     * @param identifier The url for the supplementary file.
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
     @Override
     public Collection<LocalFile> fetch( String identifier ) {
         try {
+            // FIXME this needs to deal with the URL.
             if ( f == null || !f.isConnected() ) f = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
             assert f != null;
             File newDir = mkdir( identifier );

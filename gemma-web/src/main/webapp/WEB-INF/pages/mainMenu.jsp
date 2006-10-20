@@ -18,21 +18,11 @@
 		<a href="<c:url value="/searcher.html"/>"> <fmt:message key="menu.compassSearcher" /> </a>
 	</li>
 	<li>
-		<!--    Paul, uncomment to use webflow implementation    
-		<a href="<c:url value="/flowController.html?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
-		-->
 		<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
 	</li>
 	<li>
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>"> <fmt:message
 				key="menu.ExpressionExperimentSearch" /> </a>
-	</li>
-
-	<li>
-		<a href="<c:url value="/candidateGeneList.html"/>"> <fmt:message key="menu.CandidateGeneList" /> </a>
-	</li>
-	<li>
-		<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" /> </a>
 	</li>
 	<li>
 		<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a>
@@ -77,4 +67,17 @@
 			</a>
 		</li>
 	</ul>
+
+	<h2>
+		Inactive, deprecated, or not ready for prime time
+	</h2>
+	<ul class="glassList">
+		<li>
+			<a href="<c:url value="/candidateGeneList.html"/>"> <fmt:message key="menu.CandidateGeneList" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" /> </a>
+		</li>
+	</ul>
+
 </authz:authorize>

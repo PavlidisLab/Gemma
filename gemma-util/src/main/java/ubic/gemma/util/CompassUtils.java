@@ -19,7 +19,6 @@
 package ubic.gemma.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
@@ -27,8 +26,8 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.FSDirectory;
-import org.compass.gps.spi.CompassGpsInterfaceDevice;
-import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
+import org.compass.gps.device.AbstractGpsDevice;
+import org.compass.gps.spi.CompassGpsInterfaceDevice; 
 
 /**
  * Utility methods to manipulate compass (and lucene).
@@ -92,9 +91,8 @@ public class CompassUtils {
      * 
      * @param device
      */
-    public static void disableIndexMirroring( SpringHibernate3GpsDevice device ) {
-        SpringHibernate3GpsDevice indexer = device;
-        indexer.stop();
+    public static void disableIndexMirroring( AbstractGpsDevice device ) {
+        device.stop();
     }
 
     /**
@@ -102,8 +100,7 @@ public class CompassUtils {
      * 
      * @param device
      */
-    public static void enableIndexMirroring( SpringHibernate3GpsDevice device ) {
-        SpringHibernate3GpsDevice indexer = device;
-        indexer.start();
+    public static void enableIndexMirroring( AbstractGpsDevice device ) {
+        device.start();
     }
 }
