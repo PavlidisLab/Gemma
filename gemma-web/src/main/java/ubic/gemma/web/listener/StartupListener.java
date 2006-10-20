@@ -34,6 +34,7 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
@@ -95,6 +96,12 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         loadVersionInformation( config );
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
+
+        /*
+         * disable compass indexing. 
+         */
+        SpringHibernate3GpsDevice indexer = ( SpringHibernate3GpsDevice ) ctx.getBean( "hibernateGpsDevice" );
+        indexer.stop();
 
         loadRememberMeStatus( config, ctx );
 
