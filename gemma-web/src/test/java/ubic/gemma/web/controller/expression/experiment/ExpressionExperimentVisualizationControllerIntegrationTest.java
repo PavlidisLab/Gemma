@@ -32,8 +32,8 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
 import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationFormController;
 
 /**
- * Tests the expressionExperimentVisualizationController functionality. For this to work, data must be left in the database,
- * hence the integration test naming convention.
+ * Tests the expressionExperimentVisualizationController functionality. For this to work, data must be left in the
+ * database, hence the integration test naming convention.
  * 
  * @author keshav
  * @version $Id$
@@ -48,7 +48,7 @@ public class ExpressionExperimentVisualizationControllerIntegrationTest extends 
         ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
 
         ExpressionExperimentVisualizationFormController controller = ( ExpressionExperimentVisualizationFormController ) this
-                .getBean( "expressionExperimentSearchController" );
+                .getBean( "expressionExperimentVisualizationFormController" );
 
         HttpServletRequest request = new MockHttpServletRequest();
         HttpServletResponse response = new MockHttpServletResponse();
@@ -64,7 +64,8 @@ public class ExpressionExperimentVisualizationControllerIntegrationTest extends 
         BindException errors = new BindException( command, "ExpressionExperimentSearchCommand" );
         controller.processFormSubmission( request, response, command, errors );
         ModelAndView mav = controller.onSubmit( request, response, command, errors );
-        assertEquals( "showExpressionExperimentSearchResults", mav.getViewName() );
+        log.warn( mav.getViewName() );
+        assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
 
     }
 }
