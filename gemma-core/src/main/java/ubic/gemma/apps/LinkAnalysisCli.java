@@ -8,11 +8,15 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -23,6 +27,8 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -153,6 +159,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             geoService.setLoadPlatformOnly( false );
             Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( this.geneExpressionFile );
             
+            ExpressionExperimentService eeService = (ExpressionExperimentService)this.getBean("expressionExperimentService");
             //this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
             ExpressionDataMatrixService expressionDataMatrixService = (ExpressionDataMatrixService) this.getBean("expressionDataMatrixService");
             DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getMatrix(ees.iterator().next(), this.getQuantitationType());
@@ -161,7 +168,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             DesignElementDataVectorService vectorService = (DesignElementDataVectorService) this.getBean("designElementDataVectorService");
             Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix(ees.iterator().next(), this.getQuantitationType());
             this.linkAnalysis.setDataVector(dataVectors);
-            
+            this.linkAnalysis.setPPService((Probe2ProbeCoexpressionService)this.getBean("probe2ProbeCoexpressionService"));
+            this.linkAnalysis.setTaxon(eeService.getTaxon(ees.iterator().next().getId()));
+
             this.linkAnalysis.analysis();
  		}
  		catch(Exception e)

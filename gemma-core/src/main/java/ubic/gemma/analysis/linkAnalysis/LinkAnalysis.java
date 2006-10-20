@@ -5,9 +5,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -15,16 +18,22 @@ import corejava.Format;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 import ubic.basecode.bio.geneset.GeneAnnotations;
+import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
 import ubic.basecode.datafilter.Filter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
-import ubic.gemma.analysis.diff.ExpressionDataManager;
+import ubic.gemma.apps.Blat.BlattableGenome;
+import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
+import ubic.gemma.model.association.coexpression.MouseGeneCoExpression;
+import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.PersisterHelper;
 
 /*
 * @author xiangwan
@@ -37,7 +46,9 @@ public class LinkAnalysis {
 	private GeneAnnotations geneAnnotations = null;
     private DoubleMatrixNamed dataMatrix = null;
     private Collection<DesignElementDataVector> dataVectors = null;
-
+    private Probe2ProbeCoexpressionService ppService = null;
+    private Taxon taxon = null;
+    
     private int uniqueItems = 0;
     private double upperTailCut;
     private double lowerTailCut;
@@ -196,8 +207,6 @@ public class LinkAnalysis {
 	@SuppressWarnings("unchecked")
 	private void init()
 	{
-		assert this.geneAnnotationFile != null;
-		assert this.dataMatrix != null;
         this.initDB();
 		Set rowsToUse = new HashSet(this.getActiveProbeIdSet());
 		try {
@@ -208,19 +217,88 @@ public class LinkAnalysis {
 		}
 		this.uniqueItems = this.geneAnnotations.numGenes();
 	}
-	public void analysis()
-	{	
-		this.init();
-		this.calculateDistribution();
-		this.getLinks();
+	private void saveLinks()
+	{
 		try{
-			if(this.useDB)
-				this.dbManager.addLinks(this.keep, this.dataMatrix);
-		}catch(SQLException e)
+			/*********Find the dataVector for each probe first****/
+			Map p2v = new HashMap<String,DesignElementDataVector>();
+			for(DesignElementDataVector vector:this.dataVectors)
+			{
+				String name = vector.getDesignElement().getName();
+				p2v.put(name,vector);
+			}
+			
+            int c = dataMatrix.columns();
+            int[] p1vAr = new int[keep.size()];
+            int[] p2vAr = new int[keep.size()];
+            int[] cbAr = new int[keep.size()];
+            int[] pbAr = new int[keep.size()];
+            System.err.println( "Ready to submit to tmm database." );
+            StopWatch watch = new StopWatch();
+            watch.start();
+            for ( int i = 0, n = keep.size(); i < n; i++ ) {
+                Link m = ( Link ) keep.get( i );
+                double w = m.getWeight();
+
+                String p1 = dataMatrix.getRowName( m.getx() );
+                String p2 = dataMatrix.getRowName( m.gety() );
+
+                DesignElementDataVector v1 = (DesignElementDataVector)p2v.get(p1);
+                DesignElementDataVector v2 = (DesignElementDataVector)p2v.get(p2);
+                p1vAr[i] = new Long(v1.getId()).intValue();
+                p2vAr[i] = new Long(v2.getId()).intValue();
+                cbAr[i] = CorrelationStats.correlAsByte( w );
+                pbAr[i] = CorrelationStats.pvalueAsByte( w, c );
+                if(this.useDB)
+                {
+                	Probe2ProbeCoexpression ppCoexpression = null;
+                	
+                    if ( taxon.getCommonName().equals( "mouse" ) ) {
+                        ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
+                    } else if ( taxon.getCommonName().equals( "rat" ) ) {
+                    	ppCoexpression = RatProbeCoExpression.Factory.newInstance();
+                    } else if ( taxon.getCommonName().equals( "human" ) ) {
+                    	ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
+                    }
+                    ppCoexpression.setFirstVector(v1);
+                    ppCoexpression.setSecondVector(v2);
+                    ppCoexpression.setScore(w);
+                    ppCoexpression.setPvalue(CorrelationStats.pvalue(w,c));
+                    ppCoexpression.setQuantitationType(v1.getQuantitationType());
+                    Probe2ProbeCoexpression ppCo = this.ppService.create(ppCoexpression);
+                }
+            }
+            watch.stop();
+            System.err.println( "The time for inserting " + this.keep.size() + " link:" + watch.getTime() );
+/**
+            System.err.println( "Ready to submit to tmm database." );
+            if(this.useDB)
+            {
+            	LinkInserter li = new LinkInserter( this.dbManager.getDbHandle() );
+            	int dataSetId = 0;
+            	int rd = li.insertBulkLink( dataSetId, p1vAr, p2vAr, cbAr, pbAr );
+            	System.err.println( "Inserted " + rd + " links into the database" );
+            }
+*/
+		}catch(Exception e)
 		{
 			System.err.println("Errors when inserting the links into database");
 			e.printStackTrace();
 		}
+		
+	}
+	public void analysis()
+	{
+		assert this.geneAnnotationFile != null;
+		assert this.dataMatrix != null;
+		assert this.ppService != null;
+		assert this.taxon != null;
+		System.err.println("Taxon: "+this.taxon.getCommonName());
+		
+		this.init();
+		this.calculateDistribution();
+		this.getLinks();
+		this.saveLinks();
 	}
 	public void outputOptions()
 	{
@@ -254,6 +332,13 @@ public class LinkAnalysis {
 	}
 	public void setDataMatrix(DoubleMatrixNamed paraDataMatrix) {
 		this.dataMatrix = paraDataMatrix;
+	}
+	public void setTaxon(Taxon taxon)
+	{
+		this.taxon = taxon;
+	}
+	public void setPPService(Probe2ProbeCoexpressionService ppService) {
+		this.ppService = ppService;
 	}
 	public void setDataVector(Collection <DesignElementDataVector> vectors) {
 		this.dataVectors = vectors;

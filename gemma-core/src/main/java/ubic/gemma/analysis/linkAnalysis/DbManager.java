@@ -23,6 +23,10 @@ public class DbManager {
 	{
 		dbHandle = new Handle(hostName, dataSet);
 	}
+	public Handle getDbHandle()
+	{
+		return this.dbHandle;
+	}
 	public void addLinks(ObjectArrayList linkLists, DoubleMatrixNamed dataMatrix) throws SQLException
 	{
 		if(linkLists.size() == 0) return;
