@@ -130,4 +130,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return compSeq;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetByGeneAlias( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select gene from GeneImpl as gene inner join gene.aliases where gene.aliases.Alias like :search";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return genes;
+    }
+
 }

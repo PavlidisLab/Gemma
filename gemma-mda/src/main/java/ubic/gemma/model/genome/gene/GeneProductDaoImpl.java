@@ -22,16 +22,58 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.genome.gene.GeneProduct
  */
 public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProductDaoBase {
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByName(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenesByName( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select gene from GeneImpl as gene inner join gene.products where  gene.products.name like :search";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return genes;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByNcbiId(java.lang.String)
+     */
+    @Override
+    protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select gene from GeneImpl as gene inner join gene.products where  gene.products.ncbiId like :search";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return genes;
+    }
 
     private static Log log = LogFactory.getLog( GeneProductDaoImpl.class.getName() );
 

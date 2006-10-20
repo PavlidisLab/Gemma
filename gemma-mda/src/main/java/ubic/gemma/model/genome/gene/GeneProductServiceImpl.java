@@ -22,10 +22,28 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneProductService
  */
 public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
+     */
+    @Override
+    protected Collection handleGetGenesByName( String search ) throws Exception {
+        return this.getGeneProductDao().getGenesByName( search );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
+     */
+    @Override
+    protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
+        return this.getGeneProductDao().getGenesByNcbiId( search );
+    }
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#create(ubic.gemma.model.genome.gene.GeneProduct)

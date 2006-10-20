@@ -33,6 +33,14 @@ import ubic.gemma.model.genome.Gene;
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
     /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
+     */
+    @Override
+    protected Collection handleGetByGeneAlias( String search ) throws Exception {
+        return this.getGeneDao().getByGeneAlias( search );
+    }
+
+    /* (non-Javadoc)
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceCountById(long)
      */
     @Override

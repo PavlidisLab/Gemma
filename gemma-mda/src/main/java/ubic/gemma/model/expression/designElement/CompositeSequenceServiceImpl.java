@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
  */
 public class CompositeSequenceServiceImpl extends
         ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase {
+
     Log log = LogFactory.getLog( this.getClass() );
 
     /**
