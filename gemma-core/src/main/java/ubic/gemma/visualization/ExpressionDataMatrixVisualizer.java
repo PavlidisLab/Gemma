@@ -38,17 +38,4 @@ public interface ExpressionDataMatrixVisualizer extends DataMatrixVisualizer {
      * @return ExpressionDataMatrix
      */
     public ExpressionDataMatrix getExpressionDataMatrix();
-
-    /**
-     * Returns the suppressVisualizations.
-     * 
-     * @return boolean
-     */
-    public boolean isSuppressVisualizations();
-
-    /**
-     * @param suppressVisualizations
-     */
-    public void setSuppressVisualizations( boolean suppressVisualizations );
-
 }

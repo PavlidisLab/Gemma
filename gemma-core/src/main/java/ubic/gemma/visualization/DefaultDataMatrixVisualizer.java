@@ -40,8 +40,6 @@ import ubic.basecode.gui.JMatrixDisplay;
 public class DefaultDataMatrixVisualizer implements DataMatrixVisualizer {
     private Log log = LogFactory.getLog( DefaultDataMatrixVisualizer.class );
 
-    private boolean suppressVisualizations;
-
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
     protected List<String> rowLabels = null;
@@ -118,24 +116,6 @@ public class DefaultDataMatrixVisualizer implements DataMatrixVisualizer {
 
         display.setCellSize( new Dimension( 16, 16 ) );
         display.saveImage( outfile );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#isSuppressVisualizations()
-     */
-    public boolean isSuppressVisualizations() {
-        return suppressVisualizations;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setSuppressVisualizations(boolean)
-     */
-    public void setSuppressVisualizations( boolean suppressVisualizations ) {
-        this.suppressVisualizations = suppressVisualizations;
     }
 
     /*

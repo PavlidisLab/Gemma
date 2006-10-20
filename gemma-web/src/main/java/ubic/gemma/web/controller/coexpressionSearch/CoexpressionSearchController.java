@@ -53,15 +53,13 @@ import ubic.gemma.web.controller.BaseFormController;
  * success view returns either a visual representation of the result set or a downloadable data file.
  * <p>
  * {@link stringency} sets the number of data sets the link must be seen in before it is listed in the results, and
- * {@link species} sets the type of species to search. 
- * {@link keywords} restrict the search.
+ * {@link species} sets the type of species to search. {@link keywords} restrict the search.
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="coexpressionSearchController"  
+ * @spring.bean id="coexpressionSearchController"
  * @spring.property name = "commandName" value="coexpressionSearchCommand"
- * @spring.property name = "commandClass"
- *                  value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
+ * @spring.property name = "commandClass" value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
  * @spring.property name = "formView" value="searchCoexpression"
  * @spring.property name = "successView" value="showCoexpressionSearchResults"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
@@ -97,7 +95,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         csc.setSearchString( "" );
         csc.setStringency( 1 );
-        csc.setSpecies("Human");
+        csc.setSpecies( "Human" );
 
         return csc;
 
@@ -122,7 +120,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Canceled" );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ));
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
 
         }
 
@@ -131,6 +129,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
     /**
      * Mock function - do not use.
+     * 
      * @param request
      * @param response
      * @param command
@@ -144,9 +143,9 @@ public class CoexpressionSearchController extends BaseFormController {
             BindException errors ) throws Exception {
 
         log.debug( "entering onSubmit" );
-        
+
         CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
-        String searchCriteria = ( (CoexpressionSearchCommand ) command ).getSearchCriteria();
+        String searchCriteria = ( ( CoexpressionSearchCommand ) command ).getSearchCriteria();
         boolean suppressVisualizations = ( ( CoexpressionSearchCommand ) command ).isSuppressVisualizations();
 
         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
@@ -156,7 +155,7 @@ public class CoexpressionSearchController extends BaseFormController {
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
         Collection foundGenes = null;
         ExpressionDataMatrix expressionDataMatrix = null;
-        ExpressionDataMatrixVisualizer matrixVisualizer = null;
+        HttpExpressionDataMatrixVisualizer matrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( Long.decode( "1" ) );
             expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
@@ -164,16 +163,14 @@ public class CoexpressionSearchController extends BaseFormController {
             matrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http", request
                     .getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
             matrixVisualizer.setSuppressVisualizations( suppressVisualizations );
-        } 
-        else if (searchCriteria.equalsIgnoreCase( "gene symbol" )) {
+        } else if ( searchCriteria.equalsIgnoreCase( "gene symbol" ) ) {
             log.debug( "search by official gene symbol" );
-            foundGenes = geneService.findByOfficialSymbol (csc.getSearchString() );
+            foundGenes = geneService.findByOfficialSymbol( csc.getSearchString() );
             // call service which produces expression data image based on gene symbol search criteria
+        } else {
+            log.debug( "Unknown search" );
         }
-        else {
-            log.debug("Unknown search");
-        }
-        ModelAndView mav = new ModelAndView(getSuccessView());
+        ModelAndView mav = new ModelAndView( getSuccessView() );
         mav.addObject( "matrixVisualizer", matrixVisualizer );
         mav.addObject( "foundGenes", foundGenes );
         mav.addObject( "coexpressionSearchCommand", csc );
@@ -190,20 +187,20 @@ public class CoexpressionSearchController extends BaseFormController {
         // add search categories
         Collection<String> searchCategories = new HashSet<String>();
         searchCategories.add( "gene symbol" );
-        //searchCategories.add( "probe set id" );
+        // searchCategories.add( "probe set id" );
 
         Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
-        
+
         searchByMap.put( "searchCategories", searchCategories );
-        
+
         // add species
         Collection<String> speciesCategories = new HashSet<String>();
         speciesCategories.add( "Human" );
         speciesCategories.add( "Mouse" );
-        speciesCategories.add( "Rat" );        
-        
-        searchByMap.put( "speciesCategories", speciesCategories );        
-        
+        speciesCategories.add( "Rat" );
+
+        searchByMap.put( "speciesCategories", speciesCategories );
+
         return searchByMap;
     }
 
@@ -220,11 +217,11 @@ public class CoexpressionSearchController extends BaseFormController {
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
     }
-    
+
     /**
      * @param geneService
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }    
+    }
 }

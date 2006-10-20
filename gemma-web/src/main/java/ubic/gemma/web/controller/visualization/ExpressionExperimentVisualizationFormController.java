@@ -61,7 +61,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentVisualizationFormController"  
+ * @spring.bean id="expressionExperimentVisualizationFormController"
  * @spring.property name = "commandName" value="expressionExperimentVisualizationCommand"
  * @spring.property name = "commandClass"
  *                  value="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand"
@@ -116,7 +116,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setName( ee.getName() );
         eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
         eesc.setStringency( 1 );
-        eesc.setSpecies("Human");
+        eesc.setSpecies( "Human" );
 
         return eesc;
 
@@ -160,7 +160,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         compositeSequences = new ArrayList<DesignElement>();
         designElementToGeneMap = new HashMap<DesignElement, Collection<Gene>>();
-        
+
         if ( expressionExperiment == null ) {
             errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
                     + " found" ) );
@@ -176,7 +176,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         String[] searchIds = StringUtils.split( searchString, "," );
 
         /* handle search by design element */
-        if ( ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
+        if ( ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria().equalsIgnoreCase(
+                "probe set id" ) ) {
             Collection<Gene> geneCol = null;
             for ( ArrayDesign design : arrayDesigns ) {
 
@@ -206,7 +207,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             }
         }
         /* handle search by gene */
-        if ( ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria().equalsIgnoreCase( "gene symbol" ) ) {
+        if ( ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria().equalsIgnoreCase(
+                "gene symbol" ) ) {
             // TODO add search by gene symbol
             errors.addError( new ObjectError( command.toString(), null, null,
                     "Search by gene symbol unsupported at this time." ) );
@@ -228,32 +230,35 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             BindException errors ) throws Exception {
 
         log.debug( "entering onSubmit" );
-        
+
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
         String searchCriteria = ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria();
-        boolean suppressVisualizations = ( ( ExpressionExperimentVisualizationCommand ) command ).isSuppressVisualizations();
-
-        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
+        boolean suppressVisualizations = ( ( ExpressionExperimentVisualizationCommand ) command )
+                .isSuppressVisualizations();
+        
+        //TODO remove this
+         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
                 + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools
                 .createDir( "../webapps/ROOT/visualization/" ) );
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
-        
+
         ExpressionDataMatrix expressionDataMatrix = null;
-        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
+        HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
             expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
 
-            expressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http", request
-                    .getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
-            expressionDataMatrixVisualizer.setSuppressVisualizations( suppressVisualizations );
+            httpExpressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http",
+                    request.getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
+            httpExpressionDataMatrixVisualizer.setSuppressVisualizations( suppressVisualizations );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
         }
 
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer", expressionDataMatrixVisualizer );
+        return new ModelAndView( getSuccessView() ).addObject( "httpExpressionDataMatrixVisualizer",
+                httpExpressionDataMatrixVisualizer );
     }
 
     /**
@@ -269,17 +274,17 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         searchCategories.add( "probe set id" );
 
         Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
-        
+
         searchByMap.put( "searchCategories", searchCategories );
-        
+
         // add species
         Collection<String> speciesCategories = new HashSet<String>();
         speciesCategories.add( "Human" );
         speciesCategories.add( "Mouse" );
-        speciesCategories.add( "Rat" );        
-        
-        searchByMap.put( "speciesCategories", speciesCategories );        
-        
+        speciesCategories.add( "Rat" );
+
+        searchByMap.put( "speciesCategories", speciesCategories );
+
         return searchByMap;
     }
 

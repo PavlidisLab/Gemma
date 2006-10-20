@@ -32,11 +32,10 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 
 /**
- * @jsp.tag name="expressionDataMatrixVisualizer" body-content="empty"
+ * @jsp.tag name="httpExpressionDataMatrixVisualizer" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -57,14 +56,15 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
 
-    private ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
+    private HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
 
     /**
      * @jsp.attribute description="The visualizer object" required="true" rtexprvalue="true"
-     * @param expressionDataMatrixVisualizer
+     * @param httpExpressionDataMatrixVisualizer
      */
-    public void setExpressionDataMatrixVisualizer( ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer ) {
-        this.expressionDataMatrixVisualizer = expressionDataMatrixVisualizer;
+    public void setHttpExpressionDataMatrixVisualizer(
+            HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer ) {
+        this.httpExpressionDataMatrixVisualizer = httpExpressionDataMatrixVisualizer;
     }
 
     /*
@@ -78,26 +78,26 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         log.debug( "start tag" );
         try {
             /* get metadata from MatrixVisualizer */
-            ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
-            String imageFile = expressionDataMatrixVisualizer.getImageFile();
+            ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
+            String imageFile = httpExpressionDataMatrixVisualizer.getImageFile();
 
             Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
-            ColorMatrix colorMatrix = expressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
+            ColorMatrix colorMatrix = httpExpressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
 
-            List<String> designElementNames = expressionDataMatrixVisualizer.getRowLabels();
+            List<String> designElementNames = httpExpressionDataMatrixVisualizer.getRowLabels();
 
             /*
              * remove me when using dynamic images
              */
-            expressionDataMatrixVisualizer.saveImage( new File( imageFile ), colorMatrix );
+            httpExpressionDataMatrixVisualizer.saveImage( new File( imageFile ), colorMatrix );
 
             /* Cannot use \ in non internet explorer browsers. Using / instead. */
             imageFile = StringUtils.replace( imageFile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
 
-            String urlPrefix = ( ( HttpExpressionDataMatrixVisualizer ) expressionDataMatrixVisualizer ).getProtocol()
-                    + "://" + ( ( HttpExpressionDataMatrixVisualizer ) expressionDataMatrixVisualizer ).getServer()
-                    + ":" + ( ( HttpExpressionDataMatrixVisualizer ) expressionDataMatrixVisualizer ).getPort() + "/";
+            String urlPrefix = httpExpressionDataMatrixVisualizer.getProtocol() + "://"
+                    + httpExpressionDataMatrixVisualizer.getServer() + ":"
+                    + httpExpressionDataMatrixVisualizer.getPort() + "/";
             imageFile = StringUtils.replace( imageFile,
                     StringUtils.splitByWholeSeparator( imageFile, "visualization" )[0], urlPrefix );
 
@@ -105,7 +105,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             StringBuilder buf = new StringBuilder();
 
-            if ( expressionDataMatrixVisualizer.isSuppressVisualizations() ) {
+            if ( httpExpressionDataMatrixVisualizer.isSuppressVisualizations() ) {
                 buf.append( "Visualizations suppressed." );
             } else if ( expressionDataMatrix == null || m.size() == 0 ) {
                 buf.append( "No data to display" );
@@ -121,7 +121,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
-                //buf.append( "<img src=\"" + imageFile + "\">" );
+                // buf.append( "<img src=\"" + imageFile + "\">" );
                 buf.append( "<img src=\"visualizeDataMatrix.html?type=bar \"border=1 width=400 height=300/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
