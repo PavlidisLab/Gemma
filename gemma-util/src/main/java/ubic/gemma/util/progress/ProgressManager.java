@@ -300,7 +300,7 @@ public class ProgressManager {
      */
     public static synchronized boolean destroyProgressJob( ProgressJob ajob ) {
 
-        ajob.updateProgress( new ProgressData( 100, "Finalizing and cleaning up...", true, ajob.getForwardingURL() ) );
+        ajob.updateProgress( new ProgressData( 100, "Task stage completed ...", true, ajob.getForwardingURL() ) );
         ajob.done();
 
         if ( progressJobs.containsKey( ajob.getTrackingId() ) ) {
