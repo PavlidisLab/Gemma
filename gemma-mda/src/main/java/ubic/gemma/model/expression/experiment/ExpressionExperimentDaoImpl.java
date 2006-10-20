@@ -353,7 +353,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
-        final String queryString = "select SU.taxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.taxon where EE.id = :id";
+        final String queryString = "select SU.taxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.BioMaterialSourceTaxon where EE.id = :id";
 
         return ( Taxon ) queryByIdReturnObject( id, queryString );
         
