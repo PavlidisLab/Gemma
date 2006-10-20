@@ -33,6 +33,7 @@ import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignFormCon
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadControllerIntegrationTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationControllerIntegrationTest;
+import ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadControllerTest;
 import ubic.gemma.web.controller.testdata.TestDataAddingControllerTest;
 import ubic.gemma.web.listener.StartupListenerTest;
 import ubic.gemma.web.util.ConfigurationCookieTest;
@@ -65,6 +66,7 @@ public class AllWebTests extends TestSuite {
         suite.addTestSuite( ExpressionExperimentVisualizationControllerIntegrationTest.class );
         suite.addTestSuite( ExpressionExperimentLoadControllerIntegrationTest.class );
         suite.addTestSuite( TestDataAddingControllerTest.class );
+        suite.addTestSuite( SimpleExpressionExperimentLoadControllerTest.class );
 
         suite.addTestSuite( StartupListenerTest.class );
         suite.addTestSuite( ValidationTest.class );
