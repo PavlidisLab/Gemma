@@ -2,15 +2,22 @@
 function refreshProgress() {
 	HttpProgressMonitor.getProgressStatus(updateProgress);
 }
-function updateProgress(data) {
-	document.getElementById("progressTextArea").value += data.description + "\n";	
-   document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
+var previousMessage;
 
+function updateProgress(data) {
+   if (previousMessage != data.description.value) {
+		previouseMessage = data.description.value;
+
+		document.getElementById("progressTextArea").value += data.description + "\n";	
+   	document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
+	}
+	
 	if (data.done && data.forwardingURL != null) {
 			redirect( data.forwardingURL );
 	} else {
 		window.setTimeout("refreshProgress()", 1000);
 	}
+	
 	return true;
 }
 
