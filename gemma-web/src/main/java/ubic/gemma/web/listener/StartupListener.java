@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.listener;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,7 +36,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
@@ -100,9 +98,6 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         /* deletes the compass lock file */
         CompassUtils.deleteCompassLocks();
-
-        /* rebuild the index */
-        CompassUtils.rebuildCompassIndex( ( CompassGpsInterfaceDevice ) ctx.getBean( "compassGps" ) );
 
         /* disable compass indexing. */
         CompassUtils.disableIndexMirroring( ( SpringHibernate3GpsDevice ) ctx.getBean( "hibernateGpsDevice" ) );
