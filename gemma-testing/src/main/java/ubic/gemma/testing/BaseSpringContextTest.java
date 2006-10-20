@@ -23,6 +23,8 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.compass.gps.spi.CompassGpsInterfaceDevice;
+import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -59,6 +61,8 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
         super.onSetUp();
         hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
         CompassUtils.deleteCompassLocks();
+        CompassUtils.rebuildCompassIndex( ( CompassGpsInterfaceDevice ) getBean( "compassGps" ) );
+        CompassUtils.disableIndexMirroring( ( SpringHibernate3GpsDevice ) getBean( "hibernateGpsDevice" ) );
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
     }
 

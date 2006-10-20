@@ -41,8 +41,6 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
-        SpringHibernate3GpsDevice indexer = ( SpringHibernate3GpsDevice ) this.getBean( "hibernateGpsDevice" );
-        indexer.stop();
     }
 
     public void testExpressionExperimentDelete() {

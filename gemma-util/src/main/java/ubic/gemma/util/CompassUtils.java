@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.FSDirectory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
+import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 
 /**
  * Utility methods to manipulate compass (and lucene).
@@ -76,10 +77,33 @@ public class CompassUtils {
     }
 
     /**
+     * Deletes and re-creates the index.
+     * 
      * @param gps
      * @throws IOException
      */
-    public static void deleteCompassIndex( CompassGpsInterfaceDevice gps ) throws IOException {
+    public static void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
+        gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
+    }
+
+    /**
+     * disables the index mirroring operation.
+     * 
+     * @param device
+     */
+    public static void disableIndexMirroring( SpringHibernate3GpsDevice device ) {
+        SpringHibernate3GpsDevice indexer = device;
+        indexer.stop();
+    }
+
+    /**
+     * enables the index mirroring operation.
+     * 
+     * @param device
+     */
+    public static void enableIndexMirroring( SpringHibernate3GpsDevice device ) {
+        SpringHibernate3GpsDevice indexer = device;
+        indexer.start();
     }
 }

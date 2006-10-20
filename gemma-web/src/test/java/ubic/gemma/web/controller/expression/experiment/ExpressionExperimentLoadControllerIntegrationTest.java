@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.MockClient;
+import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.ProgressData;
 
@@ -58,8 +59,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        SpringHibernate3GpsDevice indexer = ( SpringHibernate3GpsDevice ) this.getBean( "hibernateGpsDevice" );
-        indexer.stop();
+        CompassUtils.disableIndexMirroring( ( SpringHibernate3GpsDevice ) getBean( "hibernateGpsDevice" ) );
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
     }

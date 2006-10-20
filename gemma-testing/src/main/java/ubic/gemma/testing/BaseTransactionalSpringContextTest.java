@@ -24,6 +24,8 @@ import java.util.ResourceBundle;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.compass.gps.spi.CompassGpsInterfaceDevice;
+import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
@@ -354,8 +356,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        // CompassUtils.disableLuceneLocks();
-        CompassUtils.deleteCompassLocks();
+        // CompassUtils.rebuildCompassIndex( ( CompassGpsInterfaceDevice ) getBean( "compassGps" ) );
+        // CompassUtils.disableIndexMirroring( ( SpringHibernate3GpsDevice ) getBean( "hibernateGpsDevice" ) );
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
         this.testHelper = new TestPersistentObjectHelper();
 

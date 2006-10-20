@@ -18,8 +18,6 @@
  */
 package ubic.gemma.util;
 
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
@@ -34,26 +32,17 @@ public class CompassUtilsTest extends BaseSpringContextTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * Tests deleting the compass index
+     * Tests deleting and rebuilding the compass index
      */
     public void testDeleteCompassIndex() {
         log.debug( this.getBean( "compassGps" ) );
 
         CompassGpsInterfaceDevice gps = ( CompassGpsInterfaceDevice ) this.getBean( "compassGps" );
 
-        boolean fail = false;
-        // Disable compass deletion test - DESTRUCTIVE test
-        /*
-        try {
-            
-            //CompassUtils.deleteCompassIndex( gps );
-        } catch ( IOException e ) {
-            fail = true;
-            e.printStackTrace();
-        } finally {
-            assertFalse( false );
-        }
-        */
+        CompassUtils.rebuildCompassIndex( gps );
+
+        assertNotNull( gps );
+
     }
 
 }
