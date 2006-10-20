@@ -70,4 +70,37 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseTransactionalSpri
         assertEquals( 30, ee.getDesignElementDataVectors().size() );
         assertEquals( 12, ee.getBioAssays().size() );
     }
+
+    public final void testLoadB() throws Exception {
+        SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
+                .getBean( "simpleExpressionDataLoaderService" );
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "new ad" );
+        metaData.setArrayDesign( ad );
+
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( "mouse" );
+        metaData.setTaxon( taxon );
+        metaData.setName( "ee" );
+        metaData.setQuantitationTypeName( "testing" );
+        metaData.setGeneralType( GeneralType.QUANTITATIVE );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.RATIO );
+
+        InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
+
+        ExpressionExperiment ee = service.load( metaData, data );
+
+        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        eeService.thaw( ee );
+
+        assertNotNull( ee );
+        assertEquals( 200, ee.getDesignElementDataVectors().size() );
+        assertEquals( 59, ee.getBioAssays().size() );
+    }
+
 }

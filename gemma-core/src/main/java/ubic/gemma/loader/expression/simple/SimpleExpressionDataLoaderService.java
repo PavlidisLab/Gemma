@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -125,6 +125,7 @@ public class SimpleExpressionDataLoaderService {
             for ( int i = 0; i < matrix.rows(); i++ ) {
                 CompositeSequence cs = CompositeSequence.Factory.newInstance();
                 cs.setName( matrix.getRowName( i ) );
+                cs.setArrayDesign( arrayDesign );
                 arrayDesign.getCompositeSequences().add( cs );
             }
 
