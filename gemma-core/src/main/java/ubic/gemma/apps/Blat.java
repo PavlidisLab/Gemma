@@ -36,13 +36,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.BlatResultParser;
-import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.concurrent.GenericStreamConsumer;
 
 /**
  * Class to manage the gfServer and run BLAT searches.

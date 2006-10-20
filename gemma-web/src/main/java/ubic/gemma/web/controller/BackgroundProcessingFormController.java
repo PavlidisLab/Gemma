@@ -18,10 +18,17 @@
  */
 package ubic.gemma.web.controller;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.web.servlet.ModelAndView;
+
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * Extends this when the controller needs to run a long task (show a progress bar). To use it, implement getRunner and
@@ -33,7 +40,12 @@ import org.acegisecurity.context.SecurityContextHolder;
 public abstract class BackgroundProcessingFormController extends BaseFormController {
 
     /**
-     * @param eeLoadCommand
+     * Use this to access the Future job (as in, request.getAttribute(JOB_ATTRIBUTE)
+     */
+    public static final String JOB_ATTRIBUTE = "job";
+
+    /**
+     * @param startJob
      */
     protected void startJob( Object command, HttpServletRequest request ) {
         /*
@@ -41,13 +53,13 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
          */
         SecurityContext context = SecurityContextHolder.getContext();
 
-        BackgroundControllerJob runner = getRunner( context, request, command );
+        BackgroundControllerJob<ModelAndView> job = getRunner( context, request, command, this.getMessageUtil() );
 
-        Thread job = new Thread( runner );
-        request.getSession().setAttribute( "threadId", job.getId() ); // this needs to be set in case the thread needs
-        // to be
-        // canceled
-        job.start();
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        Future task = executorService.submit( job );
+
+        request.setAttribute( JOB_ATTRIBUTE, task );
     }
 
     /**
@@ -57,7 +69,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * @param command from form
      * @return
      */
-    protected abstract BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
-            Object command );
+    protected abstract BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger );
 
 }

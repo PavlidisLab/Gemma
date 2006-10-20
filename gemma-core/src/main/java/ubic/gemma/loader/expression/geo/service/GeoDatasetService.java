@@ -76,6 +76,7 @@ public class GeoDatasetService extends AbstractGeoService {
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
         Collection persistedResult = persisterHelper.persist( result );
+        log.info( "Persisted " + series.getGeoAccession() );
         this.geoConverter.clear();
         return persistedResult;
     }

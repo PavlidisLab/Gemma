@@ -18,19 +18,22 @@
  */
 package ubic.gemma.web.controller;
 
+import java.util.concurrent.Callable;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public abstract class BackgroundControllerJob extends BaseFormController implements Runnable {
+public abstract class BackgroundControllerJob<T> implements Callable<T> {
 
     Log loadLog = LogFactory.getLog( this.getClass().getName() );
 
@@ -38,19 +41,29 @@ public abstract class BackgroundControllerJob extends BaseFormController impleme
     protected SecurityContext securityContext;
     protected HttpSession session;
 
+    private MessageUtil messageUtil;
+
     /**
      * @param securityContext
      * @param command
      * @param jobDescription
      */
-    protected void init( SecurityContext parentSecurityContext, HttpServletRequest request, Object commandObj ) {
-
+    public BackgroundControllerJob( SecurityContext parentSecurityContext, HttpServletRequest request,
+            Object commandObj, MessageUtil messenger ) {
         this.securityContext = parentSecurityContext;
-
-        SecurityContextHolder.setContext( securityContext ); // so that acegi doesn't deny the thread permission
         this.command = commandObj;
-
         this.session = request.getSession();
+        this.messageUtil = messenger;
+    }
+
+    /**
+     * @param session
+     * @param msg
+     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
+     */
+    public void saveMessage( String msg ) {
+        loadLog.info( msg );
+        this.messageUtil.saveMessage( session, msg );
     }
 
 }

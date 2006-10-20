@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util.concurrent;
+package ubic.gemma.util.concurrent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /**
+ * See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html
+ * 
  * @author pavlidis
  * @version $Id$
  */

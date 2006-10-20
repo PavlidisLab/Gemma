@@ -16,33 +16,24 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util.concurrent;
+package ubic.gemma.web.controller;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import ubic.gemma.loader.util.parser.Parser;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 /**
- * See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html
+ * TODO - DOCUMENT ME
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class ParsingStreamConsumer extends Thread {
-    InputStream is;
-    Parser parser;
+public abstract class BackgroundControllerTask<T> extends FutureTask<T> {
 
-    public ParsingStreamConsumer( Parser parser, InputStream is ) {
-        this.is = is;
-        this.parser = parser;
+    /**
+     * @param callable
+     */
+    public BackgroundControllerTask( Callable<T> callable ) {
+        super( callable );
     }
 
-    public void run() {
-        try {
-            parser.parse( is );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
 }

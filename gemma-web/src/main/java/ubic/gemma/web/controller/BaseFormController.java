@@ -19,9 +19,7 @@
 package ubic.gemma.web.controller;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -45,43 +43,31 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingSer
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.util.MailEngine;
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
  * example, getting the current user and saving messages/errors. This class is intended to be a base class for all Form
  * controllers.
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
+ * @author Matt Raible (original version)
  * @version $Id$
+ * @spring.property name="messageUtil" ref="messageUtil"
  */
 public abstract class BaseFormController extends SimpleFormController {
     protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
+    private MessageUtil messageUtil;
     protected MailEngine mailEngine = null;
     protected SimpleMailMessage mailMessage = null;
     protected String templateName = null;
+
     protected UserService userService = null;
 
     /**
      * Define a cancel view to use.
      */
     protected String cancelView;
-
-    /**
-     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
-     * no cancel view defined; otherwise, get the cancel view.
-     * 
-     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
-     * @return the name of the cancel view to use.
-     */
-    @SuppressWarnings("unused")
-    protected String getCancelView( HttpServletRequest request ) {
-        // Default to successView if cancelView is invalid
-        if ( StringUtils.isBlank( cancelView ) ) {
-            return getSuccessView();
-        }
-        return this.cancelView;
-    }
 
     /**
      * Convenience method to get the Configuration HashMap from the servlet context.
@@ -99,42 +85,13 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * Convenience method for getting a i18n key's value.
-     * <p>
-     * Implementation note: Calling getMessageSourceAccessor() is used because the RequestContext variable is not set in
-     * unit tests b/c there's no DispatchServlet Request.
-     * 
      * @param msgKey
-     * @param locale the current locale
+     * @param locale
      * @return
+     * @see ubic.gemma.web.util.MessageUtil#getText(java.lang.String, java.util.Locale)
      */
     public String getText( String msgKey, Locale locale ) {
-        return getMessageSourceAccessor().getMessage( msgKey, locale );
-    }
-
-    /**
-     * Convenience method for getting a i18n key's value with arguments.
-     * 
-     * @param msgKey
-     * @param args
-     * @param locale the current locale
-     * @return
-     * @see getText( String msgKey, Locale locale )
-     */
-    public String getText( String msgKey, Object[] args, Locale locale ) {
-        return getMessageSourceAccessor().getMessage( msgKey, args, locale );
-    }
-
-    /**
-     * Convenient method for getting a i18n key's value with a single string argument.
-     * 
-     * @param msgKey
-     * @param arg
-     * @param locale the current locale
-     * @return
-     */
-    public String getText( String msgKey, String arg, Locale locale ) {
-        return getText( msgKey, new Object[] { arg }, locale );
+        return this.messageUtil.getText( msgKey, locale );
     }
 
     public UserService getUserService() {
@@ -142,98 +99,56 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * Default behavior for FormControllers - redirect to the successView when the cancel button has been pressed.
-     */
-    @Override
-    protected ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-        if ( request.getParameter( "cancel" ) != null ) {
-            saveMessage( request, "errors.cancel", "Cancelled" );
-            return new ModelAndView( getCancelView( request ) );
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * Put a message into the session. These can be displayed to the user.
-     * <p>
-     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
-     * session.
-     * 
      * @param request
      * @param msg
+     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     public void saveMessage( HttpServletRequest request, String msg ) {
-        List<String> messages = ( List<String> ) request.getSession().getAttribute( "messages" );
-
-        if ( messages == null ) {
-            messages = new ArrayList<String>();
-        }
-
-        messages.add( msg );
-        request.getSession().setAttribute( "messages", messages );
-    }
-
-    @SuppressWarnings("unchecked")
-    public void saveMessage( HttpSession session, String msg ) {
-        List<String> messages = ( List<String> ) session.getAttribute( "messages" );
-
-        if ( messages == null ) {
-            messages = new ArrayList<String>();
-        }
-
-        messages.add( msg );
-        session.setAttribute( "messages", messages );
+        this.messageUtil.saveMessage( request, msg );
     }
 
     /**
-     * Put a message into the session. These can be displayed to the user.
-     * <p>
-     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
-     * session. *
-     * 
      * @param request
-     * @param parameter Array of parameters to be filled into the message.
+     * @param key
+     * @param parameter
      * @param defaultMessage
-     */
-    public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
-        String newMessage = getText( key, parameters, request.getLocale() );
-        if ( newMessage == null ) newMessage = defaultMessage;
-        saveMessage( request, newMessage );
-    }
-
-    /**
-     * Put a message into the session. These can be displayed to the user.
-     * <p>
-     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
-     * session.
-     * 
-     * @param request
-     * @param parameter A single parameter to be filled into the message.
-     * @param defaultMessage
+     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
+     *      java.lang.Object, java.lang.String)
      */
     public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
-        String newMessage = getText( key, new Object[] { parameter }, request.getLocale() );
-        if ( newMessage == null ) newMessage = defaultMessage;
-        saveMessage( request, newMessage );
+        this.messageUtil.saveMessage( request, key, parameter, defaultMessage );
     }
 
     /**
-     * Put a message into the session. These can be displayed to the user.
-     * <p>
-     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
-     * session.
-     * 
+     * @param request
+     * @param key
+     * @param parameters
+     * @param defaultMessage
+     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
+     *      java.lang.Object[], java.lang.String)
+     */
+    public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
+        this.messageUtil.saveMessage( request, key, parameters, defaultMessage );
+    }
+
+    /**
      * @param request
      * @param key
      * @param defaultMessage
+     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
+     *      java.lang.String)
      */
     public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
-        String newMessage = getText( key, new Object[] {}, request.getLocale() );
-        if ( newMessage == null ) newMessage = defaultMessage;
-        saveMessage( request, newMessage );
+        this.messageUtil.saveMessage( request, key, defaultMessage );
+    }
+
+    /**
+     * @param session
+     * @param msg
+     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
+     */
+    public void saveMessage( HttpSession session, String msg ) {
+        this.messageUtil.saveMessage( session, msg );
     }
 
     /**
@@ -258,6 +173,13 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
+     * @param messageUtil the messageUtil to set
+     */
+    public void setMessageUtil( MessageUtil messageUtil ) {
+        this.messageUtil = messageUtil;
+    }
+
+    /**
      * @param templateName
      */
     public void setTemplateName( String templateName ) {
@@ -269,6 +191,22 @@ public abstract class BaseFormController extends SimpleFormController {
      */
     public void setUserService( UserService userService ) {
         this.userService = userService;
+    }
+
+    /**
+     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
+     * no cancel view defined; otherwise, get the cancel view.
+     * 
+     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
+     * @return the name of the cancel view to use.
+     */
+    @SuppressWarnings("unused")
+    protected String getCancelView( HttpServletRequest request ) {
+        // Default to successView if cancelView is invalid
+        if ( StringUtils.isBlank( cancelView ) ) {
+            return getSuccessView();
+        }
+        return this.cancelView;
     }
 
     /**
@@ -294,6 +232,20 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
+     * Default behavior for FormControllers - redirect to the successView when the cancel button has been pressed.
+     */
+    @Override
+    protected ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+        if ( request.getParameter( "cancel" ) != null ) {
+            messageUtil.saveMessage( request, "errors.cancel", "Cancelled" );
+            return new ModelAndView( getCancelView( request ) );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
      * Convenience message to send messages to users, includes app URL as footer.
      * 
      * @param user
@@ -309,6 +261,13 @@ public abstract class BaseFormController extends SimpleFormController {
         model.put( "message", msg );
         model.put( "applicationURL", url );
         mailEngine.sendMessage( mailMessage, templateName, model );
+    }
+
+    /**
+     * @return the messageUtil
+     */
+    public MessageUtil getMessageUtil() {
+        return this.messageUtil;
     }
 
 }

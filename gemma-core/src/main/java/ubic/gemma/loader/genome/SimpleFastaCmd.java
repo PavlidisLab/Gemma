@@ -30,10 +30,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
-import ubic.gemma.loader.util.concurrent.ParsingStreamConsumer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.util.concurrent.ParsingStreamConsumer;
 
 /**
  * Simple implementation of methods for fetching sequences from blast-formatted databases.

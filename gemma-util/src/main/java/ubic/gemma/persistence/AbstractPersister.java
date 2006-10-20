@@ -83,6 +83,12 @@ public abstract class AbstractPersister implements Persister {
                 }
                 result.add( persist( entity ) );
                 count = iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
+
+                if ( Thread.interrupted() ) {
+                    log.info( "Cancelled" );
+                    break;
+                }
+
             }
             iteratorStatusUpdate( col, count, numElementsPerUpdate, false );
         } catch ( Exception e ) {

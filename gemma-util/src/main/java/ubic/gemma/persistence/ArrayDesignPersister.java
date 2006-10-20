@@ -200,9 +200,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         log.info( "Array Design " + arrayDesign + " already exists, returning..." );
 
-        log.info( "Thawing..." );
-        arrayDesignService.thaw( arrayDesign );
-        log.info( "Thawed" );
         return existing;
 
     }
@@ -284,6 +281,12 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( count % SESSION_BATCH_SIZE == 0 ) {
                 this.getCurrentSession().flush();
                 this.getCurrentSession().clear();
+                if ( Thread.interrupted() ) {
+                    log.info( "Cancelled" );
+                    // we should clean up after ourselves.
+                    arrayDesignService.remove( arrayDesign ); // etc
+                    return null;
+                }
             }
         }
 

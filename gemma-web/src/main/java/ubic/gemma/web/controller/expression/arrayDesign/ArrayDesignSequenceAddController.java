@@ -19,7 +19,6 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,6 +56,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
+import ubic.gemma.web.util.MessageUtil;
 import ubic.gemma.web.util.upload.FileUploadUtil;
 
 /**
@@ -159,6 +159,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         log.info( "thawing " + arrayDesign );
         arrayDesignService.thaw( arrayDesign );
         log.info( "done thawing" );
+
         // validate a file was entered
         FileUpload fileUpload = commandObject.getSequenceFile();
         if ( fileUpload.getName() != null && fileUpload.getFile().length == 0 ) {
@@ -268,35 +269,24 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
      *      java.lang.Object, java.lang.String)
      */
     @Override
-    protected BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
-            Object command ) {
-        return new ArrayDesignSequenceAddJob( securityContext, request, command );
-    }
+    protected BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( securityContext, request, command, messenger ) {
+            public ModelAndView call() throws Exception {
+                SecurityContextHolder.setContext( securityContext );
 
-    class ArrayDesignSequenceAddJob extends BackgroundControllerJob {
+                ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
 
-        public ArrayDesignSequenceAddJob( SecurityContext securityContext, HttpServletRequest request, Object command ) {
+                FileUpload fileUpload = commandObject.getSequenceFile();
 
-            init( securityContext, request, command );
-        }
+                ArrayDesign arrayDesign = commandObject.getArrayDesign();
+                SequenceType sequenceType = commandObject.getSequenceType();
+                Taxon taxon = commandObject.getTaxon();
 
-        public void run() {
-            SecurityContextHolder.setContext( securityContext );
+                ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
+                        "Loading data from " + fileUpload.getName() );
 
-            ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
-
-            FileUpload fileUpload = commandObject.getSequenceFile();
-
-            ArrayDesign arrayDesign = commandObject.getArrayDesign();
-            SequenceType sequenceType = commandObject.getSequenceType();
-            Taxon taxon = commandObject.getTaxon();
-
-            ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
-                    "Loading data from " + fileUpload.getName() );
-
-            job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
-
-            try {
+                job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
 
                 File file = fileUpload.getLocalPath();
 
@@ -309,14 +299,11 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
                 stream.close();
 
-                this.saveMessage( this.session, "Successfully loaded " + bioSequences.size() + " sequences for "
-                        + arrayDesign );
+                this.saveMessage( "Successfully loaded " + bioSequences.size() + " sequences for " + arrayDesign );
 
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( "view" );
             }
-
-            ProgressManager.destroyProgressJob( job );
-        }
+        };
     }
 }

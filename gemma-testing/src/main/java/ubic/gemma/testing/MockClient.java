@@ -68,35 +68,35 @@ public class MockClient implements Observer {
      * @return ProgressData the last progress data that the load sent
      */
     public static ProgressData monitorLoad() {
-
-        // Need to wait to see if the expression experiment loaded correctly.
-        // But as the load controller runs in a serpate thread, it will return before its done.
         MockClient mc = new MockClient();
         long start = System.currentTimeMillis();
         long elapsed = 0;
         boolean done = false;
 
         // Need a short pause to make sure the job is started before we try and monitor it
-        try {
-            long numMillisecondsToSleep = 3000; // 3 seconds
-            Thread.sleep( numMillisecondsToSleep );
-        } catch ( InterruptedException e ) {
-        }
+        // try {
+        // long numMillisecondsToSleep = 3000; // 3 seconds
+        // Thread.sleep( numMillisecondsToSleep );
+        // } catch ( InterruptedException e ) {
+        // }
 
         // fixme: I'm not sure why the user is set to 'test'. If this changes this test will break
-        ProgressManager.addToNotification( "test", mc );
+        boolean ok = ProgressManager.addToNotification( "test", mc );
+
+        if ( !ok ) {
+            throw new IllegalStateException();
+        }
 
         while ( !done && !( TIMEOUT < elapsed ) ) {
             if ( mc.getProgressData() != null ) {
                 done = mc.getProgressData().isDone();
-                if ( log.isDebugEnabled() ) log.debug( mc.getProgressData().getDescription() );
-                if ( log.isDebugEnabled() ) log.debug( "Elapsed time: " + elapsed );
-
             }
 
             try {
-                long numMillisecondsToSleep = 200;
+                long numMillisecondsToSleep = 2000;
                 Thread.sleep( numMillisecondsToSleep );
+                if ( log.isDebugEnabled() ) log.debug( mc.getProgressData().getDescription() );
+                if ( log.isInfoEnabled() ) log.info( "Waiting...Elapsed time: " + elapsed );
             } catch ( InterruptedException e ) {
             }
 

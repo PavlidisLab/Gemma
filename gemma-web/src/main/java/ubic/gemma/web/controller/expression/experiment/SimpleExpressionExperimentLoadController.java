@@ -61,6 +61,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
+import ubic.gemma.web.util.MessageUtil;
 import ubic.gemma.web.util.upload.FileUploadUtil;
 
 /**
@@ -186,18 +187,6 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
         return command;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
-            Object command ) {
-        return new SimpleExpressionExperimentLoadJob( securityContext, request, command );
-    }
-
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( request, binder );
@@ -290,46 +279,41 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
     }
 
-    class SimpleExpressionExperimentLoadJob extends BackgroundControllerJob {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+     *      java.lang.Object, java.lang.String)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( securityContext, request, command, messenger ) {
+            public ModelAndView call() throws Exception {
+                SecurityContextHolder.setContext( securityContext );
 
-        public SimpleExpressionExperimentLoadJob( SecurityContext securityContext, HttpServletRequest request,
-                Object command ) {
+                SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
 
-            init( securityContext, request, command );
-        }
+                FileUpload fileUpload = commandObject.getDataFile();
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.lang.Runnable#run()
-         */
-        public void run() {
-            SecurityContextHolder.setContext( securityContext );
+                ArrayDesign arrayDesign = commandObject.getArrayDesign();
+                if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
+                    log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                    arrayDesign = ArrayDesign.Factory.newInstance();
+                    arrayDesign.setName( commandObject.getArrayDesignName() );
+                    commandObject.setArrayDesign( arrayDesign );
+                }
 
-            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+                Taxon taxon = commandObject.getTaxon();
+                if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
+                    log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
+                    taxon = Taxon.Factory.newInstance();
+                    taxon.setScientificName( commandObject.getTaxonName() );
+                    commandObject.setTaxon( taxon );
+                }
 
-            FileUpload fileUpload = commandObject.getDataFile();
-
-            ArrayDesign arrayDesign = commandObject.getArrayDesign();
-            if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
-                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                arrayDesign = ArrayDesign.Factory.newInstance();
-                arrayDesign.setName( commandObject.getArrayDesignName() );
-                commandObject.setArrayDesign( arrayDesign );
-            }
-
-            Taxon taxon = commandObject.getTaxon();
-            if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
-                log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
-                taxon = Taxon.Factory.newInstance();
-                taxon.setScientificName( commandObject.getTaxonName() );
-                commandObject.setTaxon( taxon );
-            }
-
-            ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
-                    "Loading data from " + fileUpload.getName() );
-
-            try {
+                ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
+                        "Loading data from " + fileUpload.getName() );
 
                 File file = fileUpload.getLocalPath();
 
@@ -339,14 +323,12 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
                 ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
                 stream.close();
                 job.setForwardingURL( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() );
-                this.saveMessage( this.session, "Successfully loaded " + result );
+                this.saveMessage( "Successfully loaded " + result );
 
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( "view" );
             }
-
-            ProgressManager.destroyProgressJob( job );
-        }
+        };
     }
 
 }

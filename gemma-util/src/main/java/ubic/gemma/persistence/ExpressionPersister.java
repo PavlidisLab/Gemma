@@ -199,7 +199,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param entity
      */
     private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
-
         log.info( "Filling in DesignElementDataVectors..." );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
@@ -214,7 +213,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
             }
 
+            if ( Thread.interrupted() ) {
+                log.info( "Cancelled" );
+                return null;
+            }
         }
+
         log.info( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
         return bioAssays;
     }
@@ -381,7 +385,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         ExpressionExperiment existing = expressionExperimentService.findByName( entity.getName() );
         if ( existing != null ) {
             log.warn( "Expression experiment with same name exists (" + existing
-                    + "), returning it (persister does not handle updates)" );
+                    + "), returning it (this method does not handle updates)" );
             return existing;
         }
 
@@ -401,7 +405,14 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setExperimentalDesign( experimentalDesign );
         }
 
+        // this does most of the preparatory work.
         processBioAssays( entity );
+
+        if ( Thread.interrupted() ) {
+            log.info( "Cancelled" );
+            // we should clean up after ourselves.
+            return null;
+        }
 
         log.info( "Persisting expression experiment" );
         return expressionExperimentService.create( entity );

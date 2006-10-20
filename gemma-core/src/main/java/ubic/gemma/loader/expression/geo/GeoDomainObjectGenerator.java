@@ -141,17 +141,17 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     }
 
-    /**
-     * @param datasetsToProcess Collection of GDS accession ids to process.
-     * @return
-     */
-    private Collection<Object> processDatasets( Collection<String> datasetsToProcess ) {
-        Collection<Object> result = new HashSet<Object>();
-        for ( String accession : datasetsToProcess ) {
-            result.add( processDataSet( accession ) );
-        }
-        return result;
-    }
+    // /**
+    // * @param datasetsToProcess Collection of GDS accession ids to process.
+    // * @return
+    // */
+    // private Collection<Object> processDatasets( Collection<String> datasetsToProcess ) {
+    // Collection<Object> result = new HashSet<Object>();
+    // for ( String accession : datasetsToProcess ) {
+    // result.add( processDataSet( accession ) );
+    // }
+    //        return result;
+    //    }
 
     /**
      * @param geoAccession
