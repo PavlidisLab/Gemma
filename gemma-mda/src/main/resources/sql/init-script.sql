@@ -3,6 +3,9 @@ delete from TAXON;
 delete from EXTERNAL_DATABASE;
 delete from AUDIT_TRAIL;
 
+-- alter CHROMOSOME_FEATURE for case insensitive search
+ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) character set latin1 default NULL;
+
 -- all of these are used.
 insert into AUDIT_TRAIL VALUES (); 
 insert into AUDIT_TRAIL VALUES (); 
