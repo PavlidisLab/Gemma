@@ -43,8 +43,8 @@ public class TaxonPropertyEditor extends PropertyEditorSupport {
     }
 
     public String getAsText() {
-        if ( this.getValue() == null ) {
-            return "<unknown>";
+        if ( this.getValue() == null || ( ( Taxon ) this.getValue() ).getId() == null ) {
+            return "---";
         }
         return ( ( Taxon ) this.getValue() ).getScientificName();
     }
@@ -52,9 +52,6 @@ public class TaxonPropertyEditor extends PropertyEditorSupport {
     public void setAsText( String text ) throws IllegalArgumentException {
         if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
         Object ad = taxonService.findByScientificName( text );
-        if ( ad == null ) {
-            throw new IllegalArgumentException( "There is no taxon with name=" + text );
-        }
-        this.setValue( ad );
+        this.setValue( ad ); // okay to be null
     }
 }

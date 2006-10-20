@@ -72,9 +72,16 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
             br = brs.findOrCreate( br );
 
             assert br.getId() != null;
-        } catch ( java.net.UnknownHostException e ) {
-            ready = false;
-            return;
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
         }
 
         ready = true;

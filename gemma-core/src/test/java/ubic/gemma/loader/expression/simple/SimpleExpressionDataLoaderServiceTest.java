@@ -24,8 +24,10 @@ import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaD
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -43,9 +45,13 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseTransactionalSpri
                 .getBean( "simpleExpressionDataLoaderService" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        metaData.setArrayDesignDescription( "foo" );
-        metaData.setArrayDesignName( "new ad" );
-        metaData.setTaxonName( "mouse" );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "new ad" );
+        metaData.setArrayDesign( ad );
+
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( "mouse" );
+        metaData.setTaxon( taxon );
         metaData.setName( "ee" );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
@@ -64,5 +70,4 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseTransactionalSpri
         assertEquals( 30, ee.getDesignElementDataVectors().size() );
         assertEquals( 12, ee.getBioAssays().size() );
     }
-
 }

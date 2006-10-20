@@ -19,8 +19,6 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -59,7 +57,6 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
-import ubic.gemma.web.util.upload.CommonsMultipartFile;
 import ubic.gemma.web.util.upload.FileUploadUtil;
 
 /**
@@ -145,7 +142,6 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        log.info( "Entering onSubmit" );
         ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
         Cookie cookie = new ArrayDesignSequenceAddCookie( commandObject );
         response.addCookie( cookie );
@@ -181,7 +177,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
         ProgressManager.destroyProgressJob( job );
 
-        startJob( commandObject, request, "Loading sequences for " + commandObject.getArrayDesign().getName() );
+        startJob( commandObject, request );
 
         return new ModelAndView( new RedirectView( "/Gemma/processProgress.html" ) );
     }
@@ -204,7 +200,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
      * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest,
      *      java.lang.Object, org.springframework.validation.Errors)
      */
-    @SuppressWarnings( { "unchecked", "unused" })
+    @SuppressWarnings( { "unused", "unchecked" })
     @Override
     protected Map referenceData( HttpServletRequest request ) throws Exception {
 
@@ -225,14 +221,14 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
             taxonNames.add( taxon );
         }
 
-        Collections.sort( arrayDesignNames, new Comparator() {
-            public int compare( Object o1, Object o2 ) {
-                return ( ( ArrayDesign ) o1 ).getName().compareTo( ( ( ArrayDesign ) o2 ).getName() );
+        Collections.sort( arrayDesignNames, new Comparator<ArrayDesign>() {
+            public int compare( ArrayDesign o1, ArrayDesign o2 ) {
+                return ( o1 ).getName().compareTo( ( o2 ).getName() );
             }
         } );
-        Collections.sort( taxonNames, new Comparator() {
-            public int compare( Object o1, Object o2 ) {
-                return ( ( Taxon ) o1 ).getScientificName().compareTo( ( ( Taxon ) o2 ).getScientificName() );
+        Collections.sort( taxonNames, new Comparator<Taxon>() {
+            public int compare( Taxon o1, Taxon o2 ) {
+                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
             }
         } );
 
@@ -273,16 +269,15 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
      */
     @Override
     protected BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
-            Object command, String jobDescription ) {
-        return new ArrayDesignSequenceAddJob( securityContext, request, command, jobDescription );
+            Object command ) {
+        return new ArrayDesignSequenceAddJob( securityContext, request, command );
     }
 
     class ArrayDesignSequenceAddJob extends BackgroundControllerJob {
 
-        public ArrayDesignSequenceAddJob( SecurityContext securityContext, HttpServletRequest request, Object command,
-                String jobDescription ) {
+        public ArrayDesignSequenceAddJob( SecurityContext securityContext, HttpServletRequest request, Object command ) {
 
-            init( securityContext, request, command, jobDescription );
+            init( securityContext, request, command );
         }
 
         public void run() {

@@ -137,11 +137,18 @@
             </field>
             
         </form>
-        
+     <!--   
         <form name="arrayDesignSequenceAdd">
-            <field property="sequenceFile" depends="required"></field>
-            <field property="arrayDesign" depends="required"></field>
-            <field property="sequenceType" depends="required"></field>
+            <field property="sequenceFile" depends="required" />
+            <field property="arrayDesign" depends="required" />
+            <field property="sequenceType" depends="required" />
         </form>
-       
+        
+        <form name="simpleExpressionExperimentForm">
+            <field property="dataFile" depends="required" />
+            <field property="arrayDesign" depends="required" />
+            <field property="name" depends="required" />
+            <field property="description" depends="required" />
+        </form>
+       -->
     </formset> 

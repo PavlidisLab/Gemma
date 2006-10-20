@@ -62,12 +62,16 @@ public class PubMedXMLParserTest extends TestCase {
 
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
             assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
-        } catch ( java.net.UnknownHostException e ) {
-            log.warn( "Test skipped due to unknown host exception: " + e.getMessage() );
-            return;
-        } catch ( java.net.ConnectException e ) {
-            log.warn( "Test skipped due to connection exception: " + e.getMessage() );
-            return;
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
         }
     }
 }

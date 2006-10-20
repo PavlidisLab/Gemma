@@ -23,40 +23,41 @@
 		</list>
 	</property>
 	<property name="mappings">
-		<props>
-			<prop key="/dwr/**/*">dwrController</prop>
-			<prop key="/arrays/*">arrayDesignController</prop>
-			<prop key="/signup.html">signupController</prop>
-			<prop key="/editUser.html">userFormController</prop>
-			<prop key="/editProfile.html">userFormController</prop>
-			<prop key="/uploadFile.html">fileUploadController</prop>
-			<prop key="/selectFile.html">fileUploadController</prop>
-			<prop key="/users.html">userListController</prop>
-			<prop key="/activeUsers.html">userListController</prop>
-			<prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
-			<prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
-			<prop key="/bibRefSearch.html">pubMedQueryController</prop>
-			<prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
-			<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
-			<prop key="/bioAssay/*">bioAssayController</prop>
-			<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
-			<prop key="/bioMaterial/*">bioMaterialController</prop>
-			<prop key="/designElement/*">designElementController</prop>
-			<prop key="/experimentalDesign/*">experimentalDesignController</prop>
-			<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
-			<prop key="/experimentalFactor/*">experimentalFactorController</prop>
-			<prop key="/expressionExperiment/*">expressionExperimentController</prop>
-			<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
-			<prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
-			<prop key="/expressionExperiment/expressionExperimentVisualization.html">expressionExperimentVisualizationFormController</prop>
+        <props>
+            <prop key="/dwr/**/*">dwrController</prop>
+            <prop key="/arrays/*">arrayDesignController</prop>
+            <prop key="/signup.html">signupController</prop>
+            <prop key="/editUser.html">userFormController</prop>
+            <prop key="/editProfile.html">userFormController</prop>
+            <prop key="/uploadFile.html">fileUploadController</prop>
+            <prop key="/selectFile.html">fileUploadController</prop>
+            <prop key="/users.html">userListController</prop>
+            <prop key="/activeUsers.html">userListController</prop>
+            <prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
+            <prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
+            <prop key="/bibRefSearch.html">pubMedQueryController</prop>
+            <prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
+            <prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
+            <prop key="/bioAssay/*">bioAssayController</prop>
+            <prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
+            <prop key="/bioMaterial/*">bioMaterialController</prop>
+            <prop key="/designElement/*">designElementController</prop>
+            <prop key="/experimentalDesign/*">experimentalDesignController</prop>
+            <prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
+            <prop key="/experimentalFactor/*">experimentalFactorController</prop>
+            <prop key="/expressionExperiment/*">expressionExperimentController</prop>
+            <prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
+            <prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
+ 			<prop key="/expressionExperiment/expressionExperimentVisualization.html">expressionExperimentVisualizationFormController</prop>
 			<prop key="/expressionExperiment/visualizeDataMatrix.html">expressionExperimentVisualizationController</prop>
-			<prop key="/candidateGeneList*">candidateGeneListController</prop>
-			<prop key="/gene/*">geneController</prop>
-			<prop key="/geneFinder.html">geneFinderController</prop>
-			<prop key="/addTestData.html">testDataAddingController</prop>
-			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
-			<prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
-		</props>
+            <prop key="/candidateGeneList*">candidateGeneListController</prop>
+            <prop key="/gene/*">geneController</prop>
+            <prop key="/geneFinder.html">geneFinderController</prop>
+            <prop key="/addTestData.html">testDataAddingController</prop>
+            <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+            <prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
+            <prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
+        </props>
 	</property>
 </bean>
 <!-- default mapping, as a fallback. Avoid using. -->

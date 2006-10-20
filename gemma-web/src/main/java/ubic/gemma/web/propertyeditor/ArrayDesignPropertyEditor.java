@@ -43,15 +43,15 @@ public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
     private static Log log = LogFactory.getLog( TaxonPropertyEditor.class.getName() );
 
     public String getAsText() {
+        if ( this.getValue() == null || ( ( ArrayDesign ) this.getValue() ).getId() == null ) {
+            return " --- ";
+        }
         return ( ( ArrayDesign ) this.getValue() ).getName();
     }
 
     public void setAsText( String text ) throws IllegalArgumentException {
         if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to an array design..." );
         Object ad = arrayDesignService.findArrayDesignByName( text );
-        if ( ad == null ) {
-            throw new IllegalArgumentException( "There is no array design with name=" + text );
-        }
-        this.setValue( ad );
+        this.setValue( ad ); // okay to be null.F
     }
 }

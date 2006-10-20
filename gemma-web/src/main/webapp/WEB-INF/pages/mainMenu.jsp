@@ -1,5 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
-<title><fmt:message key="mainMenu.title" /></title>
+<title><fmt:message key="mainMenu.title" />
+</title>
 <content tag="heading">
 <fmt:message key="mainMenu.heading" />
 </content>
@@ -57,6 +58,9 @@
 		</li>
 		<li>
 			<a href="<c:url value="/loadExpressionExperiment.html"/>"> <fmt:message key="menu.loadExpressionExperiment" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="loadSimpleExpressionExperiment.html"/>"> Load expression data from a tabbed file</a>
 		</li>
 		<li>
 			<a href="<c:url value="/addTestData.html"/>">Add test data </a>

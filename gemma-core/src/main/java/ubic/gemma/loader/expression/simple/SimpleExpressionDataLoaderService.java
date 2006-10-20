@@ -25,11 +25,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.xml.sax.SAXException;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
@@ -37,6 +34,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -46,7 +44,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -84,7 +82,7 @@ public class SimpleExpressionDataLoaderService {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrixNamed matrix = ( DoubleMatrixNamed ) reader.read( data );
 
-        Taxon taxon = convertTaxon( metaData.getTaxonName() );
+        Taxon taxon = convertTaxon( metaData.getTaxon() );
 
         ArrayDesign arrayDesign = convertArrayDesign( metaData, matrix );
 
@@ -95,17 +93,8 @@ public class SimpleExpressionDataLoaderService {
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
-
-            BibliographicReference ref;
-            try {
-                ref = pubfetch.retrieveByHTTP( metaData.getPubMedId() );
-                experiment.setPrimaryPublication( ref );
-            } catch ( Exception e ) {
-                log.error( "Problems retrieving " + metaData.getPubMedId() + ". Error is: " );
-                e.printStackTrace();
-
-                throw new RuntimeException( "Problems retrieving " + metaData.getPubMedId() );
-            }
+            BibliographicReference ref = pubfetch.retrieveByHTTP( metaData.getPubMedId() );
+            experiment.setPrimaryPublication( ref );
         }
 
         QuantitationType quantitationType = convertQuantitationType( metaData );
@@ -115,60 +104,36 @@ public class SimpleExpressionDataLoaderService {
         experiment.setDesignElementDataVectors( vectors );
 
         return ( ExpressionExperiment ) persisterHelper.persist( experiment );
-
     }
 
     /**
      * @param taxonName
      * @return
      */
-    private Taxon convertTaxon( String taxonName ) {
-        Taxon taxon = taxonService.findByScientificName( taxonName );
-        if ( taxon == null ) {
-            taxon = taxonService.findByCommonName( taxonName );
-        }
-
-        if ( taxon == null ) {
-            taxon = Taxon.Factory.newInstance();
-            taxon.setScientificName( taxonName );
-            taxon = ( Taxon ) persisterHelper.persist( taxon );
-        }
-
-        return taxon;
+    private Taxon convertTaxon( Taxon taxon ) {
+        return taxonService.findOrCreate( taxon );
     }
 
     private ArrayDesign convertArrayDesign( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
-        String arrayDesignName = metaData.getArrayDesignName();
+        ArrayDesign arrayDesign = metaData.getArrayDesign();
 
-        ArrayDesign result;
-        ArrayDesign existing = arrayDesignService.findArrayDesignByName( arrayDesignName );
-        if ( existing == null ) {
-            existing = arrayDesignService.findByShortName( arrayDesignName );
-        }
+        ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
         if ( existing == null ) {
-            log.info( "Creating new ArrayDesign " + arrayDesignName );
-            result = ArrayDesign.Factory.newInstance();
-            result.setName( arrayDesignName );
-            result.setShortName( arrayDesignName );
-            result.setDescription( metaData.getArrayDesignDescription() );
+            log.info( "Creating new ArrayDesign " + arrayDesign );
 
             for ( int i = 0; i < matrix.rows(); i++ ) {
                 CompositeSequence cs = CompositeSequence.Factory.newInstance();
                 cs.setName( matrix.getRowName( i ) );
-                result.getCompositeSequences().add( cs );
+                arrayDesign.getCompositeSequences().add( cs );
             }
 
-            result = ( ArrayDesign ) persisterHelper.persist( result );
-
-        } else {
-            log.info( "Found existing " + existing );
-            result = existing;
+            arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
         }
 
-        arrayDesignService.thaw( result );
+        arrayDesignService.thaw( arrayDesign );
 
-        return result;
+        return arrayDesign;
 
     }
 
@@ -180,9 +145,9 @@ public class SimpleExpressionDataLoaderService {
         QuantitationType result = QuantitationType.Factory.newInstance();
         result.setName( metaData.getQuantitationTypeName() );
         result.setDescription( metaData.getQuantitationTypeDescription() );
-        result.setGeneralType( metaData.getGeneralType() );
+        result.setGeneralType( GeneralType.QUANTITATIVE );
         result.setType( metaData.getType() );
-        result.setRepresentation( PrimitiveType.DOUBLE );
+        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
         result.setScale( metaData.getScale() );
         result.setIsBackground( false );
         return result;

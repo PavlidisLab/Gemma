@@ -36,6 +36,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
@@ -63,7 +64,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
         ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
 
-        startJob( eeLoadCommand, request, "Loading " + eeLoadCommand.getAccession() );
+        startJob( eeLoadCommand, request );
 
         return new ModelAndView( new RedirectView( "processProgress.html" ) );
     }
@@ -96,16 +97,15 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
      */
     @Override
     protected BackgroundControllerJob getRunner( SecurityContext securityContext, HttpServletRequest request,
-            Object command, String jobDescription ) {
-        return new ExpressionExperimentLoadRun( securityContext, request, command, jobDescription );
+            Object command ) {
+        return new ExpressionExperimentLoadRun( securityContext, request, command );
     }
 
     @SuppressWarnings("unchecked")
     class ExpressionExperimentLoadRun extends BackgroundControllerJob {
 
-        public ExpressionExperimentLoadRun( SecurityContext securityContext, HttpServletRequest request,
-                Object command, String jobDescription ) {
-            init( securityContext, request, command, jobDescription );
+        public ExpressionExperimentLoadRun( SecurityContext securityContext, HttpServletRequest request, Object command ) {
+            init( securityContext, request, command );
         }
 
         public void run() {
@@ -113,6 +113,9 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
             SecurityContextHolder.setContext( securityContext );
             Map<Object, Object> model = new HashMap<Object, Object>();
             String accesionNum = ( ( ExpressionExperimentLoadCommand ) command ).getAccession();
+
+            ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
+                    "Loading " + ( ( ExpressionExperimentLoadCommand ) command ).getAccession() );
 
             // put the accession number in a safer form
             accesionNum = StringUtils.strip( accesionNum );
@@ -132,16 +135,19 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
                 job.setForwardingURL( "/Gemma/arrays/showAllArrayDesigns.html?id="
                         + arrayDesigns.iterator().next().getId() );
+                // FIXME add success message
 
             } else {
                 geoDatasetService.setLoadPlatformOnly( false );
                 Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum );
                 if ( result.size() == 1 ) {
                     ExpressionExperiment loaded = result.iterator().next();
+                    this.saveMessage( this.session, "Successfully loaded " + loaded );
                     job.setForwardingURL( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                             + loaded.getId() );
                 } else {
                     // FIXME should show just the loaded ones.
+                    // FIXME add success message
                     job.setForwardingURL( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" );
                 }
             }

@@ -19,6 +19,7 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 
@@ -58,19 +59,23 @@ public class PubMedXMLFetcher {
      * 
      * @param pubMedId
      * @return BibliographicReference for the id given.
-     * @throws IOException
      */
-    public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException, SAXException,
-            ParserConfigurationException {
-        URL toBeGotten = new URL( uri + pubMedId );
-        log.info( "Fetching " + toBeGotten );
-        PubMedXMLParser pmxp = new PubMedXMLParser();
-        Collection<BibliographicReference> results = pmxp.parse( toBeGotten.openStream() );
-        if ( results == null || results.size() == 0 ) {
-            return null;
+    public BibliographicReference retrieveByHTTP( int pubMedId ) {
+        try {
+            URL toBeGotten = new URL( uri + pubMedId );
+            log.info( "Fetching " + toBeGotten );
+            PubMedXMLParser pmxp = new PubMedXMLParser();
+            Collection<BibliographicReference> results = pmxp.parse( toBeGotten.openStream() );
+            if ( results == null || results.size() == 0 ) {
+                return null;
+            }
+            assert results.size() == 1;
+            return results.iterator().next();
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-        assert results.size() == 1;
-        return results.iterator().next();
     }
 
     /**

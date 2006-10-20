@@ -28,12 +28,12 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
@@ -44,7 +44,8 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  */
 public class FileUploadUtil {
 
-    private static final int BUF_SIZE = 81920;
+    private static Log log = LogFactory.getLog( FileUploadUtil.class.getName() );
+    private static final int BUF_SIZE = 32768;
 
     /**
      * @param request
@@ -63,34 +64,13 @@ public class FileUploadUtil {
             throw new IllegalArgumentException( "File with key " + key + " was not in the request" );
         }
 
-        // the directory to upload to - put it in a user-specific directory for now.
-        String uploadDir = getUploadPath( request );
+        File copiedFile = getLocalUploadLocation( request, fileUpload, file );
 
-        // Create the directory if it doesn't exist
-        File dirPath = FileTools.createDir( uploadDir );
+        copyFile( file, copiedFile );
 
-        // retrieve the file data
-        InputStream stream = file.getInputStream();
-
-        File copiedFile = new File( uploadDir + File.separatorChar + file.getOriginalFilename() );
-
-        fileUpload.setLocalPath( copiedFile );
-
-        // write the file to the file specified
-        OutputStream bos = new FileOutputStream( copiedFile );
-        int bytesRead = 0;
-        byte[] buffer = new byte[BUF_SIZE];
-
-        ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, "Copying file" ) );
-
-        while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
-            bos.write( buffer, 0, bytesRead );
+        if ( !copiedFile.canRead() || copiedFile.length() == 0 ) {
+            throw new IllegalArgumentException( "Uploaded file is not readable or of size zero" );
         }
-
-        bos.close();
-
-        // close the stream
-        stream.close();
 
         String link = getContextUploadPath( request ); // FIXME - this will not yield a valid url.
         request.setAttribute( "link", link + file.getOriginalFilename() );
@@ -100,17 +80,64 @@ public class FileUploadUtil {
         request.setAttribute( "fileName", file.getOriginalFilename() );
         request.setAttribute( "contentType", file.getContentType() );
         request.setAttribute( "size", file.getSize() + " bytes" );
-        request.setAttribute( "location", dirPath.getAbsolutePath() + File.separatorChar + file.getOriginalFilename() );
+        request.setAttribute( "location", fileUpload.getLocalPath() );
         return copiedFile;
+    }
+
+    /**
+     * @param request
+     * @param fileUpload
+     * @param file
+     * @return
+     */
+    private static File getLocalUploadLocation( HttpServletRequest request, FileUpload fileUpload,
+            CommonsMultipartFile file ) {
+        // the directory to upload to - put it in a user-specific directory for now.
+        String uploadDir = getUploadPath( request );
+
+        // Create the directory if it doesn't exist
+        File uploadDirFile = FileTools.createDir( uploadDir );
+
+        File copiedFile = new File( uploadDirFile.getAbsolutePath()
+                + File.separatorChar
+                + ( request.getSession() == null ? RandomStringUtils.randomAlphanumeric( 20 ) : request.getSession()
+                        .getId() ) + "__" + file.getOriginalFilename() );
+
+        fileUpload.setLocalPath( copiedFile );
+        return copiedFile;
+    }
+
+    /**
+     * @param file
+     * @param copiedFile
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    private static void copyFile( CommonsMultipartFile file, File copiedFile ) throws FileNotFoundException,
+            IOException {
+        log.info( "Copying file (" + file.getSize() + " bytes)" );
+        // write the file to the file specified
+        OutputStream bos = new FileOutputStream( copiedFile );
+        int bytesRead = 0;
+        byte[] buffer = new byte[BUF_SIZE];
+
+        InputStream stream = file.getInputStream();
+        while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
+            bos.write( buffer, 0, bytesRead );
+        }
+
+        bos.close();
+        stream.close();
+        log.info( "Done copying" );
     }
 
     /**
      * @param request
      * @return
      */
+    @SuppressWarnings("unused")
     public static String getUploadPath( HttpServletRequest request ) {
-        String id = RandomStringUtils.randomAlphanumeric( 20 );
-        return ConfigUtils.getDownloadPath() + id;
+        return ConfigUtils.getDownloadPath() + "userUploads";
     }
 
     /**

@@ -199,6 +199,10 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         log.info( "Array Design " + arrayDesign + " already exists, returning..." );
+
+        log.info( "Thawing..." );
+        arrayDesignService.thaw( arrayDesign );
+        log.info( "Thawed" );
         return existing;
 
     }

@@ -53,12 +53,16 @@ public class PubMedXMLFetcherTest extends TestCase {
 
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
             assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
-        } catch ( java.net.ConnectException e ) {
-            log.warn( "Test skipped due to connection exception" );
-            return;
-        } catch ( java.net.UnknownHostException e ) {
-            log.warn( "Test skipped due to unknown host exception" );
-            return;
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
         }
     }
 
@@ -66,12 +70,16 @@ public class PubMedXMLFetcherTest extends TestCase {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
             assertNull( br );
-        } catch ( java.net.ConnectException e ) {
-            log.warn( "Test skipped due to connection exception", e );
-            return;
-        } catch ( java.net.UnknownHostException e ) {
-            log.warn( "Test skipped due to unknown host exception" );
-            return;
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
         }
     }
 }

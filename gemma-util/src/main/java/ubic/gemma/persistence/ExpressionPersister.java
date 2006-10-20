@@ -401,8 +401,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setExperimentalDesign( experimentalDesign );
         }
 
-        if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
-
         processBioAssays( entity );
 
         log.info( "Persisting expression experiment" );

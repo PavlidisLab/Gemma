@@ -1,0 +1,17 @@
+#progressBar {
+	padding-top: 5px;
+}
+
+#progressBarBox {
+	width: 350px;
+	height: 20px;
+	border: 1px inset;
+	background: #EEEEEE;
+}
+
+#progressBarBoxContent {
+	width: 0;
+	height: 20px;
+	border-right: 1px solid #444444;
+	background: #9ACB34;
+}

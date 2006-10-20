@@ -22,7 +22,6 @@ import org.biomage.AuditAndSecurity.Contact;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -45,13 +44,6 @@ public class SimpleExpressionExperimentMetaData {
      */
     private Contact user;
 
-    /**
-     * Only handle a single array design
-     */
-    private String arrayDesignName;
-
-    private String arrayDesignDescription;
-
     private String quantitationTypeName;
 
     private String quantitationTypeDescription;
@@ -62,11 +54,6 @@ public class SimpleExpressionExperimentMetaData {
 
     private StandardQuantitationType type;
 
-    /**
-     * 
-     */
-    private String taxonName;
-
     private DatabaseEntry externalReference;
 
     /**
@@ -74,18 +61,12 @@ public class SimpleExpressionExperimentMetaData {
      */
     private int pubMedId;
 
-    /**
-     * @return the arrayDesign
-     */
-    public String getArrayDesignName() {
-        return this.arrayDesignName;
-    }
+    ArrayDesign arrayDesign;
 
-    /**
-     * @param arrayDesign the arrayDesign to set
-     */
-    public void setArrayDesignName( String arrayDesign ) {
-        this.arrayDesignName = arrayDesign;
+    Taxon taxon;
+
+    public ArrayDesign getArrayDesign() {
+        return this.arrayDesign;
     }
 
     /**
@@ -96,80 +77,10 @@ public class SimpleExpressionExperimentMetaData {
     }
 
     /**
-     * @param description the description to set
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
      * @return the externalReference
      */
     public DatabaseEntry getExternalReference() {
         return this.externalReference;
-    }
-
-    /**
-     * @param externalReference the externalReference to set
-     */
-    public void setExternalReference( DatabaseEntry externalReference ) {
-        this.externalReference = externalReference;
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    /**
-     * @return the pubMedId
-     */
-    public Integer getPubMedId() {
-        return this.pubMedId;
-    }
-
-    /**
-     * @param pubMedId the pubMedId to set
-     */
-    public void setPubMedId( int pubMedId ) {
-        this.pubMedId = pubMedId;
-    }
-
-    /**
-     * @return the taxon
-     */
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
-    /**
-     * @param taxon the taxon to set
-     */
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
-    /**
-     * @return the user
-     */
-    public Contact getUser() {
-        return this.user;
-    }
-
-    /**
-     * @param user the user to set
-     */
-    public void setUser( Contact user ) {
-        this.user = user;
     }
 
     /**
@@ -180,52 +91,17 @@ public class SimpleExpressionExperimentMetaData {
     }
 
     /**
-     * @param generalType the generalType to set
+     * @return the name
      */
-    public void setGeneralType( GeneralType generalType ) {
-        this.generalType = generalType;
+    public String getName() {
+        return this.name;
     }
 
     /**
-     * @return the quantitationTypeName
+     * @return the pubMedId
      */
-    public String getQuantitationTypeName() {
-        return this.quantitationTypeName;
-    }
-
-    /**
-     * @param quantitationTypeName the quantitationTypeName to set
-     */
-    public void setQuantitationTypeName( String quantitationTypeName ) {
-        this.quantitationTypeName = quantitationTypeName;
-    }
-
-    /**
-     * @return the scale
-     */
-    public ScaleType getScale() {
-        return this.scale;
-    }
-
-    /**
-     * @param scale the scale to set
-     */
-    public void setScale( ScaleType scale ) {
-        this.scale = scale;
-    }
-
-    /**
-     * @return the type
-     */
-    public StandardQuantitationType getType() {
-        return this.type;
-    }
-
-    /**
-     * @param type the type to set
-     */
-    public void setType( StandardQuantitationType type ) {
-        this.type = type;
+    public Integer getPubMedId() {
+        return this.pubMedId;
     }
 
     /**
@@ -236,6 +112,77 @@ public class SimpleExpressionExperimentMetaData {
     }
 
     /**
+     * @return the quantitationTypeName
+     */
+    public String getQuantitationTypeName() {
+        return this.quantitationTypeName;
+    }
+
+    /**
+     * @return the scale
+     */
+    public ScaleType getScale() {
+        return this.scale;
+    }
+
+    public Taxon getTaxon() {
+        return this.taxon;
+    }
+
+    /**
+     * @return the type
+     */
+    public StandardQuantitationType getType() {
+        return this.type;
+    }
+
+    /**
+     * @return the user
+     */
+    public Contact getUser() {
+        return this.user;
+    }
+
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        this.arrayDesign = arrayDesign;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    /**
+     * @param externalReference the externalReference to set
+     */
+    public void setExternalReference( DatabaseEntry externalReference ) {
+        this.externalReference = externalReference;
+    }
+
+    /**
+     * @param generalType the generalType to set
+     */
+    public void setGeneralType( GeneralType generalType ) {
+        this.generalType = generalType;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    /**
+     * @param pubMedId the pubMedId to set
+     */
+    public void setPubMedId( int pubMedId ) {
+        this.pubMedId = pubMedId;
+    }
+
+    /**
      * @param quantitationTypeDescription the quantitationTypeDescription to set
      */
     public void setQuantitationTypeDescription( String quantitationTypeDescription ) {
@@ -243,17 +190,35 @@ public class SimpleExpressionExperimentMetaData {
     }
 
     /**
-     * @return the arrayDesignDescription
+     * @param quantitationTypeName the quantitationTypeName to set
      */
-    public String getArrayDesignDescription() {
-        return this.arrayDesignDescription;
+    public void setQuantitationTypeName( String quantitationTypeName ) {
+        this.quantitationTypeName = quantitationTypeName;
     }
 
     /**
-     * @param arrayDesignDescription the arrayDesignDescription to set
+     * @param scale the scale to set
      */
-    public void setArrayDesignDescription( String arrayDesignDescription ) {
-        this.arrayDesignDescription = arrayDesignDescription;
+    public void setScale( ScaleType scale ) {
+        this.scale = scale;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType( StandardQuantitationType type ) {
+        this.type = type;
+    }
+
+    /**
+     * @param user the user to set
+     */
+    public void setUser( Contact user ) {
+        this.user = user;
     }
 
 }

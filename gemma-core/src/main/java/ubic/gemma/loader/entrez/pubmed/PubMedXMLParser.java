@@ -87,26 +87,30 @@ public class PubMedXMLParser {
     /**
      * @param is
      * @return
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
-    public Collection<BibliographicReference> parse( InputStream is ) throws IOException, ParserConfigurationException,
-            SAXException {
+    public Collection<BibliographicReference> parse( InputStream is ) {
 
-        if ( is.available() == 0 ) {
-            throw new IOException( "XML stream contains no data." );
+        try {
+            if ( is.available() == 0 ) {
+                throw new IOException( "XML stream contains no data." );
+            }
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setIgnoringComments( true );
+            // factory.setValidating( true );
+
+            builder = factory.newDocumentBuilder();
+
+            Document document = builder.parse( is );
+
+            return extractBibRefs( document );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        } catch ( ParserConfigurationException e ) {
+            throw new RuntimeException( e );
+        } catch ( SAXException e ) {
+            throw new RuntimeException( e );
         }
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments( true );
-        // factory.setValidating( true );
-
-        builder = factory.newDocumentBuilder();
-
-        Document document = builder.parse( is );
-
-        return extractBibRefs( document );
     }
 
     /**
@@ -169,7 +173,6 @@ public class PubMedXMLParser {
 
         log.debug( articles.getLength() + " articles found in document" );
 
-     
         try {
             for ( int i = 0; i < articles.getLength(); i++ ) {
 

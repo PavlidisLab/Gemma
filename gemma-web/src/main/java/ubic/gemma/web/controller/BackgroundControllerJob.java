@@ -26,9 +26,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -38,7 +35,6 @@ public abstract class BackgroundControllerJob extends BaseFormController impleme
     Log loadLog = LogFactory.getLog( this.getClass().getName() );
 
     protected Object command;
-    protected ProgressJob job;
     protected SecurityContext securityContext;
     protected HttpSession session;
 
@@ -47,10 +43,7 @@ public abstract class BackgroundControllerJob extends BaseFormController impleme
      * @param command
      * @param jobDescription
      */
-    protected void init( SecurityContext parentSecurityContext, HttpServletRequest request, Object commandObj,
-            String jobDescription ) {
-        this.job = ProgressManager.createProgressJob( parentSecurityContext.getAuthentication().getName(),
-                jobDescription );
+    protected void init( SecurityContext parentSecurityContext, HttpServletRequest request, Object commandObj ) {
 
         this.securityContext = parentSecurityContext;
 
