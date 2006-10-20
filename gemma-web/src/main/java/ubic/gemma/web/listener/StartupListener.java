@@ -34,7 +34,6 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
