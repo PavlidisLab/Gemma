@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import org.compass.gps.impl.SingleCompassGps;
 import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -59,7 +60,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        CompassUtils.disableIndexMirroring( ( SpringHibernate3GpsDevice ) getBean( "hibernateGpsDevice" ) );
+        CompassUtils.disableIndexMirroring( ( SingleCompassGps ) getBean( "compassGps" ) );
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
     }

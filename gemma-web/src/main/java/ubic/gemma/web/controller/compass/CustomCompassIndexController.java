@@ -1,19 +1,21 @@
 /*
- * Copyright 2004-2006 the original author or authors.
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-
 package ubic.gemma.web.controller.compass;
 
 import java.util.HashMap;
@@ -21,6 +23,8 @@ import java.util.HashMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.compass.spring.web.mvc.AbstractCompassGpsCommandController;
 import org.compass.spring.web.mvc.CompassIndexCommand;
@@ -46,10 +50,11 @@ import ubic.gemma.util.CompassUtils;
  * The results of the index operation will be saved under the <code>indexResultsName</code>, which defaults to
  * "indexResults".
  * 
- * @uthor keshav
+ * @author keshav
  * @author kimchy
  */
 public class CustomCompassIndexController extends AbstractCompassGpsCommandController {
+    private Log log = LogFactory.getLog( CustomCompassIndexController.class );
 
     private String indexView;
 
@@ -61,6 +66,11 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
         setCommandClass( CompassIndexCommand.class );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
         if ( indexView == null ) {
@@ -71,8 +81,15 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractCommandController#handle(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     */
     protected ModelAndView handle( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+
         CompassIndexCommand indexCommand = ( CompassIndexCommand ) command;
 
         if ( !StringUtils.hasText( indexCommand.getDoIndex() ) || !indexCommand.getDoIndex().equalsIgnoreCase( "true" ) ) {
@@ -81,9 +98,9 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
 
         long time = System.currentTimeMillis();
 
+        log.info( "Rebuilding compass index." );
         CompassUtils.rebuildCompassIndex( ( CompassGpsInterfaceDevice ) this.getWebApplicationContext().getBean(
                 "compassGps" ) );
-        getCompassGps().index();
 
         time = System.currentTimeMillis() - time;
         CompassIndexResults indexResults = new CompassIndexResults( time );

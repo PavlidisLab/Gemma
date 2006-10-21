@@ -19,6 +19,7 @@
 package ubic.gemma.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
@@ -26,8 +27,7 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.FSDirectory;
-import org.compass.gps.device.AbstractGpsDevice;
-import org.compass.gps.spi.CompassGpsInterfaceDevice; 
+import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 /**
  * Utility methods to manipulate compass (and lucene).
@@ -82,8 +82,27 @@ public class CompassUtils {
      * @throws IOException
      */
     public static void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
+        boolean wasRunningBefore = gps.isRunning();
+
+        log.debug( "CompassGps was running? " + wasRunningBefore );
+
+        /* Check state of device. If not running and you try to index, you will get a device exception. */
+        if ( !wasRunningBefore ) {
+            enableIndexMirroring( gps );
+        }
+
+        /* We don't need to check if index already exists. If it doesn't, it won't be deleted. */
         gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
         gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
+
+        log.debug( "indexing now ... " );
+        gps.index();
+
+        /* Return state of device */
+        if ( !wasRunningBefore ) {
+            disableIndexMirroring( gps );
+        }
+
     }
 
     /**
@@ -91,7 +110,7 @@ public class CompassUtils {
      * 
      * @param device
      */
-    public static void disableIndexMirroring( AbstractGpsDevice device ) {
+    public static void disableIndexMirroring( CompassGpsInterfaceDevice device ) {
         device.stop();
     }
 
@@ -100,7 +119,7 @@ public class CompassUtils {
      * 
      * @param device
      */
-    public static void enableIndexMirroring( AbstractGpsDevice device ) {
+    public static void enableIndexMirroring( CompassGpsInterfaceDevice device ) {
         device.start();
     }
 }
