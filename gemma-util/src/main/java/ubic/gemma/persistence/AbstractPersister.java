@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
  * Base class for persisters, provides session management.
@@ -37,7 +38,7 @@ import org.hibernate.SessionFactory;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class AbstractPersister implements Persister {
+public abstract class AbstractPersister extends HibernateDaoSupport implements Persister {
 
     /**
      * How many times per collection to update us (at most)
@@ -153,25 +154,6 @@ public abstract class AbstractPersister implements Persister {
         }
 
         // collection = persistedCollection;
-    }
-
-    /**
-     * @param sessionFactory The sessionFactory to set.
-     */
-    public void setSessionFactory( SessionFactory sessionFactory ) {
-        this.sessionFactory = sessionFactory;
-        // crudUtils.initMetaData( sessionFactory );
-    }
-
-    /**
-     * @return Current Hibernate Session.
-     */
-    protected Session getCurrentSession() {
-        try {
-            return this.sessionFactory.getCurrentSession();
-        } catch ( HibernateException e ) {
-            return sessionFactory.openSession();
-        }
     }
 
     /**

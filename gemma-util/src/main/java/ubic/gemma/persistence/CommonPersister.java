@@ -515,7 +515,7 @@ abstract public class CommonPersister extends AbstractPersister {
         }
 
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
-        this.getCurrentSession().flush();
+        this.getHibernateTemplate().flush();
         return ontologyEntry;
     }
 

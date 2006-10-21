@@ -91,12 +91,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
             designElement = compositeSequenceService.create( ( CompositeSequence ) designElement );
 
-            try {
-                Hibernate.initialize( arrayDesign.getCompositeSequences() );
-            } catch ( HibernateException e ) {
-                Session sess = this.getCurrentSession();
-                sess.lock( arrayDesign, LockMode.NONE );
-            }
+            this.getHibernateTemplate().flush();
+
             arrayDesign.getCompositeSequences().add( ( CompositeSequence ) designElement );
 
         } else {
@@ -228,7 +224,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
 
             if ( persistedBioSequences % SESSION_BATCH_SIZE == 0 ) {
-                this.getCurrentSession().flush();
+                this.getHibernateTemplate().flush();
             }
 
         }
@@ -279,8 +275,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                         + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
             }
             if ( count % SESSION_BATCH_SIZE == 0 ) {
-                this.getCurrentSession().flush();
-                this.getCurrentSession().clear();
+                this.getHibernateTemplate().flush();
+                this.getHibernateTemplate().clear();
                 if ( Thread.interrupted() ) {
                     log.info( "Cancelled" );
                     // we should clean up after ourselves.
