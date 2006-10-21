@@ -55,9 +55,8 @@ public class StartupListenerTest extends TestCase {
 
         // initialize Spring
         String pkg = ClassUtils.classPackageAsResourcePath( Constants.class );
-        log.warn( pkg );
         sc.addInitParameter( ContextLoader.CONFIG_LOCATION_PARAM, "classpath*:/" + pkg + "/applicationContext-*.xml,"
-                + "classpath*:/" + pkg + "/localTestDataSource.xml" );
+                + "classpath*:/" + pkg + "/localTestDataSource.xml" + ",classpath*:/" + pkg + "/compassTest.xml" );
     }
 
     protected void tearDown() throws Exception {

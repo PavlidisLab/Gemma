@@ -19,7 +19,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import org.compass.gps.impl.SingleCompassGps;
-import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -33,7 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.MockClient;
-import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.ProgressData;
 
@@ -60,7 +58,6 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        CompassUtils.disableIndexMirroring( ( SingleCompassGps ) getBean( "compassGps" ) );
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
     }
@@ -113,7 +110,11 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "accession", "GDS999" );
         request.setParameter( "loadPlatformOnly", "false" );
 
-        controller.handleRequest( request, response );
+        try {
+            ModelAndView mv = controller.handleRequest( request, response );
+        } catch ( Exception e ) {
+            fail();
+        }
 
         ProgressData finalPd = MockClient.monitorLoad();
 
