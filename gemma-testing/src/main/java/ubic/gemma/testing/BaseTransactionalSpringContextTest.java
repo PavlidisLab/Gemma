@@ -24,8 +24,6 @@ import java.util.ResourceBundle;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.gps.spi.CompassGpsInterfaceDevice;
-import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
@@ -51,8 +49,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.CompassUtils;
+import ubic.gemma.persistence.PersisterHelper; 
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
@@ -277,6 +274,15 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment() {
         return testHelper.getTestPersistentExpressionExperiment();
+    }
+
+    /**
+     * Convenience method to get a (fairly) complete randomly generated persisted expression experiment.
+     * 
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies();
     }
 
     /**

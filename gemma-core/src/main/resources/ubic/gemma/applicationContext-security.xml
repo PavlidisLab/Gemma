@@ -624,7 +624,7 @@
      
     
     <!--  pointcut that identifies crud operations -->
-    <bean id="crudPointcut" class="ubic.gemma.security.interceptor.AclPointcut"/>
+    <bean id="crudPointcut" class="ubic.gemma.security.interceptor.CrudPointcut"/>
     
     <bean id="auditInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
         <property name="advice">
