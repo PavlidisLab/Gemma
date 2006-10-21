@@ -132,7 +132,7 @@
 		<value>10</value>
 	</property>
 </bean>
-<bean id="indexController" name="/indexer.html" class="org.compass.spring.web.mvc.CompassIndexController">
+<bean id="indexController" name="/indexer.html" class="ubic.gemma.web.controller.compass.CustomCompassIndexController">
 	<property name="compassGps">
 		<ref bean="compassGps" />
 	</property>
