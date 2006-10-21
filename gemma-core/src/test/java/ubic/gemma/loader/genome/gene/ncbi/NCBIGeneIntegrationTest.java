@@ -30,14 +30,14 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest {
+public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
     public void testGeneDomainObjectLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
@@ -92,28 +92,30 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
     }
 
     /**
+     *  this test is too slow
+     * 
      * @throws Exception
      */
-    public void testGeneConverterBigger() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
-
-        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.biggersample.gz";
-        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.biggersample.gz";
-
-        // threaded load
-        String basePath = ConfigUtils.getString( "gemma.home" );
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
-
-        // wait until the loader is done.
-        while ( !loader.isLoaderDone() ) {
-            Thread.sleep( 100 );
-        }
-
-        // loader is done.
-        // check if it loaded 100 elements to the database
-        log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
-        assertEquals( 1999, loader.getLoadedGeneCount() );
-    }
+    // public void testGeneConverterBigger() throws Exception {
+    // NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
+    //
+    // String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.biggersample.gz";
+    // String gene2AccTestFile =
+    // "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.biggersample.gz";
+    //
+    // // threaded load
+    // String basePath = ConfigUtils.getString( "gemma.home" );
+    // loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
+    //
+    // while ( !loader.isLoaderDone() ) {
+    // Thread.sleep( 100 );
+    // }
+    //
+    // // loader is done.
+    // // check if it loaded elements to the database
+    // log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
+    //        assertEquals( 1999, loader.getLoadedGeneCount() );
+    //    }
 
     @SuppressWarnings("unchecked")
     public void testGeneLoader() throws Exception {

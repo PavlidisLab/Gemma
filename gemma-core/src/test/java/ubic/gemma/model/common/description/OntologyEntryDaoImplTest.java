@@ -43,8 +43,8 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
 
         oed = ( OntologyEntryDao ) this.getBean( "ontologyEntryDao" );
         edd = ( ExternalDatabaseDao ) this.getBean( "externalDatabaseDao" );
@@ -78,8 +78,8 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
     }
 
     @Override
-    protected void onTearDown() throws Exception {
-        super.onTearDown();
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
         oed.remove( top );
         oed.remove( middle );
         oed.remove( child );

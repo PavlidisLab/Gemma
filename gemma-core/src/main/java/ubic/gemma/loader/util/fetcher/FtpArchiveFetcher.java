@@ -80,7 +80,10 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      * @param outputFileName
      */
     protected void cleanUp( File outputFile ) {
-        if ( this.doDelete ) outputFile.delete();
+        if ( this.doDelete ) {
+            log.info( "Cleaning up " + outputFile.getName() );
+            outputFile.delete();
+        }
     }
 
     /**
@@ -147,13 +150,16 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 return listFiles( seekFileName, outputFile.getParentFile() );
             }
         } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Couldn't fetch " + seekFileName, e );
+            throw new RuntimeException( "Couldn't fetch " + seekFileName + " from "
+                    + this.getNetDataSourceUtil().getHost(), e );
         } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName, e );
+            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName + " from "
+                    + this.getNetDataSourceUtil().getHost(), e );
         } catch ( IOException e ) {
-            throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName, e );
+            throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName + " from "
+                    + this.getNetDataSourceUtil().getHost(), e );
         }
-        throw new RuntimeException( "Couldn't fetch " + seekFileName );
+        throw new RuntimeException( "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost() );
     }
 
     /**

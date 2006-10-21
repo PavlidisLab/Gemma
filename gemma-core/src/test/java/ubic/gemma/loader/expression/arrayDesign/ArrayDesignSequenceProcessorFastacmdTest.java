@@ -29,17 +29,9 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
 
-    ArrayDesignSequenceProcessingService app;
-
-    @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-        app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-
-    }
-
     @SuppressWarnings("unchecked")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         try {
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",

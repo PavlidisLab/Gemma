@@ -24,13 +24,13 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedQueryControllerTest extends BaseTransactionalSpringWebTest {
+public class PubMedQueryControllerTest extends BaseSpringWebTest {
     private PubMedQueryController controller;
 
     @Override

@@ -50,8 +50,8 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
     }
@@ -62,8 +62,8 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
      * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
      */
     @Override
-    protected void onTearDown() throws Exception {
-        super.onTearDown();
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
         if ( ee != null && ee.getId() != null ) {
             ExpressionExperimentService service = ( ExpressionExperimentService ) this
                     .getBean( "expressionExperimentService" );

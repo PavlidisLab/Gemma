@@ -28,13 +28,13 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTest {
+public class BlatAssociationDaoImplTest extends BaseSpringContextTest {
 
     private String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
 

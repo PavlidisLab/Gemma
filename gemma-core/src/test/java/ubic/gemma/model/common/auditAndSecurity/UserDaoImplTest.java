@@ -24,7 +24,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Tests the Contact, Person, User interitance hierarchy and the association between User and UserRole.
@@ -32,7 +32,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
+public class UserDaoImplTest extends BaseSpringContextTest {
     String email = null;
 
     private UserDao userDao;

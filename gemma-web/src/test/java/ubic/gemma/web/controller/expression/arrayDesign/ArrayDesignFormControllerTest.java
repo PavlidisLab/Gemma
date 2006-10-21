@@ -29,13 +29,13 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignFormControllerTest extends BaseTransactionalSpringContextTest {
+public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( ArrayDesignFormControllerTest.class.getName() );
 
     ArrayDesign ad = null;

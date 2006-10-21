@@ -18,13 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class DatabaseEntryDaoImplTest extends BaseTransactionalSpringContextTest {
+public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
 
     DatabaseEntryDao databaseEntryDao;
 

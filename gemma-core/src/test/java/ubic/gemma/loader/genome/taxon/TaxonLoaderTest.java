@@ -21,13 +21,13 @@ package ubic.gemma.loader.genome.taxon;
 import java.io.InputStream;
 
 import ubic.gemma.loader.genome.taxon.TaxonLoader;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class TaxonLoaderTest extends BaseTransactionalSpringContextTest {
+public class TaxonLoaderTest extends BaseSpringContextTest {
     InputStream is;
 
     @Override

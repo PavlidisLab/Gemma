@@ -59,7 +59,9 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     public final void testMainBadPort() throws Exception {
         Exception result = p.doWork( new String[] { "-v", "3", "-P", "c", "-u", databaseUser, "-p", databasePassword,
                 "-H", databaseHost, "-o", tempFile.getAbsolutePath() } ); // should result in an exception
-        assertTrue( result.getMessage(), result != null );
+        if ( result == null ) {
+            fail( "Expected bad port" );
+        }
     }
 
     public void testBlatHandling() throws Exception {
@@ -74,7 +76,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
                 databaseHost, "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
         if ( result != null ) {
-            fail( result.getMessage() );
+            result.printStackTrace();
+            throw ( result );
         }
     }
 
@@ -90,7 +93,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
                 databaseHost, "-o", tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg18" } );
         if ( result != null ) {
-            fail( result.getMessage() );
+            throw ( result );
         }
     }
 
@@ -98,8 +101,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
                 databaseHost, "-o", tempFile.getAbsolutePath(), "-d", "hg18", "AF015731", "BX473803" } );
         if ( result != null ) {
-            result.printStackTrace();
-            fail( result.getMessage() );
+            throw ( result );
         }
     }
 
@@ -111,7 +113,9 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         Exception result = p.doWork( new String[] { "-u", databaseUser, "-p", databasePassword, "-H", databaseHost,
                 "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
-        assertTrue( result.getMessage(), result != null );
+        if ( result == null ) {
+            fail( "Expected bad file" );
+        }
     }
     // This test requires a running gfServer with java client. Only works under linux.
     // public void testSequenceHandling() throws Exception {

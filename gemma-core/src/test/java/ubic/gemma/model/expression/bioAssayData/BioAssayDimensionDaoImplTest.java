@@ -27,13 +27,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class BioAssayDimensionDaoImplTest extends BaseTransactionalSpringContextTest {
+public class BioAssayDimensionDaoImplTest extends BaseSpringContextTest {
 
     private static final int NUMTESTCOMPOSITESEQUENCES = 15;
 

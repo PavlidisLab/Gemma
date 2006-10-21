@@ -223,6 +223,9 @@ public class ProbeMapperCli extends AbstractCLI {
 
         for ( String probe : results.keySet() ) {
             BlatAssociation best = probeMapper.scoreResults( results.get( probe ) );
+            if ( best == null ) {
+                continue;
+            }
             writeDesignElementBlatAssociation( writer, best );
         }
 
@@ -300,7 +303,6 @@ public class ProbeMapperCli extends AbstractCLI {
      * @throws IOException
      */
     public void writeDesignElementBlatAssociation( Writer output, BlatAssociation association ) throws IOException {
-
         BlatResult blatRes = association.getBlatResult();
 
         String[] sa = splitBlatQueryName( blatRes );

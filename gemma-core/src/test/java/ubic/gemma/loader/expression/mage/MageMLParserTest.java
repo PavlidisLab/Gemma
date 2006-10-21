@@ -62,8 +62,8 @@ public class MageMLParserTest extends AbstractMageTest {
     ZipInputStream istAffyGiantBioSequencePackage;
 
     @Override
-    protected void onSetUp() throws Exception {
-        // super.onSetUpInTransaction();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         mlp = new MageMLParser();
     }
 
@@ -92,7 +92,7 @@ public class MageMLParserTest extends AbstractMageTest {
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
     }
-    
+
     // The Illumina file is not parseable by the MAGEStk.
     /*
      * public void testParseCollectionIlluminaArrayDesign() throws Exception { log.debug( "Parsing MAGE from Illumina

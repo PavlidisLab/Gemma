@@ -27,7 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Use this to test acegi functionality.
@@ -36,7 +36,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest {
+public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     private ArrayDesignService arrayDesignService;
 

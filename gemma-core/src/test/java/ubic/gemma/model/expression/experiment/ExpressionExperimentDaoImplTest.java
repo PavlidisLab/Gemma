@@ -24,14 +24,14 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author kkeshav
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringContextTest {
+public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     ExpressionExperimentDao expressionExperimentDao;
 

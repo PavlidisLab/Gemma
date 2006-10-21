@@ -36,8 +36,10 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     BioSequence bs;
 
     @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        endTransaction();
+        
         bs = BioSequence.Factory.newInstance();
 
         Taxon t = Taxon.Factory.newInstance();
@@ -57,7 +59,8 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     }
 
     @Override
-    protected void onTearDown() throws Exception {
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
         BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
         bss.remove( bs );
     }

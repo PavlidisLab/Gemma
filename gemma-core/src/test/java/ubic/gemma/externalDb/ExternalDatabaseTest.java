@@ -20,7 +20,7 @@ package ubic.gemma.externalDb;
 
 import org.apache.commons.configuration.Configuration;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Tests connections to external databases.
@@ -29,7 +29,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @version $Id$
  * @see ExternalDatabase
  */
-public class ExternalDatabaseTest extends BaseTransactionalSpringContextTest {
+public class ExternalDatabaseTest extends BaseSpringContextTest {
     Configuration conf;
     GoldenPathHumanDao goldenPathHumanDao;
 

@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import org.compass.spring.device.hibernate.SpringHibernate3GpsDevice;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -37,11 +36,6 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
     private PersisterHelper persisterHelper;
     private ExternalDatabaseService externalDatabaseService;
     private ExpressionExperimentService svc;
-
-    @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-    }
 
     public void testExpressionExperimentDelete() {
 

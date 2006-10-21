@@ -28,13 +28,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTest {
+public class BioAssayFormControllerTest extends BaseSpringContextTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
     private MockHttpServletRequest request = null;

@@ -30,14 +30,14 @@ import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.UserConstants;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
+public class UserFormControllerTest extends BaseSpringWebTest {
 
     UserFormController controller;
     UserDao userDao;

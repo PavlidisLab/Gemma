@@ -27,14 +27,14 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class TestDataAddingControllerTest extends BaseTransactionalSpringWebTest {
+public class TestDataAddingControllerTest extends BaseSpringWebTest {
     TestDataAddingController controller;
 
     /**

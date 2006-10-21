@@ -23,7 +23,7 @@ import org.hibernate.TransientObjectException;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Tests meant to exercise and investigate hibernate persistence.
@@ -31,7 +31,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author pavlidis
  * @version $Id$
  */
-public class PersisterTestDoNotCommit extends BaseTransactionalSpringContextTest {
+public class PersisterTestDoNotCommit extends BaseSpringContextTest {
 
     @Override
     protected void onSetUpInTransaction() throws Exception {

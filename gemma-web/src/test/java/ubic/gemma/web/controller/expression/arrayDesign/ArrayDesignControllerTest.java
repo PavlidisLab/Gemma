@@ -9,13 +9,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignControllerTest extends BaseTransactionalSpringContextTest {
+public class ArrayDesignControllerTest extends BaseSpringContextTest {
 
     // private MockServletContext mockCtx;
     private MockHttpServletRequest request;

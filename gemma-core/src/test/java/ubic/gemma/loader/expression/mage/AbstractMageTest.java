@@ -34,6 +34,17 @@ public abstract class AbstractMageTest extends BaseSpringContextTest {
 
     protected static final String MAGE_DATA_RESOURCE_PATH = "/data/loader/expression/mage/";
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
+     */
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        endTransaction();
+    }
+
     /**
      * XSL-transform the mage document. This is only needed for testing. In production, this is done as part of the
      * parsing.

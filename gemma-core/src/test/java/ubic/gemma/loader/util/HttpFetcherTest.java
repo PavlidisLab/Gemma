@@ -36,6 +36,7 @@ import ubic.gemma.model.common.description.LocalFile;
 public class HttpFetcherTest extends TestCase {
 
     private static Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
+    File f;
 
     /*
      * Test method for 'ubic.gemma.loader.loaderutils.HttpFetcher.fetch(String)'
@@ -47,15 +48,27 @@ public class HttpFetcherTest extends TestCase {
             hf.setForce( true );
             Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );
             assertTrue( results != null && results.size() > 0 && results.iterator().next().getLocalURL() != null );
-            File f = new File( results.iterator().next().getLocalURL().toURI() );
-            f.deleteOnExit();
+            f = new File( results.iterator().next().getLocalURL().toURI() );
             assertTrue( f.length() > 0 );
-            f.delete();
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException ) {
                 log.error( "Got IOException, skipping test" );
                 return;
             }
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see junit.framework.TestCase#tearDown()
+     */
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        if ( f != null ) {
+            f.delete();
+            f.getParentFile().delete();
         }
     }
 }

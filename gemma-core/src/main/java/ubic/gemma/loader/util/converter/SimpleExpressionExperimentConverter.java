@@ -3,22 +3,14 @@ package ubic.gemma.loader.util.converter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A simple converter that prepares an expression experiment from a collection of data values. Useful if expression data

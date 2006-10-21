@@ -21,7 +21,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -34,7 +34,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author klc
  * @version $Id$
  */
-public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest {
+public class ProgressIntegrationTest extends BaseSpringContextTest {
 
     private ProgressJob pJob;
     private HttpProgressObserver pObserver;

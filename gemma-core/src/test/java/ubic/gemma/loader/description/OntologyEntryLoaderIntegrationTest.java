@@ -39,13 +39,13 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringContextTest {
+public class OntologyEntryLoaderIntegrationTest extends BaseSpringContextTest {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderIntegrationTest.class );
     String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
     GeneOntologyLoader ontologyEntryPersister = null;

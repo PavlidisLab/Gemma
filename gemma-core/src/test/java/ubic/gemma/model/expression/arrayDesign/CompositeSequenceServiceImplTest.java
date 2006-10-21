@@ -36,10 +36,9 @@ public class CompositeSequenceServiceImplTest extends BaseSpringContextTest {
     CompositeSequence cs = null;
 
     /**
-     * Asserts the true if getAssociatedGenes returns null when there are no composite sequences associated with this
-     * gene.
+     * FIXME not implemented.
      */
-    public void testHandleGetAssociatedGenes() {// TODO add mocks
+    public void testHandleGetAssociatedGenes() {
         compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
         cs = CompositeSequence.Factory.newInstance();

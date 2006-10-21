@@ -26,13 +26,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class BioAssayDaoImplTest extends BaseTransactionalSpringContextTest {
+public class BioAssayDaoImplTest extends BaseSpringContextTest {
 
     private static final int NUMTESTBIOASSAYS = 5;
 

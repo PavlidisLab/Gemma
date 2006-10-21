@@ -5,9 +5,9 @@ import java.io.InputStream;
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
-public class ImageCumulativePlatesLoaderTest extends BaseTransactionalSpringContextTest {
+public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
 
     InputStream is;
 
@@ -29,6 +29,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseTransactionalSpringCont
     @Override
     protected void onTearDownInTransaction() throws Exception {
         is.close();
+        // FIXME delete the created sequences.
     }
 
 }

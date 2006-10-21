@@ -24,13 +24,13 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
+public class BlatResultDaoImplTest extends BaseSpringContextTest {
     String testSequence = RandomStringUtils.random( 100, "ATCG" );
     String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
     BlatResultDao blatResultDao;

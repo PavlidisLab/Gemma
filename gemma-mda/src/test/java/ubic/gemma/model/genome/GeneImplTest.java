@@ -21,6 +21,8 @@ package ubic.gemma.model.genome;
 import junit.framework.TestCase;
 
 /**
+ * Tests of 'equals' implementation
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -41,6 +43,7 @@ public class GeneImplTest extends TestCase {
 
         Chromosome c = Chromosome.Factory.newInstance();
         c.setName( "X" );
+        c.setTaxon( aTax );
 
         aLoc = PhysicalLocation.Factory.newInstance();
         aLoc.setChromosome( c );
@@ -107,6 +110,8 @@ public class GeneImplTest extends TestCase {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
 
+        a.setTaxon( aTax );
+        b.setTaxon( aTax );
         a.setOfficialSymbol( "foo" );
         b.setOfficialSymbol( "foo" );
         a.setOfficialName( "foo" );

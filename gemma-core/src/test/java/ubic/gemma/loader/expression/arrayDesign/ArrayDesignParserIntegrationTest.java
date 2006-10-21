@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 // import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Loads the database with ArrayDesigns. This test is more representative of integration testing than unit testing as it
@@ -35,7 +35,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringContextTest {
+public class ArrayDesignParserIntegrationTest extends BaseSpringContextTest {
     protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 
     private ArrayDesignParser arrayDesignParser = null;

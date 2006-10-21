@@ -26,13 +26,13 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class GoldenPathBioSequenceLoaderTest extends BaseTransactionalSpringContextTest {
+public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
     public void testGetTranscriptBioSequences() throws Exception {
 

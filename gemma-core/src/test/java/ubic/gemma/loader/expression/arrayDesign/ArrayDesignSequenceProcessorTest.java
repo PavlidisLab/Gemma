@@ -56,8 +56,9 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     ArrayDesignSequenceProcessingService app;
 
     @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        endTransaction();
 
         // note that the name MG-U74A is not used by the result.
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
@@ -71,7 +72,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     @Override
-    protected void onTearDown() throws Exception {
+    protected void onTearDownInTransaction() throws Exception {
         if ( result != null ) {
             ArrayDesignService svc = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
             svc.remove( result );

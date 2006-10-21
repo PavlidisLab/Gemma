@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractExpressionExperimentTest extends BaseTransactionalSpringContextTest {
+public abstract class AbstractExpressionExperimentTest extends BaseSpringContextTest {
 
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations.

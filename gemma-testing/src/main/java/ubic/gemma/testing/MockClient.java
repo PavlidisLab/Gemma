@@ -84,7 +84,7 @@ public class MockClient implements Observer {
         boolean ok = ProgressManager.addToNotification( "test", mc );
 
         if ( !ok ) {
-            throw new IllegalStateException();
+            // throw new IllegalStateException();
         }
 
         while ( !done && !( TIMEOUT < elapsed ) ) {

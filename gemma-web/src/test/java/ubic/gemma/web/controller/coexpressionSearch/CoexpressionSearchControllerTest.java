@@ -12,7 +12,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand;
 import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationFormController;
 
@@ -20,7 +20,7 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
  * @author joseph
  * @version $Id$
  */
-public class CoexpressionSearchControllerTest extends BaseTransactionalSpringContextTest {
+public class CoexpressionSearchControllerTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
     /**

@@ -25,7 +25,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 
 import com.dumbster.smtp.SimpleSmtpServer;
 
@@ -35,7 +35,7 @@ import com.dumbster.smtp.SimpleSmtpServer;
  * @author keshav
  * @version $Id$
  */
-public class SignupControllerTest extends BaseTransactionalSpringWebTest {
+public class SignupControllerTest extends BaseSpringWebTest {
 
     UserAuthenticatingController controller;
 

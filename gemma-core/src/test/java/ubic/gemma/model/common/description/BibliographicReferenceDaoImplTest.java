@@ -27,7 +27,7 @@ import org.hibernate.Transaction;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
@@ -36,7 +36,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author pavlidis
  * @version $Id$
  */
-public class BibliographicReferenceDaoImplTest extends BaseTransactionalSpringContextTest {
+public class BibliographicReferenceDaoImplTest extends BaseSpringContextTest {
 
     private BibliographicReferenceDao bibliographicReferenceDao = null;
     private DatabaseEntry de = null;

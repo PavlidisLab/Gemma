@@ -30,7 +30,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
  * @version $Id$
  * @see com.dumbster.smtp.SimpleSmtpServer
  */
-public abstract class BaseTransactionalSpringWebTest extends BaseTransactionalSpringContextTest {
+public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     /**
      * 
@@ -55,7 +55,6 @@ public abstract class BaseTransactionalSpringWebTest extends BaseTransactionalSp
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
-
         super.onSetUpInTransaction();
 
         // change the port on the mailSender so it doesn't conflict with an

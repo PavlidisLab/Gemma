@@ -34,7 +34,7 @@ public class CompassUtilsTest extends BaseSpringContextTest {
     /**
      * Tests deleting and rebuilding the compass index
      */
-    public void testDeleteCompassIndex() {
+    public void testRebuildCompassIndex() {
         log.debug( this.getBean( "compassGps" ) );
 
         CompassGpsInterfaceDevice gps = ( CompassGpsInterfaceDevice ) this.getBean( "compassGps" );

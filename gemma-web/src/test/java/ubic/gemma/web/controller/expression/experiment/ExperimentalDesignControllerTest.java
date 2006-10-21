@@ -25,13 +25,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author Kiran Keshav
  * @version $Id$
  */
-public class ExperimentalDesignControllerTest extends BaseTransactionalSpringContextTest {
+public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
 
     ExperimentalDesignService experimentalDesignService = null;
 

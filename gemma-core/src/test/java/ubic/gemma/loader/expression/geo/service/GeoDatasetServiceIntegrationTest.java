@@ -180,6 +180,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gse2221Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS1830" );
+        assertNotNull( results );
+        ee = results.iterator().next();
         assertEquals( 1, results.size() );
 
     }
@@ -195,8 +197,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gse1133Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE1133" );
+        ee = results.iterator().next(); // fixme, need to delete both.
         assertEquals( 2, results.size() );
-
     }
 
     /**

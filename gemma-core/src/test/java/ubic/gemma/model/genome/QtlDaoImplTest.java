@@ -25,14 +25,14 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @author daq?
  * @version $Id$
  */
-public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
+public class QtlDaoImplTest extends BaseSpringContextTest {
 
     QtlDao qtlDao = null;
     PhysicalLocationDao physicalLocationDao = null;

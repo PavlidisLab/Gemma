@@ -32,25 +32,34 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.model.genome.biosequence.BioSequenceDao;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
+public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
 
     private static final String DEFAULT_TAXON = "Mus musculus";
 
     ArrayDesign ad;
     ArrayDesignDao arrayDesignDao;
     ExternalDatabaseDao externalDatabaseDao;
+    BioSequenceDao bioSequenceDao;
 
     /**
      * @param arrayDesignDao The arrayDesignDao to set.
      */
     public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
+    }
+
+    /**
+     * @param bioSequenceDao the bioSequenceDao to set
+     */
+    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
+        this.bioSequenceDao = bioSequenceDao;
     }
 
     /**
@@ -64,30 +73,38 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         flushSession(); // fails without this.
         ad = arrayDesignDao.find( ad );
+        arrayDesignDao.thaw( ad );
         CompositeSequence cs = ad.getCompositeSequences().iterator().next();
 
         assertNotNull( cs.getId() );
         assertNotNull( cs.getArrayDesign().getId() );
     }
 
-    // This test disabled because we do not set all-delete-orphan cascade style set for this currently.
-    // public void testCascadeDeleteOrphanCompositeSequences() {
-    // ad = ( ArrayDesign ) persisterHelper.persist( ad );
-    // CompositeSequence cs = ad.getCompositeSequences().iterator().next();
-    // ad.getCompositeSequences().remove( cs );
-    // cs.setArrayDesign( null );
-    // arrayDesignDao.update( ad );
-    // assertEquals( 3, ad.getCompositeSequences().size() );
-    // }
+    public void testDelete() {
 
-    // FIXME: Need to add a meaning test of reporters
-    // public void testCascadeDeleteOrphanReporters() {
-    // Reporter cs = ad.getReporters().iterator().next();
-    // ad.getReporters().remove( cs );
-    // cs.setArrayDesign( null );
-    // arrayDesignDao.update( ad );
-    // assertEquals( 2, ad.getReporters().size() );
-    // }
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+
+        Collection<CompositeSequence> seqs = ad.getCompositeSequences();
+        Collection<Long> seqIds = new ArrayList<Long>();
+        for ( CompositeSequence seq : seqs ) {
+            if ( seq.getId() == null ) {
+                continue; // why?
+            }
+            seqIds.add( seq.getId() );
+        }
+        arrayDesignDao.remove( ad );
+
+        CompositeSequenceDao compositeSequenceDao = ( CompositeSequenceDao ) getBean( "compositeSequenceDao" );
+        for ( Long id : seqIds ) {
+            try {
+                CompositeSequence cs = ( CompositeSequence ) compositeSequenceDao.load( id );
+                if ( cs != null ) fail( cs + " was still in the system" );
+            } catch ( HibernateObjectRetrievalFailureException e ) {
+                // ok
+            }
+        }
+
+    }
 
     public void testFindWithExternalReference() {
         ad = ArrayDesign.Factory.newInstance();
@@ -111,10 +128,6 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         assertNotNull( found );
     }
 
-    private String getGpl() {
-        return "GPL" + RandomStringUtils.randomNumeric( 4 );
-    }
-
     public void testFindWithExternalReferenceNotFound() {
         ad = ArrayDesign.Factory.newInstance();
         assignExternalReference( ad, getGpl() );
@@ -133,19 +146,31 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         assertNull( found );
     }
 
-    public void testLoadCompositeSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
-        assertEquals( 3, actualValue.size() );
-        assertTrue( actualValue.iterator().next() instanceof CompositeSequence );
-    }
-
     // public void testLoadReporters() {
     // ad = ( ArrayDesign ) persisterHelper.persist( ad );
     // Collection actualValue = arrayDesignDao.loadReporters( ad.getId() );
     // assertEquals( 3, actualValue.size() );
     // assertTrue( actualValue.iterator().next() instanceof Reporter );
     // }
+
+    /*
+     * A test of getting a taxon assciated with an arrayDesign. todo: this test should use an actual array design that
+     * has many bioSequences assciated with it.
+     */
+    public void testGetTaxon() {
+
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Taxon tax = arrayDesignDao.getTaxon( ad.getId() );
+        assertEquals( DEFAULT_TAXON, tax.getScientificName() );
+
+    }
+
+    public void testLoadCompositeSequences() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
+        assertEquals( 3, actualValue.size() );
+        assertTrue( actualValue.iterator().next() instanceof CompositeSequence );
+    }
 
     /*
      * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numCompositeSequences(ArrayDesign)'
@@ -167,42 +192,23 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         assertEquals( expectedValue, actualValue );
     }
 
-    public void testDelete() {
+    /**
+     * @param accession
+     */
+    private void assignExternalReference( ArrayDesign toFind, String accession ) {
+        ExternalDatabase geo = externalDatabaseDao.findByName( "GEO" );
+        assert geo != null;
 
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+        de.setExternalDatabase( geo );
 
-        Collection<CompositeSequence> seqs = ad.getCompositeSequences();
-        Collection<Long> seqIds = new ArrayList<Long>();
-        for ( CompositeSequence seq : seqs ) {
-            if ( seq.getId() == null ) {
-                continue; // why?
-            }
-            seqIds.add( seq.getId() );
-        }
-        arrayDesignDao.remove( ad );
+        de.setAccession( accession );
 
-        CompositeSequenceDao compositeSequenceDao = ( CompositeSequenceDao ) getBean( "compositeSequenceDao" );
-        for ( Long id : seqIds ) {
-            try {
-                CompositeSequence cs = ( CompositeSequence ) compositeSequenceDao.load( id );
-                fail( cs + " was still in the system" );
-            } catch ( HibernateObjectRetrievalFailureException e ) {
-                // ok
-            }
-        }
-
+        toFind.getExternalReferences().add( de );
     }
 
-    /*
-     * A test of getting a taxon assciated with an arrayDesign. todo: this test should use an actual array design that
-     * has many bioSequences assciated with it.
-     */
-    public void testGetTaxon() {
-
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Taxon tax = arrayDesignDao.getTaxon( ad.getId() );
-        assertEquals( DEFAULT_TAXON, tax.getScientificName() );
-
+    private String getGpl() {
+        return "GPL" + RandomStringUtils.randomNumeric( 4 );
     }
 
     /*
@@ -211,6 +217,7 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        // / endTransaction();
 
         // Create Array design
         ad = ArrayDesign.Factory.newInstance();
@@ -249,6 +256,7 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         Taxon tax = Taxon.Factory.newInstance();
         tax.setScientificName( DEFAULT_TAXON );
         BioSequence bs = BioSequence.Factory.newInstance( tax );
+        bs.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
         bs.setTaxon( tax );
 
@@ -266,23 +274,15 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         super.onTearDownInTransaction();
         if ( ad != null && ad.getId() != null ) {
             log.info( "Deleting " + ad );
+            // also remove the sequences
+            arrayDesignDao.thaw( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                bioSequenceDao.remove( cs.getBiologicalCharacteristic() );
+            }
+
             this.arrayDesignDao.remove( ad );
+
         }
-    }
-
-    /**
-     * @param accession
-     */
-    private void assignExternalReference( ArrayDesign toFind, String accession ) {
-        ExternalDatabase geo = externalDatabaseDao.findByName( "GEO" );
-        assert geo != null;
-
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-        de.setExternalDatabase( geo );
-
-        de.setAccession( accession );
-
-        toFind.getExternalReferences().add( de );
     }
 
 }

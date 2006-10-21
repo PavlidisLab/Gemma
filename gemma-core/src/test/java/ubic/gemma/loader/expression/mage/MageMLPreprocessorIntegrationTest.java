@@ -65,8 +65,8 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
     }
 
     @Override
-    public void onSetUp() throws Exception {
-        super.onSetUp();
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         this.mageMLPreprocessor = new MageMLPreprocessor( "testPreprocess" );
         mageMLPreprocessor.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
     }

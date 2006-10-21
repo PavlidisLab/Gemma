@@ -52,8 +52,9 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        endTransaction();
 
         // first load small twoc-color
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );

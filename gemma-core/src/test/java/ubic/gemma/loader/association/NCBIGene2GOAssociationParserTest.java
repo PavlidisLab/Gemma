@@ -26,7 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Tests multiple both parsing and loading.
@@ -34,7 +34,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class NCBIGene2GOAssociationParserTest extends BaseTransactionalSpringContextTest {
+public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     protected Log log = LogFactory.getLog( NCBIGene2GOAssociationParserTest.class );
 
     NCBIGene2GOAssociationParser gene2GOAssParser = null;

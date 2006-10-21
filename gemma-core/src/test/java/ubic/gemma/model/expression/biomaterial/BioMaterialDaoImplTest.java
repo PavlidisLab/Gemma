@@ -19,13 +19,13 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class BioMaterialDaoImplTest extends BaseTransactionalSpringContextTest {
+public class BioMaterialDaoImplTest extends BaseSpringContextTest {
 
     private String searchkeyName;
     private String searchkeyAcc;

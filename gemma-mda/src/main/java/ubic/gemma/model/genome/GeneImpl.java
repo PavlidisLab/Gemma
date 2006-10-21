@@ -24,6 +24,8 @@ package ubic.gemma.model.genome;
 
 /**
  * @see ubic.gemma.model.genome.Gene
+ * @author pavlidis
+ * @version $Id$
  */
 public class GeneImpl extends ubic.gemma.model.genome.Gene {
     /**

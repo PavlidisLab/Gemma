@@ -25,13 +25,13 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class GenomePersisterTest extends BaseTransactionalSpringContextTest {
+public class GenomePersisterTest extends BaseSpringContextTest {
 
     public void testPersistGene() throws Exception {
         endTransaction();

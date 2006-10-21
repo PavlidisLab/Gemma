@@ -22,11 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.Session;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

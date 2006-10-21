@@ -29,13 +29,13 @@ import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author daq2101
  * @version $Id$
  */
-public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContextTest {
+public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
     private final Log log = LogFactory.getLog( CandidateGeneListDaoImplTest.class );
 
     private CandidateGeneListDao candidateGeneListDao;

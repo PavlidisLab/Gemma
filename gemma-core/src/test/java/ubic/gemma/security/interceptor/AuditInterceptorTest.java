@@ -26,13 +26,13 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
+public class AuditInterceptorTest extends BaseSpringContextTest {
     private UserService userService;
     ExpressionExperimentService expressionExperimentService;
 

@@ -32,6 +32,7 @@ public class TaxonFetcherTest extends TestCase {
     // FIXME - this test takes too long.
     public void testFetch() throws Exception {
         TaxonFetcher fetcher = new TaxonFetcher();
+        fetcher.setDeleteAfterUnpack( false );
         Collection<LocalFile> files = fetcher.fetch();
         assertEquals( 9, files.size() );
         for ( LocalFile file : files ) {

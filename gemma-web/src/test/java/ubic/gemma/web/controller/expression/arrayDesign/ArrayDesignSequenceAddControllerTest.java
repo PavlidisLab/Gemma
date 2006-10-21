@@ -18,13 +18,13 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignSequenceAddControllerTest extends BaseTransactionalSpringWebTest {
+public class ArrayDesignSequenceAddControllerTest extends BaseSpringWebTest {
 
     /**
      * Test method for

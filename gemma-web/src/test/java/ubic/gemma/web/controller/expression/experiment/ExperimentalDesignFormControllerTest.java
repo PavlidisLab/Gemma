@@ -31,13 +31,13 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ExperimentalDesignFormControllerTest extends BaseTransactionalSpringContextTest {
+public class ExperimentalDesignFormControllerTest extends BaseSpringContextTest {
     // TODO finish implementing this test.
     private Log log = LogFactory.getLog( this.getClass() );
 

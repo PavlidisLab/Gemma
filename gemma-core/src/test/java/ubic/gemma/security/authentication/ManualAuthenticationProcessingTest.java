@@ -62,7 +62,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
                 .getBean( "manualAuthenticationProcessing" );
         assertNotNull( manager );
         try {
-           manager.attemptAuthentication( "I don't exist", "wrong" );
+            manager.attemptAuthentication( "I don't exist", "wrong" );
             fail( "Should have gotten a BadCredentialsException" );
         } catch ( BadCredentialsException expected ) {
             // expected.

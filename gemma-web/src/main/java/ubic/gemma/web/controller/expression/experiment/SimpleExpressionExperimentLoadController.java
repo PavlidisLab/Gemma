@@ -19,7 +19,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -117,6 +116,10 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
      * @param adsac
      */
     private void loadCookie( HttpServletRequest request, SimpleExpressionExperimentMetaData command ) {
+
+        // cookies aren't all that important, if they're missing we just go on.
+        if ( request == null || request.getCookies() == null ) return;
+
         for ( Cookie cook : request.getCookies() ) {
             if ( cook.getName().equals( COOKIE_NAME ) ) {
                 try {
@@ -132,7 +135,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
                     command.setQuantitationTypeDescription( cookie.getString( "quantitationTypeDescription" ) );
 
                 } catch ( Exception e ) {
-                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    log.debug( "Cookie could not be loaded: " + e.getMessage() );
                     // that's okay, we just don't get a cookie.
                 }
             }
@@ -208,10 +211,16 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
         response.addCookie( cookie );
 
         FileUpload fileUpload = commandObject.getDataFile();
+
+        if ( fileUpload == null || fileUpload.getFile() == null ) {
+            errors.rejectValue( "dataFile", "errors.required", "Data file is required" );
+            return showForm( request, response, errors );
+        }
+
         File file = FileUploadUtil.copyUploadedFile( request, fileUpload, "dataFile.file" );
 
         if ( !file.canRead() ) {
-            errors.rejectValue( "file", "errors.required", "File was not uploaded successfully?" );
+            errors.rejectValue( "dataFile", "errors.required", "Data file was not uploaded successfully?" );
             return showForm( request, response, errors );
         }
 

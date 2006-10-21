@@ -18,22 +18,18 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * This test is actually used to test sorting on collections. I am testing the Andromda AssociationEnd
- * andromda.hibernate.orderByColumns tagged value. This value is part of the sterotype EntityAssociation.
- * 
  * @author keshav
  * @version $Id$
  */
-public class AuditTrailDaoTest extends BaseTransactionalSpringContextTest {
+public class AuditTrailDaoTest extends BaseSpringContextTest {
     protected static final Log log = LogFactory.getLog( AuditTrailDaoTest.class );
 
     AuditTrailDao auditTrailDao;
@@ -83,25 +79,9 @@ public class AuditTrailDaoTest extends BaseTransactionalSpringContextTest {
     public void testCreate() {
         log.info( "Creating audit trail" );
         assert auditTrail != null;
-        getAuditTrailDao().create( auditTrail );
-    }
-
-    /**
-     * this method retrieves all
-     */
-    @SuppressWarnings("unchecked")
-    public void testfindAllAuditTrails() {
-        log.info( "Retreiving all audit events" );
-
-        Collection<AuditTrail> trails = getAuditTrailDao().loadAll();
-        for ( AuditTrail at : trails ) {
-            log.info( at );
-            Collection<AuditEvent> events = at.getEvents();
-            for ( AuditEvent ae : events ) {
-                log.info( ae.getNote() );
-            }
-
-        }
+        AuditTrail t = getAuditTrailDao().create( auditTrail );
+        assertNotNull( t );
+        assertNotNull( t.getId() );
     }
 
     /**

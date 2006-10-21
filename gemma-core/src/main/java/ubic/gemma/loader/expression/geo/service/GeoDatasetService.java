@@ -57,7 +57,6 @@ public class GeoDatasetService extends AbstractGeoService {
         geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
 
         Collection<DatabaseEntry> projectedAccessions = geoDomainObjectGenerator.getProjectedAccessions( geoAccession );
-
         checkForExisting( projectedAccessions );
 
         if ( this.loadPlatformOnly ) {
@@ -96,6 +95,9 @@ public class GeoDatasetService extends AbstractGeoService {
      * @param projectedAccessions
      */
     private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
+        if ( projectedAccessions == null || projectedAccessions.size() == 0 ) {
+           return; // that's okay, it might have been a GPL.
+        }
         for ( DatabaseEntry entry : projectedAccessions ) {
             ExpressionExperiment existing = expressionExperimentService.findByAccession( entry );
             if ( existing != null ) {

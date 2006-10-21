@@ -52,7 +52,7 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
         SimpleExpressionExperimentLoadCommand command = ( SimpleExpressionExperimentLoadCommand ) obj;
 
         if ( command.getDataFile().getFile() == null ) {
-            ValidationUtils.rejectIfEmptyOrWhitespace( errors, "file", "errors.required", "File is required" );
+            ValidationUtils.rejectIfEmptyOrWhitespace( errors, "dataFile", "errors.required", "File is required" );
         }
 
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "name", "errors.required", "Name is required" );

@@ -131,6 +131,12 @@
 			<version>2.4.1</version>
 			<type>jar</type>
 			<scope>runtime</scope>
+              <exclusions>
+				<exclusion>
+					<groupId>jstl</groupId>
+			        <artifactId>standard</artifactId>
+				</exclusion>
+            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-dbutils</groupId>

@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 ;
 
@@ -33,7 +33,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author pavlidis
  * @version $Id$
  */
-public class CrudUtilsTest extends BaseTransactionalSpringContextTest {
+public class CrudUtilsTest extends BaseSpringContextTest {
 
     public final void testProcessAssociationsCreateWithCascade() throws Exception {
         CrudUtils c = ( CrudUtils ) getBean( "crudUtils" );

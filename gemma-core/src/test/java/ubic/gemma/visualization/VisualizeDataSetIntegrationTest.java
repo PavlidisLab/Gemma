@@ -33,13 +33,13 @@ import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class VisualizeDataSetIntegrationTest extends BaseTransactionalSpringContextTest {
+public class VisualizeDataSetIntegrationTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( VisualizeDataSetIntegrationTest.class );
 
     private String filename = "aov.results-2-monocyte-data-bytime.bypat.data.sort";

@@ -38,8 +38,8 @@ public class PersisterTest extends BaseSpringContextTest {
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
      */
     @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        endTransaction();
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         helper = new TestPersistentObjectHelper();
         helper.setPersisterHelper( persisterHelper );
@@ -54,25 +54,8 @@ public class PersisterTest extends BaseSpringContextTest {
         assertNotNull( ad.getId() );
     }
 
-    /**
-     * @throws Exception
-     */
-    // public void testPersistBioSequences() throws Exception {
-    // Collection<BioSequence> seqs = new HashSet<BioSequence>();
-    // for ( int i = 0; i < 2000; i++ ) {
-    // seqs.add( helper.getTestNonPersistentBioSequence() );
-    // }
-    //
-    // persisterHelper.persist( seqs );
-    //
-    // }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
-     */
     @Override
-    protected void onTearDown() throws Exception {
+    protected void onTearDownInTransaction() throws Exception {
         if ( ad != null && ad.getId() != null ) {
             ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
             ads.remove( ad );

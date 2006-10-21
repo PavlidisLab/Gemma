@@ -36,29 +36,6 @@ import ubic.gemma.util.ConfigUtils;
 public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
     Blat blat = new Blat();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-        // blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
-     */
-    @Override
-    protected void onTearDown() throws Exception {
-        super.onTearDown();
-        // blat.stopServer( ConfigUtils.getInt( "gfClient.humanServerPort" ) );
-    }
-
     /**
      * Test method for
      * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
