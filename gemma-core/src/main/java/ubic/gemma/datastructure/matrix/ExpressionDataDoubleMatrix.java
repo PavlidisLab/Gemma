@@ -21,6 +21,7 @@ package ubic.gemma.datastructure.matrix;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -41,6 +42,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
 
     private DoubleMatrixNamed matrix;
+
+    private Map<DesignElement, Integer> rowMap;
+    private Map<BioAssay, Integer> columnMap;
 
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
     }
@@ -81,8 +85,16 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double[] getColumn( BioAssay bioAssay ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( !columnMap.containsKey( bioAssay ) ) {
+            return null;
+        }
+        double[] rawResult = this.matrix.getColumn( columnMap.get( bioAssay ) );
+        assert rawResult != null;
+        Double[] result = new Double[rawResult.length];
+        for ( int i = 0; i < rawResult.length; i++ ) {
+            result[i] = rawResult[i];
+        }
+        return result;
     }
 
     /*
