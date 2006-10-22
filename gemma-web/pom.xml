@@ -133,7 +133,7 @@
 			<scope>runtime</scope>
               <exclusions>
 				<exclusion>
-					<groupId>jstl</groupId>
+					<groupId>taglibs</groupId>
 			        <artifactId>standard</artifactId>
 				</exclusion>
             </exclusions>
@@ -250,7 +250,7 @@
 			<type>jar</type>
             <exclusions>
 				<exclusion>
-					<groupId>jstl</groupId>
+					<groupId>taglibs</groupId>
 			        <artifactId>standard</artifactId>
 				</exclusion>
             </exclusions>
