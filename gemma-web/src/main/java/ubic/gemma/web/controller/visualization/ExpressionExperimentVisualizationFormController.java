@@ -39,7 +39,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -241,11 +241,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
 
-        ExpressionDataMatrix expressionDataMatrix = null;
+        ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
         HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
-            expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
+            expressionDataMatrix = new ExpressionDataDesignElementDataVectorMatrix( ee, compositeSequences );
 
             httpExpressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http",
                     request.getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );

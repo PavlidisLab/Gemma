@@ -146,16 +146,8 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         assertNull( found );
     }
 
-    // public void testLoadReporters() {
-    // ad = ( ArrayDesign ) persisterHelper.persist( ad );
-    // Collection actualValue = arrayDesignDao.loadReporters( ad.getId() );
-    // assertEquals( 3, actualValue.size() );
-    // assertTrue( actualValue.iterator().next() instanceof Reporter );
-    // }
-
     /*
-     * A test of getting a taxon assciated with an arrayDesign. todo: this test should use an actual array design that
-     * has many bioSequences assciated with it.
+     * A test of getting a taxon assciated with an arrayDesign
      */
     public void testGetTaxon() {
 

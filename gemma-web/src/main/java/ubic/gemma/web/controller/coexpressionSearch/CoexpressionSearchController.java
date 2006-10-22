@@ -36,7 +36,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -152,11 +152,11 @@ public class CoexpressionSearchController extends BaseFormController {
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
         Collection foundGenes = null;
-        ExpressionDataMatrix expressionDataMatrix = null;
+        ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
         HttpExpressionDataMatrixVisualizer matrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( Long.decode( "1" ) );
-            expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
+            expressionDataMatrix = new ExpressionDataDesignElementDataVectorMatrix( ee, compositeSequences );
 
             matrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http", request
                     .getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );

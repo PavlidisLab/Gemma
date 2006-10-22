@@ -100,11 +100,11 @@ public class BioAssayFormController extends BaseFormController {
      * @return Map
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected Map referenceData( HttpServletRequest request ) {
+    @SuppressWarnings( { "unchecked", "unused" })
+    protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
-        Map edMap = new HashMap();
-        edMap.put( "externalDatabases", edCol );// FIXME - parameterize the map
+        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
+        edMap.put( "externalDatabases", edCol );
         return edMap;
     }
 

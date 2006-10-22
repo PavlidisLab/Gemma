@@ -347,7 +347,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        DoubleMatrixNamed matrix = edms.getMatrix( newee, qt );
+        DoubleMatrixNamed matrix = edms.getDoubleNamedMatrix( newee, qt );
 
         if ( log.isDebugEnabled() ) {
             printMatrix( matrix );
@@ -403,7 +403,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        DoubleMatrixNamed matrix = edms.getMatrix( newee, qt );
+        DoubleMatrixNamed matrix = edms.getDoubleNamedMatrix( newee, qt );
         assertTrue( matrix != null );
         if ( log.isDebugEnabled() ) {
             printMatrix( matrix );
@@ -430,7 +430,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        matrix = edms.getMatrix( newee, qt );
+        matrix = edms.getDoubleNamedMatrix( newee, qt );
 
         if ( log.isDebugEnabled() ) {
             printMatrix( matrix );

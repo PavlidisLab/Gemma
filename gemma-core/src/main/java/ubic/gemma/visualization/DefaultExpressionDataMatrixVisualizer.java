@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -47,7 +47,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
 
     private static final long serialVersionUID = -5075323948059345296L;
 
-    private ExpressionDataMatrix expressionDataMatrix = null;
+    private ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
 
     /**
      * Do not instantiate. This is to be "inpected" by java constructs that require an official java bean. When we say
@@ -62,7 +62,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * @param expressionDataMatrix
      * @param imageFile
      */
-    public DefaultExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
+    public DefaultExpressionDataMatrixVisualizer( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix, String imageFile ) {
         super( imageFile );
         this.expressionDataMatrix = expressionDataMatrix;
     }
@@ -72,7 +72,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
      */
-    public ExpressionDataMatrix getExpressionDataMatrix() {
+    public ExpressionDataDesignElementDataVectorMatrix getExpressionDataMatrix() {
         return expressionDataMatrix;
     }
 
@@ -81,7 +81,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
-    public ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+    public ColorMatrix createColorMatrix( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix ) {
 
         if ( expressionDataMatrix == null || expressionDataMatrix.getDesignElements() == null ) {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );

@@ -28,7 +28,7 @@ import java.util.List;
 import junit.framework.TestCase;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -43,7 +43,7 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
     private DefaultExpressionDataMatrixVisualizer matrixVisualizer = null;
 
-    private ExpressionDataMatrix expressionDataMatrix = null;
+    private ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
 
     double[][] data = null;
 
@@ -103,7 +103,7 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
         /* The expression data matrix */
 
-        expressionDataMatrix = new ExpressionDataMatrix( ExpressionExperiment.Factory.newInstance(), designElements );
+        expressionDataMatrix = new ExpressionDataDesignElementDataVectorMatrix( ExpressionExperiment.Factory.newInstance(), designElements );
 
         matrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix, tmp.getAbsolutePath() );
 

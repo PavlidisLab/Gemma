@@ -18,7 +18,7 @@
  */
 package ubic.gemma.visualization;
 
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
 
 /**
  * Provides information to visualize the ExpressionDataMatrix over http. This class is useful when using the
@@ -53,7 +53,7 @@ public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMat
      * @param expressionDataMatrix
      * @param imageFile
      */
-    public HttpExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
+    public HttpExpressionDataMatrixVisualizer( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix, String imageFile ) {
         super( expressionDataMatrix, imageFile );
     }
 
@@ -62,7 +62,7 @@ public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMat
      * @param server
      * @param port
      */
-    public HttpExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String protocol,
+    public HttpExpressionDataMatrixVisualizer( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix, String protocol,
             String server, int port, String imageFile ) {
         super( expressionDataMatrix, imageFile );
 

@@ -58,9 +58,6 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
             queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
-            // this will not work with detached bioassays.
-            // queryObject.add( Restrictions.in( "bioAssays", bioAssayDimension.getBioAssays() ) );
-
             // FIXME this isn't fail-safe, and also doesn't distinguish between dimensions that differ only in the
             // ordering.
             Collection<String> names = new HashSet<String>();

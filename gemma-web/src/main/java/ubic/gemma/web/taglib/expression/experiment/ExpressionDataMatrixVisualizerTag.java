@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.gui.ColorMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 
@@ -78,7 +78,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         log.debug( "start tag" );
         try {
             /* get metadata from MatrixVisualizer */
-            ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
+            ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
             String imageFile = httpExpressionDataMatrixVisualizer.getImageFile();
 
             Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();

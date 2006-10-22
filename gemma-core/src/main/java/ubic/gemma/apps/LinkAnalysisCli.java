@@ -158,7 +158,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             // this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
             ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this
                     .getBean( "expressionDataMatrixService" );
-            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getMatrix( ees.iterator().next(), this
+            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( ees.iterator().next(), this
                     .getQuantitationType() );
             this.linkAnalysis.setDataMatrix( dataMatrix );
 

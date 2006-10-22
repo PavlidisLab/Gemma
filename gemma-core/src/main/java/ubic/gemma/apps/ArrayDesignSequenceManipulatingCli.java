@@ -27,6 +27,9 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
+ * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
+ * with it.
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -56,15 +59,19 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         arrayDesignService.thaw( arrayDesign );
     }
 
-    protected ArrayDesign locateArrayDesign( String arrayDesignName ) {
-        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( arrayDesignName );
+    /**
+     * @param name of the array design to find.
+     * @return
+     */
+    protected ArrayDesign locateArrayDesign( String name ) {
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name );
 
         if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( arrayDesignName );
+            arrayDesign = arrayDesignService.findByShortName( name );
         }
 
         if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + arrayDesignName + " found" );
+            log.error( "No arrayDesign " + name + " found" );
             bail( ErrorCode.INVALID_OPTION );
         }
         return arrayDesign;

@@ -51,7 +51,7 @@ public class ExpressionDataMatrixTest extends TestCase {
     String[] rowNames = null;
     String[] colNames = null;
 
-    ExpressionDataMatrix matrixData = null;
+    ExpressionDataDesignElementDataVectorMatrix matrixData = null;
     ByteArrayConverter bconverter = null;
     StringConverter sconverter = null;
 
@@ -124,7 +124,7 @@ public class ExpressionDataMatrixTest extends TestCase {
         }
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        matrixData = new ExpressionDataMatrix( ee, designElements );
+        matrixData = new ExpressionDataDesignElementDataVectorMatrix( ee, designElements );
 
     }
 
