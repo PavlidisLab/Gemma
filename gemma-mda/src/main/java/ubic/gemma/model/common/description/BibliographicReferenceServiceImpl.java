@@ -37,6 +37,7 @@ public class BibliographicReferenceServiceImpl extends
      * 
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#alreadyExists(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     protected BibliographicReference handleFind(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
@@ -47,6 +48,7 @@ public class BibliographicReferenceServiceImpl extends
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
+    @Override
     protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
             throws java.lang.Exception {
 
@@ -58,6 +60,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#findByExternalId(java.lang.String,
      *      java.lang.String)
      */
+    @Override
     protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id,
             java.lang.String databaseName ) throws java.lang.Exception {
 
@@ -69,6 +72,7 @@ public class BibliographicReferenceServiceImpl extends
      * 
      * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(java.lang.String)
      */
+    @Override
     protected BibliographicReference handleFindByTitle( String title ) throws Exception {
 
         return getBibliographicReferenceDao().findByTitle( title );
@@ -86,6 +90,7 @@ public class BibliographicReferenceServiceImpl extends
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     protected BibliographicReference handleCreate(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
@@ -95,6 +100,7 @@ public class BibliographicReferenceServiceImpl extends
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
             throws java.lang.Exception {
         getBibliographicReferenceDao().update( BibliographicReference );

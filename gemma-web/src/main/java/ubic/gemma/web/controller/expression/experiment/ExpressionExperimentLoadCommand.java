@@ -28,6 +28,11 @@ import java.io.Serializable;
  */
 public class ExpressionExperimentLoadCommand implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 8311146574225719807L;
+
     private String datasourceName;
 
     private boolean loadPlatformOnly;

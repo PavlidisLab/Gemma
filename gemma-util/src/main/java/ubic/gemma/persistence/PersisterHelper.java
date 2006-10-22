@@ -37,6 +37,7 @@ public class PersisterHelper extends RelationshipPersister {
      * 
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(ubic.gemma.model.genome.Gene)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Object persist( Object entity ) {
 

@@ -36,6 +36,7 @@ public class ExternalDatabaseServiceImplTest extends TestCase {
     private ExternalDatabaseServiceImpl svc = null;
     private ExternalDatabaseDao dao = null;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         svc = new ExternalDatabaseServiceImpl();
@@ -46,6 +47,7 @@ public class ExternalDatabaseServiceImplTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

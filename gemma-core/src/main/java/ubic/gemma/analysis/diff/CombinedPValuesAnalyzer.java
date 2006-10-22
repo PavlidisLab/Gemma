@@ -115,6 +115,7 @@ public class CombinedPValuesAnalyzer extends OneWayAnovaAnalyzer{
     /**
      * This method is used to write significant genes for all experiments with their combined p values to an output file
      */
+    @Override
     protected void writeSignificantGenesToFile(String fileName, Hashtable<String, Double> sigGenes ){
         managers[0].writeSignificantGenesToFile(fileName, sigGenes);
     }

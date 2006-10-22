@@ -276,16 +276,9 @@ public class DatasetCombiner {
 
         // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
-
-        Collection<String> alreadyMatched = new HashSet<String>();
-
         // do pairwise comparisons of all samples.
         for ( int j = 0; j < sampleAccs.size(); j++ ) {
             String targetAcc = sampleAccs.get( j );
-
-            // if ( alreadyMatched.contains( targetAcc ) ) {
-            // continue;
-            // }
 
             int mindistance = Integer.MAX_VALUE;
             String bestMatch = null;
@@ -299,10 +292,6 @@ public class DatasetCombiner {
                 if ( i == j ) continue;
 
                 String testAcc = sampleAccs.get( i );
-
-                // if ( alreadyMatched.contains( testAcc ) ) {
-                // continue;
-                // }
 
                 String jTitle = accToTitle.get( testAcc );
                 if ( StringUtils.isBlank( jTitle ) )

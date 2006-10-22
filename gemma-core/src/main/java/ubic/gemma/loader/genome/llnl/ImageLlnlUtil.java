@@ -27,6 +27,7 @@ import ubic.gemma.util.NetDatasourceUtil;
  */
 public class ImageLlnlUtil extends NetDatasourceUtil {
 
+    @Override
     public void init() {
         this.setHost( ConfigUtils.getString( "llnl.image.host" ) );
         assert this.getHost() != null;

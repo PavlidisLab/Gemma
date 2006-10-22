@@ -38,6 +38,7 @@ public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile
      * 
      * @see ubic.gemma.model.common.description.LocalFile#asFile()
      */
+    @Override
     public java.io.File asFile() {
 
         if ( this.getLocalURL() == null ) {
@@ -55,6 +56,7 @@ public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile
     /**
      * @see ubic.gemma.model.common.description.LocalFile#canRead()
      */
+    @Override
     public Boolean canRead() {
         return this.asFile().canRead();
     }
@@ -62,6 +64,7 @@ public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile
     /**
      * @see ubic.gemma.model.common.description.LocalFile#canWrite()
      */
+    @Override
     public Boolean canWrite() {
         return this.asFile().canWrite();
     }

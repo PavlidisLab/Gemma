@@ -30,6 +30,7 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
     /**
      * @see ubic.gemma.model.genome.ChromosomeService#find(ubic.gemma.model.genome.Chromosome)
      */
+    @Override
     protected ubic.gemma.model.genome.Chromosome handleFind( ubic.gemma.model.genome.Chromosome chromosome )
             throws java.lang.Exception {
         return this.getChromosomeDao().find( chromosome );
@@ -38,6 +39,7 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
     /**
      * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
      */
+    @Override
     protected ubic.gemma.model.genome.Chromosome handleFindOrCreate( ubic.gemma.model.genome.Chromosome chromosome )
             throws java.lang.Exception {
         return this.getChromosomeDao().findOrCreate( chromosome );

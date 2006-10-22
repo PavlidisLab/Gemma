@@ -56,11 +56,13 @@ public class NCBIGeneParserTest extends TestCase {
         assertEquals( 100, ngip.getCount() );
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

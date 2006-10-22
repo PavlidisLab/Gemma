@@ -32,6 +32,7 @@ public class BioSequence2GeneProductServiceImpl
     /**
      * @see ubic.gemma.model.association.BioSequence2GeneProductService#create(ubic.gemma.model.association.BioSequence2GeneProduct)
      */
+    @Override
     protected ubic.gemma.model.association.BioSequence2GeneProduct handleCreate(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)
         throws java.lang.Exception
     {

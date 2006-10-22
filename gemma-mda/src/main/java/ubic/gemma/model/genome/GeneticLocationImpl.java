@@ -34,8 +34,14 @@ import org.apache.commons.lang.builder.CompareToBuilder;
 public class GeneticLocationImpl extends ubic.gemma.model.genome.GeneticLocation implements Comparable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5806006409735224836L;
+
+    /**
      * @see java.lang.Comparable#compareTo(Object)
      */
+    @Override
     public int compareTo( Object object ) {
         GeneticLocationImpl other = ( GeneticLocationImpl ) object;
         return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() ).append(

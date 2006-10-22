@@ -27,6 +27,7 @@ import ubic.gemma.util.NetDatasourceUtil;
  */
 public class GeoUtil extends NetDatasourceUtil {
 
+    @Override
     public void init() {
         this.setHost( ConfigUtils.getString( "geo.host" ) );
     }

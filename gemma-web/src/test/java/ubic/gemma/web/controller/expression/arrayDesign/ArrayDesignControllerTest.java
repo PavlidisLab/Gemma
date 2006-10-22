@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.Collection;
@@ -9,17 +27,15 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignControllerTest extends BaseSpringContextTest {
+public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
-    // private MockServletContext mockCtx;
     private MockHttpServletRequest request;
-    // private MockHttpServletResponse response;
 
     ArrayDesignController arrayDesignController;
 
@@ -27,32 +43,17 @@ public class ArrayDesignControllerTest extends BaseSpringContextTest {
 
     ArrayDesignService arrayDesignService;
 
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        // mockCtx = new MockServletContext();
-
-        request = new MockHttpServletRequest();
-        // response = new MockHttpServletResponse();
-
-        // arrayDesignController = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
-
-       
-
-        // arrayDesignService = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-
-    }
-
     /**
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
     public void testShowAllArrayDesigns() throws Exception {
-        ArrayDesignController a = ( ArrayDesignController ) getBean( "arrayDesignController" );
-        request.setRequestURI( "Gemma/arrayDesign/showAllArrayDesigns.html" );
-        ModelAndView mav = a.showAll( request, ( HttpServletResponse ) null );
+        ArrayDesignController controller = ( ArrayDesignController ) getBean( "arrayDesignController" );
+        request = newPost( "Gemma/arrayDesign/showAllArrayDesigns.html" );
+
+        ModelAndView mav = controller.showAll( request, ( HttpServletResponse ) null );
         Collection<ArrayDesign> c = ( mav.getModel() ).values();
         assertNotNull( c );
-        assertEquals( mav.getViewName(), "arrayDesigns" );
+        assertEquals( "arrayDesigns", mav.getViewName() );
     }
 }

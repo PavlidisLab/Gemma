@@ -60,6 +60,7 @@ public class ArrayDesignFormController extends BaseFormController {
      * @return Object
      * @throws ServletException
      */
+    @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
         String name = RequestUtils.getStringParameter( request, "name", "" );
@@ -81,6 +82,7 @@ public class ArrayDesignFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
+    @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
@@ -100,6 +102,7 @@ public class ArrayDesignFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
+    @Override
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {

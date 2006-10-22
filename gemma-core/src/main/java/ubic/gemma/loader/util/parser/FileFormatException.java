@@ -29,6 +29,11 @@ public class FileFormatException extends RuntimeException {
     /**
      * 
      */
+    private static final long serialVersionUID = -1984918923089214361L;
+
+    /**
+     * 
+     */
     public FileFormatException() {
         super();
     }

@@ -28,6 +28,7 @@ public class DesignElementDimensionServiceImpl extends
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
+    @Override
     protected ubic.gemma.model.expression.bioAssayData.DesignElementDimension handleFindOrCreate(
             ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension )
             throws java.lang.Exception {

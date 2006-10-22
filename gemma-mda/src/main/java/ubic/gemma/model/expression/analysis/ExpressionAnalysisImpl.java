@@ -30,4 +30,9 @@ package ubic.gemma.model.expression.analysis;
 public class ExpressionAnalysisImpl
     extends ubic.gemma.model.expression.analysis.ExpressionAnalysis
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -8839606530329241794L;
 }

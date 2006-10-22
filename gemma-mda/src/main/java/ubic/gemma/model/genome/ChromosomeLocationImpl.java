@@ -34,6 +34,7 @@ public abstract class ChromosomeLocationImpl extends ubic.gemma.model.genome.Chr
     /**
      * @see ubic.gemma.model.genome.ChromosomeLocation#compareTo(java.lang.Object)
      */
+    @Override
     public abstract int compareTo( java.lang.Object o );
 
 }

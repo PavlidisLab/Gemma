@@ -40,6 +40,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     protected ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
             ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
         return this.getContactDao().find( contact );
@@ -48,6 +49,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact )
             throws java.lang.Exception {
         this.getContactDao().remove( contact );
@@ -56,6 +58,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#update(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact )
             throws java.lang.Exception {
         this.getContactDao().update( contact );

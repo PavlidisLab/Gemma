@@ -129,6 +129,7 @@ public class OntologyEntryLoaderIntegrationTest extends BaseSpringContextTest {
     /**
      * 
      */
+    @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         ontologyEntryParser = new GeneOntologyEntryParser();

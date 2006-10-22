@@ -30,4 +30,9 @@ package ubic.gemma.model.expression.biomaterial;
 public class TreatmentImpl
     extends ubic.gemma.model.expression.biomaterial.Treatment
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 265514192370169605L;
 }

@@ -69,6 +69,7 @@ public class TaxonFetcher extends FtpArchiveFetcher {
         return this.fetch( "taxon" );
     }
 
+    @Override
     @SuppressWarnings("unused")
     protected String formLocalFilePath( String unused, File newDir ) {
         return newDir + File.separator + "taxdump.tar.gz";

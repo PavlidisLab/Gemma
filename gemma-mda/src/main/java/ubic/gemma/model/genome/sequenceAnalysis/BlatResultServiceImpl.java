@@ -34,6 +34,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception {
         return ( BlatResult ) this.getBlatResultDao().create( blatResult );
@@ -42,6 +43,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
             throws java.lang.Exception {
         this.getBlatResultDao().remove( blatResult );
@@ -50,6 +52,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFind(
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception {
         return this.getBlatResultDao().find( blatResult );
@@ -58,6 +61,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFindOrCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception {
         return this.getBlatResultDao().findOrCreate( blatResult );

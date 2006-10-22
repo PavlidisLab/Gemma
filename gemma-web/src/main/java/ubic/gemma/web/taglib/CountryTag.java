@@ -46,6 +46,10 @@ import ubic.gemma.util.LabelValue;
  * @jsp.tag name="country" body-content="empty"
  */
 public class CountryTag extends TagSupport {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1578861231763990108L;
     // private static final String COUNTRIES = CountryTag.class.getName() + ".COUNTRIES";
     private String name;
     private String prompt;
@@ -93,6 +97,7 @@ public class CountryTag extends TagSupport {
      * @exception JspException if a JSP exception has occurred
      * @see javax.servlet.jsp.tagext.Tag#doStartTag()
      */
+    @Override
     public int doStartTag() throws JspException {
         ExpressionEvaluator eval = new ExpressionEvaluator( this, pageContext );
 
@@ -152,6 +157,7 @@ public class CountryTag extends TagSupport {
      * 
      * @see javax.servlet.jsp.tagext.Tag#release()
      */
+    @Override
     public void release() {
         super.release();
     }

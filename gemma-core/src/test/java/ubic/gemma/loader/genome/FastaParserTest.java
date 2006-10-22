@@ -38,6 +38,7 @@ public class FastaParserTest extends TestCase {
     InputStream f;
     InputStream g;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         f = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );

@@ -83,6 +83,7 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
     /**
      * @see ubic.gemma.model.genome.Taxon#toString()
      */
+    @Override
     public java.lang.String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append( "Taxon:" );

@@ -37,6 +37,7 @@ public class ExptMetaTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         testStream = ExptMetaTest.class.getResourceAsStream( "/data/smd.expt-meta.test.txt" );
@@ -46,6 +47,7 @@ public class ExptMetaTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

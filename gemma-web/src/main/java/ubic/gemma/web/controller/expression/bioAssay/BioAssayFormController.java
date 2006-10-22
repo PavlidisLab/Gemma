@@ -73,6 +73,7 @@ public class BioAssayFormController extends BaseFormController {
      * @throws ServletException
      * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
      */
+    @Override
     protected Object formBackingObject( HttpServletRequest request ) {
         BioAssay ba = null;
 
@@ -98,6 +99,7 @@ public class BioAssayFormController extends BaseFormController {
      * @param request
      * @return Map
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected Map referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
@@ -116,6 +118,7 @@ public class BioAssayFormController extends BaseFormController {
      * @see org.springframework.web.servlet.mvc.AbstractFormController#processFormSubmission(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
+    @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
@@ -154,6 +157,7 @@ public class BioAssayFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
+    @Override
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {

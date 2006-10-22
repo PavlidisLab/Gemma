@@ -223,6 +223,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * Set up a custom property editor for converting form inputs to real objects. Override this to add additional
      * custom editors (call super.initBinder() in your implemenation)
      */
+    @Override
     @SuppressWarnings("unused")
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         NumberFormat nf = NumberFormat.getNumberInstance();

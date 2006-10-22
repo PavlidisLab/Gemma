@@ -34,11 +34,13 @@ public class PubMedXMLFetcherTest extends TestCase {
     private static Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
     PubMedXMLFetcher pmf;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         pmf = new PubMedXMLFetcher();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         pmf = null;

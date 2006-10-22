@@ -45,8 +45,8 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerator {
 
-    private static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
-    private AtomicBoolean producerDone = new AtomicBoolean( false );
+    static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
+    AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean infoProducerDone = new AtomicBoolean( false );;
 
     /**
@@ -180,8 +180,9 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
     }
 
     // not used at all
+    @SuppressWarnings("unused")
     public Collection<?> generate( String accession ) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 }

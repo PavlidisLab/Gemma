@@ -29,6 +29,7 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     /**
      * @see ubic.gemma.model.genome.TaxonService#find(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     protected ubic.gemma.model.genome.Taxon handleFind( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception {
         return this.getTaxonDao().find( taxon );
@@ -37,6 +38,7 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     /**
      * @see ubic.gemma.model.genome.TaxonService#update(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().update( taxon );
     }
@@ -44,6 +46,7 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     /**
      * @see ubic.gemma.model.genome.TaxonService#remove(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().remove( taxon );
     }

@@ -31,6 +31,7 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     protected ubic.gemma.model.common.quantitationtype.QuantitationType handleFind(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
         return this.getQuantitationTypeDao().find( quantitationType );
@@ -47,6 +48,7 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
             throws java.lang.Exception {
         this.getQuantitationTypeDao().update( quantitationType );
@@ -55,6 +57,7 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#remove(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
             throws java.lang.Exception {
         this.getQuantitationTypeDao().remove( quantitationType );

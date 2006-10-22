@@ -61,6 +61,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
      * 
      * @see ubic.gemma.loader.util.fetcher.Fetcher#fetch(java.lang.String)
      */
+    @Override
     public Collection<LocalFile> fetch( final String identifier ) {
 
         ExecutorService service = Executors.newFixedThreadPool( 3 );
@@ -193,6 +194,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
     /**
      * @throws ConfigurationException
      */
+    @Override
     protected void initConfig() {
 
         localBasePath = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );

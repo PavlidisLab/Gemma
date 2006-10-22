@@ -23,12 +23,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.util.ConfigUtils;
@@ -85,8 +82,7 @@ public class PubMedXMLFetcher {
      * @return Collection<BibliographicReference>
      * @throws IOException
      */
-    public Collection<BibliographicReference> retrieveByHTTP( Collection<Integer> pubMedIds ) throws IOException,
-            SAXException, ParserConfigurationException {
+    public Collection<BibliographicReference> retrieveByHTTP( Collection<Integer> pubMedIds ) throws IOException {
         StringBuilder buf = new StringBuilder();
         for ( Integer integer : pubMedIds ) {
             buf.append( integer + "," );

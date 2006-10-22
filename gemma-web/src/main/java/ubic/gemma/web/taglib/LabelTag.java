@@ -66,6 +66,10 @@ import org.springmodules.validation.commons.ValidatorFactory;
  */
 public class LabelTag extends TagSupport {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5143900914114132538L;
     protected RequestContext requestContext;
     protected transient final Log log = LogFactory.getLog( LabelTag.class );
     protected String key = null;
@@ -74,6 +78,7 @@ public class LabelTag extends TagSupport {
     protected boolean colon = true;
     protected boolean helpTip = false;
 
+    @Override
     public int doStartTag() throws JspException {
 
         try {
@@ -270,6 +275,7 @@ public class LabelTag extends TagSupport {
     /**
      * Release all allocated resources.
      */
+    @Override
     public void release() {
         super.release();
         key = null;

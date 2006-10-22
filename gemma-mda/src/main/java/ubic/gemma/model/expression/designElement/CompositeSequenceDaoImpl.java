@@ -19,14 +19,10 @@
 
 package ubic.gemma.model.expression.designElement;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
-
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author pavlidis

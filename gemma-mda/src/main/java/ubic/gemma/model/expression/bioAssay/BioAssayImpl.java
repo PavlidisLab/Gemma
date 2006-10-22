@@ -30,4 +30,9 @@ package ubic.gemma.model.expression.bioAssay;
 public class BioAssayImpl
     extends ubic.gemma.model.expression.bioAssay.BioAssay
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -984217953142208083L;
 }

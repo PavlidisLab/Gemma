@@ -27,6 +27,10 @@ package ubic.gemma.loader.util;
  */
 public class AlreadyExistsInSystemException extends RuntimeException {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5677999264920938691L;
     Object data;
 
     /**

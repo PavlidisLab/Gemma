@@ -10,11 +10,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand;
-import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationFormController;
 
 /**
  * @author joseph
@@ -26,6 +23,7 @@ public class CoexpressionSearchControllerTest extends BaseSpringContextTest {
     /**
      * @throws Exception
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();

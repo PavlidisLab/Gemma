@@ -20,7 +20,6 @@
  */
 package ubic.gemma.model.genome;
 
-import java.math.BigInteger;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;

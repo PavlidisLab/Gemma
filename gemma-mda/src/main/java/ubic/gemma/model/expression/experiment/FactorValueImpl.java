@@ -37,6 +37,7 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
      */
+    @Override
     public java.lang.String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append( this.getClass().getSimpleName() );

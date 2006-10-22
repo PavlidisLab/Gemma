@@ -62,6 +62,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @param newDir
      * @return
      */
+    @Override
     public String formLocalFilePath( String identifier, File newDir ) {
         String outputFileName = newDir + System.getProperty( "file.separator" ) + "E-" + identifier + ".mageml.tgz";
         return outputFileName;
@@ -71,6 +72,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @param identifier
      * @return
      */
+    @Override
     public String formRemoteFilePath( String identifier ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
         String seekFile = remoteBaseDir + "/" + dirName + "/" + "E-" + identifier + "/" + "E-" + identifier

@@ -90,6 +90,7 @@ abstract public class GenomePersister extends CommonPersister {
      * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
+    @Override
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
 
@@ -105,6 +106,7 @@ abstract public class GenomePersister extends CommonPersister {
      * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
+    @Override
     public Object persist( Object entity ) {
         if ( entity instanceof Gene ) {
             return persistGene( ( Gene ) entity );

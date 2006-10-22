@@ -1,8 +1,5 @@
 package ubic.gemma.analysis.linkAnalysis;
 
-import ubic.basecode.dataStructure.Link;
-import cern.colt.list.ObjectArrayList;
-
 
 public class LinkAnalysisTest {
 

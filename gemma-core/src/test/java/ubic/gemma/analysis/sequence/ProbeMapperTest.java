@@ -47,6 +47,7 @@ public class ProbeMapperTest extends TestCase {
     private String databasePassword;
     List<Double> tester;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -69,6 +70,7 @@ public class ProbeMapperTest extends TestCase {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

@@ -30,6 +30,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
+    @Override
     protected ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception {
         return this.getBioAssayDimensionDao().findOrCreate( bioAssayDimension );

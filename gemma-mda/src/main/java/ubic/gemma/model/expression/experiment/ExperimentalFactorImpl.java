@@ -30,4 +30,9 @@ package ubic.gemma.model.expression.experiment;
 public class ExperimentalFactorImpl
     extends ubic.gemma.model.expression.experiment.ExperimentalFactor
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 9095212348088245443L;
 }

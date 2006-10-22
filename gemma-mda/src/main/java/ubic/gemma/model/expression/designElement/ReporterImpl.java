@@ -33,6 +33,7 @@ public class ReporterImpl extends ubic.gemma.model.expression.designElement.Repo
      */
     private static final long serialVersionUID = -4106592694842336681L;
 
+    @Override
     public ArrayDesign getArrayDesign() {
         return this.getCompositeSequence() == null ? null : this.getCompositeSequence().getArrayDesign();
     }
@@ -41,6 +42,7 @@ public class ReporterImpl extends ubic.gemma.model.expression.designElement.Repo
      * 
      */
 
+    @Override
     public void setArrayDesign( ArrayDesign arrayDesign ) {
         if ( this.getCompositeSequence() != null ) this.getCompositeSequence().setArrayDesign( arrayDesign );
     }

@@ -41,6 +41,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
      */
+    @Override
     protected java.util.Collection handleGetAllBioAssays() throws java.lang.Exception {
         return this.getBioAssayDao().loadAll();
     }

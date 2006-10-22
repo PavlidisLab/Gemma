@@ -30,8 +30,14 @@ import org.apache.commons.lang.builder.CompareToBuilder;
 public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocation implements Comparable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -6580769809003779541L;
+
+    /**
      * @see java.lang.Comparable#compareTo(Object)
      */
+    @Override
     public int compareTo( Object object ) {
         PhysicalLocationImpl other = ( PhysicalLocationImpl ) object;
         return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() ).append(
@@ -60,6 +66,7 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
      * 
      * @see ubic.gemma.model.genome.PhysicalLocation#nearlyEquals(java.lang.Object)
      */
+    @Override
     public boolean nearlyEquals( Object object ) {
         if ( this == object ) {
             return true;

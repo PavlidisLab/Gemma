@@ -354,6 +354,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     class FakeProgress extends Thread {
         private static final int DELAY = 30;
 
+        @Override
         public void run() {
 
             for ( int i = 0; i < 100; i++ ) {
@@ -394,6 +395,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
 
         }
 
+        @Override
         public void run() {
 
             for ( int i = 0; i < 100; i++ ) {
@@ -428,6 +430,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
             this.jobId = jobId;
         }
 
+        @Override
         public void run() {
             MockProcess mp;
             for ( int i = 0; i < times; i++ ) {

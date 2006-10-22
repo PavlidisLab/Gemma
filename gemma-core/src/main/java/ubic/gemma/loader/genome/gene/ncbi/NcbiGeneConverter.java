@@ -47,8 +47,8 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 public class NcbiGeneConverter implements Converter {
 
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
-    private AtomicBoolean producerDone = new AtomicBoolean( false );
-    private AtomicBoolean sourceDone = new AtomicBoolean( false );
+    AtomicBoolean producerDone = new AtomicBoolean( false );
+    AtomicBoolean sourceDone = new AtomicBoolean( false );
     private ExternalDatabase genBank;
 
     public NcbiGeneConverter() {
@@ -188,6 +188,7 @@ public class NcbiGeneConverter implements Converter {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
         Thread convertThread = new Thread( new Runnable() {
+            @SuppressWarnings("synthetic-access")
             public void run() {
                 while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
                     try {

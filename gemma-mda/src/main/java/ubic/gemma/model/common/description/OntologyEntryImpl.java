@@ -29,6 +29,12 @@ package ubic.gemma.model.common.description;
  */
 public class OntologyEntryImpl extends ubic.gemma.model.common.description.OntologyEntry {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1168949780694791726L;
+
+    @Override
     public String toString() {
         return "Id:" + this.getId() + " Accession " + this.getAccession() + " Category:" + this.getCategory()
                 + " Value:" + this.getValue();

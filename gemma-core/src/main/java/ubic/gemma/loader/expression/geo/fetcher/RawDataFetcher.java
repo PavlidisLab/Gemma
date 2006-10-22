@@ -97,6 +97,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * @param newDir
      * @return
      */
+    @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier + "_RAW.tar";
     }
@@ -105,6 +106,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * @param identifier
      * @return
      */
+    @Override
     protected String formRemoteFilePath( String identifier ) {
         String seekFile = remoteBaseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
         return seekFile;

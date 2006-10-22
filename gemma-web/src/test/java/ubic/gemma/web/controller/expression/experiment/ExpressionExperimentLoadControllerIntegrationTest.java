@@ -51,6 +51,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     ArrayDesign ad;
     AbstractGeoService geoService;
 
+    @Override
     protected void init() {
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
     }

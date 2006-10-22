@@ -29,12 +29,14 @@ public class ProgressDataTest extends TestCase {
 
     protected ProgressData pd;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         pd = new ProgressData( 1, "test", false );
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         pd = null;

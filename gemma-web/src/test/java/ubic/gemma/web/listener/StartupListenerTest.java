@@ -46,6 +46,7 @@ public class StartupListenerTest extends TestCase {
     private MockServletContext sc = null;
     private ServletContextListener listener = null;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         listener = new StartupListener();
@@ -56,9 +57,10 @@ public class StartupListenerTest extends TestCase {
         // initialize Spring
         String pkg = ClassUtils.classPackageAsResourcePath( Constants.class );
         sc.addInitParameter( ContextLoader.CONFIG_LOCATION_PARAM, "classpath*:/" + pkg + "/applicationContext-*.xml,"
-                + "classpath*:/" + pkg + "/localTestDataSource.xml" + ",classpath*:/" + pkg + "/compassTest.xml" );
+                + "classpath*:/" + pkg + "/localTestDataSource.xml" + ",classpath*:/" + pkg + "/compasstest.xml" );
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         listener = null;

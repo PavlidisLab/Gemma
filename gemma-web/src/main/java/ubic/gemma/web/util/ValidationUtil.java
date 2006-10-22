@@ -36,6 +36,11 @@ import org.springmodules.validation.commons.FieldChecks;
 public class ValidationUtil extends FieldChecks {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -1055125736570838963L;
+
+    /**
      * Validates that two fields match. This goes with the custom declaration in the validation-rules-custom.xml file.
      * 
      * @param bean

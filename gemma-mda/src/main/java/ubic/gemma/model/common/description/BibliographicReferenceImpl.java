@@ -30,4 +30,9 @@ package ubic.gemma.model.common.description;
 public class BibliographicReferenceImpl
     extends ubic.gemma.model.common.description.BibliographicReference
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 8714453825361838680L;
 }

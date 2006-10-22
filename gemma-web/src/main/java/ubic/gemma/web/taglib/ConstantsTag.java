@@ -66,6 +66,11 @@ import ubic.gemma.Constants;
  * @jsp.tag name="constants" body-content="empty" tei-class="ubic.gemma.web.taglib.ConstantsTei"
  */
 public class ConstantsTag extends TagSupport {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4937929483183805421L;
+
     private final Log log = LogFactory.getLog( ConstantsTag.class );
 
     /**
@@ -83,6 +88,7 @@ public class ConstantsTag extends TagSupport {
      */
     protected String var = null;
 
+    @Override
     public int doStartTag() throws JspException {
         // Using reflection, get the available field names in the class
         Class c = null;
@@ -167,6 +173,7 @@ public class ConstantsTag extends TagSupport {
     /**
      * Release all allocated resources.
      */
+    @Override
     public void release() {
         super.release();
         clazz = null;

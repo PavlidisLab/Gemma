@@ -39,12 +39,14 @@ public class PubMedXMLParserTest extends TestCase {
     InputStream testStream;
     PubMedXMLParser testParser;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
         testParser = new PubMedXMLParser();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         testStream.close();

@@ -32,6 +32,7 @@ public class BlatResultImplTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         brtest = BlatResult.Factory.newInstance();
@@ -41,6 +42,7 @@ public class BlatResultImplTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

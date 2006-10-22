@@ -28,6 +28,11 @@ package ubic.gemma.model.genome.biosequence;
 public class BioSequenceImpl
     extends ubic.gemma.model.genome.biosequence.BioSequence
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -6620431603579954167L;
     
     
     

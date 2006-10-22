@@ -28,6 +28,11 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResult {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -8157023595754885730L;
+
+    /**
      * Based on the JKSrc method in psl.c. However, we do not double-penalize for mismatches (they are not subtracted
      * from the matches). The gap penalties are implemented as in psl.c.
      * 

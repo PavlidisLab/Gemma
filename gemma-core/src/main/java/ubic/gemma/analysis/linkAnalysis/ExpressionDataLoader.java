@@ -31,15 +31,10 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.diff.ExpressionDataManager;
-import ubic.gemma.loader.expression.geo.GeoConverter;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.PersisterHelper;
 
 
 /**

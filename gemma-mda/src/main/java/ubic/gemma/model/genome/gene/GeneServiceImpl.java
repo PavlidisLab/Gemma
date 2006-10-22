@@ -61,6 +61,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      * 
      * @see ubic.gemma.model.genome.gene.GeneService#updateGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
     }
@@ -79,6 +80,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialName(java.lang.String)
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.Collection<Gene> handleFindByOfficialName( java.lang.String officialName ) throws java.lang.Exception {
         return this.getGeneDao().findByOfficialName( officialName );
@@ -87,6 +89,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialSymbol(java.lang.String)
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.Collection<Gene> handleFindByOfficialSymbol( java.lang.String officialSymbol )
             throws java.lang.Exception {
@@ -96,6 +99,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#handleFindByOfficialSymbolInexact(java.lang.String)
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.Collection<Gene> handleFindByOfficialSymbolInexact( java.lang.String officialSymbol )
             throws java.lang.Exception {
@@ -105,6 +109,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findAllQtlsByPhysicalMapLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
+    @Override
     protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(
             ubic.gemma.model.genome.PhysicalLocation physicalMapLocation ) throws java.lang.Exception {
         return this.getGeneDao().findByPhysicalLocation( physicalMapLocation );

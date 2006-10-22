@@ -48,6 +48,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#create(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleCreate(
             ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
         return ( GeneProduct ) this.getGeneProductDao().create( geneProduct );
@@ -56,6 +57,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleFindOrCreate(
             ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
         return this.getGeneProductDao().findOrCreate( geneProduct );
@@ -64,6 +66,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     protected void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
         this.getGeneProductDao().remove( geneProduct );
     }
@@ -71,6 +74,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
         this.getGeneProductDao().update( geneProduct );
     }
@@ -78,6 +82,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
      */
+    @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id ) throws java.lang.Exception {
         return ( GeneProduct ) this.getGeneProductDao().load( id );
     }

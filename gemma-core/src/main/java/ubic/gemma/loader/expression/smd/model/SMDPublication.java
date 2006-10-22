@@ -160,6 +160,7 @@ public class SMDPublication {
         private StringBuilder expSetBuf;
         private StringBuilder pubBuf;
 
+        @Override
         @SuppressWarnings("unused")
         public void startElement( String uri, String name, String qName, Attributes atts ) {
 
@@ -174,6 +175,7 @@ public class SMDPublication {
             }
         }
 
+        @Override
         @SuppressWarnings("unused")
         public void endElement( String uri, String tagName, String qName ) {
             if ( tagName.equals( "publication" ) && !inSet ) {
@@ -241,6 +243,7 @@ public class SMDPublication {
             }
         }
 
+        @Override
         public void characters( char ch[], int start, int length ) {
 
             if ( inPub ) {
@@ -256,6 +259,7 @@ public class SMDPublication {
     /**
      * Returns info in tab-delimited string.
      */
+    @Override
     public String toString() {
         return id + "\t" + citation + "\t" + title + "\t" + pubMedId;
     }

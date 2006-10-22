@@ -48,6 +48,7 @@ public class RMATest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         // test data are from the affybatch.example in the affy package.
@@ -70,6 +71,7 @@ public class RMATest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         if ( connected ) aa.cleanup();

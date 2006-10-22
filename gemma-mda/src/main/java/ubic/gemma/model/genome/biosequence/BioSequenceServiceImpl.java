@@ -34,6 +34,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @Override
     protected ubic.gemma.model.genome.biosequence.BioSequence handleFind(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception {
         return this.getBioSequenceDao().find( bioSequence );
@@ -42,6 +43,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception {
         this.getBioSequenceDao().remove( bioSequence );
@@ -50,6 +52,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception {
         this.getBioSequenceDao().update( bioSequence );

@@ -21,9 +21,6 @@ package ubic.gemma.analysis.linkAnalysis;
 import hep.aida.IHistogram1D;
 import hep.aida.ref.Histogram1D;
 
-import java.util.Map;
-import java.util.Set;
-
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
@@ -262,7 +259,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      */
     private boolean checkAssociation(String probeA, String probeB, GeneAnnotations geneData)
     {
-    	String geneId = (String)geneData.getProbeGeneName(probeA);
+    	String geneId = geneData.getProbeGeneName(probeA);
     	//Map geneToProbeMap = geneData.getProbeToGeneMap();
     	//return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
     	if(geneId != null)
@@ -276,7 +273,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      */
     private boolean checkDuplication(String probeId, GeneAnnotations geneData)
     {
-    	String geneId = (String)geneData.getProbeGeneName(probeId);
+    	String geneId = geneData.getProbeGeneName(probeId);
     	
     	if(geneId != null)
     		return geneData.numProbesForGene(geneId) > 1;
@@ -607,6 +604,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     /**
      * @return java.lang.String
      */
+    @Override
     public String toString() {
         return C.toString();
     }

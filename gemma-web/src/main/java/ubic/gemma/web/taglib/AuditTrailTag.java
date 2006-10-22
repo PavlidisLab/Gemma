@@ -33,6 +33,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
  */
 public class AuditTrailTag extends TagSupport {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2754089266068070978L;
     private AuditTrail auditTrail;
 
     /**

@@ -72,6 +72,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#setForce(boolean)
      */
+    @Override
     public void setForce( boolean force ) {
         this.force = force;
     }

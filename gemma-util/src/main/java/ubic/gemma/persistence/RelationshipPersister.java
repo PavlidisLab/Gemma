@@ -37,6 +37,7 @@ public class RelationshipPersister extends ExpressionPersister {
      * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
+    @Override
     public Object persist( Object entity ) {
         if ( entity == null ) return null;
 
@@ -66,6 +67,7 @@ public class RelationshipPersister extends ExpressionPersister {
      * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
+    @Override
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );

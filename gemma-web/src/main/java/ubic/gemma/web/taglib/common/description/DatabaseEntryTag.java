@@ -33,6 +33,11 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  */
 public class DatabaseEntryTag extends TagSupport {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -8225561718129593445L;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     private DatabaseEntry databaseEntry;

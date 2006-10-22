@@ -31,6 +31,7 @@ public class PersonImpl extends ubic.gemma.model.common.auditAndSecurity.Person 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.Person#getFullName()
      */
+    @Override
     public java.lang.String getFullName() {
         return this.getName() + " " + this.getLastName();
     }

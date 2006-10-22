@@ -60,6 +60,7 @@ public class AffyProbeReader extends BasicLineMapParser {
      * 
      * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
         String[] sArray = line.split( "\t" );
@@ -116,6 +117,7 @@ public class AffyProbeReader extends BasicLineMapParser {
      * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
+    @Override
     protected Object getKey( Object newItem ) {
         assert newItem instanceof CompositeSequence;
         return ( ( CompositeSequence ) newItem ).getName();

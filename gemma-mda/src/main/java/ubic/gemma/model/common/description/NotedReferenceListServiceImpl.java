@@ -29,6 +29,7 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
      * @see ubic.gemma.model.common.description.NotedReferenceListService#createNewList(String,
      *      ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     protected ubic.gemma.model.common.description.NotedReferenceList handleCreateNewList( String name,
             ubic.gemma.model.common.auditAndSecurity.User owner ) throws java.lang.Exception {
         NotedReferenceList result = NotedReferenceList.Factory.newInstance();
@@ -42,6 +43,7 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
      * @see ubic.gemma.model.common.description.NotedReferenceListService#addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList,
      *      ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected void handleAddReferenceToList(
             ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
@@ -60,6 +62,7 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
     /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#getAllReferencesForList(ubic.gemma.model.common.description.NotedReferenceList)
      */
+    @Override
     protected java.util.Collection handleGetAllReferencesForList(
             ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception {
         return notedReferenceList.getReferences();

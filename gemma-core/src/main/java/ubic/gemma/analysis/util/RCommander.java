@@ -74,6 +74,7 @@ public abstract class RCommander {
         log.debug( "...disconnected" );
     }
 
+    @Override
     protected void finalize() throws Throwable {
         super.finalize();
         cleanup();

@@ -55,6 +55,7 @@ public class ProteinProteinInteractionLoaderCLI extends AbstractSpringAwareCLI {
      * @throws ConfigurationException
      * @throws IOException
      */
+    @Override
     public Exception doWork( String args[] ) {
 
         try {

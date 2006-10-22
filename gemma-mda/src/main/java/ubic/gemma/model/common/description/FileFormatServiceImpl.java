@@ -27,6 +27,7 @@ public class FileFormatServiceImpl extends ubic.gemma.model.common.description.F
     /**
      * @see ubic.gemma.model.common.description.FileFormatService#findByIdentifier(String)
      */
+    @Override
     protected ubic.gemma.model.common.description.FileFormat handleFindByIdentifier( String identifier )
             throws java.lang.Exception {
         return this.getFileFormatDao().findByFormatIdentifier( identifier );

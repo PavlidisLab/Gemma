@@ -70,6 +70,7 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
     /**
      * @param persisterHelper the persisterHelper to set
      */
+    @Override
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }

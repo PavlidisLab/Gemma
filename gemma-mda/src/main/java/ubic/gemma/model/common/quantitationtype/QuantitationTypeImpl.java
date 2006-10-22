@@ -30,4 +30,9 @@ package ubic.gemma.model.common.quantitationtype;
 public class QuantitationTypeImpl
     extends ubic.gemma.model.common.quantitationtype.QuantitationType
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -352202738189491165L;
 }

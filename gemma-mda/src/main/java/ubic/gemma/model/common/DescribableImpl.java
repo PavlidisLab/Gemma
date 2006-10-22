@@ -30,6 +30,7 @@ public abstract class DescribableImpl extends ubic.gemma.model.common.Describabl
     /**
      * @see ubic.gemma.model.common.Describable#toString()
      */
+    @Override
     public java.lang.String toString() {
         return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() )
                 + ( this.getName() == null ? "" : " Name=" + this.getName() );

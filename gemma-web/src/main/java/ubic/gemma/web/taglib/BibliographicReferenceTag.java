@@ -37,6 +37,10 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class BibliographicReferenceTag extends TagSupport {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 9123111233311081600L;
     private BibliographicReference bibliographicReference;
 
     /**

@@ -274,6 +274,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ( ExpressionExperiment ) this.load( Long.parseLong( expressionExperimentValueObject.getId() ) );
     }
 
+    @Override
     public ExpressionExperimentValueObject toExpressionExperimentValueObject( final ExpressionExperiment entity ) {
         ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject();
 
@@ -358,6 +359,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
+    @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
         final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon where EE.id = :id";

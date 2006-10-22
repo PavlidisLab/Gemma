@@ -24,16 +24,13 @@ import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
 import ubic.basecode.datafilter.Filter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
-import ubic.gemma.apps.Blat.BlattableGenome;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
-import ubic.gemma.model.association.coexpression.MouseGeneCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.PersisterHelper;
 
 /*
 * @author xiangwan

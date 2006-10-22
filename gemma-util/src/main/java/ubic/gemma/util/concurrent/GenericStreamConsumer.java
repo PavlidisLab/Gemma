@@ -36,6 +36,7 @@ public class GenericStreamConsumer extends Thread {
         this.is = is;
     }
 
+    @Override
     @SuppressWarnings("unused")
     public void run() {
         try {

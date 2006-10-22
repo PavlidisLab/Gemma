@@ -36,6 +36,7 @@ public class UserServiceImplTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         userDaoMock = createMock( UserDao.class );
@@ -51,6 +52,7 @@ public class UserServiceImplTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

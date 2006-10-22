@@ -31,6 +31,7 @@ public class BeanPropertyCompleterTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }

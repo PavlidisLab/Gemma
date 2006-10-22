@@ -40,6 +40,7 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
     /**
      * @throws Exception
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();

@@ -32,6 +32,11 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 public class TaxonTag extends TagSupport {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1308354625783322070L;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     private Taxon taxon;

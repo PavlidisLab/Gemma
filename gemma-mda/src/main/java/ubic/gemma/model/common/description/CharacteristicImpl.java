@@ -36,6 +36,7 @@ public class CharacteristicImpl extends ubic.gemma.model.common.description.Char
     /**
      * @see ubic.gemma.model.common.description.Characteristic#toString()
      */
+    @Override
     public java.lang.String toString() {
         StringBuilder buf = new StringBuilder();
 

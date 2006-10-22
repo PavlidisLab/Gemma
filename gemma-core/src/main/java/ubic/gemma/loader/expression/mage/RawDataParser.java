@@ -482,4 +482,9 @@ public class RawDataParser implements FileCombiningParser {
 }
 
 class NoMoreQuantitationTypesException extends RuntimeException {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1520081075629386288L;
 }

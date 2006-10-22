@@ -27,7 +27,6 @@ import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;

@@ -378,21 +378,20 @@ public class TestPersistentObjectHelper {
     /**
      * @return Collection<BioSequence2GeneProduct>
      */
-    private Collection getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
+    @SuppressWarnings("unchecked")
+    private Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
-        Collection b2gCol = new HashSet<BioSequence2GeneProduct>();
+        Collection<BioSequence2GeneProduct> b2gCol = new HashSet<BioSequence2GeneProduct>();
         for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
             BlatAssociation b2g = BlatAssociation.Factory.newInstance();
             b2g.setScore( RandomUtils.nextDouble() );
             b2g.setBioSequence( bioSequence );
             b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPeristentGene() ) );
-            // FIXME is this the right biosequence for the blat?
             b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence ) );
-
             b2gCol.add( b2g );
         }
 
-        return persisterHelper.persist( b2gCol );
+        return ( Collection<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
     }
 
     /**

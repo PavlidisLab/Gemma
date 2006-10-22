@@ -31,6 +31,7 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#find(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     protected ubic.gemma.model.expression.biomaterial.Compound handleFind(
             ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
         return this.getCompoundDao().find( compound );
@@ -47,6 +48,7 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#update(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.expression.biomaterial.Compound compound )
             throws java.lang.Exception {
         this.getCompoundDao().update( compound );
@@ -55,6 +57,7 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#remove(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.expression.biomaterial.Compound compound )
             throws java.lang.Exception {
         this.getCompoundDao().remove( compound );

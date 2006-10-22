@@ -130,6 +130,7 @@ public class SMDExperiment {
         StringBuilder expSetBuf;
         StringBuilder expBuf;
 
+        @Override
         @SuppressWarnings("unused")
         public void startElement( String uri, String value, String qName, Attributes atts ) {
 
@@ -144,6 +145,7 @@ public class SMDExperiment {
             }
         }
 
+        @Override
         @SuppressWarnings( { "unused", "synthetic-access" })
         public void endElement( String uri, String tagName, String qName ) {
             if ( tagName.equals( "experiment_set" ) && !inExp ) {
@@ -208,6 +210,7 @@ public class SMDExperiment {
             }
         }
 
+        @Override
         public void characters( char ch[], int start, int length ) {
 
             if ( inSet ) {
@@ -221,6 +224,7 @@ public class SMDExperiment {
 
     }
 
+    @Override
     public String toString() {
         return number + "\t" + name + "\t" + description;
     }

@@ -39,6 +39,10 @@ import ubic.basecode.gui.graphics.text.Util;
  * @verson $Id$
  */
 public class ExpressionDataMatrixProducerImpl extends JPanel {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7885617488725734975L;
     // TODO this class is quite similar to the JMatrixDisplay in baseCode ... maybe use that directly?
     protected boolean m_isShowLabels = false;
     protected BufferedImage m_image = null;

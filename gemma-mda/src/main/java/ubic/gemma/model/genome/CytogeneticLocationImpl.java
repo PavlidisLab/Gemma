@@ -34,8 +34,14 @@ import org.apache.commons.lang.builder.CompareToBuilder;
 public class CytogeneticLocationImpl extends ubic.gemma.model.genome.CytogeneticLocation implements Comparable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 8735392364160586636L;
+
+    /**
      * @see java.lang.Comparable#compareTo(Object)
      */
+    @Override
     public int compareTo( Object object ) {
         CytogeneticLocationImpl other = ( CytogeneticLocationImpl ) object;
         return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() ).append(

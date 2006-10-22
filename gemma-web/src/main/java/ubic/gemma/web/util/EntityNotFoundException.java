@@ -30,6 +30,11 @@ package ubic.gemma.web.util;
 public class EntityNotFoundException extends RuntimeException {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -4361183252269974819L;
+
+    /**
      * @param string
      */
     public EntityNotFoundException( String string ) {

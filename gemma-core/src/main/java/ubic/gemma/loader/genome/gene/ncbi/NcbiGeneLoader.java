@@ -137,7 +137,7 @@ public class NcbiGeneLoader {
     /**
      * @param geneQueue
      */
-    private void doLoad( final BlockingQueue<Gene> geneQueue ) {
+    void doLoad( final BlockingQueue<Gene> geneQueue ) {
         while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
 
             try {

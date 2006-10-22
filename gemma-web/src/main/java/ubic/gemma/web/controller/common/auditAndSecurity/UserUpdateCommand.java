@@ -296,6 +296,7 @@ public class UserUpdateCommand {
      * @return
      * @see ubic.gemma.model.common.auditAndSecurity.User#equals(java.lang.Object)
      */
+    @Override
     public boolean equals( Object object ) {
         return this.user.equals( object );
     }
@@ -472,6 +473,7 @@ public class UserUpdateCommand {
      * @return
      * @see ubic.gemma.model.common.auditAndSecurity.User#hashCode()
      */
+    @Override
     public int hashCode() {
         return this.user.hashCode();
     }
@@ -480,6 +482,7 @@ public class UserUpdateCommand {
      * @return
      * @see ubic.gemma.model.common.DescribableImpl#toString()
      */
+    @Override
     public String toString() {
         return this.user.toString();
     }

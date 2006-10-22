@@ -73,6 +73,7 @@ public final class ContainerTestSetup extends TestSetup {
         super( test );
     }
 
+    @Override
     protected void setUp() throws Exception {
         // Optional step to install the container from a URL pointing to its distribution
         log.info( "Installing Tomcat (if necessary)" );
@@ -113,6 +114,7 @@ public final class ContainerTestSetup extends TestSetup {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         log.info( "Stopping container..." );
         container.stop();

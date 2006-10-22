@@ -3433,18 +3433,6 @@ public class MageMLConverterHelper {
         convertAssociations( pba, gemmaObj );
     }
 
-    // /**
-    // * Special conversion method for MAGE OntologyEntries
-    // *
-    // * @param entry - the MAGE OntologyEntry to be converted.
-    // * @param gemmaObj The Gemma object which will have the association to the resulting converted object.
-    // */
-    // private void specialConvertOntologyEntryAssociation( OntologyEntry entry, Object gemmaObj, List elmList ) {
-    // if ( gemmaObj == null ) throw new IllegalArgumentException( "Null Gemma object passed" );
-    // log.debug( "Entering specialConvertOntologyEntryAssociation" );
-    // // this won't be called
-    // }
-
     /**
      * In Gemma, an OntologyEntry is a DatabaseEntry, while in Mage, an OntologyEntry hasa DatabaseEntry.
      * 
@@ -3457,31 +3445,6 @@ public class MageMLConverterHelper {
         assert ed != null : "Null externalDatabase for MAGE version of " + gemmaObj;
         gemmaObj.setExternalDatabase( ed );
         gemmaObj.setAccession( databaseEntry.getAccession() );
-    }
-
-    /**
-     * Convert all the reporters via the reporter groups. no-op not needed.
-     * 
-     * @param reporterGroups
-     * @param gemmaObj
-     */
-    private void specialConvertReporterGroups( List reporterGroups,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
-
-        // Collection<Reporter> designObjs;
-        // designObjs = initializeReporterCollection( gemmaObj );
-        //
-        // for ( Iterator iter = reporterGroups.iterator(); iter.hasNext(); ) {
-        // ReporterGroup rg = ( ReporterGroup ) iter.next();
-        // List reps = rg.getReporters();
-        // for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
-        // org.biomage.DesignElement.Reporter reporter = ( org.biomage.DesignElement.Reporter ) iterator.next();
-        // Reporter convertedReporter = convertReporter( reporter );
-        // convertedReporter.setArrayDesign( gemmaObj );
-        // if ( !designObjs.contains( convertedReporter ) ) designObjs.add( convertedReporter );
-        // }
-        // }
-        // gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );
     }
 
     /**

@@ -32,8 +32,14 @@ import java.util.List;
 public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrail {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5316032533526337630L;
+
+    /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#addEvent(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void addEvent( AuditEvent event ) {
         if ( event == null ) throw new IllegalArgumentException( "AuditEvent cannot be null" );

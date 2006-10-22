@@ -47,6 +47,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
     private ExpressionExperimentDao eeDao;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -119,6 +120,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
     
  
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         ee = null;

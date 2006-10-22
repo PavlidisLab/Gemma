@@ -45,6 +45,7 @@ public class ConstantsTei extends TagExtraInfo {
     /**
      * Return information about the scripting variables to be created.
      */
+    @Override
     public VariableInfo[] getVariableInfo( TagData data ) {
         // loop through and expose all attributes
         List<VariableInfo> vars = new ArrayList<VariableInfo>();

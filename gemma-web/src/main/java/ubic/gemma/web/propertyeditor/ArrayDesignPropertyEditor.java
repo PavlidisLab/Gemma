@@ -42,6 +42,7 @@ public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
 
     private static Log log = LogFactory.getLog( TaxonPropertyEditor.class.getName() );
 
+    @Override
     public String getAsText() {
         if ( this.getValue() == null || ( ( ArrayDesign ) this.getValue() ).getId() == null ) {
             return " --- ";
@@ -49,6 +50,7 @@ public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
         return ( ( ArrayDesign ) this.getValue() ).getName();
     }
 
+    @Override
     public void setAsText( String text ) throws IllegalArgumentException {
         if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to an array design..." );
         Object ad = arrayDesignService.findArrayDesignByName( text );

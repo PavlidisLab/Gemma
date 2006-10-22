@@ -31,6 +31,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
     private String searchkeyAcc;
     BioMaterialDao bioMaterialDao;
 
+    @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         bioMaterialDao = ( BioMaterialDao ) getBean( "bioMaterialDao" );

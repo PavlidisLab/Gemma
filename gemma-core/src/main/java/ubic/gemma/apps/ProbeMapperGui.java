@@ -54,6 +54,10 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * @version $Id$
  */
 public class ProbeMapperGui extends JFrame {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -7060936185884039602L;
     private static Log log = LogFactory.getLog( ProbeMapperGui.class.getName() );
     private javax.swing.JPanel jContentPane = null;
     private JPanel topButtonPanel = null;

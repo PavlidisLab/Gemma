@@ -53,6 +53,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     }
 
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
+    @Override
     @SuppressWarnings("unchecked")
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();

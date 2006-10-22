@@ -76,6 +76,7 @@ public class BibliographicReferenceDaoImplTest extends BaseSpringContextTest {
     /**
      * @param persisterHelper The persisterHelper to set.
      */
+    @Override
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }

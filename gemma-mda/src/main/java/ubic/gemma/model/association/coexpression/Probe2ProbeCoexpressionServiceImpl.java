@@ -32,6 +32,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#create(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)
      */
+    @Override
     protected ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression handleCreate(
             ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression p2pCoexpression )
             throws java.lang.Exception {

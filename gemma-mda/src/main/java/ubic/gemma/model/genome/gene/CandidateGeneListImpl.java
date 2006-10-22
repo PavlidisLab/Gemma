@@ -33,6 +33,11 @@ import ubic.gemma.model.genome.Gene;
 public class CandidateGeneListImpl extends ubic.gemma.model.genome.gene.CandidateGeneList {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 6209243106259182402L;
+
+    /**
      * Adds a candidate to the list, intitializing the list as a List if none exists. Lists are ranked in ascending
      * order starting at 0.
      * 
@@ -42,6 +47,7 @@ public class CandidateGeneListImpl extends ubic.gemma.model.genome.gene.Candidat
      * @return the CandidateGene created
      * @see ubic.gemma.model.genome.gene.CandidateGeneList#addCandidate(ubic.gemma.model.genome.Gene)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public CandidateGene addCandidate( Gene gene ) {
 
@@ -76,6 +82,7 @@ public class CandidateGeneListImpl extends ubic.gemma.model.genome.gene.Candidat
      * @param candidateGene The gene to move
      * @see ubic.gemma.model.genome.gene.CandidateGeneList#decreaseRanking(ubic.gemma.model.genome.gene.CandidateGene)
      */
+    @Override
     public void decreaseRanking( ubic.gemma.model.genome.gene.CandidateGene candidateGene ) {
         if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
         if ( !this.getCandidates().contains( candidateGene ) ) {
@@ -105,6 +112,7 @@ public class CandidateGeneListImpl extends ubic.gemma.model.genome.gene.Candidat
      * @param candidate The gene to move
      * @see ubic.gemma.model.genome.gene.CandidateGeneList#increaseRanking(CandidateGene)
      */
+    @Override
     public void increaseRanking( CandidateGene candidateGene ) {
         if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
         if ( !this.getCandidates().contains( candidateGene ) )
@@ -133,6 +141,7 @@ public class CandidateGeneListImpl extends ubic.gemma.model.genome.gene.Candidat
      * @param candidateGene The candidate to remove
      * @see ubic.gemma.model.genome.gene.CandidateGeneList#removeCandidate(CandidateGene)
      */
+    @Override
     public void removeCandidate( CandidateGene candidateGene ) {
         if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidateGene cannot be null" );
         if ( this.getCandidates() == null )

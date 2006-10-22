@@ -32,6 +32,10 @@ import java.util.Comparator;
 public class LabelValue implements Comparable, Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 3485837885293359602L;
+    /**
      * Comparator that can be used for a case insensitive sort of <code>LabelValue</code> objects.
      */
     public static final Comparator CASE_INSENSITIVE_ORDER = new Comparator() {
@@ -108,6 +112,7 @@ public class LabelValue implements Comparable, Serializable {
     /**
      * Return a string representation of this object.
      */
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer( "LabelValue[" );
         sb.append( this.label );
@@ -122,6 +127,7 @@ public class LabelValue implements Comparable, Serializable {
      * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals( Object obj ) {
         if ( obj == this ) {
             return true;
@@ -150,6 +156,7 @@ public class LabelValue implements Comparable, Serializable {
      * 
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return ( this.getValue() == null ) ? 17 : this.getValue().hashCode();
     }

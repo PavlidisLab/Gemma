@@ -29,6 +29,11 @@ public class InvalidAccessionException extends RuntimeException {
     /**
      * 
      */
+    private static final long serialVersionUID = -9078403276805996725L;
+
+    /**
+     * 
+     */
     public InvalidAccessionException() {
         super();
     }

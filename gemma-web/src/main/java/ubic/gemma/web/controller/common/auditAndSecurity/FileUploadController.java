@@ -50,6 +50,7 @@ public class FileUploadController extends BaseFormController {
     /**
      * 
      */
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         FileUpload fileUpload = ( FileUpload ) command;
@@ -71,6 +72,7 @@ public class FileUploadController extends BaseFormController {
     /**
      * 
      */
+    @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {

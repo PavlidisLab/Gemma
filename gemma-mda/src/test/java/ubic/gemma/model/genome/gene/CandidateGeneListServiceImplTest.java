@@ -151,6 +151,7 @@ public class CandidateGeneListServiceImplTest extends TestCase {
         return cgl;
     }
 
+    @Override
     protected void setUp() throws Exception {
 
         UserDaoMock = createMock( UserDao.class );
@@ -200,6 +201,7 @@ public class CandidateGeneListServiceImplTest extends TestCase {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
 
     }

@@ -27,6 +27,7 @@ import ubic.gemma.util.NetDatasourceUtil;
  */
 public class NCBIUtil extends NetDatasourceUtil {
 
+    @Override
     public void init() {
         this.setHost( ConfigUtils.getString( "ncbi.host" ) );
     }

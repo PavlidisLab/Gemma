@@ -42,6 +42,7 @@ public class TaxonPropertyEditor extends PropertyEditorSupport {
         this.taxonService = taxonService;
     }
 
+    @Override
     public String getAsText() {
         if ( this.getValue() == null || ( ( Taxon ) this.getValue() ).getId() == null ) {
             return "---";
@@ -49,6 +50,7 @@ public class TaxonPropertyEditor extends PropertyEditorSupport {
         return ( ( Taxon ) this.getValue() ).getScientificName();
     }
 
+    @Override
     public void setAsText( String text ) throws IllegalArgumentException {
         if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
         Object ad = taxonService.findByScientificName( text );

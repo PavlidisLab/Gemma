@@ -31,6 +31,7 @@ public class HardwareServiceImpl extends ubic.gemma.model.common.protocol.Hardwa
     /**
      * @see ubic.gemma.model.common.protocol.HardwareService#find(ubic.gemma.model.common.protocol.Hardware)
      */
+    @Override
     protected ubic.gemma.model.common.protocol.Hardware handleFind(
             ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception {
         return this.getHardwareDao().find( hardware );
@@ -39,6 +40,7 @@ public class HardwareServiceImpl extends ubic.gemma.model.common.protocol.Hardwa
     /**
      * @see ubic.gemma.model.common.protocol.HardwareService#update(ubic.gemma.model.common.protocol.Hardware)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception {
         this.getHardwareDao().update( hardware );
     }
@@ -46,6 +48,7 @@ public class HardwareServiceImpl extends ubic.gemma.model.common.protocol.Hardwa
     /**
      * @see ubic.gemma.model.common.protocol.HardwareService#remove(ubic.gemma.model.common.protocol.Hardware)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception {
         this.getHardwareDao().remove( hardware );
     }

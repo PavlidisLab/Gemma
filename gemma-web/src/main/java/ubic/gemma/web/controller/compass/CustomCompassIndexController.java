@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.compass;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -71,6 +72,7 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
         if ( indexView == null ) {
@@ -87,6 +89,8 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
      * @see org.springframework.web.servlet.mvc.AbstractCommandController#handle(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
+    @Override
+    @SuppressWarnings("unused")
     protected ModelAndView handle( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -104,7 +108,7 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
 
         time = System.currentTimeMillis() - time;
         CompassIndexResults indexResults = new CompassIndexResults( time );
-        HashMap data = new HashMap();
+        Map<Object, Object> data = new HashMap<Object, Object>();
         data.put( getCommandName(), indexCommand );
         data.put( getIndexResultsName(), indexResults );
         return new ModelAndView( getIndexResultsView(), data );

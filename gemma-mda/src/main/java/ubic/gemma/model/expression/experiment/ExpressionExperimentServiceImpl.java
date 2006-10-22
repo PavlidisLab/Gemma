@@ -199,6 +199,7 @@ public class ExpressionExperimentServiceImpl extends
      * The good news is as a buisness rule we only allow 1 taxon per EE.
      */
     
+    @Override
     protected Taxon handleGetTaxon( Long id ) {
        
         return this.getExpressionExperimentDao().getTaxon(id);

@@ -32,6 +32,7 @@ public class NotedReferenceListImpl extends ubic.gemma.model.common.description.
     /**
      * @see ubic.gemma.model.common.description.NotedReferenceList#addReference(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public void addReference( NotedReference bibliographicReference ) {
         this.getReferences().add( bibliographicReference );
     }
@@ -39,6 +40,7 @@ public class NotedReferenceListImpl extends ubic.gemma.model.common.description.
     /**
      * @see ubic.gemma.model.common.description.NotedReferenceList#removeReference(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public void removeReference( NotedReference bibliographicReference ) {
         if ( bibliographicReference != null ) {
             this.getReferences().remove( bibliographicReference );

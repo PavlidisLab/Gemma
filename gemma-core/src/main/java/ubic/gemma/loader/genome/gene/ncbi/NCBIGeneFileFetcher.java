@@ -34,6 +34,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
+    @Override
     public void initConfig() {
         this.localBasePath = ConfigUtils.getString( "ncbi.local.datafile.basepath" );
         this.remoteBaseDir = ConfigUtils.getString( "ncbi.remote.gene.basedir" );
@@ -108,6 +109,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
      * @param newDir
      * @return
      */
+    @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier + ".gz";
     }
@@ -116,6 +118,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
      * @param identifier
      * @return
      */
+    @Override
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + identifier + ".gz";
     }

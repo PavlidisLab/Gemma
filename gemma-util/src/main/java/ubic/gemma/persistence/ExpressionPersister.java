@@ -252,6 +252,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
+    @Override
     public Object persist( Object entity ) {
         if ( entity == null ) return null;
 
@@ -440,6 +441,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
+    @Override
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );

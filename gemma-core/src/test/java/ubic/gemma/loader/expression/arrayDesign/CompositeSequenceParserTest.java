@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 public class CompositeSequenceParserTest extends TestCase {
     InputStream designElementStream;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );

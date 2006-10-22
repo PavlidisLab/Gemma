@@ -33,6 +33,7 @@ public class TreatmentServiceImpl extends ubic.gemma.model.expression.biomateria
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentService#getTreatments()
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.List handleGetTreatments() throws java.lang.Exception {
         List<Treatment> result = new ArrayList<Treatment>();
@@ -43,6 +44,7 @@ public class TreatmentServiceImpl extends ubic.gemma.model.expression.biomateria
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentService#saveTreatment(ubic.gemma.model.expression.biomaterial.Treatment)
      */
+    @Override
     protected Treatment handleSaveTreatment( ubic.gemma.model.expression.biomaterial.Treatment treatment )
             throws java.lang.Exception {
         return ( Treatment ) this.getTreatmentDao().create( treatment );

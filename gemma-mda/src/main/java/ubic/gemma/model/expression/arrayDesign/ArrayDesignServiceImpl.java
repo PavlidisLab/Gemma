@@ -34,6 +34,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
+    @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getArrayDesignDao().loadAll();
     }
@@ -41,6 +42,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#removeArrayDesign(java.lang.String)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception {
         this.getArrayDesignDao().remove( arrayDesign );
@@ -58,6 +60,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#updateArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().update( arrayDesign );
     }

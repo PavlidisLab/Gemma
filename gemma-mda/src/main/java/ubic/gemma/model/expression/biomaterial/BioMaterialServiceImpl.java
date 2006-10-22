@@ -39,6 +39,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#getBioMaterials()
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.List handleGetBioMaterials() throws java.lang.Exception {
         List<BioMaterial> results = new ArrayList<BioMaterial>();

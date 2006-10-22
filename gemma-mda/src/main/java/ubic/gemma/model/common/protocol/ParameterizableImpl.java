@@ -30,4 +30,9 @@ package ubic.gemma.model.common.protocol;
 public class ParameterizableImpl
     extends ubic.gemma.model.common.protocol.Parameterizable
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7511202811637485883L;
 }

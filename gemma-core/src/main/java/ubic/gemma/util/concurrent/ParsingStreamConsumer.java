@@ -38,6 +38,7 @@ public class ParsingStreamConsumer extends Thread {
         this.parser = parser;
     }
 
+    @Override
     public void run() {
         try {
             parser.parse( is );

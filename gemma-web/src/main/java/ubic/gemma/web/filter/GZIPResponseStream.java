@@ -42,6 +42,7 @@ public class GZIPResponseStream extends ServletOutputStream {
         bufferedOutput = new ByteArrayOutputStream();
     }
 
+    @Override
     public void close() throws IOException {
         // verify the stream is yet to be closed
         if ( closed ) {
@@ -90,6 +91,7 @@ public class GZIPResponseStream extends ServletOutputStream {
         return ( this.closed );
     }
 
+    @Override
     public void flush() throws IOException {
         if ( closed ) {
             throw new IOException( "Cannot flush a closed output stream" );
@@ -102,10 +104,12 @@ public class GZIPResponseStream extends ServletOutputStream {
         // noop
     }
 
+    @Override
     public void write( byte[] b ) throws IOException {
         write( b, 0, b.length );
     }
 
+    @Override
     public void write( byte[] b, int off, int len ) throws IOException {
 
         if ( closed ) {
@@ -119,6 +123,7 @@ public class GZIPResponseStream extends ServletOutputStream {
         bufferedOutput.write( b, off, len );
     }
 
+    @Override
     public void write( int b ) throws IOException {
         if ( closed ) {
             throw new IOException( "Cannot write to a closed output stream" );

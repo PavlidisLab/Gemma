@@ -42,6 +42,7 @@ public class CandidateGeneListImplTest extends TestCase {
         return g;
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         t = Taxon.Factory.newInstance();

@@ -27,4 +27,9 @@ package ubic.gemma.model.expression.designElement;
  */
 public class CompositeSequenceImpl extends ubic.gemma.model.expression.designElement.CompositeSequence {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2144914030275919838L;
+
 }

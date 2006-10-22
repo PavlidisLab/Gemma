@@ -39,6 +39,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
      * 
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         tempFile = File.createTempFile( "cli", ".txt" );
@@ -52,6 +53,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         tempFile.delete();
     }

@@ -179,6 +179,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineMapParser {
         return g2GOAss;
     }
 
+    @Override
     public Gene2GOAssociation parseOneLine( String line ) {
         return this.mapFromGene2GO( line );
     }

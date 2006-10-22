@@ -44,6 +44,11 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public class CommonsMultipartFile implements MultipartFile, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6483196912349343465L;
+
     protected static final Log logger = LogFactory.getLog( CommonsMultipartFile.class );
 
     private final FileItem fileItem;

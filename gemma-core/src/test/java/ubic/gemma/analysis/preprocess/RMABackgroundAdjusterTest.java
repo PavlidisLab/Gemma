@@ -52,6 +52,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         super.setUp();
@@ -75,6 +76,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         if ( connected ) aa.cleanup();

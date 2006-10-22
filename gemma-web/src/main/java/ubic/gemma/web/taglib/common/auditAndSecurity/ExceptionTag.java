@@ -30,6 +30,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
  */
 public class ExceptionTag extends TagSupport {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4323477499674966726L;
+
     Exception exception;
 
     Boolean showStackTrace = true;

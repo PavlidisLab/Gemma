@@ -65,6 +65,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
      * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
+    @Override
     public Object parseOneLine( String line ) {
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
 

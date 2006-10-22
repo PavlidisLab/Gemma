@@ -60,6 +60,7 @@ public class GoldenPathBioSequenceParser extends BasicLineParser implements Queu
         }
     }
 
+    @Override
     public Collection<BioSequence> getResults() {
         return results;
     }

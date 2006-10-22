@@ -38,6 +38,7 @@ public class QuantileNormalizerTest extends TestCase {
 
     private boolean connected = false;
 
+    @Override
     public void setUp() throws Exception {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         tester = ( DoubleMatrixNamed ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
@@ -53,6 +54,7 @@ public class QuantileNormalizerTest extends TestCase {
         log.debug( "Setup done" );
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         tester = null;

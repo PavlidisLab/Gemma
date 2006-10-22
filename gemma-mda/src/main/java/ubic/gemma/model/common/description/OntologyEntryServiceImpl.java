@@ -31,6 +31,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     /**
      * @see ubic.gemma.model.common.description.OntologyEntryService#findOrCreate(ubic.gemma.model.common.description.OntologyEntry)
      */
+    @Override
     protected ubic.gemma.model.common.description.OntologyEntry handleFindOrCreate(
             ubic.gemma.model.common.description.OntologyEntry ontologyEntry ) throws java.lang.Exception {
         return this.getOntologyEntryDao().findOrCreate( ontologyEntry );
@@ -39,6 +40,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     /**
      * @see ubic.gemma.model.common.description.OntologyEntryService#remove(ubic.gemma.model.common.description.OntologyEntry)
      */
+    @Override
     protected void handleRemove( ubic.gemma.model.common.description.OntologyEntry ontologyEntry )
             throws java.lang.Exception {
         this.getOntologyEntryDao().remove( ontologyEntry );

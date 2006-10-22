@@ -28,10 +28,12 @@ import ubic.gemma.util.ConfigUtils;
 public class PubMedSearcherTest extends AbstractCLITestCase {
     PubMedSearcher p = new PubMedSearcher();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

@@ -90,6 +90,7 @@ public class HttpFetcher extends AbstractFetcher {
      * @param newDir
      * @return
      */
+    @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier;
     }

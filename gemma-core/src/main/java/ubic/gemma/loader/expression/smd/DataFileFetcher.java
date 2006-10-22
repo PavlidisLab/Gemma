@@ -140,6 +140,7 @@ public class DataFileFetcher extends SmdFetcher {
     /**
      * @return
      */
+    @Override
     public boolean isForce() {
         return force;
     }
@@ -147,6 +148,7 @@ public class DataFileFetcher extends SmdFetcher {
     /**
      * @param force
      */
+    @Override
     public void setForce( boolean force ) {
         this.force = force;
     }
@@ -156,6 +158,7 @@ public class DataFileFetcher extends SmdFetcher {
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
+    @Override
     @SuppressWarnings("unused")
     public Collection<LocalFile> fetch( String identifier ) {
         throw new UnsupportedOperationException();

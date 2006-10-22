@@ -201,6 +201,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             HttpServletRequest request, Object command, MessageUtil messenger ) {
         return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+            @SuppressWarnings("synthetic-access")
             public ModelAndView call() throws Exception {
                 SecurityContextHolder.setContext( securityContext );
                 Map<Object, Object> model = new HashMap<Object, Object>();
@@ -211,7 +212,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
                 ArrayDesign arrayDesign = commandObject.getArrayDesign();
                 if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
-                    log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                     log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
                     arrayDesign = ArrayDesign.Factory.newInstance();
                     arrayDesign.setName( commandObject.getArrayDesignName() );
                     commandObject.setArrayDesign( arrayDesign );

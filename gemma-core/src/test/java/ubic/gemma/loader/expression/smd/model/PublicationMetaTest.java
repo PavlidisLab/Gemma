@@ -36,6 +36,7 @@ public class PublicationMetaTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         testStream = PublicationMetaTest.class.getResourceAsStream( "/data/smd.pub-meta.test.txt" );
@@ -45,6 +46,7 @@ public class PublicationMetaTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

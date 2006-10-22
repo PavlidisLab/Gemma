@@ -20,7 +20,6 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import hep.aida.IHistogram1D;
 import ubic.basecode.bio.geneset.GeneAnnotations;
-import java.util.Map;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.list.DoubleArrayList;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;

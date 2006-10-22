@@ -30,4 +30,9 @@ package ubic.gemma.model.common.description;
 public class ExternalDatabaseImpl
     extends ubic.gemma.model.common.description.ExternalDatabase
 {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5857412688940867544L;
 }

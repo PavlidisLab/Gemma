@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @author keshav
  * @version $Id$
+ * @deprecated Use the {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService}.
  */
 public class SimpleExpressionExperimentConverter {
     private Log log = LogFactory.getLog( SimpleExpressionExperimentConverter.class );

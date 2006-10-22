@@ -31,6 +31,11 @@ import java.io.Serializable;
 public class FileUpload implements Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 537156568346654834L;
+
+    /**
      * Optional friendly name for the file.
      */
     private String name;

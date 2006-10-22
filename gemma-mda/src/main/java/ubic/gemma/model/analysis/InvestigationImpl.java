@@ -28,4 +28,9 @@ package ubic.gemma.model.analysis;
  * @see ubic.gemma.model.analysis.Investigation
  */
 public class InvestigationImpl extends ubic.gemma.model.analysis.Investigation {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 245348469390922116L;
 }

@@ -19,9 +19,6 @@
 package ubic.gemma.web.controller.genome.gene;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,7 +27,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.CandidateGeneListService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /** 
@@ -80,6 +76,7 @@ public class GeneFinderController extends SimpleFormController {
      * @return Object
      * @throws Exception
      */
+    @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
     }
