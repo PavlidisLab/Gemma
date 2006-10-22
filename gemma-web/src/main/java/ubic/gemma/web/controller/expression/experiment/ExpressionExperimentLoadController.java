@@ -102,6 +102,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
         return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
 
+            @SuppressWarnings("unchecked")
             public ModelAndView call() throws Exception {
 
                 SecurityContextHolder.setContext( securityContext );
@@ -116,7 +117,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 accesionNum = StringUtils.strip( accesionNum );
                 accesionNum = StringUtils.upperCase( accesionNum );
 
-                log.info( "Loading " + accesionNum );
+                 log.info( "Loading " + accesionNum );
 
                 if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                     geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

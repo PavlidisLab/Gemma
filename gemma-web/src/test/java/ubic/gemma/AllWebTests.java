@@ -20,6 +20,7 @@ package ubic.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.web.controller.TaskRunningTest;
 import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchControllerTest;
 import ubic.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserFormControllerTest;
@@ -76,6 +77,8 @@ public class AllWebTests extends TestSuite {
 
         suite.addTestSuite( StartupListenerTest.class );
         suite.addTestSuite( ValidationTest.class );
+
+        suite.addTestSuite( TaskRunningTest.class );
 
         suite.addTestSuite( ConfigurationCookieTest.class );
 

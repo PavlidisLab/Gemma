@@ -46,8 +46,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        TaskRunningService taskRunningService = ( TaskRunningService ) this.getBean( "taskRunningService" );
-        taskRunningService.startUp();
 
         controller = ( AbstractController ) this.getBean( "mockController" );
 
@@ -76,13 +74,16 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
         ModelAndView result = null;
 
+        long timeout = 60000;
+        long startTime = System.currentTimeMillis();
         while ( result == null ) {
-            Thread.sleep( 200 );
+            Thread.sleep( 1000 );
             try {
                 result = taskCheckController.handleRequest( afterRequest, response );
             } catch ( Exception e ) {
                 fail( "Got an exception: " + e );
             }
+            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
         }
 
         assertEquals( "view", result.getViewName() );
@@ -135,7 +136,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( taskId );
 
         // let it go a little while
-        Thread.sleep( 400 );
+        Thread.sleep( 1000 );
 
         MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
         afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
@@ -145,18 +146,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
         ModelAndView result = taskCheckController.handleRequest( afterRequest, response );
         assertNotNull( result );
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
-     */
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-        TaskRunningService taskRunningService = ( TaskRunningService ) this.getBean( "taskRunningService" );
-        taskRunningService.shutDown();
     }
 
 }

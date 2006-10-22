@@ -23,9 +23,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.testing.BaseSpringWebTest;
-import ubic.gemma.testing.MockClient;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.progress.ProgressData;
 
 /**
  * @author pavlidis

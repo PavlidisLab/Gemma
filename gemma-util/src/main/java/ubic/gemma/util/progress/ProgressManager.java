@@ -148,18 +148,21 @@ public class ProgressManager {
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
+        // Use the taskId if we have one; otherwise the username.
         String key = taskId == null ? userName : taskId;
 
         if ( !progressJobs.containsKey( key ) ) {
-            log.debug( "Creating new progress job for " + key );
+            log.debug( "Creating new progress job(s) with key " + key );
             progressJobs.put( key, new Vector<ProgressJob>() );
+        } else {
+            log.debug( "Already have job with key " + key );
         }
 
         usersJobs = progressJobs.get( key );
 
         // No job currently assciated with this thread or the job assciated with the thread is no longer valid
         if ( ( currentJob.get() == null ) || ( progressJobsById.get( currentJob.get() ) == null ) ) {
-            JobInfo jobI = createnewJobInfo( taskId, userName, description );
+            JobInfo jobI = createnewJobInfo( key, userName, description );
 
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
@@ -170,7 +173,7 @@ public class ProgressManager {
             // keep track of these jobs
             usersJobs.add( newJob ); // adds to the progressJobs collection
             progressJobsById.put( createdJobI.getId(), newJob );
-            progressJobsByTaskId.put( taskId, newJob );
+            progressJobsByTaskId.put( key, newJob );
         } else {
             Long oldId = currentJob.get();
             newJob = progressJobsById.get( oldId );
@@ -354,7 +357,7 @@ public class ProgressManager {
     public static synchronized void signalDone( Object key ) {
         log.debug( key + " Done!" );
         ProgressJob job = progressJobsByTaskId.get( key );
-        assert job != null;
+        assert job != null : "No job of id " + key;
         destroyProgressJob( job );
     }
 
@@ -364,7 +367,7 @@ public class ProgressManager {
     public static synchronized void signalCancelled( Object key ) {
         log.debug( key + " Cancelled" );
         ProgressJob job = progressJobsByTaskId.get( key );
-        assert job != null;
+        assert job != null : "No job of id " + key;
         destroyProgressJob( job );
     }
 
@@ -375,7 +378,7 @@ public class ProgressManager {
     public static synchronized void signalFailed( Object key, Throwable cause ) {
         log.debug( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
-        assert job != null;
+        assert job != null : "No job of id " + key;
         destroyProgressJob( job );
         // FIXME do something with the cause...
     }

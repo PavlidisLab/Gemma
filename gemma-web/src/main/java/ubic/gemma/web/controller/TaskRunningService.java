@@ -16,6 +16,8 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.util.progress.ProgressManager;
 
 /**
+ * Handles the execution of tasks in threads that can be check by clients later.
+ * 
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="taskRunningService"
@@ -24,8 +26,6 @@ import ubic.gemma.util.progress.ProgressManager;
 public class TaskRunningService {
 
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
-
-    private Future monitorFuture;
 
     ProgressManager progressManager;
 
@@ -37,26 +37,24 @@ public class TaskRunningService {
 
     final Map<Object, Throwable> failedTasks = new ConcurrentHashMap<Object, Throwable>();
 
-    ExecutorService executorService;
-
     /**
+     * Signal that a task should be cancelled.
      * 
-     *
+     * @param taskId
      */
-    public TaskRunningService() {
-        executorService = Executors.newCachedThreadPool();
-        startUp();
-    }
-
     public synchronized void cancelTask( Object taskId ) {
-        log.info( "Cancelling " + taskId );
+        log.debug( "Cancelling " + taskId );
         if ( submittedTasks.containsKey( taskId ) ) {
             Future toCancel = submittedTasks.get( taskId );
             boolean cancelled = toCancel.cancel( true );
             if ( cancelled ) {
+                /*
+                 * Note that we do this notification stuff here, not in the callable that is watching it. Don't do it
+                 * twice.
+                 */
                 handleCancel( taskId, toCancel );
             } else {
-                throw new RuntimeException( "couldn't cancel " + taskId );
+                throw new RuntimeException( "Couldn't cancel " + taskId );
             }
         } else {
             log.warn( "Attempt to cancel a task that has not been submitted" );
@@ -65,7 +63,8 @@ public class TaskRunningService {
     }
 
     /**
-     * Call to determine if a task is done. If it is done, the results is retrieved.
+     * Determine if a task is done. If it is done, the results is retrieved. Results can only be retrieved once, after
+     * which the servicer released them.
      * 
      * @param taskId
      * @return
@@ -139,32 +138,6 @@ public class TaskRunningService {
     }
 
     /**
-     * Use this to shut down the service.
-     */
-    public void shutDown() {
-        if ( monitorFuture != null ) {
-            log.info( "Shutting down task monitor" );
-            monitorFuture.cancel( true );
-            monitorFuture = null;
-        }
-    }
-
-    /**
-     * Start the service running.
-     */
-    public void startUp() {
-        if ( monitorFuture == null || monitorFuture.isCancelled() || monitorFuture.isDone() ) {
-            log.info( "Starting the service" );
-            // start the monitoring thread
-            // ExecutorService monitorService = Executors.newSingleThreadExecutor();
-            // FutureTask monitor = getMonitorTask();
-            // monitorFuture = monitorService.submit( monitor );
-        } else {
-            log.info( "Service seems to be running, will not start" );
-        }
-    }
-
-    /**
      * @param taskId
      * @param task
      */
@@ -195,8 +168,11 @@ public class TaskRunningService {
                         if ( cancelledTasks.containsKey( taskId ) ) {
                             log.debug( "Looks like " + taskId + " was cancelled" );
                         } else {
-                            log.debug( taskId + " was interuppted...hmm. Treating it as cancelled." );
-                            handleCancel( taskId, task );
+                            /*
+                             * Don't call handleCancel - it was porbably already called.
+                             */
+                            log.debug( taskId + " was interuppted."
+                                    + " Treating it as cancelled (assuming it was already handled)" );
                         }
                     } else {
                         log.info( "Error thrown for " + taskId );
@@ -245,48 +221,4 @@ public class TaskRunningService {
         ProgressManager.signalDone( taskId );
     }
 
-    // /**
-    // * This is the task that periodically checks submitted jobs for ones that have completed.
-    // *
-    // * @return
-    // */
-    // FutureTask<Object> getMonitorTask() {
-    // return new FutureTask<Object>( new Callable<Object>() {
-    //
-    // Log log = LogFactory.getLog( TaskRunningService.class.getName() );
-    //
-    // public Object call() throws Exception {
-    // while ( true ) {
-    //
-    // // flagged for removal
-    // Collection<Object> nonRunningTaskIds = new HashSet<Object>();
-    //
-    // for ( Object key : submittedTasks.keySet() ) {
-    //
-    // Future task = submittedTasks.get( key );
-    //
-    // if ( task.isCancelled() ) {
-    // nonRunningTaskIds.add( key );
-    // log.debug( "Task with key " + key + " was cancelled" );
-    // cancelledTasks.put( key, task );
-    // ProgressManager.signalCancelled( key );
-    // } else if ( task.isDone() ) {
-    // nonRunningTaskIds.add( key );
-    // log.debug( "Task with key " + key + " is done" );
-    // finishedTasks.put( key, task );
-    // ProgressManager.signalDone( key );
-    // }
-    // }
-    //
-    // for ( Object id : nonRunningTaskIds ) {
-    // submittedTasks.remove( id );
-    // }
-    //
-    // Thread.sleep( 200 );
-    //
-    // }
-    //
-    // }
-    // } );
-    // }
 }

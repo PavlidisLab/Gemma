@@ -184,7 +184,18 @@ public class UserFormController extends UserAuthenticatingController {
                 log.debug( "User has role " + roleName );
                 UserRole role = UserRole.Factory.newInstance( user.getUserName(), roleName,
                         "Added by userFormController" );
-                user.getRoles().add( role );
+
+                // avoid adding the same role twice.
+                if ( user.getRoles().size() > 0 ) {
+                    for ( UserRole existingRole : user.getRoles() ) {
+                        if ( !existingRole.getName().equals( roleName ) ) {
+                            user.getRoles().add( role );
+                        }
+                    }
+                } else {
+                    user.getRoles().add( role );
+                }
+
             }
         }
 
@@ -216,7 +227,7 @@ public class UserFormController extends UserAuthenticatingController {
                 user = new UserUpdateCommand();
                 UserRole role = UserRole.Factory.newInstance();
                 role.setName( UserConstants.USER_ROLE );
-                role.setUserName( user.getUserName() ); 
+                role.setUserName( user.getUserName() );
                 user.getRoles().add( role );
             }
 

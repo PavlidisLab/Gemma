@@ -26,7 +26,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
@@ -219,7 +218,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         request.setParameter( "firstName", "Something new" );
 
-        // note use of addParameters
+        // note use of add
         request.addParameter( "roles", UserConstants.ADMIN_ROLE );
 
         MockHttpServletResponse response = new MockHttpServletResponse();

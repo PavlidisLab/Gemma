@@ -20,17 +20,18 @@ package ubic.gemma.web.util;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CancellationException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
 
@@ -78,6 +79,9 @@ public class MockLongJobController extends BackgroundProcessingFormController {
         return new BackgroundControllerJob<ModelAndView>( jobId, securityContext, request, command, messenger ) {
 
             public ModelAndView call() throws Exception {
+
+                SecurityContextHolder.setContext( securityContext );
+                ProgressManager.createProgressJob( this.getTaskId(), "SomeUser", "Doin' sumpin'" );
 
                 if ( this.getRequest().getAttribute( "throw" ) != null ) {
                     log.info( "I'm throwing an exception" );

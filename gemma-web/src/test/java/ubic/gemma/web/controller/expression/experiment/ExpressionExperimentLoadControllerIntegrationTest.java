@@ -37,7 +37,6 @@ import ubic.gemma.testing.MockClient;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
 import ubic.gemma.web.controller.TaskCompletionController;
-import ubic.gemma.web.controller.TaskRunningService;
 
 /**
  * @author pavlidis
@@ -62,8 +61,6 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        TaskRunningService taskRunningService = ( TaskRunningService ) this.getBean( "taskRunningService" );
-        taskRunningService.startUp();
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
     }
@@ -75,8 +72,6 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      */
     @Override
     protected void onTearDownInTransaction() throws Exception {
-        TaskRunningService taskRunningService = ( TaskRunningService ) this.getBean( "taskRunningService" );
-        taskRunningService.shutDown();
         super.onTearDownInTransaction();
         if ( ee != null && ee.getId() != null ) {
             log.info( "Deleting " + ee );
@@ -134,15 +129,24 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         TaskCompletionController taskCheckController = ( TaskCompletionController ) this
                 .getBean( "taskCompletionController" );
 
-        try {
-            ModelAndView mv = taskCheckController.handleRequest( afterRequest, response );
-            assertNotNull( mv );
-            Map model = mv.getModel();
-            ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
-            assertNotNull( ee.getId() );
-        } catch ( Exception e ) {
-            assertTrue( e instanceof AlreadyExistsInSystemException );
+        ModelAndView mv = null;
+        long timeout = 60000;
+        long startTime = System.currentTimeMillis();
+        while ( mv == null ) {
+            Thread.sleep( 200 );
+            try {
+                mv = taskCheckController.handleRequest( afterRequest, response );
+            } catch ( Exception e ) {
+                assertTrue( e instanceof AlreadyExistsInSystemException );
+                return;
+            }
+            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
         }
+
+        assertNotNull( mv );
+        Map model = mv.getModel();
+        ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
+        assertNotNull( ee.getId() );
 
     }
 
@@ -170,21 +174,30 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         MockClient.monitorTask( taskId );
 
         Thread.sleep( 500 );// make sure it's really done.
-        
+
         MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
         afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
         TaskCompletionController taskCheckController = ( TaskCompletionController ) this
                 .getBean( "taskCompletionController" );
 
-        try {
-            ModelAndView mv = taskCheckController.handleRequest( afterRequest, response );
-            assertNotNull( mv );
-            Map model = mv.getModel();
-            ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
-            assertNotNull( ee.getId() );
-        } catch ( Exception e ) {
-            assertTrue( e instanceof AlreadyExistsInSystemException );
+        ModelAndView mv = null;
+        long timeout = 60000;
+        long startTime = System.currentTimeMillis();
+        while ( mv == null ) {
+            Thread.sleep( 200 );
+            try {
+                mv = taskCheckController.handleRequest( afterRequest, response );
+            } catch ( Exception e ) {
+                assertTrue( e instanceof AlreadyExistsInSystemException );
+                return;
+            }
+            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
         }
+
+        Map model = mv.getModel();
+        ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
+        assertNotNull( ee.getId() );
+
     }
 
     /**

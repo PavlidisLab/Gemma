@@ -20,12 +20,21 @@ package ubic.gemma.loader.util;
 
 /**
  * Can be thrown when an attempt is made to load data into the system that already exists. Intended to be used when
- * simply returning the existing data would be confusing.
+ * simply returning the existing data would be confusing. It can hold a reference to the data that was existing.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class AlreadyExistsInSystemException extends RuntimeException {
+
+    Object data;
+
+    /**
+     * @return the data
+     */
+    public Object getData() {
+        return this.data;
+    }
 
     /**
      * 
@@ -36,24 +45,26 @@ public class AlreadyExistsInSystemException extends RuntimeException {
 
     /**
      * @param message
-     * @param cause
-     */
-    public AlreadyExistsInSystemException( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
-    /**
-     * @param message
      */
     public AlreadyExistsInSystemException( String message ) {
         super( message );
     }
 
     /**
-     * @param cause
+     * @param data The data that already existed.
      */
-    public AlreadyExistsInSystemException( Throwable cause ) {
-        super( cause );
+    public AlreadyExistsInSystemException( Object data ) {
+        super();
+        this.data = data;
+    }
+
+    /**
+     * @param message
+     * @param data The data that already existed.
+     */
+    public AlreadyExistsInSystemException( String message, Object data ) {
+        super( message );
+        this.data = data;
     }
 
 }
