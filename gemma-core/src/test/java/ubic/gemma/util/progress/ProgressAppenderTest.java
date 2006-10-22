@@ -80,7 +80,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
         log4jLogger.setLevel( Level.INFO );
 
-        job = ProgressManager.createProgressJob( "test", "testing" );
+        job = ProgressManager.createProgressJob( null, "test", "testing" );
     }
 
     /*

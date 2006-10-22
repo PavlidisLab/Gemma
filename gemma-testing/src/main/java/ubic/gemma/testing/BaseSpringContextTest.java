@@ -27,6 +27,7 @@ import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -87,6 +88,8 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
     HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
     };
+
+    private ConfigurableApplicationContext context;
 
     /**
      * 
@@ -351,6 +354,8 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
         ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );
         ( ( XmlWebApplicationContext ) ctx ).refresh();
 
+        this.context = ctx;
+
         return ctx;
     }
 
@@ -398,6 +403,13 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      */
     protected void setFlushModeCommit() {
         ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().setFlushMode( FlushMode.COMMIT );
+    }
+
+    /**
+     * @return the context
+     */
+    public ConfigurableApplicationContext getContext() {
+        return this.context;
     }
 
 }

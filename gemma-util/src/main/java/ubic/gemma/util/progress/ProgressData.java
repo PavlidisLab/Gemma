@@ -30,6 +30,21 @@ public class ProgressData implements Serializable {
     private String description = "Default";
     private boolean done = false;
     private String forwardingURL;
+    private String taskId;
+
+    /**
+     * @return the taskId
+     */
+    public String getTaskId() {
+        return this.taskId;
+    }
+
+    /**
+     * @param taskId the taskId to set
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
+    }
 
     /**
      * @param per int value of percent

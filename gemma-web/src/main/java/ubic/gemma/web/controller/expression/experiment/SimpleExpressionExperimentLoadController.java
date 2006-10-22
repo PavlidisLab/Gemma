@@ -145,6 +145,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
     /**
      * @param mapping
      */
+    @SuppressWarnings("unchecked")
     private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
         List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
@@ -188,6 +189,61 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
         SimpleExpressionExperimentMetaData command = new SimpleExpressionExperimentLoadCommand();
         loadCookie( request, command );
         return command;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+     *      java.lang.Object, java.lang.String)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+            public ModelAndView call() throws Exception {
+                SecurityContextHolder.setContext( securityContext );
+                Map<Object, Object> model = new HashMap<Object, Object>();
+
+                SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+
+                FileUpload fileUpload = commandObject.getDataFile();
+
+                ArrayDesign arrayDesign = commandObject.getArrayDesign();
+                if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
+                    log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                    arrayDesign = ArrayDesign.Factory.newInstance();
+                    arrayDesign.setName( commandObject.getArrayDesignName() );
+                    commandObject.setArrayDesign( arrayDesign );
+                }
+
+                Taxon taxon = commandObject.getTaxon();
+                if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
+                    log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
+                    taxon = Taxon.Factory.newInstance();
+                    taxon.setScientificName( commandObject.getTaxonName() );
+                    commandObject.setTaxon( taxon );
+                }
+
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Loading data from " + fileUpload.getName() );
+
+                File file = fileUpload.getLocalPath();
+
+                assert file != null;
+
+                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+                ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
+                stream.close();
+                job.setForwardingURL( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() );
+                this.saveMessage( "Successfully loaded " + result );
+
+                model.put( "expressionExperiment", result );
+
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( "view", model );
+            }
+        };
     }
 
     @Override
@@ -286,58 +342,6 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
             this.setComment( "Information for the Simple Expression Experiment Loading form" );
         }
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( securityContext, request, command, messenger ) {
-            public ModelAndView call() throws Exception {
-                SecurityContextHolder.setContext( securityContext );
-
-                SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
-
-                FileUpload fileUpload = commandObject.getDataFile();
-
-                ArrayDesign arrayDesign = commandObject.getArrayDesign();
-                if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
-                    log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                    arrayDesign = ArrayDesign.Factory.newInstance();
-                    arrayDesign.setName( commandObject.getArrayDesignName() );
-                    commandObject.setArrayDesign( arrayDesign );
-                }
-
-                Taxon taxon = commandObject.getTaxon();
-                if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
-                    log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
-                    taxon = Taxon.Factory.newInstance();
-                    taxon.setScientificName( commandObject.getTaxonName() );
-                    commandObject.setTaxon( taxon );
-                }
-
-                ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
-                        "Loading data from " + fileUpload.getName() );
-
-                File file = fileUpload.getLocalPath();
-
-                assert file != null;
-
-                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-                ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
-                stream.close();
-                job.setForwardingURL( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() );
-                this.saveMessage( "Successfully loaded " + result );
-
-                ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( "view" );
-            }
-        };
     }
 
 }

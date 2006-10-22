@@ -18,7 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.compass.gps.impl.SingleCompassGps;
+import java.util.Map;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -26,6 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,7 +35,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.MockClient;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.web.controller.BackgroundProcessingFormController;
+import ubic.gemma.web.controller.TaskCompletionController;
+import ubic.gemma.web.controller.TaskRunningService;
 
 /**
  * @author pavlidis
@@ -58,6 +62,8 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        TaskRunningService taskRunningService = ( TaskRunningService ) this.getBean( "taskRunningService" );
+        taskRunningService.startUp();
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
     }
@@ -69,8 +75,11 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      */
     @Override
     protected void onTearDownInTransaction() throws Exception {
+        TaskRunningService taskRunningService = ( TaskRunningService ) this.getBean( "taskRunningService" );
+        taskRunningService.shutDown();
         super.onTearDownInTransaction();
         if ( ee != null && ee.getId() != null ) {
+            log.info( "Deleting " + ee );
             ExpressionExperimentService service = ( ExpressionExperimentService ) this
                     .getBean( "expressionExperimentService" );
             service.delete( ee );
@@ -110,17 +119,30 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "accession", "GDS999" );
         request.setParameter( "loadPlatformOnly", "false" );
 
+        // goes to the progress page...
+        controller.handleRequest( request, response );
+
+        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        assert taskId != null;
+
+        MockClient.monitorTask( taskId );
+
+        Thread.sleep( 500 );// make sure it's really done.
+
+        MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
+        afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        TaskCompletionController taskCheckController = ( TaskCompletionController ) this
+                .getBean( "taskCompletionController" );
+
         try {
-            ModelAndView mv = controller.handleRequest( request, response );
+            ModelAndView mv = taskCheckController.handleRequest( afterRequest, response );
+            assertNotNull( mv );
+            Map model = mv.getModel();
+            ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
+            assertNotNull( ee.getId() );
         } catch ( Exception e ) {
-            fail();
+            assertTrue( e instanceof AlreadyExistsInSystemException );
         }
-
-        ProgressData finalPd = MockClient.monitorLoad();
-
-        String forwardURL = finalPd.getForwardingURL().trim();
-
-        assertTrue( forwardURL.startsWith( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" ) );
 
     }
 
@@ -139,17 +161,30 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "accession", "GDS266" );
         request.setParameter( "loadPlatformOnly", "false" );
 
+        // goes to the progress page...
         controller.handleRequest( request, response );
 
-        ProgressData finalPd = MockClient.monitorLoad();
-        String forwardURL = finalPd.getForwardingURL().trim();
+        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        assert taskId != null;
 
-        // forwardURL.getChars( srcBegin, srcEnd, dst, dstBegin )forwardURL.charAt('=');
-        // long id = forwardURL. todo: get the id of the EE and load it to really see if it worked. Can get the id from
-        // end of the fowarding url
+        MockClient.monitorTask( taskId );
 
-        assertTrue( forwardURL.startsWith( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" ) );
+        Thread.sleep( 500 );// make sure it's really done.
+        
+        MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
+        afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        TaskCompletionController taskCheckController = ( TaskCompletionController ) this
+                .getBean( "taskCompletionController" );
 
+        try {
+            ModelAndView mv = taskCheckController.handleRequest( afterRequest, response );
+            assertNotNull( mv );
+            Map model = mv.getModel();
+            ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
+            assertNotNull( ee.getId() );
+        } catch ( Exception e ) {
+            assertTrue( e instanceof AlreadyExistsInSystemException );
+        }
     }
 
     /**

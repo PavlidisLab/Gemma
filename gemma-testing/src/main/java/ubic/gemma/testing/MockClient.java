@@ -65,26 +65,26 @@ public class MockClient implements Observer {
     /**
      * monitors the a background (test) progress that was started and returns after 60 seconds or when it is finished.
      * 
-     * @return ProgressData the last progress data that the load sent
+     * @return ProgressData the last progress data that the was sent
      */
-    public static ProgressData monitorLoad() {
+    public static ProgressData monitorTask( String taskId ) {
         MockClient mc = new MockClient();
         long start = System.currentTimeMillis();
         long elapsed = 0;
         boolean done = false;
 
-        // Need a short pause to make sure the job is started before we try and monitor it
-        // try {
-        // long numMillisecondsToSleep = 3000; // 3 seconds
-        // Thread.sleep( numMillisecondsToSleep );
-        // } catch ( InterruptedException e ) {
-        // }
+        boolean ok = ProgressManager.addToNotification( taskId, mc );
 
-        // fixme: I'm not sure why the user is set to 'test'. If this changes this test will break
-        boolean ok = ProgressManager.addToNotification( "test", mc );
+        try {
+            Thread.sleep( 2000 );
+        } catch ( InterruptedException e1 ) {
+            //
+        }
 
         if ( !ok ) {
-            // throw new IllegalStateException();
+            // throw new IllegalStateException( "No task " + taskId );
+            // maybe it's already done.
+            return mc.getProgressData();
         }
 
         while ( !done && !( TIMEOUT < elapsed ) ) {
@@ -96,16 +96,12 @@ public class MockClient implements Observer {
                 long numMillisecondsToSleep = 2000;
                 Thread.sleep( numMillisecondsToSleep );
                 if ( log.isDebugEnabled() ) log.debug( mc.getProgressData().getDescription() );
-                if ( log.isInfoEnabled() ) log.info( "Waiting...Elapsed time: " + elapsed );
+                if ( log.isInfoEnabled() ) log.info( "Waiting for job " + taskId + " ...Elapsed time: " + elapsed );
             } catch ( InterruptedException e ) {
             }
 
             elapsed = System.currentTimeMillis() - start;
         }
-
-        // forwardURL.getChars( srcBegin, srcEnd, dst, dstBegin )forwardURL.charAt('=');
-        // long id = forwardURL. todo: get the id of the EE and load it to really see if it worked. Can get the id from
-        // end of the fowarding url
 
         if ( !done ) {
             throw new IllegalStateException( "Test timed out" );

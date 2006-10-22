@@ -87,7 +87,7 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
 
-        ProgressJob job = ProgressManager.createProgressJob( "pavlidis", "Golden path loading" );
+        ProgressJob job = ProgressManager.createProgressJob( null, "pavlidis", "Golden path loading" );
         gp.load( dumper );
         ProgressManager.destroyProgressJob( job );
 

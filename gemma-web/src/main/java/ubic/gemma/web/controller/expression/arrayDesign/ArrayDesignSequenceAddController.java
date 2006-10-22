@@ -88,54 +88,6 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
     /*
      * (non-Javadoc)
      * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    @SuppressWarnings("unused")
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
-        loadCookie( request, adsac );
-        return adsac;
-    }
-
-    /**
-     * @param request
-     * @param adsac
-     */
-    private void loadCookie( HttpServletRequest request, ArrayDesignSequenceAddCommand adsac ) {
-        for ( Cookie cook : request.getCookies() ) {
-            if ( cook.getName().equals( COOKIE_NAME ) ) {
-                try {
-                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    TaxonPropertyEditor taxed = new TaxonPropertyEditor( taxonService );
-                    taxed.setAsText( cookie.getString( "taxon" ) );
-
-                    adsac.setSequenceType( ( SequenceType.fromString( cookie.getString( "sequenceType" ) ) ) );
-                    adsac.setTaxon( ( Taxon ) taxed.getValue() );
-                } catch ( Exception e ) {
-                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
-                    // that's okay, we just don't get a cookie.
-                }
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
-     *      org.springframework.web.bind.ServletRequestDataBinder)
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
-        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(java.lang.Object,
      *      org.springframework.validation.BindException)
      */
@@ -153,8 +105,8 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
                     "Array design did not have any compositesequences" );
             return showForm( request, response, errors );
         }
-        ProgressJob job = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
-                .getName(), "Processing " + arrayDesign );
+        ProgressJob job = ProgressManager.createProgressJob( null, SecurityContextHolder.getContext()
+                .getAuthentication().getName(), "Processing " + arrayDesign );
 
         log.info( "thawing " + arrayDesign );
         arrayDesignService.thaw( arrayDesign );
@@ -183,16 +135,121 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         return new ModelAndView( new RedirectView( "/Gemma/processProgress.html" ) );
     }
 
-    class ArrayDesignSequenceAddCookie extends ConfigurationCookie {
+    public void setArrayDesignSequenceProcessingService(
+            ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService ) {
+        this.arrayDesignSequenceProcessingService = arrayDesignSequenceProcessingService;
+    }
 
-        public ArrayDesignSequenceAddCookie( ArrayDesignSequenceAddCommand command ) {
-            super( COOKIE_NAME );
-            this.setProperty( "sequenceType", command.getSequenceType().toString() );
-            this.setProperty( "taxon", command.getTaxon().getScientificName() );
-            this.setMaxAge( 100000 );
-            this.setComment( "Information for the Array Design sequence association form" );
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    /**
+     * @param request
+     * @param adsac
+     */
+    private void loadCookie( HttpServletRequest request, ArrayDesignSequenceAddCommand adsac ) {
+
+        // cookies aren't all that important, if they're missing we just go on.
+        if ( request == null || request.getCookies() == null ) return;
+
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    TaxonPropertyEditor taxed = new TaxonPropertyEditor( taxonService );
+                    taxed.setAsText( cookie.getString( "taxon" ) );
+
+                    adsac.setSequenceType( ( SequenceType.fromString( cookie.getString( "sequenceType" ) ) ) );
+                    adsac.setTaxon( ( Taxon ) taxed.getValue() );
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
         }
+    }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    @SuppressWarnings("unused")
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
+        loadCookie( request, adsac );
+        return adsac;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+     *      java.lang.Object, java.lang.String)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+            public ModelAndView call() throws Exception {
+                SecurityContextHolder.setContext( securityContext );
+
+                ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
+
+                FileUpload fileUpload = commandObject.getSequenceFile();
+
+                ArrayDesign arrayDesign = commandObject.getArrayDesign();
+                SequenceType sequenceType = commandObject.getSequenceType();
+                Taxon taxon = commandObject.getTaxon();
+
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Loading data from " + fileUpload.getName() );
+
+                job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
+
+                File file = fileUpload.getLocalPath();
+
+                assert file != null;
+
+                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+
+                Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
+                        arrayDesign, stream, sequenceType, taxon );
+
+                stream.close();
+
+                this.saveMessage( "Successfully loaded " + bioSequences.size() + " sequences for " + arrayDesign );
+
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( "view" );
+            }
+        };
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
+     *      org.springframework.web.bind.ServletRequestDataBinder)
+     */
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
     /*
@@ -243,67 +300,15 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
     }
 
-    public void setArrayDesignSequenceProcessingService(
-            ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService ) {
-        this.arrayDesignSequenceProcessingService = arrayDesignSequenceProcessingService;
-    }
+    class ArrayDesignSequenceAddCookie extends ConfigurationCookie {
 
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
+        public ArrayDesignSequenceAddCookie( ArrayDesignSequenceAddCommand command ) {
+            super( COOKIE_NAME );
+            this.setProperty( "sequenceType", command.getSequenceType().toString() );
+            this.setProperty( "taxon", command.getTaxon().getScientificName() );
+            this.setMaxAge( 100000 );
+            this.setComment( "Information for the Array Design sequence association form" );
+        }
 
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( securityContext, request, command, messenger ) {
-            public ModelAndView call() throws Exception {
-                SecurityContextHolder.setContext( securityContext );
-
-                ArrayDesignSequenceAddCommand commandObject = ( ArrayDesignSequenceAddCommand ) command;
-
-                FileUpload fileUpload = commandObject.getSequenceFile();
-
-                ArrayDesign arrayDesign = commandObject.getArrayDesign();
-                SequenceType sequenceType = commandObject.getSequenceType();
-                Taxon taxon = commandObject.getTaxon();
-
-                ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
-                        "Loading data from " + fileUpload.getName() );
-
-                job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
-
-                File file = fileUpload.getLocalPath();
-
-                assert file != null;
-
-                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-
-                Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
-                        arrayDesign, stream, sequenceType, taxon );
-
-                stream.close();
-
-                this.saveMessage( "Successfully loaded " + bioSequences.size() + " sequences for " + arrayDesign );
-
-                ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( "view" );
-            }
-        };
     }
 }

@@ -18,14 +18,13 @@
  */
 package ubic.gemma.web.controller;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.web.util.MessageUtil;
@@ -36,30 +35,49 @@ import ubic.gemma.web.util.MessageUtil;
  * 
  * @author pavlidis
  * @version $Id$
+ * @spring.property name="taskRunningService" ref="taskRunningService"
  */
 public abstract class BackgroundProcessingFormController extends BaseFormController {
 
     /**
-     * Use this to access the Future job (as in, request.getAttribute(JOB_ATTRIBUTE)
+     * 
      */
-    public static final String JOB_ATTRIBUTE = "job";
+    private static final int KEY_LENGTH = 16;
 
     /**
-     * @param startJob
+     * Use this to access the task id in the request.
      */
-    protected void startJob( Object command, HttpServletRequest request ) {
+    public final static String JOB_ATTRIBUTE = "taskId";
+
+    TaskRunningService taskRunningService;
+
+    /**
+     * @param taskRunningService the taskRunningService to set
+     */
+    public void setTaskRunningService( TaskRunningService taskRunningService ) {
+        this.taskRunningService = taskRunningService;
+    }
+
+    /**
+     * @param command
+     * @param request
+     * @return task id
+     */
+    protected synchronized String startJob( Object command, HttpServletRequest request ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
         SecurityContext context = SecurityContextHolder.getContext();
 
-        BackgroundControllerJob<ModelAndView> job = getRunner( context, request, command, this.getMessageUtil() );
+        String taskId = RandomStringUtils.randomAlphanumeric( KEY_LENGTH );
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
 
-        Future task = executorService.submit( job );
+        request.setAttribute( JOB_ATTRIBUTE, taskId );
 
-        request.setAttribute( JOB_ATTRIBUTE, task );
+        taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
+
+        return taskId;
     }
 
     /**
@@ -69,7 +87,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * @param command from form
      * @return
      */
-    protected abstract BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
+    protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
             HttpServletRequest request, Object command, MessageUtil messenger );
 
 }

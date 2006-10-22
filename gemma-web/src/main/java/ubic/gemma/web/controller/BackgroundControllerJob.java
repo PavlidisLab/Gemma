@@ -37,23 +37,42 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
 
     Log loadLog = LogFactory.getLog( this.getClass().getName() );
 
+    protected String taskId;
     protected Object command;
     protected SecurityContext securityContext;
     protected HttpSession session;
 
     private MessageUtil messageUtil;
 
+    private HttpServletRequest request;
+
+    /**
+     * @return the request
+     */
+    public HttpServletRequest getRequest() {
+        return this.request;
+    }
+
+    /**
+     * @return the taskId
+     */
+    public String getTaskId() {
+        return this.taskId;
+    }
+
     /**
      * @param securityContext
      * @param command
      * @param jobDescription
      */
-    public BackgroundControllerJob( SecurityContext parentSecurityContext, HttpServletRequest request,
+    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
             Object commandObj, MessageUtil messenger ) {
+        this.taskId = taskId;
         this.securityContext = parentSecurityContext;
         this.command = commandObj;
         this.session = request.getSession();
         this.messageUtil = messenger;
+        this.request = request;
     }
 
     /**

@@ -5,13 +5,12 @@
 
 <html>
 	<head>
-		<title><fmt:message key="expressionExperiment.load.title" /></title>
+		<title><fmt:message key="expressionExperiment.load.title" />
+		</title>
 		<content tag="heading">
 		<fmt:message key="expressionExperiment.load.title" />
 		</content>
 
-
-</style>
 	</head>
 	<body>
 		<spring:bind path="command.*">
@@ -29,7 +28,7 @@
 
 		<fmt:message key="expressionExperiment.load.message" />
 
-		<form method="post" id="loadExpressionExperimentForm" action="<c:url value="/loadExpressionExperiment.html"/>" >
+		<form method="post" id="loadExpressionExperimentForm" action="<c:url value="/loadExpressionExperiment.html"/>">
 
 
 			<table class="detail">

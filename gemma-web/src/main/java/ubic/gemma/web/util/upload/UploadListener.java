@@ -68,7 +68,8 @@ public class UploadListener implements OutputStreamListener {
      */
     public void start() {
         totalFiles++;
-        pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName() , "File Upload" );
+        pJob = ProgressManager.createProgressJob( null, SecurityContextHolder.getContext().getAuthentication()
+                .getName(), "File Upload" );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }
 
@@ -81,11 +82,11 @@ public class UploadListener implements OutputStreamListener {
         int oldPercent = pJob.getProgressData().getPercent();
 
         totalBytesRead = totalBytesRead + bytesRead;
-        Double newPercent = ( totalBytesRead / totalToRead ) * 100 ;
+        Double newPercent = ( totalBytesRead / totalToRead ) * 100;
 
         if ( newPercent.intValue() > oldPercent ) {
             pJob.nudgeProgress();
-            oldPercent =  newPercent.intValue();
+            oldPercent = newPercent.intValue();
         }
 
         try {
@@ -110,11 +111,11 @@ public class UploadListener implements OutputStreamListener {
      * 
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
      */
-    
+
     public void done() {
         pJob.updateProgress( new ProgressData( 100, "Finished Uploading. Processing File...", true ) );
         ProgressManager.destroyProgressJob( pJob );
-        
+
     }
 
 }

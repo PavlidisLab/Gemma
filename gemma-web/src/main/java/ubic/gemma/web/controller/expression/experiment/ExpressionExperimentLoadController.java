@@ -63,8 +63,8 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        startJob( command, request );
-        return new ModelAndView( new RedirectView( "processProgress.html" ) );
+        String taskId = startJob( command, request );
+        return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
     }
 
     /**
@@ -97,9 +97,10 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
      *      java.lang.Object, java.lang.String)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( SecurityContext securityContext,
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             HttpServletRequest request, Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( securityContext, request, command, messenger ) {
+
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
 
             public ModelAndView call() throws Exception {
 
@@ -107,8 +108,9 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 Map<Object, Object> model = new HashMap<Object, Object>();
                 String accesionNum = ( ( ExpressionExperimentLoadCommand ) command ).getAccession();
 
-                ProgressJob job = ProgressManager.createProgressJob( securityContext.getAuthentication().getName(),
-                        "Loading " + ( ( ExpressionExperimentLoadCommand ) command ).getAccession() );
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Loading "
+                        + ( ( ExpressionExperimentLoadCommand ) command ).getAccession() );
 
                 // put the accession number in a safer form
                 accesionNum = StringUtils.strip( accesionNum );
@@ -126,8 +128,6 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                     Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     // FIXME just show the ones loaded.
-                    job.setForwardingURL( "/Gemma/arrays/showAllArrayDesigns.html?id="
-                            + arrayDesigns.iterator().next().getId() );
                     model.put( "arrayDesigns", arrayDesigns );
 
                 } else {
@@ -136,19 +136,16 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                     if ( result.size() == 1 ) {
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
-                        job.setForwardingURL( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                + loaded.getId() );
                         model.put( "expressionExperiment", loaded );
                     } else {
                         // FIXME should show just the loaded ones.
                         model.put( "expressionExeriments", result );
                         this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-                        job.setForwardingURL( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" );
                     }
                 }
 
                 ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( "view", model );
+                return new ModelAndView( "expressionExperimentDetails", model );
             }
         };
     }

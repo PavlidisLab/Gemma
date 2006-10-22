@@ -37,6 +37,16 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     protected String trackingId;
     protected String forwardingURL;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return trackingId;
+    }
+
     /**
      * The factory create method in ProgressManager is the advised way to create a ProgressJob
      * 
@@ -102,7 +112,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public void updateProgress( ProgressData pd ) {
         setProgressData( pd );
         setDescription( pd.getDescription() );
-        updateDescriptionHistory(pd.getDescription());
+        updateDescriptionHistory( pd.getDescription() );
         setChanged();
         notifyObservers( pData );
     }
@@ -126,7 +136,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public void updateProgress( String newDescription ) {
         pData.setDescription( newDescription );
         setDescription( newDescription );
-        updateDescriptionHistory(newDescription);
+        updateDescriptionHistory( newDescription );
         setChanged();
         notifyObservers( pData );
     }
@@ -198,9 +208,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public void setForwardingURL( String forwardingURL ) {
         this.forwardingURL = forwardingURL;
     }
-    
-    private void updateDescriptionHistory(String message)
-    {
+
+    private void updateDescriptionHistory( String message ) {
         this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
     }
 

@@ -44,7 +44,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      */
     public void testCreateProgressJob() {
 
-        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Testing the Progress Manager" );
         assertEquals( pJob.getUser(), ConfigUtils.getString( "gemma.admin.user" ) );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager" );
@@ -60,7 +60,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      */
     public void testCreateAnonymousProgressJob() {
 
-        pJob = ProgressManager.createProgressJob( "123456", "Testing the Progress Manager in anonymous ways" );
+        pJob = ProgressManager.createProgressJob( null, "123456", "Testing the Progress Manager in anonymous ways" );
         assertEquals( pJob.getUser(), null );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager in anonymous ways" );
 
@@ -75,7 +75,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
 
     public void testDestroyProgressJob() {
         pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.admin.user" ) );
-        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Testing the Progress Manager" );
 
         // single case
@@ -96,7 +96,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     public void testAddToNotificationStringObserver() {
 
         pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.admin.user" ) );
-        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Testing the Progress Manager" );
 
         // single case
@@ -110,9 +110,9 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         pJob = null;
 
         // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pJob1 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pJob2 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Test2 of Notify" );
 
         MockClient mClient = new MockClient();
@@ -193,7 +193,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     public void testAddToRecentNotificationStringObserver() {
 
         pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.admin.user" ) );
-        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Testing the Progress Manager" );
 
         // single case
@@ -207,13 +207,13 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         pJob = null;
 
         // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pJob1 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pJob2 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Test2 of Notify" );
-        ProgressJob pJob3 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pJob3 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Test3 of Notify" );
-        ProgressJob pJob4 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pJob4 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "Test4 of Notify" );
 
         MockClient mClient = new MockClient();
@@ -325,8 +325,8 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      * Tests if the thread local variable gets inherited to new threads
      */
     public void testMultipleThreads() {
-        ProgressJob pj = ProgressManager
-                .createProgressJob( ConfigUtils.getString( "gemma.admin.user" ), "i luve tests" );
+        ProgressJob pj = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+                "i luve tests" );
         MockProgress mProgress = new MockProgress( 3, ConfigUtils.getString( "gemma.admin.user" ), "test runs", pj
                 .getId() );
         mProgress.start();
@@ -337,7 +337,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         ProgressManager.dump();
         assertEquals( false, ProgressManager.nudgeCurrentThreadsProgressJob() );
 
-        ProgressJob pj = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
+        ProgressJob pj = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
                 "i luve happie tests" );
 
         FakeProgress fProgres = new FakeProgress();
@@ -390,7 +390,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
 
             userName = fakeName;
             description = fakeDescription;
-            simpleJob = ProgressManager.createProgressJob( userName, description );
+            simpleJob = ProgressManager.createProgressJob( null, userName, description );
 
         }
 

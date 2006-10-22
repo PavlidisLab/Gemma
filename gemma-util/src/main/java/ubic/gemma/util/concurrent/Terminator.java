@@ -28,7 +28,7 @@ public class Terminator {
 
     // Try to kill; return true if known to be dead
 
-    static boolean terminate( Thread t, long maxWaitToDie ) {
+    public static boolean terminate( Thread t, long maxWaitToDie ) {
 
         if ( !t.isAlive() ) return true; // already dead
 
