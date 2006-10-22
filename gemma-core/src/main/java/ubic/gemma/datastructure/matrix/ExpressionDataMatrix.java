@@ -18,113 +18,74 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * @author keshav
+ * Represents a matrix of data from an expression experiment.
+ * 
+ * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataMatrix {
-    private Log log = LogFactory.getLog( this.getClass() );
-
-    private ExpressionExperiment expressionExperiment = null;
-
-    private Collection<DesignElement> designElements = null;
-
-    private Map<String, DesignElementDataVector> dataMap = new HashMap<String, DesignElementDataVector>();
+public interface ExpressionDataMatrix<T> {
 
     /**
-     * @param expressionExperiment
+     * Access a single row of the matrix.
+     * 
+     * @param designElement
+     * @return
+     */
+    public T[] getRow( DesignElement designElement );
+
+    /**
+     * Access a single column of the matrix.
+     * 
+     * @param bioAssay
+     * @return
+     */
+    public T[] getColumn( BioAssay bioAssay );
+
+    /**
+     * Access a single value of the matrix.
+     * 
+     * @param designElement
+     * @param bioAssay
+     * @return
+     */
+    public T get( DesignElement designElement, BioAssay bioAssay );
+
+    /**
+     * Access a submatrix
+     * 
      * @param designElements
+     * @param bioAssays
+     * @return
      */
-    public ExpressionDataMatrix( ExpressionExperiment expressionExperiment, Collection<DesignElement> designElements ) {
-        if ( expressionExperiment == null || designElements == null )
-            throw new RuntimeException( "Either expression experiment or collection of design elements does not exist." );
-
-        this.expressionExperiment = expressionExperiment;
-        this.designElements = designElements;
-
-        for ( DesignElement designElement : designElements ) {
-            String key = ( ( CompositeSequence ) designElement ).getName();
-
-            // FIXME what about the quantitation type?
-            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
-                    .getDesignElementDataVectors();
-            Iterator iter = vectors.iterator();
-            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
-
-            dataMap.put( key, vector );
-        }
-    }
+    public T[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays );
 
     /**
-     * Log the data values
+     * Access a submatrix
+     * 
+     * @param designElements
+     * @return
      */
-    @Override
-    public String toString() {
-        assert designElements != null : "Design Elements not initialized";
-        StringBuilder b = new StringBuilder();
-        int rowsDone = 0;
-        for ( DesignElement designElement : designElements ) {
-            ByteArrayConverter converter = new ByteArrayConverter();
-            // FIXME quantitation type
-            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
-                    .getDesignElementDataVectors();
-            Iterator iter = vectors.iterator();
-            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
-
-            String key = ( ( CompositeSequence ) designElement ).getName();
-
-            byte[] byteData = vector.getData();
-            double[] data = converter.byteArrayToDoubles( byteData );
-
-            b.append( key );
-            for ( int j = 0; j < Math.min( data.length, 10 ); j++ ) {
-                b.append( " " + data[j] );
-            }
-            if ( data.length < 10 ) {
-                b.append( "..." );
-            }
-            b.append( "\n" );
-            rowsDone++;
-            if ( rowsDone > 10 ) {
-                b.append( "..." );
-                break;
-            }
-        }
-        return b.toString();
-    }
+    public T[][] getRows( List<DesignElement> designElements );
 
     /**
-     * @return Collection<DesignElement>
+     * Access a submatrix
+     * 
+     * @param bioAssays
+     * @return
      */
-    public Collection<DesignElement> getDesignElements() {
-        return designElements;
-    }
+    public T[][] getColumns( List<BioAssay> bioAssays );
 
     /**
-     * @return ExpressionExperiment
+     * Access the entire matrix.
+     * 
+     * @return
      */
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
+    public T[][] getMatrix();
 
-    /**
-     * @return Returns the dataMap.
-     */
-    public Map<String, DesignElementDataVector> getDataMap() {
-        return dataMap;
-    }
 }

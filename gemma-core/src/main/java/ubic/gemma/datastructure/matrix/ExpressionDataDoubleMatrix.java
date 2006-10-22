@@ -22,93 +22,107 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Produces DoubleMatrix objects for ExpressionExperiments.
+ * TODO - DOCUMENT ME
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="expressionDataMatrixService"
- * @spring.property name="designElementDataVectorService" ref = "designElementDataVectorService"
  */
-public class ExpressionDataMatrixService {
+public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
 
-    private static Log log = LogFactory.getLog( ExpressionDataMatrixService.class.getName() );
+    private DoubleMatrixNamed matrix;
 
-    DesignElementDataVectorService designElementDataVectorService;
-
-    /**
-     * @param expExp
-     * @param qt
-     * @return
-     * @deprecated use getMatrix instead
-     */
-    @SuppressWarnings("unchecked")
-    public DoubleMatrixNamed getDoubleNamedMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
-        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
-        if ( vectors == null || vectors.size() == 0 ) {
-            log.warn( "No vectors for " + expExp + " and " + qt );
-            return null;
-        }
-        return vectorsToDoubleMatrix( vectors );
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
     }
 
-    /**
-     * @param expExp
-     * @param qt
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public ExpressionDataMatrix getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
-        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
-        if ( vectors == null || vectors.size() == 0 ) {
-            log.warn( "No vectors for " + expExp + " and " + qt );
-            return null;
-        }
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
+            Collection<DesignElement> designElements, QuantitationType quantitationType ) {
 
-        if ( qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-            return new ExpressionDataDoubleMatrix( vectors );
-        } else if ( qt.getRepresentation().equals( PrimitiveType.INT ) ) {
-            return new ExpressionDataIntegerMatrix( vectors );
-        } else if ( qt.getRepresentation().equals( PrimitiveType.STRING ) ) {
-            return new ExpressionDataStringMatrix( vectors );
-        } else if ( qt.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
-            return new ExpressionDataBooleanMatrix( vectors );
-        } else {
-            throw new UnsupportedOperationException();
-        }
     }
 
-    /**
-     * @param expExp
-     * @param designElements
-     * @param qt
-     * @return
-     */
-    public ExpressionDataMatrix getMatrix( ExpressionExperiment expExp, Collection<DesignElement> designElements,
-            QuantitationType qt ) {
-        throw new UnsupportedOperationException( "not implemented yet" );
+    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors ) {
+
     }
 
-    /**
-     * @param designElementDataVectorService The designElementDataVectorService to set.
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
+    public Double get( DesignElement designElement, BioAssay bioAssay ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
+     */
+    public Double[][] get( List designElements, List bioAssays ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public Double[] getColumn( BioAssay bioAssay ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
+     */
+    public Double[][] getColumns( List bioAssays ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
+     */
+    public Double[][] getMatrix() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
+     */
+    public Double[] getRow( DesignElement designElement ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
+     */
+    public Double[][] getRows( List designElements ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /**
@@ -156,4 +170,5 @@ public class ExpressionDataMatrixService {
         }
         return matrix;
     }
+
 }
