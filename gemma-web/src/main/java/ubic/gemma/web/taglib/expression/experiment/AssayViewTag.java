@@ -131,7 +131,7 @@ public class AssayViewTag extends TagSupport {
         while ( iter.hasNext() ) {
             materials.add( ( BioMaterial ) iter.next() );
         }
-        Comparator comparator = new BioMaterialComparator();
+        Comparator<BioMaterial> comparator = new BioMaterialComparator();
         Collections.sort( materials, comparator );
         for ( BioMaterial material : materials ) {
             if ( count % 2 == 0 ) {
@@ -176,11 +176,11 @@ public class AssayViewTag extends TagSupport {
         return SKIP_BODY;
     }
 
-    private class BioMaterialComparator implements Comparator {
+    class BioMaterialComparator implements Comparator<BioMaterial> {
 
-        public int compare( Object arg0, Object arg1 ) {
-            BioMaterial obj0 = ( BioMaterial ) arg0;
-            BioMaterial obj1 = ( BioMaterial ) arg1;
+        public int compare( BioMaterial arg0, BioMaterial arg1 ) {
+            BioMaterial obj0 = arg0;
+            BioMaterial obj1 = arg1;
 
             return obj0.getName().compareTo( obj1.getName() );
         }
