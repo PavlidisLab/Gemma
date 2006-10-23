@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataMatrixVisualizationTest extends TestCase {
+public class ExpressionDataMatrixVisualizerTest extends TestCase {
 
     private DefaultExpressionDataMatrixVisualizer matrixVisualizer = null;
 
