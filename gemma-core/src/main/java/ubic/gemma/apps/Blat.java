@@ -275,20 +275,25 @@ public class Blat {
          */
 
         log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
+        int count = 0;
         for ( BioSequence b : sequences ) {
             if ( StringUtils.isNotBlank( b.getSequence() ) ) {
                 out.write( ">" + b.getName() + "\n" + b.getSequence() + "\n" );
             } else {
                 log.warn( "Blank sequence for " + b );
             }
+            if ( ++count % 5000 == 0 ) {
+                log.debug( "Wrote " + count + " sequences" );
+            }
         }
         out.close();
+        log.info( "Wrote " + count + " sequences" );
 
         String outputPath = getTmpPslFilePath();
 
         Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
 
-        log.debug( "Got" + rawresults.size() + " raw blat results" );
+        log.info( "Got" + rawresults.size() + " raw blat results" );
 
         ExternalDatabase searchedDatabase = getSearchedGenome( genome );
 
@@ -555,6 +560,7 @@ public class Blat {
     private Collection<BlatResult> jniGfClientCall( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         try {
+            log.debug( "Starting blat run" );
             this.GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
         } catch ( UnsatisfiedLinkError e ) {
             log.error( e, e );
