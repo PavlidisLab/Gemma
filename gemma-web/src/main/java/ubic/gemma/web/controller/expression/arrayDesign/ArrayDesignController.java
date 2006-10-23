@@ -115,25 +115,29 @@ public class ArrayDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( "Must provide an id" );
         }
 
-        long id = Long.parseLong( stringId );
+        Long id = null;
+        try {
+            id = Long.parseLong( stringId );
+        } catch ( NumberFormatException e ) {
+            throw new EntityNotFoundException( "Identifier was invalid" );
+        }
 
-       
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( arrayDesign + " not found" );
         }
-        
-        //check that no EE depend on the arraydesign we want to delete
-        //Do this by checking if there are any bioassays that depend this AD
+
+        // check that no EE depend on the arraydesign we want to delete
+        // Do this by checking if there are any bioassays that depend this AD
         Collection assays = arrayDesignService.getAllAssociatedBioAssays( id );
-        if (assays.size() == 0) 
-            return doDelete( request, arrayDesign );
-        
-        //String eeName = ((BioAssay) assays.iterator().next()).  //todo tell user what EE depend on this array design
-        addMessage(request, "Array Design " + arrayDesign.getName() + " can't be Deleted. ExpressionExperiments depend on it.", new Object[] {messageName, arrayDesign.getName()} );
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ));
-        
-        
+        if ( assays.size() == 0 ) return doDelete( request, arrayDesign );
+
+        // String eeName = ((BioAssay) assays.iterator().next()). //todo tell user what EE depend on this array design
+        addMessage( request, "Array Design " + arrayDesign.getName()
+                + " can't be Deleted. ExpressionExperiments depend on it.", new Object[] { messageName,
+                arrayDesign.getName() } );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+
     }
 
     /**
@@ -146,7 +150,7 @@ public class ArrayDesignController extends BaseMultiActionController {
         arrayDesignService.remove( arrayDesign );
         log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
         addMessage( request, "object.deleted", new Object[] { messageName, arrayDesign.getName() } );
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ));
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
     }
 
 }

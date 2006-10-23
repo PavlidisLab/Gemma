@@ -21,21 +21,17 @@
 					</td>
 				</tr>
 				<tr>
-					<display:table name="arrayDesigns" class="list" requestURI=""
-						id="arrayDesignList" export="true">
-						<display:column property="name" sortable="true"
-							href="showArrayDesign.html" paramId="id" paramProperty="id"
+					<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList" export="true">
+						<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
 							titleKey="arrayDesign.name" />
-						<display:column property="description" sortable="true"
-							titleKey="arrayDesign.description" />
-						<display:column title="Design Elements" sortable="true"
-							property="advertisedNumberOfDesignElements"
-							titleKey="arrayDesign.advertisedNumberOfDesignElements">						
+						<display:column property="description" sortable="true" titleKey="arrayDesign.description" />
+						<display:column title="Design Elements" sortable="true" property="advertisedNumberOfDesignElements"
+							titleKey="arrayDesign.advertisedNumberOfDesignElements">
 						</display:column>
-						
-						<display:column  sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"   titleKey="arrayDesign.delete"> 
-						delete </display:column>
-						
+
+						<display:column sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"
+							titleKey="arrayDesign.delete">Delete</display:column>
+
 						<display:setProperty name="basic.empty.showtable" value="true" />
 					</display:table>
 				</tr>

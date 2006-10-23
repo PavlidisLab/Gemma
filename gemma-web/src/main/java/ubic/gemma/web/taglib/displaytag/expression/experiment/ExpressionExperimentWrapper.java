@@ -196,7 +196,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "Expression Experiment unavailable";
         }
         
-        return "<div align='left'> <input type='button' onclick=\"location.href='deleteExpressionExperiment.html?id=" + object.getId() + "'\" value='Delete'>  </div>";
+        return "<form action=\"deleteExpressionExperiment.html?id=" + object.getId() + "\" onSubmit=\"return confirmDelete('Expression experiment " + object.getName() + "')\" method=\"POST\"><input type=\"submit\"  value='Delete'>";
 
     }
 }

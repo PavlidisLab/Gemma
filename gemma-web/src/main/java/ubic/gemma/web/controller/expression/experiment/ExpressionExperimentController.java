@@ -200,33 +200,32 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        
+
         String sId = request.getParameter( "id" );
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new HashSet<ExpressionExperimentValueObject>();        
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
             Collection<ExpressionExperiment> expressionExperimentCol = expressionExperimentService.loadAll();
             for ( ExpressionExperiment experiment : expressionExperimentCol ) {
-                expressionExperiments.add( expressionExperimentService.toExpressionExperimentValueObject( experiment ) );               
+                expressionExperiments.add( expressionExperimentService.toExpressionExperimentValueObject( experiment ) );
             }
         }
-       
+
         // if ids are specified, then display only those expressionExperiments
         else {
             String[] idList = StringUtils.split( sId, ',' );
 
-        for (int i = 0; i < idList.length; i++) {
-            Long id = Long.parseLong( idList[i] );
-            ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
-            if ( expressionExperiment == null ) {
-                throw new EntityNotFoundException( id + " not found" );
+            for ( int i = 0; i < idList.length; i++ ) {
+                Long id = Long.parseLong( idList[i] );
+                ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+                if ( expressionExperiment == null ) {
+                    throw new EntityNotFoundException( id + " not found" );
+                }
+                expressionExperiments.add( expressionExperimentService
+                        .toExpressionExperimentValueObject( expressionExperiment ) );
             }
-            expressionExperiments.add( expressionExperimentService.toExpressionExperimentValueObject( expressionExperiment ) );
         }
-        }
-        return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments",
-                expressionExperiments );        
-        
+        return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments", expressionExperiments );
 
     }
 
@@ -237,7 +236,13 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new EntityNotFoundException( "There was no valid identifier." );
+        }
 
         if ( id == null ) {
             // should be a validation error.
@@ -257,12 +262,14 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      * @param expressionExperiment
      * @return ModelAndView
      */
-    private ModelAndView doDelete( HttpServletRequest request, HttpServletResponse response, ExpressionExperiment expressionExperiment ) {
+    @SuppressWarnings("unused")
+    private ModelAndView doDelete( HttpServletRequest request, HttpServletResponse response,
+            ExpressionExperiment expressionExperiment ) {
         addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getId() } );
         expressionExperimentService.delete( expressionExperiment );
         expressionExperiment = null;
-        
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ));
+
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
-    
+
 }

@@ -8,7 +8,6 @@
 		<h2>
 			<fmt:message key="search.results" />
 		</h2>
-
 		<display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList" export="true"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
