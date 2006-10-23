@@ -5,6 +5,8 @@ delete from AUDIT_TRAIL;
 
 -- alter CHROMOSOME_FEATURE for case insensitive search
 ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) character set latin1 default NULL;
+-- alter GENE_ALIAS for case insensitive search
+ALTER TABLE GENE_ALIAS MODIFY ALIAS varchar(255) character set latin1 default NULL;
 
 -- all of these are used.
 insert into AUDIT_TRAIL VALUES (); 
