@@ -21,13 +21,23 @@
 			Credits
 		</h2>
 
+		<p>
+			Gemma is being developed by Paul Pavlidis' group at the UBC Bioinformatics Centre. Visit the
+			<a href="http://www.bioinformatics.ubc.ca/pavlidis/lab">group home page</a> to read more about the lab's interests.
+		</p>
+
+		<p>
+			Quite a few people have contributed to Gemma in various important ways:
+		</p>
+
 		<h3>
 			Developers
 		</h3>
 
 		<ul class="glassList">
 			<li>
-				Paul Pavlidis, Ph.d. - Group head
+				Paul Pavlidis, Ph.d. (
+				<a style="font-size:0.9em;" href="http://www.bioinformatics.ubc.ca/pavlidis">www</a>) - Group head.
 			</li>
 			<li>
 				Kiran Keshav - Developer (2005) and consultant (current)
@@ -46,12 +56,22 @@
 		<p>
 			Other contributers to early stages of Gemma include David Quigley and Anshu Sinha. Gemma's precursor is
 			<a href="/tmm">TMM</a>, which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu.
+		</p>
+
 		<h3>
 			Funding
 		</h3>
 
 		<p>
 			Development of Gemma is supported by a grant from the National Institutes of Health to P.P.
+		</p>
+
+		<h3>
+			Collaborators
+		</h3>
+
+		<p>
+			...
 		</p>
 
 		<h3>
