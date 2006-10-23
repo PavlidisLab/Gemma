@@ -1,8 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <html>
 	<head>
-		<title><fmt:message key="expressionExperiments.title" />
-		</title>
+		<title><fmt:message key="expressionExperiments.title" /></title>
 	</head>
 	<body>
 		<h2>
@@ -21,7 +20,9 @@
 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
-			<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
+			<authz:authorize ifAnyGranted="admin">
+				<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
+			</authz:authorize>
 
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>
