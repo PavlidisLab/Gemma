@@ -43,7 +43,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     @Override
     protected Collection handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes = null;
-        final String queryString = "select gene from GeneImpl as gene inner join gene.products where  gene.products.name like :search";
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products where  gene.products.name like :search";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search );
@@ -62,7 +62,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     @Override
     protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
         Collection<Gene> genes = null;
-        final String queryString = "select gene from GeneImpl as gene inner join gene.products where  gene.products.ncbiId like :search";
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products where  gene.products.ncbiId like :search";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search );

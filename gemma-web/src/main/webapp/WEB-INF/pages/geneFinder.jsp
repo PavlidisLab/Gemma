@@ -12,7 +12,7 @@ The search will be by:
 <BR />
 - official symbol (implemented)
 <BR />
-- synonym/Gene alias
+- synonym (implemented)
 <BR /> 
 - genes that have gene products with that name or GI number
 <BR />
