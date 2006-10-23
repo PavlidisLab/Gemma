@@ -1,32 +1,18 @@
 <%@ include file="/common/taglibs.jsp"%>
 <title><fmt:message key="mainMenu.title" />
 </title>
-<%--<content tag="heading">
-<fmt:message key="mainMenu.heading" />
-</content>--%>
-
-
 <p>
 	<fmt:message key="mainMenu.message" />
 </p>
 
 <div class="separator"></div>
-
 <ul class="glassList">
 
-
-	<li>
-		<a href="<c:url value="/searcher.html"/>"> <fmt:message key="menu.compassSearcher" /> </a>
-	</li>
-	<li>
-		<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
+	<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
 	</li>
 	<li>
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>"> <fmt:message
 				key="menu.ExpressionExperimentSearch" /> </a>
-	</li>
-	<li>
-		<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a>
 	</li>
 	<li>
 		<a href="<c:url value="/geneFinder.html"/>"> <fmt:message key="menu.GeneFinder" /> </a>
@@ -47,6 +33,13 @@
 		Administrative functions
 	</h2>
 	<ul class="glassList">
+		<li>
+			<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="/searcher.html"/>"> <fmt:message key="menu.compassSearcher" /> </a>
+		</li>
+		<li>
 		<li>
 			<a href="<c:url value="/indexer.html"/>"> <fmt:message key="menu.compassIndexer" /> </a>
 		</li>
