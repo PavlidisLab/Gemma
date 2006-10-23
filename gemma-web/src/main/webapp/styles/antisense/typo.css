@@ -211,6 +211,12 @@
             font-size: 1em;
             padding: 0 10px 0px 5px;
         }
+        
+           td.label {
+        	  font-weight: bold;
+        	  text-align: right;
+        	  vertical-align: top;
+        }
 
         /*********************************
            Project: CSS Table Galery

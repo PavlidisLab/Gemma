@@ -1,47 +1,29 @@
 <%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
-<!DOCTYPE html PUBLIC "-//W3C//DTD html 4.01 Transitional//EN">
 <html>
-	<head>
+	<head><content tag="heading">Array designs</content><title>Array designs</title>
 	</head>
 	<body>
-		<div align="left">
-			<P>
-			<table width="100%">
-				<tr>
-					<td>
-						<div align="left">
-							<b>Search Results</b>
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<hr>
-					</td>
-				</tr>
-				<tr>
-					<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList" export="true">
-						<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
-							titleKey="arrayDesign.name" />
-						<display:column property="description" sortable="true" titleKey="arrayDesign.description" />
-						<display:column title="Design Elements" sortable="true" property="advertisedNumberOfDesignElements"
-							titleKey="arrayDesign.advertisedNumberOfDesignElements">
-						</display:column>
+		<h2>
+			Search results
+		</h2>
+		<table>
+			<tr>
+				<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList" export="true">
+					<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
+						titleKey="arrayDesign.name" />
+					<display:column property="description" sortable="true" titleKey="arrayDesign.description" />
+					<display:column title="Design Elements" sortable="true" property="advertisedNumberOfDesignElements"
+						titleKey="arrayDesign.advertisedNumberOfDesignElements">
+					</display:column>
 
-						<display:column sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"
-							titleKey="arrayDesign.delete">Delete</display:column>
+					<display:column sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"
+						titleKey="arrayDesign.delete">Delete</display:column>
 
-						<display:setProperty name="basic.empty.showtable" value="true" />
-					</display:table>
-				</tr>
-				<tr>
-					<td>
-						<hr />
-					</td>
-				</tr>
-			</table>
-		</div>
+					<display:setProperty name="basic.empty.showtable" value="true" />
+				</display:table>
+			</tr>
+		</table>
 	</body>
 </html>
 

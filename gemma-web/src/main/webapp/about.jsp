@@ -1,13 +1,14 @@
 <%@ include file="/common/taglibs.jsp"%>
 <html>
+
+
 	<head>
 		<title>About Gemma</title>
 		<content tag="heading">
 		About Gemma
 		</content>
 	</head>
-	<body>
-
+	<body> 
 		<h2>
 			Downloads
 		</h2>
@@ -15,7 +16,6 @@
 		<p>
 			Download the source...
 		<p>
-		
 		<h2>
 			Credits
 		</h2>
@@ -43,17 +43,14 @@
 		</ul>
 
 		<p>
-			Other contributers to early stages of Gemma include David Quigley and
-			Anshu Sinha. Gemma's precursor is
-			<a href="/tmm">TMM</a>, which was developed by Homin Lee, Jon Sajdak,
-			Jie Qin and Amy Hsu.
+			Other contributers to early stages of Gemma include David Quigley and Anshu Sinha. Gemma's precursor is
+			<a href="/tmm">TMM</a>, which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu.
 		<h3>
 			Funding
 		</h3>
 
 		<p>
-			Development of Gemma is supported by a grant from the National
-			Institutes of Health to P.P.
+			Development of Gemma is supported by a grant from the National Institutes of Health to P.P.
 		</p>
 
 		<h3>
@@ -61,8 +58,8 @@
 		</h3>
 
 		<p>
-			The Gemma logo and the overall graphic appearance of the site was
-			created by <a href="">Antisense Studios</a>.
+			The Gemma logo and the overall graphic appearance of the site was created by
+			<a href="">Antisense Studios</a>.
 		</p>
 
 		<h2>
@@ -78,8 +75,7 @@
 		</h2>
 
 		<p>
-			Gemma source code is available under the open-source Apache 2.0
-			license
+			Gemma source code is available under the open-source Apache 2.0 license
 		</p>
 
 		<h2>

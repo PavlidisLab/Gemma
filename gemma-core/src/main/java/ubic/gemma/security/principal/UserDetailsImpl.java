@@ -18,7 +18,10 @@
  */
 package ubic.gemma.security.principal;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.userdetails.UserDetails;
@@ -33,17 +36,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class UserDetailsImpl extends User implements UserDetails, Serializable {
-
-    @Override
-    public String toString() {
-        return this.getUserName();
-    }
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -4192775711819256567L;
+public class UserDetailsImpl extends User implements UserDetails {
 
     /**
      * This constructor is only to be used by the UserDetailsService.
@@ -61,10 +54,6 @@ public class UserDetailsImpl extends User implements UserDetails, Serializable {
         // none of this other stuff matters...
         this.setAffiliations( user.getAffiliations() );
         this.setName( user.getName() );
-    }
-
-    public String salt() {
-        return ConfigUtils.getString( "gemma.salt" );
     }
 
     /*
@@ -85,6 +74,15 @@ public class UserDetailsImpl extends User implements UserDetails, Serializable {
             i++;
         }
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.acegisecurity.userdetails.UserDetails#getUsername()
+     */
+    public String getUsername() {
+        return getUserName();
     }
 
     /*
@@ -123,13 +121,26 @@ public class UserDetailsImpl extends User implements UserDetails, Serializable {
         return getEnabled();
     }
 
+    public String salt() {
+        return ConfigUtils.getString( "gemma.salt" );
+    }
+
+    @Override
+    public String toString() {
+        return this.getUserName();
+    }
+
     /*
-     * (non-Javadoc)
-     * 
-     * @see org.acegisecurity.userdetails.UserDetails#getUsername()
+     * These two methods are implemented to keep Tomcat from trying to serialize the session.
      */
-    public String getUsername() {
-        return getUserName();
+    @SuppressWarnings("unused")
+    private void writeObject( ObjectOutputStream out ) throws IOException {
+        throw new NotSerializableException( "Not today!" );
+    }
+
+    @SuppressWarnings("unused")
+    private void readObject( ObjectInputStream in ) throws IOException {
+        throw new NotSerializableException( "Not today!" );
     }
 
 }

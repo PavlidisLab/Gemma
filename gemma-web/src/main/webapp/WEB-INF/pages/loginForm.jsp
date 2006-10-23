@@ -19,11 +19,7 @@
 		</tr>
 		<tr>
 			<th>
-				<label for="j_username" class="required">
-					*
-					<fmt:message key="label.username" />
-					:
-				</label>
+				<label for="j_username" class="required">*<fmt:message key="label.username" />:</label>
 			</th>
 			<td>
 				<div id="nick"></div>
@@ -32,10 +28,7 @@
 		</tr>
 		<tr>
 			<th>
-				<label for="j_password" class="required">
-					*
-					<fmt:message key="label.password" />
-					:
+				<label for="j_password" class="required">*<fmt:message key="label.password" />:
 				</label>
 			</th>
 			<td>
@@ -62,10 +55,11 @@
 					onclick="$('j_username').focus();" />
 			</td>
 
-		</tr>
+		</tr> <%--  Signup disabled
 		<tr>
 			<td></td>
 			<td>
+			
 				<br />
 				<fmt:message key="login.signup">
 					<fmt:param>
@@ -73,7 +67,8 @@
 					</fmt:param>
 				</fmt:message>
 			</td>
-		</tr>
+			
+		</tr> --%>
 	</table>
 </form>
 <%@ include file="/scripts/login.js"%>

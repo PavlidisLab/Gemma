@@ -1,4 +1,5 @@
-<jsp:directive.page import="org.apache.commons.lang.StringUtils"/><%@ include file="/common/taglibs.jsp"%>
+<jsp:directive.page import="org.apache.commons.lang.StringUtils" />
+<%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -8,13 +9,14 @@
 		<h2>
 			<fmt:message key="expressionExperiment.details" />
 		</h2>
-		 <a class="helpLink"  href="?" onclick="showHelpTip(event, 'This page shows the details for a specific expression experiment; further details can be obtained by following the links on this page.'); return false">Help</a>
-		
-		
+		<a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'This page shows the details for a specific expression experiment; further details can be obtained by following the links on this page.'); return false">Help</a>
+
+
 		<table width="100%" cellspacing="10">
 			<tr>
-				<td valign="top">
-					<b> <fmt:message key="expressionExperiment.name" /> </b>
+				<td class="label">
+					<fmt:message key="expressionExperiment.name" />
 				</td>
 				<td>
 					<%
@@ -30,8 +32,7 @@
 			</tr>
 
 			<tr>
-				<td valign="top">
-					<b> <fmt:message key="expressionExperiment.description" /> </b>
+				<td class="label"><fmt:message key="expressionExperiment.description" /> 
 				</td>
 				<td>
 					<%
@@ -46,8 +47,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td valign="top">
-					<b> <fmt:message key="expressionExperiment.source" /> </b>
+				<td class="label"><fmt:message key="expressionExperiment.source" /> 
 				</td>
 				<td>
 					<%
@@ -62,8 +62,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td valign="top">
-					<b> <fmt:message key="expressionExperiment.owner" /> </b>
+				<td class="label"><fmt:message key="expressionExperiment.owner" /> 
 				</td>
 				<td>
 					<%
@@ -78,8 +77,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td valign="top">
-					<b> <fmt:message key="databaseEntry.title" /> </b>
+				<td class="label"><fmt:message key="databaseEntry.title" /> 
 				</td>
 				<td>
 					<%
@@ -92,8 +90,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td valign="top">
-					<b> <fmt:message key="pubMed.publication" /> </b>
+				<td class="label"><fmt:message key="pubMed.publication" /> 
 				</td>
 				<td>
 					<%
@@ -109,8 +106,7 @@
 			</tr>
 			<authz:authorize ifAllGranted="admin">
 				<tr>
-					<td valign="top">
-						<b> <fmt:message key="auditTrail.date" /> </b>
+					<td class="label"><fmt:message key="auditTrail.date" /> 
 					</td>
 					<td>
 						<%
@@ -125,54 +121,61 @@
 			</authz:authorize>
 		</table>
 
-	 
+
 
 		<h3>
-			<fmt:message key="bioAssays.title" /> and array designs
+			<fmt:message key="bioAssays.title" />
+			and array designs
 		</h3>
-		<p>There are
-		
-			<%
-			out.print( expressionExperiment.getBioAssays().size() );
-			%> bioAssays for this expression experiment (<a
-			href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">Click for details</a>), using the following array designs.
-		<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList" pagesize="10">
-			<display:column property="name" sortable="true" maxWords="20" href="/Gemma/arrays/showArrayDesign.html" paramId="id"
-				paramProperty="id" />
-			<display:setProperty name="basic.empty.showtable" value="false" />
-		</display:table>
+		<p>
+			There are <%out.print( expressionExperiment.getBioAssays().size() );%>	bioAssays for this expression experiment (
+			<a
+				href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">Click
+				for details</a>), using the following array designs.
+			<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList" pagesize="10">
+				<display:column property="name" sortable="true" maxWords="20" href="/Gemma/arrays/showArrayDesign.html" paramId="id"
+					paramProperty="id" />
+				<display:setProperty name="basic.empty.showtable" value="false" />
+			</display:table>
 		</p>
 
 		<h3>
-			<fmt:message key="experimentalDesign.title" />: <a
-			href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
-			<%
-			out.print( expressionExperiment.getExperimentalDesign().getName() );
-			%> </a>
+			<fmt:message key="experimentalDesign.title" />
+			:
+			<a
+				href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+				<%
+				out.print( expressionExperiment.getExperimentalDesign().getName() );
+				%> </a>
 		</h3>
-		 	<p>
-		<b>Description:</b> <%out.print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(), 100));%> This experimental design has
-		<%
-		out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
-		%>
-		experimental factors.
+		<p>
+			<b>Description:</b>
+			<%
+			out.print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(), 100 ) );
+			%>
+			This experimental design has
+			<%
+			out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+			%>
+			experimental factors.
 		</p>
-	
+
 
 		<h3>
 			<fmt:message key="investigators.title" />
 		</h3>
-		<p><display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" pagesize="10"
-			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-			<display:column property="name" sortable="true" maxWords="20"
-				href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name" />
-			<display:column property="phone" sortable="true" maxWords="100" />
-			<display:column property="fax" sortable="true" maxWords="100" />
-			<display:column property="email" sortable="true" maxWords="100" />
-			<display:setProperty name="basic.empty.showtable" value="false" />
-			<display:setProperty name="basic.msg.empty_list" value="No investigators are associated with this experiment." />
-		</display:table>
-</p>
+		<p>
+			<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" pagesize="10"
+				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+				<display:column property="name" sortable="true" maxWords="20"
+					href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name" />
+				<display:column property="phone" sortable="true" maxWords="100" />
+				<display:column property="fax" sortable="true" maxWords="100" />
+				<display:column property="email" sortable="true" maxWords="100" />
+				<display:setProperty name="basic.empty.showtable" value="false" />
+				<display:setProperty name="basic.msg.empty_list" value="No investigators are associated with this experiment." />
+			</display:table>
+		</p>
 		<%
 		if ( expressionExperiment.getAnalyses().size() > 0 ) {
 		%>
@@ -212,8 +215,9 @@
 			<fmt:message key="designElementDataVectors.title" />
 		</h3>
 		<p>
-		There are
-		<b> <c:out value="${designElementDataVectorCount}" /> </b> design elements for this expression experiment. Details by quantitation type:
+			There are
+			<b> <c:out value="${designElementDataVectorCount}" /> </b> design elements for this expression experiment. Details
+			by quantitation type:
 		</p>
 		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" pagesize="10"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
@@ -226,7 +230,7 @@
 			Biomaterials and Assays
 		</h3>
 		<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
- 
+
 
 
 		<table>

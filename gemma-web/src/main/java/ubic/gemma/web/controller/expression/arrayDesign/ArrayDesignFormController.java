@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
-import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -63,13 +62,23 @@ public class ArrayDesignFormController extends BaseFormController {
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        String name = RequestUtils.getStringParameter( request, "name", "" );
+        String idString = request.getParameter( "id" );
 
-        log.debug( name );
+        Long id;
 
-        if ( !"".equals( name ) ) return arrayDesignService.findArrayDesignByName( name );
+        // should be caught by validation.
+        try {
+            id = Long.parseLong( idString );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalArgumentException();
+        }
 
-        return ArrayDesign.Factory.newInstance();
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+
+        if ( arrayDesign == null ) {
+            return ArrayDesign.Factory.newInstance();
+        }
+        return arrayDesign;
     }
 
     /**

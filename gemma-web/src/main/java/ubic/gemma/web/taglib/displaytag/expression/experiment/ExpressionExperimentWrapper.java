@@ -34,13 +34,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * <p>
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
- *
+ * 
  * @author pavlidis
+ * @author jrsantos
  * @version $Id$
- *  
  */
 public class ExpressionExperimentWrapper extends TableDecorator {
-
 
     Log log = LogFactory.getLog( this.getClass() );
 
@@ -61,8 +60,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getExternalDetailsLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
-            return "<a href=\"" + object.getExternalUri() + "\">" + object.getAccession()
-            + "</a>";             
+            return "<a href=\"" + object.getExternalUri() + "\">" + object.getAccession() + "</a>";
         }
         return "No accession";
     }
@@ -75,7 +73,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDetails() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
-           
+
             return object.getExternalDatabase() + " - " + object.getAccession();
         }
         return "No accession";
@@ -87,9 +85,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getAssaysLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         long count = object.getBioAssayCount();
-        
-        return  count + "<small><a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
-        +  "(list)</a>";        
+
+        return count + " <a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
+                + "(details)</a>";
     }
 
     /**
@@ -129,7 +127,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDesignsLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        if ( object != null  ) {
+        if ( object != null ) {
             return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\"> </a>";
         }
         return "No design";
@@ -188,15 +186,17 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         return object.getTaxon();
     }
-    
+
     public String getDelete() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        
+
         if ( object == null ) {
             return "Expression Experiment unavailable";
         }
-        
-        return "<form action=\"deleteExpressionExperiment.html?id=" + object.getId() + "\" onSubmit=\"return confirmDelete('Expression experiment " + object.getName() + "')\" method=\"POST\"><input type=\"submit\"  value='Delete'>";
+
+        return "<form action=\"deleteExpressionExperiment.html?id=" + object.getId()
+                + "\" onSubmit=\"return confirmDelete('Expression experiment " + object.getName()
+                + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
 
     }
 }
