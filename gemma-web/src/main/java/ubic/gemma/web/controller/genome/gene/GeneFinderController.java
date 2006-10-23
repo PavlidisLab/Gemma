@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,19 +27,53 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /** 
- * @author daq2101
+ * @author joseph
  * @version $Id$
  * @spring.bean id="geneFinderController"  
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="geneService" ref="geneService"
+ * @spring.property name="geneProductService" ref="geneProductService" 
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"  
  */
 public class GeneFinderController extends SimpleFormController {
     private GeneService geneService;
+    private GeneProductService geneProductService;
+    private CompositeSequenceService compositeSequenceService;
+    
+    /**
+     * @return the compositeSequenceService
+     */
+    public CompositeSequenceService getCompositeSequenceService() {
+        return compositeSequenceService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @return the geneProductService
+     */
+    public GeneProductService getGeneProductService() {
+        return geneProductService;
+    }
+
+    /**
+     * @param geneProductService the geneProductService to set
+     */
+    public void setGeneProductService( GeneProductService geneProductService ) {
+        this.geneProductService = geneProductService;
+    }
 
     /**
      * @return Returns the bibliographicReferenceService.
@@ -62,11 +97,14 @@ public class GeneFinderController extends SimpleFormController {
         String searchString = request.getParameter( "searchString" );
 
         // search by inexact symbol
-        Collection<Gene> genesOfficialSymbol = this.getGeneService().findByOfficialSymbolInexact( searchString );
+        //Collection tmp = new ArrayList<Gene>();
+        Collection<Gene> genesOfficialSymbol = geneService.findByOfficialSymbolInexact( searchString );
         Collection<Gene> genesAlias = geneService.getByGeneAlias( searchString );
+        Collection<Gene> genesGeneProduct = geneProductService.getGenesByName( searchString );
         ModelAndView mav = new ModelAndView("geneFinderList");
         mav.addObject( "genesOfficialSymbol", genesOfficialSymbol );
         mav.addObject( "genesAlias", genesAlias );
+        mav.addObject( "genesGeneProduct", genesGeneProduct );
         mav.addObject("searchParameter", searchString);
         return mav;
 
