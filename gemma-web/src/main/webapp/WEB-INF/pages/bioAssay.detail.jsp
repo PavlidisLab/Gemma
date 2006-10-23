@@ -42,7 +42,7 @@
             <fmt:message key="bioMaterials.title" />
         </h3>
         <display:table name="bioAssay.samplesUsed" class="list" requestURI="" id="bioMaterialList"
-        export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
+         pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
             <display:column property="name" maxWords="20" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
             <display:column property="description" maxWords="100" />
         </display:table>
@@ -51,7 +51,7 @@
             <fmt:message key="bioAssay.arrayDesigns" />
         </h3>
         <display:table name="bioAssay.arrayDesignUsed" class="list" requestURI="" id="arrayDesignList"
-        export="true" pagesize="10" >
+         pagesize="10" >
             <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrayDesign/showArrayDesign.html" paramId="name" paramProperty="name"/>
             <display:column property="description" maxWords="100" />
             <display:column property="advertisedNumberOfDesignElements" maxWords="100" />

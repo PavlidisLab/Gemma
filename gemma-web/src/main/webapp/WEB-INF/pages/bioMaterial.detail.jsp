@@ -43,7 +43,7 @@
             <fmt:message key="treatments.title" />
         </h3>
         <display:table name="bioMaterial.treatments" class="list" requestURI="" id="treatmentList"
-        export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
+         pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
        	    <display:column property="id" sortable="true" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
             <display:column property="name" maxWords="20" />
             <display:column property="description" maxWords="100" />
@@ -54,7 +54,7 @@
             <fmt:message key="characteristics.title" />
         </h3>
         <display:table name="bioMaterial.characteristics" class="list" requestURI="" id="characteristicList"
-        export="true" pagesize="10" >
+        pagesize="10" >
             <display:column property="id" maxWords="20" sortable="true" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
             <display:column property="category" maxWords="100" />
             <display:column property="value" maxWords="100" />

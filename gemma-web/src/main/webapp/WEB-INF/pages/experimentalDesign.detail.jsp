@@ -89,7 +89,7 @@
             <fmt:message key="experimentalFactors.title" />
         </h3>
         <display:table name="experimentalDesign.experimentalFactors" class="list" requestURI="" id="experimentalFactorList"
-        export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExperimentalDesignWrapper">
+         pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExperimentalDesignWrapper">
             <display:column property="name" sortable="true" href="/Gemma/experimentalFactor/showExperimentalFactor.html" paramId="id" paramProperty="id" maxWords="20" />
             <display:column property="description" maxWords="100" />
             <display:column property="factorValuesLink" sortable="true" maxWords="100" titleKey="experimentalDesign.factorValues"  />

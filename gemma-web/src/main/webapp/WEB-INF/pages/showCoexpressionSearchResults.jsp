@@ -9,7 +9,7 @@
 </h2> 
 
 <display:table name="foundGenes"
-	class="list" requestURI="" id="foundGenes" export="true"
+	class="list" requestURI="" id="foundGenes" 
 	pagesize="10">
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>

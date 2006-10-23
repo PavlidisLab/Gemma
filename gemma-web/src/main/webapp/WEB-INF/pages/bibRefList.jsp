@@ -19,7 +19,7 @@
 </DIV>
 
 <display:table pagesize="5" name="bibliographicReferences" class="list" requestURI=""
-    id="bibliographicReferenceList" export="true">
+    id="bibliographicReferenceList">
     <display:column sort="true" href="showBibRef.html"
         paramId="accession" paramProperty="pubAccession.accession"
         title="View details">

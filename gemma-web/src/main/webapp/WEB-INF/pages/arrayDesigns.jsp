@@ -13,7 +13,7 @@
 		</h2>
 		<table>
 			<tr>
-				<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList" export="true">
+				<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList">
 					<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
 						titleKey="arrayDesign.name" />
 					<display:column property="description" sortable="true" titleKey="arrayDesign.description" />

@@ -17,7 +17,7 @@
 <%-- <display:table name="${userList}" cellspacing="0" cellpadding="0" --%>
 <display:table name="userList" cellspacing="0" cellpadding="0"
     requestURI="" defaultsort="1" id="users"
-    pagesize="25" styleClass="list userList" export="true">
+    pagesize="25" styleClass="list userList" >
   
     <%-- Table columns --%>
     <display:column property="userName" sort="true" 

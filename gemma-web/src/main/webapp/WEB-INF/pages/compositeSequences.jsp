@@ -12,7 +12,7 @@
         </h2>
 
         <display:table name="compositeSequences" class="list" requestURI="" id="compositeSequenceList"
-            export="true" pagesize="20">
+             pagesize="20">
 			<display:column property="name" sortable="true" titleKey="compositeSequence.name" maxWords="20" />
 			<display:column property="description" sortable="true" titleKey="compositeSequence.description" maxWords="100" />			 
             <display:setProperty name="basic.empty.showtable" value="true" />      

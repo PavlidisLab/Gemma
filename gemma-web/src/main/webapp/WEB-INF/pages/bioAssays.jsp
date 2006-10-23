@@ -12,7 +12,7 @@
         </h2>
 
         <display:table name="bioAssays" class="list" requestURI="" id="bioAssayList"
-            export="true" pagesize="20" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
+             pagesize="20" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
 		
 			<display:column property="nameLink" sortable="true" titleKey="bioAssay.name" maxWords="20" />
 			<display:column property="description" sortable="true" titleKey="bioAssay.description" maxWords="100" />

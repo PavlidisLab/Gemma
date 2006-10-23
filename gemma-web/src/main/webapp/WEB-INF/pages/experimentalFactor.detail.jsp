@@ -44,7 +44,7 @@
             Factor Values
         </h3>
         <display:table name="experimentalFactor.factorValues" class="list" requestURI="" id="factorValueList"
-        export="true" pagesize="10">
+         pagesize="10">
             <display:column property="value" sortable="true" />
         </display:table>
 

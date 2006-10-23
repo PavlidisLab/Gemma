@@ -13,7 +13,7 @@
 
         <display:table name="genes" class="list" requestURI="" id="geneList"
             decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper" 
-            export="true" pagesize="20">	
+            pagesize="20">	
 			<display:column property="name" sortable="true" titleKey="gene.name" maxWords="20"
 				href="/Gemma/gene/showGene.html" paramId="id" paramProperty="id" />
 			<display:column property="officialSymbol" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />

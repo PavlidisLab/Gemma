@@ -165,7 +165,7 @@
 			<fmt:message key="investigators.title" />
 		</h3>
 		<p>
-			<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" pagesize="10"
+			<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" pagesize="10" 
 				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 				<display:column property="name" sortable="true" maxWords="20"
 					href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name" />
@@ -219,7 +219,7 @@
 			<b> <c:out value="${designElementDataVectorCount}" /> </b> design elements for this expression experiment. Details
 			by quantitation type:
 		</p>
-		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" pagesize="10"
+		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" pagesize="10" 
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="qtName" sortable="true" maxWords="20" titleKey="quantitationType.name" />
 			<display:column property="qtValue" sortable="true" maxWords="20" titleKey="quantitationType.countVectors" />

@@ -1,4 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
+
 <html>
 	<head>
 		<title><fmt:message key="expressionExperiments.title" /></title>
@@ -7,9 +8,9 @@
 		<h2>
 			<fmt:message key="search.results" />
 		</h2>
+		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
-
-		<display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList" export="true"
+		<display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
@@ -26,10 +27,6 @@
 
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>
-
-		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
-
-
 
 	</body>
 </html>
