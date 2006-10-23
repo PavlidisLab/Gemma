@@ -275,6 +275,7 @@ abstract public class GenomePersister extends CommonPersister {
     private BlatResult persistBlatResult( BlatResult blatResult ) {
         blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
         blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome() ) );
+        blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );
         return blatResultService.create( blatResult );
     }
 
