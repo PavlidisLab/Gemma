@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * @author keshav
  * @version $Id$
+ * @deprecated
  */
 public class ExpressionDataDesignElementDataVectorMatrix {
     private Log log = LogFactory.getLog( this.getClass() );
