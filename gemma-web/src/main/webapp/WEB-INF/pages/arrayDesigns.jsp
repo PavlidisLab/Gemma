@@ -1,7 +1,11 @@
 <%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
 <html>
-	<head><content tag="heading">Array designs</content><title>Array designs</title>
+	<head>
+		<content tag="heading">
+		Array designs
+		</content>
+		<title>Array designs</title>
 	</head>
 	<body>
 		<h2>
@@ -16,10 +20,10 @@
 					<display:column title="Design Elements" sortable="true" property="advertisedNumberOfDesignElements"
 						titleKey="arrayDesign.advertisedNumberOfDesignElements">
 					</display:column>
-
-					<display:column sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"
-						titleKey="arrayDesign.delete">Delete</display:column>
-
+					<authz:authorize ifAnyGranted="admin">
+						<display:column sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"
+							titleKey="arrayDesign.delete">Delete</display:column>
+					</authz:authorize>
 					<display:setProperty name="basic.empty.showtable" value="true" />
 				</display:table>
 			</tr>
