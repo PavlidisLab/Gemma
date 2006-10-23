@@ -119,20 +119,22 @@ public class SimpleExpressionDataLoaderService {
 
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
-        if ( existing == null ) {
-            log.info( "Creating new ArrayDesign " + arrayDesign );
-
-            for ( int i = 0; i < matrix.rows(); i++ ) {
-                CompositeSequence cs = CompositeSequence.Factory.newInstance();
-                cs.setName( matrix.getRowName( i ) );
-                cs.setArrayDesign( arrayDesign );
-                arrayDesign.getCompositeSequences().add( cs );
-            }
-
-            arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
+        if ( existing != null ) {
+            log.info( "Array Design exists" );
+            arrayDesignService.thaw( existing );
+            return existing;
         }
 
-        arrayDesignService.thaw( arrayDesign );
+        log.info( "Creating new ArrayDesign " + arrayDesign );
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( matrix.getRowName( i ) );
+            cs.setArrayDesign( arrayDesign );
+            arrayDesign.getCompositeSequences().add( cs );
+        }
+
+        log.info( "New array design has " + arrayDesign.getCompositeSequences().size() + " compositeSequences" );
 
         return arrayDesign;
 
