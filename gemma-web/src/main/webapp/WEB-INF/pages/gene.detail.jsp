@@ -38,6 +38,23 @@
                 </td>
             </tr>
          </table>
+ 
+         <%
+		if ( gene.getAliases().size() > 0 ) {
+		%>
+         <h3>
+			<fmt:message key="gene.aliases" />
+		</h3>
+		<% 
+		} 
+		%>
+		        
+         <display:table name="gene.aliases" class="list" requestURI="" id="aliasList" 
+			pagesize="10">
+			<display:column property="alias" sortable="true" maxWords="20"/>
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table> 
+		
         <%
 		if ( gene.getAccessions().size() > 0 ) {
 		%>
@@ -60,5 +77,6 @@
 		</b>
 		composite sequences associated with this gene.
 		<br />
+
     </body>
 </html>

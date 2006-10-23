@@ -62,9 +62,12 @@ public class GeneFinderController extends SimpleFormController {
         String searchString = request.getParameter( "searchString" );
 
         // search by inexact symbol
-        Collection<Gene> genes = this.getGeneService().findByOfficialSymbolInexact( searchString );
-        ModelAndView mav = new ModelAndView("genes");
-        mav.addObject( "genes", genes );
+        Collection<Gene> genesOfficialSymbol = this.getGeneService().findByOfficialSymbolInexact( searchString );
+        Collection<Gene> genesAlias = geneService.getByGeneAlias( searchString );
+        ModelAndView mav = new ModelAndView("geneFinderList");
+        mav.addObject( "genesOfficialSymbol", genesOfficialSymbol );
+        mav.addObject( "genesAlias", genesAlias );
+        mav.addObject("searchParameter", searchString);
         return mav;
 
     }
