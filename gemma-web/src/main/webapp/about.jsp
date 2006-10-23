@@ -8,7 +8,8 @@
 		About Gemma
 		</content>
 	</head>
-	<body> 
+	<body>
+
 		<h2>
 			Downloads
 		</h2>
@@ -26,10 +27,10 @@
 
 		<ul class="glassList">
 			<li>
-				Paul Pavlidis, Ph.d. - group head
+				Paul Pavlidis, Ph.d. - Group head
 			</li>
 			<li>
-				Kiran Keshav - developer (2005) and consultant (current)
+				Kiran Keshav - Developer (2005) and consultant (current)
 			</li>
 			<li>
 				Kelsey Hamer - Lead developer
@@ -59,7 +60,7 @@
 
 		<p>
 			The Gemma logo and the overall graphic appearance of the site was created by
-			<a href="">Antisense Studios</a>.
+			<a href="http://www.antisensestudios.com">Antisense Studios</a>.
 		</p>
 
 		<h2>
@@ -67,7 +68,7 @@
 		</h2>
 
 		<p>
-			...
+			While Gemma is in beta, use at your own risk!
 		</p>
 
 		<h2>
@@ -93,7 +94,5 @@
 				<a href="">Technical documentation</a>
 			</li>
 		</ul>
-
-
 	</body>
 </html>

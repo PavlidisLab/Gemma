@@ -5,8 +5,8 @@
 </div>
 
 
-<span class="left"> Version ${appConfig["version"]} &middot; Copyright &copy; 2004 - 2006 &middot; <a
-	href="<c:url value="/"/>">Gemma</a> </span>
+<span class="left"  ><a href="http://www.ubc.ca"><img style="padding:0 20px" " src="<c:url value="/images/logo/3rdpty/logo_ubc.jpg"/>" /></a></span>
+<span class="left">&nbsp;Copyright &copy; 2004 - 2006 &middot;&nbsp;|&nbsp;Gemma version ${appConfig["version"]} &middot; </span>
 <c:if test="${pageContext.request.remoteUser != null}">
 	<span class="right"> | <fmt:message key="user.status" /> <authz:authentication operation="username" /> | <a
 		href="<c:url value="/logout.html"/>"> <fmt:message key="user.logout" /> </a> </span>
