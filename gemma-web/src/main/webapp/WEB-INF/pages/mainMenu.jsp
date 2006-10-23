@@ -1,9 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
 <title><fmt:message key="mainMenu.title" />
 </title>
-<content tag="heading">
+<%--<content tag="heading">
 <fmt:message key="mainMenu.heading" />
-</content>
+</content>--%>
+
 
 <p>
 	<fmt:message key="mainMenu.message" />
@@ -29,6 +30,9 @@
 	</li>
 	<li>
 		<a href="<c:url value="/geneFinder.html"/>"> <fmt:message key="menu.GeneFinder" /> </a>
+	</li>
+	<li>
+		<a href="<c:url value="/about.html"/>">About this site</a>
 	</li>
 	<authz:authorize ifAnyGranted="user,admin">
 		<li>
@@ -81,3 +85,4 @@
 	</ul>
 
 </authz:authorize>
+

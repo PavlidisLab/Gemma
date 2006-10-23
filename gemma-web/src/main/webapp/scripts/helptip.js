@@ -55,7 +55,7 @@
 |   <script type="text/javascript" src="helptip.js">< /script>                |
 |   <link type="text/css" rel="StyleSheet" href="helptip.css" />              |
 |                                                                             |
-|   <a class="helpLink" href="?" onclick="showHelp(event, 'String to show');  |
+|<a class="helpLink" href="?" onclick="showHelpTip(event, 'String to show');  |
 |      return false">Help</a>                                                 |
 |-----------------------------------------------------------------------------|
 | Created 2001-09-27 | All changes are in the log above. | Updated 2002-12-02 |

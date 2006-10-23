@@ -12,7 +12,6 @@
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 		<link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/${appConfig["theme"]}/print.css'/>" />
 
-		<script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/prototype.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/scriptaculous.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/global.js'/>"></script>
@@ -35,14 +34,20 @@
 
 			<div id="content" class="clearfix">
 
-				<div id="main">
+
+
+				<div id="main" class="home">
 					<%@ include file="/common/messages.jsp"%>
 					<h1>
 						<decorator:getProperty property="page.heading" />
 					</h1>
 					<decorator:body />
 				</div>
+			
+				<div id="sub" class="home">
+					<%@ include file="/common/subarea.jsp"%>
 
+				</div>
 
 				<c:set var="currentMenu" scope="request">
 					<decorator:getProperty property="meta.menu" />
@@ -57,6 +62,7 @@
 
 
 				<div id="nav">
+
 					<div class="wrapper">
 						<h2 class="accessibility">
 							Navigation
@@ -66,6 +72,8 @@
 					<hr />
 				</div>
 				<%-- end nav --%>
+
+
 
 			</div>
 			<%-- end content --%>

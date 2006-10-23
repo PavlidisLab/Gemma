@@ -116,10 +116,10 @@ public class AssayViewTag extends TagSupport {
             }
         }
         buf.append( "<table><tr>" );
-        buf.append( "<td>BioMaterial</td>" );
+        buf.append( "<th>BioMaterial</th>" );
         // display arraydesigns
         for ( ArrayDesign design : designs ) {
-            buf.append( "<td>" + design.getShortName() + "</td>" );
+            buf.append( "<th>BioAssays on<br />" + ( design.getShortName() == null ? design.getName() : design.getShortName()) + "</th>" );
         }
         buf.append( "</tr>" );
 

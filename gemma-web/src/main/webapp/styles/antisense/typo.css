@@ -10,6 +10,9 @@
              #ccc         - medium gray (line)
              #f7f7f7 - light gray (form background)
              #f90        - orange (required *)
+             
+             #003366 - blue
+             #CC6633 - orange
 */
 
 /* TYPOGRAPHY */
@@ -34,12 +37,12 @@
     /* LINKS */
         a,a:link
             a:active {
-            color: #000033;
+            color: #1465B7;
             text-decoration: none;
         }
 
         a:visited {
-            color: #CC6633;
+            color: #1465B7;
             background-color: transparent;
         }
 
@@ -51,7 +54,7 @@
 
     /* HEADINGS */
         h1, h2, h3, h4, h5, h6 {
-            font-family: tahoma, arial, helvetica, sans-serif;
+            font-family: verdana, arial, helvetica, sans-serif;
             font-weight: normal;
         }
 
@@ -83,14 +86,14 @@
             font-size: 1.4em;
             line-height: 1.5em;
             margin: 0 0 0.5em 0;
-            padding: 0;
+            padding:  0;
         }
 
         h3 {
             font-size: 1.3em;
             line-height: 1.3em;
             margin: 0 0 0.5em 0;
-            padding: 0;
+            padding: 10px 0px 0px 0 ;
             color: black;
         }
 
@@ -123,7 +126,7 @@
         p {
             font-size: 1em;
             margin: 0 0 1.5em 0;
-            padding: 0;
+            padding: 0px 20px 0px 20px;
             line-height: 1.4em;
         }
 
@@ -134,7 +137,7 @@
 
         pre {
             font-family: monospace;
-            font-size: 12px;
+            font-size: 1em;
         }
 
         strong,b {
@@ -149,6 +152,11 @@
             font-family: "courier new", courier, monospace;
             font-size: 12px;
             white-space: pre;
+        }
+        
+        textarea {
+          font-family: verdana, arial, helvetica, sans-serif;
+          font-size: 1em;
         }
     /* END TEXT */
 
@@ -192,11 +200,16 @@
 
         th {
             font-weight: bold;
+            font-size: 1.1em;
             text-align: left;
+            line-height: 1.6em;
+            border-bottom: 1px solid #999999;
+            padding: 0 10px 0px 5px;
         }
 
         td {
             font-size: 1em;
+            padding: 0 10px 0px 5px;
         }
 
         /*********************************

@@ -5,8 +5,7 @@
 
 <html>
 	<head>
-		<title><fmt:message key="expressionExperiment.load.title" />
-		</title>
+		<title><fmt:message key="expressionExperiment.load.title" /></title>
 		<content tag="heading">
 		<fmt:message key="expressionExperiment.load.title" />
 		</content>
@@ -69,11 +68,7 @@
 			</table>
 		</form>
 
-		<script type="text/javascript">
-		<!--
-highlightFormElements();
-// -->
-		</script>
+
 	</body>
 </html>
 

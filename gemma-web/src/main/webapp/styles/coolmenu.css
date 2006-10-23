@@ -41,12 +41,12 @@
 }
 
 .cmItem, .cmItemOver {
-    background-color: #fff; 
+    background-color: #FFFFF; 
     padding-left: 5px;
 }
 
 .cmItemOver {
-    background-color: #ffd; 
+    background-color: #FFFFDD; 
     border-color: yellow;
     padding-left: -2px;
 }

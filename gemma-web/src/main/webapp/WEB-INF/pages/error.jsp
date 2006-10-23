@@ -6,47 +6,40 @@
 
 <html>
 	<head>
-		<title><fmt:message key="errorPage.title" />
-		</title>
+		<title><fmt:message key="errorPage.title" /></title>
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	</head>
 
 	<body id="error">
-		<div id="page">
-			<div id="content" class="clearfix">
-				<div id="main">
-					<h1>
-						<fmt:message key="errorPage.heading" />
-					</h1>
+		<h1>
+			<fmt:message key="errorPage.heading" />
+		</h1>
 
-					<a href="mainMenu.html" title="Go back" name="back" onclick="history.back();return false">&#171; Back</a>
+		<a href="mainMenu.html" title="Go back" name="back" onclick="history.back();return false">&#171; Back</a>
 
-					<%@ include file="/common/messages.jsp"%>
+		<%@ include file="/common/messages.jsp"%>
 
-					<%
-					if ( request.getAttribute( "exception" ) != null ) {
-					%>
-					<Gemma:exception exception="${exception}" />
-					<%
-					} else if ( ( Exception ) request.getAttribute( "javax.servlet.error.exception" ) != null ) {
-					%>
-					<Gemma:exception exception="${pageContext.request.attribute['javax.servlet.error.exception']}" />
-					<%
-					} else if ( ( Exception ) request.getAttribute( "exception" ) != null ) {
-					%>
-					<Gemma:exception exception="${pageContext.request.attribute['exception']}" />
-					<%
-					} else {
-					%>
-					<p>
-						<fmt:message key="errorPage.info.missing" />
-					</p>
-					<%
-					}
-					%>
-				</div>
-			</div>
-		</div>
+		<%
+		if ( request.getAttribute( "exception" ) != null ) {
+		%>
+		<Gemma:exception exception="${exception}" />
+		<%
+		} else if ( ( Exception ) request.getAttribute( "javax.servlet.error.exception" ) != null ) {
+		%>
+		<Gemma:exception exception="${pageContext.request.attribute['javax.servlet.error.exception']}" />
+		<%
+		} else if ( ( Exception ) request.getAttribute( "exception" ) != null ) {
+		%>
+		<Gemma:exception exception="${pageContext.request.attribute['exception']}" />
+		<%
+		} else {
+		%>
+		<p>
+			<fmt:message key="errorPage.info.missing" />
+		</p>
+		<%
+		}
+		%>
 	</body>
 </html>
 

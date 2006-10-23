@@ -6,7 +6,7 @@
     <!-- Define the CSS Theme, put in servlet context by StartupListener -->
     <context-param>
         <param-name>theme</param-name>
-        <param-value>simplicity</param-value>
+        <param-value>antisense</param-value>
     </context-param>
     
     <!-- Define the basename for a resource bundle for I18N -->
