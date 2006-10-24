@@ -44,7 +44,7 @@ import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.progress.ProgressAppenderTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizerTest;
 
 /**
  * Tests for gemma-core
@@ -84,7 +84,7 @@ public class AllCoreTests {
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
         suite.addTestSuite( ExpressionDataMatrixTest.class );
-        suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
+        suite.addTestSuite( ExpressionDataMatrixVisualizerTest.class );
 
         suite.addTestSuite( ProgressIntegrationTest.class );
         suite.addTestSuite( ProgressAppenderTest.class );
