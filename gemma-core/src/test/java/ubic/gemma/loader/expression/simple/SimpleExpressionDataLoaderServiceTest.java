@@ -105,7 +105,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertNotNull( ee );
         assertEquals( 200, ee.getDesignElementDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
-        setComplete();
+        // setComplete();
     }
 
 }
