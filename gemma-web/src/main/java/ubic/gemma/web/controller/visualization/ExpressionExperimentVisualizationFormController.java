@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -231,11 +232,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
         String searchCriteria = ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria();
-        boolean suppressVisualizations = ( ( ExpressionExperimentVisualizationCommand ) command )
-                .isSuppressVisualizations();
-        
-        //TODO remove this
-         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
+
+        // TODO remove this
+        // boolean suppressVisualizations = ( ( ExpressionExperimentVisualizationCommand ) command )
+        // .isSuppressVisualizations();
+
+        // TODO remove this
+        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
                 + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools
                 .createDir( "../webapps/ROOT/visualization/" ) );
 
@@ -249,7 +252,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
             httpExpressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http",
                     request.getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
-            httpExpressionDataMatrixVisualizer.setSuppressVisualizations( suppressVisualizations );
+            // httpExpressionDataMatrixVisualizer.setSuppressVisualizations( suppressVisualizations );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
