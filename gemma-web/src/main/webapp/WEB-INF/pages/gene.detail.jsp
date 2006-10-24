@@ -22,6 +22,39 @@
                     }%>
                 </td>
             </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="gene.officialSymbol" />
+                    </b>
+                </td>
+                <td>
+                	<%if (gene.getOfficialSymbol() != null){%>
+                    	<jsp:getProperty name="gene" property="officialSymbol" />
+                    <%}else{
+                    	out.print("No official symbol available");
+                    }%>
+                </td>
+            </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="gene.ncbi" />
+                    </b>
+                </td>
+                <td>
+
+                	<%if (gene.getNcbiId() != null){%>
+                    	<jsp:getProperty name="gene" property="ncbiId" />
+                    	<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=<%out.print(gene.getNcbiId()); %>">
+                    	(NCBI link)</a>
+                    <%}else{
+                    	out.print("No NCBI ID available");
+                    }%>
+                </td>
+            </tr>
         
             <tr>
                 <td valign="top">
@@ -31,9 +64,24 @@
                 </td>
                 <td>
                 	<%if (gene.getDescription() != null){%>
-                    	<jsp:getProperty name="gene" property="description" />
+                    <textarea name="" rows=5 cols=80 readonly=true><jsp:getProperty name="gene" property="description" /></textarea><
                     <%}else{
                     	out.print("Description unavailable");
+                    }%>
+                </td>
+            </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="gene.taxon" />
+                    </b>
+                </td>
+                <td>
+                	<%if (gene.getTaxon() != null) {
+                    	out.print(gene.getTaxon().getScientificName());
+                	} else{
+                    	out.print("Taxon unavailable");
                     }%>
                 </td>
             </tr>

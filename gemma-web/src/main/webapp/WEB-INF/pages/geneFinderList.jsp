@@ -14,8 +14,7 @@
 	    <display:table name="genes" class="list" requestURI="" id="genesList"
             decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper" 
             pagesize="100">	
-			<display:column property="name" sortable="true" titleKey="gene.name" maxWords="20"
-				href="/Gemma/gene/showGene.html" paramId="id" paramProperty="id" />
+			<display:column property="nameLink" sortable="true" titleKey="gene.name" maxWords="20" />
 			<display:column property="officialSymbol" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
 			<display:column property="description" sortable="true" titleKey="gene.description" maxWords="100" /> 
