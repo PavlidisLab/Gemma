@@ -261,6 +261,8 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
+     * NOTE this method does not use findOrCreate! A new result is made every time. (FIXME)
+     * 
      * @param blastResult
      */
     private BlastResult persistBlastResult( BlastResult blastResult ) {
@@ -270,6 +272,8 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
+     * NOTE this method does not use findOrCreate! A new result is made every time. (FIXME)
+     * 
      * @param blatResult
      */
     private BlatResult persistBlatResult( BlatResult blatResult ) {

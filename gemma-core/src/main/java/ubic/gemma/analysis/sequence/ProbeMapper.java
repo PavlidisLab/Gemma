@@ -369,10 +369,9 @@ public class ProbeMapper {
             Collection<BioSequence> sequences ) {
         Blat b = new Blat();
         b.setBlatScoreThreshold( blatScoreThreshold );
-        BlattableGenome bg = inferBlatGenome( goldenpath );
 
         try {
-            Map<String, Collection<BlatResult>> results = b.blatQuery( sequences, bg );
+            Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
             Collection<BlatResult> blatres = new HashSet<BlatResult>();
             for ( Collection<BlatResult> coll : results.values() ) {
                 blatres.addAll( coll );
@@ -385,27 +384,6 @@ public class ProbeMapper {
     }
 
     /**
-     * FIXME - this should not be hard coded like this, what happens when more genomes are added.
-     * 
-     * @param goldenpath
-     * @return
-     */
-    private BlattableGenome inferBlatGenome( GoldenPath goldenpath ) {
-        BlattableGenome bg = BlattableGenome.HUMAN;
-
-        if ( goldenpath.getDatabaseName().startsWith( "mm" ) ) {
-            bg = BlattableGenome.MOUSE;
-        } else if ( goldenpath.getDatabaseName().startsWith( "hg" ) ) {
-            bg = BlattableGenome.HUMAN;
-        } else if ( goldenpath.getDatabaseName().startsWith( "rn" ) ) {
-            bg = BlattableGenome.RAT;
-        } else {
-            throw new IllegalArgumentException( "Unsupported database for blatting " + goldenpath.getDatabaseName() );
-        }
-        return bg;
-    }
-
-    /**
      * Get BlatAssociation results for a single sequence. If you have multiple sequences to run it is always better to
      * use processSequences();
      * 
@@ -415,12 +393,12 @@ public class ProbeMapper {
      * @see processSequences
      */
     public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
-        BlattableGenome bg = inferBlatGenome( goldenPath );
+
         Blat b = new Blat();
         b.setBlatScoreThreshold( blatScoreThreshold );
         Collection<BlatResult> results;
         try {
-            results = b.blatQuery( sequence, bg );
+            results = b.blatQuery( sequence, goldenPath.getTaxon() );
         } catch ( IOException e ) {
             throw new RuntimeException( "Error running blat", e );
         }

@@ -175,7 +175,7 @@ public class Blat {
      * @return Collection of BlatResult objects.
      * @throws IOException
      */
-    public Collection<BlatResult> blatQuery( BioSequence b, BlattableGenome genome ) throws IOException {
+    public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
@@ -187,9 +187,9 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath();
 
-        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
+        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
-        ExternalDatabase searchedDatabase = this.getSearchedGenome( genome );
+        ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
         for ( BlatResult result : results ) {
             result.setSearchedDatabase( searchedDatabase );
         }
@@ -212,26 +212,15 @@ public class Blat {
             throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
         }
 
-        // FIXME - this should not be hard coded like this, what happens when more genomes are added.
-        BlattableGenome g = BlattableGenome.MOUSE;
-        if ( t.getNcbiId() == 10090 ) {
-            g = BlattableGenome.MOUSE;
-        } else if ( t.getNcbiId() == 9606 ) {
-            g = BlattableGenome.HUMAN;
-        } else if ( t.getNcbiId() == 10116 ) {
-            g = BlattableGenome.RAT;
-        } else {
-            throw new IllegalArgumentException( "Unsupported taxon " + t );
-        }
-
-        return blatQuery( b, g );
+        return blatQuery( b, t );
     }
 
     /**
      * @param genome
      * @return
      */
-    private int choosePortForQuery( BlattableGenome genome ) {
+    private int choosePortForQuery( Taxon taxon ) {
+        BlattableGenome genome = inferBlatDatabase( taxon );
         switch ( genome ) {
             case HUMAN:
                 return humanServerPort;
@@ -257,13 +246,13 @@ public class Blat {
 
     /**
      * @param sequences
-     * @param genome The genome which will be searched.
-     * @return map of the input sequence names to a corresponding collection of blat result(s)
+     * @param taxon The taxon whose database will be searched.
+     * @return map of the input sequences to a corresponding collection of blat result(s)
      * @throws IOException
      */
-    public Map<String, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, BlattableGenome genome )
+    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
             throws IOException {
-        Map<String, Collection<BlatResult>> results = new HashMap<String, Collection<BlatResult>>();
+        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
 
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
         BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
@@ -291,22 +280,22 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath();
 
-        Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
+        Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
         log.info( "Got" + rawresults.size() + " raw blat results" );
 
-        ExternalDatabase searchedDatabase = getSearchedGenome( genome );
+        ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
 
         for ( BlatResult blatResult : rawresults ) {
             blatResult.setSearchedDatabase( searchedDatabase );
 
-            String name = blatResult.getQuerySequence().getName();
+            BioSequence query = blatResult.getQuerySequence();
 
-            if ( !results.containsKey( name ) ) {
-                results.put( name, new HashSet<BlatResult>() );
+            if ( !results.containsKey( query ) ) {
+                results.put( query, new HashSet<BlatResult>() );
             }
 
-            results.get( name ).add( blatResult );
+            results.get( query ).add( blatResult );
         }
 
         querySequenceFile.delete();
@@ -314,14 +303,34 @@ public class Blat {
     }
 
     /**
-     * @param genome
+     * @param taxon
      * @return
      */
-    private ExternalDatabase getSearchedGenome( BlattableGenome genome ) {
+    public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
+        BlattableGenome genome = inferBlatDatabase( taxon );
         ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
         searchedDatabase.setType( DatabaseType.SEQUENCE );
         searchedDatabase.setName( genome.toString().toLowerCase() );
         return searchedDatabase;
+    }
+
+    /**
+     * @param taxon
+     * @return
+     */
+    private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
+        BlattableGenome bg = BlattableGenome.MOUSE;
+
+        if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {
+            bg = BlattableGenome.MOUSE;
+        } else if ( taxon.getNcbiId() == 10116 || taxon.getCommonName().equals( "rat" ) ) {
+            bg = BlattableGenome.RAT;
+        } else if ( taxon.getNcbiId() == 9606 || taxon.getCommonName().equals( "human" ) ) {
+            bg = BlattableGenome.HUMAN;
+        } else {
+            throw new UnsupportedOperationException( "Cannot determine which database to search for " + taxon );
+        }
+        return bg;
     }
 
     /**

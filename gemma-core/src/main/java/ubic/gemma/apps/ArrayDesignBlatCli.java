@@ -18,9 +18,19 @@
  */
 package ubic.gemma.apps;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collection;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
+import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -32,6 +42,8 @@ import ubic.gemma.model.genome.Taxon;
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
 
+    String blatResultFile = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -41,6 +53,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void buildOptions() {
         super.buildOptions();
+
+        Option blatResultOption = OptionBuilder.hasArg().withArgName( "PSL file" ).withDescription(
+                "Blat result file in PSL format (if supplied, BLAT will not be run)" ).withLongOpt( "blatfile" )
+                .create( 'b' );
+
+        addOption( blatResultOption );
     }
 
     public static void main( String[] args ) {
@@ -76,8 +94,38 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
         unlazifyArrayDesign( arrayDesign );
+        Collection<BlatResult> persistedResults;
+        try {
+            if ( this.blatResultFile != null ) {
+                File f = new File( blatResultFile );
+                if ( !f.canRead() ) {
+                    log.error( "Cannot read from " + blatResultFile );
+                    bail( ErrorCode.INVALID_OPTION );
+                }
 
-        arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon );
+                log.info( "Reading blat results in from " + f.getAbsolutePath() );
+                BlatResultParser parser = new BlatResultParser();
+                parser.setTaxon( taxon );
+                parser.parse( f );
+                Collection<BlatResult> blatResults = parser.getResults();
+
+                if ( blatResults == null || blatResults.size() == 0 ) {
+                    throw new IllegalStateException( "No blat results in file!" );
+                }
+
+                log.info( "Got " + blatResults.size() + " blat records" );
+                persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, blatResults,
+                        taxon );
+            } else {
+                persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon );
+            }
+        } catch ( FileNotFoundException e ) {
+            return e;
+        } catch ( IOException e ) {
+            return e;
+        }
+
+        log.info( "Persisted " + persistedResults.size() + " results" );
 
         return null;
     }
@@ -85,6 +133,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void processOptions() {
         super.processOptions();
+
+        if ( hasOption( 'b' ) ) {
+            this.blatResultFile = this.getOptionValue( 'b' );
+        }
+
         arrayDesignSequenceAlignmentService = ( ArrayDesignSequenceAlignmentService ) this
                 .getBean( "arrayDesignSequenceAlignmentService" );
 

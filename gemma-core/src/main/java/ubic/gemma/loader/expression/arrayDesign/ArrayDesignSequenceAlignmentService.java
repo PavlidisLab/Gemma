@@ -28,10 +28,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.apps.Blat;
-import ubic.gemma.apps.Blat.BlattableGenome;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -71,11 +70,13 @@ public class ArrayDesignSequenceAlignmentService {
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults, Taxon taxon ) {
         Map<String, BioSequence> sequencesToBlat = getSequenceMap( ad );
 
-        Collection<BlatResult> allResults = new HashSet<BlatResult>();
+        ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
 
-        persistBlatResults( taxon, sequencesToBlat, allResults, rawBlatResults );
+        for ( BlatResult result : rawBlatResults ) {
+            result.setSearchedDatabase( searchedDatabase );
+        }
 
-        return allResults;
+        return persistBlatResults( taxon, sequencesToBlat, rawBlatResults );
     }
 
     /**
@@ -84,60 +85,49 @@ public class ArrayDesignSequenceAlignmentService {
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon ) {
         Map<String, BioSequence> sequencesToBlat = getSequenceMap( ad );
 
-        Blat blat = new Blat();
-        BlattableGenome bg = BlattableGenome.MOUSE;
-
-        if ( taxon.getCommonName().equals( "mouse" ) ) {
-            bg = BlattableGenome.MOUSE;
-        } else if ( taxon.getCommonName().equals( "rat" ) ) {
-            bg = BlattableGenome.RAT;
-        } else if ( taxon.getCommonName().equals( "human" ) ) {
-            bg = BlattableGenome.HUMAN;
-        }
-
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
-        Map<String, Collection<BlatResult>> results = runBlat( sequencesToBlat, blat, bg );
+        Map<BioSequence, Collection<BlatResult>> results = runBlat( sequencesToBlat, taxon );
 
         log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
 
-        for ( String key : results.keySet() ) {
+        for ( BioSequence key : results.keySet() ) {
             Collection<BlatResult> brs = results.get( key );
-            persistBlatResults( taxon, sequencesToBlat, allResults, brs );
+            allResults.addAll( persistBlatResults( taxon, sequencesToBlat, brs ) );
         }
 
         return allResults;
 
     }
 
-    private void persistBlatResults( Taxon taxon, Map<String, BioSequence> sequencesToBlat,
-            Collection<BlatResult> allResults, Collection<BlatResult> brs ) {
+    @SuppressWarnings("unchecked")
+    private Collection<BlatResult> persistBlatResults( Taxon taxon, Map<String, BioSequence> sequencesToBlat,
+            Collection<BlatResult> brs ) {
+
         for ( BlatResult br : brs ) {
             String acc = br.getQuerySequence().getName();
             assert acc != null && sequencesToBlat.containsKey( acc );
 
-            // // FIXME: the blatter should set the taxon for us. Parser supports this.
-            // br.getQuerySequence().setTaxon( taxon );
             br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
-            br.setTargetChromosome( ( Chromosome ) persisterHelper.persist( br.getTargetChromosome() ) );
             br.setQuerySequence( sequencesToBlat.get( acc ) );
-            br = blatResultService.create( br );
-            allResults.add( br );
+
         }
+        log.info( "Persisting " + brs.size() + " BLAT results" );
+        return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
 
     /**
      * @param sequencesToBlat
      * @param blat
-     * @param bg
+     * @param taxon whose database will be queries
      * @return
      */
-    private Map<String, Collection<BlatResult>> runBlat( Map<String, BioSequence> sequencesToBlat, Blat blat,
-            BlattableGenome bg ) {
-        Map<String, Collection<BlatResult>> results = null;
+    private Map<BioSequence, Collection<BlatResult>> runBlat( Map<String, BioSequence> sequencesToBlat, Taxon taxon ) {
+        Blat blat = new Blat();
+        Map<BioSequence, Collection<BlatResult>> results = null;
         try {
-            results = blat.blatQuery( sequencesToBlat.values(), bg );
+            results = blat.blatQuery( sequencesToBlat.values(), taxon );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
