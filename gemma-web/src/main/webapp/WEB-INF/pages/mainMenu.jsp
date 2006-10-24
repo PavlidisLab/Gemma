@@ -7,7 +7,7 @@
 
 <div class="separator"></div>
 <ul class="glassList">
-
+	<li>
 	<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
 	</li>
 	<li>
