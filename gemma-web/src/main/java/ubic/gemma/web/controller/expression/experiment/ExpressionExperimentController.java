@@ -109,7 +109,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
                 arrayDesigns.add( design );
             }
         }
-        ExpressionExperimentValueObject vo;
+
         mav.addObject( "arrayDesigns", arrayDesigns );
         long num = expressionExperimentService.getDesignElementDataVectorCountById( id );
         // add count of designElementDataVectors
