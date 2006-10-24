@@ -108,7 +108,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
     @Override
     public String toString() {
         return this.getClass().getSimpleName()
-                + ( this.getId() == null ? " " : " Id:" + this.getId() )
+                + ( this.getId() == null ? " " : " Id:" + this.getId() + " " )
                 + this.getOfficialSymbol()
                 + ( this.getOfficialName() == null ? " " : this.getOfficialName() + " " )
                 + ( this.getOfficialName() == null && this.getPhysicalLocation() == null ? " " : this
