@@ -3,7 +3,6 @@ package ubic.gemma.apps;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -25,9 +24,6 @@ import ubic.gemma.model.genome.TaxonService;
  */
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignProbeMapperService arrayDesignProbeMapperService;
-    TaxonService taxonService;
-
-    private String commonName;
 
     /*
      * (non-Javadoc)
