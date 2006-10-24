@@ -270,9 +270,7 @@ public class VisualizeDataSetApp {
                 colorMatrix ) );
 
         List<double[]> data = new ArrayList<double[]>();
-        // for ( int i = 0; i < rawData.length; i++ ) {
-        // data.add( rawData[i] );
-        // }
+
         data.add( rawData[4] );
         data.add( rawData[13] );
         data.add( rawData[22] );
