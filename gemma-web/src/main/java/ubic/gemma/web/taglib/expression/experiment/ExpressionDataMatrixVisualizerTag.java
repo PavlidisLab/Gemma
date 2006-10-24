@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -76,9 +77,12 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     public int doStartTag() throws JspException {
 
         log.debug( "start tag" );
+
         try {
+            // TODO use ExpressionDataDoubleMatrix
             /* get metadata from MatrixVisualizer */
-            ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
+            ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer
+                    .getExpressionDataMatrix();
             String imageFile = httpExpressionDataMatrixVisualizer.getImageFile();
 
             Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
@@ -87,11 +91,9 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             List<String> designElementNames = httpExpressionDataMatrixVisualizer.getRowLabels();
 
-            /*
-             * remove me when using dynamic images
-             */
+            // TODO document this - not using because we are not reading from an image file.
+            // remove me
             httpExpressionDataMatrixVisualizer.saveImage( new File( imageFile ), colorMatrix );
-
             /* Cannot use \ in non internet explorer browsers. Using / instead. */
             imageFile = StringUtils.replace( imageFile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
 
@@ -102,12 +104,21 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                     StringUtils.splitByWholeSeparator( imageFile, "visualization" )[0], urlPrefix );
 
             log.debug( "setting compatibility for non-IE browsers " + imageFile );
+            // end remove me
 
             StringBuilder buf = new StringBuilder();
 
-            if ( httpExpressionDataMatrixVisualizer.isSuppressVisualizations() ) {
-                buf.append( "Visualizations suppressed." );
-            } else if ( expressionDataMatrix == null || m.size() == 0 ) {
+            // TODO read these in
+            String type = "matrix";
+            HttpSession session = this.pageContext.getSession();
+            session.setAttribute( "type", type );
+            session.setAttribute( "httpExpressionDataMatrixVisualizer", httpExpressionDataMatrixVisualizer );
+
+            // TODO remove this don't suppress visualizations
+            // if ( httpExpressionDataMatrixVisualizer.isSuppressVisualizations() ) {
+            // buf.append( "Visualizations suppressed." );
+            // }
+            if ( expressionDataMatrix == null || m.size() == 0 ) {
                 buf.append( "No data to display" );
             } else {
 
@@ -122,7 +133,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
                 // buf.append( "<img src=\"" + imageFile + "\">" );
-                buf.append( "<img src=\"visualizeDataMatrix.html?type=bar \"border=1 width=400 height=300/>" );
+                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=400 height=300/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( String name : designElementNames ) {
