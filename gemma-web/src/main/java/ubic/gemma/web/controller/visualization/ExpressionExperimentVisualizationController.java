@@ -18,8 +18,15 @@
  */
 package ubic.gemma.web.controller.visualization;
 
+import java.awt.Dimension;
+import java.awt.Font;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,15 +37,22 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.date.MonthConstants;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.gui.ColorMatrix;
+import ubic.basecode.gui.JMatrixDisplay;
+import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -52,7 +66,10 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    // TODO Currently contains dummy charts. Change to data matrix.
+    private HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
+
+    private static final int DEFAULT_MAX_SIZE = 3;
+
     /**
      * @param request
      * @param response
@@ -62,21 +79,41 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
+        String type = ( String ) request.getSession().getAttribute( "type" );
+        log.debug( "attribute \"type\" from tag: " + type );
+
+        httpExpressionDataMatrixVisualizer = ( HttpExpressionDataMatrixVisualizer ) request.getSession().getAttribute(
+                "httpExpressionDataMatrixVisualizer" );
+        log.debug( "attribute \"httpExpressionDataMatrixVisualizer\" from tag: " + httpExpressionDataMatrixVisualizer );
+
+        ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer
+                .getExpressionDataMatrix();
+
+        type = "bar";// dummy for now
         OutputStream out = null;
         try {
             out = response.getOutputStream();
-            String type = request.getParameter( "type" );
-            JFreeChart chart = null;
-            if ( type.equals( "pie" ) ) {
-                chart = createPieChart();
-            } else if ( type.equals( "bar" ) ) {
-                chart = createBarChart();
-            } else if ( type.equals( "time" ) ) {
-                chart = createTimeSeriesChart();
+            if ( type.equals( "matrix" ) ) {
+                String title = "Heat Map of Expression Values";// TODO read in?
+                JMatrixDisplay display = createHeatMap( title, expressionDataMatrix );
+                if ( display != null ) {
+                    response.setContentType( "image/png" );
+                    display.writeOutAsPNG( out, false, false );
+                }
+            } else if ( type.equals( "profile" ) ) {
+                JFreeChart chart = null;// createXYLineChart( title, dataCol, DEFAULT_MAX_SIZE );
+                if ( chart != null ) {
+                    response.setContentType( "image/png" );
+                    ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
+                }
             }
-            if ( chart != null ) {
-                response.setContentType( "image/png" );
-                ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
+
+            else if ( type.equals( "bar" ) ) {
+                JFreeChart chart = createBarChart();
+                if ( chart != null ) {
+                    response.setContentType( "image/png" );
+                    ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
+                }
             }
         } catch ( Exception e ) {
             log.error( e.toString() );
@@ -90,6 +127,88 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             }
         }
         return null; // nothing to return;
+    }
+
+    // // TODO Currently contains dummy charts. Change to data matrix.
+    // /**
+    // * @param request
+    // * @param response
+    // * @param errors
+    // * @return ModelAndView
+    // */
+    // @SuppressWarnings("unused")
+    // public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+    //
+    // OutputStream out = null;
+    // try {
+    // out = response.getOutputStream();
+    // String type = request.getParameter( "type" );
+    // JFreeChart chart = null;
+    // if ( type.equals( "pie" ) ) {
+    // chart = createPieChart();
+    // } else if ( type.equals( "bar" ) ) {
+    // chart = createBarChart();
+    // } else if ( type.equals( "time" ) ) {
+    // chart = createTimeSeriesChart();
+    // }
+    // if ( chart != null ) {
+    // response.setContentType( "image/png" );
+    // ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
+    // }
+    // } catch ( Exception e ) {
+    // log.error( e.toString() );
+    // } finally {
+    // if ( out != null ) {
+    // try {
+    // out.close();
+    // } catch ( IOException e ) {
+    // log.warn( "Problems closing output stream. Issues were: " + e.toString() );
+    // }
+    // }
+    // }
+    // return null; // nothing to return;
+    // }
+
+    private JMatrixDisplay createHeatMap( String title, ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix ) {
+
+        if ( httpExpressionDataMatrixVisualizer == null )
+            throw new RuntimeException( "Cannot create color matrix due to null HttpExpressionDataMatrixVisualizer" );
+
+        ColorMatrix colorMatrix = httpExpressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
+
+        // TODO move from JMatrixDisplay
+        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
+
+        display.setCellSize( new Dimension( 16, 16 ) );
+
+        return display;
+    }
+
+    private JFreeChart createXYLineChart( String title, Collection<double[]> dataCol, int numProfiles ) {
+        if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
+
+        if ( dataCol.size() < numProfiles ) {
+            log.info( "Collection smaller than number of elements.  Will display first " + DEFAULT_MAX_SIZE
+                    + " profiles." );
+            numProfiles = DEFAULT_MAX_SIZE;
+        }
+
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
+        Iterator iter = dataCol.iterator();
+        for ( int j = 0; j < numProfiles; j++ ) {
+            double[] data = ( double[] ) iter.next();
+            XYSeries series = new XYSeries( j, true, true );
+            for ( int i = 0; i < data.length; i++ ) {
+                series.add( i, data[i] );
+            }
+            xySeriesCollection.addSeries( series );
+        }
+
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", xySeriesCollection,
+                PlotOrientation.VERTICAL, false, false, false );
+        chart.addSubtitle( new TextTitle( "(Raw data values)", new Font( "SansSerif", Font.BOLD, 14 ) ) );
+
+        return chart;
     }
 
     /**
