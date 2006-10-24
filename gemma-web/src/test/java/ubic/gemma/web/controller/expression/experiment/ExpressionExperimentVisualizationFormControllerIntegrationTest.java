@@ -38,7 +38,7 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentVisualizationControllerIntegrationTest extends AbstractExpressionExperimentTest {
+public class ExpressionExperimentVisualizationFormControllerIntegrationTest extends AbstractExpressionExperimentTest {
 
     /**
      * @throws Exception
