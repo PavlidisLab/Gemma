@@ -20,6 +20,12 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,6 +33,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProductService;
@@ -90,7 +97,7 @@ public class GeneFinderController extends SimpleFormController {
     }
 
     @Override
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -98,14 +105,24 @@ public class GeneFinderController extends SimpleFormController {
 
         // search by inexact symbol
         //Collection tmp = new ArrayList<Gene>();
-        Collection<Gene> genesOfficialSymbol = geneService.findByOfficialSymbolInexact( searchString );
-        Collection<Gene> genesAlias = geneService.getByGeneAlias( searchString );
-        Collection<Gene> genesGeneProduct = geneProductService.getGenesByName( searchString );
+        Set<Gene> geneSet =  new HashSet<Gene>();
+        geneSet.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
+        geneSet.addAll( geneService.getByGeneAlias( searchString ) );  
+        geneSet.addAll( geneProductService.getGenesByName( searchString ) );  
+        geneSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );  
+        
+        List<Gene> geneList = new ArrayList<Gene>(geneSet);
+        Comparator<Gene> comparator = new GeneComparator();
+        Collections.sort( geneList, comparator );
+//        Collection<Gene> genesOfficialSymbol = geneService.findByOfficialSymbolInexact( searchString );
+//        Collection<Gene> genesAlias = geneService.getByGeneAlias( searchString );
+//        Set<Gene> genesGeneProductSet = new HashSet<Gene>();
+//        genesGeneProductSet.addAll( geneProductService.getGenesByName( searchString ) );
+//        genesGeneProductSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );        
         ModelAndView mav = new ModelAndView("geneFinderList");
-        mav.addObject( "genesOfficialSymbol", genesOfficialSymbol );
-        mav.addObject( "genesAlias", genesAlias );
-        mav.addObject( "genesGeneProduct", genesGeneProduct );
-        mav.addObject("searchParameter", searchString);
+        mav.addObject( "genes", geneList );
+        mav.addObject( "searchParameter", searchString );
+        
         return mav;
 
     }
@@ -120,5 +137,15 @@ public class GeneFinderController extends SimpleFormController {
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
+    }
+    
+    class GeneComparator implements Comparator<Gene> {
+
+        public int compare( Gene arg0, Gene arg1 ) {
+            Gene obj0 = arg0;
+            Gene obj1 = arg1;
+
+            return obj0.getName().compareTo( obj1.getName() );
+        }
     }
 }

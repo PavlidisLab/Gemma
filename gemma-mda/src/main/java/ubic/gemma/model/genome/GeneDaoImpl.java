@@ -133,7 +133,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected Collection handleGetByGeneAlias( String search ) throws Exception {
         Collection<Gene> genes = null;
-        final String queryString = "select gene from GeneImpl as gene inner join gene.aliases where gene.aliases.Alias like :search";
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.aliases where gene.aliases.Alias like :search";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search );
