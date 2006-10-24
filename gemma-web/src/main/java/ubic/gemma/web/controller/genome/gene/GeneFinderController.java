@@ -29,6 +29,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
@@ -38,6 +40,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController;
 
 /** 
  * @author joseph
@@ -50,6 +53,8 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"  
  */
 public class GeneFinderController extends SimpleFormController {
+    private static Log log = LogFactory.getLog( GeneFinderController.class.getName() );
+    
     private GeneService geneService;
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
@@ -106,11 +111,12 @@ public class GeneFinderController extends SimpleFormController {
         // search by inexact symbol
         //Collection tmp = new ArrayList<Gene>();
         Set<Gene> geneSet =  new HashSet<Gene>();
+
         geneSet.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
         geneSet.addAll( geneService.getByGeneAlias( searchString ) );  
         geneSet.addAll( geneProductService.getGenesByName( searchString ) );  
         geneSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );  
-        
+    
         List<Gene> geneList = new ArrayList<Gene>(geneSet);
         Comparator<Gene> comparator = new GeneComparator();
         Collections.sort( geneList, comparator );
