@@ -111,7 +111,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
                 + ( this.getId() == null ? " " : " Id:" + this.getId() + " " )
                 + this.getOfficialSymbol()
                 + ( this.getOfficialName() == null ? " " : this.getOfficialName() + " " )
-                + ( this.getOfficialName() == null && this.getPhysicalLocation() == null ? " " : this
+                + ( this.getOfficialName() == null && this.getPhysicalLocation() != null ? " " : this
                         .getPhysicalLocation()
                         + " " ) + ( this.getNcbiId() == null ? " " : " (NCBI " + this.getNcbiId() + ")" );
     }
