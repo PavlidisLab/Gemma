@@ -306,6 +306,7 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( methodName.equals( "findOrCreate" ) ) {
             addLoadOrCreateAuditEvent( returnValue );
+            processAssociations( m, returnValue );
         } else if ( AUDIT_READ && CrudUtils.methodIsLoad( m ) ) {
             if ( returnValue != null ) {
                 if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
@@ -319,11 +320,12 @@ public class AuditInterceptor implements MethodInterceptor {
                     addLoadAuditEvent( returnValue );
                 }
             }
-
+            processAssociations( m, returnValue );
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
+            processAssociations( m, returnValue );
         }
-        processAssociations( m, returnValue );
+
 
     }
 
