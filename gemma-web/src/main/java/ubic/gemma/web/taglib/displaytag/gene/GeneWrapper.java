@@ -53,4 +53,25 @@ public class GeneWrapper extends TableDecorator {
         return object.getAccession() + "." + object.getAccessionVersion();
     }
     
+    public String getNcbiLink() {
+        Gene object = ( Gene ) getCurrentRowObject();
+        String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" +
+                object.getNcbiId() + "'>(ncbi)</a>";
+        return ncbiLink;
+    }
+    
+    public String getGemmaLink() {
+        Gene object = ( Gene ) getCurrentRowObject();
+        String gemmaLink = "<a href='/Gemma/gene/showGene.html?id=" +
+                object.getId() + "'>(gemma)</a>";
+        return gemmaLink;
+    }
+    
+    public String getNameLink() {
+        Gene object = ( Gene ) getCurrentRowObject();
+        String nameLink = object.getName() + getGemmaLink() + getNcbiLink();
+        
+        return nameLink;
+    }
+    
 }
