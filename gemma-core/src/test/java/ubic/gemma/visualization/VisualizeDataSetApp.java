@@ -205,7 +205,7 @@ public class VisualizeDataSetApp {
      */
     private Collection<String[]> parseData( boolean headerExists ) throws IOException {
 
-        InputStream is = VisualizeDataSetIntegrationTest.class.getResourceAsStream( "/data/loader/" + filename );
+        InputStream is = VisualizeDataSetApp.class.getResourceAsStream( "/data/loader/" + filename );
 
         TabDelimParser parser = new TabDelimParser();
         parser.parse( is );
