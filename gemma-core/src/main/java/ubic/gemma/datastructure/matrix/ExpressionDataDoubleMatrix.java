@@ -162,8 +162,15 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public Double[][] getMatrix() {
-        // TODO Auto-generated method stub
-        return null;
+
+        Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            Double[] row = ( Double[] ) matrix.getRowObj( i );
+            dMatrix[i] = row;
+        }
+
+        return dMatrix;
     }
 
     /*
