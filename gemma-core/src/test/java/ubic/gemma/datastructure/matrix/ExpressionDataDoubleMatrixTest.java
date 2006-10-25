@@ -31,6 +31,8 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -86,7 +88,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
                 .getBean( "expressionExperimentService" );
         eeService.thaw( ee );
 
-        // setComplete();
+        setComplete();
 
         assertNotNull( ee );
         assertEquals( 200, ee.getDesignElementDataVectors().size() );
@@ -110,33 +112,49 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         quantitationType.setScale( metaData.getScale() );
         quantitationType.setIsBackground( false );
 
-        CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ArrayDesign adFromDb = adService.findArrayDesignByName( "new ad" );
-        // adService.thaw( adFromDb );
 
         Collection designElements = adFromDb.getCompositeSequences();
 
         /* Constructor 1 */
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, designElements, quantitationType );
+        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix( ee, designElements,
+                quantitationType );
 
-        /* Get row for design element 228766_at from ExpressionDataDoubleMatrix. */
+        /* ASSERTIONS */
+
+        /* Get valid DesignElement from database */
+        CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         Collection<CompositeSequence> csCol = csService.findByName( "228766_at" ); // FIXME why collection?
         assertNotNull( csCol );
         assertTrue( csCol.size() > 0 );
 
-        CompositeSequence cs = csCol.iterator().next();
-
-        Double[] row = matrix.getRow( cs );
+        /* Get row for design element '228766_at' from ExpressionDataDoubleMatrix. */
+        CompositeSequence csFromDb = csCol.iterator().next();
+        Double[] row = expressionDataDoubleMatrix.getRow( csFromDb );
         assertNotNull( row );
         for ( int i = 0; i < row.length; i++ ) {
             log.debug( row[i] );
         }
+
+        /* Get valid BioAssay from database */
+        BioAssayService bsService = ( BioAssayService ) this.getBean( "bioAssayService" );
+        BioAssay ba = BioAssay.Factory.newInstance();
+        ba.setName( "8.1" );
+        BioAssay bioAssayFromDb = bsService.findOrCreate( ba );
+
+        /* Get column for bioassay '8.1' from ExpressionDataDoubleMatrix. */
+        // Double[] column = expressionDataDoubleMatrix.getColumn( bioAssayFromDb );
+        // assertNotNull( column ); //TODO implement column
+
+        /* Get the matrix */
+        Double[][] dMatrix = expressionDataDoubleMatrix.getMatrix();
+        assertEquals( dMatrix.length, 200 );
+        assertEquals( dMatrix[0].length, 59 );
 
         /* Constructor 2 */
         // ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, quantitationType );
         /* Constructor 3 */
         // ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix(ee.getDesignElementDataVectors());
     }
-
 }

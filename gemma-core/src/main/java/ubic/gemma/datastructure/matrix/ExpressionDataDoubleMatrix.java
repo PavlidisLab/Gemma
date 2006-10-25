@@ -55,8 +55,12 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
     private Map<DesignElement, Integer> rowMap;
     private Map<BioAssay, Integer> columnMap;
 
+    /**
+     * @param expressionExperiment
+     * @param quantitationType
+     */
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-
+        throw new RuntimeException( "Method not yet implemented" );
     }
 
     /**
@@ -71,6 +75,7 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
 
         columnMap = new HashMap<BioAssay, Integer>();
 
+        /* set rowMap */
         int i = 0;
         Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
         for ( DesignElement designElement : designElements ) {
@@ -91,11 +96,15 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
             rowMap.put( designElement, i );
 
         }
+
         matrix = vectorsToDoubleMatrix( vectorsOfInterest );
     }
 
+    /**
+     * @param dataVectors
+     */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors ) {
-
+        throw new RuntimeException( "Method not yet implemented" );
     }
 
     /*
