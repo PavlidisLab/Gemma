@@ -21,6 +21,7 @@ package ubic.gemma.datastructure.matrix;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -55,8 +55,6 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
     private Map<DesignElement, Integer> rowMap;
     private Map<BioAssay, Integer> columnMap;
 
-    private ByteArrayConverter byteArrayConverter;
-
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
 
     }
@@ -69,39 +67,28 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
             Collection<DesignElement> designElements, QuantitationType quantitationType ) {
 
-        matrix = new SparseRaggedDoubleMatrix2DNamed();
-
         rowMap = new HashMap<DesignElement, Integer>();
 
         columnMap = new HashMap<BioAssay, Integer>();
 
-        byteArrayConverter = new ByteArrayConverter();
-
-        int i = 0;
+        Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
         for ( DesignElement designElement : designElements ) {
-
             DesignElementDataVector vectorOfInterest = null;
             Collection<DesignElementDataVector> vectors = designElement.getDesignElementDataVectors();
             for ( DesignElementDataVector vector : vectors ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 if ( vectorQuantitationType.getType().equals( quantitationType.getType() ) ) {
                     vectorOfInterest = vector;
+                    vectorsOfInterest.add( vectorOfInterest );
                     break;
                 }
             }
             if ( vectorOfInterest == null ) {
-                log.warn( "Vector not found for given quantitation type.  Skipping ..." );
+                log.warn( "Vector not found for quantitation type " + quantitationType.getType() + ".  Skipping ..." );
                 continue;
             }
-
-            byte[] byteData = vectorOfInterest.getData();
-            double[] rawData = byteArrayConverter.byteArrayToDoubles( byteData );
-            for ( int j = 0; j < rawData.length; j++ ) {
-                matrix.set( i, j, rawData[j] );
-            }
-            rowMap.put( designElement, i );
-            matrix.addRowName( designElement.getName(), i );
         }
+        matrix = vectorsToDoubleMatrix( vectorsOfInterest );
     }
 
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors ) {
