@@ -71,6 +71,7 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
 
         columnMap = new HashMap<BioAssay, Integer>();
 
+        int i = 0;
         Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
         for ( DesignElement designElement : designElements ) {
             DesignElementDataVector vectorOfInterest = null;
@@ -87,6 +88,8 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
                 log.warn( "Vector not found for quantitation type " + quantitationType.getType() + ".  Skipping ..." );
                 continue;
             }
+            rowMap.put( designElement, i );
+
         }
         matrix = vectorsToDoubleMatrix( vectorsOfInterest );
     }
