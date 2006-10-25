@@ -20,11 +20,16 @@ package ubic.gemma.datastructure.matrix;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -34,24 +39,69 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * TODO - DOCUMENT ME
+ * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
+ * or column, returning data for a specific DesignElement or data for a specific BioAssay. The data itself is backed by
+ * a SparseRaggedDoubleMatrix2DNamed, which allows for each row to contain a different number of values.
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  */
 public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
+    private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
 
     private DoubleMatrixNamed matrix;
 
     private Map<DesignElement, Integer> rowMap;
     private Map<BioAssay, Integer> columnMap;
 
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-    }
+    private ByteArrayConverter byteArrayConverter;
 
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+
+    }
+    
+    /**
+     * 
+     * @param expressionExperiment
+     * @param designElements
+     * @param quantitationType
+     */
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
             Collection<DesignElement> designElements, QuantitationType quantitationType ) {
 
+        matrix = new SparseRaggedDoubleMatrix2DNamed();
+
+        rowMap = new HashMap<DesignElement, Integer>();
+
+        columnMap = new HashMap<BioAssay, Integer>();
+
+        byteArrayConverter = new ByteArrayConverter();
+
+        int i = 0;
+        for ( DesignElement designElement : designElements ) {
+            rowMap.put( designElement, i );
+
+            DesignElementDataVector vectorOfInterest = null;
+            Collection<DesignElementDataVector> vectors = designElement.getDesignElementDataVectors();
+            for ( DesignElementDataVector vector : vectors ) {
+                QuantitationType vectorQuantitationType = vector.getQuantitationType();
+                if ( vectorQuantitationType.getType().equals( quantitationType ) ) {
+                    vectorOfInterest = vector;
+                    break;
+                }
+            }
+            if ( vectorOfInterest == null ) {
+                log.warn( "Vector not found for given quantitation type.  Skipping ..." );
+                continue;
+            }
+            byte[] byteData = vectorOfInterest.getData();
+            double[] data = byteArrayConverter.byteArrayToDoubles( byteData );
+            for ( int j = 0; j < data.length; j++ ) {
+                matrix.set( i, j, data[j] );
+            }
+            matrix.addRowName( designElement.getName(), i );
+        }
     }
 
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors ) {
@@ -103,7 +153,16 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     public Double[][] getColumns( List bioAssays ) {
-        // TODO Auto-generated method stub
+        // if ( bioAssays == null ) {
+        // return null;
+        // }
+        //
+        // List<BioAssay> assays = bioAssays;
+        //
+        // // Double[][] result = new Double[][assays.size()];
+        // for ( BioAssay assay : assays ) {
+        // Double[] columnResult = getColumn( assay );
+        // }
         return null;
     }
 
@@ -123,8 +182,17 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
      */
     public Double[] getRow( DesignElement designElement ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( !rowMap.containsKey( designElement ) ) {
+            return null;
+        }
+
+        double[] rawResult = this.matrix.getRow( rowMap.get( designElement ) );
+        assert rawResult != null;
+        Double[] result = new Double[rawResult.length];
+        for ( int i = 0; i < rawResult.length; i++ ) {
+            result[i] = rawResult[i];
+        }
+        return result;
     }
 
     /*
@@ -133,8 +201,19 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
     public Double[][] getRows( List designElements ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( designElements == null ) {
+            return null;
+        }
+
+        List<DesignElement> elements = designElements;
+        Double[][] result = new Double[elements.size()][];
+        int i = 0;
+        for ( DesignElement element : elements ) {
+            Double[] rowResult = getRow( element );
+            result[i] = rowResult;
+            i++;
+        }
+        return result;
     }
 
     /**
