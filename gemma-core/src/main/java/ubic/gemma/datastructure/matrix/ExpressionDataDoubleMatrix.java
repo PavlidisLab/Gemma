@@ -60,9 +60,8 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
 
     }
-    
+
     /**
-     * 
      * @param expressionExperiment
      * @param designElements
      * @param quantitationType
@@ -80,13 +79,12 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
 
         int i = 0;
         for ( DesignElement designElement : designElements ) {
-            rowMap.put( designElement, i );
 
             DesignElementDataVector vectorOfInterest = null;
             Collection<DesignElementDataVector> vectors = designElement.getDesignElementDataVectors();
             for ( DesignElementDataVector vector : vectors ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
-                if ( vectorQuantitationType.getType().equals( quantitationType ) ) {
+                if ( vectorQuantitationType.getType().equals( quantitationType.getType() ) ) {
                     vectorOfInterest = vector;
                     break;
                 }
@@ -95,11 +93,13 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
                 log.warn( "Vector not found for given quantitation type.  Skipping ..." );
                 continue;
             }
+
             byte[] byteData = vectorOfInterest.getData();
-            double[] data = byteArrayConverter.byteArrayToDoubles( byteData );
-            for ( int j = 0; j < data.length; j++ ) {
-                matrix.set( i, j, data[j] );
+            double[] rawData = byteArrayConverter.byteArrayToDoubles( byteData );
+            for ( int j = 0; j < rawData.length; j++ ) {
+                matrix.set( i, j, rawData[j] );
             }
+            rowMap.put( designElement, i );
             matrix.addRowName( designElement.getName(), i );
         }
     }
