@@ -119,6 +119,22 @@
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>  
 		
+		<%
+		if ( gene.getProducts().size() > 0 ) {
+		%>
+         <h3>
+			<fmt:message key="gene.products" />
+		</h3>
+		<% 
+		} 
+		%>
+		
+         <display:table name="gene.products" class="list" requestURI="" id="productsList" 
+			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
+			<display:column property="name" sortable="true" maxWords="20"/>
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>  
+		
 		<br />
 		There are <b>
 		<a href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><c:out value="${compositeSequenceCount}"/> </a>

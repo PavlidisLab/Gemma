@@ -93,10 +93,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected long handleGetCompositeSequenceCountById( long id ) throws Exception {
         long count = 0;
-
-        final String queryString = "select count(distinct compositeSequence) from BioSequence2GeneProductImpl as bs2gp,CompositeSequenceImpl as compositeSequence "
+        final String queryString = "select count(distinct compositeSequence) from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+            + " and compositeSequence.id=bs2gp.bioSequence.id "
+            + " and gene.id = :id ";
+        /*final String queryString = "select count(distinct compositeSequence) from BioSequence2GeneProductImpl as bs2gp,CompositeSequenceImpl as compositeSequence "
                 + "where bs2gp.geneProduct.id in (select gene.products.id from GeneImpl as gene where gene.id = :id) and "
-                + "bs2gp.bioSequence = compositeSequence.biologicalCharacteristic";
+                + "bs2gp.bioSequence = compositeSequence.biologicalCharacteristic";*/
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", id );
@@ -115,9 +117,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected Collection handleGetCompositeSequencesById( long id ) throws Exception {
         Collection<CompositeSequence> compSeq = null;
-        final String queryString = "select distinct compositeSequence from BioSequence2GeneProductImpl as bs2gp,CompositeSequenceImpl as compositeSequence "
+        final String queryString = "select distinct compositeSequence from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+            + " and compositeSequence.id=bs2gp.bioSequence.id "
+            + " and gene.id = :id ";        
+        /*final String queryString = "select distinct compositeSequence from BioSequence2GeneProductImpl as bs2gp,CompositeSequenceImpl as compositeSequence "
                 + "where bs2gp.geneProduct.id in (select gene.products.id from GeneImpl as gene where gene.id = :id) and "
-                + "bs2gp.bioSequence = compositeSequence.biologicalCharacteristic";
+                + "bs2gp.bioSequence = compositeSequence.biologicalCharacteristic";*/
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", id );

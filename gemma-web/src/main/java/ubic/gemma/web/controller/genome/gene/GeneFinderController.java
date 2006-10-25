@@ -35,12 +35,11 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController;
 
 /** 
  * @author joseph
@@ -50,6 +49,7 @@ import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController;
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneProductService" ref="geneProductService" 
+ * @spring.property name="bioSequenceService" ref="bioSequenceService" 
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"  
  */
 public class GeneFinderController extends SimpleFormController {
@@ -58,6 +58,22 @@ public class GeneFinderController extends SimpleFormController {
     private GeneService geneService;
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
+    private BioSequenceService bioSequenceService;
+    
+    
+    /**
+     * @return the bioSequenceService
+     */
+    public BioSequenceService getBioSequenceService() {
+        return bioSequenceService;
+    }
+
+    /**
+     * @param bioSequenceService the bioSequenceService to set
+     */
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
     
     /**
      * @return the compositeSequenceService
@@ -109,28 +125,26 @@ public class GeneFinderController extends SimpleFormController {
         String searchString = request.getParameter( "searchString" );
 
         // search by inexact symbol
-        //Collection tmp = new ArrayList<Gene>();
         Set<Gene> geneSet =  new HashSet<Gene>();
 
         geneSet.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
         geneSet.addAll( geneService.getByGeneAlias( searchString ) );  
+        
         geneSet.addAll( geneProductService.getGenesByName( searchString ) );  
-        geneSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );  
-    
+        geneSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );   
+        
+        geneSet.addAll( bioSequenceService.getGenesByAccession( searchString ) );
+        geneSet.addAll( bioSequenceService.getGenesByName( searchString ) );
+        
         List<Gene> geneList = new ArrayList<Gene>(geneSet);
         Comparator<Gene> comparator = new GeneComparator();
         Collections.sort( geneList, comparator );
-//        Collection<Gene> genesOfficialSymbol = geneService.findByOfficialSymbolInexact( searchString );
-//        Collection<Gene> genesAlias = geneService.getByGeneAlias( searchString );
-//        Set<Gene> genesGeneProductSet = new HashSet<Gene>();
-//        genesGeneProductSet.addAll( geneProductService.getGenesByName( searchString ) );
-//        genesGeneProductSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );        
+      
         ModelAndView mav = new ModelAndView("geneFinderList");
         mav.addObject( "genes", geneList );
         mav.addObject( "searchParameter", searchString );
         
         return mav;
-
     }
 
     /**
@@ -154,4 +168,6 @@ public class GeneFinderController extends SimpleFormController {
             return obj0.getName().compareTo( obj1.getName() );
         }
     }
+
+
 }

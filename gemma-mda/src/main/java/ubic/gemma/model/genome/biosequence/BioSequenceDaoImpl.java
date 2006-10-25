@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,6 +27,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -113,5 +116,44 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             sb.append( "\n" );
         }
         log.debug( sb.toString() );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByAccession(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenesByAccession( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp where gene.products.id=bs2gp.geneProduct.id "
+            + " and bs2gp.bioSequence.sequenceDatabaseEntry.accession like :search ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
+     */
+    @Override
+    protected Collection handleGetGenesByName( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp where gene.products.id=bs2gp.geneProduct.id "
+        + " and bs2gp.bioSequence.name like :search ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
     }
 }

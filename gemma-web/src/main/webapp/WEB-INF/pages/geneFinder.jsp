@@ -10,9 +10,9 @@ From here you can search the Gemma database for existing Genes.
 The search will be by:
 <BR />
 <BR />
-- official symbol (implemented)
+- official symbol 
 <BR />
-- synonym (implemented)
+- synonym 
 <BR /> 
 - genes that have gene products with that name or GI number
 <BR />
