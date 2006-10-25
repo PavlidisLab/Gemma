@@ -77,6 +77,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
 
+        // FIXME don't need to load db, but reusing this for now.
         /* read file and load data in database */
         ee = service.load( metaData, data );
 
@@ -85,7 +86,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
                 .getBean( "expressionExperimentService" );
         eeService.thaw( ee );
 
-        setComplete();
+        // setComplete();
 
         assertNotNull( ee );
         assertEquals( 200, ee.getDesignElementDataVectors().size() );
@@ -112,7 +113,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ArrayDesign adFromDb = adService.findArrayDesignByName( "new ad" );
-        adService.thaw( adFromDb );
+        // adService.thaw( adFromDb );
 
         Collection designElements = adFromDb.getCompositeSequences();
 
