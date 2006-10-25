@@ -46,7 +46,7 @@ import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionDataMatrixTest extends TestCase {
+public class ExpressionDataDesignElementDataVectorMatrixTest extends TestCase {
     Log log = LogFactory.getLog( this.getClass() );
     String[] rowNames = null;
     String[] colNames = null;
