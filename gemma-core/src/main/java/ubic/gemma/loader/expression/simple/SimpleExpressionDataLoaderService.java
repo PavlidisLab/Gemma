@@ -70,18 +70,24 @@ public class SimpleExpressionDataLoaderService {
     TaxonService taxonService;
 
     /**
-     * @param metaData
-     * @param data tab-delimited file with row names corresponding to CompositeSequence names and column names
-     *        corresponding to BioAssay names.
-     * @return
+     * @param data
+     * @return DoubleMatrixNamed
      * @throws IOException
      */
-    public ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData, InputStream data )
-            throws IOException {
-
+    public DoubleMatrixNamed parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        DoubleMatrixNamed matrix = ( DoubleMatrixNamed ) reader.read( data );
+        return ( DoubleMatrixNamed ) reader.read( data );
+    }
 
+    /**
+     * @param metaData
+     * @param matrix
+     * @return ExpressionExperiment
+     */
+    public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
+        if ( matrix == null || metaData == null ) {
+            throw new IllegalArgumentException( "One or all of method arguments was null" );
+        }
         Taxon taxon = convertTaxon( metaData.getTaxon() );
 
         ArrayDesign arrayDesign = convertArrayDesign( metaData, matrix );
@@ -102,6 +108,26 @@ public class SimpleExpressionDataLoaderService {
         Collection<DesignElementDataVector> vectors = convertDesignElementDataVectors( experiment, bad, arrayDesign,
                 quantitationType, matrix );
         experiment.setDesignElementDataVectors( vectors );
+        experiment.setBioAssays( bad.getBioAssays() );
+
+        return experiment;
+    }
+
+    /**
+     * Parses, converts (into Gemma objects), and loads data into the database.
+     * 
+     * @param metaData
+     * @param data tab-delimited file with row names corresponding to CompositeSequence names and column names
+     *        corresponding to BioAssay names.
+     * @return
+     * @throws IOException
+     */
+    public ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData, InputStream data )
+            throws IOException {
+
+        DoubleMatrixNamed matrix = parse( data );
+
+        ExpressionExperiment experiment = convert( metaData, matrix );
 
         return ( ExpressionExperiment ) persisterHelper.persist( experiment );
     }
@@ -114,6 +140,11 @@ public class SimpleExpressionDataLoaderService {
         return taxonService.findOrCreate( taxon );
     }
 
+    /**
+     * @param metaData
+     * @param matrix
+     * @return
+     */
     private ArrayDesign convertArrayDesign( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
         ArrayDesign arrayDesign = metaData.getArrayDesign();
 
@@ -156,6 +187,13 @@ public class SimpleExpressionDataLoaderService {
         return result;
     }
 
+    /**
+     * @param ee
+     * @param arrayDesign
+     * @param taxon
+     * @param matrix
+     * @return BioAssayDimension
+     */
     private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
             DoubleMatrixNamed matrix ) {
 
@@ -185,6 +223,14 @@ public class SimpleExpressionDataLoaderService {
         return bad;
     }
 
+    /**
+     * @param expressionExperiment
+     * @param bioAssayDimension
+     * @param arrayDesign
+     * @param quantitationType
+     * @param matrix
+     * @return Collection<DesignElementDataVector>
+     */
     private Collection<DesignElementDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
             QuantitationType quantitationType, DoubleMatrixNamed matrix ) {
