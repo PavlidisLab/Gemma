@@ -226,7 +226,7 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * Convert {@link DesignElementDataVector}s into a {@link DoubleMatrixNamed}.
      * 
      * @param vectors
-     * @return
+     * @return DoubleMatrixNamed
      */
     private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
@@ -266,6 +266,14 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
             rowNum++;
         }
         return matrix;
+    }
+
+    /**
+     * @return DoubleMatrixNamed
+     * @deprecated Access to the data should be through the ExpressionDataMatrix.
+     */
+    public DoubleMatrixNamed getDoubleMatrixNamed() {
+        return this.matrix;
     }
 
 }
