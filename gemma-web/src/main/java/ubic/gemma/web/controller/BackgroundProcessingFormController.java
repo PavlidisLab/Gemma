@@ -73,7 +73,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
 
         BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
 
-        request.setAttribute( JOB_ATTRIBUTE, taskId );
+        request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 

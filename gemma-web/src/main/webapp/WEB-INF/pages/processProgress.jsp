@@ -3,7 +3,8 @@
 <html>
 	<head>
 		<title>Wait...</title>
-		<script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
+		<script type='text/javascript'
+			src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 		<script type='text/javascript' src="<c:url value="scripts/indeterminateProgress.js"/>"></script>
@@ -30,8 +31,11 @@
 			<input type="hidden" name="taskId" />
 		</form>
 
+		<form method="post" action="<c:url value="/processDelete.html"/>">			
+			<input type="submit" value="cancel" />
+		</form>
 
-		<script type="text/javascript">
+<script type="text/javascript">
 	startProgress();
 </script>
 

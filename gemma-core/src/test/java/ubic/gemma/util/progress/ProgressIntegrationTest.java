@@ -61,7 +61,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     public void testCreateAnonymousProgressJob() {
 
         pJob = ProgressManager.createProgressJob( null, "123456", "Testing the Progress Manager in anonymous ways" );
-        assertEquals( pJob.getUser(), null );
+        assertEquals( "test",pJob.getUser() );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager in anonymous ways" );
 
         ProgressManager.destroyProgressJob( pJob ); // clean up so this test won't affect next tests

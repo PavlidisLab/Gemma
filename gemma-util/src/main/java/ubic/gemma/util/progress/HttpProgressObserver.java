@@ -68,7 +68,9 @@ public class HttpProgressObserver implements Observer, Serializable {
             logger.info( "No user associated with security context.  Tried to use session id: " + sessionId
                     + "  successful = " + hasLiveJob );
 
-        }
+        } else
+            logger.info( "User associated with security context. User = "
+                    + SecurityContextHolder.getContext().getAuthentication().getName() );
 
     }
 

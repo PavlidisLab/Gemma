@@ -26,6 +26,7 @@ import java.util.Observer;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -134,8 +135,7 @@ public class ProgressManager {
     }
 
     /**
-     * @param id If a valid user name is used for the id the progress job created will be automatically associated with
-     *        that user, else there will be no association between the created job and any user. If a user name is not
+     * @param UserId This could be a user name or some kind of sessionID that the user is using. If a user name is not
      *        used then the HTTPSessionID must be used for anonymous users. If it is not used there will be no way for
      *        the Ajax call back to get the progress job that it wants to observer. todo: should session id's be
      *        persisted to the database for anonymous users?
@@ -143,37 +143,43 @@ public class ProgressManager {
      * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
      *         job assciated with it that progress job will be returned.
      */
-    public static synchronized ProgressJob createProgressJob( String taskId, String userName, String description ) {
+    public static synchronized ProgressJob createProgressJob( String taskId, String userId, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
-        // Use the taskId if we have one; otherwise the username.
-        String key = taskId == null ? userName : taskId;
-
-        if ( !progressJobs.containsKey( key ) ) {
-            log.debug( "Creating new progress job(s) with key " + key );
-            progressJobs.put( key, new Vector<ProgressJob>() );
+        if ( !progressJobs.containsKey( userId ) ) {
+            log.debug( "Creating new progress job(s) with key " + userId );
+            progressJobs.put( userId, new Vector<ProgressJob>() );
         } else {
-            log.debug( "Already have job with key " + key );
+            log.debug( "Already have job with key " + userId );
         }
 
-        usersJobs = progressJobs.get( key );
+        usersJobs = progressJobs.get(userId  );
 
         // No job currently assciated with this thread or the job assciated with the thread is no longer valid
         if ( ( currentJob.get() == null ) || ( progressJobsById.get( currentJob.get() ) == null ) ) {
-            JobInfo jobI = createnewJobInfo( key, userName, description );
+            JobInfo jobI = createnewJobInfo( taskId, userId, description );
 
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
             newJob = new ProgressJobImpl( createdJobI, description );
+            
+            //if no user is set then the userName should be a sessionId
+            
+            if (createdJobI.getUser() == null)
+                newJob.setTrackingId( userId );
+            
             currentJob.set( createdJobI.getId() );
+            
             newJob.setPhase( 0 );
 
             // keep track of these jobs
             usersJobs.add( newJob ); // adds to the progressJobs collection
             progressJobsById.put( createdJobI.getId(), newJob );
-            progressJobsByTaskId.put( key, newJob );
+            if (taskId != null)
+                progressJobsByTaskId.put( taskId, newJob );
+            
         } else {
             Long oldId = currentJob.get();
             newJob = progressJobsById.get( oldId );
@@ -182,8 +188,7 @@ public class ProgressManager {
             newJob.setPhase( newJob.getPhase() + 1 );
             newJob.setDescription( description );
         }
-
-        newJob.setTrackingId( key );
+        
         ProgressManager.dump();
 
         return newJob;
@@ -195,16 +200,27 @@ public class ProgressManager {
      * @return
      */
     private static JobInfo createnewJobInfo( String taskId, String userName, String description ) {
+        
         Calendar cal = new GregorianCalendar();
         JobInfo jobI = JobInfo.Factory.newInstance();
         jobI.setRunningStatus( true );
         jobI.setStartTime( cal.getTime() );
         jobI.setDescription( description );
         jobI.setTaskId( taskId );
-        // User aUser = userService.findByUserName( SecurityContextHolder.getContext().getAuthentication().getName()
-        // );
+
         User aUser = userService.findByUserName( userName );
-        if ( aUser != null ) jobI.setUser( aUser );
+        
+        //Try to use the userName asscciated with the security context
+        if (aUser == null)
+            aUser = userService.findByUserName( SecurityContextHolder.getContext().getAuthentication().getName() );
+            
+        if ( aUser != null )
+            jobI.setUser( aUser );
+        else {
+            jobI.setUser( null );
+            log.debug( "No user assciated with job. Client side observer will have no way to receive progress messages.  Use sesison ID for anonymous users." );
+        }
+        
         return jobI;
     }
 
@@ -222,14 +238,14 @@ public class ProgressManager {
 
             for ( Iterator values = progressJobs.get( name ).iterator(); values.hasNext(); ) {
                 ProgressJob job = ( ProgressJob ) values.next();
-                log.debug( "====> progressJob: " + job );
+                log.debug( "====> progressJob: " + job.getId() );
             }
         }
 
         log.debug( "ProgressJobsById Dump:  " );
         for ( Iterator iter = progressJobsById.keySet().iterator(); iter.hasNext(); ) {
             Long id = ( Long ) iter.next();
-            log.debug( " Id: " + id + " ProgressJob: " + progressJobsById.get( id ) );
+            log.debug( " Id: " + id + " ProgressJob: " + progressJobsById.get( id ).getId() );
 
         }
 
@@ -321,21 +337,36 @@ public class ProgressManager {
      * @param ajob
      */
     public static synchronized boolean destroyProgressJob( ProgressJob progressJob ) {
+
+        if ( progressJob == null ) {
+            log
+                    .debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
+            return false;
+        }
         log.debug( "Destroying " + progressJob );
 
         progressJob.updateProgress( new ProgressData( 100, "Task stage completed ...", true, progressJob
                 .getForwardingURL() ) );
         progressJob.done();
 
-        if ( progressJobs.containsKey( progressJob.getTrackingId() ) ) {
+        //sorted by user?
+        if ((progressJob.getUser() != null) && (progressJobs.containsKey( progressJob.getUser() ))) {
+            Collection jobs = progressJobs.get( progressJob.getUser() );
+            jobs.remove( progressJob );
+            if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getUser() );
+        }
+        
+        //sorted by sessionID?
+        if  ((progressJob.getTrackingId() != null) && ( progressJobs.containsKey( progressJob.getTrackingId() ) ) ){
             Collection jobs = progressJobs.get( progressJob.getTrackingId() );
             jobs.remove( progressJob );
             if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getTrackingId() );
         }
+        
         if ( progressJobsById.containsKey( progressJob.getId() ) ) progressJobsById.remove( progressJob.getId() );
 
-        if ( progressJobsByTaskId.containsKey( progressJob.getTrackingId() ) )
-            progressJobsByTaskId.remove( progressJob.getTrackingId() );
+        if (( progressJob.getJobInfo().getTaskId() != null) && (progressJobsByTaskId.containsKey( progressJob.getJobInfo().getTaskId() ) ))
+            progressJobsByTaskId.remove( progressJob.getJobInfo().getTaskId() );
 
         currentJob.set( null );
         jobInfoDao.update( progressJob.getJobInfo() );
@@ -379,6 +410,7 @@ public class ProgressManager {
         log.debug( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
+        job.getJobInfo().setFailedMessage( cause.toString() );
         destroyProgressJob( job );
         // FIXME do something with the cause...
     }

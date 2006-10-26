@@ -36,7 +36,21 @@ function startProgress() {
 	return true;
 }
 function createProgressBar() {
-	document.write("<div id=\"progressBar\" style=\"display: none;\"> <div id=\"theMeter\">  <div id=\"progressBarText\"></div>   <div id=\"progressBarBox\">  <div id=\"progressBarBoxContent\"></div>  </div>  </div>  </div>");
+	document.write("
+	 <div id=\"progressBar\" style=\"display:none;\">
+			<div id=\"theMeter\">
+				<div id=\"progressBarText\">
+					<textarea id=\"progressTextArea\" name=\"\" rows=5 cols=60 readonly=true> </textarea>
+				</div>
+				<div id=\"progressBarBox\">
+					<div id=\"progressBarBoxContent\"></div>
+				</div>
+			</div>
+		</div>
+
+		<form>
+			<input type=\"hidden\" name=\"taskId\" />
+		</form> ");
 }
 function moveProgress(count) {
 	document.getElementById("progressBarBoxContent").style.width = parseInt(count * 35) + "px";

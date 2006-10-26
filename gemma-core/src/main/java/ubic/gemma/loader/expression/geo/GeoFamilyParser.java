@@ -361,9 +361,17 @@ public class GeoFamilyParser implements Parser {
                     log.error( "Empty or null line" );
                     continue;
                 }
+                
                 parseLine( line );
                 if ( ++parsedLines % 20000 == 0 && log.isInfoEnabled() ) {
+                    
                     log.info( "Parsed " + parsedLines + " lines" );
+                    
+                    if (Thread.currentThread().isInterrupted()) {
+                        dis.close();    //clean up                       
+                        throw new CancellationException("Thread was terminated during parsing. " + this.getClass());
+                    }
+                    
                 }
             }
         } catch ( Exception e ) {

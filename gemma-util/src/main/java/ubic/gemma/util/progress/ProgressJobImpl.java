@@ -32,9 +32,9 @@ import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 public class ProgressJobImpl extends Observable implements ProgressJob {
 
     protected ProgressData pData;
-    protected JobInfo jInfo;
+    protected JobInfo jInfo;        //this obj is persisted to DB
     protected int currentPhase;
-    protected String trackingId;
+    protected String trackingId;    //session id
     protected String forwardingURL;
 
     /*
@@ -210,7 +210,10 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     }
 
     private void updateDescriptionHistory( String message ) {
-        this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
+        if (this.jInfo.getMessages() == null)
+            this.jInfo.setMessages( message );
+        else
+            this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
     }
 
 }

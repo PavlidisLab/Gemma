@@ -199,6 +199,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 .fetchAndLoad( "GSE1133" );
         ee = results.iterator().next(); // fixme, need to delete both.
         assertEquals( 2, results.size() );
+
     }
 
     /**
@@ -301,6 +302,18 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ads.add( ad );
         int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
         assertEquals( 100, actualValue );
+    }
+    
+    
+    public void testFetchAndLoadCancel() throws Exception {
+        
+        endTransaction();
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gds994Short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS994" );
+        
     }
 
     //

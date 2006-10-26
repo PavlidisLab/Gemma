@@ -65,7 +65,7 @@ public class TaskCompletionController extends AbstractController {
     @SuppressWarnings("unused")
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
 
         if ( taskId == null ) {
             throw new IllegalArgumentException( "No task id" );

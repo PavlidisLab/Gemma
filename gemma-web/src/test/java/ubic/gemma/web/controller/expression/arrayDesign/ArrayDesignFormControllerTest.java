@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
@@ -91,6 +92,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
         request = new MockHttpServletRequest( "POST", "/arrays/editArrayDesign.html" );
         request.addParameter( "name", ad.getName() );
         request.addParameter( "description", ad.getDescription() );
+        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
 
@@ -113,6 +115,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
 
         request = new MockHttpServletRequest( "GET", "/arrays/editArrayDesign.html" );
         request.addParameter( "name", ad.getName() );
+        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
 

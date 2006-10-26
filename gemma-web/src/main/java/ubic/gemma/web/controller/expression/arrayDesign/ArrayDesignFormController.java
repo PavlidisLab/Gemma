@@ -65,16 +65,19 @@ public class ArrayDesignFormController extends BaseFormController {
         String idString = request.getParameter( "id" );
 
         Long id;
-
+        ArrayDesign arrayDesign = null;
+        
         // should be caught by validation.
-        try {
-            id = Long.parseLong( idString );
-        } catch ( NumberFormatException e ) {
-            throw new IllegalArgumentException();
+        if ( idString != null ) {
+            try {
+                id = Long.parseLong( idString );
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException();
+            }
+            arrayDesign = arrayDesignService.load( id );
+
         }
-
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
-
+        
         if ( arrayDesign == null ) {
             return ArrayDesign.Factory.newInstance();
         }

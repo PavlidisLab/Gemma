@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -86,8 +87,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
             designElement = compositeSequenceService.create( ( CompositeSequence ) designElement );
 
-            this.getHibernateTemplate().flush();
-
+            this.getHibernateTemplate().flush();          
             arrayDesign.getCompositeSequences().add( ( CompositeSequence ) designElement );
 
         } else {
@@ -269,15 +269,17 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
                 log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
                         + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
+                
+                
             }
             if ( count % SESSION_BATCH_SIZE == 0 ) {
                 this.getHibernateTemplate().flush();
                 this.getHibernateTemplate().clear();
-                if ( Thread.interrupted() ) {
+                if ( Thread.currentThread().isInterrupted()) {
                     log.info( "Cancelled" );
                     // we should clean up after ourselves.
                     arrayDesignService.remove( arrayDesign ); // etc
-                    return null;
+                    throw new CancellationException("Thread was terminated during persisting the arraydesign. " + this.getClass());
                 }
             }
         }
@@ -317,6 +319,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         arrayDesignService.update( arrayDesign );
+
+        if ( Thread.currentThread().isInterrupted()) {
+            log.info( "Cancelled" );
+            // we should clean up after ourselves.
+            arrayDesignService.remove( arrayDesign ); // etc
+            throw new CancellationException("Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass());
+        }
+        
         return arrayDesign;
     }
 

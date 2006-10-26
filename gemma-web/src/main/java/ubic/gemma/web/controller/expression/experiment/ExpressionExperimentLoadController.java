@@ -74,7 +74,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
-            Future job = ( Future ) request.getAttribute( JOB_ATTRIBUTE );
+            Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
             job.cancel( true );
             this.saveMessage( request, "Cancelled processing" );
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );

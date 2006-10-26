@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
@@ -409,14 +410,16 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         // this does most of the preparatory work.
         processBioAssays( entity );
 
-        if ( Thread.interrupted() ) {
+        log.info( "Persisting expression experiment" );
+        entity = expressionExperimentService.create( entity );
+
+        if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
-            // we should clean up after ourselves.
-            return null;
+            expressionExperimentService.delete( entity );
+            throw new CancellationException( "Thread canceled during EE persisting. " + this.getClass() );
         }
 
-        log.info( "Persisting expression experiment" );
-        return expressionExperimentService.create( entity );
+        return entity;
     }
 
     /**
