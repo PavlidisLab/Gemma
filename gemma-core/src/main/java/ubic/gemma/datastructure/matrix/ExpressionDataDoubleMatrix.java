@@ -94,7 +94,7 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
                 continue;
             }
             rowMap.put( designElement, i );
-
+            i++;
         }
 
         matrix = vectorsToDoubleMatrix( vectorsOfInterest );
