@@ -31,6 +31,22 @@ import java.util.HashSet;
  */
 public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.BioSequenceServiceBase {
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(long)
+     */
+    @Override
+    protected BioSequence handleLoad( long id ) throws Exception {
+        return (BioSequence) this.getBioSequenceDao().load( id );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoadAll()
+     */
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getBioSequenceDao().loadAll();
+    }
+
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
