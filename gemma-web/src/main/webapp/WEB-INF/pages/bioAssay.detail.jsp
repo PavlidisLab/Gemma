@@ -52,7 +52,7 @@
         </h3>
         <display:table name="bioAssay.arrayDesignUsed" class="list" requestURI="" id="arrayDesignList"
          pagesize="10" >
-            <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrayDesign/showArrayDesign.html" paramId="name" paramProperty="name"/>
+            <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrays/showArrayDesign.html" paramId="id" paramProperty="id"/>
             <display:column property="description" maxWords="100" />
             <display:column property="advertisedNumberOfDesignElements" maxWords="100" />
         </display:table>
