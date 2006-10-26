@@ -57,6 +57,7 @@
             <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
             <prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
             <prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
+            <prop key="/processDelete.html">processDeleteController</prop>
             <prop key="/checkJobProgress.html">taskCompletionController</prop>
             <prop key="/mock.html">mockController</prop>
         </props>
