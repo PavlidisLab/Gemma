@@ -84,6 +84,27 @@
 				</spring:bind>
 			</td>
 		</tr>
+		
+		<tr>
+			<td valign="top">
+				<b> <fmt:message key="label.standardQuantitationTypeName" /> </b>
+			</td>
+
+			<td>
+
+				<spring:bind path="expressionExperimentVisualizationCommand.standardQuantitationTypeName">
+					<select name="${status.expression}">
+						<c:forEach items="${standardQuantitationTypeNames}" var="standardQuantitationTypeName">
+							<option value="${standardQuantitationTypeName}"
+								<c:if test="${status.value == standardQuantitationTypeName}">selected="selected" </c:if>>
+								${standardQuantitationTypeName}
+							</option>
+						</c:forEach>
+					</select>
+					<span class="fieldError">${status.errorMessage}</span>
+				</spring:bind>
+			</td>
+		</tr>
 
 		<tr>
 			<td valign="top">

@@ -41,6 +41,8 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -77,6 +79,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private CompositeSequenceService compositeSequenceService = null;
     private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
     private List<DesignElement> compositeSequences = null;
+    private QuantitationType quantitationType = null;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -116,6 +119,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
         eesc.setStringency( 1 );
         eesc.setSpecies( "Human" );
+        eesc.setStandardQuantitationTypeName( StandardQuantitationType.RATIO.getValue() );
 
         return eesc;
 
@@ -169,14 +173,25 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         log.debug( "Got " + arrayDesigns.size() + " array designs for the expression experiment with id " + id );
 
+        /* Get the selected standard quantitation type. */
+        String standardQuantitationTypeName = eesc.getStandardQuantitationTypeName();
+        quantitationType = QuantitationType.Factory.newInstance();
+        StandardQuantitationType standardQuantitationType = null;
+        if ( StandardQuantitationType.literals().contains( standardQuantitationTypeName ) ) {
+            standardQuantitationType = StandardQuantitationType.fromString( standardQuantitationTypeName );
+        } else {
+            standardQuantitationType = StandardQuantitationType.OTHER;
+            log.warn( "Invalid quantitation type.  Using " + standardQuantitationType + " instead" );
+        }
+        quantitationType.setType( standardQuantitationType );
+
         // more searchString validation - see also validation.xml
-        String searchString = ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchString();
+        String searchString = eesc.getSearchString();
         log.debug( "Got search string " + searchString );
         String[] searchIds = StringUtils.split( searchString, "," );
 
         /* handle search by design element */
-        if ( ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria().equalsIgnoreCase(
-                "probe set id" ) ) {
+        if ( eesc.getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
             Collection<Gene> geneCol = null;
             for ( ArrayDesign design : arrayDesigns ) {
 
@@ -231,7 +246,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         log.debug( "entering onSubmit" );
 
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        String searchCriteria = ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria();
+        String searchCriteria = eesc.getSearchCriteria();
 
         // TODO remove this
         // boolean suppressVisualizations = ( ( ExpressionExperimentVisualizationCommand ) command )
@@ -243,6 +258,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 .createDir( "../webapps/ROOT/visualization/" ) );
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
+
+        log.debug( "Quantitation Type " + quantitationType.getType().getValue() );
 
         ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
         HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
@@ -269,12 +286,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     @SuppressWarnings("unused")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
+
+        Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
+
         // add search categories
         Collection<String> searchCategories = new HashSet<String>();
         searchCategories.add( "gene symbol" );
         searchCategories.add( "probe set id" );
-
-        Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
 
         searchByMap.put( "searchCategories", searchCategories );
 
@@ -285,6 +303,14 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         speciesCategories.add( "Rat" );
 
         searchByMap.put( "speciesCategories", speciesCategories );
+
+        // add standard quantitation types to select from
+        Collection<String> standardQuantitationTypeNames = StandardQuantitationType.literals();
+        for ( String name : standardQuantitationTypeNames ) {
+            log.warn( name );
+        }
+
+        searchByMap.put( "standardQuantitationTypeNames", standardQuantitationTypeNames );
 
         return searchByMap;
     }

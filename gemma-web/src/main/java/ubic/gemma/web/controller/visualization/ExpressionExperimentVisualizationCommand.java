@@ -47,6 +47,8 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     private String filename = null;
 
     private String species = null;
+    
+    private String standardQuantitationTypeName = null;
 
     /**
      * @return Returns the filename.
@@ -172,6 +174,22 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
      */
     public void setExpressionExperimentId( Long id ) {
         this.expressionExperimentId = id;
+    }
+    
+    /**
+     * 
+     * @return String
+     */
+    public String getStandardQuantitationTypeName() {
+        return standardQuantitationTypeName;
+    }
+    
+    /**
+     * 
+     * @param standardQuantitationType
+     */
+    public void setStandardQuantitationTypeName( String standardQuantitationTypeName ) {
+        this.standardQuantitationTypeName = standardQuantitationTypeName;
     }
 
 }
