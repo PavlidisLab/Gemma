@@ -23,10 +23,7 @@ import java.awt.Font;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Random;
-import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -89,7 +86,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer
                 .getExpressionDataMatrix();
 
-        type = "bar";// dummy for now
+        type = "matrix";
         OutputStream out = null;
         try {
             out = response.getOutputStream();
@@ -101,7 +98,9 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                     display.writeOutAsPNG( out, false, false );
                 }
             } else if ( type.equals( "profile" ) ) {
-                JFreeChart chart = null;// createXYLineChart( title, dataCol, DEFAULT_MAX_SIZE );
+                String title = "Expression Profiles";
+                JFreeChart chart = createXYLineChart( title, httpExpressionDataMatrixVisualizer
+                        .getRowData( expressionDataMatrix ), DEFAULT_MAX_SIZE );
                 if ( chart != null ) {
                     response.setContentType( "image/png" );
                     ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
@@ -116,7 +115,8 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                 }
             }
         } catch ( Exception e ) {
-            log.error( e.toString() );
+            log.error( "Error is: " );
+            e.printStackTrace();
         } finally {
             if ( out != null ) {
                 try {

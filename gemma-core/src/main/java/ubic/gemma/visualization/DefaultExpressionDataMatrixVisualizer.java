@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
@@ -62,7 +63,8 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * @param expressionDataMatrix
      * @param imageFile
      */
-    public DefaultExpressionDataMatrixVisualizer( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix, String imageFile ) {
+    public DefaultExpressionDataMatrixVisualizer( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix,
+            String imageFile ) {
         super( imageFile );
         this.expressionDataMatrix = expressionDataMatrix;
     }
@@ -74,6 +76,40 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      */
     public ExpressionDataDesignElementDataVectorMatrix getExpressionDataMatrix() {
         return expressionDataMatrix;
+    }
+
+    /**
+     * @param expressionDataMatrix
+     * @return Collection<double[]>
+     */
+    public Collection<double[]> getRowData( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix ) {
+        // TODO make part of interface
+
+        if ( expressionDataMatrix == null || expressionDataMatrix.getDesignElements() == null ) {
+            throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
+        }
+
+        Collection<DesignElement> deCol = expressionDataMatrix.getDesignElements();
+
+        Collection<double[]> dataCol = new HashSet<double[]>();
+
+        ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
+
+        int i = 0;
+        for ( DesignElement designElement : deCol ) {
+            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
+                    .getDesignElementDataVectors();
+            Iterator iter = vectors.iterator();
+            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
+
+            double[] data = byteArrayConverter.byteArrayToDoubles( vector.getData() );
+
+            dataCol.add( data );
+
+            i++;
+        }
+
+        return dataCol;
     }
 
     /*

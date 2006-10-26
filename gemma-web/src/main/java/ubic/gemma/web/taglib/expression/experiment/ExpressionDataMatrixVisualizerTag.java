@@ -133,7 +133,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
                 // buf.append( "<img src=\"" + imageFile + "\">" );
-                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=400 height=300/>" );
+                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=100 height=100/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( String name : designElementNames ) {
