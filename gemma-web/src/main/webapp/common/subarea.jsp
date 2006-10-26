@@ -9,5 +9,8 @@
 	News
 </h2>
 <p class="line">
+	The Gemma alpha build is now up! Use at your own risk.
+</p>
+<p class="line">
 	We're working hard to get Gemma ready for an initial launch...
 </p>
