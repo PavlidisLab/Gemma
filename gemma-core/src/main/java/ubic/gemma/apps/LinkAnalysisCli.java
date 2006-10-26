@@ -147,29 +147,34 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         }
         this.linkAnalysis.outputOptions();
         try {
-            GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-            // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( actualExperimentsPath ) );
-            geoService.setLoadPlatformOnly( false );
-            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( this.geneExpressionFile );
-
             ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                    .getBean( "expressionExperimentService" );
+            .getBean( "expressionExperimentService" );
+            ExpressionExperiment expressionExperiment = eeService.findByShortName(this.geneExpressionFile);
+            if(expressionExperiment == null)
+            {
+            	GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
+            	// geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            	geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( actualExperimentsPath ) );
+            	geoService.setLoadPlatformOnly( false );
+            	Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( this.geneExpressionFile );
+            	expressionExperiment = ees.iterator().next();
+            }
+
             // this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
             ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this
                     .getBean( "expressionDataMatrixService" );
-            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( ees.iterator().next(), this
+            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this
                     .getQuantitationType() );
             this.linkAnalysis.setDataMatrix( dataMatrix );
 
             DesignElementDataVectorService vectorService = ( DesignElementDataVectorService ) this
                     .getBean( "designElementDataVectorService" );
-            Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( ees.iterator().next(),
+            Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,
                     this.getQuantitationType() );
             this.linkAnalysis.setDataVector( dataVectors );
             this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
                     .getBean( "probe2ProbeCoexpressionService" ) );
-            this.linkAnalysis.setTaxon( eeService.getTaxon( ees.iterator().next().getId() ) );
+            this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
 
             this.linkAnalysis.analysis();
         } catch ( Exception e ) {

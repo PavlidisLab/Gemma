@@ -230,9 +230,10 @@ public class LinkAnalysis {
             int[] p2vAr = new int[keep.size()];
             int[] cbAr = new int[keep.size()];
             int[] pbAr = new int[keep.size()];
-            System.err.println( "Ready to submit to tmm database." );
+            System.err.println( "Ready to submit to Gemd database." );
             StopWatch watch = new StopWatch();
             watch.start();
+            Collection <Probe2ProbeCoexpression> p2plinks = new HashSet<Probe2ProbeCoexpression>();
             for ( int i = 0, n = keep.size(); i < n; i++ ) {
                 Link m = ( Link ) keep.get( i );
                 double w = m.getWeight();
@@ -262,9 +263,11 @@ public class LinkAnalysis {
                     ppCoexpression.setScore(w);
                     ppCoexpression.setPvalue(CorrelationStats.pvalue(w,c));
                     ppCoexpression.setQuantitationType(v1.getQuantitationType());
-                    Probe2ProbeCoexpression ppCo = this.ppService.create(ppCoexpression);
+                    p2plinks.add(ppCoexpression);
+                    //Probe2ProbeCoexpression ppCo = this.ppService.create(ppCoexpression);
                 }
             }
+            this.ppService.create(p2plinks);
             watch.stop();
             System.err.println( "The time for inserting " + this.keep.size() + " link:" + watch.getTime() );
 /**
