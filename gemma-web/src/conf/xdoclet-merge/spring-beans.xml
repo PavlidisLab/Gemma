@@ -56,6 +56,7 @@
             <prop key="/addTestData.html">testDataAddingController</prop>
             <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
             <prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
+            <prop key="/genome/bioSequence/*">bioSequenceController</prop>
             <prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
             <prop key="/processDelete.html">processDeleteController</prop>
             <prop key="/checkJobProgress.html">taskCompletionController</prop>
@@ -175,6 +176,14 @@
 			<prop key="/designElement/showAllDesignElements.html">showAll</prop>
 			<prop key="/designElement/deleteDesignElement.html">delete</prop>
 			<prop key="/designElement/showDesignElement.html">show</prop>
+		</props>
+	</property>
+</bean>
+<bean id="bioSequenceActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+	<property name="mappings">
+		<props>
+			<prop key="/genome/bioSequence/showAllBioSequences.html">showAll</prop>
+			<prop key="/genome/bioSequence/showBioSequence.html">show</prop>
 		</props>
 	</property>
 </bean>
