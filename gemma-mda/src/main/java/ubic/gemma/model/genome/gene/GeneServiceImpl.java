@@ -32,7 +32,9 @@ import ubic.gemma.model.genome.Gene;
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
      */
     @Override
@@ -40,7 +42,9 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getByGeneAlias( search );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceCountById(long)
      */
     @Override
@@ -48,7 +52,9 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCompositeSequenceCountById( id );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(long)
      */
     @Override
@@ -82,7 +88,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected java.util.Collection<Gene> handleFindByOfficialName( java.lang.String officialName ) throws java.lang.Exception {
+    protected java.util.Collection<Gene> handleFindByOfficialName( java.lang.String officialName )
+            throws java.lang.Exception {
         return this.getGeneDao().findByOfficialName( officialName );
     }
 
@@ -158,7 +165,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     @Override
     protected Gene handleCreate( Gene gene ) throws Exception {
-        return (Gene) this.getGeneDao().create( gene );
+        return ( Gene ) this.getGeneDao().create( gene );
     }
 
     /*
@@ -174,8 +181,17 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     @Override
     protected Gene handleLoad( long id ) throws Exception {
-        return (Gene) this.getGeneDao().load( id );
+        return ( Gene ) this.getGeneDao().load( id );
     }
-   
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleFind(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Gene handleFind( Gene gene ) throws Exception {
+        return this.getGeneDao().find( gene );
+    }
     
 }

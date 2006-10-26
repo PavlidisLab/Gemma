@@ -29,7 +29,9 @@ import java.util.Collection;
  */
 public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
@@ -37,7 +39,9 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
         return this.getGeneProductDao().getGenesByName( search );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @Override
@@ -85,6 +89,16 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id ) throws java.lang.Exception {
         return ( GeneProduct ) this.getGeneProductDao().load( id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    @Override
+    protected GeneProduct handleFind( GeneProduct geneProduct ) throws Exception {
+        return this.getGeneProductDao().find( geneProduct );
     }
 
 }
