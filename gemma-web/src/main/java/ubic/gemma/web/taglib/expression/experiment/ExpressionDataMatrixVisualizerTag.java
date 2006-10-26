@@ -91,21 +91,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             List<String> designElementNames = httpExpressionDataMatrixVisualizer.getRowLabels();
 
-            // TODO document this - not using because we are not reading from an image file.
-            // remove me
-            httpExpressionDataMatrixVisualizer.saveImage( new File( imageFile ), colorMatrix );
-            /* Cannot use \ in non internet explorer browsers. Using / instead. */
-            imageFile = StringUtils.replace( imageFile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
-
-            String urlPrefix = httpExpressionDataMatrixVisualizer.getProtocol() + "://"
-                    + httpExpressionDataMatrixVisualizer.getServer() + ":"
-                    + httpExpressionDataMatrixVisualizer.getPort() + "/";
-            imageFile = StringUtils.replace( imageFile,
-                    StringUtils.splitByWholeSeparator( imageFile, "visualization" )[0], urlPrefix );
-
-            log.debug( "setting compatibility for non-IE browsers " + imageFile );
-            // end remove me
-
             StringBuilder buf = new StringBuilder();
 
             // TODO read these in
@@ -132,7 +117,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
-                // buf.append( "<img src=\"" + imageFile + "\">" );
                 buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=100 height=100/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
