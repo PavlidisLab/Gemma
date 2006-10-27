@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,7 +37,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -73,6 +76,7 @@ public class CoexpressionSearchController extends BaseFormController {
     private GeneService geneService = null;
     private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
     private List<DesignElement> compositeSequences = null;
+    private QuantitationType quantitationType = null;
 
     public CoexpressionSearchController() {
         /*
@@ -122,6 +126,8 @@ public class CoexpressionSearchController extends BaseFormController {
 
         }
 
+        quantitationType = null; // FIXME see ExpressionExperimentVisualizationFormController
+
         return super.processFormSubmission( request, response, command, errors );
     }
 
@@ -152,11 +158,11 @@ public class CoexpressionSearchController extends BaseFormController {
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
         Collection foundGenes = null;
-        ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
+        ExpressionDataMatrix expressionDataMatrix = null;
         HttpExpressionDataMatrixVisualizer matrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( Long.decode( "1" ) );
-            expressionDataMatrix = new ExpressionDataDesignElementDataVectorMatrix( ee, compositeSequences );
+            expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, compositeSequences, quantitationType );
 
             matrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http", request
                     .getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
