@@ -18,21 +18,16 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.gui.ColorMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 
 /**
@@ -45,12 +40,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private static final long serialVersionUID = 6403196597063627020L;
 
     private Log log = LogFactory.getLog( this.getClass() );
-
-    /* supported only by internet explorer */
-    private final String IE_IMG_PATH_SEPARATOR = "\\";
-
-    /* supported by all browsers */
-    private final String ALL_IMG_PATH_SEPARATOR = "/";
 
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
@@ -79,15 +68,11 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         log.debug( "start tag" );
 
         try {
-            // TODO use ExpressionDataDoubleMatrix
             /* get metadata from MatrixVisualizer */
-            ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer
-                    .getExpressionDataMatrix();
+            ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
             String imageFile = httpExpressionDataMatrixVisualizer.getImageFile();
 
-            Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
-
-            ColorMatrix colorMatrix = httpExpressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
+            Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
             List<String> designElementNames = httpExpressionDataMatrixVisualizer.getRowLabels();
 
@@ -103,7 +88,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             // if ( httpExpressionDataMatrixVisualizer.isSuppressVisualizations() ) {
             // buf.append( "Visualizations suppressed." );
             // }
-            if ( expressionDataMatrix == null || m.size() == 0 ) {
+            if ( expressionDataMatrix == null || m.length == 0 ) {
                 buf.append( "No data to display" );
             } else {
 
