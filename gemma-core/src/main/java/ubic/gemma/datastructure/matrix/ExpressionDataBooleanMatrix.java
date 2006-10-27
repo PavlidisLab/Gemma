@@ -2,6 +2,7 @@ package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
@@ -21,7 +22,6 @@ public class ExpressionDataBooleanMatrix implements ExpressionDataMatrix {
 
     private ObjectMatrix2DNamed matrix;
 
-    
     public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
 
     }
@@ -102,6 +102,26 @@ public class ExpressionDataBooleanMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
     public Boolean[][] getRows( List designElements ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowMap()
+     */
+    public Map<DesignElement, Integer> getRowMap() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnMap()
+     */
+    public Map<BioAssay, Integer> getColumnMap() {
         // TODO Auto-generated method stub
         return null;
     }

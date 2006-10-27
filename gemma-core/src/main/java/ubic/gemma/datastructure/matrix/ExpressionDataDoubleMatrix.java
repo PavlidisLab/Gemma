@@ -269,6 +269,28 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
     }
 
     /**
+     * Returns the row map.
+     * 
+     * @return Map<DesignElement,Integer>
+     */
+    public Map<DesignElement, Integer> getRowMap() {
+
+        return this.rowMap;
+
+    }
+
+    /**
+     * Returns the column map.
+     * 
+     * @return Map<BioAssay,Integer>
+     */
+    public Map<BioAssay, Integer> getColumnMap() {
+
+        return this.columnMap;
+
+    }
+
+    /**
      * @return DoubleMatrixNamed
      * @deprecated Access to the data should be through the ExpressionDataMatrix.
      */
