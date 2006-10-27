@@ -79,10 +79,14 @@ public class TaskCompletionController extends AbstractController {
 
         log.debug( "Checking for job " + taskId );
 
+        ModelAndView returnedView;
         try {
-            return ( ModelAndView ) taskRunningService.checkResult( taskId );
+            returnedView =  (ModelAndView) taskRunningService.checkResult( taskId );
+            returnedView.setView( new RedirectView(returnedView.getViewName()) );
+            return returnedView;
         } catch ( CancellationException e ) {
             log.debug( "Job was cancelled" );
+            
             return new ModelAndView( new RedirectView( "/mainMenu.html" ) ); // have to replace this...
         } catch ( Throwable e ) {
             log.debug( "Got an exception: " + e );
