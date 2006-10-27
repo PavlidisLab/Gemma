@@ -27,6 +27,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -132,6 +133,41 @@ public class DesignElementDataVectorDaoImpl extends
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+    
+    
+    /**
+     * Gets all the genes that are related to the DesignElementDataVector identified by the given ID.
+     * @param id 
+     * @return Collection
+     */    
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenesById( long id ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+            + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+            + " and compositeSequence.designElementDataVectors.id = :id ";        
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", id );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+    }
+    
+    /**
+     * Gets all the genes that are related to the DesignElementDataVector.
+     * @param designElementDataVector
+     * @return Collection
+     */    
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenes( DesignElementDataVector dedv ) throws Exception {
+        return this.handleGetGenesById( dedv.getId() );
     }
 
     /**
