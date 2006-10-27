@@ -307,7 +307,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      */
     public void testSingleUse() {
 
-        MockProcess mp = new MockProcess( ConfigUtils.getString( "gemma.admin.user" ), "A run of tests" );
+        SimpleMockProcess mp = new SimpleMockProcess( ConfigUtils.getString( "gemma.admin.user" ), "A run of tests" );
         MockClient mc = new MockClient();
         ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mc );
         mp.start();
@@ -318,7 +318,8 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
             e.printStackTrace();
 
         }
-        assertEquals( 100, mc.upDateTimes() );
+        assertEquals( 101, mc.upDateTimes() );
+        
     }
 
     /*
@@ -380,14 +381,14 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      * @author klc
      * @version $Id$
      */
-    class MockProcess extends Thread {
+    class SimpleMockProcess extends Thread {
         private static final int DELAY = 30;
 
         private String userName;
         private String description;
         private ProgressJob simpleJob;
 
-        public MockProcess( String fakeName, String fakeDescription ) {
+        public SimpleMockProcess( String fakeName, String fakeDescription ) {
 
             userName = fakeName;
             description = fakeDescription;
@@ -408,6 +409,8 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
                 }
 
             }
+            
+            ProgressManager.destroyProgressJob( simpleJob );
 
         }
 
@@ -432,9 +435,9 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
 
         @Override
         public void run() {
-            MockProcess mp;
+            SimpleMockProcess mp;
             for ( int i = 0; i < times; i++ ) {
-                mp = new MockProcess( userName, description );
+                mp = new SimpleMockProcess( userName, description );
                 assertEquals( jobId, mp.getJobId() );
 
                 mp.start();
