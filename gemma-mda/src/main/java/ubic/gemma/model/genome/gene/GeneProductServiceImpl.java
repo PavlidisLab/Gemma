@@ -97,8 +97,8 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    protected GeneProduct handleFind( GeneProduct geneProduct ) throws Exception {
-        return this.getGeneProductDao().find( geneProduct );
+    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct ) throws Exception {
+        return this.getGeneProductDao().find( gProduct );
     }
 
 }
