@@ -22,6 +22,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -60,6 +61,8 @@ public class DefaultDataMatrixVisualizer implements DataMatrixVisualizer {
      */
     public DefaultDataMatrixVisualizer( String imageFile ) {
         this.imageFile = imageFile;
+        this.rowLabels = new ArrayList<String>();
+        this.colLabels = new ArrayList<String>();
     }
 
     /**
