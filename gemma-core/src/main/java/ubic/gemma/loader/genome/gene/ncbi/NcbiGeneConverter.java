@@ -31,18 +31,24 @@ import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.CytogeneticLocation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 
 /**
- * Convert NCBIGene2Accession objects into Gemma Gene objects.
+ * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts.
  * 
  * @author pavlidis
  * @author jrsantos
  * @version $Id$
+ * @see NCBIGene2Accession, NCBIGeneInfo
  */
 public class NcbiGeneConverter implements Converter {
 
@@ -81,11 +87,24 @@ public class NcbiGeneConverter implements Converter {
         gene.setName( info.getDefaultSymbol() );
         gene.setOfficialSymbol( info.getDefaultSymbol() );
         gene.setOfficialName( info.getDescription() );
-        gene.setDescription( info.getDescription() );
+        gene.setDescription( "Imported from NCBI gene; Nomenclature status: " + info.getNomenclatureStatus() );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setNcbiId( new Integer( info.getTaxId() ) );
         gene.setTaxon( t );
+
+        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+        Chromosome chrom = Chromosome.Factory.newInstance();
+        chrom.setTaxon( t );
+        chrom.setName( info.getChromosome() );
+        pl.setChromosome( chrom );
+
+        CytogeneticLocation cl = CytogeneticLocation.Factory.newInstance();
+        cl.setChromosome( chrom );
+        cl.setBand( info.getMapLocation() );
+
+        gene.setPhysicalLocation( pl );
+        gene.setCytogenicLocation( cl );
 
         Collection<GeneAlias> aliases = gene.getAliases();
         for ( String alias : info.getSynonyms() ) {
@@ -95,6 +114,7 @@ public class NcbiGeneConverter implements Converter {
             newAlias.setAlias( alias );
             aliases.add( newAlias );
         }
+
         return gene;
 
     }
@@ -121,34 +141,52 @@ public class NcbiGeneConverter implements Converter {
 
         // RNA section
         if ( acc.getRnaNucleotideAccession() != null ) {
-            GeneProduct geneProduct = GeneProduct.Factory.newInstance();
+            GeneProduct rna = GeneProduct.Factory.newInstance();
 
             // set available fields
-            geneProduct.setNcbiId( acc.getRnaNucleotideGI() );
-            geneProduct.setGene( gene );
-            geneProduct.setName( acc.getRnaNucleotideAccession() );
-            geneProduct.setType( GeneProductType.RNA );
+            rna.setNcbiId( acc.getRnaNucleotideGI() );
+            rna.setGene( gene );
+            rna.setName( acc.getRnaNucleotideAccession() );
+            rna.setType( GeneProductType.RNA );
+
+            String description = "Imported from NCBI Gene";
+
+            if ( acc.getStatus() != null ) {
+                description = description + " (Refseq status: " + acc.getStatus() + ").";
+            }
 
             DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
             accession.setAccession( acc.getRnaNucleotideAccession() );
             accession.setAccessionVersion( acc.getRnaNucleotideAccessionVersion() );
             accession.setExternalDatabase( genBank );
 
+            /*
+             * Fill in physical location details.
+             */
+            if ( acc.getGenomicNucleotideAccession() != null && gene.getPhysicalLocation() != null ) {
+                getChromosomeDetails( acc, gene );
+                PhysicalLocation pl = getPhysicalLocation( acc, gene );
+                rna.setPhysicalLocation( pl );
+            }
+
             Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
             accessions.add( accession );
-            geneProduct.setAccessions( accessions );
-            geneProducts.add( geneProduct );
+            rna.setAccessions( accessions );
+            rna.setDescription( description );
+            geneProducts.add( rna );
         }
 
         // Protein section
         if ( acc.getProteinAccession() != null ) {
-            GeneProduct geneProduct = GeneProduct.Factory.newInstance();
+            GeneProduct protein = GeneProduct.Factory.newInstance();
 
             // set available fields
-            geneProduct.setNcbiId( acc.getProteinGI() );
-            geneProduct.setGene( gene );
-            geneProduct.setName( acc.getProteinAccession() );
-            geneProduct.setType( GeneProductType.PROTEIN );
+            protein.setNcbiId( acc.getProteinGI() );
+            protein.setGene( gene );
+            protein.setName( acc.getProteinAccession() );
+            protein.setType( GeneProductType.PROTEIN );
+            protein.setDescription( "Imported from NCBI Gene"
+                    + ( acc.getStatus() != null ? " (" + acc.getStatus() + ")" : "" ) );
 
             DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
             accession.setAccession( acc.getProteinAccession() );
@@ -157,10 +195,46 @@ public class NcbiGeneConverter implements Converter {
 
             Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
             accessions.add( accession );
-            geneProduct.setAccessions( accessions );
-            geneProducts.add( geneProduct );
+            protein.setAccessions( accessions );
+            geneProducts.add( protein );
         }
         return geneProducts;
+    }
+
+    /**
+     * @param acc
+     * @param gene
+     * @return
+     */
+    private PhysicalLocation getPhysicalLocation( NCBIGene2Accession acc, Gene gene ) {
+        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+        pl.setChromosome( gene.getPhysicalLocation().getChromosome() );
+        if ( acc.getOrientation() != null ) {
+            pl.setStrand( acc.getOrientation() );
+        }
+        if ( acc.getStartPosition() != null ) {
+            pl.setNucleotide( acc.getStartPosition() );
+            pl.setNucleotideLength( new Long( Math.abs( acc.getEndPosition() - acc.getStartPosition() ) ).intValue() );
+        }
+        return pl;
+    }
+
+    /**
+     * @param acc
+     * @param gene
+     */
+    private void getChromosomeDetails( NCBIGene2Accession acc, Gene gene ) {
+        Chromosome chrom = gene.getPhysicalLocation().getChromosome();
+        BioSequence chromSeq = BioSequence.Factory.newInstance();
+        chromSeq.setName( acc.getGenomicNucleotideAccession() );
+        chromSeq.setType( SequenceType.WHOLE_CHROMOSOME );
+        chromSeq.setTaxon( gene.getTaxon() );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setExternalDatabase( genBank );
+        dbe.setAccession( acc.getGenomicNucleotideAccession() );
+        dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
+        chromSeq.setSequenceDatabaseEntry( dbe );
+        chrom.setSequence( chromSeq );
     }
 
     public Gene convert( NcbiGeneData data ) {

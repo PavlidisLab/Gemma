@@ -61,7 +61,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                      * this can happen in semi-rare cases in queries by symbol, where the gene symbol is not unique for
                      * the taxon and the query did not have the gene name to further restrict the query.
                      */
-
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '" + Gene.class.getName() + "' was found when executing query" );
 
@@ -86,7 +85,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( existingGene != null ) {
             return existingGene;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new gene: " + gene.getName() );
+        // We consider this abnormal because we expect most genes to have been loaded into the system already.
+        log.warn( "*** Creating new gene: " + gene + " ***" );
         return ( Gene ) create( gene );
     }
 

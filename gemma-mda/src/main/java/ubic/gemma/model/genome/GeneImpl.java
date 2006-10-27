@@ -22,6 +22,8 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.model.genome.gene.GeneProduct;
+
 /**
  * @see ubic.gemma.model.genome.Gene
  * @author pavlidis
@@ -62,11 +64,21 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
                 boolean bothHaveName = this.getOfficialName() != null && that.getOfficialName() != null;
                 boolean bothHavePhysicalLocation = this.getPhysicalLocation() != null
                         && that.getPhysicalLocation() != null;
+                boolean bothHaveGeneProducts = this.getProducts() != null && this.getProducts().size() > 0
+                        && that.getProducts() != null && that.getProducts().size() > 0;
 
                 if ( bothHaveName ) {
                     return this.getOfficialName().equals( that.getOfficialName() );
                 } else if ( bothHavePhysicalLocation ) {
-                    return this.getPhysicalLocation().nearlyEquals( that.getPhysicalLocation() );
+                    return this.getPhysicalLocation().equals( that.getPhysicalLocation() );
+                } else if ( bothHaveGeneProducts ) {
+                    // fastest check: they must any given gene product in common.
+                    GeneProduct thisGeneProduct = this.getProducts().iterator().next();
+                    for ( GeneProduct thatGeneProduct : that.getProducts() ) {
+                        if ( thisGeneProduct.equals( thatGeneProduct ) ) {
+                            return true;
+                        }
+                    }
                 } else {
                     return false; // can't decide, assume unequal.
                 }
@@ -90,29 +102,41 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
 
         if ( this.getNcbiId() != null ) {
             hashCode += this.getNcbiId().hashCode();
-        } else if ( this.getOfficialSymbol() != null && this.getOfficialName() != null && this.getTaxon() != null ) {
-            hashCode += this.getOfficialSymbol().hashCode();
-            hashCode += this.getOfficialName().hashCode();
-            hashCode += this.getTaxon().hashCode();
-        } else if ( this.getOfficialSymbol() != null && this.getPhysicalLocation() != null && this.getTaxon() != null ) {
-            hashCode += this.getOfficialSymbol().hashCode();
-            hashCode += this.getPhysicalLocation().hashCode();
-            hashCode += this.getTaxon().hashCode();
-        } else {
-            hashCode += super.hashCode();
+            return hashCode;
         }
+
+        if ( this.getOfficialSymbol() != null ) {
+            hashCode += this.getOfficialSymbol().hashCode();
+        }
+
+        if ( this.getTaxon() != null ) {
+            hashCode += this.getTaxon().hashCode();
+        }
+
+        if ( this.getOfficialName() != null ) {
+            hashCode += this.getOfficialName().hashCode();
+        } else if ( this.getPhysicalLocation() != null ) {
+            hashCode += this.getPhysicalLocation().hashCode();
+        } else if ( this.getProducts() != null && this.getProducts().size() > 0 ) {
+            GeneProduct gp = this.getProducts().iterator().next();
+            hashCode += gp.hashCode();
+        }
+
+        hashCode += super.hashCode();
 
         return hashCode;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName()
-                + ( this.getId() == null ? " " : " Id:" + this.getId() + " " )
-                + this.getOfficialSymbol()
-                + ( this.getOfficialName() == null ? " " : this.getOfficialName() + " " )
-                + ( this.getOfficialName() == null && this.getPhysicalLocation() != null ? " " : this
-                        .getPhysicalLocation()
-                        + " " ) + ( this.getNcbiId() == null ? " " : " (NCBI " + this.getNcbiId() + ")" );
+        StringBuilder buf = new StringBuilder();
+        buf.append( this.getClass().getSimpleName() );
+        buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
+        buf.append( this.getOfficialSymbol() + " " );
+        buf.append( this.getOfficialName() == null ? "" : this.getOfficialName() + " " );
+        buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
+                + this.getPhysicalLocation() + "] " : "" );
+        buf.append( this.getNcbiId() == null ? "" : " (NCBI " + this.getNcbiId() + ")" );
+        return buf.toString();
     }
 }

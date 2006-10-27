@@ -39,6 +39,7 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
  * 
  * @author pavlidis
  * @version $Id$
+ * @see NCBIGene2Accession
  */
 public class NcbiGene2AccessionParser extends BasicLineParser implements QueuingParser {
 
@@ -138,8 +139,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
             newGene.setProteinGI( fields[6].equals( "-" ) ? null : fields[6] );
             newGene.setGenomicNucleotideAccession( fields[7].equals( "-" ) ? null : fields[7] );
             newGene.setGenomicNucleotideGI( fields[8].equals( "-" ) ? null : fields[8] );
-            newGene.setStartPosition( fields[9].equals( "-" ) ? -1 : Integer.parseInt( fields[9] ) );
-            newGene.setEndPosition( fields[10].equals( "-" ) ? -1 : Integer.parseInt( fields[10] ) );
+            newGene.setStartPosition( fields[9].equals( "-" ) ? null : Long.parseLong( fields[9] ) );
+            newGene.setEndPosition( fields[10].equals( "-" ) ? null : Long.parseLong( fields[10] ) );
             newGene.setOrientation( fields[11].equals( "?" ) ? null : fields[11] );
 
             // set accession version numbers (additional parsing)
@@ -180,7 +181,25 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
                 newGene.setProteinAccessionVersion( null );
                 newGene.setProteinAccessionVersion( null );
             }
-            // ignoring DNA
+
+            // Genome (chromosome information)
+            String genomicAccession = newGene.getGenomicNucleotideAccession();
+            if ( StringUtils.isNotBlank( genomicAccession ) ) {
+                String[] tokens = StringUtil.splitPreserveAllTokens( genomicAccession, '.' );
+                if ( tokens.length == 1 ) {
+                    newGene.setGenomicNucleotideAccession( tokens[0] );
+                    newGene.setGenomicNucleotideAccessionVersion( null );
+                } else if ( tokens.length == 2 ) {
+                    newGene.setGenomicNucleotideAccession( tokens[0] );
+                    newGene.setGenomicNucleotideAccessionVersion( tokens[1] );
+                } else {
+                    throw new UnsupportedOperationException( "Don't know how to deal with " + genomicAccession );
+                }
+            } else {
+                newGene.setGenomicNucleotideAccessionVersion( null );
+                newGene.setGenomicNucleotideAccessionVersion( null );
+            }
+
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( e );
         }

@@ -85,12 +85,14 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     }
 
     /**
-     * This test uses 'real' data. A human blat server must be available on the configured port.
+     * This test uses 'real' data. 
      * 
      * @throws Exception
      */
     public final void testProcessArrayDesignWithData() throws Exception {
 
+        // possibly insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
+        
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
 
         // needed to fill in the sequence information for blat scoring.
@@ -113,6 +115,8 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
         arrayDesignProbeMapperService.processArrayDesign( ad, taxon );
+         
+        // possibly assert no unexpected new genes or gene products were added.
 
     }
 }

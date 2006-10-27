@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
@@ -238,8 +239,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     while ( rs.next() ) {
 
                         GeneProduct product = GeneProduct.Factory.newInstance();
-                        String ncbiId = rs.getString( 1 );
-                        product.setNcbiId( ncbiId ); // transcript identifier, not gene...or set accessions?
+
+                        // this is not the ncbi id.
+                        // String ncbiId = rs.getString( 1 );
+                        String name = rs.getString( 1 );
+                        // product.setNcbiId( ncbiId ); // transcript identifier, not gene...or set accessions?
+
+                        product.setType( GeneProductType.RNA );
 
                         Gene gene = Gene.Factory.newInstance();
                         gene.setOfficialSymbol( rs.getString( 2 ) );
@@ -251,20 +257,33 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
 
+                        PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
+                        genePl.setStrand( pl.getStrand() );
+
+                        /*
+                         * Do not use this as the official_name: it isn't.
+                         */
+                        gene.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
+
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
                         c.setTaxon( getTaxon() );
                         pl.setChromosome( c );
+                        genePl.setChromosome( c );
 
-                        gene.setPhysicalLocation( pl );
+                        /*
+                         * this only contains the chromosome and strand: the nucleotide positions are only valid for the
+                         * gene product
+                         */
+                        gene.setPhysicalLocation( genePl );
 
-                        if ( StringUtils.isNotBlank( ncbiId ) ) {
-                            product.setName( ncbiId );
+                        if ( StringUtils.isNotBlank( name ) ) {
+                            product.setName( name );
                         } else {
                             product.setName( "Product of " + gene.getOfficialSymbol() );
                         }
 
-                        product.setDescription( "Product of " + gene.getOfficialSymbol() );
+                        product.setDescription( "Imported from Golden Path" );
                         product.setPhysicalLocation( pl );
                         product.setGene( gene );
 
@@ -296,7 +315,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds "
+        String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, kgxr.description "
                 + " FROM knownGene as kg INNER JOIN"
                 + " kgXref AS kgxr ON kg.name=kgxr.kgID WHERE "
                 + "((kg.txStart > ? AND kg.txEnd < ?) OR (kg.txStart < ? AND kg.txEnd > ?) OR "
@@ -384,14 +403,16 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
-                + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
-                + "(txStart > ?  AND txStart < ?) OR  (txEnd > ? AND  txEnd < ? )) and chrom = ? ";
+        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, kgxref.description "
+                + "FROM refFlat as r inner join kgxref on r.geneName = kgxref.geneSymbol "
+                + "WHERE "
+                + "((r.txStart > ? AND r.txEnd < ?) OR (r.txStart < ? AND r.txEnd > ?) OR "
+                + "(r.txStart > ?  AND r.txStart < ?) OR  (r.txEnd > ? AND  r.txEnd < ? )) and r.chrom = ? ";
 
         if ( strand != null ) {
-            query = query + " AND strand = ? order by txStart ";
+            query = query + " AND r.strand = ? order by r.txStart ";
         } else {
-            query = query + " order by txStart ";
+            query = query + " order by r.txStart ";
         }
 
         return findGenesByQuery( start, end, searchChrom, strand, query );

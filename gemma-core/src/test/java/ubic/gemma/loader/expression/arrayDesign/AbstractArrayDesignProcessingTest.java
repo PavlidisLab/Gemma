@@ -55,15 +55,19 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         endTransaction();
-
-        // first load small twoc-color
-        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        geoService.setLoadPlatformOnly( true );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession );
-        ad = ads.iterator().next();
-
         ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        ad = arrayDesignService.findByShortName( "GPL140" );
+
+        if ( ad == null ) {
+
+            // first load small twoc-color
+            AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            geoService.setLoadPlatformOnly( true );
+            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession );
+            ad = ads.iterator().next();
+
+        }
 
         arrayDesignService.thaw( ad );
 

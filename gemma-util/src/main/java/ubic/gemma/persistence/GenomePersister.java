@@ -25,6 +25,7 @@ import java.util.Map;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -134,6 +135,13 @@ abstract public class GenomePersister extends CommonPersister {
         if ( gene == null ) return null;
         if ( !isTransient( gene ) ) return gene;
 
+        Gene existingGene = geneService.find( gene );
+
+        if ( existingGene != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Gene exists, will not update" );
+            return existingGene;
+        }
+
         if ( gene.getAccessions().size() > 0 ) {
             gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         }
@@ -143,12 +151,17 @@ abstract public class GenomePersister extends CommonPersister {
 
         gene.setTaxon( persistTaxon( gene.getTaxon() ) );
 
-        gene = geneService.findOrCreate( gene );
+        fillChromosomeLocationAssociations( gene.getPhysicalLocation() );
+        fillChromosomeLocationAssociations( gene.getCytogenicLocation() );
+        fillChromosomeLocationAssociations( gene.getGeneticLocation() );
 
         for ( GeneProduct product : tempGeneProduct ) {
             product.setGene( gene );
             for ( DatabaseEntry databaseEntry : product.getAccessions() ) {
                 databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
+            }
+            if ( product.getPhysicalLocation() != null ) {
+                fillChromosomeLocationAssociations( product.getPhysicalLocation() );
             }
         }
         gene.setProducts( tempGeneProduct );
@@ -156,8 +169,16 @@ abstract public class GenomePersister extends CommonPersister {
         for ( GeneAlias alias : gene.getAliases() ) {
             alias.setGene( gene );
         }
-        geneService.update( gene );
-        return gene;
+        return geneService.create( gene );
+    }
+
+    /**
+     * @param chromosomeLocation
+     * @return
+     */
+    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation ) {
+        if ( chromosomeLocation == null ) return;
+        chromosomeLocation.setChromosome( persistChromosome( chromosomeLocation.getChromosome() ) );
     }
 
     /**
@@ -261,7 +282,8 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * NOTE this method does not use findOrCreate! A new result is made every time. (FIXME)
+     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
+     * time. (FIXME: this method might need to be moved)
      * 
      * @param blastResult
      */
@@ -272,7 +294,8 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * NOTE this method does not use findOrCreate! A new result is made every time. (FIXME)
+     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
+     * time. (FIXME this method might need to be moved)
      * 
      * @param blatResult
      */
@@ -345,9 +368,14 @@ abstract public class GenomePersister extends CommonPersister {
         if ( geneProduct == null ) return null;
         if ( !isTransient( geneProduct ) ) return geneProduct;
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Persisting " + geneProduct );
+        GeneProduct existing = geneProductService.find( geneProduct );
+
+        if ( existing != null ) {
+            if ( log.isDebugEnabled() ) log.debug( geneProduct + " exists, will not update" );
+            return existing;
         }
+
+        if ( log.isDebugEnabled() ) log.debug( "Persisting " + geneProduct );
 
         if ( geneProduct.getCdsPhysicalLocation() != null ) {
             geneProduct.getCdsPhysicalLocation().setChromosome(
@@ -365,17 +393,11 @@ abstract public class GenomePersister extends CommonPersister {
             }
         }
 
-        // careful, circular trap?
         if ( isTransient( geneProduct.getGene() ) ) {
             geneProduct.setGene( persistGene( geneProduct.getGene() ) );
         }
 
-        // going via gene will persist it.
-        if ( isTransient( geneProduct ) ) {
-            geneProduct = geneProductService.findOrCreate( geneProduct );
-        }
-
-        return geneProduct;
+        return geneProductService.create( geneProduct );
     }
 
     /**

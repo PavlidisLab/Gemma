@@ -33,8 +33,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.apps.Blat;
-import ubic.gemma.apps.Blat.BlattableGenome;
-import ubic.gemma.externalDb.GoldenPath;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -141,23 +139,31 @@ public class ProbeMapper {
         for ( Gene gene : geneList ) {
             if ( lastGene != null ) {
 
-                int overlap = SequenceManipulation.computeOverlap( gene.getPhysicalLocation(), lastGene
-                        .getPhysicalLocation() );
-                int length = gene.getPhysicalLocation().getNucleotideLength();
+                // int overlap = SequenceManipulation.computeOverlap( gene.getPhysicalLocation(), lastGene
+                // .getPhysicalLocation() );
+                // int length = gene.getPhysicalLocation().getNucleotideLength();
+                //
+                // if ( log.isDebugEnabled() )
+                // log.debug( "Overlap is " + overlap + "/" + length + " between " + gene + " and " + lastGene );
 
-                if ( log.isDebugEnabled() )
-                    log.debug( "Overlap is " + overlap + "/" + length + " between " + gene + " and " + lastGene );
+                // if ( gene.getOfficialSymbol().equals( lastGene.getOfficialSymbol() ) ) {
+                // if ( overlap > 0 ) {
+                // // same gene.
+                // } else {
+                // // rare case where symbols are the same but not the same gene.
+                // distinctGenes.add( gene );
+                // }
+                // } else {
+                // // definitely not the same gene.
+                // distinctGenes.add( gene );
+                // }
 
-                if ( gene.getOfficialSymbol().equals( lastGene.getOfficialSymbol() ) ) {
-                    if ( overlap > 0 ) {
-                        // same gene.
-                    } else {
-                        // rare case where symbols are the same but not the same gene.
-                        distinctGenes.add( gene );
-                    }
+                if ( gene.equals( lastGene ) ) {
+                    log.debug( "" );
+                    log.debug( gene + " is equal to " + lastGene );
                 } else {
-                    // definitely not the same gene.
                     distinctGenes.add( gene );
+                    log.debug( gene + " is not equal to " + lastGene );
                 }
 
             }

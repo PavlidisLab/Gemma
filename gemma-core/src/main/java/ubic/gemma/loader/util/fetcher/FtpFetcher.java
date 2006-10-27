@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -54,20 +55,33 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
     public Collection<LocalFile> fetch( String identifier ) {
 
+        File existingFile = null;
         String seekFile = formRemoteFilePath( identifier );
         try {
+            File newDir = mkdir( identifier );
+            String outputFileName = formLocalFilePath( identifier, newDir );
+
+            existingFile = new File( outputFileName );
+            if ( existingFile.canRead() ) {
+                log.info( outputFileName + " already exists: checking size match." );
+            }
+
             if ( ftpClient == null || !ftpClient.isConnected() ) {
                 ftpClient = this.getNetDataSourceUtil().connect( FTP.BINARY_FILE_TYPE );
             }
 
-            File newDir = mkdir( identifier );
-            String outputFileName = formLocalFilePath( identifier, newDir );
             long expectedSize = getExpectedSize( seekFile );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
             Collection<LocalFile> result = this.doTask( future, expectedSize, seekFile, outputFileName );
             return result;
+        } catch ( UnknownHostException e ) {
+            if ( force || !allowUseExisting || existingFile == null ) throw new RuntimeException( e );
 
+            log.warn( "Could not connect to " + this.getNetDataSourceUtil().getHost() + " to check size of " + seekFile
+                    + ", using existing file" );
+            Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
+            return fallback;
         } catch ( IOException e ) {
             log.error( e, e );
             throw new RuntimeException( "Couldn't fetch " + seekFile, e );

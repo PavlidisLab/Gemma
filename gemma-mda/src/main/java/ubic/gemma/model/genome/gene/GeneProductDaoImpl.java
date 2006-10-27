@@ -36,7 +36,9 @@ import ubic.gemma.util.BusinessKey;
  */
 public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProductDaoBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -56,9 +58,12 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         return genes;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByNcbiId(java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
         Collection<Gene> genes = null;
@@ -96,8 +101,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + GeneProduct.class.getName()
-                                    + "' was found when executing query" );
+                            "More than one instance of '" + geneProduct + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();

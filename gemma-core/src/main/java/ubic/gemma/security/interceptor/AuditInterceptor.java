@@ -143,6 +143,13 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
+     * @param crudUtils the crudUtils to set
+     */
+    public void setCrudUtils( CrudUtils crudUtils ) {
+        this.crudUtils = crudUtils;
+    }
+
+    /**
      * @param userDao The userDao to set.
      */
     public void setUserDao( UserDao userDao ) {
@@ -178,23 +185,8 @@ public class AuditInterceptor implements MethodInterceptor {
         if ( at.getEvents().size() == 0 ) {
             User user = getCurrentUser();
 
-            at.start( "create " + d, user );
+            at.start( getCreateEventNote( d ), user );
             updateAndLog( d, user, at.getLast().getNote() );
-        }
-    }
-
-    /**
-     * Updates and logs the audit trail provided certain conditions are met (ie. user is not null).
-     * 
-     * @param at
-     */
-    private void updateAndLog( Auditable d, User user, String note ) {
-        if ( user != null ) {
-            AuditTrail at = d.getAuditTrail();
-            auditTrailDao.update( at );
-            if ( log.isTraceEnabled() ) log.trace( note + " event on " + d + " by " + user.getUserName() );
-        } else {
-            log.info( "NULL user: Cannot update the audit trail with a null user" );
         }
     }
 
@@ -221,9 +213,17 @@ public class AuditInterceptor implements MethodInterceptor {
             addCreateAuditEvent( auditable );
         } else {
             User user = getCurrentUser();
-            at.read( "Loaded", user );
+            at.read( getLoadEventNote( auditable ), user );
             updateAndLog( auditable, user, at.getLast().getNote() );
         }
+    }
+
+    /**
+     * @param auditable
+     * @return
+     */
+    private String getLoadEventNote( Auditable auditable ) {
+        return "Loaded " + auditable.getClass().getSimpleName() + " " + auditable.getId();
     }
 
     /**
@@ -251,7 +251,7 @@ public class AuditInterceptor implements MethodInterceptor {
             addCreateAuditEvent( d );
         } else {
             User user = getCurrentUser();
-            at.update( "Updated" + d, user );
+            at.update( getUpdateEventNote( d ), user );
             updateAndLog( d, user, at.getLast().getNote() );
         }
 
@@ -288,10 +288,26 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
+     * @param d
+     * @return
+     */
+    private String getCreateEventNote( Auditable d ) {
+        return "Create " + d.getClass().getSimpleName() + " " + d.getId();
+    }
+
+    /**
      * @return
      */
     private User getCurrentUser() {
         return UserDetailsServiceImpl.getCurrentUser();
+    }
+
+    /**
+     * @param d
+     * @return
+     */
+    private String getUpdateEventNote( Auditable d ) {
+        return "Updated " + d.getClass().getSimpleName() + " " + d.getId();
     }
 
     /**
@@ -306,7 +322,6 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( methodName.equals( "findOrCreate" ) ) {
             addLoadOrCreateAuditEvent( returnValue );
-            processAssociations( m, returnValue );
         } else if ( AUDIT_READ && CrudUtils.methodIsLoad( m ) ) {
             if ( returnValue != null ) {
                 if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
@@ -320,10 +335,10 @@ public class AuditInterceptor implements MethodInterceptor {
                     addLoadAuditEvent( returnValue );
                 }
             }
-            processAssociations( m, returnValue );
+
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
-            processAssociations( m, returnValue );
+               //     processAssociations( m, returnValue );
         }
 
 
@@ -342,7 +357,7 @@ public class AuditInterceptor implements MethodInterceptor {
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
 
-                if ( log.isTraceEnabled() ) log.trace( "Checking " + propertyNames[j] + " for cascade audit" );
+              //  if ( log.isTraceEnabled() ) log.trace( "Checking " + propertyNames[j] + " for cascade audit" );
 
                 /*
                  * If the action being taken will result in a hibernate cascade, we need to update the audit information
@@ -351,7 +366,7 @@ public class AuditInterceptor implements MethodInterceptor {
                  */
                 if ( !crudUtils.needCascade( m, cs ) ) {
                     if ( log.isTraceEnabled() )
-                        log.trace( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
+                //        log.trace( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
                     continue;
                 }
 
@@ -418,10 +433,18 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
-     * @param crudUtils the crudUtils to set
+     * Updates and logs the audit trail provided certain conditions are met (ie. user is not null).
+     * 
+     * @param at
      */
-    public void setCrudUtils( CrudUtils crudUtils ) {
-        this.crudUtils = crudUtils;
+    private void updateAndLog( Auditable d, User user, String note ) {
+        if ( user != null ) {
+            AuditTrail at = d.getAuditTrail();
+            auditTrailDao.update( at );
+            if ( log.isTraceEnabled() ) log.trace( note + " event on " + d + " by " + user.getUserName() );
+        } else {
+            log.info( "NULL user: Cannot update the audit trail with a null user" );
+        }
     }
 
 }

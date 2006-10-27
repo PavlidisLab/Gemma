@@ -182,16 +182,19 @@ public class BusinessKey {
      * @param gene
      */
     public static void addRestrictions( Criteria queryObject, Gene gene ) {
-        if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
+        if ( gene.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", gene.getId() ) );
+        } else if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
             queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
         } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
             queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
 
             attachCriteria( queryObject, gene.getTaxon(), "taxon" );
 
+            // Need either the official name or the location to be unambiguous.
             if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
                 queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
-            } else if ( gene.getPhysicalLocation() != null ) { // go by physical location.
+            } else if ( gene.getPhysicalLocation() != null ) {
                 attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
             }
 
@@ -281,6 +284,10 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, PhysicalLocation physicalLocation, String attributeName ) {
         Criteria nestedCriteria = queryObject.createCriteria( attributeName );
 
+        if ( physicalLocation.getChromosome() == null ) {
+            throw new IllegalArgumentException();
+        }
+
         if ( physicalLocation.getChromosome().getId() != null ) {
             nestedCriteria.createCriteria( "chromosome" ).add(
                     Restrictions.eq( "id", physicalLocation.getChromosome().getId() ) );
@@ -290,7 +297,11 @@ public class BusinessKey {
                     Restrictions.eq( "name", physicalLocation.getChromosome().getName() ) );
         }
 
-        nestedCriteria.add( Restrictions.eq( "nucleotide", physicalLocation.getNucleotide() ) );
+        if ( physicalLocation.getNucleotide() != null )
+            nestedCriteria.add( Restrictions.eq( "nucleotide", physicalLocation.getNucleotide() ) );
+
+        if ( physicalLocation.getNucleotideLength() != null )
+            nestedCriteria.add( Restrictions.eq( "nucleotideLength", physicalLocation.getNucleotideLength() ) );
 
     }
 
@@ -366,19 +377,23 @@ public class BusinessKey {
      * @param gene
      */
     public static void checkKey( Gene gene ) {
-        if ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getNcbiId() == null ) {
-            throw new IllegalArgumentException( "No valid key for " + gene
-                    + ": Gene must have official symbol and name with taxon, or ncbiId" );
+        if ( ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getPhysicalLocation() == null
+                && gene.getProducts() == null && gene.getProducts().size() == 0 )
+                && gene.getNcbiId() == null ) {
+            throw new IllegalArgumentException(
+                    "No valid key for "
+                            + gene
+                            + ": Gene must have official symbol and name with taxon + physical location or gene products, or ncbiId" );
         }
-
     }
 
     /**
      * @param geneProduct
      */
     public static void checkKey( GeneProduct geneProduct ) {
-        if ( geneProduct.getNcbiId() == null ) {
-            throw new IllegalArgumentException( "GeneProduct must have ncbiId" );
+        if ( geneProduct.getId() != null ) return;
+        if ( StringUtils.isBlank( geneProduct.getNcbiId() ) && StringUtils.isBlank( geneProduct.getName() ) ) {
+            throw new IllegalArgumentException( "GeneProduct must have ncbiId or name" );
         }
     }
 
@@ -475,16 +490,19 @@ public class BusinessKey {
      * @param geneProduct
      */
     public static void checkValidKey( GeneProduct geneProduct ) {
+        if ( geneProduct.getId() != null ) return;
+
         boolean ok = true;
 
         if ( geneProduct == null ) ok = false;
 
-        if ( StringUtils.isBlank( geneProduct.getNcbiId() ) && StringUtils.isBlank( geneProduct.getName() ) )
-            ok = false;
+        if ( StringUtils.isBlank( geneProduct.getName() ) ) ok = false;
 
         if ( !ok ) {
             throw new IllegalArgumentException( "GeneProduct did not have a valid key" );
         }
+
+        checkKey( geneProduct.getGene() );
     }
 
     /**
@@ -542,7 +560,15 @@ public class BusinessKey {
      * @param geneProduct
      */
     public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
-        queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
+        if ( geneProduct.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", geneProduct.getId() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) ) {
+            queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) { // NM_XXXXX etc.
+            queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
+            Criteria subCriteria = queryObject.createCriteria( "gene" );
+            addRestrictions( subCriteria, geneProduct.getGene() );
+        }
     }
 
     /**

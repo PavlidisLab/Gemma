@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.concurrent.FutureTask;
 
 import org.apache.commons.logging.Log;
@@ -40,7 +42,17 @@ public abstract class AbstractFetcher implements Fetcher {
     protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
     protected String localBasePath = null;
     protected String remoteBaseDir = null;
+
+    /**
+     * Whether download is required even if the sizes match.
+     */
     protected boolean force = false;
+
+    /**
+     * Whether we are allowed to use an existing file rather than downloading again, in the case where we can't connect
+     * to the remote host to check the size of the file. Setting force=true overrides this.
+     */
+    protected boolean allowUseExisting = true;
 
     protected static final int INFO_UPDATE_INTERVAL = 2000;
 
@@ -176,6 +188,26 @@ public abstract class AbstractFetcher implements Fetcher {
             throw new RuntimeException( e );
         }
         return file;
+    }
+
+    /**
+     * Wrap the existing file in the required Collection&lt;LocalFile&gt; 
+     * @param existingFile
+     * @param seekFile
+     * @return
+     */
+    protected Collection<LocalFile> getExistingFile( File existingFile, String seekFile ) {
+        Collection<LocalFile> fallback = new HashSet<LocalFile>();
+        LocalFile lf = LocalFile.Factory.newInstance();
+        try {
+            lf.setLocalURL( existingFile.toURI().toURL() );
+            lf.setRemoteURL( ( new File( seekFile ) ).toURI().toURL() );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
+        lf.setSize( existingFile.length() );
+        fallback.add( lf );
+        return fallback;
     }
 
     /**

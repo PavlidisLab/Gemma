@@ -117,7 +117,8 @@ public class GoldenPath {
         jt = new JdbcTemplate( dataSource );
 
         String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
-        log.info( "Connecting to Golden Path : " + url + " as " + user );
+        log.info( "Connecting to " + databaseName );
+        log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
         dataSource.setDriverClassName( "com.mysql.jdbc.Driver" );
         dataSource.setUrl( url );

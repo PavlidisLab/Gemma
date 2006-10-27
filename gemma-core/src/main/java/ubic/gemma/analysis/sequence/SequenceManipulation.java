@@ -276,9 +276,10 @@ public class SequenceManipulation {
         if ( starta > enda ) throw new IllegalArgumentException( "Start " + starta + " must be before end " + enda );
         if ( startb > endb ) throw new IllegalArgumentException( "Start " + startb + " must be before end " + endb );
 
-        if ( log.isDebugEnabled() )
-            log.debug( "Comparing query length " + ( enda - starta ) + ", location: " + starta + "-->" + enda
-                    + " to target length " + ( endb - startb ) + ", location: " + startb + "--->" + endb );
+        if ( log.isTraceEnabled()) {
+//            log.trace( "Comparing query length " + ( enda - starta ) + ", location: " + starta + "-->" + enda
+//                    + " to target length " + ( endb - startb ) + ", location: " + startb + "--->" + endb );
+        }
 
         long overlap = 0;
         if ( endb < starta || enda < startb ) {
@@ -297,7 +298,7 @@ public class SequenceManipulation {
 
         assert overlap >= 0 : "Negative overlap";
         assert ( double ) overlap / ( double ) ( enda - starta ) <= 1.0 : "Overlap longer than sequence";
-        if ( log.isDebugEnabled() ) log.debug( "Overlap=" + overlap );
+        //if ( log.isTraceEnabled() ) log.trace( "Overlap=" + overlap );
         return ( int ) overlap;
     }
 

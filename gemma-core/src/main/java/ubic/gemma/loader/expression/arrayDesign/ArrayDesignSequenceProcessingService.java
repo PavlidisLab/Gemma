@@ -666,7 +666,7 @@ public class ArrayDesignSequenceProcessingService {
         }
 
         if ( numWithNoSequence > 0 )
-            log.info( "There were " + numWithNoSequence
+            log.info( "There were " + numWithNoSequence + "/" + arrayDesign.getCompositeSequences().size()
                     + " composite sequences with no associated biological characteristic" );
 
         log.info( "Updating sequences on arrayDesign" );
@@ -687,7 +687,6 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * @param gbIdMap
      * @param nameMap
      * @param sequence
      */

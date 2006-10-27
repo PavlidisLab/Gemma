@@ -55,8 +55,30 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         final PhysicalLocation that = ( PhysicalLocation ) object;
 
         if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
-            return this.getChromosome().equals( that.getChromosome() )
-                    && this.getNucleotide().equals( that.getNucleotide() );
+
+            if ( !this.getChromosome().equals( that.getChromosome() ) ) {
+                return false;
+            }
+
+            if ( this.getStrand() != null && that.getStrand() != null ) {
+                if ( !this.getStrand().equals( that.getStrand() ) ) {
+                    return false;
+                }
+            }
+
+            if ( this.getNucleotide() != null && that.getNucleotide() != null ) {
+                if ( !this.getNucleotide().equals( that.getNucleotide() ) ) {
+                    return false;
+                }
+            }
+
+            if ( this.getNucleotideLength() != null && that.getNucleotideLength() != null ) {
+                if ( !this.getNucleotideLength().equals( that.getNucleotideLength() ) ) {
+                    return false;
+                }
+            }
+
+            return true;
         }
         return true;
     }
@@ -80,9 +102,10 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
             if ( !this.getChromosome().equals( that.getChromosome() ) ) return false;
 
             // FIXME this needs to check for overlaps etc...
-            if ( Math.abs( this.getNucleotide() - that.getNucleotide() ) < 1000L ) return true;
+            if ( this.getNucleotide() != null && that.getNucleotide() != null )
+                if ( Math.abs( this.getNucleotide() - that.getNucleotide() ) > 1000L ) return false;
 
-            return false;
+            return true;
         }
         return true;
     }
@@ -90,10 +113,17 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29
-                * hashCode
-                + ( this.getId() == null ? this.getChromosome().hashCode() + this.getNucleotide().hashCode() : this
-                        .getId().hashCode() );
+        hashCode = 29;
+        if ( this.getId() != null ) {
+            hashCode += this.getId().hashCode();
+            return hashCode;
+        }
+
+        hashCode += this.getChromosome().hashCode();
+
+        if ( this.getNucleotide() != null ) hashCode += this.getNucleotide().hashCode();
+
+        if ( this.getNucleotideLength() != null ) hashCode += this.getNucleotideLength().hashCode();
 
         return hashCode;
     }
@@ -101,14 +131,11 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
+        buf.append( this.getChromosome().getTaxon().getScientificName() + " chr " + this.getChromosome().getName() );
 
-        if ( this.getId() != null ) {
-            buf.append( " Id = " + this.getId() );
-        }
-        buf.append( this.getChromosome().getTaxon().getScientificName() + " chromosome "
-                + this.getChromosome().getName() + ":" + this.getNucleotide() + " on " + this.getStrand() + " strand" );
+        if ( this.getNucleotide() != null ) buf.append( ":" + this.getNucleotide() );
+        buf.append( " on " + this.getStrand() + " strand" );
 
         return buf.toString();
     }
-
 }

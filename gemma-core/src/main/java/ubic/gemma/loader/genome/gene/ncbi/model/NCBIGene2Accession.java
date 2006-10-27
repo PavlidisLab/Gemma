@@ -6,70 +6,66 @@ package ubic.gemma.loader.genome.gene.ncbi.model;
  * </p>
  * 
  * <pre>
- *                                   gene2accession
- *                                    ---------------------------------------------------------------------------
- *                                    This file is a comprehensive report of the accessions that are 
- *                                    related to a GeneID.  It includes sequences from the international
- *                                    sequence collaboration, Swiss-Prot, and RefSeq.
- *                                   
- *                                    This file can be considered as the logical equivalent of
- *                                   
- *                                    ftp://ftp.ncbi.nih.gov/refseq/LocusLink/loc2ref
- *                                    AND
- *                                    ftp://ftp.ncbi.nih.gov/refseq/LocusLink/loc2acc
- *                                   
- *                                    tab-delimited
- *                                    one line per genomic/RNA/protein set of sequence accessions
- *                                    ---------------------------------------------------------------------------
- *                                   
- *                                    tax_id:
- *                                    the unique identifier provided by NCBI Taxonomy
- *                                    for the species or strain/isolate
- *                                   
- *                                    GeneID:
- *                                    the unique identifier for a gene
- *                                    --note:  for genomes previously available from LocusLink,
- *                                    the identifiers are equivalent
- *                                   
- *                                    status:
- *                                    status of the RefSeq if a refseq, else '-'
- *                                   
- *                                    RNA nucleotide accession.version
- *                                    may be null (-) for some genomes
- *                                   
- *                                    RNA nucleotide gi
- *                                    the gi for an RNA nucleotide accession, '-' if not applicable
- *                                   
- *                                    protein accession.version
- *                                    will be null (-) for RNA-coding genes
- *                                   
- *                                    protein gi:
- *                                    the gi for a protein accession, '-' if not applicable
- *                                   
- *                                    genomic nucleotide accession.version
- *                                    may be null (-) 
- *                                   
- *                                    genomic nucleotide gi
- *                                    the gi for a genomic nucleotide accession, '-' if not applicable
- *                                   
- *                                    start position on the genomic accession
- *                                    position of the gene feature on the genomic accession,
- *                                    '-' if not applicable
- *                                    position 0-based
- *                                   
- *                                    end positon on the genomic accession
- *                                    position of the gene feature on the genomic accession,
- *                                    '-' if not applicable
- *                                    position 0-based
- *                                   
- *                                    orientation
- *                                    orientation of the gene feature on the genomic accession,
- *                                    '?' if not applicable
+ *                                       gene2accession
+ *                                        ---------------------------------------------------------------------------
+ *                                        This file is a comprehensive report of the accessions that are 
+ *                                        related to a GeneID.  It includes sequences from the international
+ *                                        sequence collaboration, Swiss-Prot, and RefSeq.
+ *                                       
+ *                                        This file can be considered as the logical equivalent of
+ *                                       
+ *                                        ftp://ftp.ncbi.nih.gov/refseq/LocusLink/loc2ref
+ *                                        AND
+ *                                        ftp://ftp.ncbi.nih.gov/refseq/LocusLink/loc2acc
+ *                                       
+ *                                        tab-delimited
+ *                                        one line per genomic/RNA/protein set of sequence accessions
+ *                                        ---------------------------------------------------------------------------
+ *                                       
+ *                                        tax_id:
+ *                                        the unique identifier provided by NCBI Taxonomy
+ *                                        for the species or strain/isolate
+ *                                       
+ *                                        GeneID:
+ *                                        the unique identifier for a gene
+ *                                        --note:  for genomes previously available from LocusLink,
+ *                                        the identifiers are equivalent
+ *                                       
+ *                                        status:
+ *                                        status of the RefSeq if a refseq, else '-'
+ *                                       
+ *                                        RNA nucleotide accession.version
+ *                                        may be null (-) for some genomes
+ *                                       
+ *                                        RNA nucleotide gi
+ *                                        the gi for an RNA nucleotide accession, '-' if not applicable
+ *                                       
+ *                                        protein accession.version
+ *                                        will be null (-) for RNA-coding genes
+ *                                       
+ *                                        protein gi:
+ *                                        the gi for a protein accession, '-' if not applicable
+ *                                       
+ *                                        genomic nucleotide accession.version
+ *                                        may be null (-) 
+ *                                       
+ *                                        genomic nucleotide gi
+ *                                        the gi for a genomic nucleotide accession, '-' if not applicable
+ *                                       
+ *                                        start position on the genomic accession
+ *                                        position of the gene feature on the genomic accession,
+ *                                        '-' if not applicable
+ *                                        position 0-based
+ *                                       
+ *                                        end positon on the genomic accession
+ *                                        position of the gene feature on the genomic accession,
+ *                                        '-' if not applicable
+ *                                        position 0-based
+ *                                       
+ *                                        orientation
+ *                                        orientation of the gene feature on the genomic accession,
+ *                                        '?' if not applicable
  * </pre>
- * 
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -88,8 +84,8 @@ public class NCBIGene2Accession {
     private String genomicNucleotideAccession;
     private String genomicNucleotideAccessionVersion;
     private String genomicNucleotideGI;
-    private int startPosition;
-    private int endPosition;
+    private Long startPosition;
+    private Long endPosition;
     private String orientation;
 
     private NCBIGeneInfo info;
@@ -195,14 +191,14 @@ public class NCBIGene2Accession {
     /**
      * @return Returns the endPosition.
      */
-    public int getEndPosition() {
+    public Long getEndPosition() {
         return this.endPosition;
     }
 
     /**
      * @param endPosition The endPosition to set.
      */
-    public void setEndPosition( int endPosition ) {
+    public void setEndPosition( Long endPosition ) {
         this.endPosition = endPosition;
     }
 
@@ -276,18 +272,17 @@ public class NCBIGene2Accession {
         this.proteinGI = proteinGI;
     }
 
-
     /**
      * @return Returns the startPosition.
      */
-    public int getStartPosition() {
+    public Long getStartPosition() {
         return this.startPosition;
     }
 
     /**
      * @param startPosition The startPosition to set.
      */
-    public void setStartPosition( int startPosition ) {
+    public void setStartPosition( Long startPosition ) {
         this.startPosition = startPosition;
     }
 
