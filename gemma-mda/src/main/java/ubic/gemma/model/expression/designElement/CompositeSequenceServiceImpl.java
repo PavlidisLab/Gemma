@@ -132,4 +132,16 @@ public class CompositeSequenceServiceImpl extends
         }
         return genes;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleRemove(Collection)
+     */
+    @Override
+    protected void handleRemove( java.util.Collection sequencesToDelete ) throws java.lang.Exception {
+        this.getCompositeSequenceDao().remove( sequencesToDelete );
+        return;
+    }
+
 }

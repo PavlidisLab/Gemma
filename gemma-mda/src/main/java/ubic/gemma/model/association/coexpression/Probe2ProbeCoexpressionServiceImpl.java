@@ -60,36 +60,98 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     @Override
     protected java.util.Collection handleCreate( java.util.Collection p2pExpressions ) throws java.lang.Exception {
 
-        // sanity check.
-        if ( ( p2pExpressions == null ) || ( p2pExpressions.size() == 0 ) ) return null;
+      if (!this.validCollection( p2pExpressions ))
+          return null;
 
-        // Make sure that the collections passed in is all of the same Class
-
-        Object last = p2pExpressions.iterator().next();
-
-        for ( Object next : p2pExpressions ) {
-
-            if ( last.getClass() != next.getClass() ) {
-                throw new IllegalArgumentException(
-                        "Given collection doesn't contain objects of uniform type. Contains an object of type "
-                                + last.getClass() + " and another of type " + next.getClass() );
-            }
-
-            last = next;
-        }
-
-        if ( last instanceof RatProbeCoExpression )
+      Object check = p2pExpressions.iterator().next();
+        if ( check instanceof RatProbeCoExpression )
             return this.getRatProbeCoExpressionDao().create( p2pExpressions );
-        else if ( last instanceof MouseProbeCoExpression )
+        else if ( check instanceof MouseProbeCoExpression )
             return this.getMouseProbeCoExpressionDao().create( p2pExpressions );
-        else if ( last instanceof HumanProbeCoExpression )
+        else if ( check instanceof HumanProbeCoExpression )
             return this.getHumanProbeCoExpressionDao().create( p2pExpressions );
-        else if ( last instanceof OtherProbeCoExpression )
+        else if ( check instanceof OtherProbeCoExpression )
             return this.getOtherProbeCoExpressionDao().create( p2pExpressions );
         else
-            throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + last.getClass()
+            throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + check.getClass()
                     + " no service method for persisting." );
 
     }
+    
+    
+    
+    /**
+     * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)}
+     */
+   protected void handleDelete(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete)
+       throws java.lang.Exception{
+      
+       if ( toDelete instanceof RatProbeCoExpression )
+            this.getRatProbeCoExpressionDao().remove( toDelete );
+       else if ( toDelete instanceof MouseProbeCoExpression )
+            this.getMouseProbeCoExpressionDao().remove( toDelete );
+       else if ( toDelete instanceof HumanProbeCoExpression )
+            this.getHumanProbeCoExpressionDao().remove( toDelete );
+       else if ( toDelete instanceof OtherProbeCoExpression )
+            this.getOtherProbeCoExpressionDao().remove( toDelete );
+       else
+           throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + toDelete.getClass()
+                   + " no service method for persisting." );
+       
+       return;
+
+   }
+
+   
+   /**
+    * Performs the core logic for {@link #delete(java.util.Collection)}
+    */
+  protected void handleDelete(java.util.Collection deletes)
+      throws java.lang.Exception{
+      
+      if (!this.validCollection( deletes ))
+          return;
+      
+      Object check = deletes.iterator().next();
+      
+      if ( check instanceof RatProbeCoExpression )
+          this.getRatProbeCoExpressionDao().remove( deletes );
+     else if ( check instanceof MouseProbeCoExpression )
+          this.getMouseProbeCoExpressionDao().remove( deletes );
+     else if ( check instanceof HumanProbeCoExpression )
+          this.getHumanProbeCoExpressionDao().remove( deletes );
+     else if ( check instanceof OtherProbeCoExpression )
+          this.getOtherProbeCoExpressionDao().remove( deletes );
+     else
+         throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + check.getClass()
+                 + " no service method for persisting." );
+     
+     return;
+      
+      
+  }
+  
+  private Boolean validCollection(java.util.Collection p2pExpressions) throws IllegalArgumentException
+  {
+      // sanity check.
+      if ( ( p2pExpressions == null ) || ( p2pExpressions.size() == 0 ) ) return false;
+
+      // Make sure that the collections passed in is all of the same Class
+
+      Object last = p2pExpressions.iterator().next();
+
+      for ( Object next : p2pExpressions ) {
+
+          if ( last.getClass() != next.getClass() ) {
+              throw new IllegalArgumentException(
+                      "Given collection doesn't contain objects of uniform type. Contains an object of type "
+                              + last.getClass() + " and another of type " + next.getClass() );
+          }
+
+          last = next;
+      }
+      
+      return true;
+  }
 
 }

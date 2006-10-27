@@ -22,6 +22,7 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService
  */
@@ -43,6 +44,29 @@ public class BlastResultServiceImpl extends ubic.gemma.model.genome.sequenceAnal
     protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult )
             throws java.lang.Exception {
         this.getBlastResultDao().remove( blastResult );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceBase#handleFindOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    protected ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFindOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate ) throws java.lang.Exception {
+
+        return this.getBlastResultDao().findOrCreate( resultToFindOrCreate );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceBase#handleFind(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    protected ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFind(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind ) {
+
+        return this.getBlastResultDao().find( resultToFind );
+
     }
 
 }

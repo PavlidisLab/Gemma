@@ -87,7 +87,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
             designElement = compositeSequenceService.create( ( CompositeSequence ) designElement );
 
-            this.getHibernateTemplate().flush();          
+            this.getHibernateTemplate().flush();        
             arrayDesign.getCompositeSequences().add( ( CompositeSequence ) designElement );
 
         } else {
@@ -277,8 +277,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 this.getHibernateTemplate().clear();
                 if ( Thread.currentThread().isInterrupted()) {
                     log.info( "Cancelled" );
-                    // we should clean up after ourselves.
-                    arrayDesignService.remove( arrayDesign ); // etc
+                    // we should clean up after ourselves (nedd to remove all the sequences that were all ready persisted
+                    //todo:  this will try to remove the entire collection but only some are in the DB.
+                    //Not sure how the collection delete will handle deletion of transtive objects not in db.
+                    //might need to fix. 
+                    compositeSequenceService.remove( c ); // etc
                     throw new CancellationException("Thread was terminated during persisting the arraydesign. " + this.getClass());
                 }
             }

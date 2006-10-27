@@ -63,4 +63,24 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
         return results;
     }
+    
+      /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
+     */
+    @Override
+    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult){
+        if ( blatResult.getQuerySequence() == null )
+            throw new IllegalArgumentException( "BlatResult must have a querrySequence associated with it." );
+        
+        
+        BlatResult result = this.find( blatResult );
+        if ( result != null )
+            return result;
+       
+        
+        logger.debug( "Creating new BlatResult: " + blatResult.toString() );
+        result = ( BlatResult ) create( blatResult );
+        return result;
+    }
+
 }
