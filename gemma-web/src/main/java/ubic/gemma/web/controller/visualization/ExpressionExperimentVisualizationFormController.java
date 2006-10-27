@@ -40,7 +40,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -181,7 +182,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             standardQuantitationType = StandardQuantitationType.fromString( standardQuantitationTypeName );
         } else {
             standardQuantitationType = StandardQuantitationType.OTHER;
-            log.warn( "Invalid quantitation type.  Using " + standardQuantitationType + " instead" );
+            log.warn( "Invalid quantitation type.  Using " + standardQuantitationType + " instead." );
         }
         quantitationType.setType( standardQuantitationType );
 
@@ -261,11 +262,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         log.debug( "Quantitation Type " + quantitationType.getType().getValue() );
 
-        ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
+        ExpressionDataMatrix expressionDataMatrix = null;
         HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
-            expressionDataMatrix = new ExpressionDataDesignElementDataVectorMatrix( ee, compositeSequences );
+            expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, compositeSequences, quantitationType );
 
             httpExpressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http",
                     request.getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );

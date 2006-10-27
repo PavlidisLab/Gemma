@@ -19,7 +19,7 @@
 package ubic.gemma.visualization;
 
 import ubic.basecode.gui.ColorMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 
 /**
  * @author keshav
@@ -30,12 +30,12 @@ public interface ExpressionDataMatrixVisualizer extends DataMatrixVisualizer {
     /**
      * @param matrixVisualizationData
      */
-    public ColorMatrix createColorMatrix( ExpressionDataDesignElementDataVectorMatrix matrixVisualizationData );
+    public ColorMatrix createColorMatrix( ExpressionDataMatrix matrixVisualizationData );
 
     /**
      * Returns the data matrix to be visualized.
      * 
      * @return ExpressionDataMatrix
      */
-    public ExpressionDataDesignElementDataVectorMatrix getExpressionDataMatrix();
+    public ExpressionDataMatrix getExpressionDataMatrix();
 }

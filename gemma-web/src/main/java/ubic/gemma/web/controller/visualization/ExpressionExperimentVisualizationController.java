@@ -48,7 +48,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
@@ -83,8 +83,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                 "httpExpressionDataMatrixVisualizer" );
         log.debug( "attribute \"httpExpressionDataMatrixVisualizer\" from tag: " + httpExpressionDataMatrixVisualizer );
 
-        ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer
-                .getExpressionDataMatrix();
+        ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
 
         type = "matrix";
         OutputStream out = null;
@@ -97,15 +96,16 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                     response.setContentType( "image/png" );
                     display.writeOutAsPNG( out, false, false );
                 }
-            } else if ( type.equals( "profile" ) ) {
-                String title = "Expression Profiles";
-                JFreeChart chart = createXYLineChart( title, httpExpressionDataMatrixVisualizer
-                        .getRowData( expressionDataMatrix ), DEFAULT_MAX_SIZE );
-                if ( chart != null ) {
-                    response.setContentType( "image/png" );
-                    ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
-                }
             }
+            // else if ( type.equals( "profile" ) ) {
+            // String title = "Expression Profiles";
+            // JFreeChart chart = createXYLineChart( title, httpExpressionDataMatrixVisualizer
+            // .getRowData( expressionDataMatrix ), DEFAULT_MAX_SIZE );
+            // if ( chart != null ) {
+            // response.setContentType( "image/png" );
+            // ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
+            // }
+            // }
 
             else if ( type.equals( "bar" ) ) {
                 JFreeChart chart = createBarChart();
@@ -169,7 +169,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
     // return null; // nothing to return;
     // }
 
-    private JMatrixDisplay createHeatMap( String title, ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix ) {
+    private JMatrixDisplay createHeatMap( String title, ExpressionDataMatrix expressionDataMatrix ) {
 
         if ( httpExpressionDataMatrixVisualizer == null )
             throw new RuntimeException( "Cannot create color matrix due to null HttpExpressionDataMatrixVisualizer" );
