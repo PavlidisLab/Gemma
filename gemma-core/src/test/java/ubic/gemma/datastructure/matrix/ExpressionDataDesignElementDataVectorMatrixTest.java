@@ -35,6 +35,11 @@ import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.StringConverter;
 import ubic.gemma.loader.util.parser.TabDelimParser;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -51,7 +56,7 @@ public class ExpressionDataDesignElementDataVectorMatrixTest extends TestCase {
     String[] rowNames = null;
     String[] colNames = null;
 
-    ExpressionDataDesignElementDataVectorMatrix matrixData = null;
+    ExpressionDataMatrix matrixData = null;
     ByteArrayConverter bconverter = null;
     StringConverter sconverter = null;
 
@@ -124,7 +129,16 @@ public class ExpressionDataDesignElementDataVectorMatrixTest extends TestCase {
         }
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        matrixData = new ExpressionDataDesignElementDataVectorMatrix( ee, designElements );
+
+        QuantitationType quantitationType = QuantitationType.Factory.newInstance();
+        quantitationType.setName( "Test Quantitation Type." );
+        quantitationType.setDescription( "A test quantitation type from ExpressionDataDoubleMatrixTest" );
+        quantitationType.setGeneralType( GeneralType.QUANTITATIVE );
+        quantitationType.setType( StandardQuantitationType.RATIO );
+        quantitationType.setRepresentation( PrimitiveType.DOUBLE );
+        quantitationType.setScale( ScaleType.LINEAR );
+        quantitationType.setIsBackground( false );
+        matrixData = new ExpressionDataDoubleMatrix( ee, designElements, quantitationType );
 
     }
 
@@ -146,7 +160,8 @@ public class ExpressionDataDesignElementDataVectorMatrixTest extends TestCase {
 
         File tmp = File.createTempFile( "testOut", ".png" );
 
-        ExpressionDataMatrixVisualizer visualizer = new DefaultExpressionDataMatrixVisualizer( matrixData, tmp.getAbsolutePath() );
+        ExpressionDataMatrixVisualizer visualizer = new DefaultExpressionDataMatrixVisualizer( matrixData, tmp
+                .getAbsolutePath() );
 
         ColorMatrix colorMatrix = visualizer.createColorMatrix( matrixData );
 

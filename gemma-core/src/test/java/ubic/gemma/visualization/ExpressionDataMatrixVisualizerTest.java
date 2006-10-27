@@ -28,7 +28,13 @@ import java.util.List;
 import junit.framework.TestCase;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -43,7 +49,7 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
 
     private DefaultExpressionDataMatrixVisualizer matrixVisualizer = null;
 
-    private ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
+    private ExpressionDataMatrix expressionDataMatrix = null;
 
     double[][] data = null;
 
@@ -103,7 +109,16 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
 
         /* The expression data matrix */
 
-        expressionDataMatrix = new ExpressionDataDesignElementDataVectorMatrix( ExpressionExperiment.Factory.newInstance(), designElements );
+        QuantitationType quantitationType = QuantitationType.Factory.newInstance();
+        quantitationType.setName( "Test Quantitation Type." );
+        quantitationType.setDescription( "A test quantitation type from ExpressionDataDoubleMatrixTest" );
+        quantitationType.setGeneralType( GeneralType.QUANTITATIVE );
+        quantitationType.setType( StandardQuantitationType.RATIO );
+        quantitationType.setRepresentation( PrimitiveType.DOUBLE );
+        quantitationType.setScale( ScaleType.LINEAR );
+        quantitationType.setIsBackground( false );
+        expressionDataMatrix = new ExpressionDataDoubleMatrix( ExpressionExperiment.Factory.newInstance(),
+                designElements, quantitationType );
 
         matrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix, tmp.getAbsolutePath() );
 
@@ -127,6 +142,10 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
         tmp.deleteOnExit();
     }
 
+    /**
+     * 
+     *
+     */
     public void testCreateVisualization() {
 
         ColorMatrix colorMatrix = matrixVisualizer.createColorMatrix( expressionDataMatrix );
@@ -135,6 +154,9 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
 
     }
 
+    /**
+     * @throws Exception
+     */
     public void testSaveImage() throws Exception {
 
         String[] rowLabels = { "a", "b", "c", "d", "e" };
