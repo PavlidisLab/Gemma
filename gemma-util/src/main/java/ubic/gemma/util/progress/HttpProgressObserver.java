@@ -85,6 +85,7 @@ public class HttpProgressObserver implements Observer, Serializable {
     }
 
     public ProgressData getProgressData() {
+        logger.info("Returning Progress Data to client: " + pData.getDescription() + "    " + pData.getPercent());
         return pData;
     }
 

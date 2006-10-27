@@ -1,12 +1,12 @@
-
 function refreshProgress() {
 	HttpProgressMonitor.getProgressStatus(updateProgress);
 }
 var previousMessage;
 
 function updateProgress(data) {
-   if (previousMessage != data.description.value) {
-		previouseMessage = data.description.value;
+     //document.getElementById("progressBarText").innerHTML = data.description;
+   if (previousMessage != data.description) {
+		previouseMessage = data.description;
 
 		document.getElementById("progressTextArea").value += data.description + "\n";	
    	document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
@@ -36,21 +36,7 @@ function startProgress() {
 	return true;
 }
 function createProgressBar() {
-	document.write("
-	 <div id=\"progressBar\" style=\"display:none;\">
-			<div id=\"theMeter\">
-				<div id=\"progressBarText\">
-					<textarea id=\"progressTextArea\" name=\"\" rows=5 cols=60 readonly=true> </textarea>
-				</div>
-				<div id=\"progressBarBox\">
-					<div id=\"progressBarBoxContent\"></div>
-				</div>
-			</div>
-		</div>
-
-		<form>
-			<input type=\"hidden\" name=\"taskId\" />
-		</form> ");
+	document.write(" <div id=\"progressBar\" style=\"display:none;\"> <div id=\"theMeter\">	<div id=\"progressBarText\"><textarea id=\"progressTextArea\" name=\"\" rows=5 cols=60 readonly=true> </textarea>	</div><div id=\"progressBarBox\"><div id=\"progressBarBoxContent\"></div>	</div>	</div>	</div>	<form> <input type=\"hidden\" name=\"taskId\" />		</form> ");
 }
 function moveProgress(count) {
 	document.getElementById("progressBarBoxContent").style.width = parseInt(count * 35) + "px";

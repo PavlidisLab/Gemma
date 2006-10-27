@@ -50,6 +50,8 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  */
 public class ProgressManager {
 
+    private static final String FORWARD_DEFAULT = "checkJobProgress.html";
+
     protected static final Log log = LogFactory.getLog( ProgressManager.class );
 
     /**
@@ -345,8 +347,13 @@ public class ProgressManager {
         }
         log.debug( "Destroying " + progressJob );
 
-        progressJob.updateProgress( new ProgressData( 100, "Task stage completed ...", true, progressJob
-                .getForwardingURL() ) );
+        String toForwardTo = FORWARD_DEFAULT;
+        
+        //not sure if this forwarding scheme is correct.  Could it be the case we wan't  to forward to someplace else?
+        if ((progressJob.getForwardingURL() != null) && (progressJob.getForwardingURL().length() != 0))
+            toForwardTo = progressJob.getForwardingURL();
+        
+        progressJob.updateProgress( new ProgressData( 100, "Task stage completed ...", true, toForwardTo ) );
         progressJob.done();
 
         //sorted by user?

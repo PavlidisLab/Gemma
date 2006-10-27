@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -140,7 +141,17 @@ public class CompositeSequenceServiceImpl extends
      */
     @Override
     protected void handleRemove( java.util.Collection sequencesToDelete ) throws java.lang.Exception {
-        this.getCompositeSequenceDao().remove( sequencesToDelete );
+     
+        //check the collection to make sure it contains no transitive entities (just check the id and make sure its non-null
+
+       Collection<CompositeSequence> filteredSequence = new Vector<CompositeSequence>();
+       for (Object sequence :  sequencesToDelete) {
+           if (((CompositeSequence) sequence).getId() != null)
+               filteredSequence.add( (CompositeSequence) sequence );
+       }
+       
+              
+        this.getCompositeSequenceDao().remove( filteredSequence );
         return;
     }
 
