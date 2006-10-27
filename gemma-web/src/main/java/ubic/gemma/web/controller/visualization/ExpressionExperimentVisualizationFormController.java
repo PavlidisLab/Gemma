@@ -149,7 +149,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Long id = eesc.getExpressionExperimentId();
 
         if ( request.getParameter( "cancel" ) != null ) {
-            log.info( "Canceled" );
+            log.info( "Cancelled" );
 
             if ( id != null ) {
                 return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
