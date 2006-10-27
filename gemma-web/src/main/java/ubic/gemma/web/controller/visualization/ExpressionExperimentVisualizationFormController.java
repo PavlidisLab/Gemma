@@ -282,19 +282,29 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         log.debug( "Quantitation Type " + quantitationType.getType().getValue() );
 
         ExpressionDataMatrix expressionDataMatrix = null;
+
         HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
+
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
+
             expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, compositeSequences, quantitationType );
 
             httpExpressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http",
                     request.getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
-            // httpExpressionDataMatrixVisualizer.setSuppressVisualizations( suppressVisualizations );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
         }
 
+        /* deals with the case of probes that match, but not for the given quantitation type. */
+        if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
+            log.debug( compositeSequences.size() );
+            errors.addError( new ObjectError( command.toString(), null, null,
+                    "None of the match probe sets match the given quantitation type "
+                            + quantitationType.getType().getValue() ) );
+            return super.processFormSubmission( request, response, command, errors );
+        }
         return new ModelAndView( getSuccessView() ).addObject( "httpExpressionDataMatrixVisualizer",
                 httpExpressionDataMatrixVisualizer );
     }
