@@ -209,13 +209,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             // source tables
             "select distinct coGene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence," 
             // join table
-            + " Probe2ProbeCoexpressionImpl as p2pc,"
+            + "HumanProbeCoExpressionImpl as p2pc,"
             // target tables
             + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence" 
             + " where gene.products.id=bs2gp.geneProduct.id "
             + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-            + " and compositeSequence.designElementDataVectors=p2pc.firstVector " 
-            + " and coCompositeSequence.designElementDataVectors=p2pc.secondVector "
+            + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id " 
+            + " and coCompositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
             + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
             + " and coGene.products.id=coBs2gp.geneProduct.id " 
             + " and gene.id = :id ";   
@@ -223,13 +223,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             // source tables
             "select distinct coGene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence," 
             // join table
-            + " Probe2ProbeCoexpressionImpl as p2pc,"
+            + "HumanProbeCoExpressionImpl as p2pc,"
             // target tables
-            + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence" 
+            + "GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence" 
             + " where gene.products.id=bs2gp.geneProduct.id "
             + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-            + " and compositeSequence.designElementDataVectors=p2pc.secondVector " 
-            + " and coCompositeSequence.designElementDataVectors=p2pc.firstVector "
+            + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id " 
+            + " and coCompositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
             + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
             + " and coGene.products.id=coBs2gp.geneProduct.id " 
             + " and gene.id = :id ";    

@@ -28,10 +28,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
 import ubic.gemma.model.expression.bioAssay.BioAssayDaoImplTest;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoImplTest;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDaoImplTest;
+import ubic.gemma.model.expression.experiment.DesignElementDataVectorDaoTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImplTest;
 import ubic.gemma.model.genome.BioSequencePersistTest;
 import ubic.gemma.model.genome.QtlDaoImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
+import ubic.gemma.model.genome.gene.GeneDaoTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoImplTest;
 
@@ -56,7 +58,10 @@ public class AllModelTests {
         suite.addTestSuite( BioMaterialDaoImplTest.class );
         suite.addTestSuite( BioSequencePersistTest.class );
         suite.addTestSuite( CandidateGeneListDaoImplTest.class );
-
+        suite.addTestSuite( GeneDaoTest.class );
+        
+        suite.addTestSuite( DesignElementDataVectorDaoTest.class );
+        
         suite.addTestSuite( BlatAssociationDaoImplTest.class );
         suite.addTestSuite( BlatResultDaoImplTest.class );
 

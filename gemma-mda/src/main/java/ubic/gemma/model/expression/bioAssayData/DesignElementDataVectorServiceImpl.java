@@ -47,7 +47,7 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc)R
      * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleFindAllForMatrix(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType,
