@@ -18,22 +18,16 @@
  */
 package ubic.gemma.visualization;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.datastructure.matrix.ExpressionDataDesignElementDataVectorMatrix;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -48,7 +42,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
 
     private static final long serialVersionUID = -5075323948059345296L;
 
-    private ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix = null;
+    private ExpressionDataMatrix expressionDataMatrix = null;
 
     /**
      * Do not instantiate. This is to be "inpected" by java constructs that require an official java bean. When we say
@@ -63,8 +57,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * @param expressionDataMatrix
      * @param imageFile
      */
-    public DefaultExpressionDataMatrixVisualizer( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix,
-            String imageFile ) {
+    public DefaultExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
         super( imageFile );
         this.expressionDataMatrix = expressionDataMatrix;
     }
@@ -74,105 +67,76 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
      */
-    public ExpressionDataDesignElementDataVectorMatrix getExpressionDataMatrix() {
+    public ExpressionDataMatrix getExpressionDataMatrix() {
         return expressionDataMatrix;
     }
 
-    /**
-     * @param expressionDataMatrix
-     * @return Collection<double[]>
-     */
-    public Collection<double[]> getRowData( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix ) {
-        // TODO make part of interface
-
-        if ( expressionDataMatrix == null || expressionDataMatrix.getDesignElements() == null ) {
-            throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
-        }
-
-        Collection<DesignElement> deCol = expressionDataMatrix.getDesignElements();
-
-        Collection<double[]> dataCol = new HashSet<double[]>();
-
-        ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-
-        int i = 0;
-        for ( DesignElement designElement : deCol ) {
-            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
-                    .getDesignElementDataVectors();
-            Iterator iter = vectors.iterator();
-            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
-
-            double[] data = byteArrayConverter.byteArrayToDoubles( vector.getData() );
-
-            dataCol.add( data );
-
-            i++;
-        }
-
-        return dataCol;
-    }
+    // /**
+    // * @param expressionDataMatrix
+    // * @return Collection<double[]>
+    // */
+    // public Collection<double[]> getRowData( ExpressionDataMatrix expressionDataMatrix ) {
+    // // TODO make part of interface
+    // // TODO used?
+    // if ( expressionDataMatrix == null || expressionDataMatrix.getDesignElements() == null ) {
+    // throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
+    // }
+    //
+    // Collection<DesignElement> deCol = expressionDataMatrix.getDesignElements();
+    //
+    // Collection<double[]> dataCol = new HashSet<double[]>();
+    //
+    // ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
+    //
+    // int i = 0;
+    // for ( DesignElement designElement : deCol ) {
+    // Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
+    // .getDesignElementDataVectors();
+    // Iterator iter = vectors.iterator();
+    // DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
+    //
+    // double[] data = byteArrayConverter.byteArrayToDoubles( vector.getData() );
+    //
+    // dataCol.add( data );
+    //
+    // i++;
+    // }
+    //
+    // return dataCol;
+    // }
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
-    public ColorMatrix createColorMatrix( ExpressionDataDesignElementDataVectorMatrix expressionDataMatrix ) {
+    public ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+        // TODO not used?
 
-        if ( expressionDataMatrix == null || expressionDataMatrix.getDesignElements() == null ) {
+        Map<DesignElement, Integer> rowMap = expressionDataMatrix.getRowMap(); // row labels
+
+        Map<BioAssay, Integer> columnMap = expressionDataMatrix.getColumnMap(); // column labels
+
+        if ( expressionDataMatrix == null || rowMap.size() == 0 ) {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
         }
 
-        Collection<DesignElement> deCol = expressionDataMatrix.getDesignElements();
-
-        ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-        double[][] data = new double[deCol.size()][];
+        double[][] data = new double[rowMap.size()][];
         int i = 0;
-        for ( DesignElement designElement : deCol ) {
-            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
-                    .getDesignElementDataVectors();
-            Iterator iter = vectors.iterator();
-            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
-
-            data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
-
-            if ( rowLabels == null ) {
-                log.debug( "Setting row names" );
-                rowLabels = new ArrayList<String>();
-            }
-            // log.debug( designElement.getName() );
+        for ( DesignElement designElement : rowMap.keySet() ) {
+            log.warn( "design element: " + designElement );
+            Double[] row = ( Double[] ) expressionDataMatrix.getRow( designElement );
+            data[i] = ArrayUtils.toPrimitive( row );
             rowLabels.add( designElement.getName() );
             i++;
         }
 
-        if ( colLabels == null ) {
-            log.warn( "Column labels not set.  Using defaults" );
-            colLabels = new ArrayList<String>();
+        // TODO add (bioassay) column labels.
+        if ( colLabels.size() == 0 ) {
             for ( int j = 0; j < data[0].length; j++ ) {
                 colLabels.add( String.valueOf( j ) );
             }
         }
         return this.createColorMatrix( data, rowLabels, colLabels );
-    }
-
-    /**
-     * Draw the dynamic image and write to stream
-     * 
-     * @param stream
-     * @return String
-     * @throws IOException
-     */
-    public String drawDynamicImage( OutputStream stream, ColorMatrix colorMatrix ) throws IOException {
-        // TODO move me to another implementation of MatrixVisualizer
-        log.warn( "drawing dynamic image" );
-
-        ExpressionDataMatrixProducerImpl producer = new ExpressionDataMatrixProducerImpl();
-        producer.setColorMatrix( colorMatrix );
-
-        String type = producer.createDynamicImage( stream, true, true );
-
-        log.debug( "returning content type " + type );
-
-        return type;
     }
 }
