@@ -42,12 +42,12 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private String searchString = null;
 
-    private boolean suppressVisualizations;
+    private boolean viewAll;
 
     private String filename = null;
 
     private String species = null;
-    
+
     private String standardQuantitationTypeName = null;
 
     /**
@@ -81,15 +81,15 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     /**
      * @return boolean
      */
-    public boolean isSuppressVisualizations() {
-        return suppressVisualizations;
+    public boolean isViewAll() {
+        return viewAll;
     }
 
     /**
-     * @param suppressVisualizations
+     * @param viewAll
      */
-    public void setSuppressVisualizations( boolean suppressVisualizations ) {
-        this.suppressVisualizations = suppressVisualizations;
+    public void setViewAll( boolean viewAll ) {
+        this.viewAll = viewAll;
     }
 
     /**
@@ -175,17 +175,15 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     public void setExpressionExperimentId( Long id ) {
         this.expressionExperimentId = id;
     }
-    
+
     /**
-     * 
      * @return String
      */
     public String getStandardQuantitationTypeName() {
         return standardQuantitationTypeName;
     }
-    
+
     /**
-     * 
      * @param standardQuantitationType
      */
     public void setStandardQuantitationTypeName( String standardQuantitationTypeName ) {

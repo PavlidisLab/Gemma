@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +46,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -81,6 +83,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
     private List<DesignElement> compositeSequences = null;
     private QuantitationType quantitationType = null;
+    private boolean viewAll = false;
+    private final int MAX_ELEMENTS_TO_VISUALIZE = 50;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -186,17 +190,36 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
         quantitationType.setType( standardQuantitationType );
 
-        // more searchString validation - see also validation.xml
-        String searchString = eesc.getSearchString();
-        log.debug( "Got search string " + searchString );
-        String[] searchIds = StringUtils.split( searchString, "," );
+        /* check to see if 'viewAll' is selected. */
+        int size = expressionExperiment.getDesignElementDataVectors().size();
+        String[] searchIds = new String[size];
+        viewAll = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewAll();
+        if ( viewAll ) {
+            int i = 0;
+            if ( size > MAX_ELEMENTS_TO_VISUALIZE ) {// check size if 'viewAll' is set.
+                size = MAX_ELEMENTS_TO_VISUALIZE;
+            }
+            Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+            Iterator iter = vectors.iterator();
+            while ( iter.hasNext() ) {
+                DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
+                searchIds[i] = vector.getDesignElement().getName();
+                i++;
+            }
+        } else {
+            // more searchString validation - see also validation.xml
+            String searchString = eesc.getSearchString();
+            log.debug( "Got search string " + searchString );
+            searchIds = StringUtils.split( searchString, "," );
+            size = searchIds.length;
+        }
 
         /* handle search by design element */
         if ( eesc.getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
             Collection<Gene> geneCol = null;
             for ( ArrayDesign design : arrayDesigns ) {
 
-                for ( int i = 0; i < searchIds.length; i++ ) {
+                for ( int i = 0; i < size; i++ ) {
                     String searchId = StringUtils.trim( searchIds[i] );
                     log.debug( "searching for " + searchId );
 
@@ -248,10 +271,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
         String searchCriteria = eesc.getSearchCriteria();
-
-        // TODO remove this
-        // boolean suppressVisualizations = ( ( ExpressionExperimentVisualizationCommand ) command )
-        // .isSuppressVisualizations();
 
         // TODO remove this
         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()

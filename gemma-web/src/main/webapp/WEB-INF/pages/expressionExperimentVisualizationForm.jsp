@@ -152,11 +152,11 @@
 		</tr>
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.suppressVisualizations" /> </b>
+				<b> <fmt:message key="label.viewAll" /> </b>
 			</td>
 			<td>
 				<spring:bind
-					path="expressionExperimentVisualizationCommand.suppressVisualizations">
+					path="expressionExperimentVisualizationCommand.viewAll">
 					<input type="hidden" name="_${status.expression}" />
 					<input type="checkbox" name="${status.expression}" value="true" />
 					<c:if test="${status.value}">checked="checked"</c:if>
