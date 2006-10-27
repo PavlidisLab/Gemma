@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao; 
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -48,6 +49,23 @@ public class DesignElementDataVectorDaoTest extends BaseSpringContextTest {
 
         Collection objects = designElementDataVectorDao.queryByGeneSymbolAndSpecies( "GRIN1", "mouse",
                 expressionExperiments );
+        assertNotNull( objects );
+    }
+    
+    public void testGetGenes() {
+        designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
+        DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
+        dedv.setId( (long) 1 );
+        Collection objects = designElementDataVectorDao.getGenes( dedv );
+        assertNotNull( objects );
+    }
+
+
+    public void testGetGenesById() {
+        designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
+        DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
+        dedv.setId( (long) 1 );
+        Collection objects = designElementDataVectorDao.getGenesById( (long) 1 );
         assertNotNull( objects );
     }
 
