@@ -18,11 +18,15 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import java.util.Map;
+
 import hep.aida.IHistogram1D;
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.list.DoubleArrayList;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * @author Paul Pavlidis
@@ -33,16 +37,14 @@ public interface MatrixRowPairAnalysis {
 
     public void calculateMetrics();
 
-    public void calculateMetrics( GeneAnnotations geneData );
-
     public void setUseAbsoluteValue( boolean k );
 
     public void setPValueThreshold( double k );
 
     public IHistogram1D getHistogram();
 
-    public void setDuplicateMap( GeneAnnotations k );
-
+    public void setDuplicateMap( Map geneToProbeMap, Map probeToGeneMap );
+    
     public void setLowerTailThreshold( double k );
 
     public void setUpperTailThreshold( double k );
@@ -54,4 +56,6 @@ public interface MatrixRowPairAnalysis {
     public NamedMatrix getMatrix();
 
     public DoubleArrayList getHistogramArrayList();
+    
+   
 }

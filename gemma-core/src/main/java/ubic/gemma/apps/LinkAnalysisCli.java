@@ -7,7 +7,9 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
@@ -21,6 +23,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -35,22 +38,20 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
      * Use for batch processing These two files could contain the lists of experiment;
      */
     private String geneExpressionFile = null;
-    private String geneAnnotationFile = null;
-    final String actualExperimentsPath = "C:/TestData/";
+    private String localHome = "c:";;
     private LinkAnalysis linkAnalysis = new LinkAnalysis();
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         // TODO Add the running options
+        Option localHomeOption = OptionBuilder.hasArg().isRequired().withArgName( "Local Home Folder" )
+        .withDescription( "The local folder for TestData and TestResult(Should have these two subfolders)" ).withLongOpt( "localHome" ).create( 'l' );
+        addOption( localHomeOption );
+
         Option geneFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Gene Expression file" )
                 .withDescription( "The Gene Expression File for analysis" ).withLongOpt( "genefile" ).create( 'f' );
         addOption( geneFileOption );
-
-        Option goFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Gene Annotation file" )
-                .withDescription( "The Gene Annotation File for gene expression file" ).withLongOpt( "gofile" ).create(
-                        'g' );
-        addOption( goFileOption );
 
         Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" ).withDescription(
                 "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" ).create( 'c' );
@@ -88,16 +89,14 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     @Override
     protected void processOptions() {
         super.processOptions();
+        if ( hasOption( 'l' ) ) {
+            this.localHome = getOptionValue( 'l' );
+            this.linkAnalysis.setHomeDir(this.localHome);
+        }
         if ( hasOption( 'f' ) ) {
             this.geneExpressionFile = getOptionValue( 'f' );
             this.linkAnalysis.setGeneExpressionFile( this.geneExpressionFile );
         }
-
-        if ( hasOption( 'g' ) ) {
-            this.geneAnnotationFile = getOptionValue( 'g' );
-            this.linkAnalysis.setGeneAnnotationFile( this.geneAnnotationFile );
-        }
-
         if ( hasOption( 'c' ) ) {
             this.linkAnalysis.setCdfCut( Double.parseDouble( getOptionValue( 'c' ) ) );
         }
@@ -153,8 +152,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             if(expressionExperiment == null)
             {
             	GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-            	// geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            	geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( actualExperimentsPath ) );
+            	//geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            	geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.localHome+"/TestData/" ) );
             	geoService.setLoadPlatformOnly( false );
             	Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( this.geneExpressionFile );
             	expressionExperiment = ees.iterator().next();
@@ -163,15 +162,17 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             // this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
             ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this
                     .getBean( "expressionDataMatrixService" );
-            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this
-                    .getQuantitationType() );
+            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this.getQuantitationType() );
+            //DoubleMatrixNamed dataMatrix = ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment, this.getQuantitationType())).getDoubleMatrixNamed();
             this.linkAnalysis.setDataMatrix( dataMatrix );
 
             DesignElementDataVectorService vectorService = ( DesignElementDataVectorService ) this
                     .getBean( "designElementDataVectorService" );
+            this.linkAnalysis.setDEService(vectorService);
             Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,
                     this.getQuantitationType() );
             this.linkAnalysis.setDataVector( dataVectors );
+            
             this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
                     .getBean( "probe2ProbeCoexpressionService" ) );
             this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );

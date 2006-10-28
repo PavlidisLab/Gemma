@@ -30,7 +30,10 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneService;
 
 /*
 * @author xiangwan
@@ -40,10 +43,13 @@ public class LinkAnalysis {
 	private MatrixRowPairAnalysis metricMatrix;
     private DoubleArrayList cdf;
     private ObjectArrayList keep;
-	private GeneAnnotations geneAnnotations = null;
     private DoubleMatrixNamed dataMatrix = null;
     private Collection<DesignElementDataVector> dataVectors = null;
     private Probe2ProbeCoexpressionService ppService = null;
+    private DesignElementDataVectorService deService = null;
+	private HashMap<String,String> probeToGeneMap = null;
+	private HashMap<String,Set> geneToProbeMap = null;
+	private Map p2v = null;
     private Taxon taxon = null;
     
     private int uniqueItems = 0;
@@ -62,13 +68,11 @@ public class LinkAnalysis {
     private double binSize = 0.01;
     private boolean useDB = false;
     private String geneExpressionFile = null;
-    private String geneAnnotationFile = null;
-    
+        
     private boolean minPresentFractionIsSet = false;
     private boolean lowExpressionCutIsSet = false;
     
-	final String actualExperimentsPath = "C:/TestData/";
-	final String analysisResultsPath = "C:/Results/";
+	private String localHome = "c:";
 	
 	protected static final Log log = LogFactory.getLog(LinkAnalysis.class);
     
@@ -104,9 +108,11 @@ public class LinkAnalysis {
         } else if (metric.equals( "spearmann" ) ) {
             // metricMatrix = MatrixRowPairAnalysisFactory.spearman(dataMatrix, tooSmallToKeep);
         }
+        
+		metricMatrix.setDuplicateMap(geneToProbeMap, probeToGeneMap);
 
-        metricMatrix.setUseAbsoluteValue( this.absoluteValue);
-        metricMatrix.calculateMetrics( this.geneAnnotations);
+		metricMatrix.setUseAbsoluteValue( this.absoluteValue);
+        metricMatrix.calculateMetrics();
         System.err.println( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + this.tooSmallToKeep );
 
@@ -190,10 +196,11 @@ public class LinkAnalysis {
 	{
         cdf = Stats.cdf( metricMatrix.getHistogramArrayList() );
         chooseCutPoints();
-        metricMatrix.calculateMetrics( this.geneAnnotations);
+        metricMatrix.calculateMetrics();
         keep = metricMatrix.getKeepers();
         System.err.println( "Selected " + keep.size() + " values to keep" );
 	}
+/*
 	@SuppressWarnings("unchecked")
 	private Collection<String> getActiveProbeIdSet() {
 		Collection probeIdSet = new HashSet<String>();
@@ -201,30 +208,54 @@ public class LinkAnalysis {
         	probeIdSet.add(rowName);
         return probeIdSet;
 	}
+*/
 	@SuppressWarnings("unchecked")
 	private void init()
 	{
         this.initDB();
-		Set rowsToUse = new HashSet(this.getActiveProbeIdSet());
+/*
 		try {
-			this.geneAnnotations = new GeneAnnotations(this.actualExperimentsPath + this.geneAnnotationFile, rowsToUse, null,
+			this.geneAnnotations = new GeneAnnotations(this.localHome+"/TestData/" + this.geneAnnotationFile, rowsToUse, null,
 					null);
 		} catch (IOException e) {
 			log.error("Error in reading GO File");
 		}
 		this.uniqueItems = this.geneAnnotations.numGenes();
+*/
+		this.p2v = new HashMap<String,DesignElementDataVector>();
+
+		this.probeToGeneMap = new HashMap<String, String>();
+		this.geneToProbeMap = new HashMap<String, Set>();
+		for(DesignElementDataVector vector:this.dataVectors)
+		{
+			String probeName = vector.getDesignElement().getName();
+			p2v.put(probeName,vector);
+			Collection<Gene> geneSet = this.deService.getGenes(vector);
+			String geneName = null;
+			if(geneSet != null && !geneSet.isEmpty())
+				geneName = geneSet.iterator().next().getName();
+			else
+				continue;
+			this.probeToGeneMap.put(probeName,geneName);
+			Set probeSet = (Set)this.geneToProbeMap.get(geneName);
+			if(probeSet == null)
+			{
+				Set tmpSet = new HashSet();
+				tmpSet.add(probeName);
+				this.geneToProbeMap.put(geneName, tmpSet);
+			}
+			else
+				probeSet.add(probeName);
+		}
+		if(geneToProbeMap.size() < this.dataVectors.size()/100)
+			this.uniqueItems = this.dataVectors.size();
+		else
+			this.uniqueItems = geneToProbeMap.size();
 	}
 	private void saveLinks()
 	{
 		try{
 			/*********Find the dataVector for each probe first****/
-			Map p2v = new HashMap<String,DesignElementDataVector>();
-			for(DesignElementDataVector vector:this.dataVectors)
-			{
-				String name = vector.getDesignElement().getName();
-				p2v.put(name,vector);
-			}
-			
             int c = dataMatrix.columns();
             int[] p1vAr = new int[keep.size()];
             int[] p2vAr = new int[keep.size()];
@@ -289,10 +320,11 @@ public class LinkAnalysis {
 	}
 	public void analysis()
 	{
-		assert this.geneAnnotationFile != null;
 		assert this.dataMatrix != null;
+		assert this.dataVectors != null;
 		assert this.ppService != null;
 		assert this.taxon != null;
+		assert this.deService != null;
 		System.err.println("Taxon: "+this.taxon.getCommonName());
 		
 		this.init();
@@ -304,7 +336,6 @@ public class LinkAnalysis {
 	{
 		System.err.println("Current Setting");
 		System.err.println("Gene Expression File:"+this.geneExpressionFile);
-		System.err.println("Gene Annotation File:"+this.geneAnnotationFile);
 		System.err.println("AbsouteValue Setting:"+this.absoluteValue);
 		System.err.println("BinSize:"+this.binSize);
 		System.err.println("cdfCut:"+this.cdfCut);
@@ -327,9 +358,6 @@ public class LinkAnalysis {
 	public void setFwe(double fwe) {
 		this.fwe = fwe;
 	}
-	public void setGeneAnnotationFile(String geneAnnotationFile) {
-		this.geneAnnotationFile = geneAnnotationFile;
-	}
 	public void setDataMatrix(DoubleMatrixNamed paraDataMatrix) {
 		this.dataMatrix = paraDataMatrix;
 	}
@@ -339,6 +367,9 @@ public class LinkAnalysis {
 	}
 	public void setPPService(Probe2ProbeCoexpressionService ppService) {
 		this.ppService = ppService;
+	}
+	public void setDEService(DesignElementDataVectorService deService) {
+		this.deService = deService;
 	}
 	public void setDataVector(Collection <DesignElementDataVector> vectors) {
 		this.dataVectors = vectors;
@@ -363,15 +394,18 @@ public class LinkAnalysis {
 	public void setUseDB() {
 		this.useDB = true;
 	}
+	public void setHomeDir(String paraLocalHome){
+		this.localHome = paraLocalHome;
+	}
 	public void writeDataIntoFile(String paraFileName)
 	{
 		BufferedWriter writer = null;
 		try {
-			writer = new BufferedWriter(new FileWriter(this.analysisResultsPath
+			writer = new BufferedWriter(new FileWriter(this.localHome+"/TestResult/"
 					+ paraFileName));
 		} catch (IOException e) {
 			log.error("File for output expression data "
-					+ this.analysisResultsPath + paraFileName
+					+ this.localHome+"/TestResult/" + paraFileName
 					+ "could not be opened");
 		}
 		try {

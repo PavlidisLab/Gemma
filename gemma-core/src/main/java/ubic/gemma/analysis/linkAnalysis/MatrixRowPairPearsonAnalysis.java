@@ -18,6 +18,9 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import java.util.Map;
+import java.util.Set;
+
 import hep.aida.IHistogram1D;
 import hep.aida.ref.Histogram1D;
 
@@ -28,6 +31,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix2DNamed;
 import ubic.basecode.math.CorrelationStats;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.genome.gene.GeneService;
 import cern.colt.bitvector.BitMatrix;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
@@ -65,6 +70,10 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private boolean histogramIsFilled = false;
     private DoubleMatrixNamed dataMatrix = null;
     private GeneAnnotations duplicateMap = null;
+    private Map probeToGeneMap = null;
+    private Map geneToProbeMap = null;
+    private DesignElementDataVectorService deService = null;
+    private GeneService geneService = null;
     private BitMatrix used = null;
     private int numMissing;
     private double globalTotal = 0.0; // used to store the running total of the matrix values.
@@ -166,10 +175,11 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     /**
      * @param k GroupMap
      */
-    public void setDuplicateMap( GeneAnnotations k ) {
-        this.duplicateMap = k;
+    public void setDuplicateMap(Map m1, Map m2)
+    {
+    	this.geneToProbeMap = m1;
+    	this.probeToGeneMap = m2;
     }
-
     /**
      * Set an (absolute value) correlation, below which values are not maintained in the correlation matrix. They are
      * still kept in the histogram. (In some implementations this can greatly reduce the memory requirements for the
@@ -220,22 +230,6 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     public void nullMatrix() {
         C = null;
     }
-
-    /**
-     *
-     */
-    private void calculateMetricsFast() {
-        this.calculateMetricsFast( null );
-    }
-
-    /**
-     * Calculate the linear correlation matrix of a matrix, allowing missing values. Slower. If there are no missing
-     * values, this calls PearsonFast.
-     */
-    public void calculateMetrics() {
-        this.calculateMetrics( null );
-    }
-
     /**
      * @param ival double[]
      * @param jval double[]
@@ -257,13 +251,14 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param geneData GeneAnnotations
      * @return
      */
-    private boolean checkAssociation(String probeA, String probeB, GeneAnnotations geneData)
+    private boolean checkAssociation(String probeA, String probeB)
     {
-    	String geneId = geneData.getProbeGeneName(probeA);
+    	if(this.probeToGeneMap == null || this.geneToProbeMap == null) return false;
+    	String geneId = (String)this.probeToGeneMap.get(probeA);
     	//Map geneToProbeMap = geneData.getProbeToGeneMap();
     	//return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
     	if(geneId != null)
-    		return geneData.getGeneProbes(geneId).contains(probeB);
+    		return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
     	return false;
     }
     /**
@@ -271,12 +266,13 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param String probId 
      * @param GeneAnnotations geneData
      */
-    private boolean checkDuplication(String probeId, GeneAnnotations geneData)
+    private boolean checkDuplication(String probeId)
     {
-    	String geneId = geneData.getProbeGeneName(probeId);
+    	if(this.probeToGeneMap == null || this.geneToProbeMap == null) return false;
+    	String geneId = (String)this.probeToGeneMap.get(probeId);;
     	
     	if(geneId != null)
-    		return geneData.numProbesForGene(geneId) > 1;
+    		return ((Set)geneToProbeMap.get(geneId)).size() > 1;
     	
     	return false;
     }
@@ -287,7 +283,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param duplicates The map containing information about what items are the 'same' as other items; such are
      *        skipped.
      */
-    private void calculateMetricsFast( GeneAnnotations geneData ) {
+    private void calculateMetricsFast() {
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
 
@@ -314,10 +310,10 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         for ( int i = 0; i < numrows; i++ ) {
 
             if ( docalcs ) {
-                if ( geneData != null ) {
+                if ( this.probeToGeneMap != null && this.geneToProbeMap != null) {
                     itemA = this.dataMatrix.getRowName( i );
                     //AhasDuplicates = ( ( Set ) probeToGeneMap.get( itemA ) ).size() > 0;
-                	AhasDuplicates = checkDuplication(itemA, geneData); 
+                	AhasDuplicates = checkDuplication(itemA); 
                 }
                 ival = data[i];
             }
@@ -328,7 +324,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     keepCorrel( i, j, C.getQuick( i, j ), numcols );
                     continue;
                 }
-                if ( AhasDuplicates &&  this.checkAssociation(itemA, this.dataMatrix.getRowName( j ),geneData ))  {
+                if ( AhasDuplicates &&  this.checkAssociation(itemA, this.dataMatrix.getRowName( j )))  {
                     duplicateSkip++;
                     continue;
                 }
@@ -340,7 +336,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
         System.err.println( "" );
 
-        finishMetrics( duplicateSkip, geneData );
+        finishMetrics( duplicateSkip);
 
     }
 
@@ -350,7 +346,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * 
      * @param duplicates Defines values that should not be compared to each other.
      */
-    public void calculateMetrics( GeneAnnotations geneData ) {
+    public void calculateMetrics() {
 
         int numused;
         int numrows = this.dataMatrix.rows();
@@ -359,7 +355,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         boolean docalcs = this.needToCalculateMetrics();
 
         if ( this.numMissing == 0 ) {
-            calculateMetricsFast( geneData );
+            calculateMetricsFast( );
             return;
         }
 
@@ -389,9 +385,9 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
 
             if ( docalcs ) {
                 rowStatistics();
-                if ( geneData != null ) {
+                if ( this.geneToProbeMap != null && this.probeToGeneMap != null) {
                     itemA = this.dataMatrix.getRowName( i );
-                    AhasDuplicates =  this.checkDuplication(itemA, geneData);
+                    AhasDuplicates =  this.checkDuplication(itemA);
                 }
                 ival = data[i];
             }
@@ -407,7 +403,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                 }
 
                 /* skip duplicates */
-                if ( AhasDuplicates && this.checkAssociation(itemA,this.dataMatrix.getRowName( j ),geneData ) ) {
+                if ( AhasDuplicates && this.checkAssociation(itemA,this.dataMatrix.getRowName( j )) ) {
                     duplicateSkip++;
                     continue;
                 }
@@ -454,7 +450,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             }
         }
         System.err.println( "" );
-        finishMetrics( duplicateSkip, geneData );
+        finishMetrics( duplicateSkip);
     }
 
     /**
@@ -517,9 +513,23 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         double p = CorrelationStats.pvalue( correl, numused );
 
         // correct it for duplicates.
-        if ( this.duplicateMap != null ) {
-            double k = ( double ) duplicateMap.numProbesForGene( dataMatrix.getRowName( i ) ) + 1;
-            double m = ( double ) duplicateMap.numProbesForGene( dataMatrix.getRowName( j ) ) + 1;
+        if ( this.geneToProbeMap != null && this.probeToGeneMap!= null ) 
+        {
+        	//Map geneToProbeMap = geneData.getProbeToGeneMap();
+        	//return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
+        	double k = 1, m = 1;
+        	//String geneId = duplicateMap.getProbeGeneName(dataMatrix.getRowName(i));
+        	String geneId = (String)this.probeToGeneMap.get(dataMatrix.getRowName(i));
+        	
+        	if(geneId != null)
+        		//k = ( double ) duplicateMap.numProbesForGene( geneId ) + 1;
+        		k =  ((Set)this.geneToProbeMap.get(geneId)).size() + 1;
+        	
+        	//geneId = duplicateMap.getProbeGeneName(dataMatrix.getRowName(j));
+        	geneId = (String)this.probeToGeneMap.get(dataMatrix.getRowName(j));
+        	if(geneId != null)
+        		//m = ( double ) duplicateMap.numProbesForGene( geneId ) + 1;
+        		m =  ((Set)this.geneToProbeMap.get(geneId)).size() + 1;
             p = p * k * m;
         }
 
@@ -666,8 +676,8 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param duplicateSkip int
      * @param duplicates Map
      */
-    private void finishMetrics( int duplicateSkip, GeneAnnotations geneData ) {
-        if ( !this.histogramIsFilled && geneData != null ) {
+    private void finishMetrics( int duplicateSkip) {
+        if ( !this.histogramIsFilled && this.probeToGeneMap != null && this.geneToProbeMap != null) {
             System.err.println( "Skipped " + duplicateSkip + " pairs of duplicates" );
         }
         this.histogramIsFilled = true;
