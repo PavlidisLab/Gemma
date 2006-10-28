@@ -117,6 +117,15 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         arrayDesignProbeMapperService.processArrayDesign( ad, taxon );
          
         // possibly assert no unexpected new genes or gene products were added.
+        
+        // expect to see added (not in NCBI) as of 10/28
+        /*
+         * CR749610 (gene and gene product) (HYOU1)
+         * NM_001008411 (product of TDG) This product is in NCBI gene
+         * Another anonymous product of TDG.
+         * CR541839 (HMOX2)
+         * CR456760 (HMOX2)
+         */
 
     }
 }

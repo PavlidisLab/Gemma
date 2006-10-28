@@ -388,16 +388,6 @@ public class BusinessKey {
     }
 
     /**
-     * @param geneProduct
-     */
-    public static void checkKey( GeneProduct geneProduct ) {
-        if ( geneProduct.getId() != null ) return;
-        if ( StringUtils.isBlank( geneProduct.getNcbiId() ) && StringUtils.isBlank( geneProduct.getName() ) ) {
-            throw new IllegalArgumentException( "GeneProduct must have ncbiId or name" );
-        }
-    }
-
-    /**
      * @param ontologyEntry
      */
     public static void checkKey( OntologyEntry ontologyEntry ) {
@@ -496,7 +486,8 @@ public class BusinessKey {
 
         if ( geneProduct == null ) ok = false;
 
-        if ( StringUtils.isBlank( geneProduct.getName() ) ) ok = false;
+        if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) && StringUtils.isBlank( geneProduct.getName() ) )
+            ok = true;
 
         if ( !ok ) {
             throw new IllegalArgumentException( "GeneProduct did not have a valid key" );
@@ -566,8 +557,24 @@ public class BusinessKey {
             queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
         } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) { // NM_XXXXX etc.
             queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
-            Criteria subCriteria = queryObject.createCriteria( "gene" );
-            addRestrictions( subCriteria, geneProduct.getGene() );
+
+            if ( geneProduct.getAccessions() != null && geneProduct.getAccessions().size() > 0 ) {
+
+                Criteria subCriteria = queryObject.createCriteria( "accessions" );
+                Disjunction disjunction = Restrictions.disjunction();
+                for ( DatabaseEntry databaseEntry : geneProduct.getAccessions() ) {
+                    disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
+                    // FIXME this should include the ExternalDatabase in the criteria.
+                }
+                subCriteria.add( disjunction );
+            }
+
+            /*
+             * Can't use gene. This causes some problems when goldenpath and ncbi don't have the same information about
+             * the gene (usually the symbol). Possibly use just the physical location of the gene, not the symbol? Or
+             * check aliases?
+             */
+            // addRestrictions( subCriteria, geneProduct.getGene() );
         }
     }
 

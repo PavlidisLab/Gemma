@@ -143,7 +143,7 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         if ( gene.getAccessions().size() > 0 ) {
-            gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
+            this.persistCollectionElements( gene.getAccessions() );
         }
 
         Collection<GeneProduct> tempGeneProduct = gene.getProducts();
@@ -376,6 +376,10 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         if ( log.isDebugEnabled() ) log.debug( "Persisting " + geneProduct );
+
+        if ( geneProduct.getAccessions() != null ) {
+            this.persistCollectionElements( geneProduct.getAccessions() );
+        }
 
         if ( geneProduct.getCdsPhysicalLocation() != null ) {
             geneProduct.getCdsPhysicalLocation().setChromosome(

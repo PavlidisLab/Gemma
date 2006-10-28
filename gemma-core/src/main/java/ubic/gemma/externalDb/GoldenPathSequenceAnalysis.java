@@ -30,7 +30,9 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
+import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -243,7 +245,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         // this is not the ncbi id.
                         // String ncbiId = rs.getString( 1 );
                         String name = rs.getString( 1 );
-                        // product.setNcbiId( ncbiId ); // transcript identifier, not gene...or set accessions?
+
+                        if ( StringUtils.isNotBlank( name ) ) {
+                            DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
+                            accession.setAccession( name );
+                            accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
+                            product.getAccessions().add( accession );
+                        }
 
                         product.setType( GeneProductType.RNA );
 

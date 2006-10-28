@@ -55,9 +55,9 @@ public class NcbiGeneConverter implements Converter {
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
-    private ExternalDatabase genBank;
+    private static ExternalDatabase genBank;
 
-    public NcbiGeneConverter() {
+    static {
         genBank = ExternalDatabase.Factory.newInstance();
         genBank.setName( "Genbank" );
     }
@@ -155,10 +155,16 @@ public class NcbiGeneConverter implements Converter {
                 description = description + " (Refseq status: " + acc.getStatus() + ").";
             }
 
-            DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
-            accession.setAccession( acc.getRnaNucleotideAccession() );
-            accession.setAccessionVersion( acc.getRnaNucleotideAccessionVersion() );
-            accession.setExternalDatabase( genBank );
+            if ( acc.getRnaNucleotideAccession() != null ) {
+                DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
+                accession.setAccession( acc.getRnaNucleotideAccession() );
+                accession.setAccessionVersion( acc.getRnaNucleotideAccessionVersion() );
+                accession.setExternalDatabase( genBank );
+                if ( rna.getAccessions() == null ) {
+                    rna.setAccessions( new HashSet<DatabaseEntry>() );
+                }
+                rna.getAccessions().add( accession );
+            }
 
             /*
              * Fill in physical location details.
@@ -169,9 +175,6 @@ public class NcbiGeneConverter implements Converter {
                 rna.setPhysicalLocation( pl );
             }
 
-            Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
-            accessions.add( accession );
-            rna.setAccessions( accessions );
             rna.setDescription( description );
             geneProducts.add( rna );
         }
@@ -293,6 +296,13 @@ public class NcbiGeneConverter implements Converter {
 
     public void setSourceDoneFlag( AtomicBoolean flag ) {
         this.sourceDone = flag;
+    }
+
+    /**
+     * @return the genBank
+     */
+    public static ExternalDatabase getGenbank() {
+        return genBank;
     }
 
 }

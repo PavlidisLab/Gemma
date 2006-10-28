@@ -92,7 +92,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( GeneProduct.class );
 
-            BusinessKey.checkKey( geneProduct );
+            BusinessKey.checkValidKey( geneProduct );
 
             BusinessKey.createQueryObject( queryObject, geneProduct );
 
