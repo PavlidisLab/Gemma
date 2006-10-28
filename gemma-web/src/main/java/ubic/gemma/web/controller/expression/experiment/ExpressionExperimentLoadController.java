@@ -146,7 +146,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 }
 
                 ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( "expressionExperimentDetails", model );
+                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html"), model );
             }
         };
     }

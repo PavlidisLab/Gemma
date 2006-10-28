@@ -82,8 +82,9 @@ public class TaskCompletionController extends AbstractController {
         ModelAndView returnedView;
         try {
             returnedView =  (ModelAndView) taskRunningService.checkResult( taskId );
-            returnedView.setView( new RedirectView(returnedView.getViewName()) );
             return returnedView;
+//            returnedView.setView( new RedirectView(returnedView.getViewName()) );
+//            return returnedView;
         } catch ( CancellationException e ) {
             log.debug( "Job was cancelled" );
             
