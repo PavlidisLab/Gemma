@@ -30,8 +30,6 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private static final long serialVersionUID = 2166768356457316142L;
 
-    private int stringency;
-
     private String searchCriteria = null;
 
     private String name = null;
@@ -104,20 +102,6 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
      */
     public void setSearchString( String searchString ) {
         this.searchString = searchString;
-    }
-
-    /**
-     * @return int
-     */
-    public int getStringency() {
-        return stringency;
-    }
-
-    /**
-     * @param stringency
-     */
-    public void setStringency( int stringency ) {
-        this.stringency = stringency;
     }
 
     /**

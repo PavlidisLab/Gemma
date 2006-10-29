@@ -50,8 +50,8 @@
             <field property="searchString" depends="required">
                 <arg0 key="expressionExperimentVisualizationCommand.searchString"/>
             </field>
-            <field property="stringency" depends="required">
-                <arg0 key="expressionExperimentVisualizationCommand.stringency"/>
+            <field property="viewAll" depends="required">
+                <arg0 key="expressionExperimentVisualizationCommand.viewAll"/>
             </field>
         </form>
         

@@ -140,18 +140,6 @@
 
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.stringency" /> </b>
-			</td>
-			<td>
-				<spring:bind path="expressionExperimentVisualizationCommand.stringency">
-					<input "type="text" size=1
-						name="<c:out value="${status.expression}"/>"
-						value="<c:out value="${status.value}"/>" />
-				</spring:bind>
-			</td>
-		</tr>
-		<tr>
-			<td valign="top">
 				<b> <fmt:message key="label.viewAll" /> </b>
 			</td>
 			<td>

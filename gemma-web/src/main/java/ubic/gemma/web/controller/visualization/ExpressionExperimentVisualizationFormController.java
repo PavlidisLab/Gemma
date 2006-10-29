@@ -60,7 +60,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
  * success view returns either a visual representation of the result set or a downloadable data file.
  * <p>
- * {@link stringency} sets the number of data sets the link must be seen in before it is listed in the results, and
+ * {@link viewAll} sets whether or not the entire data set will be viewed (with maximum 50 results displayed), and
  * {@link species} sets the type of species to search. {@link keywords} restrict the search.
  * 
  * @author keshav
@@ -122,7 +122,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
         eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
-        eesc.setStringency( 1 );
         eesc.setSpecies( "Human" );
         eesc.setStandardQuantitationTypeName( StandardQuantitationType.RATIO.getValue() );
 
@@ -301,7 +300,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
             log.debug( compositeSequences.size() );
             errors.addError( new ObjectError( command.toString(), null, null,
-                    "None of the match probe sets match the given quantitation type "
+                    "None of the probe sets match the given quantitation type "
                             + quantitationType.getType().getValue() ) );
             return super.processFormSubmission( request, response, command, errors );
         }
