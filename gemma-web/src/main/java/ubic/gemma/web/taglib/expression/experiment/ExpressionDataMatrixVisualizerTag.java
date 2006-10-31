@@ -70,7 +70,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         try {
             /* get metadata from MatrixVisualizer */
             ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
-            String imageFile = httpExpressionDataMatrixVisualizer.getImageFile();
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
