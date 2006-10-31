@@ -61,6 +61,7 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
         ExpressionExperimentVisualizationCommand command = new ExpressionExperimentVisualizationCommand();
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "probeset_0, probeset_1" );
+        // command.setStandardQuantitationTypeName( StandardQuantitationType.MEASUREDSIGNAL.getValue() );
 
         log.debug( "expression experiment id " + ee.getId() );
         command.setExpressionExperimentId( ee.getId() );
@@ -69,6 +70,7 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
         controller.processFormSubmission( request, response, command, errors );
         ModelAndView mav = controller.onSubmit( request, response, command, errors );
         log.warn( mav.getViewName() );
+        // assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
         assertEquals( "expressionExperimentVisualizationForm", mav.getViewName() );
 
     }
