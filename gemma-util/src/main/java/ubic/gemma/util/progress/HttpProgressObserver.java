@@ -65,11 +65,11 @@ public class HttpProgressObserver implements Observer, Serializable {
             String sessionId = WebContextFactory.get().getSession().getId();
             this.hasLiveJob = ProgressManager.addToRecentNotification( sessionId, this );
 
-            logger.info( "No user associated with security context.  Tried to use session id: " + sessionId
+            logger.debug( "No user associated with security context.  Tried to use session id: " + sessionId
                     + "  successful = " + hasLiveJob );
 
         } else
-            logger.info( "User associated with security context. User = "
+            logger.debug( "User associated with security context. User = "
                     + SecurityContextHolder.getContext().getAuthentication().getName() );
 
     }
@@ -85,7 +85,7 @@ public class HttpProgressObserver implements Observer, Serializable {
     }
 
     public ProgressData getProgressData() {
-        logger.info("Returning Progress Data to client: " + pData.getDescription() + "    " + pData.getPercent());
+        logger.debug("Returning Progress Data to client: " + pData.getDescription() + "    " + pData.getPercent());
         return pData;
     }
 
