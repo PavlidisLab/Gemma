@@ -67,8 +67,7 @@ public class LinkAnalysis {
     private double lowExpressionCut = 0.3;
     private double binSize = 0.01;
     private boolean useDB = false;
-    private String geneExpressionFile = null;
-        
+    
     private boolean minPresentFractionIsSet = false;
     private boolean lowExpressionCutIsSet = false;
     
@@ -226,10 +225,13 @@ public class LinkAnalysis {
 
 		this.probeToGeneMap = new HashMap<String, String>();
 		this.geneToProbeMap = new HashMap<String, Set>();
+
 		for(DesignElementDataVector vector:this.dataVectors)
 		{
+			/***Initialize the map between probe and designElementDataVector***/
 			String probeName = vector.getDesignElement().getName();
 			p2v.put(probeName,vector);
+			/***Initialize the map between probe and gene 1-1 mapping***/
 			Collection<Gene> geneSet = this.deService.getGenes(vector);
 			String geneName = null;
 			if(geneSet != null && !geneSet.isEmpty())
@@ -237,6 +239,8 @@ public class LinkAnalysis {
 			else
 				continue;
 			this.probeToGeneMap.put(probeName,geneName);
+			
+			/***Initialize the map between gene and probeSet 1-n mapping***/
 			Set probeSet = (Set)this.geneToProbeMap.get(geneName);
 			if(probeSet == null)
 			{
@@ -247,10 +251,9 @@ public class LinkAnalysis {
 			else
 				probeSet.add(probeName);
 		}
-		if(geneToProbeMap.size() < this.dataVectors.size()/100)
-			this.uniqueItems = this.dataVectors.size();
-		else
-			this.uniqueItems = geneToProbeMap.size();
+		assert(geneToProbeMap.size() != 0);
+		this.uniqueItems = geneToProbeMap.size();
+
 	}
 	private void saveLinks()
 	{
@@ -335,7 +338,6 @@ public class LinkAnalysis {
 	public void outputOptions()
 	{
 		System.err.println("Current Setting");
-		System.err.println("Gene Expression File:"+this.geneExpressionFile);
 		System.err.println("AbsouteValue Setting:"+this.absoluteValue);
 		System.err.println("BinSize:"+this.binSize);
 		System.err.println("cdfCut:"+this.cdfCut);
@@ -373,9 +375,6 @@ public class LinkAnalysis {
 	}
 	public void setDataVector(Collection <DesignElementDataVector> vectors) {
 		this.dataVectors = vectors;
-	}
-	public void setGeneExpressionFile(String geneExpressionFile) {
-		this.geneExpressionFile = geneExpressionFile;
 	}
 	public void setLowExpressionCut(double lowExpressionCut) {
 		this.lowExpressionCut = lowExpressionCut;

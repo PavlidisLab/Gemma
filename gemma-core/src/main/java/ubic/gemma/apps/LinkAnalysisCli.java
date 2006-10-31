@@ -1,8 +1,13 @@
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -37,7 +42,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     /**
      * Use for batch processing These two files could contain the lists of experiment;
      */
-    private String geneExpressionFile = null;
+    private String geneExpressionList = null;
     private String localHome = "c:";;
     private LinkAnalysis linkAnalysis = new LinkAnalysis();
 
@@ -94,8 +99,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             this.linkAnalysis.setHomeDir(this.localHome);
         }
         if ( hasOption( 'f' ) ) {
-            this.geneExpressionFile = getOptionValue( 'f' );
-            this.linkAnalysis.setGeneExpressionFile( this.geneExpressionFile );
+            this.geneExpressionList = getOptionValue( 'f' );
         }
         if ( hasOption( 'c' ) ) {
             this.linkAnalysis.setCdfCut( Double.parseDouble( getOptionValue( 'c' ) ) );
@@ -128,11 +132,19 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         QuantitationType qtf = QuantitationType.Factory.newInstance();
 
         // Affymetrix platform.
+        
         qtf.setName( "VALUE" );
         qtf.setScale( ScaleType.UNSCALED );
         qtf.setRepresentation( PrimitiveType.DOUBLE );
         qtf.setGeneralType( GeneralType.QUANTITATIVE );
         qtf.setType( StandardQuantitationType.MEASUREDSIGNAL );
+       	/*
+        qtf.setName( "ABS_CALL" );
+        qtf.setScale( ScaleType.OTHER );
+        qtf.setRepresentation( PrimitiveType.STRING );
+        qtf.setGeneralType( GeneralType.CATEGORICAL );
+        qtf.setType( StandardQuantitationType.PRESENTABSENT);
+		*/
         return qts.find( qtf );
     }
 
@@ -146,38 +158,54 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         }
         this.linkAnalysis.outputOptions();
         try {
-            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-            .getBean( "expressionExperimentService" );
-            ExpressionExperiment expressionExperiment = eeService.findByShortName(this.geneExpressionFile);
+            ExpressionExperiment expressionExperiment = null;
+            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+            ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
+            DesignElementDataVectorService vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
+            this.linkAnalysis.setDEService(vectorService);
+            this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" ) );
+
+            expressionExperiment = eeService.findByShortName(this.geneExpressionList);
             if(expressionExperiment == null)
             {
-            	GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-            	//geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            	geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.localHome+"/TestData/" ) );
-            	geoService.setLoadPlatformOnly( false );
-            	Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( this.geneExpressionFile );
-            	expressionExperiment = ees.iterator().next();
+            	InputStream is = new FileInputStream( this.geneExpressionList );
+            	BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            	String accession = null;
+            	while ( ( accession = br.readLine() ) != null ) {
+            		if ( StringUtils.isBlank( accession ) ) {
+            			continue;
+            		}
+            		expressionExperiment = eeService.findByShortName(accession);
+            		if(expressionExperiment == null) continue;
+            		/*{
+            		GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
+            		//geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            		geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.localHome+"/TestData/" ) );
+            		geoService.setLoadPlatformOnly( false );
+            		Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( this.geneExpressionFile );
+            		expressionExperiment = ees.iterator().next();
+            		}*/
+
+            		//this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
+            		DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this.getQuantitationType() );
+            		//DoubleMatrixNamed dataMatrix = ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment, this.getQuantitationType())).getDoubleMatrixNamed();
+            		this.linkAnalysis.setDataMatrix( dataMatrix );
+            		Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,this.getQuantitationType() );
+            		this.linkAnalysis.setDataVector( dataVectors );
+            		this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
+            		this.linkAnalysis.analysis();
+            	}
             }
-
-            // this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
-            ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this
-                    .getBean( "expressionDataMatrixService" );
-            DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this.getQuantitationType() );
-            //DoubleMatrixNamed dataMatrix = ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment, this.getQuantitationType())).getDoubleMatrixNamed();
-            this.linkAnalysis.setDataMatrix( dataMatrix );
-
-            DesignElementDataVectorService vectorService = ( DesignElementDataVectorService ) this
-                    .getBean( "designElementDataVectorService" );
-            this.linkAnalysis.setDEService(vectorService);
-            Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,
-                    this.getQuantitationType() );
-            this.linkAnalysis.setDataVector( dataVectors );
-            
-            this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
-                    .getBean( "probe2ProbeCoexpressionService" ) );
-            this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
-
-            this.linkAnalysis.analysis();
+            else
+            {
+        		DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this.getQuantitationType() );
+        		//DoubleMatrixNamed dataMatrix = ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment, this.getQuantitationType())).getDoubleMatrixNamed();
+        		this.linkAnalysis.setDataMatrix( dataMatrix );
+        		Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,this.getQuantitationType() );
+        		this.linkAnalysis.setDataVector( dataVectors );
+        		this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
+        		this.linkAnalysis.analysis();
+            }
         } catch ( Exception e ) {
             log.error( e );
             return e;
