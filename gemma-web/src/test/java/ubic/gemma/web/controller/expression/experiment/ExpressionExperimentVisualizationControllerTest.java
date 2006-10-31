@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;

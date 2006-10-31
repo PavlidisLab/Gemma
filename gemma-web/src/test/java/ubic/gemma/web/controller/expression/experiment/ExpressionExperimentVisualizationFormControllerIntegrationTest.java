@@ -36,7 +36,8 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
  * database, hence the integration test naming convention.
  * 
  * @author keshav
- * @version $Id$
+ * @version $Id: ExpressionExperimentVisualizationFormControllerIntegrationTest.java,v 1.1 2006/10/24 15:38:33 keshav
+ *          Exp $
  */
 public class ExpressionExperimentVisualizationFormControllerIntegrationTest extends AbstractExpressionExperimentTest {
 
@@ -54,8 +55,8 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
         HttpServletResponse response = new MockHttpServletResponse();
         ExpressionExperimentVisualizationCommand command = new ExpressionExperimentVisualizationCommand();
         command.setSearchCriteria( "probe set id" );
-        command.setSearchString( "0_at, 1_at" );
-        // command.setFilename( "build/Gemma/images/outImage.png" );
+        command.setSearchString( "probeset_0, probeset_1" );
+
         log.debug( "expression experiment id " + ee.getId() );
         command.setExpressionExperimentId( ee.getId() );
 
@@ -65,7 +66,7 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
         controller.processFormSubmission( request, response, command, errors );
         ModelAndView mav = controller.onSubmit( request, response, command, errors );
         log.warn( mav.getViewName() );
-        assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
+        assertEquals( "expressionExperimentVisualizationForm", mav.getViewName() );
 
     }
 }
