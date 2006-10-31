@@ -70,6 +70,7 @@ public class UploadListener implements OutputStreamListener {
         totalFiles++;
         pJob = ProgressManager.createProgressJob( null, SecurityContextHolder.getContext().getAuthentication()
                 .getName(), "File Upload" );
+       pJob.setForwardingURL( "/Gemma/uploadFile.html" );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }
 

@@ -10,11 +10,9 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-		<script type='text/javascript' src="<c:url value="scripts/indeterminateProgress.js"/>"></script>
+		<script type='text/javascript' src="<c:url value="scripts/progressbar.js"/>"></script>
 		<style type="text/css">
-#progressBar { padding-top: 5px; }
-#progressBarBox { width: 350px; height: 20px; border: 1px inset; background: #EEEEEE;}
-#progressBarBoxContent { width: 0; height: 20px; border-right: 1px solid #444444; background: #9ACB34; }
+<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </style>
 
 	</head>
@@ -28,7 +26,7 @@
 			<input type="submit" value="Add some data" name="submit" />
 		</form>
 
-		<script type="text/javascript">createProgressBar();</script>
+		<script type="text/javascript">createIndeterminateProgressBar();</script>
 
 	</body>
 </html>

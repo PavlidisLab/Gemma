@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,6 +27,8 @@ import ubic.gemma.util.progress.ProgressManager;
 public class TaskRunningService {
 
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
+    
+    private static final int KEY_LENGTH = 16;
 
     ProgressManager progressManager;
 
@@ -219,6 +222,13 @@ public class TaskRunningService {
         finishedTasks.put( taskId, result );
         submittedTasks.remove( taskId );
         ProgressManager.signalDone( taskId );
+    }
+    
+    /**
+     * @return
+     */
+    public static String generateTaskId() {
+        return RandomStringUtils.randomAlphanumeric( KEY_LENGTH );
     }
 
 }

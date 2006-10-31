@@ -42,7 +42,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
     /**
      * 
      */
-    private static final int KEY_LENGTH = 16;
+   
 
     /**
      * Use this to access the task id in the request.
@@ -69,7 +69,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
          */
         SecurityContext context = SecurityContextHolder.getContext();
 
-        String taskId = RandomStringUtils.randomAlphanumeric( KEY_LENGTH );
+        String taskId = TaskRunningService.generateTaskId();
 
         BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
 
