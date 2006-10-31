@@ -179,7 +179,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         // TODO move from JMatrixDisplay
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
 
-        display.setCellSize( new Dimension( 16, 16 ) );
+        // display.setCellSize( new Dimension( 16, 16 ) );
 
         return display;
     }

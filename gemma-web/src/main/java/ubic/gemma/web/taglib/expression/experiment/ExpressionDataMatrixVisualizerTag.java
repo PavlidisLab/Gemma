@@ -84,10 +84,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             session.setAttribute( "type", type );
             session.setAttribute( "httpExpressionDataMatrixVisualizer", httpExpressionDataMatrixVisualizer );
 
-            // TODO remove this don't suppress visualizations
-            // if ( httpExpressionDataMatrixVisualizer.isSuppressVisualizations() ) {
-            // buf.append( "Visualizations suppressed." );
-            // }
             if ( expressionDataMatrix == null || m.length == 0 ) {
                 buf.append( "No data to display" );
             } else {
@@ -102,7 +98,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
-                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=100 height=100/>" );
+                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=300 height=300/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( String name : designElementNames ) {

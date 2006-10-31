@@ -123,7 +123,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setName( ee.getName() );
         eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
         eesc.setSpecies( "Human" );
-        eesc.setStandardQuantitationTypeName( StandardQuantitationType.RATIO.getValue() );
+        eesc.setStandardQuantitationTypeName( StandardQuantitationType.DERIVEDSIGNAL.getValue() );
 
         return eesc;
 
@@ -193,11 +193,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         int size = expressionExperiment.getDesignElementDataVectors().size();
         String[] searchIds = new String[size];
         viewAll = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewAll();
-        if ( viewAll ) {
-            int i = 0;
-            if ( size > MAX_ELEMENTS_TO_VISUALIZE ) {// check size if 'viewAll' is set.
+        if ( viewAll ) {/* check size if 'viewAll' is set. */
+            if ( size > MAX_ELEMENTS_TO_VISUALIZE ) {
                 size = MAX_ELEMENTS_TO_VISUALIZE;
             }
+            int i = 0;
             Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
             Iterator iter = vectors.iterator();
             while ( iter.hasNext() ) {
@@ -205,7 +205,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 searchIds[i] = vector.getDesignElement().getName();
                 i++;
             }
-        } else {
+        } else {/* if viewAll not selected, use search string */
             // more searchString validation - see also validation.xml
             String searchString = eesc.getSearchString();
             log.debug( "Got search string " + searchString );
@@ -227,7 +227,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     if ( cs != null ) {
                         compositeSequences.add( cs );
 
-                        /* get the genes associated with this design element */
+                        /* get the genes associated with this design element (for display) */
                         geneCol = compositeSequenceService.getAssociatedGenes( cs );
 
                         log.debug( "geneCol " + geneCol );
@@ -238,7 +238,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     }
                 }
             }
-            log.debug( compositeSequences.size() );
+            log.debug( "number of composite sequences: " + compositeSequences.size() );
             if ( compositeSequences.size() == 0 ) {
                 errors.addError( new ObjectError( command.toString(), null, null, "None of the probe sets exist." ) );
             }
@@ -276,9 +276,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools
                 .createDir( "../webapps/ROOT/visualization/" ) );
 
-        log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
+        // log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
 
-        log.debug( "Quantitation Type " + quantitationType.getType().getValue() );
+        log.debug( "Quantitation Type: " + quantitationType.getType().getValue() );
 
         ExpressionDataMatrix expressionDataMatrix = null;
 
@@ -296,12 +296,23 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             // call service which produces expression data image based on gene symbol search criteria
         }
 
+        // FIXME botches the order
+        /* handle the labels */
+        List<String> rowLabels = new ArrayList<String>();
+        Collection keySet = expressionDataMatrix.getRowMap().keySet();
+        for ( Object obj : keySet ) {
+            DesignElement de = ( DesignElement ) obj;
+            log.debug( de );
+            rowLabels.add( de.getName() );
+        }
+        httpExpressionDataMatrixVisualizer.setRowLabels( rowLabels );
+
         /* deals with the case of probes that match, but not for the given quantitation type. */
         if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
-            log.debug( compositeSequences.size() );
-            errors.addError( new ObjectError( command.toString(), null, null,
-                    "None of the probe sets match the given quantitation type "
-                            + quantitationType.getType().getValue() ) );
+            errors
+                    .addError( new ObjectError( command.toString(), null, null,
+                            "None of the probe sets match the given quantitation type "
+                                    + quantitationType.getType().getValue() ) );
             return super.processFormSubmission( request, response, command, errors );
         }
         return new ModelAndView( getSuccessView() ).addObject( "httpExpressionDataMatrixVisualizer",
