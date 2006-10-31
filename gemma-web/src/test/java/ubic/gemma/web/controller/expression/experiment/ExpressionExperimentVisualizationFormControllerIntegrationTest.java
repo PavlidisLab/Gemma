@@ -46,8 +46,13 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
      */
     @SuppressWarnings("unchecked")
     public void testOnSubmit() throws Exception {
+        /* put test data in database */
         ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
 
+        /* leave data in database */
+        setComplete();
+
+        /* mimic the search */
         ExpressionExperimentVisualizationFormController controller = ( ExpressionExperimentVisualizationFormController ) this
                 .getBean( "expressionExperimentVisualizationFormController" );
 
@@ -59,8 +64,6 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
 
         log.debug( "expression experiment id " + ee.getId() );
         command.setExpressionExperimentId( ee.getId() );
-
-        setComplete();// leave data in database
 
         BindException errors = new BindException( command, "ExpressionExperimentSearchCommand" );
         controller.processFormSubmission( request, response, command, errors );
