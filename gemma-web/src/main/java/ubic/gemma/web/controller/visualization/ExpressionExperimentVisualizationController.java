@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.awt.Dimension;
 import java.awt.Font;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -49,7 +48,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -63,7 +62,7 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    private HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
+    private ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
 
     private static final int DEFAULT_MAX_SIZE = 3;
 
@@ -79,11 +78,11 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         String type = ( String ) request.getSession().getAttribute( "type" );
         log.debug( "attribute \"type\" from tag: " + type );
 
-        httpExpressionDataMatrixVisualizer = ( HttpExpressionDataMatrixVisualizer ) request.getSession().getAttribute(
-                "httpExpressionDataMatrixVisualizer" );
-        log.debug( "attribute \"httpExpressionDataMatrixVisualizer\" from tag: " + httpExpressionDataMatrixVisualizer );
+        expressionDataMatrixVisualizer = ( ExpressionDataMatrixVisualizer ) request.getSession().getAttribute(
+                "expressionDataMatrixVisualizer" );
+        log.debug( "attribute \"expressionDataMatrixVisualizer\" from tag: " + expressionDataMatrixVisualizer );
 
-        ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
+        ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
 
         type = "matrix";
         OutputStream out = null;
@@ -129,52 +128,17 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         return null; // nothing to return;
     }
 
-    // // TODO Currently contains dummy charts. Change to data matrix.
-    // /**
-    // * @param request
-    // * @param response
-    // * @param errors
-    // * @return ModelAndView
-    // */
-    // @SuppressWarnings("unused")
-    // public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-    //
-    // OutputStream out = null;
-    // try {
-    // out = response.getOutputStream();
-    // String type = request.getParameter( "type" );
-    // JFreeChart chart = null;
-    // if ( type.equals( "pie" ) ) {
-    // chart = createPieChart();
-    // } else if ( type.equals( "bar" ) ) {
-    // chart = createBarChart();
-    // } else if ( type.equals( "time" ) ) {
-    // chart = createTimeSeriesChart();
-    // }
-    // if ( chart != null ) {
-    // response.setContentType( "image/png" );
-    // ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
-    // }
-    // } catch ( Exception e ) {
-    // log.error( e.toString() );
-    // } finally {
-    // if ( out != null ) {
-    // try {
-    // out.close();
-    // } catch ( IOException e ) {
-    // log.warn( "Problems closing output stream. Issues were: " + e.toString() );
-    // }
-    // }
-    // }
-    // return null; // nothing to return;
-    // }
-
+    /**
+     * @param title
+     * @param expressionDataMatrix
+     * @return JMatrixDisplay
+     */
     private JMatrixDisplay createHeatMap( String title, ExpressionDataMatrix expressionDataMatrix ) {
 
-        if ( httpExpressionDataMatrixVisualizer == null )
+        if ( expressionDataMatrixVisualizer == null )
             throw new RuntimeException( "Cannot create color matrix due to null HttpExpressionDataMatrixVisualizer" );
 
-        ColorMatrix colorMatrix = httpExpressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
+        ColorMatrix colorMatrix = expressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
 
         // TODO move from JMatrixDisplay
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
@@ -184,6 +148,12 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         return display;
     }
 
+    /**
+     * @param title
+     * @param dataCol
+     * @param numProfiles
+     * @return JFreeChart
+     */
     private JFreeChart createXYLineChart( String title, Collection<double[]> dataCol, int numProfiles ) {
         if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
 
@@ -217,7 +187,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
      * @return a pie chart.
      */
     private JFreeChart createPieChart() {
-
+        // FIXME
         // create a dataset...
         DefaultPieDataset data = new DefaultPieDataset();
         data.setValue( "One", new Double( 43.2 ) );
@@ -238,7 +208,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
      * @return a bar chart.
      */
     private JFreeChart createBarChart() {
-
+        // FIXME
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         dataset.addValue( 10.0, "S1", "C1" );
         dataset.addValue( 4.0, "S1", "C2" );
@@ -289,7 +259,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
      * @return a time series chart.
      */
     private JFreeChart createTimeSeriesChart() {
-
+        // FIXME
         // here we just populate a series with random data...
         TimeSeries series = new TimeSeries( "Random Data" );
         Day current = new Day( 1, MonthConstants.JANUARY, 2001 );
