@@ -51,7 +51,7 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
      * Fraction identity computation, as in psl.c.
      * 
      * @return Value between 0 and 1.
-     * @see http:// genome.ucsc.edu/FAQ/FAQblat#blat5
+     * @see http://genome.ucsc.edu/FAQ/FAQblat#blat4
      */
     @Override
     public Double identity() {
@@ -62,16 +62,20 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
 
         if ( aliSize <= 0 ) return 0.0;
 
-        long sizeDif = qAliSize = tAliSize;
+        long sizeDif = qAliSize - tAliSize;
         if ( sizeDif < 0 ) {
-            sizeDif = -sizeDif; // here assuming "isMrna" is false;
+            sizeDif = 0; // here assuming "isMrna" is true. ("The parameter isMrna should be set to TRUE, regardless
+            // of whether the input sequence is mRNA or protein")
         }
-        int insertFactor = this.getQueryGapCount();
-        int milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3 * Math
-                .log( 1.0 + sizeDif ) ) ) )
-                / ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
+        int insertFactor = this.getQueryGapCount() + this.getTargetGapCount(); // assuming isMRNA is true.
+        int total = ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
+        int milliBad = 0;
+        if ( total != 0 ) {
+            milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3.0 * Math
+                    .log( 1.0 + sizeDif ) ) ) )
+                    / total;
+        }
         assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad;
         return 100.0 - milliBad * 0.1;
     }
-
 }
