@@ -53,7 +53,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
+import ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -282,15 +283,15 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         ExpressionDataMatrix expressionDataMatrix = null;
 
-        HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
+        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
 
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
 
             expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, compositeSequences, quantitationType );
 
-            httpExpressionDataMatrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http",
-                    request.getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
+            expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix, imageFile
+                    .getAbsolutePath() );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
@@ -304,8 +305,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                                     + quantitationType.getType().getValue() ) );
             return super.processFormSubmission( request, response, command, errors );
         }
-        return new ModelAndView( getSuccessView() ).addObject( "httpExpressionDataMatrixVisualizer",
-                httpExpressionDataMatrixVisualizer );
+        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
+                expressionDataMatrixVisualizer );
     }
 
     /**
