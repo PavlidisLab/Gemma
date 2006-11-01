@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN" "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+
+<taglib>
+
+   <tlib-version>1.2-RC2</tlib-version>
+   <jsp-version>1.2</jsp-version>
+   <short-name>AjaxAnywhere</short-name>
+
+   <uri>http://ajaxanywhere.sourceforge.net/</uri>
+
+   <display-name>ajaxanywhere</display-name>
+   <description><![CDATA[ajaxanywhere taglib]]></description>
+
+   <tag>
+
+      <name>watchJSFState</name>
+      <tag-class>org.ajaxanywhere.WatchJSFStateTag</tag-class>
+      <display-name>watchJSFState</display-name>
+      <description><![CDATA[@deprecated ]]></description>
+
+      <attribute>
+         <name>firstDelimiter</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[if JSF implementation saves its state on the client, this attribute indicates the beginning of state saving block]]></description>
+
+      </attribute>
+      <attribute>
+         <name>lastDelimiter</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[if JSF implementation saves its state on the client, this attribute indicates the end of state saving block]]></description>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>link</name>
+      <tag-class>org.ajaxanywhere.LinkTag</tag-class>
+
+      <attribute>
+         <name>functionName</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+
+      </attribute>
+      <attribute>
+         <name>zones</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+
+      </attribute>
+      <attribute>
+         <name>style</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+
+      </attribute>
+      <attribute>
+         <name>styleClass</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+
+      </attribute>
+      <attribute>
+         <name>href</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>zoneJSF</name>
+      <tag-class>org.ajaxanywhere.jsf.ZoneJSFTag</tag-class>
+      <display-name>zoneJSF</display-name>
+      <description><![CDATA[]]></description>
+
+      <attribute>
+         <name>id</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[name description]]></description>
+
+      </attribute>
+      <attribute>
+         <name>idSuffix</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[the idSuffix can be set to en EL expression, which is appended to the id to form the resulting id of the aazone span html element. This allows to create dynamic zones e.g. in a datatable]]></description>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>autoZone</name>
+      <tag-class>org.ajaxanywhere.AutoZoneTag</tag-class>
+      <display-name>autoZone</display-name>
+      <description><![CDATA[]]></description>
+
+      <attribute>
+         <name>forId</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[indicates that the content goes into the innerHTLM of another DOM object]]></description>
+
+      </attribute>
+      <attribute>
+         <name>id</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[unique ID]]></description>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>zone</name>
+      <tag-class>org.ajaxanywhere.ZoneTag</tag-class>
+      <display-name>zone</display-name>
+      <description><![CDATA[]]></description>
+
+      <attribute>
+         <name>name</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>java.lang.String</type>
+           <description><![CDATA[name description]]></description>
+
+      </attribute>
+      <attribute>
+         <name>skipIfNotIncluded</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <type>boolean</type>
+           <description><![CDATA[if the zone is not in the include list, tag content is not evaluated.]]></description>
+
+      </attribute>
+   </tag>
+
+</taglib>

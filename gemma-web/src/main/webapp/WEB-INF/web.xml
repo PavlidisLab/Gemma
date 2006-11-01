@@ -94,7 +94,7 @@
         <filter-name>compressionFilter</filter-name>
         <filter-class>ubic.gemma.web.filter.GZIPFilter</filter-class>
     </filter>
-    
+
     <filter-mapping>
         <filter-name>encodingFilter</filter-name>
         <url-pattern>/j_security_check</url-pattern>
@@ -250,6 +250,18 @@
             <taglib-location>/WEB-INF/Gemma.tld</taglib-location>
         </taglib>
     </jsp-config>
+    
+    <!--  AjaxAnywhere -->
+    <filter>
+        <filter-name>AjaxAnywhere</filter-name>
+        <filter-class>org.ajaxanywhere.AAFilter</filter-class>
+    </filter>
+    
+    <filter-mapping>
+        <filter-name>AjaxAnywhere</filter-name>
+        <url-pattern>*.html</url-pattern> <!-- other framewords mapping-->
+    </filter-mapping>
+    <!-- End AjaxAnywhere -->
     
 </web-app>
 

@@ -126,11 +126,14 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        if ( id == null ) {
+        String idStr = request.getParameter( "id" );
+        
+        if ( idStr == null ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( identifierNotFound );
         }
+        Long id = Long.parseLong(idStr);
+
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
         Map m = expressionExperimentService.getQuantitationTypeCountById( id );

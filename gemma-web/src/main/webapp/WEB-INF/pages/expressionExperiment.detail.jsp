@@ -3,7 +3,6 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
 <html>
 	<body>
 		<h2>
@@ -164,6 +163,9 @@
 		<h3>
 			<fmt:message key="investigators.title" />
 		</h3>
+		<% 
+			if ( expressionExperiment.getInvestigators().size() > 0 ) {
+		%>
 		<p>
 			<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" pagesize="10" 
 				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
@@ -177,15 +179,17 @@
 			</display:table>
 		</p>
 		<%
+		}
+			else {
+			    out.print("No investigators known");
+			}
+		%>
+		<%
 		if ( expressionExperiment.getAnalyses().size() > 0 ) {
 		%>
 		<h3>
 			<fmt:message key="analyses.title" />
 		</h3>
-		<%
-		}
-		%>
-
 		<display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList" pagesize="10"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="name" sortable="true" maxWords="20"
@@ -193,24 +197,32 @@
 			<display:column property="description" sortable="true" maxWords="100" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
-
+		<%
+		}
+		%>
 		<%
 		if ( expressionExperiment.getSubsets().size() > 0 ) {
 		%>
 		<h3>
 			<fmt:message key="expressionExperimentSubsets.title" />
 		</h3>
-		<%
-		}
-		%>
-
-		<display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList" pagesize="10"
+		<aazone tableId="subsetList" zone="subsetTable" />
+		<aa:zone name="subsetTable">
+		<display:table name="expressionExperiment.subsets" class="list" 
+			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" 
+			id="subsetList" pagesize="2"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
 			<display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name" />
 			<display:column property="description" sortable="true" maxWords="100" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
+		</aa:zone>
+		<%
+		}
+		%>
 
+
+<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 		<h3>
 			<fmt:message key="designElementDataVectors.title" />
 		</h3>
@@ -219,13 +231,16 @@
 			<b> <c:out value="${designElementDataVectorCount}" /> </b> design elements for this expression experiment. Details
 			by quantitation type:
 		</p>
-		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" pagesize="10" 
+		<aazone tableId="dataVectorList" zone="dataVectorTable" />
+		<aa:zone name="dataVectorTable">
+		<display:table name="qtCountSet" class="list" 
+			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" id="dataVectorList" pagesize="10" 
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="qtName" sortable="true" maxWords="20" titleKey="quantitationType.name" />
 			<display:column property="qtValue" sortable="true" maxWords="20" titleKey="quantitationType.countVectors" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
-
+		</aa:zone>
 		<h3>
 			Biomaterials and Assays
 		</h3>
@@ -266,5 +281,6 @@
 				</td>
 			</tr>
 		</table>
+		<script type="text/javascript" src="<c:url value="/scripts/aa-init.js"/>"></script>
 	</body>
 </html>
