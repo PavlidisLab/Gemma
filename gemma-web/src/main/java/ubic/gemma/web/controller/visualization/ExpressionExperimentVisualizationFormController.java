@@ -296,17 +296,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             // call service which produces expression data image based on gene symbol search criteria
         }
 
-        // FIXME botches the order
-        /* handle the labels */
-        List<String> rowLabels = new ArrayList<String>();
-        Collection keySet = expressionDataMatrix.getRowMap().keySet();
-        for ( Object obj : keySet ) {
-            DesignElement de = ( DesignElement ) obj;
-            log.debug( de );
-            rowLabels.add( de.getName() );
-        }
-        httpExpressionDataMatrixVisualizer.setRowLabels( rowLabels );
-
         /* deals with the case of probes that match, but not for the given quantitation type. */
         if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
             errors
