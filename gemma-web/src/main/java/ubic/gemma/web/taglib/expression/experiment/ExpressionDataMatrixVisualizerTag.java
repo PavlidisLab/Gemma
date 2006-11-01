@@ -18,17 +18,23 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.CompositeSequenceServiceImpl;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 
 /**
@@ -41,6 +47,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private static final long serialVersionUID = 6403196597063627020L;
 
     private Log log = LogFactory.getLog( this.getClass() );
+
+    private CompositeSequenceService compositeSequenceService = null;
 
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
@@ -55,6 +63,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      */
     public void setExpressionDataMatrixVisualizer( ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer ) {
         this.expressionDataMatrixVisualizer = expressionDataMatrixVisualizer;
+        this.compositeSequenceService = new CompositeSequenceServiceImpl();
     }
 
     /*
@@ -73,7 +82,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
-            Set<DesignElement> designElements = expressionDataMatrix.getRowMap().keySet();
+            Set<CompositeSequence> compositeSequences = expressionDataMatrix.getRowMap().keySet();
 
             StringBuilder buf = new StringBuilder();
 
@@ -92,7 +101,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<table border=\"0\">" );
                 buf.append( "<tr>" );
                 buf.append( "<td>&nbsp;</td>" );
-                buf.append( "<td align=\"left\">Probe Set<br/><br/></td>" );
+                buf.append( "<td align=\"left\">Probe Set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gene<br/><br/></td>" );
                 buf.append( "</tr>" );
 
                 buf.append( "<tr>" );
@@ -102,12 +111,25 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
-                for ( DesignElement de : designElements ) {
-                    String name = de.getName();
+                for ( CompositeSequence cs : compositeSequences ) {
                     buf.append( "<font size=\"-1\">" );
-                    buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
-                            + name + "\">" + name + "</a>" );
+                    buf.append( cs.getName() );
                     buf.append( "</font>" );
+
+                    Collection associatedGenes = compositeSequenceService.getAssociatedGenes( cs );
+                    Iterator iter = associatedGenes.iterator();
+                    // FIXME only adding the first gene
+                    if ( iter.hasNext() ) {
+                        Gene gene = ( Gene ) iter.next();
+                        String name = gene.getName();
+                        if ( !StringUtils.isEmpty( name ) ) {
+                            buf.append( "&nbsp;&nbsp;&nbsp;" );
+                            buf
+                                    .append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
+                                            + name + "\">" + name + "</a>" );
+                        }
+                    }
+
                     buf.append( "<br>" );
                 }
                 buf.append( "</td>" );

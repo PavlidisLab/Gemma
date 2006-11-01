@@ -52,7 +52,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
@@ -81,7 +80,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
-    private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
     private List<DesignElement> compositeSequences = null;
     private QuantitationType quantitationType = null;
     private boolean viewAll = false;
@@ -122,7 +120,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setExpressionExperimentId( ee.getId() );
         eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
-        eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
+        eesc.setSearchString( "probeset_0,probeset_1,probeset_2,probeset_3,probeset_4,probeset_5" );
         eesc.setSpecies( "Human" );
         eesc.setStandardQuantitationTypeName( StandardQuantitationType.DERIVEDSIGNAL.getValue() );
 
@@ -167,7 +165,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
 
         compositeSequences = new ArrayList<DesignElement>();
-        designElementToGeneMap = new HashMap<DesignElement, Collection<Gene>>();
 
         if ( expressionExperiment == null ) {
             errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
@@ -216,7 +213,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         /* handle search by design element */
         if ( eesc.getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
-            Collection<Gene> geneCol = null;
             for ( ArrayDesign design : arrayDesigns ) {
 
                 for ( int i = 0; i < size; i++ ) {
@@ -227,15 +223,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
                     if ( cs != null ) {
                         compositeSequences.add( cs );
-
-                        /* get the genes associated with this design element (for display) */
-                        geneCol = compositeSequenceService.getAssociatedGenes( cs );
-
-                        log.debug( "geneCol " + geneCol );
-                        if ( geneCol != null ) {
-                            // FIXME For now, if geneCol is 0 I am still putting in map. Unnecessary and inefficient.
-                            designElementToGeneMap.put( cs, geneCol );
-                        }
                     }
                 }
             }
