@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.visualization;
 
+import java.awt.Dimension;
 import java.awt.Font;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -143,7 +144,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         // TODO move from JMatrixDisplay
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
 
-        // display.setCellSize( new Dimension( 16, 16 ) );
+        display.setCellSize( new Dimension( 16, 16 ) );
 
         return display;
     }
