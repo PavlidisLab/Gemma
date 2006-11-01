@@ -252,6 +252,8 @@
     </jsp-config>
     
     <!--  AjaxAnywhere -->
+    <!--  This has to be last (or near it) in order for the filter 
+    	to be triggered after the page has been processed -->
     <filter>
         <filter-name>AjaxAnywhere</filter-name>
         <filter-class>org.ajaxanywhere.AAFilter</filter-class>
