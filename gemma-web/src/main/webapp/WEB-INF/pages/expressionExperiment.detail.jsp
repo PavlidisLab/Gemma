@@ -203,6 +203,7 @@
 		<%
 		if ( expressionExperiment.getSubsets().size() > 0 ) {
 		%>
+		<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 		<h3>
 			<fmt:message key="expressionExperimentSubsets.title" />
 		</h3>
@@ -210,7 +211,7 @@
 		<aa:zone name="subsetTable">
 		<display:table name="expressionExperiment.subsets" class="list" 
 			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" 
-			id="subsetList" pagesize="2"
+			id="subsetList" pagesize="10"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
 			<display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name" />
 			<display:column property="description" sortable="true" maxWords="100" />
@@ -222,7 +223,6 @@
 		%>
 
 
-<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 		<h3>
 			<fmt:message key="designElementDataVectors.title" />
 		</h3>

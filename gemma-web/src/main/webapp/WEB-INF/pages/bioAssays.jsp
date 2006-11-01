@@ -14,7 +14,7 @@
 		<aa:zone name="bioAssayTable">
 			<display:table name="bioAssays" class="list"
 				requestURI="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html"
-				id="bioAssayList" sort="list" pagesize="2"
+				id="bioAssayList" sort="list" pagesize="20"
 				decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
 
 				<display:column property="nameLink" sortable="true"
