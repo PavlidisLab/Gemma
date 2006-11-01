@@ -35,6 +35,8 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -83,32 +85,59 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
         data[3] = d3;
         data[4] = d4;
 
-        List<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
+        List<DesignElementDataVector> vectorsPerExpressionExperiment = new ArrayList<DesignElementDataVector>();
         List<String> colLabelsList = new ArrayList<String>();
         ByteArrayConverter converter = new ByteArrayConverter();
 
+        /* QuantitationType for each DesignElementDataVector */
+        QuantitationType vectorQuantitationType = QuantitationType.Factory.newInstance();
+        vectorQuantitationType.setName( "Test Quantitation Type." );
+        vectorQuantitationType.setDescription( "A test quantitation type from ExpressionDataDoubleMatrixTest" );
+        vectorQuantitationType.setGeneralType( GeneralType.QUANTITATIVE );
+        vectorQuantitationType.setType( StandardQuantitationType.RATIO );
+        vectorQuantitationType.setRepresentation( PrimitiveType.DOUBLE );
+        vectorQuantitationType.setScale( ScaleType.LINEAR );
+        vectorQuantitationType.setIsBackground( false );
+
+        /* BioAssayDimension for each DesignElementDataVector */
+        BioAssayDimension vectorBioAssayDimension = BioAssayDimension.Factory.newInstance();
+        List<BioAssay> assays = new ArrayList<BioAssay>(); // BioAssays
+        for ( int i = 0; i < data[0].length; i++ ) {
+            BioAssay assay = BioAssay.Factory.newInstance();
+            assay.setName( "Test BioAssay " + i );
+            assays.add( assay );
+        }
+
+        Collection<DesignElement> designElements = new HashSet<DesignElement>();
+        vectorBioAssayDimension.setBioAssays( assays );
         for ( int i = 0; i < data[0].length; i++ ) {
             colLabelsList.add( i, String.valueOf( i ) );
 
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
             vector.setData( converter.doubleArrayToBytes( data[i] ) );
-            vectors.add( i, vector );
+            vector.setQuantitationType( vectorQuantitationType );
+            vector.setBioAssayDimension( vectorBioAssayDimension );
+
+            DesignElement designElement = CompositeSequence.Factory.newInstance();
+            designElement.setName( "Test DesignElement " + i );
+            designElements.add( designElement );
+            /* one vector/design element in this case */
+            Collection<DesignElementDataVector> vectorsPerDesignElement = new HashSet<DesignElementDataVector>();
+            vectorsPerDesignElement.add( vector );
+            designElement.setDesignElementDataVectors( vectorsPerDesignElement );
+
+            vector.setDesignElement( designElement );
+
+            vectorsPerExpressionExperiment.add( i, vector );
         }
 
         tmp = File.createTempFile( "visualizationTest", ".png" );
 
         /* Create the expression experiment. */
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setDesignElementDataVectors( vectors );
-
-        /* Only creating one design element for this test. */
-        DesignElement de1 = CompositeSequence.Factory.newInstance();
-        de1.setDesignElementDataVectors( vectors );
-        Collection<DesignElement> designElements = new HashSet<DesignElement>();
-        designElements.add( de1 );
+        ee.setDesignElementDataVectors( vectorsPerExpressionExperiment );
 
         /* The expression data matrix */
-
         QuantitationType quantitationType = QuantitationType.Factory.newInstance();
         quantitationType.setName( "Test Quantitation Type." );
         quantitationType.setDescription( "A test quantitation type from ExpressionDataDoubleMatrixTest" );
