@@ -61,26 +61,6 @@ public interface DataMatrixVisualizer {
     public String getImageFile();
 
     /**
-     * @return List<String>
-     */
-    public List<String> getRowLabels();
-
-    /**
-     * @param rowLabels
-     */
-    public void setRowLabels( List<String> rowLabels );
-
-    /**
-     * @return List<String>
-     */
-    public List<String> getColLabels();
-
-    /**
-     * @param colLabels
-     */
-    public void setColLabels( List<String> colLabels );
-
-    /**
      * @return Color[]
      */
     public Color[] getColorMap();

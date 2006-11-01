@@ -37,7 +37,7 @@ public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMat
 
     private int port = 8080;
 
-    private boolean suppressVisualizations;
+    private boolean suppressVisualizations = false;
 
     /**
      * Do not instantiate. This is to be "inpected" by java constructs that require an official java bean. When we say
@@ -113,21 +113,18 @@ public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMat
         this.port = port;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#isSuppressVisualizations()
+    /**
+     * @return boolean
      */
     public boolean isSuppressVisualizations() {
         return suppressVisualizations;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setSuppressVisualizations(boolean)
+    /**
+     * @param suppressVisualizations
      */
     public void setSuppressVisualizations( boolean suppressVisualizations ) {
         this.suppressVisualizations = suppressVisualizations;
     }
+
 }
