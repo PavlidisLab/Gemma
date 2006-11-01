@@ -97,7 +97,9 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
-                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=300 height=300/>" );
+                // buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=300
+                // height=300/>");
+                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( DesignElement de : designElements ) {
@@ -106,7 +108,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                     buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
                             + name + "\">" + name + "</a>" );
                     buf.append( "</font>" );
-                    buf.append( "<br/>" );
+                    buf.append( "<br>" );
                 }
                 buf.append( "</td>" );
 
