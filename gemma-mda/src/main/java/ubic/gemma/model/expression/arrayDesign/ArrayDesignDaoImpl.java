@@ -23,8 +23,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.LockMode;
+import org.hibernate.Criteria; 
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -38,7 +37,7 @@ import ubic.gemma.util.BusinessKey;
  */
 public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
 
-    private static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
+    static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
 
     /*
      * (non-Javadoc)
@@ -225,7 +224,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( arrayDesign, LockMode.READ );
+                session.update( arrayDesign );
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
                 arrayDesign.getLocalFiles().size();
                 arrayDesign.getExternalReferences().size();
