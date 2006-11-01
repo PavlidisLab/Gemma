@@ -18,16 +18,19 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -85,15 +88,22 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     }
 
     /**
-     * This test uses 'real' data. 
+     * This test uses 'real' data.
      * 
      * @throws Exception
      */
     public final void testProcessArrayDesignWithData() throws Exception {
-
-        // possibly insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
-        
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
+
+        // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
+        NcbiGeneLoader loader = new NcbiGeneLoader();
+        loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+        String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
+        assert filePath != null;
+        filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
+        String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
+        String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
+        loader.load( geneInfoFile, gene2AccFile, true );
 
         // needed to fill in the sequence information for blat scoring.
         InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
@@ -115,16 +125,13 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
         arrayDesignProbeMapperService.processArrayDesign( ad, taxon );
-         
+
         // possibly assert no unexpected new genes or gene products were added.
-        
+
         // expect to see added (not in NCBI) as of 10/28
         /*
-         * CR749610 (gene and gene product) (HYOU1)
-         * NM_001008411 (product of TDG) This product is in NCBI gene
-         * Another anonymous product of TDG.
-         * CR541839 (HMOX2)
-         * CR456760 (HMOX2)
+         * CR749610 (gene and gene product) (HYOU1) NM_001008411 (product of TDG) This product is in NCBI gene Another
+         * anonymous product of TDG. CR541839 (HMOX2) CR456760 (HMOX2)
          */
 
     }

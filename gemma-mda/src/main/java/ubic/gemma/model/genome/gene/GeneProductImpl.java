@@ -16,10 +16,6 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.genome.gene;
 
 /**
@@ -91,12 +87,12 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
         buf.append( this.getClass().getSimpleName() );
 
         if ( this.getId() != null ) {
-            buf.append( " Id=" + this.getId() );
+            buf.append( " Id=" + this.getId() + " " );
         } else {
             buf.append( " " );
         }
 
-        buf.append( this.getName() + " (Gene = " + this.getGene() + ")" );
+        buf.append( this.getName() + " [Gene = " + this.getGene() + "]" );
 
         return buf.toString();
 

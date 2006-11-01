@@ -145,7 +145,7 @@ public class NcbiGeneLoader {
                 if ( gene == null ) {
                     continue;
                 }
-                persisterHelper.persist( gene );                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+                persisterHelper.persist( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 ) {
                     log.info( "Loaded " + loadedGeneCount + " genes. " + "Current queue has " + geneQueue.size()
@@ -158,6 +158,7 @@ public class NcbiGeneLoader {
                 throw new RuntimeException( e );
             }
         }
+        log.info( "Loaded " + loadedGeneCount + " genes. " );
         loaderDone.set( true );
     }
 

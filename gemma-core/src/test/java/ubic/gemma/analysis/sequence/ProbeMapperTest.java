@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
@@ -85,7 +86,7 @@ public class ProbeMapperTest extends TestCase {
         try {
             GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser,
                     databasePassword );
-            
+
             if ( gp == null ) {
                 log.warn( "Could not get Goldenpath database connection, skipping test" );
                 return;
@@ -109,6 +110,21 @@ public class ProbeMapperTest extends TestCase {
             throw e;
         }
 
+    }
+
+    /**
+     * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 10/31/2006.
+     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
+     */
+    public void testLocateGene() throws Exception {
+        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
+                databasePassword );
+
+        Collection<GeneProduct> products = gp.findRefGenesByLocation( "2", new Long( 73320308 ), new Long( 73331929 ),
+                "+" );
+        assertEquals( 2, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() );
     }
 
     public void testComputeSpecificityA() throws Exception {

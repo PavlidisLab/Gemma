@@ -48,8 +48,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * @version $Id$
  */
 public class ProbeMapper {
-    public static final double DEFAULT_IDENTITY_THRESHOLD = 0.90;
-    public static final double DEFAULT_SCORE_THRESHOLD = 0.90;
+    public static final double DEFAULT_IDENTITY_THRESHOLD = 0.80;
+    public static final double DEFAULT_SCORE_THRESHOLD = 0.80;
     private Log log = LogFactory.getLog( ProbeMapper.class.getName() );
     private double identityThreshold = DEFAULT_IDENTITY_THRESHOLD;
     private double scoreThreshold = DEFAULT_SCORE_THRESHOLD;
@@ -491,6 +491,9 @@ public class ProbeMapper {
 
             for ( BlatResult blatResult : blatResultsForSequence ) {
                 if ( blatResult.score() < scoreThreshold || blatResult.identity() < identityThreshold ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score()
+                                + " identity=" + blatResult.identity() );
                     skipped++;
                     continue;
                 }

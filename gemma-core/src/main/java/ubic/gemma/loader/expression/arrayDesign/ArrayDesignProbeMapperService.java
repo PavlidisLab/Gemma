@@ -93,7 +93,9 @@ public class ArrayDesignProbeMapperService {
             Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
                     blatResults );
 
-            if ( log.isDebugEnabled() ) log.debug( "Found " + results.size() + " mappings for " + compositeSequence );
+            if ( log.isDebugEnabled() )
+                log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
+                        + " BLAT results)" );
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
@@ -155,4 +157,5 @@ public class ArrayDesignProbeMapperService {
     public void setBlatScoreThreshold( double blatScoreThreshold ) {
         this.blatScoreThreshold = blatScoreThreshold;
     }
+
 }

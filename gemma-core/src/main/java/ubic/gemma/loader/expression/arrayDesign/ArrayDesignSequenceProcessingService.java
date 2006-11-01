@@ -638,7 +638,6 @@ public class ArrayDesignSequenceProcessingService {
             // go back and fill information into the composite sequences, namely the database entry information.
             BioSequence match = null;
             if ( nameMap.containsKey( compositeSequence.getName() ) ) {
-                if ( log.isDebugEnabled() ) log.debug( "Found match by name" );
                 match = nameMap.get( compositeSequence.getName() );
             } else if ( compositeSequence.getBiologicalCharacteristic() != null
                     && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null
@@ -646,7 +645,6 @@ public class ArrayDesignSequenceProcessingService {
                             .getAccession() ) ) {
                 match = gbIdMap.get( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
                         .getAccession() );
-                if ( log.isDebugEnabled() ) log.debug( "Found match by accession" );
             } else {
                 numWithNoSequence++;
                 notifyAboutMissingSequences( numWithNoSequence, compositeSequence );

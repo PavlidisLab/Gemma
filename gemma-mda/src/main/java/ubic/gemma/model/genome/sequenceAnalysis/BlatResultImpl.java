@@ -70,7 +70,7 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         int milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3 * Math
                 .log( 1.0 + sizeDif ) ) ) )
                 / ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
-        assert milliBad >= 0 && milliBad <= 1000;
+        assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad;
         return 100.0 - milliBad * 0.1;
     }
 

@@ -171,6 +171,10 @@ public class BlatResultParser extends BasicLineParser {
             result.getTargetChromosome().getSequence().setName( chrom );
             result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
 
+            if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
+                return null;
+            }
+
             if ( taxon != null ) {
                 result.getTargetChromosome().setTaxon( taxon );
                 result.getTargetChromosome().getSequence().setTaxon( taxon );
@@ -178,10 +182,6 @@ public class BlatResultParser extends BasicLineParser {
 
             if ( searchedDatabase != null ) {
                 result.setSearchedDatabase( searchedDatabase );
-            }
-
-            if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
-                return null;
             }
 
             return result;

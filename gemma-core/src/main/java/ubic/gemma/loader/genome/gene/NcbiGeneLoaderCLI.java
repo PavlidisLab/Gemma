@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.genome.gene;
 
+import java.io.File;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
@@ -62,8 +64,8 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         /* check parse option. */
         if ( hasOption( 'f' ) ) {
             // load through files
-            String geneInfoFile = filePath + "/" + GENEINFO_FILE;
-            String gene2AccFile = filePath + "/" + GENE2ACCESSION_FILE;
+            String geneInfoFile = filePath + File.separatorChar + GENEINFO_FILE;
+            String gene2AccFile = filePath + File.separatorChar + GENE2ACCESSION_FILE;
             loader.load( geneInfoFile, gene2AccFile, true ); // do filtering of taxa
         } else { /* defaults to download files remotely. */
             loader.load( true );

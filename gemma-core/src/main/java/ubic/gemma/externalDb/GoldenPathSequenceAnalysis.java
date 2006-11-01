@@ -242,9 +242,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         GeneProduct product = GeneProduct.Factory.newInstance();
 
-                        // this is not the ncbi id.
-                        // String ncbiId = rs.getString( 1 );
                         String name = rs.getString( 1 );
+                        assert StringUtils.isNotBlank( name );
 
                         if ( StringUtils.isNotBlank( name ) ) {
                             DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
@@ -285,11 +284,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                          */
                         gene.setPhysicalLocation( genePl );
 
-                        if ( StringUtils.isNotBlank( name ) ) {
-                            product.setName( name );
-                        } else {
-                            product.setName( "Product of " + gene.getOfficialSymbol() );
-                        }
+                        product.setName( name );
 
                         product.setDescription( "Imported from Golden Path" );
                         product.setPhysicalLocation( pl );
@@ -323,7 +318,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, kgxr.description "
+        String query = "SELECT kgxr.mRNA, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, kgxr.description "
                 + " FROM knownGene as kg INNER JOIN"
                 + " kgXref AS kgxr ON kg.name=kgxr.kgID WHERE "
                 + "((kg.txStart > ? AND kg.txEnd < ?) OR (kg.txStart < ? AND kg.txEnd > ?) OR "
@@ -422,7 +417,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         } else {
             query = query + " order by r.txStart ";
         }
-
         return findGenesByQuery( start, end, searchChrom, strand, query );
 
     }

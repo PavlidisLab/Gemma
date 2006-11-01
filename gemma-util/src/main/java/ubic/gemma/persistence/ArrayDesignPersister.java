@@ -87,7 +87,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
             designElement = compositeSequenceService.create( ( CompositeSequence ) designElement );
 
-            this.getHibernateTemplate().flush();        
+            this.getHibernateTemplate().flush();
             arrayDesign.getCompositeSequences().add( ( CompositeSequence ) designElement );
 
         } else {
@@ -144,6 +144,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         assert ad != null;
         if ( !arrayDesignCache.containsKey( ad.getName() ) ) {
             ad = persistArrayDesign( ad );
+            arrayDesignService.thaw( ad );
             assert !isTransient( ad );
             addToDesignElementCache( ad );
             arrayDesignCache.put( ad.getName(), ad );
@@ -269,20 +270,21 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
                 log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
                         + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
-                
-                
+
             }
             if ( count % SESSION_BATCH_SIZE == 0 ) {
                 this.getHibernateTemplate().flush();
                 this.getHibernateTemplate().clear();
-                if ( Thread.currentThread().isInterrupted()) {
+                if ( Thread.currentThread().isInterrupted() ) {
                     log.info( "Cancelled" );
-                    // we should clean up after ourselves (nedd to remove all the sequences that were all ready persisted
-                    //todo:  this will try to remove the entire collection but only some are in the DB.
-                    //Not sure how the collection delete will handle deletion of transtive objects not in db.
-                    //might need to fix. 
+                    // we should clean up after ourselves (nedd to remove all the sequences that were all ready
+                    // persisted
+                    // todo: this will try to remove the entire collection but only some are in the DB.
+                    // Not sure how the collection delete will handle deletion of transtive objects not in db.
+                    // might need to fix.
                     compositeSequenceService.remove( c ); // etc
-                    throw new CancellationException("Thread was terminated during persisting the arraydesign. " + this.getClass());
+                    throw new CancellationException( "Thread was terminated during persisting the arraydesign. "
+                            + this.getClass() );
                 }
             }
         }
@@ -323,13 +325,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesignService.update( arrayDesign );
 
-        if ( Thread.currentThread().isInterrupted()) {
+        if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
             // we should clean up after ourselves.
             arrayDesignService.remove( arrayDesign ); // etc
-            throw new CancellationException("Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass());
+            throw new CancellationException(
+                    "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );
         }
-        
+
         return arrayDesign;
     }
 

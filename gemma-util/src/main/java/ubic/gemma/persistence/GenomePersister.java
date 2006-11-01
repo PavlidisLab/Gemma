@@ -142,6 +142,8 @@ abstract public class GenomePersister extends CommonPersister {
             return existingGene;
         }
 
+        log.info( "*** New  " + gene + " ***" );
+
         if ( gene.getAccessions().size() > 0 ) {
             this.persistCollectionElements( gene.getAccessions() );
         }
@@ -357,6 +359,7 @@ abstract public class GenomePersister extends CommonPersister {
         }
         association.setGeneProduct( persistGeneProduct( association.getGeneProduct() ) );
         association.setBioSequence( persistBioSequence( association.getBioSequence() ) );
+
         return blatAssociationService.create( association );
     }
 
@@ -375,7 +378,7 @@ abstract public class GenomePersister extends CommonPersister {
             return existing;
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "Persisting " + geneProduct );
+        if ( log.isInfoEnabled() ) log.info( "*** New: " + geneProduct + " *** " );
 
         if ( geneProduct.getAccessions() != null ) {
             this.persistCollectionElements( geneProduct.getAccessions() );
