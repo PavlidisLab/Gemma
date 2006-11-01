@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
@@ -28,10 +28,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
+import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 
 /**
- * @jsp.tag name="httpExpressionDataMatrixVisualizer" body-content="empty"
+ * @jsp.tag name="expressionDataMatrixVisualizer" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -46,15 +47,14 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
 
-    private HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer = null;
+    private ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
 
     /**
      * @jsp.attribute description="The visualizer object" required="true" rtexprvalue="true"
-     * @param httpExpressionDataMatrixVisualizer
+     * @param expressionDataMatrixVisualizer
      */
-    public void setHttpExpressionDataMatrixVisualizer(
-            HttpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer ) {
-        this.httpExpressionDataMatrixVisualizer = httpExpressionDataMatrixVisualizer;
+    public void setExpressionDataMatrixVisualizer( ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer ) {
+        this.expressionDataMatrixVisualizer = expressionDataMatrixVisualizer;
     }
 
     /*
@@ -68,12 +68,12 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         log.debug( "start tag" );
 
         try {
-            /* get metadata from MatrixVisualizer */
-            ExpressionDataMatrix expressionDataMatrix = httpExpressionDataMatrixVisualizer.getExpressionDataMatrix();
+            /* get metadata from ExpressionDataMatrixVisualizer */
+            ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
-            List<String> designElementNames = httpExpressionDataMatrixVisualizer.getRowLabels();
+            Set<DesignElement> designElements = expressionDataMatrix.getRowMap().keySet();
 
             StringBuilder buf = new StringBuilder();
 
@@ -81,7 +81,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             String type = "matrix";
             HttpSession session = this.pageContext.getSession();
             session.setAttribute( "type", type );
-            session.setAttribute( "httpExpressionDataMatrixVisualizer", httpExpressionDataMatrixVisualizer );
+            session.setAttribute( "expressionDataMatrixVisualizer", expressionDataMatrixVisualizer );
 
             if ( expressionDataMatrix == null || m.length == 0 ) {
                 buf.append( "No data to display" );
@@ -100,7 +100,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=300 height=300/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
-                for ( String name : designElementNames ) {
+                for ( DesignElement de : designElements ) {
+                    String name = de.getName();
                     buf.append( "<font size=\"-1\">" );
                     buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
                             + name + "\">" + name + "</a>" );
@@ -115,7 +116,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
-            throw new JspException( "ExpressionDataMatrixVisualizationTag: " + ex.getMessage() );
+            throw new JspException( "ExpressionDataMatrixVisualizerTag: " + ex.getMessage() );
         }
 
         log.debug( "return SKIP_BODY" );

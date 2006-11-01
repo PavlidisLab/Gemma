@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<jsp:useBean id="httpExpressionDataMatrixVisualizer" scope="request"
-    class="ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer" />
+<jsp:useBean id="expressionDataMatrixVisualizer" scope="request"
+    class="ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer" />
 <html>
     <body>
         <h2>
@@ -27,7 +27,7 @@
             	<%expressionDataMatrixVisualization.drawDynamicImage( stream);%>
             	<%response.setContentType( "image/jpg" );%>
   				--%>
-                <Gemma:httpExpressionDataMatrixVisualizer httpExpressionDataMatrixVisualizer="<%=httpExpressionDataMatrixVisualizer%>"/>
+                <Gemma:expressionDataMatrixVisualizer expressionDataMatrixVisualizer="<%=expressionDataMatrixVisualizer%>"/>
                 
             </a>
         </div>
