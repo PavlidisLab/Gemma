@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
@@ -12,11 +13,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -28,7 +25,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -51,7 +47,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         // TODO Add the running options
         Option localHomeOption = OptionBuilder.hasArg().isRequired().withArgName( "Local Home Folder" )
-        .withDescription( "The local folder for TestData and TestResult(Should have these two subfolders)" ).withLongOpt( "localHome" ).create( 'l' );
+                .withDescription( "The local folder for TestData and TestResult(Should have these two subfolders)" )
+                .withLongOpt( "localHome" ).create( 'l' );
         addOption( localHomeOption );
 
         Option geneFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Gene Expression file" )
@@ -96,7 +93,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         super.processOptions();
         if ( hasOption( 'l' ) ) {
             this.localHome = getOptionValue( 'l' );
-            this.linkAnalysis.setHomeDir(this.localHome);
+            this.linkAnalysis.setHomeDir( this.localHome );
         }
         if ( hasOption( 'f' ) ) {
             this.geneExpressionList = getOptionValue( 'f' );
@@ -132,19 +129,16 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         QuantitationType qtf = QuantitationType.Factory.newInstance();
 
         // Affymetrix platform.
-        
+
         qtf.setName( "VALUE" );
         qtf.setScale( ScaleType.UNSCALED );
         qtf.setRepresentation( PrimitiveType.DOUBLE );
         qtf.setGeneralType( GeneralType.QUANTITATIVE );
         qtf.setType( StandardQuantitationType.MEASUREDSIGNAL );
-       	/*
-        qtf.setName( "ABS_CALL" );
-        qtf.setScale( ScaleType.OTHER );
-        qtf.setRepresentation( PrimitiveType.STRING );
-        qtf.setGeneralType( GeneralType.CATEGORICAL );
-        qtf.setType( StandardQuantitationType.PRESENTABSENT);
-		*/
+        /*
+         * qtf.setName( "ABS_CALL" ); qtf.setScale( ScaleType.OTHER ); qtf.setRepresentation( PrimitiveType.STRING );
+         * qtf.setGeneralType( GeneralType.CATEGORICAL ); qtf.setType( StandardQuantitationType.PRESENTABSENT);
+         */
         return qts.find( qtf );
     }
 
@@ -158,52 +152,61 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         }
         try {
             ExpressionExperiment expressionExperiment = null;
-            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-            ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
-            DesignElementDataVectorService vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
-            this.linkAnalysis.setDEService(vectorService);
-            this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" ) );
+            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                    .getBean( "expressionExperimentService" );
+            ExpressionDataMatrixService expressionDataMatrixService = ( ExpressionDataMatrixService ) this
+                    .getBean( "expressionDataMatrixService" );
+            DesignElementDataVectorService vectorService = ( DesignElementDataVectorService ) this
+                    .getBean( "designElementDataVectorService" );
+            this.linkAnalysis.setDEService( vectorService );
+            this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
+                    .getBean( "probe2ProbeCoexpressionService" ) );
 
-            expressionExperiment = eeService.findByShortName(this.geneExpressionList);
-            if(expressionExperiment == null)
-            {
-            	InputStream is = new FileInputStream( this.geneExpressionList );
-            	BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            	String accession = null;
-            	while ( ( accession = br.readLine() ) != null ) {
-            		if ( StringUtils.isBlank( accession ) ) {
-            			continue;
-            		}
-            		expressionExperiment = eeService.findByShortName(accession);
-            		if(expressionExperiment == null) continue;
-            		/*{
-            		GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-            		//geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            		geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.localHome+"/TestData/" ) );
-            		geoService.setLoadPlatformOnly( false );
-            		Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( this.geneExpressionFile );
-            		expressionExperiment = ees.iterator().next();
-            		}*/
+            expressionExperiment = eeService.findByShortName( this.geneExpressionList );
+            if ( expressionExperiment == null ) {
+                InputStream is = new FileInputStream( this.geneExpressionList );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+                String accession = null;
+                while ( ( accession = br.readLine() ) != null ) {
+                    if ( StringUtils.isBlank( accession ) ) {
+                        continue;
+                    }
+                    expressionExperiment = eeService.findByShortName( accession );
+                    if ( expressionExperiment == null ) continue;
+                    /*
+                     * { GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
+                     * //geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+                     * geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                     * this.localHome+"/TestData/" ) ); geoService.setLoadPlatformOnly( false ); Collection<ExpressionExperiment>
+                     * ees = geoService.fetchAndLoad( this.geneExpressionFile ); expressionExperiment =
+                     * ees.iterator().next(); }
+                     */
 
-            		//this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
-            		DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this.getQuantitationType() );
-            		//DoubleMatrixNamed dataMatrix = ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment, this.getQuantitationType())).getDoubleMatrixNamed();
-            		this.linkAnalysis.setDataMatrix( dataMatrix );
-            		Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,this.getQuantitationType() );
-            		this.linkAnalysis.setDataVector( dataVectors );
-            		this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
-            		this.linkAnalysis.analysis();
-            	}
-            }
-            else
-            {
-        		DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment, this.getQuantitationType() );
-        		//DoubleMatrixNamed dataMatrix = ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment, this.getQuantitationType())).getDoubleMatrixNamed();
-        		this.linkAnalysis.setDataMatrix( dataMatrix );
-        		Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,this.getQuantitationType() );
-        		this.linkAnalysis.setDataVector( dataVectors );
-        		this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
-        		this.linkAnalysis.analysis();
+                    // this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
+                    DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix(
+                            expressionExperiment, this.getQuantitationType() );
+                    // DoubleMatrixNamed dataMatrix =
+                    // ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment,
+                    // this.getQuantitationType())).getDoubleMatrixNamed();
+                    this.linkAnalysis.setDataMatrix( dataMatrix );
+                    Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix(
+                            expressionExperiment, this.getQuantitationType() );
+                    this.linkAnalysis.setDataVector( dataVectors );
+                    this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
+                    this.linkAnalysis.analysis();
+                }
+            } else {
+                DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment,
+                        this.getQuantitationType() );
+                // DoubleMatrixNamed dataMatrix =
+                // ((ExpressionDataDoubleMatrix)expressionDataMatrixService.getMatrix(expressionExperiment,
+                // this.getQuantitationType())).getDoubleMatrixNamed();
+                this.linkAnalysis.setDataMatrix( dataMatrix );
+                Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( expressionExperiment,
+                        this.getQuantitationType() );
+                this.linkAnalysis.setDataVector( dataVectors );
+                this.linkAnalysis.setTaxon( eeService.getTaxon( expressionExperiment.getId() ) );
+                this.linkAnalysis.analysis();
             }
         } catch ( Exception e ) {
             log.error( e );
