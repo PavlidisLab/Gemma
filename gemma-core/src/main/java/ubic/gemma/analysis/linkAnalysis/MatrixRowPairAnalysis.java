@@ -56,6 +56,5 @@ public interface MatrixRowPairAnalysis {
     public NamedMatrix getMatrix();
 
     public DoubleArrayList getHistogramArrayList();
-    
    
 }

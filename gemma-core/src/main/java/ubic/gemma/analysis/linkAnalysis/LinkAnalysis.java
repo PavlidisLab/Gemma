@@ -253,7 +253,10 @@ public class LinkAnalysis {
 		}
 		assert(geneToProbeMap.size() != 0);
 		this.uniqueItems = geneToProbeMap.size();
-
+//		this.uniqueItems = 10000;
+		double scoreP = CorrelationStats.correlationForPvalue(this.fwe/this.uniqueItems, this.dataMatrix.columns())- 0.001;
+		if(scoreP > this.tooSmallToKeep)
+			this.tooSmallToKeep = scoreP;
 	}
 	private void saveLinks()
 	{
@@ -331,6 +334,7 @@ public class LinkAnalysis {
 		System.err.println("Taxon: "+this.taxon.getCommonName());
 		
 		this.init();
+		this.outputOptions();
 		this.calculateDistribution();
 		this.getLinks();
 		this.saveLinks();
@@ -342,6 +346,7 @@ public class LinkAnalysis {
 		System.err.println("BinSize:"+this.binSize);
 		System.err.println("cdfCut:"+this.cdfCut);
 		System.err.println("catchCut:"+this.tooSmallToKeep);
+		System.err.println("Unique Items:"+this.uniqueItems);
 		System.err.println("fwe:"+this.fwe);
 		System.err.println("useDB:"+this.useDB);
 		System.err.println("lowExpressionCut:"+this.lowExpressionCut);

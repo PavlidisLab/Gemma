@@ -26,6 +26,7 @@ import hep.aida.ref.Histogram1D;
 
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.dataStructure.Link;
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;
@@ -58,7 +59,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
 
     private double storageThresholdValue = 0.5;
     private IHistogram1D histogram = null;
-    private SparseDoubleMatrix2DNamed C = null;
+    private CompressedSparseDoubleMatrix2DNamed C = null;
     private double[] rowMeans = null;
     private double[] rowSumSquaresSqrt = null;
     private boolean[] hasMissing = null;
@@ -92,7 +93,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      */
     private MatrixRowPairPearsonAnalysis( int size ) {
         if ( size > 0 ) {
-            C = DoubleMatrix2DNamedFactory.sparse( size, size );
+            C = DoubleMatrix2DNamedFactory.compressedsparse( size, size );
         }
         histogram = new Histogram1D( "Correlation histogram", 2000, -1.0, 1.0 );
         keepers = new ObjectArrayList( 10000 );

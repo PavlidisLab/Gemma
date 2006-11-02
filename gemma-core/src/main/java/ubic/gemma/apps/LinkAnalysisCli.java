@@ -156,7 +156,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
-        this.linkAnalysis.outputOptions();
         try {
             ExpressionExperiment expressionExperiment = null;
             ExpressionExperimentService eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
