@@ -19,6 +19,7 @@
 package ubic.gemma.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.persistence.PersisterHelper;
@@ -103,6 +104,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /** check if using test or production context */
     void createSpringContext() {
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false );
+        CompassUtils.deleteCompassLocks();
+        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "compassGps" ) );
     }
 
     public void setCtx( BeanFactory ctx ) {
