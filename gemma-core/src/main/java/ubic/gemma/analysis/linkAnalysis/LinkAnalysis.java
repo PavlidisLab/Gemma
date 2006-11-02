@@ -39,57 +39,34 @@ import corejava.Format;
 
 public class LinkAnalysis {
     private MatrixRowPairAnalysis metricMatrix;
-
     private DoubleArrayList cdf;
-
     private ObjectArrayList keep;
-
     private DoubleMatrixNamed dataMatrix = null;
-
     private Collection<DesignElementDataVector> dataVectors = null;
-
     private Probe2ProbeCoexpressionService ppService = null;
-
     private DesignElementDataVectorService deService = null;
-
     private HashMap<String, String> probeToGeneMap = null;
-
     private HashMap<String, Set> geneToProbeMap = null;
-
     private Map p2v = null;
-
     private Taxon taxon = null;
 
     private int uniqueItems = 0;
-
     private double upperTailCut;
-
     private double lowerTailCut;
-
     private Format form;
-
     private DbManager dbManager = null;
 
     private String metric = "pearson";
-
     private double tooSmallToKeep = 0.5;
-
     private boolean absoluteValue = false;
-
     private double fwe = 0.01;
-
     private double cdfCut = 0.01; // 1.0 means, keep everything.
-
     private double minPresentFraction = 0.3;
-
     private double lowExpressionCut = 0.3;
-
     private double binSize = 0.01;
-
     private boolean useDB = false;
 
     private boolean minPresentFractionIsSet = false;
-
     private boolean lowExpressionCutIsSet = false;
 
     private String localHome = "c:";
@@ -262,6 +239,8 @@ public class LinkAnalysis {
         // this.uniqueItems = 10000;
         double scoreP = CorrelationStats.correlationForPvalue( this.fwe / this.uniqueItems, this.dataMatrix.columns() ) - 0.001;
         if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
+    
+
     }
 
     private void saveLinks() {
@@ -280,8 +259,8 @@ public class LinkAnalysis {
                 Link m = ( Link ) keep.get( i );
                 double w = m.getWeight();
 
-                String p1 = dataMatrix.getRowName( m.getx() );
-                String p2 = dataMatrix.getRowName( m.gety() );
+                Object p1 = dataMatrix.getRowName( m.getx() );
+                Object p2 = dataMatrix.getRowName( m.gety() );
 
                 DesignElementDataVector v1 = ( DesignElementDataVector ) p2v.get( p1 );
                 DesignElementDataVector v2 = ( DesignElementDataVector ) p2v.get( p2 );
@@ -430,7 +409,7 @@ public class LinkAnalysis {
             writer.write( "\n" );
             int rows = this.dataMatrix.rows();
             for ( int i = 0; i < rows; i++ ) {
-                writer.write( this.dataMatrix.getRowName( i ) );
+                writer.write( this.dataMatrix.getRowName( i ).toString() );
                 double rowData[] = this.dataMatrix.getRow( i );
                 for ( int j = 0; j < rowData.length; j++ )
                     writer.write( "\t" + rowData[j] );

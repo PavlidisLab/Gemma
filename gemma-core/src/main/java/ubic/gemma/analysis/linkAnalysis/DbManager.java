@@ -47,8 +47,8 @@ public class DbManager {
             double weight = link.getWeight();
             int x = link.getx();
             int y = link.gety();
-            String p1 = dataMatrix.getRowName( x );
-            String p2 = dataMatrix.getRowName( y );
+            Object p1 = dataMatrix.getRowName( x );
+            Object p2 = dataMatrix.getRowName( y );
 
             // System.err.println(p1+"-----"+p2);
             // if(true) continue;

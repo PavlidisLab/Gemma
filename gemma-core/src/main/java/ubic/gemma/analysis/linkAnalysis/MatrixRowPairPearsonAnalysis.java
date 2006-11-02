@@ -254,7 +254,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param geneData GeneAnnotations
      * @return
      */
-    private boolean checkAssociation( String probeA, String probeB ) {
+    private boolean checkAssociation( Object probeA, Object probeB ) {
         if ( this.probeToGeneMap == null || this.geneToProbeMap == null ) return false;
         String geneId = ( String ) this.probeToGeneMap.get( probeA );
         // Map geneToProbeMap = geneData.getProbeToGeneMap();
@@ -269,7 +269,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param String probId
      * @param GeneAnnotations geneData
      */
-    private boolean checkDuplication( String probeId ) {
+    private boolean checkDuplication(  Object probeId ) {
         if ( this.probeToGeneMap == null || this.geneToProbeMap == null ) return false;
         String geneId = ( String ) this.probeToGeneMap.get( probeId );
         ;
@@ -306,7 +306,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
 
         /* for each vector, compare it to all other vectors, avoid repeating things */
-        String itemA = "";
+        Object itemA = null;
         double[] ival = null;
         boolean AhasDuplicates = false;
         int duplicateSkip = 0;
@@ -379,7 +379,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
 
         /* for each vector, compare it to all other vectors */
-        String itemA = "", itemB = "";
+        Object itemA = null;
         boolean AhasDuplicates = false;
         int duplicateSkip = 0;
         double[] ival = null;

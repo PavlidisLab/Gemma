@@ -57,7 +57,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
             writer.write( "\n" );
             int rows = this.dataMatrix.rows();
             for ( int i = 0; i < rows; i++ ) {
-                writer.write( this.dataMatrix.getRowName( i ) );
+                writer.write( this.dataMatrix.getRowName( i ).toString() );
                 double rowData[] = this.dataMatrix.getRow( i );
                 for ( int j = 0; j < rowData.length; j++ )
                     writer.write( "\t" + rowData[j] );

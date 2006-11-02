@@ -298,7 +298,7 @@ public class ExpressionDataManager {
      * This method is used to write significant genes of an experiment to an output file This method is especially
      * needed for SAM analysis(as it does not have p values)
      */
-    protected void writeSignificantGenesToFileWithoutPValues( String fileName, List<String> probeNames ) {
+    protected void writeSignificantGenesToFileWithoutPValues( String fileName, List<Object> probeNames ) {
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter( new FileWriter( analysisResultsPath + fileName ) );
