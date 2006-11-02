@@ -11,13 +11,15 @@
             Gene search for <b>${searchParameter}</b>
         </h2>
 
-	    <display:table name="genes" class="list" requestURI="" id="genesList"
+	    <display:table name="genes" class="list" 
+	    	requestURI="" 
+	    	id="genesList"
             decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper" 
-            pagesize="100">	
-			<display:column property="nameLink" sortable="true" titleKey="gene.name" maxWords="20" />
-			<display:column property="officialSymbol" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
+            pagesize="20">	
+			<display:column property="nameLink" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
 			<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />
+			<display:column property="matchesView" sortable="true" title="Matched By" maxWords="20" />
             <display:setProperty name="basic.empty.showtable" value="true" />      
         </display:table>
 

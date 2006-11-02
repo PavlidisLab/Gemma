@@ -18,6 +18,10 @@
  */
 package ubic.gemma.web.taglib.displaytag.gene;
 
+import java.util.ArrayList;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
@@ -70,8 +74,30 @@ public class GeneFinderWrapper extends TableDecorator {
     public String getNameLink() {
         Gene object = ( Gene ) getCurrentRowObject();
         String nameLink = object.getName() + getGemmaLink() + getNcbiLink();
-        
         return nameLink;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public String getMatchesView() {
+        Gene object = ( Gene ) getCurrentRowObject();
+        Set<Gene> geneMatch = (Set) this.getPageContext().findAttribute( "geneMatch" );
+        Set<Gene> aliasMatch = (Set) this.getPageContext().findAttribute( "aliasMatch" );
+        Set<Gene> geneProductMatch = (Set) this.getPageContext().findAttribute( "geneProductMatch" );
+        Set<Gene> bioSequenceMatch = (Set) this.getPageContext().findAttribute( "bioSequenceMatch" );
+        ArrayList<String> matches = new ArrayList<String>();
+        if (geneMatch.contains( object )) {
+            matches.add("Symbol");;
+        }
+        if (aliasMatch.contains( object )) {
+            matches.add("Alias");;
+        }
+        if (geneProductMatch.contains( object )) {
+            matches.add("GeneProduct");;
+        }
+        if (bioSequenceMatch.contains( object )) {
+            matches.add("BioSequence");;
+        }
+        return StringUtils.join( matches.toArray(), "," );
     }
     
 }

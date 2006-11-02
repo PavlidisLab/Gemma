@@ -22,24 +22,31 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.web.controller.BackgroundProcessingFormController;
+import ubic.gemma.web.controller.BaseFormController;
 
 /** 
  * @author joseph
@@ -52,7 +59,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="bioSequenceService" ref="bioSequenceService" 
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"  
  */
-public class GeneFinderController extends SimpleFormController {
+public class GeneFinderController extends BaseFormController {
     private static Log log = LogFactory.getLog( GeneFinderController.class.getName() );
     
     private GeneService geneService;
@@ -123,18 +130,57 @@ public class GeneFinderController extends SimpleFormController {
             BindException errors ) throws Exception {
 
         String searchString = request.getParameter( "searchString" );
+        
+        // first check - searchString should allow searches of 3 characters or more ONLY
+        // this is to prevent a huge wildcard search
+        if ( StringUtils.isEmpty( searchString ) ) {
+            this.saveMessage( request, "Must use at least three characters for search" );
+            return new ModelAndView("geneFinder");
+        }
+        
+        Map params = request.getParameterMap();
 
+        String previousSearch = (String)request.getSession().getAttribute( "previousSearch");
+        // check to see if the modelAndView is saved in the session
+        // make sure that this is a pagination or sort (not a re-search)
+        // the current search string and the previous search string should not be null
+        // and the previous search should be the same as the current one.
+        if ( (request.getSession().getAttribute( "modelAndView") != null) && 
+                (params.size() > 1) &&
+                (previousSearch != null) &&
+                (previousSearch.equals( searchString ))
+                ) {
+            return (ModelAndView) request.getSession().getAttribute( "modelAndView");
+        }
+        
+
+        
         // search by inexact symbol
         Set<Gene> geneSet =  new HashSet<Gene>();
-
-        geneSet.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
-        geneSet.addAll( geneService.getByGeneAlias( searchString ) );  
+        Set<Gene> geneMatch = new HashSet<Gene>();
+        Set<Gene> aliasMatch = new HashSet<Gene>();
+        Set<Gene> geneProductMatch = new HashSet<Gene>();
+        Set<Gene> bioSequenceMatch = new HashSet<Gene>();
         
-        geneSet.addAll( geneProductService.getGenesByName( searchString ) );  
-        geneSet.addAll( geneProductService.getGenesByNcbiId( searchString ) );   
+        geneMatch.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
+        aliasMatch.addAll( geneService.getByGeneAlias( searchString ) );
         
-        geneSet.addAll( bioSequenceService.getGenesByAccession( searchString ) );
-        geneSet.addAll( bioSequenceService.getGenesByName( searchString ) );
+        geneProductMatch.addAll( geneProductService.getGenesByName( searchString ) );
+        geneProductMatch.addAll( geneProductService.getGenesByNcbiId( searchString ) );
+        
+        bioSequenceMatch.addAll( bioSequenceService.getGenesByAccession( searchString ) );
+        bioSequenceMatch.addAll( bioSequenceService.getGenesByName( searchString ) );
+         
+        geneSet.addAll(geneMatch);
+        geneSet.addAll(aliasMatch);
+        geneSet.addAll( geneProductMatch );
+        geneSet.addAll( bioSequenceMatch );
+        
+        // trick to get around lazy load
+        // touch all taxa in geneSet
+        for (Gene g : geneSet) {
+            String name = g.getTaxon().getScientificName();
+        }
         
         List<Gene> geneList = new ArrayList<Gene>(geneSet);
         Comparator<Gene> comparator = new GeneComparator();
@@ -142,7 +188,16 @@ public class GeneFinderController extends SimpleFormController {
       
         ModelAndView mav = new ModelAndView("geneFinderList");
         mav.addObject( "genes", geneList );
+        mav.addObject( "geneMatch", geneMatch );
+        mav.addObject( "aliasMatch", aliasMatch );
+        mav.addObject( "geneProductMatch", geneProductMatch );
+        mav.addObject( "bioSequenceMatch", bioSequenceMatch );
         mav.addObject( "searchParameter", searchString );
+        
+        // cache modelandview
+        
+        request.getSession().setAttribute( "modelAndView", mav );
+        request.getSession().setAttribute( "previousSearch", searchString );   
         
         return mav;
     }
@@ -159,6 +214,33 @@ public class GeneFinderController extends SimpleFormController {
         return request;
     }
     
+    /**
+     * 
+     */
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+        return this.onSubmit( request, response, command, errors );
+    }
+    
+    
+    
+    
+    /* (non-Javadoc)
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     */
+    @Override
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) throws Exception {
+        if (request.getParameter( "searchString" ) != null) {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
+        
+        return super.showForm( request, response, errors );
+    }
+
+
+
+
     class GeneComparator implements Comparator<Gene> {
 
         public int compare( Gene arg0, Gene arg1 ) {
