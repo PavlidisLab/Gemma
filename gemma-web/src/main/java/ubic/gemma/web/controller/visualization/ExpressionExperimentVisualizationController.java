@@ -94,7 +94,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                 JMatrixDisplay display = createHeatMap( title, expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( "image/png" );
-                    display.writeOutAsPNG( out, false, false );
+                    display.writeOutAsPNG( out, true, true );
                 }
             }
             // else if ( type.equals( "profile" ) ) {
@@ -144,7 +144,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         // TODO move from JMatrixDisplay
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
 
-        display.setCellSize( new Dimension( 16, 16 ) );
+        display.setCellSize( new Dimension( 10, 10 ) );
 
         return display;
     }
