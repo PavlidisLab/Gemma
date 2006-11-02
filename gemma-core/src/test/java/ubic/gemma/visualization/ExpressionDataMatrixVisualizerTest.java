@@ -38,6 +38,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -101,10 +102,16 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
 
         /* BioAssayDimension for each DesignElementDataVector */
         BioAssayDimension vectorBioAssayDimension = BioAssayDimension.Factory.newInstance();
+        BioMaterial bm = null;
         List<BioAssay> assays = new ArrayList<BioAssay>(); // BioAssays
         for ( int i = 0; i < data[0].length; i++ ) {
             BioAssay assay = BioAssay.Factory.newInstance();
             assay.setName( "Test BioAssay " + i );
+            bm = BioMaterial.Factory.newInstance();
+            bm.setName( "Test BioMaterial " + i );
+            Collection<BioMaterial> samplesUsed = new HashSet<BioMaterial>();
+            samplesUsed.add( bm );
+            assay.setSamplesUsed( samplesUsed );
             assays.add( assay );
         }
 
