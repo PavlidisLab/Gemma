@@ -160,7 +160,7 @@ public class SimpleExpressionDataLoaderService {
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( matrix.getRowName( i ) );
+            cs.setName( matrix.getRowName( i ).toString() );
             cs.setArrayDesign( arrayDesign );
             arrayDesign.getCompositeSequences().add( cs );
         }
@@ -202,16 +202,16 @@ public class SimpleExpressionDataLoaderService {
         bad.setDescription( "Generated from flat file" );
 
         for ( int i = 0; i < matrix.columns(); i++ ) {
-            String columnName = matrix.getColName( i );
+            Object columnName = matrix.getColName( i );
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( columnName );
+            bioMaterial.setName( columnName.toString() );
             bioMaterial.setSourceTaxon( taxon );
             Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
             bioMaterials.add( bioMaterial );
 
             BioAssay assay = BioAssay.Factory.newInstance();
-            assay.setName( columnName );
+            assay.setName( columnName.toString() );
             assay.setArrayDesignUsed( arrayDesign );
             assay.setSamplesUsed( bioMaterials );
 

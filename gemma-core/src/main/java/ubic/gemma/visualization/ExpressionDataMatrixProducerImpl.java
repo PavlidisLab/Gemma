@@ -188,7 +188,7 @@ public class ExpressionDataMatrixProducerImpl extends JPanel {
             int y = ( i * m_cellSize.height ) + m_columnLabelHeight + m_labelGutter;
             int xRatio = ( colorMatrix.getColumnCount() * m_cellSize.width ) + m_labelGutter;
             int yRatio = y + m_cellSize.height - m_fontGutter;
-            String rowName = colorMatrix.getRowName( i );
+            String rowName = colorMatrix.getRowName( i ).toString();
             if ( null == rowName ) {
                 rowName = "Undefined";
             }
@@ -212,7 +212,7 @@ public class ExpressionDataMatrixProducerImpl extends JPanel {
             int y = m_columnLabelHeight;
 
             // get column name
-            String columnName = colorMatrix.getColumnName( j );
+            String columnName = colorMatrix.getColumnName( j ).toString();
             if ( null == columnName ) {
                 columnName = "Undefined";
             }
