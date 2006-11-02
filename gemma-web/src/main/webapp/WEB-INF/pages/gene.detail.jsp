@@ -1,4 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
+<jsp:directive.page import="org.apache.commons.lang.StringUtils" />
+<jsp:directive.page import="java.util.Collection" />
+<jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
 <jsp:useBean id="gene" scope="request"
     class="ubic.gemma.model.genome.GeneImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -8,22 +11,7 @@
             <fmt:message key="gene.details" />
         </h2>
         <table width="100%" cellspacing="10">
-            <tr>
-                <td valign="top">
-                    <b>
-                        <fmt:message key="gene.name" />
-                    </b>
-                </td>
-                <td>
-                	<%if (gene.getName() != null){%>
-                    	<jsp:getProperty name="gene" property="name" />
-                    <%}else{
-                    	out.print("No name available");
-                    }%>
-                </td>
-            </tr>
-            
-            <tr>
+           <tr>
                 <td valign="top">
                     <b>
                         <fmt:message key="gene.officialSymbol" />
@@ -34,6 +22,21 @@
                     	<jsp:getProperty name="gene" property="officialSymbol" />
                     <%}else{
                     	out.print("No official symbol available");
+                    }%>
+                </td>
+            </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="gene.officialName" />
+                    </b>
+                </td>
+                <td>
+                	<%if (gene.getOfficialName() != null){%>
+                    	<jsp:getProperty name="gene" property="officialName" />
+                    <%}else{
+                    	out.print("No official name available");
                     }%>
                 </td>
             </tr>
@@ -64,7 +67,7 @@
                 </td>
                 <td>
                 	<%if (gene.getDescription() != null){%>
-                    <textarea name="" rows=5 cols=80 readonly=true><jsp:getProperty name="gene" property="description" /></textarea><
+                    <textarea name="" rows=5 cols=80 readonly=true><jsp:getProperty name="gene" property="description" /></textarea>
                     <%}else{
                     	out.print("Description unavailable");
                     }%>
@@ -85,23 +88,30 @@
                     }%>
                 </td>
             </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="gene.aliases" />
+                    </b>
+                </td>
+                <td>
+                	<%if (gene.getAliases().size() > 0 ) {
+  						Collection<GeneAlias> aliasObjects = gene.getAliases();
+  						String[] aliases = new String[aliasObjects.size()];
+						int i = 0;
+						for (GeneAlias a : aliasObjects) {
+						    aliases[i] = a.getAlias();
+						    i++;
+						}
+						out.print(StringUtils.join(aliases,", "));
+                	} else{
+                    	out.print("No aliases defined");
+                    }%>
+                </td>
+            </tr>
          </table>
  
-         <%
-		if ( gene.getAliases().size() > 0 ) {
-		%>
-         <h3>
-			<fmt:message key="gene.aliases" />
-		</h3>
-		<% 
-		} 
-		%>
-		        
-         <display:table name="gene.aliases" class="list" requestURI="" id="aliasList" 
-			pagesize="10">
-			<display:column property="alias" sortable="true" maxWords="20"/>
-			<display:setProperty name="basic.empty.showtable" value="false" />
-		</display:table> 
 		
         <%
 		if ( gene.getAccessions().size() > 0 ) {
@@ -132,6 +142,7 @@
          <display:table name="gene.products" class="list" requestURI="" id="productsList" 
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
 			<display:column property="name" sortable="true" maxWords="20"/>
+			<display:column property="description" sortable="true" maxWords="20"/>
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>  
 		

@@ -17,6 +17,7 @@
 			<display:column property="name" sortable="true" titleKey="gene.name" maxWords="20"
 				href="/Gemma/gene/showGene.html" paramId="id" paramProperty="id" />
 			<display:column property="officialSymbol" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
+			<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" /> 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
 			<display:column property="description" sortable="true" titleKey="gene.description" maxWords="100" /> 
             <display:setProperty name="basic.empty.showtable" value="true" />      

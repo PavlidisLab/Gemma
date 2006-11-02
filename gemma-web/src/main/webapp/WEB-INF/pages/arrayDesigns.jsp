@@ -13,10 +13,12 @@
 		</h2>
 		<table>
 			<tr>
-				<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList">
+				<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList"
+				pagesize="20" decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 					<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
 						titleKey="arrayDesign.name" />
-					<display:column property="description" sortable="true" titleKey="arrayDesign.description" />
+					<display:column property="shortDescription" sortable="true" titleKey="arrayDesign.description" />
+					<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName" />
 					<display:column title="Design Elements" sortable="true" property="advertisedNumberOfDesignElements"
 						titleKey="arrayDesign.advertisedNumberOfDesignElements">
 					</display:column>
