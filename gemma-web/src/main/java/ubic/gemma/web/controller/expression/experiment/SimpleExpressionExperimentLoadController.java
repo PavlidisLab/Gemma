@@ -236,13 +236,14 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
                 ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
                 stream.close();
-                job.setForwardingURL( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() );
+                
                 this.saveMessage( "Successfully loaded " + result );
 
                 model.put( "expressionExperiment", result );
 
                 ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( "view", model );
+                //return new ModelAndView( "view", model );
+                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId()), model );
             }
         };
     }

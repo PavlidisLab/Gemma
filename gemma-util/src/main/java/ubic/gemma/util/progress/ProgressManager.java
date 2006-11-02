@@ -269,6 +269,10 @@ public class ProgressManager {
         Long id = currentJob.get();
         threadsJob = progressJobsById.get( id );
 
+        if (threadsJob == null) {
+            log.debug( "Current threads job id not found in active job list. Current threads job id is invalid. id =: " + id );
+            return false;
+        }
         if ( pData == null )
             threadsJob.nudgeProgress();
         else
@@ -406,6 +410,7 @@ public class ProgressManager {
         log.debug( key + " Cancelled" );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
+        job.getJobInfo().setFailedMessage( "Cancelation was singnaled by user" );
         destroyProgressJob( job );
     }
 
@@ -419,7 +424,7 @@ public class ProgressManager {
         assert job != null : "No job of id " + key;
         job.getJobInfo().setFailedMessage( cause.toString() );
         destroyProgressJob( job );
-        // FIXME do something with the cause...
+      
     }
 
 }
