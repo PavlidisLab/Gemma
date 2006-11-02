@@ -18,11 +18,11 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
-import java.util.Map;
-import java.util.Set;
-
 import hep.aida.IHistogram1D;
 import hep.aida.ref.Histogram1D;
+
+import java.util.Map;
+import java.util.Set;
 
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.dataStructure.Link;
@@ -30,7 +30,6 @@ import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;
-import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix2DNamed;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.genome.gene.GeneService;
