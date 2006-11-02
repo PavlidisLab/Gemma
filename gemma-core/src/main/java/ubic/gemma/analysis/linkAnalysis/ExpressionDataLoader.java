@@ -18,6 +18,7 @@
  */
 
 package ubic.gemma.analysis.linkAnalysis;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,118 +37,98 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-
 /**
  * @author xiangwan
  */
-public class ExpressionDataLoader
-{
+public class ExpressionDataLoader {
 
-	final String actualExperimentsPath = "C:/TestData/";
-	final String analysisResultsPath = "C:/Results/";
+    final String actualExperimentsPath = "C:/TestData/";
+    final String analysisResultsPath = "C:/Results/";
 
-	protected ExpressionExperiment experiment = null;
+    protected ExpressionExperiment experiment = null;
 
-	protected String experimentName = null;
+    protected String experimentName = null;
 
-	protected static final Log log = LogFactory
-			.getLog(ExpressionDataManager.class);
+    protected static final Log log = LogFactory.getLog( ExpressionDataManager.class );
 
-	protected GeneAnnotations geneAnnotations = null;
+    protected GeneAnnotations geneAnnotations = null;
 
-	protected int uniqueItems = 0;
+    protected int uniqueItems = 0;
 
-	protected Collection<DesignElementDataVector> designElementDataVectors = null;
-	
-	public ExpressionDataLoader(ExpressionExperiment paraExperiment, String paraGOFile) {
-		this.experiment = paraExperiment;
-		if (this.experiment != null) {
-			this.getValidDesignmentDataVector();
-			this.experimentName = this.experiment.getName();
-		}
-		Set rowsToUse = new HashSet(this.getActiveProbeIdSet());
-		try {
-			this.geneAnnotations = new GeneAnnotations(
-					this.actualExperimentsPath + paraGOFile, rowsToUse, null,
-					null);
-		} catch (IOException e) {
-			log.error("Error in reading GO File");
-		}
+    protected Collection<DesignElementDataVector> designElementDataVectors = null;
 
-	}
+    public ExpressionDataLoader( ExpressionExperiment paraExperiment, String paraGOFile ) {
+        this.experiment = paraExperiment;
+        if ( this.experiment != null ) {
+            this.getValidDesignmentDataVector();
+            this.experimentName = this.experiment.getName();
+        }
+        Set rowsToUse = new HashSet( this.getActiveProbeIdSet() );
+        try {
+            this.geneAnnotations = new GeneAnnotations( this.actualExperimentsPath + paraGOFile, rowsToUse, null, null );
+        } catch ( IOException e ) {
+            log.error( "Error in reading GO File" );
+        }
 
-	private Collection<String> getActiveProbeIdSet() {
-		Collection probeIdSet = new HashSet<String>();
-		for (DesignElementDataVector dataVector : this.designElementDataVectors) {
-			DesignElement designElement = dataVector.getDesignElement();
-			String probeId = ((CompositeSequence) designElement).getName();
-			probeIdSet.add(probeId);
-		}
+    }
 
-		return probeIdSet;
-	}
+    private Collection<String> getActiveProbeIdSet() {
+        Collection probeIdSet = new HashSet<String>();
+        for ( DesignElementDataVector dataVector : this.designElementDataVectors ) {
+            DesignElement designElement = dataVector.getDesignElement();
+            String probeId = ( ( CompositeSequence ) designElement ).getName();
+            probeIdSet.add( probeId );
+        }
 
-	private void getValidDesignmentDataVector() {
-		Collection<DesignElementDataVector> dataVectors = this.experiment
-				.getDesignElementDataVectors();
-		this.designElementDataVectors = new HashSet<DesignElementDataVector>();
-		for (DesignElementDataVector dataVector : dataVectors) {
-			if (dataVector.getQuantitationType().getName().trim().equals(
-					"VALUE")
-					&& dataVector.getQuantitationType().getRepresentation()
-							.toString().trim().equals("DOUBLE"))
-				this.designElementDataVectors.add(dataVector);
-		}
-	}
+        return probeIdSet;
+    }
 
-	public void writeExpressionDataToFile(String paraFileName) {
-		BufferedWriter writer = null;
-		try {
-			writer = new BufferedWriter(new FileWriter(this.analysisResultsPath
-					+ paraFileName));
-		} catch (IOException e) {
-			log.error("File for output expression data "
-					+ this.analysisResultsPath + paraFileName
-					+ "could not be opened");
-		}
-		Collection<DesignElementDataVector> dataVectors = this.experiment
-				.getDesignElementDataVectors();
+    private void getValidDesignmentDataVector() {
+        Collection<DesignElementDataVector> dataVectors = this.experiment.getDesignElementDataVectors();
+        this.designElementDataVectors = new HashSet<DesignElementDataVector>();
+        for ( DesignElementDataVector dataVector : dataVectors ) {
+            if ( dataVector.getQuantitationType().getName().trim().equals( "VALUE" )
+                    && dataVector.getQuantitationType().getRepresentation().toString().trim().equals( "DOUBLE" ) )
+                this.designElementDataVectors.add( dataVector );
+        }
+    }
 
-		try {
-			writer.write("Experiment Name: " + this.experimentName + "\n");
-			writer.write("Accession: "
-					+ this.experiment.getAccession().getAccession() + "\n");
-			writer.write("Name: " + this.experiment.getName() + "\n");
-			writer.write("Description: " + this.experiment.getDescription()
-					+ "\n");
-			writer.write("Source: " + this.experiment.getSource() + "\n");
+    public void writeExpressionDataToFile( String paraFileName ) {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter( new FileWriter( this.analysisResultsPath + paraFileName ) );
+        } catch ( IOException e ) {
+            log.error( "File for output expression data " + this.analysisResultsPath + paraFileName
+                    + "could not be opened" );
+        }
+        Collection<DesignElementDataVector> dataVectors = this.experiment.getDesignElementDataVectors();
 
-			for (DesignElementDataVector dataVector : this.designElementDataVectors) {
-				DesignElement designElement = dataVector.getDesignElement();
-				CompositeSequence compSequence = (CompositeSequence) designElement;
-				String probId = ((CompositeSequence) designElement).getName();
-				byte[] expressionByteData = dataVector.getData();
-				ByteArrayConverter byteConverter = new ByteArrayConverter();
-				double[] expressionData = byteConverter
-						.byteArrayToDoubles(expressionByteData);
-				writer.write(probId + "\t");
-				for (int i = 0; i < expressionData.length; i++)
-					writer.write(expressionData[i] + "\t");
-				writer.write(dataVector.getQuantitationType().getName() + "\t");
-				writer.write(dataVector.getQuantitationType()
-						.getRepresentation()
-						+ "\t");
-				writer.write(dataVector.getQuantitationType().getScale()
-						.getValue()
-						+ "\t");
-				writer.write(dataVector.getQuantitationType().getType()
-						.getValue()
-						+ "\t");
-				writer.write("\n");
-			}
-			writer.close();
-		} catch (IOException e) {
-			log.error("Error in write data into file");
-		}
-	}
+        try {
+            writer.write( "Experiment Name: " + this.experimentName + "\n" );
+            writer.write( "Accession: " + this.experiment.getAccession().getAccession() + "\n" );
+            writer.write( "Name: " + this.experiment.getName() + "\n" );
+            writer.write( "Description: " + this.experiment.getDescription() + "\n" );
+            writer.write( "Source: " + this.experiment.getSource() + "\n" );
+
+            for ( DesignElementDataVector dataVector : this.designElementDataVectors ) {
+                DesignElement designElement = dataVector.getDesignElement();
+                CompositeSequence compSequence = ( CompositeSequence ) designElement;
+                String probId = ( ( CompositeSequence ) designElement ).getName();
+                byte[] expressionByteData = dataVector.getData();
+                ByteArrayConverter byteConverter = new ByteArrayConverter();
+                double[] expressionData = byteConverter.byteArrayToDoubles( expressionByteData );
+                writer.write( probId + "\t" );
+                for ( int i = 0; i < expressionData.length; i++ )
+                    writer.write( expressionData[i] + "\t" );
+                writer.write( dataVector.getQuantitationType().getName() + "\t" );
+                writer.write( dataVector.getQuantitationType().getRepresentation() + "\t" );
+                writer.write( dataVector.getQuantitationType().getScale().getValue() + "\t" );
+                writer.write( dataVector.getQuantitationType().getType().getValue() + "\t" );
+                writer.write( "\n" );
+            }
+            writer.close();
+        } catch ( IOException e ) {
+            log.error( "Error in write data into file" );
+        }
+    }
 }

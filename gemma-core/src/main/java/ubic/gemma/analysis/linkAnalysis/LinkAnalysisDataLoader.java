@@ -20,58 +20,55 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * This class is to set the analysis parameters for linkAnalysis.
+ * 
  * @author xiangwan
  */
 public class LinkAnalysisDataLoader extends ExpressionDataLoader {
-    
-	private DoubleMatrixNamed dataMatrix = null;
-    
-	public LinkAnalysisDataLoader(ExpressionExperiment paraExpressionExperiment, String goFile )
-	{
-		super(paraExpressionExperiment, goFile);
-		this.dataMatrix = this.vectorsToDoubleMatrix(this.designElementDataVectors);
-		this.filter();
-	}
-	private void filter()
-	{
+
+    private DoubleMatrixNamed dataMatrix = null;
+
+    public LinkAnalysisDataLoader( ExpressionExperiment paraExpressionExperiment, String goFile ) {
+        super( paraExpressionExperiment, goFile );
+        this.dataMatrix = this.vectorsToDoubleMatrix( this.designElementDataVectors );
+        this.filter();
+    }
+
+    private void filter() {
         Filter x = new AffymetrixProbeNameFilter();
         DoubleMatrixNamed r = ( DoubleMatrixNamed ) x.filter( this.dataMatrix );
         this.dataMatrix = r;
-        System.err.println(this.dataMatrix);
+        System.err.println( this.dataMatrix );
         this.uniqueItems = this.dataMatrix.rows();
-	}
-	public void writeDataIntoFile(String paraFileName)
-	{
-		BufferedWriter writer = null;
-		try {
-			writer = new BufferedWriter(new FileWriter(this.analysisResultsPath
-					+ paraFileName));
-		} catch (IOException e) {
-			log.error("File for output expression data "
-					+ this.analysisResultsPath + paraFileName
-					+ "could not be opened");
-		}
-		try {
-			int cols = this.dataMatrix.columns();
-			for(int i = 0; i < cols; i++)
-			{
-				writer.write("\t" + this.getDataMatrix().getColName(i));
-			}
-			writer.write("\n");
-			int rows = this.dataMatrix.rows();
-			for(int i = 0; i < rows; i++)
-			{
-				writer.write(this.dataMatrix.getRowName(i));
-				double rowData[] = this.dataMatrix.getRow(i);
-				for(int j = 0; j < rowData.length; j++)
-					writer.write("\t"+rowData[j]);
-				writer.write("\n");
-			}
-			writer.close();
-		} catch (IOException e) {
-			log.error("Error in write data into file");
-		}
-	}
+    }
+
+    public void writeDataIntoFile( String paraFileName ) {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter( new FileWriter( this.analysisResultsPath + paraFileName ) );
+        } catch ( IOException e ) {
+            log.error( "File for output expression data " + this.analysisResultsPath + paraFileName
+                    + "could not be opened" );
+        }
+        try {
+            int cols = this.dataMatrix.columns();
+            for ( int i = 0; i < cols; i++ ) {
+                writer.write( "\t" + this.getDataMatrix().getColName( i ) );
+            }
+            writer.write( "\n" );
+            int rows = this.dataMatrix.rows();
+            for ( int i = 0; i < rows; i++ ) {
+                writer.write( this.dataMatrix.getRowName( i ) );
+                double rowData[] = this.dataMatrix.getRow( i );
+                for ( int j = 0; j < rowData.length; j++ )
+                    writer.write( "\t" + rowData[j] );
+                writer.write( "\n" );
+            }
+            writer.close();
+        } catch ( IOException e ) {
+            log.error( "Error in write data into file" );
+        }
+    }
+
     private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             return null;
@@ -111,6 +108,12 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
         }
         return matrix;
     }
-	public DoubleMatrixNamed getDataMatrix() { return this.dataMatrix;}
-	public GeneAnnotations getGeneAnnotations() { return this.geneAnnotations;};
+
+    public DoubleMatrixNamed getDataMatrix() {
+        return this.dataMatrix;
+    }
+
+    public GeneAnnotations getGeneAnnotations() {
+        return this.geneAnnotations;
+    };
 }
