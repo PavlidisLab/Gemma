@@ -39,7 +39,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
      * Use for batch processing These two files could contain the lists of experiment;
      */
     private String geneExpressionList = null;
-    private String localHome = "c:";;
+    private String geneExpressionFile = null;
+    private String localHome = "c:";
     private LinkAnalysis linkAnalysis = new LinkAnalysis();
 
     @SuppressWarnings("static-access")
@@ -51,9 +52,13 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 .withLongOpt( "localHome" ).create( 'l' );
         addOption( localHomeOption );
 
-        Option geneFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Gene Expression file" )
-                .withDescription( "The Gene Expression File for analysis" ).withLongOpt( "genefile" ).create( 'f' );
+        Option geneFileOption = OptionBuilder.hasArg().withArgName( "Gene Expression file" )
+                .withDescription( "The Gene Expression File for analysis" ).withLongOpt( "genefile" ).create( 'g' );
         addOption( geneFileOption );
+
+        Option geneFileListOption = OptionBuilder.hasArg().withArgName( "Gene Expression file" )
+        .withDescription( "The Gene Expression File for analysis" ).withLongOpt( "genefile" ).create( 'f' );
+        addOption( geneFileListOption );
 
         Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" ).withDescription(
                 "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" ).create( 'c' );
@@ -94,6 +99,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'l' ) ) {
             this.localHome = getOptionValue( 'l' );
             this.linkAnalysis.setHomeDir( this.localHome );
+        }
+        if ( hasOption( 'g' ) ) {
+            this.geneExpressionFile = getOptionValue( 'g' );
         }
         if ( hasOption( 'f' ) ) {
             this.geneExpressionList = getOptionValue( 'f' );
@@ -150,6 +158,12 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
+        if(this.geneExpressionFile == null && this.geneExpressionList == null){
+            System.err.println( "Neither expression experiment nor experiment list is provided" );
+            return null;
+        }
+            
+            
         try {
             ExpressionExperiment expressionExperiment = null;
             ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
@@ -162,8 +176,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
                     .getBean( "probe2ProbeCoexpressionService" ) );
 
-            expressionExperiment = eeService.findByShortName( this.geneExpressionList );
-            if ( expressionExperiment == null ) {
+            if ( this.geneExpressionFile == null ) {
                 InputStream is = new FileInputStream( this.geneExpressionList );
                 BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
                 String accession = null;
@@ -172,15 +185,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                         continue;
                     }
                     expressionExperiment = eeService.findByShortName( accession );
-                    if ( expressionExperiment == null ) continue;
-                    /*
-                     * { GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-                     * //geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-                     * geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                     * this.localHome+"/TestData/" ) ); geoService.setLoadPlatformOnly( false ); Collection<ExpressionExperiment>
-                     * ees = geoService.fetchAndLoad( this.geneExpressionFile ); expressionExperiment =
-                     * ees.iterator().next(); }
-                     */
+                    if ( expressionExperiment == null ){
+                        System.err.println( accession + " is not loaded yet!");
+                        continue;
+                    }
 
                     // this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
                     DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix(
@@ -196,6 +204,21 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                     this.linkAnalysis.analysis();
                 }
             } else {
+                expressionExperiment = eeService.findByShortName( this.geneExpressionList );
+                if(expressionExperiment == null)
+                {   
+                    System.err.println( this.geneExpressionFile + " is not loaded yet!");
+                    return null;
+                }
+                /*
+                 * { GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
+                 * //geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+                 * geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                 * this.localHome+"/TestData/" ) ); geoService.setLoadPlatformOnly( false ); Collection<ExpressionExperiment>
+                 * ees = geoService.fetchAndLoad( this.geneExpressionFile ); expressionExperiment =
+                 * ees.iterator().next(); }
+                 */
+
                 DoubleMatrixNamed dataMatrix = expressionDataMatrixService.getDoubleNamedMatrix( expressionExperiment,
                         this.getQuantitationType() );
                 // DoubleMatrixNamed dataMatrix =
