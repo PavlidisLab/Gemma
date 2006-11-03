@@ -396,16 +396,19 @@ public class GeoConverter implements Converter {
         List<Object> toConvert = new ArrayList<Object>();
         PrimitiveType pt = qt.getRepresentation();
         for ( Object rawValue : vector ) {
-            if ( rawValue instanceof String ) {
+            if ( rawValue == null ) {
+                handleMissing( toConvert, pt );
+            } else if ( rawValue instanceof String ) { // needs to be coverted.
                 try {
                     if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                         toConvert.add( Double.parseDouble( ( String ) rawValue ) );
+                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                        toConvert.add( ( String ) rawValue );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
                         toConvert.add( Integer.parseInt( ( String ) rawValue ) );
                     } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
                         toConvert.add( Boolean.parseBoolean( ( String ) rawValue ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                        toConvert.add( ( String ) rawValue );
+
                     } else {
                         throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
                     }
@@ -414,7 +417,7 @@ public class GeoConverter implements Converter {
                 } catch ( NullPointerException e ) {
                     handleMissing( toConvert, pt );
                 }
-            } else {
+            } else { // use as is.
                 toConvert.add( rawValue );
             }
         }
@@ -2006,6 +2009,8 @@ public class GeoConverter implements Converter {
     private void handleMissing( List<Object> toConvert, PrimitiveType pt ) {
         if ( pt.equals( PrimitiveType.DOUBLE ) ) {
             toConvert.add( Double.NaN );
+        } else if ( pt.equals( PrimitiveType.STRING ) ) {
+            toConvert.add( "" );
         } else if ( pt.equals( PrimitiveType.INT ) ) {
             toConvert.add( 0 );
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {

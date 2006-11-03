@@ -485,7 +485,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 bA.setId( persistBioAssay( bA ).getId() );
                 assert bA.getArrayDesignUsed().getId() != null;
                 if ( !alreadyFilled.contains( bA ) ) {
-                    throw new IllegalStateException( bA + " not in the experiment?" );
+                    /*
+                     * This is an exceptional circumstance that might indicate problems with the source.
+                     */
+                    log.error( "Subset bioassay " + bA + " found that isn't in the parent. Parent contains:" );
+                    StringBuilder buf = new StringBuilder();
+                    buf.append( "\n" );
+                    for ( BioAssay assay : alreadyFilled ) {
+                        buf.append( assay + "\n" );
+                    }
+                    log.error( buf );
+                    throw new IllegalStateException( bA + " in subset " + subset + " not in the parent experiment?" );
                 }
             }
         }

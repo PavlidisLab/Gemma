@@ -19,7 +19,11 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
+import ubic.gemma.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -79,6 +83,8 @@ public class GeoDatasetService extends AbstractGeoService {
 
         GeoSeries series = ( GeoSeries ) obj;
 
+        checkPlatformUniqueness( series );
+
         log.info( "Generated GEO domain objects for " + geoAccession );
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
@@ -92,11 +98,26 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
+     * Check if all the data sets are on different platforms. This is a rare case in GEO. The right thing to do would be
+     * to merge the data sets.
+     */
+    private void checkPlatformUniqueness( GeoSeries series ) {
+        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+        for ( GeoDataset dataset : series.getDatasets() ) {
+            platforms.add( dataset.getPlatform() );
+        }
+        if ( platforms.size() != series.getDatasets().size() ) {
+            throw new UnsupportedOperationException(
+                    "Some of the data sets use the same platform, this is not currently supported." );
+        }
+    }
+
+    /**
      * @param projectedAccessions
      */
     private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
         if ( projectedAccessions == null || projectedAccessions.size() == 0 ) {
-           return; // that's okay, it might have been a GPL.
+            return; // that's okay, it might have been a GPL.
         }
         for ( DatabaseEntry entry : projectedAccessions ) {
             ExpressionExperiment existing = expressionExperimentService.findByAccession( entry );

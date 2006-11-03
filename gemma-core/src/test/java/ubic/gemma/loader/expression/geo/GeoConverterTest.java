@@ -86,6 +86,18 @@ public class GeoConverterTest extends TestCase {
         Object result = this.gc.convert( series );
         assertNotNull( result );
     }
+    
+    public void testConvertWithNulls() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gds181Short/GSE96_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE96" );
+        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+    }
 
     public void testConvertDataDoubles() {
         List<Object> testList = new ArrayList<Object>();

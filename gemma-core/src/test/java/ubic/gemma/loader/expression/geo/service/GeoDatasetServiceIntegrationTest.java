@@ -170,18 +170,16 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     //
     // 
     /**
-     * GDS1830 (GSE2221) - bombs silently after or during parsing. Real data set is huge, and includes CGH and
-     * expression data.
+     * GDS246 results in 'not in experiment' error.
      */
     @SuppressWarnings("unchecked")
-    public void testFetchAndLoadGDS1830() throws Exception {
+    public void testFetchAndLoadGDS246() throws Exception {
         endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse2221Short" ) );
+                + "gse480Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                .fetchAndLoad( "GDS1830" );
-        assertNotNull( results );
+                .fetchAndLoad( "GDS246" );
         ee = results.iterator().next();
         assertEquals( 1, results.size() );
 
