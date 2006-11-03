@@ -257,8 +257,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     public Object persist( Object entity ) {
         if ( entity == null ) return null;
 
+        Object result;
+
         if ( entity instanceof ExpressionExperiment ) {
-            return persistExpressionExperiment( ( ExpressionExperiment ) entity );
+            result = persistExpressionExperiment( ( ExpressionExperiment ) entity );
+            clearCache();
+            return result;
         } else if ( entity instanceof BioAssayDimension ) {
             return persistBioAssayDimension( ( BioAssayDimension ) entity );
         } else if ( entity instanceof BioMaterial ) {
@@ -270,8 +274,15 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         } else if ( entity instanceof DesignElementDataVector ) {
             return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
         }
+
         return super.persist( entity );
 
+    }
+
+    private void clearCache() {
+        bioAssayDimensionCache.clear();
+        clearArrayDesignCache();
+        clearCommonCache();
     }
 
     /**
@@ -456,8 +467,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param expressionExperiment
      */
     private void processBioAssays( ExpressionExperiment expressionExperiment ) {
-        bioAssayDimensionCache.clear();
-        clearArrayDesignCache();
 
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 

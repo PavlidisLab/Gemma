@@ -168,10 +168,16 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      */
     @Override
     public Object persist( Object entity ) {
+        Object result;
+
         if ( entity instanceof ArrayDesign ) {
-            return persistArrayDesign( ( ArrayDesign ) entity );
+            result = persistArrayDesign( ( ArrayDesign ) entity );
+            clearArrayDesignCache();
+            return result;
         }
+
         return super.persist( entity );
+
     }
 
     /**

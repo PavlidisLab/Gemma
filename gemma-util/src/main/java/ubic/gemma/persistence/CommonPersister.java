@@ -609,4 +609,11 @@ abstract public class CommonPersister extends AbstractPersister {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
+    
+    /**
+     * For clearing the cache.
+     */
+    protected void clearCommonCache() {
+        this.quantitationTypeCache.clear();        
+    }
 }
