@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -91,6 +92,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
+     * cache results of mRNA queries.
+     */
+    LRUMap cache = new LRUMap( 200 );
+
+    /**
      * Recompute the exonOverlap looking at mRNAs. This lets us be a little less conservative about how we compute exon
      * overlaps.
      * 
@@ -102,13 +108,21 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param exonOverlap Exon overlap we're starting with. We only care to improve on this.
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
-     *      <p>
-     *      FIXME it will improve performance to cache the results of these queries, because we often look in the same
-     *      place for other hits.
      */
+    @SuppressWarnings("unchecked")
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap ) {
-        Collection<Gene> mRNAs = findRNAs( chromosome, queryStart, queryEnd );
+
+        String key = chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString();
+
+        Collection<Gene> mRNAs;
+        if ( cache.containsKey( cache ) ) {
+            log.info( "Cache hit!" );
+            mRNAs = ( Collection<Gene> ) cache.get( key );
+        } else {
+            mRNAs = findRNAs( chromosome, queryStart, queryEnd );
+            cache.put( key, mRNAs );
+        }
 
         if ( mRNAs.size() > 0 ) {
             if ( log.isDebugEnabled() )
@@ -128,6 +142,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             exonOverlap = maxOverlap;
             if ( log.isDebugEnabled() ) log.debug( "Overlap with mRNAs is now " + exonOverlap );
         }
+
         return exonOverlap;
     }
 
