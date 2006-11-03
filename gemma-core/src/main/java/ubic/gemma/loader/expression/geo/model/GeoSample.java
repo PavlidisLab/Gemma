@@ -25,6 +25,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
  * BioAssay in Gemma. Some fields are only relevant for SAGE.
@@ -33,6 +36,8 @@ import java.util.Map;
  * @version $Id$
  */
 public class GeoSample extends GeoData implements Comparable {
+
+    private static Log log = LogFactory.getLog( GeoSample.class.getName() );
 
     private List<GeoChannel> channels;
     private String hybProtocol = "";
@@ -43,20 +48,72 @@ public class GeoSample extends GeoData implements Comparable {
     private String supplementaryFile = "";
     private String lastUpdateDate = "";
 
+    private boolean isGenePix = false;
+
+    /**
+     * These are ignored by the Gemma system so don't need to be parsed.
+     */
+    private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
+
+    static {
+
+        // These are from GenePix files. In Stanford files they are named differently than described here:
+        // http://www.moleculardevices.com/pages/software/gn_genepix_file_formats.html
+        // these are location and spot size information.
+        skippableQuantitationTypes.add( "X_COORD" );
+        skippableQuantitationTypes.add( "Y_COORD" );
+        skippableQuantitationTypes.add( "TOP" );
+        skippableQuantitationTypes.add( "BOT" );
+        skippableQuantitationTypes.add( "LEFT" );
+        skippableQuantitationTypes.add( "RIGHT" );
+        skippableQuantitationTypes.add( "DIAMETER" );
+        skippableQuantitationTypes.add( "TOT_SPIX" );
+        skippableQuantitationTypes.add( "TOT_BPIX" );
+
+        // the following are background-subtracted values that can be easily computed from the raw values
+        skippableQuantitationTypes.add( "CH1D_MEAN" );
+        skippableQuantitationTypes.add( "CH2D_MEAN" );
+        skippableQuantitationTypes.add( "CH1D_MEDIAN" );
+        skippableQuantitationTypes.add( "CH2D_MEDIAN" );
+
+        // All the raw 'mean' items are skippable.
+        skippableQuantitationTypes.add( "CH1I_MEAN" );
+        skippableQuantitationTypes.add( "CH2I_MEAN" );
+        skippableQuantitationTypes.add( "CH1B_MEAN" );
+        skippableQuantitationTypes.add( "CH2B_MEAN" );
+        skippableQuantitationTypes.add( "SUM_MEAN" );
+        skippableQuantitationTypes.add( "RAT1_MEAN" );
+        skippableQuantitationTypes.add( "RAT2_MEAN" );
+        skippableQuantitationTypes.add( "PIX_RAT2_MEAN" );
+        skippableQuantitationTypes.add( "CH1IN_MEAN" );
+        skippableQuantitationTypes.add( "CH2IN_MEAN" );
+        skippableQuantitationTypes.add( "UNF_VALUE" );
+        skippableQuantitationTypes.add( "VALUE" );
+
+        // otherwise deemed skippable.
+        skippableQuantitationTypes.add( "PERGTBCH1I_1SD" );
+        skippableQuantitationTypes.add( "PERGTBCH2I_1SD" );
+        skippableQuantitationTypes.add( "PERGTBCH1I_2SD" );
+        skippableQuantitationTypes.add( "PERGTBCH2I_2SD" );
+
+    }
+
     Collection<GeoPlatform> platforms;
 
     Collection<GeoReplication> replicates;
     Collection<GeoVariable> variables;
 
-    /**
-     * The column names in the SOFT file for this sample, IN THE ORDER THEY APPEAR.
-     */
-    private List<String> columnNames = new ArrayList<String>();
+    Map<String, Class> quantitationTypeRepresentations = new HashMap<String, Class>();
 
     /**
      * quantitationType -> designelement -> value
      */
-    Map<String, Map<String, String>> data = new HashMap<String, Map<String, String>>();
+    Map<String, Map<String, Object>> data = new HashMap<String, Map<String, Object>>();
+
+    /* Ignore some data types */
+    private boolean shouldAdd( String columnName ) {
+        return !( isGenePix && skippableQuantitationTypes.contains( columnName ) );
+    }
 
     /**
      * @param designElement The probe name
@@ -64,21 +121,68 @@ public class GeoSample extends GeoData implements Comparable {
      * @param value The data point to be stored.
      */
     public void addDatum( String designElement, String quantitationType, String value ) {
-        if ( !data.containsKey( quantitationType ) ) {
-            data.put( quantitationType, new HashMap<String, String>() );
-            columnNames.add( quantitationType ); // we assume we're going in order...
+
+        if ( !shouldAdd( quantitationType ) ) {
+            return;
         }
-        data.get( quantitationType ).put( designElement, value );
+
+        if ( !data.containsKey( quantitationType ) ) {
+            data.put( quantitationType, new HashMap<String, Object>() );
+            inferRepresentation( quantitationType );
+            // getColumnNames().add( quantitationType );
+        }
+
+        Object convertedValue = convertValue( quantitationType, value );
+
+        data.get( quantitationType ).put( designElement, convertedValue );
+    }
+
+    private Object convertValue( String quantitationType, String value ) {
+        Object convertedValue = value; // if it is a string
+        Class representation = quantitationTypeRepresentations.get( quantitationType );
+
+        try {
+            if ( representation.equals( Double.class ) ) {
+                convertedValue = Double.parseDouble( value );
+            } else if ( representation.equals( Integer.class ) ) {
+                convertedValue = Integer.parseInt( value );
+            } else if ( representation.equals( Boolean.class ) ) {
+                convertedValue = Boolean.parseBoolean( value );
+            }
+        } catch ( NumberFormatException e ) {
+            convertedValue = handleMissing( representation );
+        }
+        return convertedValue;
+    }
+
+    private Object handleMissing( Class representation ) {
+        if ( representation.equals( Double.class ) ) {
+            return Double.NaN;
+        } else if ( representation.equals( Integer.class ) ) {
+            return 0;
+        } else if ( representation.equals( Boolean.class ) ) {
+            return false;
+        } else {
+            throw new IllegalArgumentException( "Don't know how to deal with a missing " + representation );
+        }
     }
 
     /**
-     * Add a name that refers to a column in the data for this sample in the SOFT file; this must be done in the order
-     * they appear in the data.
-     * 
-     * @param columnName
+     * @param quantitationType
      */
-    public void addColumnName( String columnName ) {
-        this.columnNames.add( columnName );
+    private void inferRepresentation( String quantitationType ) {
+        Class representation = Double.class;
+
+        if ( quantitationType.contains( "Probe ID" ) || quantitationType.equalsIgnoreCase( "Probe Set ID" ) ) {
+            /*
+             * special case...not a quantitation type.
+             */
+            representation = String.class;
+        } else if ( quantitationType.matches( "ABS_CALL" ) ) {
+            representation = String.class;
+        }
+
+        quantitationTypeRepresentations.put( quantitationType, representation );
     }
 
     /**
@@ -89,10 +193,10 @@ public class GeoSample extends GeoData implements Comparable {
      * @return column name.
      */
     public String getNthQuantitationType( int n ) {
-        if ( n < 0 || n > columnNames.size() - 1 ) {
-            throw new IllegalArgumentException( "Only " + columnNames.size() + " columns, requested index " + n );
+        if ( n < 0 || n > getColumnNames().size() - 1 ) {
+            throw new IllegalArgumentException( "Only " + getColumnNames().size() + " columns, requested index " + n );
         }
-        return columnNames.get( n );
+        return getColumnNames().get( n );
     }
 
     /**
@@ -100,9 +204,10 @@ public class GeoSample extends GeoData implements Comparable {
      * @param quantitationType
      * @return
      */
-    public String getDatum( String designElement, String quantitationType ) {
+    public Object getDatum( String designElement, String quantitationType ) {
         if ( !data.containsKey( quantitationType ) ) {
-            throw new IllegalArgumentException( "No such quantitation type \"" + quantitationType + "\"" );
+            // throw new IllegalArgumentException( "No such quantitation type \"" + quantitationType + "\"" );
+            return null;
         }
         return data.get( quantitationType ).get( designElement );
     }
@@ -112,7 +217,7 @@ public class GeoSample extends GeoData implements Comparable {
      * @param columnNumber
      * @return
      */
-    public String getDatum( String designElement, int columnNumber ) {
+    public Object getDatum( String designElement, int columnNumber ) {
         String quantitationType = getNthQuantitationType( columnNumber );
         return this.getDatum( designElement, quantitationType );
     }
@@ -219,6 +324,10 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public void setDescription( String description ) {
         this.description = description;
+        this.isGenePix = description.contains( "GenePix" );
+        if ( isGenePix ) {
+            log.warn( "GenePix data detected: Some unused quantitation types may be skipped" );
+        }
     }
 
     /**
@@ -249,6 +358,11 @@ public class GeoSample extends GeoData implements Comparable {
 
     public void addToDescription( String s ) {
         this.description = this.description + " " + s;
+        if ( !isGenePix && description.contains( "GenePix" ) ) { // so we only get the first time around.
+            log.warn( "GenePix data detected in " + this + ": Some unused quantitation types may be skipped" );
+        }
+        this.isGenePix = description.contains( "GenePix" );
+
     }
 
     /**
@@ -374,6 +488,10 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public void setSupplementaryFile( String supplementaryFile ) {
         this.supplementaryFile = supplementaryFile;
+    }
+
+    public boolean isGenePix() {
+        return isGenePix;
     }
 
 }

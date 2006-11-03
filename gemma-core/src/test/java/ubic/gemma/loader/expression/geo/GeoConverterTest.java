@@ -18,10 +18,15 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
+import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.basecode.io.ByteArrayConverter;
@@ -57,7 +62,7 @@ public class GeoConverterTest extends TestCase {
      * Test method for 'ubic.gemma.loader.expression.geo.GeoConverter.convertData(List<String>)'
      */
     public void testConvertDataIntegers() {
-        List<String> testList = new ArrayList<String>();
+        List<Object> testList = new ArrayList<Object>();
         testList.add( "1" );
         testList.add( "2929202" );
         testList.add( "-394949" );
@@ -70,8 +75,20 @@ public class GeoConverterTest extends TestCase {
         assertEquals( revertedResult[2], -394949 );
     }
 
+    public void testConvertGenePix() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2221" );
+        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+    }
+
     public void testConvertDataDoubles() {
-        List<String> testList = new ArrayList<String>();
+        List<Object> testList = new ArrayList<Object>();
         testList.add( "1.1" );
         testList.add( "2929202e-4" );
         testList.add( "-394949.44422" );

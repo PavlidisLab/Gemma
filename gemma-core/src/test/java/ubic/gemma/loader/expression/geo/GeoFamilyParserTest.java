@@ -23,6 +23,7 @@ import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.loader.expression.geo.model.GeoSample;
 
 /**
  * @author pavlidis
@@ -60,6 +61,16 @@ public class GeoFamilyParserTest extends TestCase {
                 "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
         parser.parse( is );
         assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+    }
+
+    public void testParseGenePix() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
+        parser.parse( is );
+        GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values()
+                .iterator().next();
+        assertTrue( sample.isGenePix() );
+        assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
     public void testParseBigBPlatformOnly() throws Exception {

@@ -374,12 +374,12 @@ public class GeoConverter implements Converter {
      * @param qt The quantitation type for the values to be converted.
      * @return
      */
-    protected byte[] convertData( List<String> vector, QuantitationType qt ) {
+    protected byte[] convertData( List<Object> vector, QuantitationType qt ) {
 
         if ( vector == null || vector.size() == 0 ) return null;
 
         boolean containsAtLeastOneNonNull = false;
-        for ( String string : vector ) {
+        for ( Object string : vector ) {
             if ( string != null ) {
                 containsAtLeastOneNonNull = true;
                 break;
@@ -395,26 +395,27 @@ public class GeoConverter implements Converter {
 
         List<Object> toConvert = new ArrayList<Object>();
         PrimitiveType pt = qt.getRepresentation();
-        for ( String string : vector ) {
-            try {
-                if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                    toConvert.add( Double.parseDouble( string ) );
-                } else if ( pt.equals( PrimitiveType.INT ) ) {
-                    toConvert.add( Integer.parseInt( string ) );
-                } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                    toConvert.add( Boolean.parseBoolean( string ) );
-                } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                    toConvert.add( string );
-                } else {
-                    throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+        for ( Object rawValue : vector ) {
+            if ( rawValue instanceof String ) {
+                try {
+                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+                        toConvert.add( Double.parseDouble( ( String ) rawValue ) );
+                    } else if ( pt.equals( PrimitiveType.INT ) ) {
+                        toConvert.add( Integer.parseInt( ( String ) rawValue ) );
+                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+                        toConvert.add( Boolean.parseBoolean( ( String ) rawValue ) );
+                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                        toConvert.add( ( String ) rawValue );
+                    } else {
+                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+                    }
+                } catch ( NumberFormatException e ) {
+                    handleMissing( toConvert, pt );
+                } catch ( NullPointerException e ) {
+                    handleMissing( toConvert, pt );
                 }
-            } catch ( NumberFormatException e ) {
-                // if ( !StringUtils.isBlank( string ) ) {
-                // throw e; // not a missing value, some other problem.
-                // }
-                handleMissing( toConvert, pt );
-            } catch ( NullPointerException e ) {
-                handleMissing( toConvert, pt );
+            } else {
+                toConvert.add( rawValue );
             }
         }
         return byteArrayConverter.toBytes( toConvert.toArray() );
@@ -560,24 +561,29 @@ public class GeoConverter implements Converter {
                 continue;
             }
 
-            String description = quantitationTypeDescriptions.get( quantitationTypeIndex );
+            /*
+             * We get the data by index, not quantitation type name, because the column names often do not match up
+             * among the samples. The first quantitation type is in column 0 (the zeroth column is the ID_REF)
+             */
+            Map<String, List<Object>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex );
+
+            if ( dataVectors == null ) {
+                log.debug( "No data for " + quantitationType );
+                quantitationTypeIndex++;
+                continue;
+            } else {
+                log.debug( "Got " + dataVectors.size() + " data vectors for " + quantitationType );
+            }
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
+            String description = quantitationTypeDescriptions.get( quantitationTypeIndex );
             qt.setDescription( description );
-
             guessQuantitationTypeParameters( qt, quantitationType, description );
-
-            /*
-             * We get the data by index, not quantitation type name, because the column names often do not match up
-             * among the samples. The first quantitation type is in column 1 (the zeroth column is the ID_REF), but
-             * that's is the zeroth quantitation type.
-             */
-            Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex - 1 );
 
             int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
-                List<String> dataVector = dataVectors.get( designElementName );
+                List<Object> dataVector = dataVectors.get( designElementName );
                 assert dataVector != null && dataVector.size() != 0;
                 DesignElementDataVector vector = convertDesignElementDataVector( geoPlatform, expExp,
                         bioAssayDimension, designElementName, dataVector, qt );
@@ -687,7 +693,7 @@ public class GeoConverter implements Converter {
      */
     private DesignElementDataVector convertDesignElementDataVector( GeoPlatform geoPlatform,
             ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName,
-            List<String> dataVector, QuantitationType qt ) {
+            List<Object> dataVector, QuantitationType qt ) {
         byte[] blob = convertData( dataVector, qt );
         if ( blob == null ) {
             return null;
@@ -1909,17 +1915,17 @@ public class GeoConverter implements Converter {
     private void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
 
         GeneralType gType = GeneralType.QUANTITATIVE;
-        PrimitiveType pType = PrimitiveType.DOUBLE;
         ScaleType sType = ScaleType.UNSCALED;
         StandardQuantitationType qType = StandardQuantitationType.MEASUREDSIGNAL;
         Boolean isBackground = Boolean.FALSE;
+
+        qt.setRepresentation( guessRepresentation( name, description ) );
 
         if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
             /*
              * special case...not a quantitation type.
              */
             qType = StandardQuantitationType.OTHER;
-            pType = PrimitiveType.STRING;
             sType = ScaleType.UNSCALED;
             gType = GeneralType.CATEGORICAL;
         } else if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
@@ -1935,7 +1941,6 @@ public class GeoConverter implements Converter {
         } else if ( name.matches( "ABS_CALL" ) ) {
             qType = StandardQuantitationType.PRESENTABSENT;
             sType = ScaleType.OTHER;
-            pType = PrimitiveType.STRING;
             gType = GeneralType.CATEGORICAL;
         }
 
@@ -1962,7 +1967,6 @@ public class GeoConverter implements Converter {
         }
 
         qt.setGeneralType( gType );
-        qt.setRepresentation( pType );
         qt.setScale( sType );
         qt.setType( qType );
         qt.setIsBackground( isBackground );
@@ -1970,8 +1974,27 @@ public class GeoConverter implements Converter {
         if ( log.isInfoEnabled() ) {
             log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
                     + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
-                    + " Encoding=" + pType );
+                    + " Encoding=" + qt.getRepresentation() );
         }
+    }
+
+    /**
+     * @param name
+     * @param description
+     * @return
+     */
+    private PrimitiveType guessRepresentation( String name, String description ) {
+        PrimitiveType pType = PrimitiveType.DOUBLE;
+        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
+            /*
+             * special case...not a quantitation type.
+             */
+            pType = PrimitiveType.STRING;
+        } else if ( name.matches( "ABS_CALL" ) ) {
+            pType = PrimitiveType.STRING;
+        }
+        return pType;
+
     }
 
     /**
@@ -2021,11 +2044,11 @@ public class GeoConverter implements Converter {
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
     @SuppressWarnings("unchecked")
-    private Map<String, List<String>> makeDataVectors( List<GeoSample> datasetSamples, int quantitationTypeIndex ) {
+    private Map<String, List<Object>> makeDataVectors( List<GeoSample> datasetSamples, int quantitationTypeIndex ) {
         if ( quantitationTypeIndex < 0 ) {
             throw new IllegalArgumentException();
         }
-        Map<String, List<String>> dataVectors = new HashMap<String, List<String>>( INITIAL_VECTOR_CAPACITY );
+        Map<String, List<Object>> dataVectors = new HashMap<String, List<Object>>( INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         for ( GeoSample sample : datasetSamples ) {
             Collection<GeoPlatform> platforms = sample.getPlatforms();
@@ -2039,18 +2062,37 @@ public class GeoConverter implements Converter {
             List<String> designElements = platform.getColumnData( identifier );
             for ( String designElementName : designElements ) {
                 if ( !dataVectors.containsKey( designElementName ) ) {
-                    dataVectors.put( designElementName, new ArrayList<String>() );
+                    dataVectors.put( designElementName, new ArrayList<Object>() );
                 }
-                String datum = sample.getDatum( designElementName, quantitationTypeIndex );
-                // this can happen if the platform has probes that aren't in the data
-                if ( datum == null && log.isDebugEnabled() ) {
-                    log.debug( "Data for sample " + sample.getGeoAccession() + " was missing for element "
-                            + designElementName );
-                }
+                Object datum = sample.getDatum( designElementName, quantitationTypeIndex );
+
+                /*
+                 * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
+                 * quantitation type that was filtered out during parsing.
+                 */
                 dataVectors.get( designElementName ).add( datum );
             }
-
         }
+
+        /*
+         * Check to see if we got any data. If not, we should return null. This can happen if the quantitation type was
+         * filtered during parsing.
+         */
+        boolean filledIn = false;
+        for ( List<Object> vector : dataVectors.values() ) {
+            for ( Object object : vector ) {
+                if ( object != null ) {
+                    filledIn = true;
+                    break;
+                }
+            }
+            if ( filledIn == true ) {
+                break;
+            }
+        }
+
+        if ( !filledIn ) return null;
+
         return dataVectors;
     }
 
