@@ -20,14 +20,17 @@ package ubic.gemma.loader.expression.simple;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -90,8 +93,6 @@ public class SimpleExpressionDataLoaderService {
         }
         Taxon taxon = convertTaxon( metaData.getTaxon() );
 
-        ArrayDesign arrayDesign = convertArrayDesign( metaData, matrix );
-
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
         experiment.setName( metaData.getName() );
         experiment.setDescription( metaData.getDescription() );
@@ -104,13 +105,83 @@ public class SimpleExpressionDataLoaderService {
         }
 
         QuantitationType quantitationType = convertQuantitationType( metaData );
-        BioAssayDimension bad = convertBioAssayDimension( experiment, arrayDesign, taxon, matrix );
-        Collection<DesignElementDataVector> vectors = convertDesignElementDataVectors( experiment, bad, arrayDesign,
-                quantitationType, matrix );
-        experiment.setDesignElementDataVectors( vectors );
-        experiment.setBioAssays( bad.getBioAssays() );
+
+        Collection<ArrayDesign> arrayDesigns = convertArrayDesigns( metaData, matrix );
+
+        // Divide up multiple array designs into multiple BioAssayDimensions.
+        Collection<DesignElementDataVector> allVectors = new HashSet<DesignElementDataVector>();
+        Collection<BioAssay> allBioAssays = new HashSet<BioAssay>();
+        Collection<Object> usedDesignElements = new HashSet<Object>();
+        for ( ArrayDesign design : arrayDesigns ) {
+            log.info( "Processing " + design );
+            DoubleMatrixNamed subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
+            BioAssayDimension bad = convertBioAssayDimension( experiment, design, taxon, subMatrix );
+            Collection<DesignElementDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
+                    quantitationType, subMatrix );
+            allVectors.addAll( vectors );
+            allBioAssays.addAll( bad.getBioAssays() );
+        }
+
+        // sanity
+        if ( usedDesignElements.size() != matrix.rows() ) {
+            log.warn( "Some rows of matrix were not matched to any of the given array designs (" + matrix.rows()
+                    + " rows, " + usedDesignElements.size() + " found" );
+        }
+
+        experiment.setDesignElementDataVectors( allVectors );
+        experiment.setBioAssays( allBioAssays );
 
         return experiment;
+    }
+
+    /**
+     * @param matrix
+     * @param usedDesignElements
+     * @param design
+     * @return
+     */
+    private DoubleMatrixNamed getSubMatrixForArrayDesign( DoubleMatrixNamed matrix,
+            Collection<Object> usedDesignElements, ArrayDesign design ) {
+        List<Object> designElements = new ArrayList<Object>();
+        List<Object> columnNames = new ArrayList<Object>();
+
+        for ( Object originalColumnName : matrix.getColNames() ) {
+            columnNames.add( originalColumnName + " on " + design.getName() );
+        }
+
+        List<double[]> rows = new ArrayList<double[]>();
+
+        Collection<Object> arrayDesignElementNames = new HashSet<Object>();
+        for ( CompositeSequence cs : design.getCompositeSequences() ) {
+            arrayDesignElementNames.add( cs.getName() );
+        }
+
+        for ( Object object : matrix.getRowNames() ) {
+            /*
+             * disallow using design elements more than once; if two array designs match a given row name, we just end
+             * up arbitrarily assigning it to one of the array designs.
+             */
+            if ( arrayDesignElementNames.contains( object ) && !usedDesignElements.contains( object ) ) {
+                rows.add( matrix.getRow( matrix.getRowIndexByName( object ) ) );
+                usedDesignElements.add( object );
+                designElements.add( object );
+            }
+        }
+
+        log.info( "Found " + rows.size() + " data rows for " + design );
+
+        if ( rows.size() == 0 ) {
+            throw new RuntimeException( "An array design was entered ( " + design
+                    + " ) for which there are no matching rows in the data" );
+        }
+
+        double[][] allSubMatrixRows = new double[rows.size()][rows.iterator().next().length];
+        rows.toArray( allSubMatrixRows );
+
+        DoubleMatrixNamed subMatrix = DoubleMatrix2DNamedFactory.fastrow( allSubMatrixRows );
+        subMatrix.setRowNames( designElements );
+        subMatrix.setColumnNames( columnNames );
+        return subMatrix;
     }
 
     /**
@@ -145,30 +216,49 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @return
      */
-    private ArrayDesign convertArrayDesign( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
-        ArrayDesign arrayDesign = metaData.getArrayDesign();
+    private Collection<ArrayDesign> convertArrayDesigns( SimpleExpressionExperimentMetaData metaData,
+            DoubleMatrixNamed matrix ) {
+        Collection<ArrayDesign> arrayDesigns = metaData.getArrayDesigns();
 
-        ArrayDesign existing = arrayDesignService.find( arrayDesign );
+        Collection<ArrayDesign> existingDesigns = new HashSet<ArrayDesign>();
+        ArrayDesign newDesign = null;
 
-        if ( existing != null ) {
-            log.info( "Array Design exists" );
-            arrayDesignService.thaw( existing );
-            return existing;
+        for ( ArrayDesign design : arrayDesigns ) {
+            ArrayDesign existing = arrayDesignService.find( design );
+            if ( existing != null ) {
+                log.info( "Array Design exists" );
+                arrayDesignService.thaw( existing );
+                existingDesigns.add( existing );
+            } else {
+                if ( newDesign != null ) {
+                    throw new IllegalArgumentException( "More than one of the array designs isn't in the system" );
+                }
+                newDesign = design;
+            }
         }
 
-        log.info( "Creating new ArrayDesign " + arrayDesign );
+        if ( newDesign != null ) {
+            newArrayDesign( matrix, newDesign );
+            existingDesigns.add( newDesign );
+        }
+
+        assert existingDesigns.size() > 0;
+
+        return existingDesigns;
+
+    }
+
+    private void newArrayDesign( DoubleMatrixNamed matrix, ArrayDesign newDesign ) {
+        log.info( "Creating new ArrayDesign " + newDesign );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( matrix.getRowName( i ).toString() );
-            cs.setArrayDesign( arrayDesign );
-            arrayDesign.getCompositeSequences().add( cs );
+            cs.setArrayDesign( newDesign );
+            newDesign.getCompositeSequences().add( cs );
         }
 
-        log.info( "New array design has " + arrayDesign.getCompositeSequences().size() + " compositeSequences" );
-
-        return arrayDesign;
-
+        log.info( "New array design has " + newDesign.getCompositeSequences().size() + " compositeSequences" );
     }
 
     /**

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.HashSet;
+
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
@@ -37,7 +39,7 @@ public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExper
 
     public SimpleExpressionExperimentLoadCommand() {
         this.dataFile = new FileUpload();
-        this.setArrayDesign( ArrayDesign.Factory.newInstance() );
+        this.setArrayDesigns( new HashSet<ArrayDesign>() );
         this.setTaxon( Taxon.Factory.newInstance() );
     }
 

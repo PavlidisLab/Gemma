@@ -19,6 +19,10 @@
 package ubic.gemma.loader.expression.simple;
 
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -46,13 +50,15 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "new ad" );
-        metaData.setArrayDesign( ad );
+        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
         metaData.setTaxon( taxon );
-        metaData.setName( "ee" );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );
@@ -81,13 +87,15 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "new ad" );
-        metaData.setArrayDesign( ad );
+        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
         metaData.setTaxon( taxon );
-        metaData.setName( "ee" );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );

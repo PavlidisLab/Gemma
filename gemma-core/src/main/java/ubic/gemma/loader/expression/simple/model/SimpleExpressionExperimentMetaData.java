@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.expression.simple.model;
 
+import java.util.Collection;
+
 import org.biomage.AuditAndSecurity.Contact;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -61,12 +63,12 @@ public class SimpleExpressionExperimentMetaData {
      */
     private int pubMedId;
 
-    ArrayDesign arrayDesign;
+    Collection<ArrayDesign> arrayDesigns;
 
     Taxon taxon;
 
-    public ArrayDesign getArrayDesign() {
-        return this.arrayDesign;
+    public Collection<ArrayDesign> getArrayDesigns() {
+        return this.arrayDesigns;
     }
 
     /**
@@ -143,8 +145,8 @@ public class SimpleExpressionExperimentMetaData {
         return this.user;
     }
 
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
+    public void setArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        this.arrayDesigns = arrayDesigns;
     }
 
     /**

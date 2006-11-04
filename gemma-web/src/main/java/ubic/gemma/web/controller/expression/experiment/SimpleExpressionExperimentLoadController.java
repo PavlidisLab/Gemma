@@ -210,12 +210,12 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
                 FileUpload fileUpload = commandObject.getDataFile();
 
-                ArrayDesign arrayDesign = commandObject.getArrayDesign();
-                if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
-                     log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                    arrayDesign = ArrayDesign.Factory.newInstance();
+                Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
+                if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
+                    log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                    ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
                     arrayDesign.setName( commandObject.getArrayDesignName() );
-                    commandObject.setArrayDesign( arrayDesign );
+                    commandObject.getArrayDesigns().add( arrayDesign );
                 }
 
                 Taxon taxon = commandObject.getTaxon();
@@ -236,14 +236,15 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
                 ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
                 stream.close();
-                
+
                 this.saveMessage( "Successfully loaded " + result );
 
                 model.put( "expressionExperiment", result );
 
                 ProgressManager.destroyProgressJob( job );
-                //return new ModelAndView( "view", model );
-                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId()), model );
+                // return new ModelAndView( "view", model );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ), model );
             }
         };
     }

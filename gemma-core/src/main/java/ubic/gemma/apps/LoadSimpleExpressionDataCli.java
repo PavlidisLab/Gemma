@@ -9,6 +9,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -116,9 +118,13 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
             log.info( "Array Design " + oneLoad[ARRAYDESIGNI] + " is not loaded" );
             return false;
         }
+
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+
         // ArrayDesign.Factory.newInstance();
         // ad.setName( oneLoad[ARRAYDESIGNI] );
-        metaData.setArrayDesign( ad );
+        metaData.setArrayDesigns( ads );
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( oneLoad[SPECIESI] );
         metaData.setTaxon( taxon );

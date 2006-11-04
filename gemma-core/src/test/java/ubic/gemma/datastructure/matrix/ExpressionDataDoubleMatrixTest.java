@@ -84,7 +84,9 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "new ad" );
-        metaData.setArrayDesign( ad );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
