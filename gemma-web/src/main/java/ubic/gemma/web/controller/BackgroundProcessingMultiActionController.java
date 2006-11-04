@@ -36,17 +36,11 @@ import ubic.gemma.web.util.MessageUtil;
  * @version $Id$
  * @spring.property name="taskRunningService" ref="taskRunningService"
  */
-public abstract class BackgroundProcessingFormController extends BaseFormController {
+public abstract class BackgroundProcessingMultiActionController extends BaseMultiActionController {
 
     /**
      * 
      */
-   
-
-    /**
-     * Use this to access the task id in the request.
-     */
-    public final static String JOB_ATTRIBUTE = "taskId";
 
     TaskRunningService taskRunningService;
 
@@ -72,7 +66,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
 
         BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
 
-        request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
+        request.getSession().setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 

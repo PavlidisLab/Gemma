@@ -58,6 +58,8 @@ public class AllCoreTests {
 
         TestSuite suite = new TestSuite( "Tests for gemma-core" );
 
+        suite.addTestSuite( ProgressIntegrationTest.class );
+        
         suite.addTest( AllPubMedTests.suite() );
         suite.addTest( AllGeoTests.suite() );
         suite.addTest( AllMageTests.suite() );
@@ -86,7 +88,7 @@ public class AllCoreTests {
         suite.addTestSuite( HttpExpressionDataMatrixVisualizerTest.class );
         suite.addTestSuite( ExpressionDataMatrixVisualizerTest.class );
 
-        suite.addTestSuite( ProgressIntegrationTest.class );
+        
         suite.addTestSuite( ProgressAppenderTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );

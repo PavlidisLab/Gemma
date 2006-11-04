@@ -26,16 +26,19 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
+import ubic.gemma.web.util.MessageUtil;
+
 /**
  * Extend this to create a MultiActionController.
  * 
  * @author keshav
  * @version $Id$
+ * @spring.property name="messageUtil" ref="messageUtil"
  */
 public abstract class BaseMultiActionController extends MultiActionController {
 
     protected Log log = LogFactory.getLog( getClass().getName() );
-
+    private MessageUtil messageUtil;
     /**
      * @param request
      * @param messageCode - if no message is found, this is used to form the message (instead of throwing an exception).
@@ -48,5 +51,19 @@ public abstract class BaseMultiActionController extends MultiActionController {
         } catch ( NoSuchMessageException e ) {
             request.getSession().setAttribute( "messages", "??" + messageCode + "??" );
         }
+    }
+    
+    /**
+     * @return the messageUtil
+     */
+    public MessageUtil getMessageUtil() {
+        return this.messageUtil;
+    }
+    
+    /**
+     * @param messageUtil the messageUtil to set
+     */
+    public void setMessageUtil( MessageUtil messageUtil ) {
+        this.messageUtil = messageUtil;
     }
 }

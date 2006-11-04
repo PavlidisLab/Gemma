@@ -215,7 +215,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     dims.add( dim );
                     session.delete( dv );
                     if ( ++count % 1000 == 0 ) {
-                        log.info( count + " vectors deleted" );
+                        log.info( count + " design Element data vectors deleted" );
                     }
                 }
 
@@ -229,7 +229,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     // fixme this needs to be here for lazy loading issues. Even though the AD isn't getting removed.
                     // Not happy about this at all. but what to do?
                     ba.getArrayDesignUsed().getCompositeSequences().size();
-
+                    
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
                         session.delete( bm );
                     }
@@ -249,6 +249,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                             session.delete( event );
                         session.delete( at );
                     }
+                    
+                    log.info( "Removed BioAssay " + ba.getName() + " and its assciations." );
+                    
                 }
 
                 // Remove audit information for ee from the db. We might want to keep this but......

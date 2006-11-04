@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -27,10 +28,13 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,8 +42,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * @author keshav
@@ -49,7 +57,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  */
-public class ExpressionExperimentController extends BaseMultiActionController {
+public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
@@ -257,7 +265,9 @@ public class ExpressionExperimentController extends BaseMultiActionController {
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }
 
-        return doDelete( request, response, expressionExperiment );
+        String taskId = startJob( expressionExperiment, request );
+        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        //return doDelete( request, response, expressionExperiment );
     }
 
     /**
@@ -274,5 +284,40 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
+    
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseBackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+     *      java.lang.Object, java.lang.String)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+
+            @SuppressWarnings("unchecked")
+            public ModelAndView call() throws Exception {
+
+                SecurityContextHolder.setContext( securityContext );
+     
+                ExpressionExperiment ee = (ExpressionExperiment) command;
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Deleting expression experiment: "
+                        + ee.getAccession() );
+                
+               // addMessage( request, "object.deleted", new Object[] { messagePrefix, ee.getId() } );
+                expressionExperimentService.delete( ee );
+                ee = null;
+
+
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html") );
+            }
+        };
+    }
+    
 
 }

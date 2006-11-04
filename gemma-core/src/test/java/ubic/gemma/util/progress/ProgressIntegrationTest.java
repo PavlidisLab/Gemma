@@ -39,6 +39,25 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     private ProgressJob pJob;
     private HttpProgressObserver pObserver;
 
+    /**
+     * Tests 1 user with 1 job with 1 observer
+     */
+    public void testSingleUse() {
+
+        SimpleMockProcess mp = new SimpleMockProcess( ConfigUtils.getString( "gemma.admin.user" ), "A run of tests" );
+        MockClient mc = new MockClient();
+        ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mc );
+        mp.start();
+
+        try {
+            Thread.sleep( 3500 );
+        } catch ( InterruptedException e ) {
+            e.printStackTrace();
+
+        }
+        assertEquals( 101, mc.upDateTimes() );
+        
+    }
     /*
      * Test method for 'ubic.gemma.web.util.progress.ProgressManager.CreateProgressJob(String, String)'
      */
@@ -302,25 +321,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     // ProgressManager.destroyProgressJob( pJob4 );
     //
     // }
-    /**
-     * Tests 1 user with 1 job with 1 observer
-     */
-    public void testSingleUse() {
-
-        SimpleMockProcess mp = new SimpleMockProcess( ConfigUtils.getString( "gemma.admin.user" ), "A run of tests" );
-        MockClient mc = new MockClient();
-        ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mc );
-        mp.start();
-
-        try {
-            Thread.sleep( 3500 );
-        } catch ( InterruptedException e ) {
-            e.printStackTrace();
-
-        }
-        assertEquals( 101, mc.upDateTimes() );
-        
-    }
+  
 
     /*
      * Tests if the thread local variable gets inherited to new threads
