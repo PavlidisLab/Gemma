@@ -179,7 +179,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                     buf.append( "    " + object + "\n" );
                 }
                 buf.append( "---------------------\n" );
-
+                log.error( buf );
             }
 
         } catch ( Exception e ) {
