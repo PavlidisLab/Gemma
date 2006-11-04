@@ -18,12 +18,19 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -53,7 +60,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
         super.onSetUpInTransaction();
 
-        ee = ExpressionExperiment.Factory.newInstance();
+        ee = this.getTestPersistentCompleteExpressionExperiment();
         ee.setName( EE_NAME );
 
         DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
@@ -66,9 +73,17 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
         ee.setOwner( c );
 
-        ee = expressionExperimentDao.findOrCreate( ee );
-        // setComplete();
+        expressionExperimentDao.update( ee );
+        expressionExperimentDao.thaw( ee );
 
+    }
+
+    @Override
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
+        if ( ee != null ) {
+            expressionExperimentDao.remove( ee );
+        }
     }
 
     /**
@@ -86,6 +101,33 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
         ExpressionExperiment expressionExperiment = expressionExperimentDao.findByAccession( accessionEntry );
         assertNotNull( expressionExperiment );
+    }
+
+    @SuppressWarnings("unchecked")
+    public final void testGetDesignElementDataVectors() throws Exception {
+        Collection<DesignElement> designElements = new HashSet<DesignElement>();
+        QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        Collection<DesignElementDataVector> allv = ee.getDesignElementDataVectors();
+        Iterator<DesignElementDataVector> it = allv.iterator();
+        for ( int i = 0; i < 2; i++ ) {
+            designElements.add( it.next().getDesignElement() );
+        }
+
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors( ee,
+                designElements, quantitationType );
+
+        assertEquals( 2, vectors.size() );
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public final void testGetSamplingOfVectors() throws Exception {
+        QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getSamplingOfVectors( ee,
+                quantitationType, 2 );
+
+        assertEquals( 2, vectors.size() );
+
     }
 
     /**

@@ -116,7 +116,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Iterator<BioAssay> it = dimension.getBioAssays().iterator();
 
-            assert dimension.getBioAssays().size() == vals.length;
+            assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
+                    + dimension.getBioAssays().size();
             for ( int i = 0; i < vals.length; i++ ) {
                 BioAssay bioAssay = it.next();
                 matrix.setQuick( rowNum, columnAssayMap.get( bioAssay ), vals[i] );

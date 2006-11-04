@@ -1,6 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<jsp:useBean id="expressionExperimentVisualizationCommand" scope="request"
+<jsp:useBean id="expressionExperimentVisualizationCommand"
+	scope="request"
 	class="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand" />
 
 <spring:bind path="expressionExperimentVisualizationCommand.*">
@@ -71,7 +72,8 @@
 
 			<td>
 
-				<spring:bind path="expressionExperimentVisualizationCommand.searchCriteria">
+				<spring:bind
+					path="expressionExperimentVisualizationCommand.searchCriteria">
 					<select name="${status.expression}">
 						<c:forEach items="${searchCategories}" var="searchCategory">
 							<option value="${searchCategory}"
@@ -84,7 +86,7 @@
 				</spring:bind>
 			</td>
 		</tr>
-		
+
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="label.standardQuantitationTypeName" /> </b>
@@ -92,9 +94,11 @@
 
 			<td>
 
-				<spring:bind path="expressionExperimentVisualizationCommand.standardQuantitationTypeName">
+				<spring:bind
+					path="expressionExperimentVisualizationCommand.standardQuantitationTypeName">
 					<select name="${status.expression}">
-						<c:forEach items="${standardQuantitationTypeNames}" var="standardQuantitationTypeName">
+						<c:forEach items="${standardQuantitationTypeNames}"
+							var="standardQuantitationTypeName">
 							<option value="${standardQuantitationTypeName}"
 								<c:if test="${status.value == standardQuantitationTypeName}">selected="selected" </c:if>>
 								${standardQuantitationTypeName}
@@ -112,39 +116,24 @@
 					sep.) </b>
 			</td>
 			<td>
-				<spring:bind path="expressionExperimentVisualizationCommand.searchString">
+				<spring:bind
+					path="expressionExperimentVisualizationCommand.searchString">
 					<input type="text" size=10
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 		</tr>
-		
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="label.species" /> </b>
-			</td>
-			<td>
-				<spring:bind path="expressionExperimentVisualizationCommand.species">
-					<select name="${status.expression}">
-						<c:forEach items="${speciesCategories}" var="speciesCategory">
-							<option value="${speciesCategory}"
-								<c:if test="${status.value == speciesCategory}">selected="selected" </c:if>>
-								${speciesCategory}
-							</option>
-						</c:forEach>
-					</select>
-				</spring:bind>
-			</td>
-		</tr>
+
+
 
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.viewAll" /> </b>
+				<b> <fmt:message key="label.viewSampling" /> </b>
 			</td>
 			<td>
 				<spring:bind
-					path="expressionExperimentVisualizationCommand.viewAll">
+					path="expressionExperimentVisualizationCommand.viewSampling">
 					<input type="hidden" name="_${status.expression}" />
 					<input type="checkbox" name="${status.expression}" value="true" />
 					<c:if test="${status.value}">checked="checked"</c:if>
@@ -154,12 +143,13 @@
 		</tr>
 	</table>
 	<br />
-	
-	<spring:bind path="expressionExperimentVisualizationCommand.expressionExperimentId">	
-		<input type="hidden" name='id' 
+
+	<spring:bind
+		path="expressionExperimentVisualizationCommand.expressionExperimentId">
+		<input type="hidden" name='id'
 			value="<c:out value="${status.value}"/>" />
 	</spring:bind>
-	
+
 	<table>
 		<tr>
 			<td>

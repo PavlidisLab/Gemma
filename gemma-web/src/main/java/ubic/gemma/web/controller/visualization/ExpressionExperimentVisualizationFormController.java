@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -80,9 +79,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
-    private List<DesignElement> compositeSequences = null;
-    private QuantitationType quantitationType = null;
-    private boolean viewAll = false;
+
+    private boolean viewSampling = false;
     private final int MAX_ELEMENTS_TO_VISUALIZE = 50;
 
     public ExpressionExperimentVisualizationFormController() {
@@ -121,11 +119,59 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
         eesc.setSearchString( "probeset_0,probeset_1,probeset_2,probeset_3,probeset_4,probeset_5" );
-        eesc.setSpecies( "Human" );
         eesc.setStandardQuantitationTypeName( StandardQuantitationType.DERIVEDSIGNAL.getValue() );
 
         return eesc;
 
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        Long id = eesc.getExpressionExperimentId();
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            log.info( "Cancelled" );
+
+            if ( id != null ) {
+                return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id="
+                        + id ) );
+            }
+
+            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" ) );
+
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    @SuppressWarnings("unchecked")
+    private QuantitationType getQuantitationType( ExpressionExperimentVisualizationCommand eesc,
+            ExpressionExperiment expressionExperiment ) {
+        QuantitationType quantitationType = null;
+        /* Get the selected standard quantitation type. */
+        String standardQuantitationTypeName = eesc.getStandardQuantitationTypeName();
+        QuantitationType requestedType = QuantitationType.Factory.newInstance();
+        StandardQuantitationType standardQuantitationType = null;
+        if ( StandardQuantitationType.literals().contains( standardQuantitationTypeName ) ) {
+            standardQuantitationType = StandardQuantitationType.fromString( standardQuantitationTypeName );
+        } else {
+            standardQuantitationType = StandardQuantitationType.OTHER;
+            log.warn( "Invalid quantitation type.  Using " + standardQuantitationType + " instead." );
+        }
+        requestedType.setType( standardQuantitationType );
+
+        Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
+        for ( QuantitationType type : types ) {
+            if ( type.equals( requestedType ) ) {
+                quantitationType = type;
+            }
+        }
+        return quantitationType;
     }
 
     /**
@@ -136,35 +182,20 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( { "unused", "unchecked" })
     @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
-        log.debug( "entering processFormSubmission" );
+        log.debug( "entering onSubmit" );
 
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        String searchCriteria = eesc.getSearchCriteria();
+
         Long id = eesc.getExpressionExperimentId();
 
-        if ( request.getParameter( "cancel" ) != null ) {
-            log.info( "Cancelled" );
-
-            if ( id != null ) {
-                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                        + request.getServerPort() + request.getContextPath()
-                        + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
-            }
-
-            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath()
-                    + "/expressionExperiment/showAllExpressionExperiments.html" ) );
-
-        }
-
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
-
-        compositeSequences = new ArrayList<DesignElement>();
+        List<DesignElement> compositeSequences = new ArrayList<DesignElement>();
 
         if ( expressionExperiment == null ) {
             errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
@@ -175,31 +206,20 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         log.debug( "Got " + arrayDesigns.size() + " array designs for the expression experiment with id " + id );
 
-        /* Get the selected standard quantitation type. */
-        String standardQuantitationTypeName = eesc.getStandardQuantitationTypeName();
-        quantitationType = QuantitationType.Factory.newInstance();
-        StandardQuantitationType standardQuantitationType = null;
-        if ( StandardQuantitationType.literals().contains( standardQuantitationTypeName ) ) {
-            standardQuantitationType = StandardQuantitationType.fromString( standardQuantitationTypeName );
-        } else {
-            standardQuantitationType = StandardQuantitationType.OTHER;
-            log.warn( "Invalid quantitation type.  Using " + standardQuantitationType + " instead." );
-        }
-        quantitationType.setType( standardQuantitationType );
+        QuantitationType quantitationType = getQuantitationType( eesc, expressionExperiment );
 
-        /* check to see if 'viewAll' is selected. */
-        int size = expressionExperiment.getDesignElementDataVectors().size();
-        String[] searchIds = new String[size];
-        viewAll = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewAll();
-        if ( viewAll ) {/* check size if 'viewAll' is set. */
-            if ( size > MAX_ELEMENTS_TO_VISUALIZE ) {
-                size = MAX_ELEMENTS_TO_VISUALIZE;
-            }
+        if ( quantitationType == null ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "No quantitation type matching "
+                    + eesc.getStandardQuantitationTypeName() + " found" ) );
+        }
+
+        String[] searchIds = new String[MAX_ELEMENTS_TO_VISUALIZE];
+        viewSampling = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewSampling();
+        if ( viewSampling ) {/* check size if 'viewAll' is set. */
             int i = 0;
-            Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
-            Iterator iter = vectors.iterator();
-            while ( iter.hasNext() ) {
-                DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
+            Collection<DesignElementDataVector> vectors = expressionExperimentService.getSamplingOfVectors(
+                    expressionExperiment, quantitationType, MAX_ELEMENTS_TO_VISUALIZE );
+            for ( DesignElementDataVector vector : vectors ) {
                 searchIds[i] = vector.getDesignElement().getName();
                 i++;
             }
@@ -208,15 +228,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             String searchString = eesc.getSearchString();
             log.debug( "Got search string " + searchString );
             searchIds = StringUtils.split( searchString, "," );
-            size = searchIds.length;
         }
 
         /* handle search by design element */
         if ( eesc.getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
             for ( ArrayDesign design : arrayDesigns ) {
-
-                for ( int i = 0; i < size; i++ ) {
-                    String searchId = StringUtils.trim( searchIds[i] );
+                for ( String searchId : searchIds ) {
+                    searchId = StringUtils.trim( searchId );
                     log.debug( "searching for " + searchId );
 
                     CompositeSequence cs = compositeSequenceService.findByName( design, searchId );
@@ -238,26 +256,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             errors.addError( new ObjectError( command.toString(), null, null,
                     "Search by gene symbol unsupported at this time." ) );
         }
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @SuppressWarnings("unused")
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        log.debug( "entering onSubmit" );
-
-        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        String searchCriteria = eesc.getSearchCriteria();
 
         // TODO remove this
         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
@@ -281,10 +279,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     .getAbsolutePath() );
         } else {
             log.debug( "search by official gene symbol" );
-            // call service which produces expression data image based on gene symbol search criteria
+            // FIXME call service which produces expression data image based on gene symbol search criteria
+            throw new UnsupportedOperationException( "Search by Gene Symbol is not supported yet" );
         }
 
-        /* deals with the case of probes that match, but not for the given quantitation type. */
+        /* deals with the case of probes don't match, for the given quantitation type. */
         if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
             errors
                     .addError( new ObjectError( command.toString(), null, null,
@@ -309,17 +308,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         // add search categories
         Collection<String> searchCategories = new HashSet<String>();
         searchCategories.add( "gene symbol" );
-        searchCategories.add( "probe set id" );
-
+        searchCategories.add( "probe id" );
         searchByMap.put( "searchCategories", searchCategories );
-
-        // add species
-        Collection<String> speciesCategories = new HashSet<String>();
-        speciesCategories.add( "Human" );
-        speciesCategories.add( "Mouse" );
-        speciesCategories.add( "Rat" );
-
-        searchByMap.put( "speciesCategories", speciesCategories );
 
         // add standard quantitation types to select from
         Collection<String> standardQuantitationTypeNames = StandardQuantitationType.literals();

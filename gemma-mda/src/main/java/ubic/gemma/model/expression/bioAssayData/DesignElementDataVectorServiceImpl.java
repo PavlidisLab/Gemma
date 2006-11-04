@@ -59,7 +59,9 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getDesignElementDataVectorDao().findAllForMatrix( expressionExperiment, quantitationType );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
      */
     @Override
@@ -67,12 +69,24 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getDesignElementDataVectorDao().getGenes( dedv );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenesById(long)
      */
     @Override
     protected Collection handleGetGenesById( long id ) throws Exception {
         return this.getDesignElementDataVectorDao().getGenesById( id );
+    }
+
+    @Override
+    protected void handleThaw( DesignElementDataVector designElementDataVector ) throws Exception {
+        this.getDesignElementDataVectorDao().thaw( designElementDataVector );
+    }
+
+    @Override
+    protected void handleThaw( Collection designElementDataVectors ) throws Exception {
+        this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
     }
 
 }

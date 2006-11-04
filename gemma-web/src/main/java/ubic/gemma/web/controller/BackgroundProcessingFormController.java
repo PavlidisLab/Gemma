@@ -41,7 +41,6 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
     /**
      * 
      */
-   
 
     /**
      * Use this to access the task id in the request.
@@ -71,6 +70,8 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
         String taskId = TaskRunningService.generateTaskId();
 
         BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
+
+        assert taskId != null;
 
         request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 

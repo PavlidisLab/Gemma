@@ -40,11 +40,9 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private String searchString = null;
 
-    private boolean viewAll;
+    private boolean viewSampling;
 
     private String filename = null;
-
-    private String species = null;
 
     private String standardQuantitationTypeName = null;
 
@@ -63,31 +61,17 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     }
 
     /**
-     * @return Returns the species.
-     */
-    public String getSpecies() {
-        return species;
-    }
-
-    /**
-     * @param filename The species to set.
-     */
-    public void setSpecies( String species ) {
-        this.species = species;
-    }
-
-    /**
      * @return boolean
      */
-    public boolean isViewAll() {
-        return viewAll;
+    public boolean isViewSampling() {
+        return viewSampling;
     }
 
     /**
-     * @param viewAll
+     * @param viewSampling
      */
-    public void setViewAll( boolean viewAll ) {
-        this.viewAll = viewAll;
+    public void setViewSampling( boolean viewAll ) {
+        this.viewSampling = viewAll;
     }
 
     /**

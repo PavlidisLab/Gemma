@@ -24,8 +24,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
@@ -134,20 +137,20 @@ public class DesignElementDataVectorDaoImpl extends
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
-    
+
     /**
      * Gets all the genes that are related to the DesignElementDataVector identified by the given ID.
-     * @param id 
+     * 
+     * @param id
      * @return Collection
-     */    
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenesById( long id ) throws Exception {
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
-            + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-            + " and compositeSequence.designElementDataVectors.id = :id ";        
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id = :id ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", id );
@@ -158,12 +161,13 @@ public class DesignElementDataVectorDaoImpl extends
         }
         return genes;
     }
-    
+
     /**
      * Gets all the genes that are related to the DesignElementDataVector.
+     * 
      * @param designElementDataVector
      * @return Collection
-     */    
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenes( DesignElementDataVector dedv ) throws Exception {
@@ -200,4 +204,42 @@ public class DesignElementDataVectorDaoImpl extends
 
         return expressionExperimentIds;
     }
+
+    @Override
+    protected void handleThaw( final DesignElementDataVector designElementDataVector ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( designElementDataVector, LockMode.READ );
+                designElementDataVector.getBioAssayDimension().getBioAssays().size();
+                for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
+                    ba.getSamplesUsed().size();
+                    ba.getDerivedDataFiles().size();
+                }
+                return null;
+            }
+        }, true );
+
+    }
+
+    @Override
+    protected void handleThaw( final Collection designElementDataVectors ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( Object object : designElementDataVectors ) {
+                    DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
+                    session.lock( designElementDataVector, LockMode.READ );
+                    designElementDataVector.getBioAssayDimension().getBioAssays().size();
+                    for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
+                        ba.getSamplesUsed().size();
+                        ba.getDerivedDataFiles().size();
+                    }
+                }
+                return null;
+            }
+        }, true );
+
+    }
+
 }

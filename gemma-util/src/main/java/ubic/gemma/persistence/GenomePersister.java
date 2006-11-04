@@ -142,7 +142,7 @@ abstract public class GenomePersister extends CommonPersister {
             return existingGene;
         }
 
-        log.info( "*** New  " + gene + " ***" );
+        if ( log.isDebugEnabled() ) log.debug( "*** New  " + gene + " ***" );
 
         if ( gene.getAccessions().size() > 0 ) {
             this.persistCollectionElements( gene.getAccessions() );
@@ -378,7 +378,7 @@ abstract public class GenomePersister extends CommonPersister {
             return existing;
         }
 
-        if ( log.isInfoEnabled() ) log.info( "*** New: " + geneProduct + " *** " );
+        if ( log.isDebugEnabled() ) log.debug( "*** New: " + geneProduct + " *** " );
 
         if ( geneProduct.getAccessions() != null ) {
             this.persistCollectionElements( geneProduct.getAccessions() );

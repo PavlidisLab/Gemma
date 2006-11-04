@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
@@ -37,7 +35,6 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
-    private static Log log = LogFactory.getLog( ArrayDesignFormControllerTest.class.getName() );
 
     ArrayDesign ad = null;
 
@@ -58,35 +55,23 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
         c.setName( "\'Contact Name\'" );
         ad.setDesignProvider( c );
 
-        /* Database entry is mandatory for expression experiments. */
-        // FIXME - InvalidDataAccessApiUsageException - this is not a bi-directional relationship so
-        // the solution on the twiki will not work. This is caused by something else.
-        // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-        // ee.setAccession( de );
-        /* Expression experiment contains a collection of experimental designs. */
-
-        // ***********
-        // Collection<ExperimentalDesign> eeCol = new HashSet();
-        // int testNum = 3;
-        // for ( int i = 0; i < testNum; i++ ) {
-        // ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
-        // ed.setName( "Experimental Design " + i );
-        // ed.setDescription( i + ": A test experimental design." );
-        // eeCol.add( ed );
-        // }
-        //
-        // ee.setExperimentalDesigns( eeCol );
-        // ***********
         ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        if ( ads.findArrayDesignByName( ad.getName() ) == null ) ads.findOrCreate( ad );
+        ad = ads.create( ad );
+    }
+
+    @Override
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
+        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
+        if ( ad != null ) {
+            ads.remove( ad );
+        }
     }
 
     /**
      * @throws Exception
      */
     public void testSave() throws Exception {
-        log.debug( "testing save" );
-
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "POST", "/arrays/editArrayDesign.html" );
@@ -109,8 +94,6 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testEdit() throws Exception {
-        log.debug( "testing edit" );
-
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "GET", "/arrays/editArrayDesign.html" );

@@ -24,6 +24,7 @@ import java.util.Map;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.genome.Taxon;
@@ -165,6 +166,7 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> result = new HashSet<ArrayDesign>();
+        this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             result.add( ba.getArrayDesignUsed() );
         }
@@ -191,47 +193,33 @@ public class ExpressionExperimentServiceImpl extends
     protected void handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().thaw( expressionExperiment );
     }
-    
+
     /*
-     * (non-Javadoc)
-     * 
-     * This only returns 1 taxon, the 1st taxon as decided by the join which ever that is.
-     * The good news is as a buisness rule we only allow 1 taxon per EE.
+     * (non-Javadoc) This only returns 1 taxon, the 1st taxon as decided by the join which ever that is. The good news
+     * is as a buisness rule we only allow 1 taxon per EE.
      */
-    
+
     @Override
     protected Taxon handleGetTaxon( Long id ) {
-       
-        return this.getExpressionExperimentDao().getTaxon(id);
-        
+        return this.getExpressionExperimentDao().getTaxon( id );
     }
-//
-//    protected Taxon handleGetTaxon( Long id ) throws Exception {
-//
-//        final String queryString = "select SU.taxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.taxon where EE.id = :id";
-//
-//        return ( Taxon ) queryByIdReturnObject( id, queryString );
-//        
-//    }
-//
-//    private Object queryByIdReturnObject( Long id, final String queryString ) {
-//        try {
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setFirstResult( 1 );
-//            queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
-//            // collection returned
-//            queryObject.setParameter( "id", id );
-//            java.util.List results = queryObject.list();
-//
-//            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
-//
-//            return results.iterator().next();
-//
-//        } catch ( org.hibernate.HibernateException ex ) {
-//            throw super.convertHibernateAccessException( ex );
-//        }
-//    }
-//    
-    
-    
+
+    @Override
+    protected Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment );
+    }
+
+    @Override
+    protected Collection handleGetSamplingOfVectors( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, Integer limit ) throws Exception {
+        return this.getExpressionExperimentDao().getSamplingOfVectors( expressionExperiment, quantitationType, limit );
+    }
+
+    @Override
+    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
+            Collection designElements, QuantitationType quantitationType ) throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, designElements,
+                quantitationType );
+    }
+
 }

@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,10 +41,12 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
@@ -133,6 +136,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
 
         return qtCounts;
+    }
+
+    @Override
+    public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+        final String queryString = "select quantType from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "id", expressionExperiment.getId() );
+            List results = queryObject.list();
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     /*
@@ -249,9 +266,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                             session.delete( event );
                         session.delete( at );
                     }
-                    
+
                     log.info( "Removed BioAssay " + ba.getName() + " and its assciations." );
-                    
+
                 }
 
                 // Remove audit information for ee from the db. We might want to keep this but......
@@ -362,8 +379,25 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
                 return null;
             }
+
         }, true );
 
+    }
+
+    @Override
+    protected void handleThawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( expressionExperiment, LockMode.READ );
+                expressionExperiment.getBioAssays().size();
+                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+                    ba.getSamplesUsed().size();
+                    ba.getDerivedDataFiles().size();
+                }
+                return null;
+            }
+        }, true );
     }
 
     @Override
@@ -404,6 +438,57 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @Override
+    protected Collection handleGetSamplingOfVectors( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, Integer limit ) throws Exception {
+        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee"
+                + " inner join ee.designElementDataVectors as dev  where ee.id = :id";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setMaxResults( limit );
+            queryObject.setParameter( "id", expressionExperiment.getId() );
+            List results = queryObject.list();
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
+            Collection designElements, QuantitationType quantitationType ) throws Exception {
+        if ( designElements == null || designElements.size() == 0 ) return null;
+
+        assert quantitationType.getId() != null && expressionExperiment.getId() != null;
+
+        // FIXME: this would be much faster done as a batch query (with "in") instead of once per design element.
+        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dev inner join dev.designElement as de inner join dev.quantitationType as qt where ee.id = :id and de.id = :deid and qt.id = :qtid";
+
+        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        for ( DesignElement designElement : ( Collection<DesignElement> ) designElements ) {
+            assert designElement.getId() != null;
+            try {
+                org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+                queryObject.setParameter( "id", expressionExperiment.getId() );
+                queryObject.setParameter( "deid", designElement.getId() );
+                queryObject.setParameter( "qtid", quantitationType.getId() );
+                List results = queryObject.list();
+                if ( results == null || results.size() == 0 ) continue;
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one design element data vector found for " + designElement + " in "
+                                    + expressionExperiment + " for " + quantitationType );
+                }
+                DesignElementDataVector result = ( DesignElementDataVector ) results.iterator().next();
+                vectors.add( result );
+            } catch ( org.hibernate.HibernateException ex ) {
+                throw super.convertHibernateAccessException( ex );
+            }
+        }
+        return vectors;
     }
 
 }
