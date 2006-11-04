@@ -19,6 +19,7 @@
 package ubic.gemma.visualization;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -76,12 +77,11 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
+    @SuppressWarnings("unchecked")
     public ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
         // TODO not used?
 
-        Map<DesignElement, Integer> rowMap = expressionDataMatrix.getRowMap(); // row labels
-
-        Map<BioAssay, Integer> columnMap = expressionDataMatrix.getColumnMap(); // column labels
+        Collection<DesignElement> rowMap = expressionDataMatrix.getRowMap(); // row labels
 
         if ( expressionDataMatrix == null || rowMap.size() == 0 ) {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
@@ -89,7 +89,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
 
         double[][] data = new double[rowMap.size()][];
         int i = 0;
-        for ( DesignElement designElement : rowMap.keySet() ) {
+        for ( DesignElement designElement : rowMap ) {
             log.warn( "design element: " + designElement );
             Double[] row = ( Double[] ) expressionDataMatrix.getRow( designElement );
             data[i] = ArrayUtils.toPrimitive( row );

@@ -94,7 +94,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
     }
 
     private int computeHashCode() {
-        int hashCode = 0;
+        int hashCode = 29;
 
         if ( this.getNcbiId() != null ) {
             hashCode += this.getNcbiId().hashCode();

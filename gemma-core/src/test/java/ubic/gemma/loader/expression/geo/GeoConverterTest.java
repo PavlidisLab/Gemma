@@ -20,19 +20,17 @@ package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
-import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.basecode.io.ByteArrayConverter;
 
 /**
- * Unit test for GeoConversion. Not for integration tests.
+ * Unit test for GeoConversion
  * 
  * @author pavlidis
  * @version $Id$
@@ -86,7 +84,7 @@ public class GeoConverterTest extends TestCase {
         Object result = this.gc.convert( series );
         assertNotNull( result );
     }
-    
+
     public void testConvertWithNulls() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gds181Short/GSE96_family.soft.gz" ) );

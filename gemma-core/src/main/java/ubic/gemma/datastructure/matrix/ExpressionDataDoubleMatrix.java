@@ -18,12 +18,9 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,8 +30,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -47,20 +44,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
-    private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
+public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
+    private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
     private DoubleMatrixNamed matrix;
 
-    private Map<DesignElement, Integer> rowMap;
-    private Map<BioAssay, Integer> columnMap;
-
     /**
-     * @param expressionExperiment
+     * @param dataVectors
      * @param quantitationType
      */
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        throw new RuntimeException( "Method not yet implemented" );
+    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
+            QuantitationType quantitationType ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( quantitationType, dataVectors );
+        vectorsToMatrix( selectedVectors );
     }
 
     /**
@@ -70,41 +67,69 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
             Collection<DesignElement> designElements, QuantitationType quantitationType ) {
-
-        rowMap = new HashMap<DesignElement, Integer>();
-
-        columnMap = new HashMap<BioAssay, Integer>();
-
-        /* set rowMap */
-        int i = 0;
-        Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
-        for ( DesignElement designElement : designElements ) {
-            DesignElementDataVector vectorOfInterest = null;
-            Collection<DesignElementDataVector> vectors = designElement.getDesignElementDataVectors();
-            for ( DesignElementDataVector vector : vectors ) {
-                QuantitationType vectorQuantitationType = vector.getQuantitationType();
-                if ( vectorQuantitationType.getType().equals( quantitationType.getType() ) ) {
-                    vectorOfInterest = vector;
-                    vectorsOfInterest.add( vectorOfInterest );
-                    break;
-                }
-            }
-            if ( vectorOfInterest == null ) {
-                log.warn( "Vector not found for quantitation type " + quantitationType.getType() + ".  Skipping ..." );
-                continue;
-            }
-            rowMap.put( designElement, i );
-            i++;
-        }
-
-        matrix = vectorsToDoubleMatrix( vectorsOfInterest );
+        init();
+        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( designElements, quantitationType );
+        vectorsToMatrix( vectorsOfInterest );
     }
 
     /**
-     * @param dataVectors
+     * @param expressionExperiment
+     * @param quantitationType
      */
-    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors ) {
-        throw new RuntimeException( "Method not yet implemented" );
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+        init();
+        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationType );
+        if ( vectorsOfInterest.size() == 0 ) {
+            throw new IllegalArgumentException( "No vectors for " + quantitationType );
+        }
+        this.vectorsToMatrix( vectorsOfInterest );
+    }
+
+    public int columns() {
+        return matrix.columns();
+    }
+
+    /**
+     * Fill in the data
+     * 
+     * @param vectors
+     * @param maxSize
+     * @return
+     */
+    private DoubleMatrixNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), maxSize );
+
+        // initialize the matrix to NaN
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                matrix.setQuick( i, j, Double.NaN );
+            }
+        }
+
+        ByteArrayConverter bac = new ByteArrayConverter();
+        int rowNum = 0;
+        for ( DesignElementDataVector vector : vectors ) {
+            matrix.addRowName( vector.getDesignElement() );
+            byte[] bytes = vector.getData();
+            double[] vals = bac.byteArrayToDoubles( bytes );
+
+            BioAssayDimension dimension = vector.getBioAssayDimension();
+            Iterator<BioAssay> it = dimension.getBioAssays().iterator();
+
+            assert dimension.getBioAssays().size() == vals.length;
+            for ( int i = 0; i < vals.length; i++ ) {
+                BioAssay bioAssay = it.next();
+                matrix.setQuick( rowNum, columnAssayMap.get( bioAssay ), vals[i] );
+            }
+
+            rowNum++;
+        }
+
+        for ( Object obj : columnBioMaterialMap.values() ) {
+            matrix.addColumnName( obj );
+        }
+
+        return matrix;
     }
 
     /*
@@ -114,8 +139,11 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double get( DesignElement designElement, BioAssay bioAssay ) {
-        // TODO Auto-generated method stub
-        return null;
+        int i = matrix.getRowIndexByName( designElement );
+        int colNum = this.columnAssayMap.get( bioAssay );
+        int j = matrix.getColIndexByName( colNum );
+        log.debug( designElement + " = " + i + " " + bioAssay + " = " + j + " (colnum=" + colNum );
+        return this.matrix.get( i, j );
     }
 
     /*
@@ -134,10 +162,9 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double[] getColumn( BioAssay bioAssay ) {
-        if ( !columnMap.containsKey( bioAssay ) ) {
-            return null;
-        }
-        double[] rawResult = this.matrix.getColumn( columnMap.get( bioAssay ) );
+        int index = this.columnAssayMap.get( bioAssay );
+
+        double[] rawResult = this.matrix.getColumn( index );
         assert rawResult != null;
         Double[] result = new Double[rawResult.length];
         for ( int i = 0; i < rawResult.length; i++ ) {
@@ -165,6 +192,14 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
         return null;
     }
 
+    /**
+     * @return DoubleMatrixNamed
+     * @deprecated Access to the data should be through the ExpressionDataMatrix interface
+     */
+    public DoubleMatrixNamed getDoubleMatrixNamed() {
+        return this.matrix;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -173,7 +208,6 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
     public Double[][] getMatrix() {
 
         Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
-
         for ( int i = 0; i < matrix.rows(); i++ ) {
             Double[] row = ( Double[] ) matrix.getRowObj( i );
             dMatrix[i] = row;
@@ -182,17 +216,22 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
         return dMatrix;
     }
 
+    /**
+     * @return
+     * @deprecated Supplied for backwards compatibility. Access to the data should be through the ExpressionDataMatrix
+     *             interface
+     */
+    public DoubleMatrixNamed getNamedMatrix() {
+        return this.matrix;
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
      */
     public Double[] getRow( DesignElement designElement ) {
-        if ( !rowMap.containsKey( designElement ) ) {
-            return null;
-        }
-
-        double[] rawResult = this.matrix.getRow( rowMap.get( designElement ) );
+        double[] rawResult = this.matrix.getRowByName( designElement );
         assert rawResult != null;
         Double[] result = new Double[rawResult.length];
         for ( int i = 0; i < rawResult.length; i++ ) {
@@ -206,6 +245,7 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
+    @SuppressWarnings("unchecked")
     public Double[][] getRows( List designElements ) {
         if ( designElements == null ) {
             return null;
@@ -222,80 +262,30 @@ public class ExpressionDataDoubleMatrix implements ExpressionDataMatrix {
         return result;
     }
 
+    public int rows() {
+        return matrix.rows();
+    }
+
+    @Override
+    public String toString() {
+        return matrix.toString();
+    }
+
     /**
-     * Convert {@link DesignElementDataVector}s into a {@link DoubleMatrixNamed}.
+     * Convert {@link DesignElementDataVector}s into Boolean matrix.
      * 
      * @param vectors
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
-            return null;
+            throw new IllegalArgumentException();
         }
 
-        ByteArrayConverter bac = new ByteArrayConverter();
+        int maxSize = setUpColumnElements();
 
-        List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension().getBioAssays();
+        this.matrix = createMatrix( vectors, maxSize );
 
-        assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
-
-        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
-
-        // Use BioMaterial names to represent the column in the matrix (as it can span multiple BioAssays)
-        for ( BioAssay assay : bioAssays ) {
-            StringBuilder buf = new StringBuilder();
-            List<BioMaterial> bms = new ArrayList<BioMaterial>( assay.getSamplesUsed() );
-            // Collections.sort( bms ); // FIXME this should use a sort.
-            for ( BioMaterial bm : bms ) {
-                buf.append( bm.getName() );
-            }
-            matrix.addColumnName( buf.toString() );
-        }
-
-        int rowNum = 0;
-        for ( DesignElementDataVector vector : vectors ) {
-            String name = vector.getDesignElement().getName();
-            matrix.addRowName( name );
-            byte[] bytes = vector.getData();
-            double[] vals = bac.byteArrayToDoubles( bytes );
-            assert vals.length == bioAssays.size() : "Number of values in vector (" + vals.length
-                    + ") don't match number of Bioassays (" + bioAssays.size() + ")";
-            for ( int i = 0; i < vals.length; i++ ) {
-                matrix.setQuick( rowNum, i, vals[i] );
-            }
-            rowNum++;
-        }
-        return matrix;
-    }
-
-    /**
-     * Returns the row map.
-     * 
-     * @return Map<DesignElement,Integer>
-     */
-    public Map<DesignElement, Integer> getRowMap() {
-
-        return this.rowMap;
-
-    }
-
-    /**
-     * Returns the column map.
-     * 
-     * @return Map<BioAssay,Integer>
-     */
-    public Map<BioAssay, Integer> getColumnMap() {
-
-        return this.columnMap;
-
-    }
-
-    /**
-     * @return DoubleMatrixNamed
-     * @deprecated Access to the data should be through the ExpressionDataMatrix.
-     */
-    public DoubleMatrixNamed getDoubleMatrixNamed() {
-        return this.matrix;
     }
 
 }

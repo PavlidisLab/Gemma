@@ -34,6 +34,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceServiceImpl;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 
@@ -82,7 +83,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
-            Set<CompositeSequence> compositeSequences = expressionDataMatrix.getRowMap().keySet();
+            Collection<DesignElement> compositeSequences = expressionDataMatrix.getRowMap();
 
             StringBuilder buf = new StringBuilder();
 
@@ -111,12 +112,13 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
-                for ( CompositeSequence cs : compositeSequences ) {
+                for ( DesignElement cs : compositeSequences ) {
+                    assert cs instanceof CompositeSequence;
                     buf.append( "<font size=\"-1\">" );
                     buf.append( cs.getName() );
                     buf.append( "</font>" );
 
-                    Collection associatedGenes = compositeSequenceService.getAssociatedGenes( cs );
+                    Collection associatedGenes = compositeSequenceService.getAssociatedGenes( ( CompositeSequence ) cs );
                     Iterator iter = associatedGenes.iterator();
                     // FIXME only adding the first gene
                     if ( iter.hasNext() ) {

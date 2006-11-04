@@ -102,6 +102,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         try {
 
+            Collection<String> errorObjects = new HashSet<String>();
             Collection<String> persistedObjects = new HashSet<String>();
 
             GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
@@ -118,6 +119,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 String[] accsToRun = StringUtils.split( accessions, ',' );
 
                 for ( String accession : accsToRun ) {
+
                     accession = StringUtils.strip( accession );
 
                     if ( StringUtils.isBlank( accession ) ) {
@@ -134,14 +136,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                                             .getAccession() + ")" );
                         }
                     } else {
-                        Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession );
-                        for ( Object object : ees ) {
-                            assert object instanceof ExpressionExperiment;
-                            persistedObjects.add( ( ( Describable ) object ).getName() + " ("
-                                    + ( ( ExpressionExperiment ) object ).getAccession().getAccession() + ")" );
-                        }
+                        processAccession( errorObjects, persistedObjects, geoService, accession );
                     }
                 }
+
             }
 
             if ( accessionFile != null ) {
@@ -156,8 +154,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         continue;
                     }
 
-                    ExpressionExperiment ee = ( ExpressionExperiment ) geoService.fetchAndLoad( accession );
-                    persistedObjects.add( ee.getName() + " (" + ee.getAccession().getAccession() + ")" );
+                    processAccession( errorObjects, persistedObjects, geoService, accession );
+
                 }
             }
 
@@ -170,9 +168,18 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 buf.append( "---------------------\n" );
 
                 log.info( buf );
-
             } else {
                 log.error( "No experiments loaded!" );
+            }
+
+            if ( errorObjects.size() > 0 ) {
+                StringBuilder buf = new StringBuilder();
+                buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
+                for ( String object : errorObjects ) {
+                    buf.append( "    " + object + "\n" );
+                }
+                buf.append( "---------------------\n" );
+
             }
 
         } catch ( Exception e ) {
@@ -180,6 +187,23 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             return e;
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processAccession( Collection<String> errorObjects, Collection<String> persistedObjects,
+            GeoDatasetService geoService, String accession ) {
+        try {
+            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession );
+            for ( Object object : ees ) {
+                assert object instanceof ExpressionExperiment;
+                persistedObjects.add( ( ( Describable ) object ).getName() + " ("
+                        + ( ( ExpressionExperiment ) object ).getAccession().getAccession() + ")" );
+            }
+        } catch ( Exception e ) {
+            errorObjects.add( accession + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
+            log.error( e, e );
+        }
     }
 
     @Override

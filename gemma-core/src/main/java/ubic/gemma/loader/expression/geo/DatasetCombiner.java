@@ -421,7 +421,7 @@ public class DatasetCombiner {
      */
     private static String getSampleOrganism( GeoSample sample ) {
         Collection<GeoPlatform> platforms = sample.getPlatforms();
-        assert platforms.size() > 0;
+        assert platforms.size() > 0 : sample + " had no platform assigned";
         GeoPlatform platform = platforms.iterator().next();
         Collection<String> organisms = platform.getOrganisms();
         assert organisms.size() > 0;

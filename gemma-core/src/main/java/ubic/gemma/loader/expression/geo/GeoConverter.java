@@ -1931,7 +1931,10 @@ public class GeoConverter implements Converter {
             qType = StandardQuantitationType.OTHER;
             sType = ScaleType.UNSCALED;
             gType = GeneralType.CATEGORICAL;
-        } else if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
+        } else if ( name.matches( "CH[12][IB]_(MEAN|MEDIAN)" ) ) { // genepix I = intensity, B = background.
+            qType = StandardQuantitationType.MEASUREDSIGNAL;
+            sType = ScaleType.LINEAR;
+        } else if ( name.matches( "CH[12][ND]_(MEAN|MEDIAN)" ) ) { // genepix normalized or subtracted.
             qType = StandardQuantitationType.DERIVEDSIGNAL;
             sType = ScaleType.LINEAR;
         } else if ( name.equals( "DET_P" ) || name.equals( "DETECTION P-VALUE" )
@@ -1948,7 +1951,11 @@ public class GeoConverter implements Converter {
         }
 
         if ( description.toLowerCase().contains( "background" ) ) {
-            qType = StandardQuantitationType.DERIVEDSIGNAL;
+            qType = StandardQuantitationType.MEASUREDSIGNAL;
+            isBackground = Boolean.TRUE;
+        }
+
+        if ( name.matches( "CH[12]B_(MEAN|MEDIAN)" ) ) { // genepix  B = background.
             isBackground = Boolean.TRUE;
         }
 

@@ -229,7 +229,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     // fixme this needs to be here for lazy loading issues. Even though the AD isn't getting removed.
                     // Not happy about this at all. but what to do?
                     ba.getArrayDesignUsed().getCompositeSequences().size();
-                    
+
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
                         session.delete( bm );
                     }
@@ -356,6 +356,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 session.lock( expressionExperiment, LockMode.READ );
                 expressionExperiment.getDesignElementDataVectors().size();
                 expressionExperiment.getBioAssays().size();
+                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+                    ba.getSamplesUsed().size();
+                    ba.getDerivedDataFiles().size();
+                }
                 return null;
             }
         }, true );

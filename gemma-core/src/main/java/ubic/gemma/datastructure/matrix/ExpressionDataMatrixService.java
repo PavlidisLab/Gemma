@@ -18,22 +18,16 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -64,7 +58,7 @@ public class ExpressionDataMatrixService {
             log.warn( "No vectors for " + expExp + " and " + qt );
             return null;
         }
-        return vectorsToDoubleMatrix( vectors );
+        return new ExpressionDataDoubleMatrix( expExp, qt ).getNamedMatrix();
     }
 
     /**
@@ -80,17 +74,10 @@ public class ExpressionDataMatrixService {
             return null;
         }
 
-        if ( qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-            return new ExpressionDataDoubleMatrix( vectors );
-        } else if ( qt.getRepresentation().equals( PrimitiveType.INT ) ) {
-            return new ExpressionDataIntegerMatrix( vectors );
-        } else if ( qt.getRepresentation().equals( PrimitiveType.STRING ) ) {
-            return new ExpressionDataStringMatrix( vectors );
-        } else if ( qt.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
-            return new ExpressionDataBooleanMatrix( vectors );
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        // designElementDataVectorService.thaw(vectors); // FIXME this is needed.
+
+        return new ExpressionDataDoubleMatrix( vectors, qt );
+
     }
 
     /**
@@ -111,49 +98,4 @@ public class ExpressionDataMatrixService {
         this.designElementDataVectorService = designElementDataVectorService;
     }
 
-    /**
-     * Convert {@link DesignElementDataVector}s into a {@link DoubleMatrixNamed}.
-     * 
-     * @param vectors
-     * @return
-     */
-    private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
-            return null;
-        }
-
-        ByteArrayConverter bac = new ByteArrayConverter();
-
-        List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension().getBioAssays();
-
-        assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
-
-        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
-
-        // Use BioMaterial names to represent the column in the matrix (as it can span multiple BioAssays)
-        for ( BioAssay assay : bioAssays ) {
-            StringBuilder buf = new StringBuilder();
-            List<BioMaterial> bms = new ArrayList<BioMaterial>( assay.getSamplesUsed() );
-            // Collections.sort( bms ); // FIXME this should use a sort.
-            for ( BioMaterial bm : bms ) {
-                buf.append( bm.getName() );
-            }
-            matrix.addColumnName( buf.toString() );
-        }
-
-        int rowNum = 0;
-        for ( DesignElementDataVector vector : vectors ) {
-            String name = vector.getDesignElement().getName();
-            matrix.addRowName( name );
-            byte[] bytes = vector.getData();
-            double[] vals = bac.byteArrayToDoubles( bytes );
-            assert vals.length == bioAssays.size() : "Number of values in vector (" + vals.length
-                    + ") don't match number of Bioassays (" + bioAssays.size() + ")";
-            for ( int i = 0; i < vals.length; i++ ) {
-                matrix.setQuick( rowNum, i, vals[i] );
-            }
-            rowNum++;
-        }
-        return matrix;
-    }
 }

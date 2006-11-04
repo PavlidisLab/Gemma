@@ -18,6 +18,7 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -94,13 +95,17 @@ public interface ExpressionDataMatrix<T> {
      * 
      * @return Map<DesignElement,Integer>
      */
-    public Map<DesignElement, Integer> getRowMap();
+    public Collection<DesignElement> getRowMap();
 
     /**
      * Gets all the bioassays in the matrix.
      * 
      * @return Map<BioAssay,Integer>
      */
-    public Map<BioAssay, Integer> getColumnMap();
+    public Collection<BioAssay> getColumnMap();
+
+    public int columns();
+
+    public int rows();
 
 }

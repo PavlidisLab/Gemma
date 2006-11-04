@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -35,7 +37,11 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -170,21 +176,33 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     //
     // 
     /**
-     * GDS246 results in 'not in experiment' error.
+     * Failure because there are two series and two data sets. This is
      */
-//    @SuppressWarnings("unchecked")
-//    public void testFetchAndLoadGDS246() throws Exception {
-//        endTransaction();
-//        String path = getTestFileBasePath();
-//        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-//                + "gse480Short" ) );
-//        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-//                .fetchAndLoad( "GDS246" );
-//        ee = results.iterator().next();
-//        assertEquals( 1, results.size() );
-//
-//    }
-
+    // @SuppressWarnings("unchecked")
+    // public void testFetchAndLoadGDS395() throws Exception {
+    // endTransaction();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+    // .fetchAndLoad( "GDS395" );
+    // ee = results.iterator().next();
+    // assertEquals( 1, results.size() );
+    //
+    // }
+    // /**
+    // * GDS246 results in 'not in experiment' error.
+    // */
+    // @SuppressWarnings("unchecked")
+    // public void testFetchAndLoadGDS246() throws Exception {
+    // endTransaction();
+    // String path = getTestFileBasePath();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+    // + "gse480Short" ) );
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+    // .fetchAndLoad( "GDS246" );
+    // ee = results.iterator().next();
+    // assertEquals( 1, results.size() );
+    //
+    // }
     /**
      * Has multiple species (mouse and human, one and two platforms respectively)
      */
@@ -309,22 +327,22 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoadCancel() throws Exception {
-
-        endTransaction();
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gds994Short" ) );
-
-        try {
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GDS994" );
-            // FIXME: what does this test test
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.warn( "Skipping test, data already exists in system" );
-        }
-    }
+    // @SuppressWarnings("unchecked")
+    // public void testFetchAndLoadCancel() throws Exception {
+    //
+    // endTransaction();
+    // String path = getTestFileBasePath();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+    // + "gds994Short" ) );
+    //
+    // try {
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+    // .fetchAndLoad( "GDS994" );
+    // // FIXME: what does this test test
+    // } catch ( AlreadyExistsInSystemException e ) {
+    // log.warn( "Skipping test, data already exists in system" );
+    // }
+    // }
 
     //
 
@@ -339,14 +357,24 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
          * http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
          */
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                .fetchAndLoad( "GDS472" );
-        final ExpressionExperiment newee = results.iterator().next();
+        ExpressionExperiment newee;
+        try {
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GDS472" );
+            newee = results.iterator().next();
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+        assertNotNull( newee );
+        ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        expressionExperimentService.thaw( newee );
+
         // get the data back out.
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
-        ExpressionDataMatrixService edms = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
         ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
 
         /*
@@ -370,11 +398,11 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        DoubleMatrixNamed matrix = edms.getDoubleNamedMatrix( newee, qt );
-
-        if ( log.isDebugEnabled() ) {
-            printMatrix( matrix );
-        }
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        assertTrue( matrix != null );
+        // if ( log.isDebugEnabled() ) {
+        // log.info( matrix.toString() );
+        // }
 
         assertTrue( matrix != null );
 
@@ -382,9 +410,11 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         assertEquals( 15, matrix.columns() );
 
-        testMatrixValue( matrix, "200000_s_at", "GSM10363", 5722.0 );
+        // GSM10363 = D1-U133B
+        testMatrixValue( newee, matrix, "200000_s_at", "GSM10363", 5722.0 );
 
-        testMatrixValue( matrix, "1007_s_at", "GSM10380", 1272.0 );
+        // GSM10380 = C7-U133A
+        testMatrixValue( newee, matrix, "1007_s_at", "GSM10380", 1272.0 );
     }
 
     /**
@@ -401,7 +431,13 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "complexShortTest" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GDS825" );
+
+        ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+
         ExpressionExperiment newee = results.iterator().next();
+        expressionExperimentService.thaw( newee );
+
         // get the data back out.
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
@@ -426,19 +462,19 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        DoubleMatrixNamed matrix = edms.getDoubleNamedMatrix( newee, qt );
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertTrue( matrix != null );
         if ( log.isDebugEnabled() ) {
-            printMatrix( matrix );
+            log.debug( matrix.toString() );
         }
 
         assertEquals( 116, matrix.rows() );
 
         assertEquals( 6, matrix.columns() );
 
-        testMatrixValue( matrix, "224501_at", "GSM21252", 7.63 );
+        testMatrixValue( newee, matrix, "224501_at", "GSM21252", 7.63 );
 
-        testMatrixValue( matrix, "224444_s_at", "GSM21251", 8.16 );
+        testMatrixValue( newee, matrix, "224444_s_at", "GSM21251", 8.16 );
 
         // ///////////////////////////////////
         // / now for the other platform // For the agilent array
@@ -453,10 +489,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        matrix = edms.getDoubleNamedMatrix( newee, qt );
-
+        matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        assertTrue( matrix != null );
         if ( log.isDebugEnabled() ) {
-            printMatrix( matrix );
+            log.debug( matrix.toString() );
         }
 
         assertTrue( matrix != null );
@@ -465,9 +501,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         assertEquals( 4, matrix.columns() );
 
-        testMatrixValue( matrix, "885", "GSM21256", -0.1202943 );
+        testMatrixValue( newee, matrix, "885", "GSM21256", -0.1202943 );
 
-        testMatrixValue( matrix, "878", "GSM21254", 0.6135323 );
+        testMatrixValue( newee, matrix, "878", "GSM21254", 0.6135323 );
 
     }
 
@@ -489,20 +525,31 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
-    private void testMatrixValue( DoubleMatrixNamed matrix, String probeToTest, String sampleToTest,
-            double expectedValue ) {
-        double[] vals;
-        vals = matrix.getRowByName( probeToTest );
-        for ( Object colName : matrix.getColNames() ) {
-            if ( ( ( String ) colName ).contains( sampleToTest ) ) {
-                double k = vals[matrix.getColIndexByName( ( String ) colName )];
-                assertEquals( expectedValue, k, 0.00001 );
-                return;
+    private void testMatrixValue( ExpressionExperiment ee, ExpressionDataMatrix matrix, String probeToTest,
+            String sampleToTest, double expectedValue ) {
+
+        DesignElement soughtDesignElement = null;
+        BioAssay soughtBioAssay = null;
+        Collection<DesignElementDataVector> vectors = ee.getDesignElementDataVectors();
+        for ( DesignElementDataVector vector : vectors ) {
+            DesignElement de = vector.getDesignElement();
+            if ( de.getName().equals( probeToTest ) ) {
+                soughtDesignElement = de;
             }
-            continue;
+
+            BioAssayDimension bad = vector.getBioAssayDimension();
+            for ( BioAssay ba : bad.getBioAssays() ) {
+                if ( ba.getAccession().getAccession().equals( sampleToTest ) ) {
+                    soughtBioAssay = ba;
+                }
+            }
 
         }
-        fail( "didn't find values for " + sampleToTest );
+        if ( soughtDesignElement == null || soughtBioAssay == null ) fail( "didn't find values for " + sampleToTest );
+
+        Double actualValue = ( Double ) matrix.get( soughtDesignElement, soughtBioAssay );
+        assertEquals( expectedValue, actualValue, 0.00001 );
+
     }
 
     /**
@@ -512,11 +559,11 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     private void printMatrix( DoubleMatrixNamed matrix ) {
         StringBuilder buf = new StringBuilder();
         buf.append( "probe" );
-        for ( String columnName : ( Collection<String> ) matrix.getColNames() ) {
+        for ( Object columnName : ( Collection<Object> ) matrix.getColNames() ) {
             buf.append( "\t" + columnName );
         }
         buf.append( "\n" );
-        for ( String rowName : ( Collection<String> ) matrix.getRowNames() ) {
+        for ( Object rowName : ( Collection<Object> ) matrix.getRowNames() ) {
             buf.append( rowName );
             double[] array = matrix.getRowByName( rowName );
             for ( int i = 0; i < array.length; i++ ) {

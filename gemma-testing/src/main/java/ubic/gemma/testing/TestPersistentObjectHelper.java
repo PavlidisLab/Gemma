@@ -502,6 +502,14 @@ public class TestPersistentObjectHelper {
      * @return
      */
     public QuantitationType getTestPersistentQuantitationType() {
+        QuantitationType qt = getTestNonPersistentQuantitationType();
+        return ( QuantitationType ) persisterHelper.persist( qt );
+    }
+
+    /**
+     * @return
+     */
+    public static QuantitationType getTestNonPersistentQuantitationType() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -509,7 +517,6 @@ public class TestPersistentObjectHelper {
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
         qt.setScale( ScaleType.LINEAR );
-        qt = ( QuantitationType ) persisterHelper.persist( qt );
         return qt;
     }
 

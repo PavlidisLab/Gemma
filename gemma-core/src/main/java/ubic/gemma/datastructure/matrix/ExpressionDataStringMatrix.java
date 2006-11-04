@@ -17,7 +17,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataStringMatrix implements ExpressionDataMatrix {
+public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix { 
 
     private StringMatrix2DNamed matrix;
 
@@ -30,7 +30,8 @@ public class ExpressionDataStringMatrix implements ExpressionDataMatrix {
 
     }
 
-    public ExpressionDataStringMatrix( Collection<DesignElementDataVector> dataVectors ) {
+    public ExpressionDataStringMatrix( Collection<DesignElementDataVector> dataVectors,
+            QuantitationType quantitationType ) {
 
     }
 
@@ -105,24 +106,20 @@ public class ExpressionDataStringMatrix implements ExpressionDataMatrix {
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowMap()
-     */
-    public Map<DesignElement, Integer> getRowMap() {
+    @Override
+    protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
         // TODO Auto-generated method stub
-        return null;
+
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnMap()
-     */
-    public Map<BioAssay, Integer> getColumnMap() {
+    public int columns() {
         // TODO Auto-generated method stub
-        return null;
+        return 0;
+    }
+
+    public int rows() {
+        // TODO Auto-generated method stub
+        return 0;
     }
 
 }

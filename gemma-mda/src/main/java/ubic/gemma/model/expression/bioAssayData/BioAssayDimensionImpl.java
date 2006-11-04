@@ -24,10 +24,10 @@ package ubic.gemma.model.expression.bioAssayData;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
+ * @author pavlidis
+ * @version $Id$
  */
-public class BioAssayDimensionImpl
-    extends ubic.gemma.model.expression.bioAssayData.BioAssayDimension
-{
+public class BioAssayDimensionImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDimension {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
