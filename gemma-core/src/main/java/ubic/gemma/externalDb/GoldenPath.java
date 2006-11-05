@@ -28,6 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
@@ -42,7 +44,9 @@ public class GoldenPath {
 
     protected static final Log log = LogFactory.getLog( GoldenPath.class );
 
-    ExternalDatabaseService externalDatabaseService;
+    private ExternalDatabase searchedDatabase;
+
+    private ExternalDatabaseService externalDatabaseService;
 
     protected DriverManagerDataSource dataSource;
 
@@ -111,7 +115,7 @@ public class GoldenPath {
         return databaseName;
     }
 
-    private void init( int port, String host, String user, String password ) throws SQLException {
+    protected void init( int port, String host, String user, String password ) throws SQLException {
         assert databaseName != null;
         dataSource = new DriverManagerDataSource();
         jt = new JdbcTemplate( dataSource );
@@ -158,6 +162,10 @@ public class GoldenPath {
         String databaseUser = ConfigUtils.getString( "gemma.db.user" );
         String databasePassword = ConfigUtils.getString( "gemma.db.password" );
 
+        searchedDatabase = ExternalDatabase.Factory.newInstance();
+        searchedDatabase.setName( databaseName );
+        searchedDatabase.setType( DatabaseType.SEQUENCE );
+
         this.init( 3306, databaseHost, databaseUser, databasePassword );
     }
 
@@ -166,6 +174,14 @@ public class GoldenPath {
      */
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
+    }
+
+    public ExternalDatabaseService getExternalDatabaseService() {
+        return externalDatabaseService;
+    }
+
+    public ExternalDatabase getSearchedDatabase() {
+        return searchedDatabase;
     }
 
 }

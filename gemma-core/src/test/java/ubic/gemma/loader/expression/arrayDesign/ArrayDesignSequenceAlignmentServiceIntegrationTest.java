@@ -66,6 +66,8 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
                 // blat presumably isn't running.
                 log.warn( "Blat server not available? Skipping test" );
                 return;
+            } else {
+                throw e;
             }
         }
     }

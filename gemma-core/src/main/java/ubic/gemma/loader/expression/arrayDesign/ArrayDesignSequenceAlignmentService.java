@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.externalDb.GoldenPathQuery;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -87,7 +89,7 @@ public class ArrayDesignSequenceAlignmentService {
 
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
-        Map<BioSequence, Collection<BlatResult>> results = runBlat( sequencesToBlat, taxon );
+        Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, taxon );
 
         log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
 
@@ -123,12 +125,58 @@ public class ArrayDesignSequenceAlignmentService {
      * @param taxon whose database will be queries
      * @return
      */
-    private Map<BioSequence, Collection<BlatResult>> runBlat( Map<String, BioSequence> sequencesToBlat, Taxon taxon ) {
+    private Map<BioSequence, Collection<BlatResult>> getAlignments( Map<String, BioSequence> sequencesToBlat,
+            Taxon taxon ) {
         Blat blat = new Blat();
-        Map<BioSequence, Collection<BlatResult>> results = null;
+        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
+
         try {
-            results = blat.blatQuery( sequencesToBlat.values(), taxon );
+
+            // First checck if there are alignment results in the goldenpath datbase.
+            GoldenPathQuery gpq = new GoldenPathQuery( taxon );
+
+            Collection<BioSequence> needBlat = new HashSet<BioSequence>();
+            int count = 0;
+            int totalFound = 0;
+            for ( BioSequence sequence : sequencesToBlat.values() ) {
+                boolean found = false;
+                if ( sequence.getSequenceDatabaseEntry() != null ) {
+                    Collection<BlatResult> brs = gpq
+                            .findAlignments( sequence.getSequenceDatabaseEntry().getAccession() );
+                    if ( brs != null && brs.size() > 0 ) {
+                        for ( BlatResult result : brs ) {
+                            result.setQuerySequence( sequence );
+                        }
+                        results.put( sequence, brs );
+                        found = true;
+                        totalFound++;
+                    }
+                }
+
+                if ( ++count % 200 == 0 && totalFound > 0 ) {
+                    log
+                            .info( "Alignments in Golden Path database for " + totalFound + "/" + count
+                                    + " checked so far." );
+                }
+
+                if ( !found ) {
+                    needBlat.add( sequence );
+                }
+
+            }
+
+            if ( totalFound > 0 ) {
+                log.info( "Found " + totalFound + "/" + count + " alignments in Golden Path database" );
+            }
+
+            if ( needBlat.size() > 0 ) {
+                log.info( "Running blat on " + needBlat.size() + " sequences" );
+                Map<BioSequence, Collection<BlatResult>> moreResults = blat.blatQuery( needBlat, taxon );
+                results.putAll( moreResults );
+            }
         } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
         return results;

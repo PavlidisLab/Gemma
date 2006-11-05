@@ -124,9 +124,6 @@ public class BlatResultParser extends BasicLineParser {
                         + " (starts with " + line.substring( 0, Math.max( line.length(), 25 ) ) );
 
             BlatResult result = BlatResult.Factory.newInstance();
-
-            String name = ( "BlatResult:" + f[QNAME_FIELD] + ":" + f[QSTART_FIELD] + ":" + f[TSTART_FIELD] + ":" + f[TNAME_FIELD] );
-            result.setId( new Long( name.hashCode() ) );
             result.setQuerySequence( BioSequence.Factory.newInstance() );
             Long queryLength = Long.parseLong( f[QSIZE_FIELD] );
             assert queryLength != null;
@@ -197,7 +194,7 @@ public class BlatResultParser extends BasicLineParser {
      * @param queryName
      * @return
      */
-    private String cleanUpQueryName( String queryName ) {
+    public static String cleanUpQueryName( String queryName ) {
         queryName = queryName.replace( "target:", "" );
         queryName = queryName.replaceFirst( ";$", "" );
         return queryName;
