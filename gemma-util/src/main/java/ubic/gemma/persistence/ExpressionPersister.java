@@ -291,10 +291,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private BioAssay persistBioAssay( BioAssay assay ) {
 
         if ( assay == null ) return null;
+        if ( !isTransient( assay ) ) {
+            return assay;
+        }
 
         fillInBioAssayAssociations( assay );
-
-        if ( !isTransient( assay ) ) return assay;
         if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
 
         return bioAssayService.findOrCreate( assay );
@@ -421,8 +422,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         // this does most of the preparatory work.
         processBioAssays( entity );
 
-        log.info( "Persisting expression experiment" );
+        log.info( "Persisting " + entity );
         entity = expressionExperimentService.create( entity );
+        this.getSession().flush(); // Yes, this is important.
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );

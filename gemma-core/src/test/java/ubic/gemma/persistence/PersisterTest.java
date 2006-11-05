@@ -49,8 +49,7 @@ public class PersisterTest extends BaseSpringContextTest {
      *  
      */
     public void testPersistNewArrayDesign() throws Exception {
-
-        ad = helper.getTestPersistentArrayDesign( 20, true );
+        ad = helper.getTestPersistentArrayDesign( 20, true, false );
         assertNotNull( ad.getId() );
     }
 

@@ -43,24 +43,6 @@
 				%>
 			</td>
 		</tr>
-
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="expressionExperiment.description" /> </b>
-			</td>
-			<td>
-				<%
-				if ( expressionExperimentVisualizationCommand.getDescription() != null ) {
-				%>
-				<jsp:getProperty name="expressionExperimentVisualizationCommand"
-					property="description" />
-				<%
-				                } else {
-				                out.print( "Description unavailable" );
-				            }
-				%>
-			</td>
-		</tr>
 	</table>
 	<hr />
 
@@ -89,25 +71,26 @@
 
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.standardQuantitationTypeName" /> </b>
+				<b> <fmt:message key="quantitationType.name" /> </b>
 			</td>
-
 			<td>
-
 				<spring:bind
-					path="expressionExperimentVisualizationCommand.standardQuantitationTypeName">
-					<select name="${status.expression}">
-						<c:forEach items="${standardQuantitationTypeNames}"
-							var="standardQuantitationTypeName">
-							<option value="${standardQuantitationTypeName}"
-								<c:if test="${status.value == standardQuantitationTypeName}">selected="selected" </c:if>>
-								${standardQuantitationTypeName}
+					path="expressionExperimentVisualizationCommand.quantitationType">
+					<select name="${status.expression}" multiple>
+						<c:forEach items="${quantitationTypes}" var="quantitationType">
+							<spring:transform value="${quantitationType}" var="name" />
+							<option value="${name}"
+								<c:if test="${status.value == name}">selected</c:if>>
+								${name}
 							</option>
 						</c:forEach>
 					</select>
 					<span class="fieldError">${status.errorMessage}</span>
 				</spring:bind>
+
 			</td>
+
+
 		</tr>
 
 		<tr>
@@ -129,7 +112,8 @@
 
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.viewSampling" /> </b>
+				<b> <fmt:message key="label.viewSampling" /> (Get a quick
+					glimpse at the data) </b>
 			</td>
 			<td>
 				<spring:bind

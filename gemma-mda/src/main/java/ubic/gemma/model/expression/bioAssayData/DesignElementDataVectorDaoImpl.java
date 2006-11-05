@@ -213,6 +213,7 @@ public class DesignElementDataVectorDaoImpl extends
                 session.lock( designElementDataVector, LockMode.READ );
                 designElementDataVector.getBioAssayDimension().getBioAssays().size();
                 for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
+                    session.update( ba );
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
                 }
@@ -229,9 +230,10 @@ public class DesignElementDataVectorDaoImpl extends
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
-                    session.lock( designElementDataVector, LockMode.READ );
+                    session.update( designElementDataVector );
                     designElementDataVector.getBioAssayDimension().getBioAssays().size();
                     for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
+                        session.update( ba );
                         ba.getSamplesUsed().size();
                         ba.getDerivedDataFiles().size();
                     }

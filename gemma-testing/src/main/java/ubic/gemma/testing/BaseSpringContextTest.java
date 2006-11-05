@@ -192,7 +192,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      * @return
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
-        return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames );
+        return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, true );
     }
 
     protected BibliographicReference getTestPersistentBibliographicReference( String accession ) {
@@ -237,6 +237,16 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment() {
         return testHelper.getTestExpressionExperimentWithAllDependencies();
+    }
+
+    /**
+     * Convenience method to get a (fairly) complete randomly generated persisted expression experiment.
+     * 
+     * @param doSequence Should the Arraydesign sequence information be filled in? (slower)
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment( boolean doSequence ) {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( doSequence );
     }
 
     /**

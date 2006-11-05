@@ -20,10 +20,13 @@ package ubic.gemma.web.controller.visualization;
 
 import java.io.Serializable;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+
 /**
  * Expression experiment command object that wraps expression experiment visualization preferences.
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  */
 public class ExpressionExperimentVisualizationCommand implements Serializable {
@@ -34,8 +37,6 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private String name = null;
 
-    private String description = null;
-
     private Long expressionExperimentId = null;
 
     private String searchString = null;
@@ -44,7 +45,11 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private String filename = null;
 
-    private String standardQuantitationTypeName = null;
+    private QuantitationType quantitationType = null;
+
+    public ExpressionExperimentVisualizationCommand() {
+        this.quantitationType = QuantitationType.Factory.newInstance();
+    }
 
     /**
      * @return Returns the filename.
@@ -70,8 +75,8 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     /**
      * @param viewSampling
      */
-    public void setViewSampling( boolean viewAll ) {
-        this.viewSampling = viewAll;
+    public void setViewSampling( boolean viewSampling ) {
+        this.viewSampling = viewSampling;
     }
 
     /**
@@ -105,20 +110,6 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     /**
      * @return String
      */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @return String
-     */
     public String getName() {
         return name;
     }
@@ -147,15 +138,15 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     /**
      * @return String
      */
-    public String getStandardQuantitationTypeName() {
-        return standardQuantitationTypeName;
+    public QuantitationType getQuantitationType() {
+        return quantitationType;
     }
 
     /**
      * @param standardQuantitationType
      */
-    public void setStandardQuantitationTypeName( String standardQuantitationTypeName ) {
-        this.standardQuantitationTypeName = standardQuantitationTypeName;
+    public void setQuantitationType( QuantitationType quantitationType ) {
+        this.quantitationType = quantitationType;
     }
 
 }

@@ -18,34 +18,33 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.testing.AbstractExpressionExperimentTest;
-import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand;
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationFormController;
 
 /**
  * Tests the expressionExperimentVisualizationController functionality.
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id: ExpressionExperimentVisualizationFormControllerIntegrationTest.java,v 1.1 2006/10/24 15:38:33 keshav
  *          Exp $
  */
-public class ExpressionExperimentVisualizationFormControllerIntegrationTest extends AbstractExpressionExperimentTest {
+public class ExpressionExperimentVisualizationFormControllerIntegrationTest extends BaseSpringWebTest {
     ExpressionExperiment ee;
+    QuantitationType qt;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        ee = this.getTestExpressionExperimentWithAllDependencies();
+        ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        qt = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
     }
 
     @Override
@@ -64,27 +63,37 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
     @SuppressWarnings("unchecked")
     public void testOnSubmit() throws Exception {
         endTransaction();
-
-        /* leave data in database */
-        setComplete();
-
         /* mimic the search */
         ExpressionExperimentVisualizationFormController controller = ( ExpressionExperimentVisualizationFormController ) this
                 .getBean( "expressionExperimentVisualizationFormController" );
 
-        HttpServletRequest request = new MockHttpServletRequest();
-        HttpServletResponse response = new MockHttpServletResponse();
-        ExpressionExperimentVisualizationCommand command = new ExpressionExperimentVisualizationCommand();
-        command.setSearchCriteria( "probe set id" );
-        command.setSearchString( "probeset_0, probeset_1" );
+        MockHttpServletRequest request = newPost( "/expressionExperiment/visualizeDataMatrix.html" );
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        request.setParameter( "searchCriteria", ExpressionExperimentVisualizationFormController.SEARCH_BY_PROBE );
+        request.setParameter( "searchString", "probeset_0, probeset_1" );
+        request.setParameter( "quantitationType", qt.getName() );
+        request.setParameter( "viewSampling", "false" );
+        request.setParameter( "id", ee.getId().toString() );
+        ModelAndView mav = controller.handleRequest( request, response );
+        assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
+    }
 
-        log.debug( "expression experiment id " + ee.getId() );
-        command.setExpressionExperimentId( ee.getId() );
+    @SuppressWarnings("unchecked")
+    public void testOnSubmitViewSampling() throws Exception {
+        endTransaction();
+        /* mimic the search */
+        ExpressionExperimentVisualizationFormController controller = ( ExpressionExperimentVisualizationFormController ) this
+                .getBean( "expressionExperimentVisualizationFormController" );
 
-        BindException errors = new BindException( command, "ExpressionExperimentSearchCommand" );
-        controller.processFormSubmission( request, response, command, errors );
-        ModelAndView mav = controller.onSubmit( request, response, command, errors );
-        assertEquals( "expressionExperimentVisualizationForm", mav.getViewName() );
+        MockHttpServletRequest request = newPost( "/expressionExperiment/visualizeDataMatrix.html" );
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        request.setParameter( "searchCriteria", ExpressionExperimentVisualizationFormController.SEARCH_BY_PROBE );
+        request.setParameter( "quantitationType", qt.getName() );
+        request.setParameter( "viewSampling", "true" );
+        request.setParameter( "id", ee.getId().toString() );
+        ModelAndView mav = controller.handleRequest( request, response );
+        assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
 
     }
+
 }

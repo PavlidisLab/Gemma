@@ -130,6 +130,12 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     }
 
+    @SuppressWarnings("unchecked")
+    public final void testGetQuantitationTypes() throws Exception {
+        Collection<QuantitationType> types = expressionExperimentDao.getQuantitationTypes( ee );
+        assertEquals( 2, types.size() );
+    }
+
     /**
      * @param expressionExperimentDao the expressionExperimentDao to set
      */

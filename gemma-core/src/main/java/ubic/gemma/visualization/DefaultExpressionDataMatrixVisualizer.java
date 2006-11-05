@@ -20,15 +20,11 @@ package ubic.gemma.visualization;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.gui.ColorMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -39,7 +35,6 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  */
 public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisualizer implements
         ExpressionDataMatrixVisualizer, Serializable {
-    private Log log = LogFactory.getLog( this.getClass() );
 
     private static final long serialVersionUID = -5075323948059345296L;
 
@@ -79,8 +74,6 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      */
     @SuppressWarnings("unchecked")
     public ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
-        // TODO not used?
-
         Collection<DesignElement> rowMap = expressionDataMatrix.getRowMap(); // row labels
 
         if ( expressionDataMatrix == null || rowMap.size() == 0 ) {
@@ -90,14 +83,13 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
         double[][] data = new double[rowMap.size()][];
         int i = 0;
         for ( DesignElement designElement : rowMap ) {
-            log.warn( "design element: " + designElement );
             Double[] row = ( Double[] ) expressionDataMatrix.getRow( designElement );
             data[i] = ArrayUtils.toPrimitive( row );
             rowLabels.add( designElement.getName() );
             i++;
         }
 
-        // TODO add (bioassay) column labels.
+        // TODO add biomaterial column labels.
         if ( colLabels.size() == 0 ) {
             for ( int j = 0; j < data[0].length; j++ ) {
                 colLabels.add( String.valueOf( j ) );

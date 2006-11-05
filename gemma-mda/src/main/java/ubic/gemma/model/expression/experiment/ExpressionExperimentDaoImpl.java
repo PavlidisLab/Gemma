@@ -140,7 +140,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     @Override
     public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
-        final String queryString = "select quantType from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id ";
+        final String queryString = "select distinct quantType from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -389,7 +389,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( expressionExperiment, LockMode.READ );
+                session.update( expressionExperiment );
                 expressionExperiment.getBioAssays().size();
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();

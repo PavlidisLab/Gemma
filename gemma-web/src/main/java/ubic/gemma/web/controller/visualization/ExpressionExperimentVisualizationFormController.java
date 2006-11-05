@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -43,24 +44,25 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 
 /**
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
  * success view returns either a visual representation of the result set or a downloadable data file.
  * <p>
- * {@link viewAll} sets whether or not the entire data set will be viewed (with maximum 50 results displayed), and
- * {@link species} sets the type of species to search. {@link keywords} restrict the search.
+ * {@link viewSampling} sets whether or not just some randomly selected vectors will be shown, and {@link species} sets
+ * the type of species to search. {@link keywords} restrict the search.
  * 
  * @author keshav
  * @version $Id$
@@ -72,15 +74,19 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "successView" value="showExpressionExperimentVisualization"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
+
+    public static final String SEARCH_BY_PROBE = "probe set id";
+    public static final String SEARCH_BY_GENE = "gene symbol";
+
     private static Log log = LogFactory.getLog( ExpressionExperimentVisualizationFormController.class.getName() );
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
-
-    private boolean viewSampling = false;
+    private DesignElementDataVectorService designElementDataVectorService;
     private final int MAX_ELEMENTS_TO_VISUALIZE = 50;
 
     public ExpressionExperimentVisualizationFormController() {
@@ -116,13 +122,172 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         eesc.setExpressionExperimentId( ee.getId() );
-        eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
         eesc.setSearchString( "probeset_0,probeset_1,probeset_2,probeset_3,probeset_4,probeset_5" );
-        eesc.setStandardQuantitationTypeName( StandardQuantitationType.DERIVEDSIGNAL.getValue() );
-
         return eesc;
 
+    }
+
+    /**
+     * @param command
+     * @param errors
+     * @param eesc
+     * @param expressionExperiment
+     * @param quantitationType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<DesignElementDataVector> getCompositeSequences( Object command, BindException errors,
+            ExpressionExperimentVisualizationCommand eesc, ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType ) {
+        Collection<DesignElementDataVector> vectors = null;
+
+        String[] searchIds = new String[MAX_ELEMENTS_TO_VISUALIZE];
+        boolean viewSampling = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewSampling();
+        if ( viewSampling ) {/* check size if 'viewSampling' is set. */
+            vectors = expressionExperimentService.getSamplingOfVectors( expressionExperiment, quantitationType,
+                    MAX_ELEMENTS_TO_VISUALIZE );
+            /* handle search by design element */
+        } else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
+
+            String searchString = eesc.getSearchString();
+            searchIds = StringUtils.split( searchString, "," );
+
+            Collection<ArrayDesign> arrayDesigns = expressionExperimentService
+                    .getArrayDesignsUsed( expressionExperiment );
+            if ( arrayDesigns.size() == 0 ) {
+                String message = "No array designs found for " + expressionExperiment;
+                log.error( message );
+                errors.addError( new ObjectError( command.toString(), null, null, message ) );
+                return null;
+            }
+
+            Collection<CompositeSequence> compositeSequences = getMatchingDesignElements( searchIds, arrayDesigns );
+
+            if ( compositeSequences.size() == 0 ) {
+                String message = "No probes could be found matching the query.";
+                log.error( message );
+                errors.addError( new ObjectError( command.toString(), null, null, message ) );
+                return null;
+            }
+
+            vectors = expressionExperimentService.getDesignElementDataVectors( expressionExperiment,
+                    compositeSequences, quantitationType );
+
+        } else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
+            /* handle search by gene */
+
+            String searchString = eesc.getSearchString();
+            searchIds = StringUtils.split( searchString, "," );
+
+            // TODO add search by gene symbol; use regular gene search.
+            errors.addError( new ObjectError( command.toString(), null, null,
+                    "Search by gene symbol unsupported at this time." ) );
+
+        }
+        if ( vectors == null || vectors.size() == 0 ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "No data could be found." ) );
+        }
+        return vectors;
+    }
+
+    private Collection<CompositeSequence> getMatchingDesignElements( String[] searchIds,
+            Collection<ArrayDesign> arrayDesigns ) {
+        Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
+        for ( ArrayDesign design : arrayDesigns ) {
+            for ( String searchId : searchIds ) {
+                searchId = StringUtils.trim( searchId );
+                CompositeSequence cs = compositeSequenceService.findByName( design, searchId );
+                if ( cs != null ) {
+                    compositeSequences.add( cs );
+                }
+            }
+        }
+        return compositeSequences;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Collection<QuantitationType> getQuantitationTypes( HttpServletRequest request ) {
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Id was not valid Long integer", e );
+        }
+        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
+        Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
+        return types;
+    }
+
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
+                getQuantitationTypes( request ) ) );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    @Override
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
+
+        // TODO remove this
+        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
+                + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools.createDir( ConfigUtils
+                .getString( "gemma.appdata.home" )
+                + File.separatorChar + "images" ) );
+
+        Map<String, Object> model = new HashMap<String, Object>();
+        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        String searchCriteria = eesc.getSearchCriteria();
+        Long id = eesc.getExpressionExperimentId();
+
+        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
+        if ( expressionExperiment == null ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
+                    + " found" ) );
+            return super.processFormSubmission( request, response, command, errors );
+        }
+
+        QuantitationType quantitationType = eesc.getQuantitationType();
+        if ( quantitationType == null ) {
+            String message = "Quantitation type must be provided";
+            log.error( message );
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return super.processFormSubmission( request, response, command, errors );
+        }
+
+        Collection<DesignElementDataVector> dataVectors = getCompositeSequences( command, errors, eesc,
+                expressionExperiment, quantitationType );
+
+        if ( errors.hasErrors() ) {
+            return super.processFormSubmission( request, response, command, errors );
+        }
+
+        designElementDataVectorService.thaw( dataVectors );
+        ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
+        /* deals with the case of probes don't match, for the given quantitation type. */
+        if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
+            String message = "None of the probe sets match the given quantitation type "
+                    + quantitationType.getType().getValue();
+            log.error( message );
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return super.processFormSubmission( request, response, command, errors );
+        }
+
+        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer(
+                expressionDataMatrix, imageFile.getAbsolutePath() );
+
+        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
+                expressionDataMatrixVisualizer );
     }
 
     @SuppressWarnings("unchecked")
@@ -149,184 +314,26 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return super.processFormSubmission( request, response, command, errors );
     }
 
-    @SuppressWarnings("unchecked")
-    private QuantitationType getQuantitationType( ExpressionExperimentVisualizationCommand eesc,
-            ExpressionExperiment expressionExperiment ) {
-        QuantitationType quantitationType = null;
-        /* Get the selected standard quantitation type. */
-        String standardQuantitationTypeName = eesc.getStandardQuantitationTypeName();
-        QuantitationType requestedType = QuantitationType.Factory.newInstance();
-        StandardQuantitationType standardQuantitationType = null;
-        if ( StandardQuantitationType.literals().contains( standardQuantitationTypeName ) ) {
-            standardQuantitationType = StandardQuantitationType.fromString( standardQuantitationTypeName );
-        } else {
-            standardQuantitationType = StandardQuantitationType.OTHER;
-            log.warn( "Invalid quantitation type.  Using " + standardQuantitationType + " instead." );
-        }
-        requestedType.setType( standardQuantitationType );
-
-        Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
-        for ( QuantitationType type : types ) {
-            if ( type.equals( requestedType ) ) {
-                quantitationType = type;
-            }
-        }
-        return quantitationType;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @SuppressWarnings( { "unused", "unchecked" })
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        log.debug( "entering onSubmit" );
-
-        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        String searchCriteria = eesc.getSearchCriteria();
-
-        Long id = eesc.getExpressionExperimentId();
-
-        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
-        List<DesignElement> compositeSequences = new ArrayList<DesignElement>();
-
-        if ( expressionExperiment == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
-                    + " found" ) );
-        }
-
-        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expressionExperiment );
-
-        log.debug( "Got " + arrayDesigns.size() + " array designs for the expression experiment with id " + id );
-
-        QuantitationType quantitationType = getQuantitationType( eesc, expressionExperiment );
-
-        if ( quantitationType == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "No quantitation type matching "
-                    + eesc.getStandardQuantitationTypeName() + " found" ) );
-        }
-
-        String[] searchIds = new String[MAX_ELEMENTS_TO_VISUALIZE];
-        viewSampling = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewSampling();
-        if ( viewSampling ) {/* check size if 'viewAll' is set. */
-            int i = 0;
-            Collection<DesignElementDataVector> vectors = expressionExperimentService.getSamplingOfVectors(
-                    expressionExperiment, quantitationType, MAX_ELEMENTS_TO_VISUALIZE );
-            for ( DesignElementDataVector vector : vectors ) {
-                searchIds[i] = vector.getDesignElement().getName();
-                i++;
-            }
-        } else {/* if viewAll not selected, use search string */
-            // more searchString validation - see also validation.xml
-            String searchString = eesc.getSearchString();
-            log.debug( "Got search string " + searchString );
-            searchIds = StringUtils.split( searchString, "," );
-        }
-
-        /* handle search by design element */
-        if ( eesc.getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
-            for ( ArrayDesign design : arrayDesigns ) {
-                for ( String searchId : searchIds ) {
-                    searchId = StringUtils.trim( searchId );
-                    log.debug( "searching for " + searchId );
-
-                    CompositeSequence cs = compositeSequenceService.findByName( design, searchId );
-
-                    if ( cs != null ) {
-                        compositeSequences.add( cs );
-                    }
-                }
-            }
-            log.debug( "number of composite sequences: " + compositeSequences.size() );
-            if ( compositeSequences.size() == 0 ) {
-                errors.addError( new ObjectError( command.toString(), null, null, "None of the probe sets exist." ) );
-            }
-        }
-        /* handle search by gene */
-        if ( ( ( ExpressionExperimentVisualizationCommand ) command ).getSearchCriteria().equalsIgnoreCase(
-                "gene symbol" ) ) {
-            // TODO add search by gene symbol
-            errors.addError( new ObjectError( command.toString(), null, null,
-                    "Search by gene symbol unsupported at this time." ) );
-        }
-
-        // TODO remove this
-        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
-                + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools
-                .createDir( "../webapps/ROOT/visualization/" ) );
-
-        // log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
-
-        log.debug( "Quantitation Type: " + quantitationType.getType().getValue() );
-
-        ExpressionDataMatrix expressionDataMatrix = null;
-
-        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
-
-        if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
-            ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
-
-            expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, compositeSequences, quantitationType );
-
-            expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix, imageFile
-                    .getAbsolutePath() );
-        } else {
-            log.debug( "search by official gene symbol" );
-            // FIXME call service which produces expression data image based on gene symbol search criteria
-            throw new UnsupportedOperationException( "Search by Gene Symbol is not supported yet" );
-        }
-
-        /* deals with the case of probes don't match, for the given quantitation type. */
-        if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
-            errors
-                    .addError( new ObjectError( command.toString(), null, null,
-                            "None of the probe sets match the given quantitation type "
-                                    + quantitationType.getType().getValue() ) );
-            return super.processFormSubmission( request, response, command, errors );
-        }
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
-                expressionDataMatrixVisualizer );
-    }
-
     /**
      * @param request
      * @return Map
      */
-    @SuppressWarnings("unused")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
 
-        Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
-
-        // add search categories
-        Collection<String> searchCategories = new HashSet<String>();
-        searchCategories.add( "gene symbol" );
-        searchCategories.add( "probe id" );
+        Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
+        List<String> searchCategories = new ArrayList<String>();
+        searchCategories.add( "Gene symbol" );
+        searchCategories.add( "Probe id" );
         searchByMap.put( "searchCategories", searchCategories );
 
-        // add standard quantitation types to select from
-        Collection<String> standardQuantitationTypeNames = StandardQuantitationType.literals();
-        for ( String name : standardQuantitationTypeNames ) {
-            log.warn( name );
-        }
+        Collection<QuantitationType> types = getQuantitationTypes( request );
+        List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
+        listedTypes.addAll( types );
 
-        searchByMap.put( "standardQuantitationTypeNames", standardQuantitationTypeNames );
+        searchByMap.put( "quantitationTypes", listedTypes );
 
         return searchByMap;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
@@ -334,5 +341,16 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
+    }
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 }

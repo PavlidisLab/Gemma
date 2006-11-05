@@ -116,8 +116,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Iterator<BioAssay> it = dimension.getBioAssays().iterator();
 
-            assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
-                    + dimension.getBioAssays().size();
+            // assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
+            // + dimension.getBioAssays().size();
             for ( int i = 0; i < vals.length; i++ ) {
                 BioAssay bioAssay = it.next();
                 matrix.setQuick( rowNum, columnAssayMap.get( bioAssay ), vals[i] );
@@ -280,7 +280,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      */
     protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException( "No vectors!" );
         }
 
         int maxSize = setUpColumnElements();
