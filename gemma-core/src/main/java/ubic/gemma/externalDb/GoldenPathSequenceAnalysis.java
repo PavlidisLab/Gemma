@@ -421,8 +421,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, kgxref.description "
-                + "FROM refFlat as r inner join kgxref on r.geneName = kgxref.geneSymbol "
+        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, kgXref.description "
+                + "FROM refFlat as r inner join kgXref on r.geneName = kgXref.geneSymbol "
                 + "WHERE "
                 + "((r.txStart > ? AND r.txEnd < ?) OR (r.txStart < ? AND r.txEnd > ?) OR "
                 + "(r.txStart > ?  AND r.txStart < ?) OR  (r.txEnd > ? AND  r.txEnd < ? )) and r.chrom = ? ";
