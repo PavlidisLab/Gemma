@@ -118,7 +118,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         // goes to the progress page...
         controller.handleRequest( request, response );
 
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         MockClient.monitorTask( taskId );
@@ -126,7 +126,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         Thread.sleep( 500 );// make sure it's really done.
 
         MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
-        afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        afterRequest.getSession().setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
         TaskCompletionController taskCheckController = ( TaskCompletionController ) this
                 .getBean( "taskCompletionController" );
 
@@ -169,7 +169,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         // goes to the progress page...
         controller.handleRequest( request, response );
 
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         MockClient.monitorTask( taskId );
@@ -177,7 +177,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         Thread.sleep( 500 );// make sure it's really done.
 
         MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
-        afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        afterRequest.getSession().setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
         TaskCompletionController taskCheckController = ( TaskCompletionController ) this
                 .getBean( "taskCompletionController" );
 
@@ -189,8 +189,11 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
             try {
                 mv = taskCheckController.handleRequest( afterRequest, response );
             } catch ( Exception e ) {
-                assertTrue( e instanceof AlreadyExistsInSystemException );
-                return;
+                if ( !( e instanceof AlreadyExistsInSystemException ) ) {
+                    log.error( e, e );
+                    fail( "Expected  possibly an AlreadyExistsInSystemException but got a " + e.getClass() );
+                }
+                return; // ok!
             }
             if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
         }

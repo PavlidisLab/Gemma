@@ -178,9 +178,13 @@ public class AuditInterceptor implements MethodInterceptor {
         // initialize the audit trail, if necessary.
         if ( at == null ) {
             at = AuditTrail.Factory.newInstance();
-            at = auditTrailDao.create( at );
-            d.setAuditTrail( at );
         }
+
+        if ( at.getId() == null ) {
+            at = auditTrailDao.create( at );
+        }
+
+        d.setAuditTrail( at );
 
         if ( at.getEvents().size() == 0 ) {
             User user = getCurrentUser();
@@ -188,6 +192,7 @@ public class AuditInterceptor implements MethodInterceptor {
             at.start( getCreateEventNote( d ), user );
             updateAndLog( d, user, at.getLast().getNote() );
         }
+
     }
 
     /**
@@ -338,9 +343,8 @@ public class AuditInterceptor implements MethodInterceptor {
 
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
-               //     processAssociations( m, returnValue );
+            // processAssociations( m, returnValue );
         }
-
 
     }
 
@@ -357,7 +361,7 @@ public class AuditInterceptor implements MethodInterceptor {
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
 
-              //  if ( log.isTraceEnabled() ) log.trace( "Checking " + propertyNames[j] + " for cascade audit" );
+                // if ( log.isTraceEnabled() ) log.trace( "Checking " + propertyNames[j] + " for cascade audit" );
 
                 /*
                  * If the action being taken will result in a hibernate cascade, we need to update the audit information
@@ -366,8 +370,8 @@ public class AuditInterceptor implements MethodInterceptor {
                  */
                 if ( !crudUtils.needCascade( m, cs ) ) {
                     if ( log.isTraceEnabled() )
-                //        log.trace( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
-                    continue;
+                    // log.trace( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
+                        continue;
                 }
 
                 PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -48,15 +50,15 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "AD Bot" );
+        ad.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
 
         Contact c = Contact.Factory.newInstance();
-        c.setName( "\'Contact Name\'" );
+        c.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDesignProvider( c );
 
-        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        ad = ads.create( ad );
+        PersisterHelper persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" );
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
     }
 
     @Override
@@ -72,13 +74,14 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testSave() throws Exception {
+        endTransaction();
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "POST", "/arrays/editArrayDesign.html" );
-        request.addParameter( "name", ad.getName() );
-        request.addParameter( "description", ad.getDescription() );
+        request.setParameter( "name", ad.getName() );
+        request.setParameter( "description", ad.getDescription() );
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
-
+        request.setParameter( "id", ad.getId().toString() );
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
 
         String errorsKey = BindException.ERROR_KEY_PREFIX + c.getCommandName();
@@ -94,10 +97,12 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testEdit() throws Exception {
+        endTransaction();
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "GET", "/arrays/editArrayDesign.html" );
-        request.addParameter( "name", ad.getName() );
+        request.setParameter( "name", ad.getName() );
+        request.setParameter( "id", ad.getId().toString() );
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );

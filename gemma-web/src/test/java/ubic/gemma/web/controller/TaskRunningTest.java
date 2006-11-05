@@ -62,7 +62,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         ModelAndView mv = controller.handleRequest( request, response );
         assertTrue( mv.getView() instanceof RedirectView );
         assertTrue( ( ( RedirectView ) mv.getView() ).getUrl().startsWith( "processProgress.html?taskId=" ) );
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // wait for job to run
@@ -70,7 +70,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
         // check on the job.
         MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
-        afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        afterRequest.getSession().setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
 
         ModelAndView result = null;
 
@@ -102,7 +102,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertTrue( mv.getView() instanceof RedirectView );
         assertTrue( ( ( RedirectView ) mv.getView() ).getUrl().startsWith( "processProgress.html?taskId=" ) );
 
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // wait for job to throw exception.
@@ -132,14 +132,14 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertTrue( mv.getView() instanceof RedirectView );
         assertTrue( ( ( RedirectView ) mv.getView() ).getUrl().startsWith( "processProgress.html?taskId=" ) );
 
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // let it go a little while
         Thread.sleep( 1000 );
 
         MockHttpServletRequest afterRequest = newPost( "/checkJobProgress.html" );
-        afterRequest.setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        afterRequest.getSession().setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
         afterRequest.setAttribute( TaskCompletionController.CANCEL_ATTRIBUTE, "true" );
 
         // should have been cancelled...

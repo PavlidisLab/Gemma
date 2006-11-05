@@ -282,7 +282,7 @@
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove=admin,ACL_SECURABLE_EDIT
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.update=ACL_SECURABLE_EDIT 
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.update=user,admin,ACL_SECURABLE_EDIT 
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.create=user,admin
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getCompositeSequenceCount=user,admin,ROLE_ANONYMOUS
@@ -354,8 +354,8 @@
                 ubic.gemma.model.common.auditAndSecurity.PersonService.remove=user,admin 
                 ubic.gemma.model.common.auditAndSecurity.PersonService.findByFullName=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.common.auditAndSecurity.PersonService.findOrCreate=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=user,admin,ROLE_ANONYMOUS,ROLE_ANONYMOUS
-                ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=user,admin,ROLE_ANONYMOUS,ROLE_ANONYMOUS
+                ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserService.create=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserService.delete=user,admin 

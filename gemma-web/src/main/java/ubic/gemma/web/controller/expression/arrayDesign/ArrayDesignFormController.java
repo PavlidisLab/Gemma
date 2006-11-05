@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -66,7 +67,7 @@ public class ArrayDesignFormController extends BaseFormController {
 
         Long id;
         ArrayDesign arrayDesign = null;
-        
+
         // should be caught by validation.
         if ( idString != null ) {
             try {
@@ -77,7 +78,7 @@ public class ArrayDesignFormController extends BaseFormController {
             arrayDesign = arrayDesignService.load( id );
 
         }
-        
+
         if ( arrayDesign == null ) {
             return ArrayDesign.Factory.newInstance();
         }
@@ -122,6 +123,12 @@ public class ArrayDesignFormController extends BaseFormController {
         log.debug( "entering onSubmit" );
 
         ArrayDesign ad = ( ArrayDesign ) command;
+
+        if ( ad == null || ad.getId() == null ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "Array design was null or had null id" ) );
+            return processFormSubmission( request, response, command, errors );
+        }
+
         arrayDesignService.update( ad );
 
         saveMessage( request, "object.saved", new Object[] { ad.getClass().getSimpleName(), ad.getName() }, "Saved" );
