@@ -103,7 +103,8 @@ public class SimpleFastaCmd implements FastaCmd {
             throws IOException {
 
         if ( StringUtils.isBlank( fastaCmdExecutable ) )
-            throw new IllegalStateException( "No fastacmd executable: You must set " + FASTA_CMD_ENV_VAR + " in your environment." );
+            throw new IllegalStateException( "No fastacmd executable: You must set " + FASTA_CMD_ENV_VAR
+                    + " in your environment." );
 
         if ( blastHome == null ) {
             throw new IllegalArgumentException();
@@ -134,6 +135,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * @throws IOException
      */
     private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) {
+
         final InputStream is = new BufferedInputStream( pr.getInputStream() );
         InputStream err = pr.getErrorStream();
 
@@ -146,12 +148,17 @@ public class SimpleFastaCmd implements FastaCmd {
 
         try {
             int exitVal = pr.waitFor();
+            Thread.sleep( 20 ); // Makes sure results are flushed.
             log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
+            is.close();
+            return parser.getResults();
+
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-        Collection<BioSequence> sequences = parser.getResults();
-        return sequences;
+
     }
 
     /**
@@ -165,8 +172,9 @@ public class SimpleFastaCmd implements FastaCmd {
             throw new IllegalArgumentException();
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        Process pr = Runtime.getRuntime().exec( fastaCmdExecutable + " -d " + database + " -s " + key.toString(), opts );
-
+        String command = fastaCmdExecutable + " -d " + database + " -s " + key.toString();
+        Process pr = Runtime.getRuntime().exec( command, opts );
+        if ( log.isDebugEnabled() ) log.debug( command + "( " + opts[0] + ")" );
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
         if ( sequences.size() == 0 ) {
             return null;

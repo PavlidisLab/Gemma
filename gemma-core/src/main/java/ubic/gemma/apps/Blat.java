@@ -417,66 +417,8 @@ public class Blat {
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
         }
+        log.debug( "GfClient Success" );
 
-        //        
-        // FutureTask<Process> future = new FutureTask<Process>( new Callable<Process>() {
-        // public Process call() throws IOException {
-        // try {
-        // Process run = Runtime.getRuntime().exec( cmd );
-        //
-        // try {
-        // run.waitFor();
-        // } catch ( InterruptedException e ) {
-        // ;
-        // }
-        // return run;
-        // } catch ( IOException e ) {
-        // String message = e.getMessage();
-        // if ( message.startsWith( "CreateProcess" ) && message.indexOf( "error=" ) > 0 ) {
-        // int errorCode = Integer.parseInt( message.substring( e.getMessage().lastIndexOf( "error=" )
-        // + ( new String( "error=" ) ).length() ) );
-        //
-        // if ( errorCode == 2 )
-        // throw new IOException( "Could not locate executable to run command (Error " + errorCode
-        // + ") " + cmd );
-        //
-        // throw new IOException( "Error (" + errorCode + ") " + cmd );
-        // }
-        // return null;
-        // }
-        // }
-        // } );
-        //
-        // Executors.newSingleThreadExecutor().execute( future );
-        // while ( !future.isDone() ) {
-        // try {
-        // Thread.sleep( 10 );
-        // } catch ( InterruptedException ie ) {
-        // ;
-        // }
-        // }
-
-        // try {
-        //
-        // if ( future.get() == null ) {
-        // log.error( "GfClient Failed" );
-        // throw new RuntimeException( "GfClient Failed" );
-        // } else if ( future.get().exitValue() != 0 ) {
-        //
-        // StringBuilder buf = getErrOutput( future );
-        //
-        // throw new RuntimeException( "GfClient Error on command : " + cmd + " exit value: "
-        // + future.get().exitValue() + " error:" + buf );
-        // } else {
-        log.info( "GfClient Success" );
-        // }
-        // } catch ( ExecutionException e ) {
-        // log.error( e, e );
-        // throw new RuntimeException( "GfClient Failed", e );
-        // } catch ( InterruptedException e ) {
-        // log.error( e, e );
-        // throw new RuntimeException( "GfClient Failed (Interrupted)", e );
-        // }
         return processPsl( outputPath, null );
     }
 

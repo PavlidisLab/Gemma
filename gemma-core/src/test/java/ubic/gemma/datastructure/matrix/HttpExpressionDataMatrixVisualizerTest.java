@@ -98,6 +98,8 @@ public class HttpExpressionDataMatrixVisualizerTest extends BaseSpringContextTes
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
 
+        assert ( data != null );
+
         matrix = service.parse( data );
         ee = service.convert( metaData, matrix );
 

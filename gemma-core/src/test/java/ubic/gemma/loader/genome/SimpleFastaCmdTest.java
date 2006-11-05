@@ -81,7 +81,7 @@ public class SimpleFastaCmdTest extends TestCase {
 
     public void testGetSingleAcc() throws Exception {
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByAccession( "AA000002.1", "testblastdb", ConfigUtils.getString( "gemma.home" )
+        BioSequence bs = fastaCmd.getByAccession( "AA000002", "testblastdb", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blast" );
         assertNotNull( bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"

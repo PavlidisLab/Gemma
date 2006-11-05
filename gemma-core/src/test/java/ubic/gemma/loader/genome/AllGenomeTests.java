@@ -54,6 +54,7 @@ public class AllGenomeTests {
         suite.addTestSuite( TaxonLoaderTest.class );
         suite.addTestSuite( TaxonParserTest.class );
         suite.addTestSuite( SupportedTaxaTest.class );
+        suite.addTestSuite( SimpleFastaCmdTest.class );
         // $JUnit-END$
         return suite;
     }
