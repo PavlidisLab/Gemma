@@ -129,3 +129,33 @@
             }
     /* END FOOTER */
 /* END LAYOUT */
+
+/* custom layout for data summary */
+
+.datasummary {
+	border-width: 1px 1px 1px 1px;
+	border-spacing: 2px;
+	border-style: outset outset outset outset;
+	border-color: blue blue blue blue;
+	border-collapse: separate;
+	background-color: white;
+	float: right;
+}
+
+.datasummary th {
+	border-width: 1px 1px 1px 1px;
+	padding: 1px 1px 1px 1px;
+	border-style: outset outset outset outset;
+	border-color: blue blue blue blue;
+	bacround-color: white;
+	-moz-border-radius: 0px 0px 0px 0px;
+}
+
+.datasummary td {
+	border-width: 1px 1px 1px 1px;
+	padding: 2px 2px 2px 2px;
+	border-style: none none none none;
+	border-color: gray gray gray gray;
+	background-color: white;
+	-moz-border-radius: 0px 0px 0px 0px;
+}

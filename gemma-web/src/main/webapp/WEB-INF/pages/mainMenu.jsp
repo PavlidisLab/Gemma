@@ -1,6 +1,42 @@
 <%@ include file="/common/taglibs.jsp"%>
 <title><fmt:message key="mainMenu.title" />
 </title>
+<table class="datasummary">
+<thead>
+<b>Data Summary</b>
+</thead>
+<tr>
+	<td>
+		Bioassays:
+	</td>
+	<td align="right"> 
+	<c:out value="${ stats.bioAssayCount }" />
+	</td>
+</tr>
+<tr>
+	<td>
+	Array Designs:
+	</td>
+	<td align="right">
+	<c:out value="${ stats.arrayDesignCount }" />	
+	</td>
+</tr>
+<tr>
+	<td>
+		Expression Experiments:
+	</td>
+</tr>
+<c:forEach var="taxon" items="${ taxonCount }" >
+<tr>
+	<td>
+		&emsp;<c:out value="${ taxon.key}" />
+	</td>
+	<td align="right">
+		<c:out value="${ taxon.value}" />	
+	</td>
+</tr>
+</c:forEach>
+</table>
 <p>
 	<fmt:message key="mainMenu.message" />
 </p>
@@ -27,6 +63,7 @@
 	</authz:authorize>
 
 </ul>
+
 <authz:authorize ifAnyGranted="admin">
 	<hr />
 	<h2>
@@ -78,4 +115,3 @@
 	</ul>
 
 </authz:authorize>
-

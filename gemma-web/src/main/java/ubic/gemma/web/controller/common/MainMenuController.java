@@ -143,7 +143,14 @@ public class MainMenuController extends BaseFormController {
         ModelAndView mav = new ModelAndView(getFormView());
 
         Map<String,Long> stats = new HashMap<String,Long>();
-        
+        long bioAssayCount = bioAssayService.countAll();
+        stats.put( "bioAssayCount", bioAssayCount );
+        long arrayDesignCount = arrayDesignService.countAll();
+        stats.put( "arrayDesignCount", arrayDesignCount );
+        Map<String,Long> taxonCount = expressionExperimentService.getPerTaxonCount();
+
+        mav.addObject( "stats", stats );
+        mav.addObject( "taxonCount",taxonCount );
         return mav;        
     }
 
