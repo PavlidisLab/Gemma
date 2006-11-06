@@ -183,6 +183,12 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         Integer expectedValue = 3;
         assertEquals( expectedValue, actualValue );
     }
+    
+    public void testCountAll() {
+        long count = arrayDesignDao.countAll();
+        assertNotNull(count);
+        assertTrue(count > 0);
+    }
 
     /**
      * @param accession

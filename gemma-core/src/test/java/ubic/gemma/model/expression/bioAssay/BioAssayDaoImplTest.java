@@ -73,6 +73,12 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
         Collection result = bioAssayDao.findBioAssayDimensions( ba );
         assertEquals( 1, result.size() );
     }
+    
+    public void testGetCount() {
+        Integer count = bioAssayDao.countAll();
+        assertNotNull(count);
+        assertTrue(count > 0);
+    }
 
     public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
         this.bioAssayDimensionDao = bioAssayDimensionDao;

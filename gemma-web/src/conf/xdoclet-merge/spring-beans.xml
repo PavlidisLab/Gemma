@@ -27,6 +27,7 @@
             <prop key="/dwr/**/*">dwrController</prop>
             <prop key="/arrays/*">arrayDesignController</prop>
             <prop key="/signup.html">signupController</prop>
+            <prop key="/mainMenu.html">mainMenuController</prop>
             <prop key="/editUser.html">userFormController</prop>
             <prop key="/editProfile.html">userFormController</prop>
             <prop key="/uploadFile.html">fileUploadController</prop>
@@ -93,7 +94,7 @@
 -->
 <!-- ==================================================== -->
 <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/mainMenu.html /flushCache.html /processProgress.html" />
+	name="/flushCache.html /processProgress.html" />
 <!-- ==================================================== -->
 <!-- Exception handler. -->
 <!-- ==================================================== -->

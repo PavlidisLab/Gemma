@@ -226,5 +226,13 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, designElements,
                 quantitationType );
     }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPerTaxonCount()
+     */
+    @Override
+    protected Map handleGetPerTaxonCount() throws Exception {
+        return this.getExpressionExperimentDao().getPerTaxonCount();
+    }
 
 }

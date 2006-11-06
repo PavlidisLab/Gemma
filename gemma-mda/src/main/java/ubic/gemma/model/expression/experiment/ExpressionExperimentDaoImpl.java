@@ -120,16 +120,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     public Map handleGetQuantitationTypeCountById( Long Id ) {
-        HashMap<String, Integer> qtCounts = new HashMap<String, Integer>();
+        HashMap<QuantitationType, Integer> qtCounts = new HashMap<QuantitationType, Integer>();
 
-        final String queryString = "select quantType.name,count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id GROUP BY quantType.name";
+        final String queryString = "select quantType,count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id GROUP BY quantType.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "id", Id );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                qtCounts.put( list.getString( 0 ), list.getInteger( 1 ) );
+                qtCounts.put( (QuantitationType)list.get( 0 ), list.getInteger( 1 ) );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -502,6 +502,25 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             }
         }
         return vectors;
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPerTaxonCount()
+     */
+    @Override
+    protected Map handleGetPerTaxonCount() throws Exception {
+        final String queryString = "select SU.sourceTaxon.scientificName, count(distinct EE.id) from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon group by SU.sourceTaxon.scientificName";
+        Map<String,Long> taxonCount = new HashMap<String,Long>();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            ScrollableResults list = queryObject.scroll();
+            while ( list.next() ) {
+                taxonCount.put( list.getString( 0 ), new Long(list.getInteger( 1 )) );
+            }
+            return taxonCount;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

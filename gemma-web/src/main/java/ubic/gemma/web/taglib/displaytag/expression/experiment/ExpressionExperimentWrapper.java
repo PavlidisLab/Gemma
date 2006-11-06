@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
@@ -170,7 +171,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getQtName() {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
-        return ( String ) entry.getKey();
+        return (( QuantitationType ) entry.getKey()).getName();
     }
 
     /**

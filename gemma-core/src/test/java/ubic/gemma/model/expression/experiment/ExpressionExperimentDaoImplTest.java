@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -134,6 +135,12 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     public final void testGetQuantitationTypes() throws Exception {
         Collection<QuantitationType> types = expressionExperimentDao.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );
+    }
+    
+    @SuppressWarnings("unchecked")
+    public final void testGetPerTaxonCount() throws Exception {
+        Map<String,Long> counts = expressionExperimentDao.getPerTaxonCount();
+        assertNotNull(counts);
     }
 
     /**
