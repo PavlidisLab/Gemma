@@ -48,6 +48,11 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByInvestigator( investigator );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getExpressionExperimentDao().countAll();
+    }
+
     /*
      * (non-Javadoc)
      * 

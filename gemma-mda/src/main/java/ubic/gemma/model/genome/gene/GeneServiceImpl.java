@@ -42,6 +42,11 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getByGeneAlias( search );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getGeneDao().countAll();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -194,7 +199,9 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().find( gene );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedElements(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -202,15 +209,19 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCoexpressedElements( gene );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedElementsById(long)
      */
     @Override
     protected Collection handleGetCoexpressedElementsById( long id ) throws Exception {
-        return this.getGeneDao().getCoexpressedElementsById( id );        
+        return this.getGeneDao().getCoexpressedElementsById( id );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedGenes(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -218,12 +229,14 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCoexpressedGenes( gene );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedGenesById(long)
      */
     @Override
     protected Collection handleGetCoexpressedGenesById( long id ) throws Exception {
         return this.getGeneDao().getCoexpressedGenesById( id );
     }
-    
+
 }

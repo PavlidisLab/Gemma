@@ -38,6 +38,11 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         this.getBioAssayDao().create( bioAssay );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getBioAssayDao().countAll();
+    }
+
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
      */

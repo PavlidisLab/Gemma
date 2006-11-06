@@ -78,4 +78,16 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         return ( BioAssay ) create( bioAssay );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from BioAssayImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
 }

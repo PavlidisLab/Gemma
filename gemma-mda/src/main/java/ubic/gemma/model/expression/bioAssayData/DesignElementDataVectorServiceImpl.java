@@ -46,6 +46,11 @@ public class DesignElementDataVectorServiceImpl extends
 
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getDesignElementDataVectorDao().countAll();
+    }
+
     /*
      * (non-Javadoc)R
      * 

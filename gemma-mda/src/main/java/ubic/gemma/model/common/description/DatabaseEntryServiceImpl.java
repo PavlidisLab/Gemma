@@ -35,6 +35,11 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
         return this.getDatabaseEntryDao().find( databaseEntry );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getDatabaseEntryDao().countAll();
+    }
+
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#create(ubic.gemma.model.common.description.DatabaseEntry)
      */

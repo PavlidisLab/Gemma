@@ -171,4 +171,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         this.getArrayDesignDao().thaw( arrayDesign );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getArrayDesignDao().countAll();
+    }
+
 }

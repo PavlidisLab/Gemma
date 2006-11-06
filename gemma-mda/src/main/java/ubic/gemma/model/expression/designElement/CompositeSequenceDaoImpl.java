@@ -19,14 +19,10 @@
 
 package ubic.gemma.model.expression.designElement;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
-
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author pavlidis
@@ -94,6 +90,18 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence );
         return ( CompositeSequence ) create( compositeSequence );
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from CompositeSequenceImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

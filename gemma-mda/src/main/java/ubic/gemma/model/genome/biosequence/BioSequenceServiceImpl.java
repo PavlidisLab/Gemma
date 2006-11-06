@@ -31,20 +31,19 @@ import java.util.HashSet;
  */
 public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.BioSequenceServiceBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(long)
      */
     @Override
     protected BioSequence handleLoad( long id ) throws Exception {
-        return (BioSequence) this.getBioSequenceDao().load( id );
+        return ( BioSequence ) this.getBioSequenceDao().load( id );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoadAll()
-     */
     @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getBioSequenceDao().loadAll();
+    protected Integer handleCountAll() throws Exception {
+        return this.getBioSequenceDao().countAll();
     }
 
     /**
@@ -126,7 +125,9 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByAccession(java.lang.String)
      */
     @Override
@@ -134,7 +135,9 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         return this.getBioSequenceDao().getGenesByAccession( search );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override

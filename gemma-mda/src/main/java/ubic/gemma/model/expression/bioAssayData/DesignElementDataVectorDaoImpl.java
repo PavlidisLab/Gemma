@@ -244,4 +244,16 @@ public class DesignElementDataVectorDaoImpl extends
 
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from DesignElementDataVectorImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
 }

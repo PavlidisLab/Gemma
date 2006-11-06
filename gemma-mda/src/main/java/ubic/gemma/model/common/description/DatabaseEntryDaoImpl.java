@@ -20,8 +20,13 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
+
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -30,18 +35,22 @@ import org.hibernate.criterion.Restrictions;
  */
 public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.DatabaseEntryDaoBase {
 
+    private static Log log = LogFactory.getLog( DatabaseEntryDaoImpl.class.getName() );
+
     @Override
     public DatabaseEntry find( DatabaseEntry databaseEntry ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( DatabaseEntry.class );
 
-            queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
-                    "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+            BusinessKey.checkKey( databaseEntry );
+
+            BusinessKey.addRestrictions( queryObject, databaseEntry );
 
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
+                    log.error( debug( results ) );
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
                             + " instances of '" + ubic.gemma.model.common.description.DatabaseEntry.class.getName()
                             + "' was found when executing query for " + databaseEntry + ", expected only 1" );
@@ -54,6 +63,28 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from DatabaseEntryImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    private String debug( List results ) {
+        StringBuilder buf = new StringBuilder();
+        buf.append( "\n" );
+        for ( Object object : results ) {
+            DatabaseEntry de = ( DatabaseEntry ) object;
+            buf.append( de + "\n" );
+        }
+        return buf.toString();
     }
 
     @Override

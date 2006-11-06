@@ -22,6 +22,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
 import java.util.HashSet;
+
 import org.springframework.dao.DataIntegrityViolationException;
 
 import ubic.gemma.util.UserConstants;

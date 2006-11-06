@@ -47,6 +47,11 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         return results;
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getBioMaterialDao().countAll();
+    }
+
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#saveBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
@@ -79,7 +84,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     protected BioMaterial handleFindById( Long id ) throws Exception {
         return this.getBioMaterialDao().findById( id );
     }
-    
+
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */

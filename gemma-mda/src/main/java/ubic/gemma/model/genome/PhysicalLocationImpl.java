@@ -101,13 +101,55 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
             if ( !this.getChromosome().equals( that.getChromosome() ) ) return false;
 
-            // FIXME this needs to check for overlaps etc...
-            if ( this.getNucleotide() != null && that.getNucleotide() != null )
-                if ( Math.abs( this.getNucleotide() - that.getNucleotide() ) > 1000L ) return false;
+            if ( this.getStrand() != null && that.getStrand() != null && !this.getStrand().equals( that.getStrand() ) ) {
+                return false;
+            }
+
+            if ( this.getNucleotide() != null && that.getNucleotide() != null && this.getNucleotideLength() != null
+                    && that.getNucleotideLength() != null ) {
+                long starta = this.getNucleotide();
+                long enda = starta + this.getNucleotideLength();
+                long startb = that.getNucleotide();
+                long endb = startb + that.getNucleotideLength();
+
+                int overlap = computeOverlap( starta, enda, startb, endb );
+
+                if ( overlap == 0 ) {
+                    return false;
+                }
+            }
+
+            if ( this.getNucleotide() != null && that.getNucleotide() != null
+                    && Math.abs( this.getNucleotide() - that.getNucleotide() ) > 1000L ) return false;
 
             return true;
         }
         return true;
+    }
+
+    private static int computeOverlap( long starta, long enda, long startb, long endb ) {
+        if ( starta > enda ) throw new IllegalArgumentException( "Start " + starta + " must be before end " + enda );
+        if ( startb > endb ) throw new IllegalArgumentException( "Start " + startb + " must be before end " + endb );
+
+        long overlap = 0;
+        if ( endb < starta || enda < startb ) {
+            overlap = 0;
+        } else if ( starta <= startb ) {
+            if ( enda < endb ) {
+                overlap = enda - startb; // overhang on the left
+            } else {
+                overlap = endb - startb; // includes entire target
+            }
+        } else if ( enda < endb ) { // entirely contained within target.
+            overlap = enda - starta; // length of our test sequence.
+        } else {
+            overlap = endb - starta; // overhang on the right
+        }
+
+        assert overlap >= 0 : "Negative overlap";
+        assert ( double ) overlap / ( double ) ( enda - starta ) <= 1.0 : "Overlap longer than sequence";
+        // if ( log.isTraceEnabled() ) log.trace( "Overlap=" + overlap );
+        return ( int ) overlap;
     }
 
     @Override

@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
@@ -59,17 +58,15 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             if ( results != null ) {
                 if ( results.size() > 1 ) {
 
-                    if ( log.isDebugEnabled() ) this.debug( results );
-
-                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    // "More than one instance of '" + BioSequence.class.getName()
-                    // + "' was found when executing query" );
-                    Iterator it = results.iterator();
-                    result = it.next(); // arbitrary pick the first one.
+//                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+//                     "More than one instance of '" + BioSequence.class.getName()
+//                     + "' was found when executing query" );
+                     Iterator it = results.iterator();
+                    result = it.next(); // arbitrarily pick the first one.
 
                     for ( ; it.hasNext(); ) {
                         BioSequence bs = ( BioSequence ) it.next();
-                        if ( log.isDebugEnabled() ) log.debug( "Removing " + bs + ", duplicate of " + result );
+                        if ( log.isInfoEnabled() ) log.info( "Removing " + bs + ", duplicate of " + result );
                         this.remove( bs );
                     }
 
@@ -118,7 +115,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         log.debug( sb.toString() );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByAccession(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -126,7 +125,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     protected Collection handleGetGenesByAccession( String search ) throws Exception {
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp where gene.products.id=bs2gp.geneProduct.id "
-            + " and bs2gp.bioSequence.sequenceDatabaseEntry.accession like :search ";
+                + " and bs2gp.bioSequence.sequenceDatabaseEntry.accession like :search ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search );
@@ -138,14 +137,17 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         return genes;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp where gene.products.id=bs2gp.geneProduct.id "
-        + " and bs2gp.bioSequence.name like :search ";
+                + " and bs2gp.bioSequence.name like :search ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search );
@@ -156,4 +158,17 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         }
         return genes;
     }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from BioSequenceImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
 }

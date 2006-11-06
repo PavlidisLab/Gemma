@@ -88,4 +88,15 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         return ( BioMaterial ) create( bioMaterial );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from BioMaterialImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 }

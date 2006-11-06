@@ -93,7 +93,6 @@ public class BusinessKey {
                     Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
         }
 
-        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -103,8 +102,7 @@ public class BusinessKey {
      */
     public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
         Criteria externalRef = queryObject.createCriteria( attributeName );
-        externalRef.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
-        if ( log.isDebugEnabled() ) log.debug( queryObject );
+        addRestrictions( externalRef, databaseEntry );
     }
 
     /**
@@ -247,7 +245,6 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, bioSequence );
-        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -260,7 +257,6 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, gene );
-        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -273,7 +269,6 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, OntologyEntry ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
-        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -329,7 +324,6 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         attachCriteria( innerQuery, taxon );
-        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -620,7 +614,6 @@ public class BusinessKey {
             throw new IllegalArgumentException( accession + " did not have an accession" );
         }
         checkKey( accession.getExternalDatabase() );
-
     }
 
     /**
@@ -631,6 +624,11 @@ public class BusinessKey {
         if ( StringUtils.isBlank( externalDatabase.getName() ) ) {
             throw new IllegalArgumentException( externalDatabase + " did not have a name" );
         }
+    }
+
+    public static void addRestrictions( Criteria queryObject, DatabaseEntry databaseEntry ) {
+        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
+                "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
     }
 
 }

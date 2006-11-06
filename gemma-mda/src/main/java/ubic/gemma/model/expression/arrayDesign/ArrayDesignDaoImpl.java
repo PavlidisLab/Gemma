@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria; 
+import org.hibernate.Criteria;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -245,5 +245,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             }
         }, true );
 
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from ArrayDesignImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 }

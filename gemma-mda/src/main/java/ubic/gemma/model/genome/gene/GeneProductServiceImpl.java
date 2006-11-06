@@ -39,6 +39,11 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
         return this.getGeneProductDao().getGenesByName( search );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getGeneProductDao().countAll();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -97,7 +102,8 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct ) throws Exception {
+    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct )
+            throws Exception {
         return this.getGeneProductDao().find( gProduct );
     }
 

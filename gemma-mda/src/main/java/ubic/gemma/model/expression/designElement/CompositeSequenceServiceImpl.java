@@ -52,6 +52,11 @@ public class CompositeSequenceServiceImpl extends
     }
 
     @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getCompositeSequenceDao().countAll();
+    }
+
+    @Override
     protected CompositeSequence handleFindOrCreate( CompositeSequence compositeSequence ) throws Exception {
 
         return this.getCompositeSequenceDao().findOrCreate( compositeSequence );
@@ -141,16 +146,16 @@ public class CompositeSequenceServiceImpl extends
      */
     @Override
     protected void handleRemove( java.util.Collection sequencesToDelete ) throws java.lang.Exception {
-     
-        //check the collection to make sure it contains no transitive entities (just check the id and make sure its non-null
 
-       Collection<CompositeSequence> filteredSequence = new Vector<CompositeSequence>();
-       for (Object sequence :  sequencesToDelete) {
-           if (((CompositeSequence) sequence).getId() != null)
-               filteredSequence.add( (CompositeSequence) sequence );
-       }
-       
-              
+        // check the collection to make sure it contains no transitive entities (just check the id and make sure its
+        // non-null
+
+        Collection<CompositeSequence> filteredSequence = new Vector<CompositeSequence>();
+        for ( Object sequence : sequencesToDelete ) {
+            if ( ( ( CompositeSequence ) sequence ).getId() != null )
+                filteredSequence.add( ( CompositeSequence ) sequence );
+        }
+
         this.getCompositeSequenceDao().remove( filteredSequence );
         return;
     }

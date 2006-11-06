@@ -207,6 +207,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return count;
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from ExpressionExperimentImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -373,6 +385,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 session.lock( expressionExperiment, LockMode.READ );
                 expressionExperiment.getDesignElementDataVectors().size();
                 expressionExperiment.getBioAssays().size();
+                expressionExperiment.getSubsets().size();
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
