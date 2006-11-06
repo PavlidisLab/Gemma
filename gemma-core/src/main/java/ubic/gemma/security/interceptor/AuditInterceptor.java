@@ -190,7 +190,7 @@ public class AuditInterceptor implements MethodInterceptor {
             User user = getCurrentUser();
 
             at.start( getCreateEventNote( d ), user );
-            updateAndLog( d, user, at.getLast().getNote() );
+            persistAndLogAuditEvent( d, user, at.getLast().getNote() );
         }
 
     }
@@ -219,7 +219,7 @@ public class AuditInterceptor implements MethodInterceptor {
         } else {
             User user = getCurrentUser();
             at.read( getLoadEventNote( auditable ), user );
-            updateAndLog( auditable, user, at.getLast().getNote() );
+            persistAndLogAuditEvent( auditable, user, at.getLast().getNote() );
         }
     }
 
@@ -257,7 +257,7 @@ public class AuditInterceptor implements MethodInterceptor {
         } else {
             User user = getCurrentUser();
             at.update( getUpdateEventNote( d ), user );
-            updateAndLog( d, user, at.getLast().getNote() );
+            persistAndLogAuditEvent( d, user, at.getLast().getNote() );
         }
 
     }
@@ -270,12 +270,12 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( returnValue == null ) return;
 
-        if ( log.isDebugEnabled() ) {
+        if ( log.isTraceEnabled() ) {
             if ( returnValue instanceof Collection ) {
-                log.debug( "After: " + m.getName() + " on Collection of "
+                log.trace( "After: " + m.getName() + " on Collection of "
                         + ( ( Collection ) returnValue ).iterator().next().getClass().getSimpleName() );
             } else {
-                log.debug( "After: " + m.getName() + " on " + returnValue );
+                log.trace( "After: " + m.getName() + " on " + returnValue );
             }
         }
 
@@ -441,9 +441,10 @@ public class AuditInterceptor implements MethodInterceptor {
      * 
      * @param at
      */
-    private void updateAndLog( Auditable d, User user, String note ) {
+    private void persistAndLogAuditEvent( Auditable d, User user, String note ) {
         if ( user != null ) {
             AuditTrail at = d.getAuditTrail();
+            assert at != null;
             auditTrailDao.update( at );
             if ( log.isTraceEnabled() ) log.trace( note + " event on " + d + " by " + user.getUserName() );
         } else {
