@@ -34,7 +34,7 @@ public class AllUtilTests {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.util" );
         // $JUnit-BEGIN$
         suite.addTestSuite( BeanPropertyCompleterTest.class );
-        suite.addTestSuite( CommonsConfigurationPropertyPlaceholderConfigurer.class );
+        suite.addTestSuite( CommonsConfigurationPropertyPlaceholderConfigurerTest.class );
         suite.addTestSuite( ConfigUtilsTest.class );
         suite.addTestSuite( ProgressDataTest.class );
         // $JUnit-END$
