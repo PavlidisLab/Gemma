@@ -21,6 +21,7 @@ package ubic.gemma.externalDb;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
 
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -87,6 +88,7 @@ public class GoldenPathDumper extends GoldenPath {
         log.info( "starting ests" );
         int offset = 0;
         int numInput = 0;
+        Collection<Integer> seen = new HashSet<Integer>();
         while ( DO_EST && !( limit > 0 && numInput >= limit ) ) {
             try {
                 Collection<BioSequence> sequences = loadSequencesByQuery( "all_est", SequenceType.EST, limitSuffix
@@ -94,7 +96,10 @@ public class GoldenPathDumper extends GoldenPath {
                 if ( sequences.size() == 0 ) {
                     break;
                 }
-                numInput = addToQueue( queue, numInput, sequences );
+
+                Collection<BioSequence> toAdd = screenDuplicates( seen, sequences );
+
+                numInput = addToQueue( queue, numInput, toAdd );
                 offset += batchSize;
             } catch ( Exception e ) {
                 log.info( e );
@@ -112,7 +117,11 @@ public class GoldenPathDumper extends GoldenPath {
                 if ( sequences.size() == 0 ) {
                     break;
                 }
-                numInput = addToQueue( queue, numInput, sequences );
+
+                Collection<BioSequence> toAdd = screenDuplicates( seen, sequences );
+
+                numInput = addToQueue( queue, numInput, toAdd );
+
                 offset += batchSize;
             } catch ( Exception e ) {
                 log.info( e );
@@ -129,7 +138,9 @@ public class GoldenPathDumper extends GoldenPath {
                 if ( sequences.size() == 0 ) {
                     break;
                 }
-                numInput = addToQueue( queue, numInput, sequences );
+                Collection<BioSequence> toAdd = screenDuplicates( seen, sequences );
+                numInput = addToQueue( queue, numInput, toAdd );
+
                 offset += batchSize;
             } catch ( Exception e ) {
                 log.info( e );
@@ -137,6 +148,18 @@ public class GoldenPathDumper extends GoldenPath {
             }
         }
 
+    }
+
+    private Collection<BioSequence> screenDuplicates( Collection<Integer> seen, Collection<BioSequence> sequences ) {
+        Collection<BioSequence> toAdd = new HashSet<BioSequence>();
+        for ( BioSequence sequence : sequences ) {
+            if ( seen.contains( sequence.getName().hashCode() ) ) {
+                continue;
+            }
+            toAdd.add( sequence );
+            seen.add( sequence.getName().hashCode() );
+        }
+        return toAdd;
     }
 
     /**

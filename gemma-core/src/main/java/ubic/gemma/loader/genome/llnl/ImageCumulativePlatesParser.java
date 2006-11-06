@@ -21,6 +21,7 @@ package ubic.gemma.loader.genome.llnl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -47,6 +48,8 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
 
     BlockingQueue<BioSequence> results = new ArrayBlockingQueue<BioSequence>( 10000 );
     private ExternalDatabase genbank;
+
+    Collection<Integer> seen = new HashSet<Integer>();
 
     public ImageCumulativePlatesParser() {
         super();
@@ -84,23 +87,16 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
             return null;
         }
 
+        // detect duplicates
+        if ( seen.contains( fields[0].hashCode() ) ) {
+            return null;
+        }
+
         BioSequence seq = BioSequence.Factory.newInstance();
 
         seq.setName( "IMAGE:" + fields[0] );
 
         seq.setType( SequenceType.EST );
-
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( "IMAGE clone" );
-
-        if ( fields.length > 8 ) {
-            buf.append( "Other accession:" );
-            for ( int i = 8; i < fields.length; i++ ) {
-                buf.append( " " + fields[i] );
-            }
-        }
-        seq.setDescription( buf.toString() );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( fields[6] );
@@ -108,11 +104,24 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
         seq.setTaxon( t );
 
         DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
-        acc.setAccession( fields[7] );
+        String[] accessions = StringUtils.split( fields[7] );
+        assert accessions.length > 0;
+        acc.setAccession( accessions[0] );
         acc.setExternalDatabase( genbank );
-
         seq.setSequenceDatabaseEntry( acc );
 
+        StringBuilder buf = new StringBuilder();
+        buf.append( "IMAGE clone, " );
+        buf.append( accessions[0] + "; " );
+        if ( accessions.length > 1 ) {
+            buf.append( "Other accessions:" );
+            for ( int i = 1; i < accessions.length; i++ ) {
+                buf.append( " " + accessions[i] );
+            }
+        }
+        seq.setDescription( buf.toString() );
+
+        seen.add( fields[0].hashCode() );
         return seq;
     }
 
@@ -124,6 +133,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
     @SuppressWarnings("unchecked")
     public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
         this.results = queue;
+        seen.clear();
         parse( inputStream );
 
     }
