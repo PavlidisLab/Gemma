@@ -26,9 +26,9 @@ import java.util.Vector;
 
 import org.rosuda.JRclient.RList;
 
-import cern.colt.list.DoubleArrayList;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * This class makes t-tests by calling R to detect significant genes for differential expression

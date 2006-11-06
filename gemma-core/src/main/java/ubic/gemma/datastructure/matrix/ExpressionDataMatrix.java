@@ -20,7 +20,6 @@ package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;

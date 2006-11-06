@@ -26,11 +26,10 @@ import java.util.Vector;
 import org.rosuda.JRclient.REXP;
 import org.rosuda.JRclient.RList;
 
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * This class performs one-way ANOVA analysis in an experiment to detect the significant genes along with

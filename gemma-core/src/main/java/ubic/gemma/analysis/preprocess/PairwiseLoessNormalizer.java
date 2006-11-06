@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.gemma.analysis.util.RCommander;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.analysis.util.RCommander;
 
 /**
  * Perform pairwise LOESS normalization on the columns of a matrix.

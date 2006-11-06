@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.util.RCommand;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.util.RCommand;
 
 /**
  * @author pavlidis

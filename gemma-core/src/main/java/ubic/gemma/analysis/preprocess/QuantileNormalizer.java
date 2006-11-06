@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.gemma.analysis.util.RCommander;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.analysis.util.RCommander;
 
 /**
  * Perform quantile normalization on a matrix, as described in:

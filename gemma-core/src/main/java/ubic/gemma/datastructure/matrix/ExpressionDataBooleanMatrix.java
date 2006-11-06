@@ -21,6 +21,7 @@ package ubic.gemma.datastructure.matrix;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

@@ -20,9 +20,8 @@ package ubic.gemma.analysis.util;
 
 import java.util.List;
 
-import ubic.basecode.util.RCommand;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.util.RCommand;
 
 /**
  * Object used by the marray bioconductor package. See marrayRaw, marrayInfo, marrayLayout in the package documentations

@@ -18,10 +18,10 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.util.RCommand;
 import ubic.gemma.analysis.util.MArrayRaw;
 import ubic.gemma.analysis.util.RCommander;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Normalizer that uses the mArray methods from BioConductor. This is used to build specific types of preprocessors.

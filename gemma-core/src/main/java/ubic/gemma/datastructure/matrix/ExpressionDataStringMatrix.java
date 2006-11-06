@@ -2,7 +2,6 @@ package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import ubic.basecode.dataStructure.matrix.StringMatrix2DNamed;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

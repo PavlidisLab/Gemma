@@ -25,13 +25,12 @@ import java.util.Vector;
 
 import org.rosuda.JRclient.REXP;
 
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * This class makes SAM analysis for differential expression by calling R with a newly constructed matrix of expression

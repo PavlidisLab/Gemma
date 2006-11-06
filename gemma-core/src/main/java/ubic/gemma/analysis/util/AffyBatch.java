@@ -18,9 +18,9 @@
  */
 package ubic.gemma.analysis.util;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.util.RCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Class to create AffyBatch objects for use in BioConductor analyses.
