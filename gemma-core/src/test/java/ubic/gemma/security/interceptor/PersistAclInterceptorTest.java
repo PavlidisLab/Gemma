@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.AbstractExpressionExperimentTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Tests of ACL management.
@@ -40,7 +40,7 @@ import ubic.gemma.testing.AbstractExpressionExperimentTest;
  * @author keshav
  * @version $Id$
  */
-public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest {
+public class PersistAclInterceptorTest extends BaseSpringContextTest {
     private BasicAclExtendedDao basicAclExtendedDao;
     private PersisterHelper persisterHelper;
     ArrayDesignService arrayDesignService;
@@ -75,7 +75,7 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
      */
     public void testCascadeCreateAndDelete() throws Exception {
         setComplete();
-        ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );
         }

@@ -24,7 +24,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.AbstractExpressionExperimentTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Tests the ExpressionExperimentController.
@@ -32,7 +32,7 @@ import ubic.gemma.testing.AbstractExpressionExperimentTest;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentControllerTest extends AbstractExpressionExperimentTest {
+public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( ExpressionExperimentControllerTest.class.getName() );
 
     // ExpressionExperimentController expressionExperimentController;
@@ -58,7 +58,7 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
         log.debug( "-> (association), => (composition)" );
 
         // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
-        ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = ( ExpressionExperiment ) ( ( PersisterHelper ) this.getBean( "persisterHelper" ) ).persist( ee );
 
