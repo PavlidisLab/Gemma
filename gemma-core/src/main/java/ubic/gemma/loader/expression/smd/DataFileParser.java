@@ -26,6 +26,8 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.xml.sax.SAXException;
+
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.smd.model.SMDBioAssay;
 import ubic.gemma.loader.expression.smd.model.SMDPerson;

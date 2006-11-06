@@ -31,11 +31,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
+import ubic.basecode.bio.geneset.GONames;
 import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.OntologyEntry;
-import ubic.basecode.bio.geneset.GONames;
 
 /**
  * Parses GO entries from GO XML.

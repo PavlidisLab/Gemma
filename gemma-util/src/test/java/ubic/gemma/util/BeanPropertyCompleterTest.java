@@ -19,8 +19,6 @@
 package ubic.gemma.util;
 
 import junit.framework.TestCase;
-//import ubic.gemma.model.common.description.ExternalDatabase;
-//import ubic.gemma.model.common.description.OntologyEntry;
 
 /**
  * @author pavlidis

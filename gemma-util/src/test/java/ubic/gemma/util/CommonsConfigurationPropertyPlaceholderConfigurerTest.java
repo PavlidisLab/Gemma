@@ -20,16 +20,15 @@ package ubic.gemma.util;
 
 import java.io.File;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
-
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis

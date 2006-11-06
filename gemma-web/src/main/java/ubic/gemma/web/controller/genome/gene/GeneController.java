@@ -20,11 +20,13 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;

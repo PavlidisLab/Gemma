@@ -18,7 +18,6 @@
  */
 package ubic.gemma.util.progress;
 
-import ubic.gemma.util.progress.ProgressData;
 import junit.framework.TestCase;
 
 /**

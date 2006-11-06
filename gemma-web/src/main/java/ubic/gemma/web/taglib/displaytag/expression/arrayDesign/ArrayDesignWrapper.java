@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
  * Used to generate hyperlinks in displaytag tables.

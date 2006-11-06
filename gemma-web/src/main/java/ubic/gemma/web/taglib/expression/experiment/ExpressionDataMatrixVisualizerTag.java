@@ -20,7 +20,6 @@ package ubic.gemma.web.taglib.expression.experiment;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.security.authentication;
 
+import java.io.IOException;
+
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.AuthenticationManager;

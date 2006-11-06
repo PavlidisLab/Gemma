@@ -19,6 +19,7 @@
 package ubic.gemma.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
