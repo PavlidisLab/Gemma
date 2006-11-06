@@ -130,14 +130,14 @@ public class TestPersistentObjectHelper {
      * @return
      */
     private Collection<DesignElementDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
-            Collection<BioAssay> bioAssays, ArrayDesign ad ) {
+            Collection<QuantitationType> quantitationTypes, Collection<BioAssay> bioAssays, ArrayDesign ad ) {
 
         BioAssayDimension baDim = BioAssayDimension.Factory.newInstance( RandomStringUtils.randomAlphanumeric( 20 ),
                 null, bioAssays, null );
 
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
-        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
-            QuantitationType quantType = getTestNonPersistentQuantitationType();
+        for ( QuantitationType quantType : quantitationTypes ) {
+
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
                 byte[] bdata = getDoubleData();
@@ -248,8 +248,14 @@ public class TestPersistentObjectHelper {
 
         log.debug( "expression experiment => design element data vectors" );
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
-        vectors.addAll( getDesignElementDataVectors( ee, bioAssaysA, adA ) );
-        vectors.addAll( getDesignElementDataVectors( ee, bioAssaysB, adB ) );
+
+        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
+            quantitationTypes.add( getTestNonPersistentQuantitationType() );
+        }
+
+        vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysA, adA ) );
+        vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysB, adB ) );
         ee.setDesignElementDataVectors( vectors );
 
         return ( ExpressionExperiment ) persisterHelper.persist( ee );
