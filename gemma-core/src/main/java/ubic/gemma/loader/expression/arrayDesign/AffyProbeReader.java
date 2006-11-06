@@ -75,9 +75,17 @@ public class AffyProbeReader extends BasicLineMapParser {
         String probeSetId = sArray[0];
         if ( probeSetId.startsWith( "Probe" ) ) return null;
         String sequence = sArray[sequenceField];
-
-        String xcoord = sArray[sequenceField - 3];
-        String ycoord = sArray[sequenceField - 2];
+        String xcoord;
+        String ycoord;
+        String index = null;
+        if ( sequenceField == 4 ) {
+            xcoord = sArray[1];
+            ycoord = sArray[2];
+        } else {
+            index = sArray[1];
+            xcoord = sArray[2];
+            ycoord = sArray[3];
+        }
 
         Reporter reporter = Reporter.Factory.newInstance();
 
@@ -90,7 +98,7 @@ public class AffyProbeReader extends BasicLineMapParser {
             return null;
         }
 
-        reporter.setName( probeSetId + ":" + xcoord + ":" + ycoord );
+        reporter.setName( probeSetId + ( index == null ? "" : "#" + index ) + ":" + xcoord + ":" + ycoord );
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
         immobChar.setIsApproximateLength( false );
