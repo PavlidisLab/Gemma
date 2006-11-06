@@ -125,7 +125,7 @@ public class GeoDatasetService extends AbstractGeoService {
                 String message = "There is already an expression experiment that matches " + entry.getAccession()
                         + ", " + existing.getName();
                 log.info( message );
-                throw new AlreadyExistsInSystemException( message );
+                throw new AlreadyExistsInSystemException( message, existing );
             }
         }
     }
