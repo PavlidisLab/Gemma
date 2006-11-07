@@ -57,18 +57,18 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
-
-//                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-//                     "More than one instance of '" + BioSequence.class.getName()
-//                     + "' was found when executing query" );
-                     Iterator it = results.iterator();
-                    result = it.next(); // arbitrarily pick the first one.
-
-                    for ( ; it.hasNext(); ) {
-                        BioSequence bs = ( BioSequence ) it.next();
-                        if ( log.isInfoEnabled() ) log.info( "Removing " + bs + ", duplicate of " + result );
-                        this.remove( bs );
-                    }
+                    debug( results );
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + BioSequence.class.getName()
+                                    + "' was found when executing query" );
+                    // Iterator it = results.iterator();
+                    // result = it.next(); // arbitrarily pick the first one.
+                    //
+                    // for ( ; it.hasNext(); ) {
+                    // BioSequence bs = ( BioSequence ) it.next();
+                    // if ( log.isInfoEnabled() ) log.info( "Removing " + bs + ", duplicate of " + result );
+                    // this.remove( bs );
+                    // }
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -166,6 +166,19 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        if ( name == null ) return null;
+        final String query = "from BioSequenceImpl b where b.name = :name";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            queryObject.setParameter( "name", name );
+            return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

@@ -160,4 +160,9 @@ public class CompositeSequenceServiceImpl extends
         return;
     }
 
+    @Override
+    protected void handleUpdate( CompositeSequence compositeSequence ) throws Exception {
+        this.getCompositeSequenceDao().update( compositeSequence );
+    }
+
 }

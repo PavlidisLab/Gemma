@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
@@ -143,5 +141,10 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     @Override
     protected Collection handleGetGenesByName( String search ) throws Exception {
         return this.getBioSequenceDao().getGenesByName( search );
+    }
+
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        return this.getBioSequenceDao().findByName( name );
     }
 }
