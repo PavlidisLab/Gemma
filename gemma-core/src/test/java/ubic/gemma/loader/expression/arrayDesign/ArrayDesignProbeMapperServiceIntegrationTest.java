@@ -57,7 +57,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         try {
             app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
                     .getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 return;

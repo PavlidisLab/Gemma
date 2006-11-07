@@ -99,6 +99,18 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * @param columnNames
+     * @return List of Lists of Strings
+     */
+    public List<List<String>> getColumnData( Collection<String> columnNames ) {
+        List<List<String>> results = new ArrayList<List<String>>();
+        for ( String columnName : columnNames ) {
+            results.add( this.getColumnData( columnName ) );
+        }
+        return results;
+    }
+
+    /**
      * @param designElement
      * @param value
      */

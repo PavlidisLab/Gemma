@@ -183,7 +183,7 @@ public class ImageCumulativePlatesLoader {
 
                 bioSequencesToPersist.add( sequence );
                 if ( ++count % BATCH_SIZE == 0 ) {
-                    bioSequenceService.create( bioSequencesToPersist );
+                    persisterHelper.persist( bioSequencesToPersist );
                     bioSequencesToPersist.clear();
                 }
 

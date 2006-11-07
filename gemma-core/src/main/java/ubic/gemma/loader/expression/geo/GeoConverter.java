@@ -766,17 +766,12 @@ public class GeoConverter implements Converter {
             return ( seenPlatforms.get( platform.getGeoAccession() ) );
         }
 
-        if ( platform.getTechnology() == PlatformType.SAGE || platform.getTechnology() == PlatformType.SAGENlaIII
-                || platform.getTechnology() == PlatformType.SAGERsaI
-                || platform.getTechnology() == PlatformType.SAGESau3A ) {
+        if ( isSage( platform ) ) {
             throw new UnsupportedOperationException( "This data set uses SAGE, it cannot be handled yet" );
         }
 
         log.debug( "Converting platform: " + platform.getGeoAccession() );
-        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( platform.getTitle() );
-        arrayDesign.setShortName( platform.getGeoAccession() );
-        arrayDesign.setDescription( platform.getDescriptions() );
+        ArrayDesign arrayDesign = createMinimalArrayDesign( platform );
 
         platformDesignElementMap.put( arrayDesign.getName(), new HashMap<String, CompositeSequence>() );
 
@@ -784,45 +779,51 @@ public class GeoConverter implements Converter {
 
         // convert the design element information.
         String identifier = determinePlatformIdentifier( platform );
-        String externalReference = determinePlatformExternalReferenceIdentifier( platform );
+        Collection<String> externalReferences = determinePlatformExternalReferenceIdentifier( platform );
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
+        String sequenceColumn = determinePlatformSequenceColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
         assert externalDb != null;
 
         List<String> identifiers = platform.getColumnData( identifier );
-        List<String> externalRefs = platform.getColumnData( externalReference );
+        List<List<String>> externalRefs = platform.getColumnData( externalReferences );
         List<String> descriptions = platform.getColumnData( descriptionColumn );
+        List<String> sequences = platform.getColumnData( sequenceColumn );
+        List<String> cloneIdentifiers = platform.getColumnData( "CLONE_ID" );
 
         assert identifier != null;
-        assert externalRefs != null : "No externalRefs found for column " + externalReference;
-
-        assert externalRefs.size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
-                + externalRefs.size() + " != " + identifiers.size();
+        assert externalRefs != null : "No externalRefs found";
+        assert externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
+                + externalRefs.iterator().next().size() + " != " + identifiers.size();
+        assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Converting " + identifiers.size() + " probe identifiers on GEO platform "
                     + platform.getGeoAccession() );
         }
 
-        Iterator<String> refIter = externalRefs.iterator();
         Iterator<String> descIter = null;
 
         if ( descriptions != null ) {
             descIter = descriptions.iterator();
         }
 
-        // much faster than hashset to add to when it gets large.
+        // much faster than hashset to add to when it gets large. (because equals isn't implemented right... FIXME)
         Collection compositeSequences = new ArrayList( 5000 );
+        int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
-            String externalRef = refIter.next();
+            String externalAccession = getExternalAccession( externalRefs, i );
 
-            String[] refs = externalRef.split( "," );
+            String cloneIdentifier = cloneIdentifiers == null ? null : cloneIdentifiers.get( i );
+
             String description = "";
-
-            if ( refs.length > 1 ) {
-                description = description + "Multiple external sequence references: " + externalRef + "; ";
-                externalRef = refs[0];
+            if ( externalAccession != null ) {
+                String[] refs = externalAccession.split( "," );
+                if ( refs.length > 1 ) {
+                    description = "Multiple external sequence references: " + externalAccession + "; ";
+                    externalAccession = refs[0];
+                }
             }
 
             if ( descIter != null ) description = description + " " + descIter.next();
@@ -832,37 +833,47 @@ public class GeoConverter implements Converter {
             cs.setDescription( description );
             cs.setArrayDesign( arrayDesign );
 
-            if ( StringUtils.isBlank( externalRef ) ) {
+            BioSequence bs = createMinimalBioSequence( taxon );
+
+            boolean isImage = false;
+            if ( StringUtils.isNotBlank( cloneIdentifier ) ) {
+                bs.setName( cloneIdentifier );
+                isImage = cloneIdentifier.startsWith( "IMAGE" );
+            }
+
+            /*
+             * If we are given a sequence, we don't need the genbank identifier, which is probably not correct anyway.
+             */
+            if ( sequences != null && StringUtils.isNotBlank( sequences.get( i ) ) ) {
+                bs.setSequence( sequences.get( i ) );
+                bs.setType( SequenceType.DNA );
+                bs.setName( id + " sequence" );
+                bs.setDescription( "Sequence provided by manufacturer, used in leiu of " + externalAccession );
+            } else if ( externalAccession != null && !isImage ) {
+                /*
+                 * We don't use this if we have an IMAGE clone because the accession might be wrong (e.g., for a
+                 * Refseq). During persisting the IMAGE clone will be replaced with the 'real' thing.
+                 */
+                DatabaseEntry dbe = createDatabaseEntry( externalDb, externalAccession, bs );
+                bs.setSequenceDatabaseEntry( dbe );
+            }
+
+            /*
+             * If we have no basis for describing the sequence, we have to skip it.
+             */
+            if ( StringUtils.isBlank( externalAccession ) && StringUtils.isBlank( cloneIdentifier ) ) {
                 if ( log.isDebugEnabled() ) {
-                    log.debug( "Blank external reference for biosequence for " + cs + " on " + arrayDesign
-                            + ", no biological characteristic will be added." );
+                    log.debug( "Blank external reference and clone id for " + cs + " on " + arrayDesign
+                            + ", no biological characteristic can be added." );
                 }
             } else {
-                BioSequence bs = BioSequence.Factory.newInstance();
-                bs.setTaxon( taxon );
-                bs.setPolymerType( PolymerType.DNA );
-                bs.setType( SequenceType.DNA );
-
-                DatabaseEntry dbe;
-                if ( externalDb.getName().equalsIgnoreCase( "genbank" ) ) {
-                    // deal with accessions in the form XXXXX.N
-                    dbe = ExternalDatabaseUtils.getGenbankAccession( externalRef );
-                    dbe.setExternalDatabase( externalDb ); // make sure it matches the one used here.
-                    bs.setName( dbe.getAccession() ); // trimmed version.
-                } else {
-                    bs.setName( externalRef );
-                    dbe = DatabaseEntry.Factory.newInstance();
-                    dbe.setAccession( externalRef );
-                    dbe.setExternalDatabase( externalDb );
-                }
-
-                bs.setSequenceDatabaseEntry( dbe );
                 cs.setBiologicalCharacteristic( bs );
             }
 
             compositeSequences.add( cs );
 
             platformDesignElementMap.get( arrayDesign.getName() ).put( id, cs );
+            i++;
         }
         arrayDesign.setCompositeSequences( new HashSet( compositeSequences ) );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
@@ -881,6 +892,63 @@ public class GeoConverter implements Converter {
         seenPlatforms.put( platform.getGeoAccession(), arrayDesign );
 
         return arrayDesign;
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
+    private ArrayDesign createMinimalArrayDesign( GeoPlatform platform ) {
+        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+        arrayDesign.setName( platform.getTitle() );
+        arrayDesign.setShortName( platform.getGeoAccession() );
+        arrayDesign.setDescription( platform.getDescriptions() );
+        return arrayDesign;
+    }
+
+    /**
+     * Is this a SAGE (Serial Analysis of Gene Expression) platform? (A non-array method)
+     * 
+     * @param platform
+     * @return
+     */
+    private boolean isSage( GeoPlatform platform ) {
+        return platform.getTechnology() == PlatformType.SAGE || platform.getTechnology() == PlatformType.SAGENlaIII
+                || platform.getTechnology() == PlatformType.SAGERsaI
+                || platform.getTechnology() == PlatformType.SAGESau3A;
+    }
+
+    private BioSequence createMinimalBioSequence( Taxon taxon ) {
+        BioSequence bs = BioSequence.Factory.newInstance();
+        bs.setTaxon( taxon );
+        bs.setPolymerType( PolymerType.DNA );
+        bs.setType( SequenceType.DNA );
+        return bs;
+    }
+
+    private DatabaseEntry createDatabaseEntry( ExternalDatabase externalDb, String externalRef, BioSequence bs ) {
+        DatabaseEntry dbe;
+        if ( externalDb.getName().equalsIgnoreCase( "genbank" ) ) {
+            // deal with accessions in the form XXXXX.N
+            dbe = ExternalDatabaseUtils.getGenbankAccession( externalRef );
+            dbe.setExternalDatabase( externalDb ); // make sure it matches the one used here.
+            bs.setName( dbe.getAccession() ); // trimmed version.
+        } else {
+            bs.setName( externalRef );
+            dbe = DatabaseEntry.Factory.newInstance();
+            dbe.setAccession( externalRef );
+            dbe.setExternalDatabase( externalDb );
+        }
+        return dbe;
+    }
+
+    private String getExternalAccession( List<List<String>> externalRefs, int i ) {
+        for ( List<String> refs : externalRefs ) {
+            if ( StringUtils.isNotBlank( refs.get( i ) ) ) {
+                return refs.get( i );
+            }
+        }
+        return null;
     }
 
     /**
@@ -1736,10 +1804,29 @@ public class GeoConverter implements Converter {
      * @param platform
      * @return
      */
+    private String determinePlatformSequenceColumn( GeoPlatform platform ) {
+        Collection<String> columnNames = platform.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelySequence( string ) ) {
+                log.info( string + " appears to indicate the  probe descriptions in column " + index + " for platform "
+                        + platform );
+                return string;
+            }
+            index++;
+        }
+        log.warn( "No platform element description column found for " + platform );
+        return null;
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
     private ExternalDatabase determinePlatformExternalDatabase( GeoPlatform platform ) {
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
 
-        String likelyExternalDatabaseIdentifier = determinePlatformExternalReferenceIdentifier( platform );
+        Collection<String> likelyExternalDatabaseIdentifiers = determinePlatformExternalReferenceIdentifier( platform );
         String dbIdentifierDescription = getDbIdentifierDescription( platform );
 
         String url = null;
@@ -1751,6 +1838,11 @@ public class GeoConverter implements Converter {
             result.setWebUri( url );
         }
 
+        if ( likelyExternalDatabaseIdentifiers == null || likelyExternalDatabaseIdentifiers.size() == 0 ) {
+            throw new IllegalStateException( "No external database identifier column was identified" );
+        }
+
+        String likelyExternalDatabaseIdentifier = likelyExternalDatabaseIdentifiers.iterator().next();
         if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" )
                 || likelyExternalDatabaseIdentifier.toLowerCase().equals( "genbank" ) ) {
             if ( genbank == null ) {
@@ -1776,6 +1868,14 @@ public class GeoConverter implements Converter {
                 log.warn( "External database is " + result );
             }
 
+            // } else if ( likelyExternalDatabaseIdentifier.equals( "CLONE_ID" ) ) {
+            // String sample = platform.getColumnData( "CLONE_ID" ).iterator().next();
+            // if ( sample.startsWith( "IMAGE" ) ) {
+            // result.setType( DatabaseType.SEQUENCE );
+            // result.setName( "IMAGE" );
+            // } else {
+            // throw new IllegalStateException( "No external database was identified, but had CLONE_ID" );
+            // }
         }
         if ( result == null || result.getName() == null ) {
             throw new IllegalStateException( "No external database was identified" );
@@ -1787,18 +1887,25 @@ public class GeoConverter implements Converter {
      * @param platform
      * @return
      */
-    private String determinePlatformExternalReferenceIdentifier( GeoPlatform platform ) {
+    private Collection<String> determinePlatformExternalReferenceIdentifier( GeoPlatform platform ) {
         Collection<String> columnNames = platform.getColumnNames();
         int index = 0;
+        Collection<String> matches = new HashSet<String>();
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyExternalReference( string ) ) {
-                log.debug( string + " appears to indicate the external reference identifier in column " + index
+                log.debug( string + " appears to indicate a possible external reference identifier in column " + index
                         + " for platform " + platform );
-                return string;
+                matches.add( string );
+
             }
             index++;
         }
-        return null;
+
+        if ( matches.size() == 0 ) {
+            return null;
+        }
+        return matches;
+
     }
 
     /**
@@ -1955,7 +2062,7 @@ public class GeoConverter implements Converter {
             isBackground = Boolean.TRUE;
         }
 
-        if ( name.matches( "CH[12]B_(MEAN|MEDIAN)" ) ) { // genepix  B = background.
+        if ( name.matches( "CH[12]B_(MEAN|MEDIAN)" ) ) { // genepix B = background.
             isBackground = Boolean.TRUE;
         }
 

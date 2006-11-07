@@ -74,6 +74,7 @@ public class AffyProbeReaderTest extends TestCase {
         boolean foundIt = false;
         for ( Iterator iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
             Reporter element = ( Reporter ) iter.next();
+            log.info( element.getName() );
             if ( element.getName().equals( "1000_at:617:349" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
@@ -94,7 +95,7 @@ public class AffyProbeReaderTest extends TestCase {
 
         apr.parse( is );
 
-        String expectedValue = "TCACGGCAGGACAACGAGAAAGCCC"; // 10
+        String expectedValue = "GCCCCCGTGAGGATGTCACTCAGAT"; // 10
         CompositeSequence cs = apr.get( "1004_at" );
 
         assertTrue( "CompositeSequence was null", cs != null );
@@ -102,7 +103,8 @@ public class AffyProbeReaderTest extends TestCase {
         boolean foundIt = false;
         for ( Iterator iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
             Reporter element = ( Reporter ) iter.next();
-            if ( element.getName().equals( "1004_at:265:573" ) ) {
+            log.info( element.getName() );
+            if ( element.getName().equals( "1004_at#2:557:275" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
                 assertEquals( expectedValue, actualValue );

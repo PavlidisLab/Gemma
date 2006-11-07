@@ -38,6 +38,7 @@ public class GeoConstants {
     public static Collection<String> extRefNames;
 
     public static Collection<String> descriptionNames;
+    public static Collection<String> sequenceColumnNames;
 
     static {
         idNames = new HashSet<String>();
@@ -50,6 +51,7 @@ public class GeoConstants {
         extRefNames.add( "ORF" );
         extRefNames.add( "Genbank" );
         extRefNames.add( "GenBank" );
+        // extRefNames.add( "CLONE_ID" ); // IMAGE...
 
         descriptionNames = new HashSet<String>();
         descriptionNames.add( "GENE_SYMBOL" );
@@ -59,7 +61,10 @@ public class GeoConstants {
         descriptionNames.add( "description" );
         descriptionNames.add( "DESCRIPTION" );
         descriptionNames.add( "Symbol" );
-        descriptionNames.add( "PRIMARY_NAME" ); // agilent
+        descriptionNames.add( "PRIMARY_NAME" ); // agilent.
+
+        sequenceColumnNames = new HashSet<String>();
+        sequenceColumnNames.add( "SEQUENCE" ); // agilent.
     }
 
     /**
@@ -76,6 +81,10 @@ public class GeoConstants {
      */
     public static boolean likelyExternalReference( String id ) {
         return extRefNames.contains( id );
+    }
+
+    public static boolean likelySequence( String id ) {
+        return sequenceColumnNames.contains( id );
     }
 
     /**

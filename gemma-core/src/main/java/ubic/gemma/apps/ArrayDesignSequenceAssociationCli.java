@@ -41,6 +41,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     private String sequenceType;
     private String sequenceFile;
+    private boolean force = false;
 
     public static void main( String[] args ) {
         ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
@@ -78,6 +79,13 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         addOption( sequenceTypeOption );
 
+        Option forceOption = OptionBuilder.withArgName( "Force overwriting of existing sequences" ).withLongOpt(
+                "force" ).withDescription(
+                "If biosequences are encountered that already have sequences filled in, "
+                        + "they will be overwritten; default is to leave them." ).create( "force" );
+
+        addOption( forceOption );
+
     }
 
     @Override
@@ -92,6 +100,10 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         if ( this.hasOption( 'f' ) ) {
             this.sequenceFile = this.getOptionValue( 'f' );
+        }
+
+        if ( this.hasOption( "force" ) ) {
+            this.force = true;
         }
 
     }
@@ -138,9 +150,10 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                         taxon );
                 sequenceFileIs.close();
             } else {
+                log.info( "Retrieving sequences from BLAST databases" );
                 // FIXME - put in correctdatabases to search. Don't always want to do mouse, human etc.
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, new String[] { "nt",
-                        "est_others", "est_human", "est_mouse" }, null );
+                        "est_others", "est_human", "est_mouse" }, null, force );
             }
 
         } catch ( Exception e ) {

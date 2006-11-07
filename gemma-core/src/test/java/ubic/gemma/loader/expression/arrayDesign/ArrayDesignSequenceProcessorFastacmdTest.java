@@ -36,7 +36,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
                     "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
             assertEquals( 243, res.size() );
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {

@@ -30,16 +30,20 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -54,6 +58,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     Taxon taxon;
     ArrayDesign result;
     ArrayDesignSequenceProcessingService app;
+    ArrayDesignService arrayDesignService;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
@@ -68,6 +73,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
         taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Mus musculus" );
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         assert taxon != null;
     }
 
@@ -130,11 +136,27 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 designElementStream, probeFile, taxon );
 
         assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
-        // assertEquals( "reporter count", 528, result.getReporters().size() );
-        // assertEquals( "reporter per composite sequence", 16, result.getCompositeSequences().iterator().next()
-        // .getComponentReporters().size() );
         assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
 
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadWithSequences() throws Exception {
+        endTransaction();
+        String path = ConfigUtils.getString( "gemma.home" );
+        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+        geoService.setLoadPlatformOnly( true );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL890" );
+        final ArrayDesign ad = ads.iterator().next();
+        arrayDesignService.thaw( ad );
+        Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
+                ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
+                false );
+        for ( BioSequence sequence : res ) {
+            assertNotNull( sequence.getSequence() );
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -144,23 +166,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         geoService.setLoadPlatformOnly( true );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88" );
-
         final ArrayDesign ad = ads.iterator().next();
-
-        HibernateDaoSupport hds = new HibernateDaoSupport() {
-        };
-
-        hds.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
-
-        HibernateTemplate templ = hds.getHibernateTemplate();
-
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( ad, LockMode.READ );
-                ad.getCompositeSequences().size();
-                return null;
-            }
-        }, true );
+        arrayDesignService.thaw( ad );
 
         // now do the sequences.
         ZipInputStream z = new ZipInputStream( this.getClass().getResourceAsStream(

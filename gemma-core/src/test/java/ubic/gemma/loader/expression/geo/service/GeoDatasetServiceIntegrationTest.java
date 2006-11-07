@@ -418,6 +418,25 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     }
 
     /**
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testMatrixCreationGDS1794() throws Exception {
+        endTransaction();
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS1794" );
+        ExpressionExperiment newee = results.iterator().next();
+        ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        expressionExperimentService.thaw( newee );
+        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( newee );
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qts.iterator().next() );
+        assertNotNull( matrix );
+    }
+
+    /**
      * This test uses 4 data sets, 4 platforms, and samples that aren't run on all platforms. Insane! And has messed up
      * values in double and string conversion.
      * 

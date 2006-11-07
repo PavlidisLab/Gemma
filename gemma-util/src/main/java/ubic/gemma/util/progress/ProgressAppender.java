@@ -37,7 +37,7 @@ public class ProgressAppender extends AppenderSkeleton {
      */
     @Override
     protected void append( LoggingEvent event ) {
-        if ( event.getLevel().isGreaterOrEqual( Priority.INFO ) ) {
+        if ( event.getLevel().isGreaterOrEqual( Priority.INFO ) && event.getMessage() != null ) {
             ProgressManager.updateCurrentThreadsProgressJob( event.getMessage().toString() );
         }
     }

@@ -20,14 +20,22 @@ package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Unit test for GeoConversion
@@ -83,6 +91,47 @@ public class GeoConverterTest extends TestCase {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testImageClones() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GPL226.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
+                "GPL226" );
+        Object result = this.gc.convert( platform );
+        ArrayDesign ad = ( ArrayDesign ) result;
+
+        assertNotNull( ad );
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs != null && bs.getName().startsWith( "IMAGE" ) ) {
+                return;
+            }
+
+        }
+        fail( "No IMAGE clones!" );
+    }
+
+    public final void testWithImages() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GPL890.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
+                "GPL890" );
+        Object result = this.gc.convert( platform );
+        ArrayDesign ad = ( ArrayDesign ) result;
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs != null && bs.getSequence() != null ) {
+                return;
+            }
+
+        }
+        fail( "No sequences!" );
     }
 
     public void testConvertWithNulls() throws Exception {
