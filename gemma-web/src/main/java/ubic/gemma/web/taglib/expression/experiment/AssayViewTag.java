@@ -119,7 +119,7 @@ public class AssayViewTag extends TagSupport {
         buf.append( "<th>BioMaterial</th>" );
         // display arraydesigns
         for ( ArrayDesign design : designs ) {
-            buf.append( "<th>BioAssays on<br />" + ( design.getShortName() == null ? design.getName() : design.getShortName()) + "</th>" );
+            buf.append( "<th>BioAssays on<br />" + "<a href='' title='" + design.getName() + "' onclick='return false;'>" + ( design.getShortName() == null ? design.getName() : design.getShortName()) + "</a></th>" );
         }
         buf.append( "</tr>" );
 
@@ -135,9 +135,9 @@ public class AssayViewTag extends TagSupport {
         Collections.sort( materials, comparator );
         for ( BioMaterial material : materials ) {
             if ( count % 2 == 0 ) {
-                buf.append( "<tr class='even' align=center>" );
+                buf.append( "<tr class='even' align=justify>" );
             } else {
-                buf.append( "<tr class='odd' align=center>" );
+                buf.append( "<tr class='odd' align=justify>" );
             }
             buf.append( "<td>" + material.getName() + "</td>" );
 
@@ -152,7 +152,7 @@ public class AssayViewTag extends TagSupport {
                     }
                     if ( assayMap.get( design ).size() > 1 ) {
                         String link = "<a href='/Gemma/bioAssay/showAllBioAssays.html?id="
-                                + StringUtils.join( ids.toArray() ) + "'> (list) </a>";
+                                + StringUtils.join( ids.toArray(), "," ) + "'> (list) </a>";
                         buf.append( "<td>" + assayMap.get( design ).size() + link + "</td>" );
                     } else {
                         BioAssay assay = ( ( ArrayList<BioAssay> ) assayMap.get( design ) ).get( 0 );
