@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
@@ -178,6 +179,33 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
             queryObject.setParameter( "name", name );
             return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @Override
+    public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
+        BusinessKey.checkValidKey( databaseEntry );
+        try {
+
+            Criteria queryObject = super.getSession( false ).createCriteria( BioSequence.class );
+
+            BusinessKey.attachCriteria( queryObject, databaseEntry, "sequenceDatabaseEntry" );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    debug( results );
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + BioSequence.class.getName()
+                                    + "' was found when executing query" );
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( BioSequence ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

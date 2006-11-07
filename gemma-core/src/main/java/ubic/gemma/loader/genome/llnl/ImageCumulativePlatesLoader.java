@@ -183,7 +183,7 @@ public class ImageCumulativePlatesLoader {
 
                 bioSequencesToPersist.add( sequence );
                 if ( ++count % BATCH_SIZE == 0 ) {
-                    persisterHelper.persist( bioSequencesToPersist );
+                    persistBatch( bioSequencesToPersist );
                     bioSequencesToPersist.clear();
                 }
 
@@ -209,12 +209,36 @@ public class ImageCumulativePlatesLoader {
         }
 
         // finish up.
-        bioSequenceService.create( bioSequencesToPersist );
+        persistBatch( bioSequencesToPersist );
 
         log.info( "Loaded total of " + count + " sequences" );
         consumerDone = true;
 
         this.numLoaded = count;
+    }
+
+    /**
+     * We only update sequences if possible, to avoid duplicates.
+     * 
+     * @param bioSequencesToPersist
+     */
+    private void persistBatch( Collection<BioSequence> bioSequencesToPersist ) {
+        int alreadyThere = 0;
+        for ( BioSequence sequence2 : bioSequencesToPersist ) {
+            BioSequence existing = bioSequenceService.findByAccession( sequence2.getSequenceDatabaseEntry() );
+            if ( existing != null ) {
+                alreadyThere++;
+                if ( !existing.getName().equals( sequence2.getName() ) ) {
+                    existing.setName( sequence2.getName() );
+                    bioSequenceService.update( existing );
+                }
+            } else {
+                if ( log.isDebugEnabled() ) log.debug( "Adding " + sequence2 );
+                persisterHelper.persist( sequence2 );
+            }
+        }
+        log.info( alreadyThere + "/" + BATCH_SIZE
+                + " of last batch were already in the database, at most just updated name" );
     }
 
 }
