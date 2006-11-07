@@ -80,11 +80,17 @@
 				</td>
 				<td>
 					<%
-					                if ( expressionExperiment.getAccession() != null ) {
-					                out.print( expressionExperiment.getAccession().getAccession() );
-					            } else {
-					                out.print( "Accession unavailable" );
-					            }
+					 	if ( expressionExperiment.getAccession() != null ) {
+					 	    if (expressionExperiment.getAccession().getExternalDatabase().getName().equalsIgnoreCase("GEO")) {
+					 	       out.print(expressionExperiment.getAccession().getAccession()+ "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + 
+			                    expressionExperiment.getAccession().getAccession() + "'>(GEO)</a>");
+					 	    }
+					 	    else {
+					    		out.print( expressionExperiment.getAccession().getAccession() );
+					 	    }
+					    } else {
+					    	out.print( "Accession unavailable" );
+					    }
 					%>
 				</td>
 			</tr>

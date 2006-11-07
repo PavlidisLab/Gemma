@@ -51,6 +51,13 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDataSource() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
+            // custom code
+            // put in GEO link if it is GEO
+            // TODO we should create external database links dynamically
+            if (object.getExternalDatabase().equalsIgnoreCase( "geo" )) {
+                return "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + 
+                    object.getAccession() + "'>GEO</a>";
+            }
             return object.getExternalDatabase();
         }
         return "No Source";
