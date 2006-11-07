@@ -129,8 +129,13 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         taxon.setCommonName( oneLoad[SPECIESI] );
         metaData.setTaxon( taxon );
 
-        InputStream data = this.getClass().getResourceAsStream( this.dirName + oneLoad[DATAFILEI] );
-
+        //InputStream data = this.getClass().getResourceAsStream( this.dirName + oneLoad[DATAFILEI] );
+        InputStream data = new FileInputStream( new File(this.dirName,oneLoad[DATAFILEI] ));
+        if(data == null){
+            log.info( "Data File " + this.dirName + oneLoad[DATAFILEI] + " doesn't exist" );
+            return false;
+        }
+        	
         metaData.setQuantitationTypeName( oneLoad[QNAMEI] );
         metaData.setQuantitationTypeDescription( oneLoad[QDESCRIPTIONI] );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );

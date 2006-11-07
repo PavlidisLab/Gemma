@@ -25,6 +25,7 @@ import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.genome.Gene;
@@ -45,9 +46,9 @@ public class LinkAnalysis {
     private Collection<DesignElementDataVector> dataVectors = null;
     private Probe2ProbeCoexpressionService ppService = null;
     private DesignElementDataVectorService deService = null;
-    private HashMap<String, String> probeToGeneMap = null;
-    private HashMap<String, Set> geneToProbeMap = null;
-    private Map p2v = null;
+    private HashMap<Object, Object> probeToGeneMap = null;
+    private HashMap<Object, Set> geneToProbeMap = null;
+    private Map<Object, DesignElementDataVector> p2v = null;
     private Taxon taxon = null;
 
     private int uniqueItems = 0;
@@ -78,14 +79,17 @@ public class LinkAnalysis {
     }
 
     public void initDB() {
-        if ( useDB ) {
-            try {
+    	return;
+    	/*
+    	if ( useDB ) {
+        	try {
                 dbManager = new DbManager( "tmm" );
             } catch ( SQLException e ) {
                 System.err.print( "Errors in Connecting the Database" );
                 e.printStackTrace();
             }
         }
+        */
     }
 
     private void filter() {
@@ -207,36 +211,35 @@ public class LinkAnalysis {
          * rowsToUse, null, null); } catch (IOException e) { log.error("Error in reading GO File"); } this.uniqueItems =
          * this.geneAnnotations.numGenes();
          */
-        this.p2v = new HashMap<String, DesignElementDataVector>();
+        this.p2v = new HashMap<Object, DesignElementDataVector>();
 
-        this.probeToGeneMap = new HashMap<String, String>();
-        this.geneToProbeMap = new HashMap<String, Set>();
+        this.probeToGeneMap = new HashMap<Object, Object>();
+        this.geneToProbeMap = new HashMap<Object, Set>();
 
         for ( DesignElementDataVector vector : this.dataVectors ) {
             /** *Initialize the map between probe and designElementDataVector** */
-            String probeName = vector.getDesignElement().getName();
-            p2v.put( probeName, vector );
+        	DesignElement probe = vector.getDesignElement(); 
+        	p2v.put( probe , vector );
             /** *Initialize the map between probe and gene 1-1 mapping** */
             Collection<Gene> geneSet = this.deService.getGenes( vector );
-            String geneName = null;
+            Gene gene = null;
             if ( geneSet != null && !geneSet.isEmpty() )
-                geneName = geneSet.iterator().next().getName();
+                gene = geneSet.iterator().next();
             else
                 continue;
-            this.probeToGeneMap.put( probeName, geneName );
+            this.probeToGeneMap.put( probe, gene );
 
             /** *Initialize the map between gene and probeSet 1-n mapping** */
-            Set probeSet = ( Set ) this.geneToProbeMap.get( geneName );
+            Set probeSet = ( Set ) this.geneToProbeMap.get( gene );
             if ( probeSet == null ) {
                 Set tmpSet = new HashSet();
-                tmpSet.add( probeName );
-                this.geneToProbeMap.put( geneName, tmpSet );
+                tmpSet.add( probe );
+                this.geneToProbeMap.put( gene, tmpSet );
             } else
-                probeSet.add( probeName );
+                probeSet.add( probe );
         }
-        assert ( geneToProbeMap.size() != 0 );
         this.uniqueItems = geneToProbeMap.size();
-        // this.uniqueItems = 10000;
+        if(this.uniqueItems == 0) return;
         double scoreP = CorrelationStats.correlationForPvalue( this.fwe / this.uniqueItems, this.dataMatrix.columns() ) - 0.001;
         if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
     
@@ -303,7 +306,7 @@ public class LinkAnalysis {
 
     }
 
-    public void analysis() {
+    public boolean analysis() {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
         assert this.ppService != null;
@@ -312,10 +315,15 @@ public class LinkAnalysis {
         System.err.println( "Taxon: " + this.taxon.getCommonName() );
 
         this.init();
+        if(this.uniqueItems == 0){
+        	log.info("Couldn't find the map between probe and gene ");
+        	return false;
+        }
         this.outputOptions();
         this.calculateDistribution();
         this.getLinks();
         this.saveLinks();
+        return true;
     }
 
     public void outputOptions() {
