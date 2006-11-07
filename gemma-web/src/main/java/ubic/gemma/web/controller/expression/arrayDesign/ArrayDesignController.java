@@ -71,17 +71,17 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
-        String id = request.getParameter( "id" );
+        String idStr = request.getParameter( "id" );
 
-        if ( ( name == null ) && ( id == null ) ) {
+        if ( ( name == null ) && ( idStr == null ) ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
         }
         ArrayDesign arrayDesign = null;
-        if ( id != null ) {
-            arrayDesign = arrayDesignService.load( Long.parseLong( id ) );
-            this.addMessage( request, "object.found", new Object[] { messageId, id } );
-            request.setAttribute( "id", id );
+        if ( idStr != null ) {
+            arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
+            this.addMessage( request, "object.found", new Object[] { messageId, idStr } );
+            request.setAttribute( "id", idStr );
         } else if ( name != null ) {
             arrayDesign = arrayDesignService.findArrayDesignByName( name );
             this.addMessage( request, "object.found", new Object[] { messageName, name } );
@@ -91,8 +91,19 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( name + " not found" );
         }
-
-        return new ModelAndView( "arrayDesign.detail" ).addObject( "arrayDesign", arrayDesign );
+        long id = arrayDesign.getId();
+        
+        Long numBioSequences = arrayDesignService.numBioSequencesById( id );
+        Long numBlatResults = arrayDesignService.numBlatResultsById( id );
+        Long numGenes = arrayDesignService.numGenesById( id );
+        
+        ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
+        mav.addObject( "arrayDesign", arrayDesign );
+        mav.addObject( "numBioSequences", numBioSequences );
+        mav.addObject( "numBlatResults",numBlatResults);
+        mav.addObject( "numGenes", numGenes );
+        
+        return mav;
     }
 
     /**

@@ -176,4 +176,28 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().countAll();
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBioSequencesById(long)
+     */
+    @Override
+    protected long handleNumBioSequencesById( long id ) throws Exception {
+        return this.getArrayDesignDao().numBioSequencesById( id );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBlatResultsById(long)
+     */
+    @Override
+    protected long handleNumBlatResultsById( long id ) throws Exception {
+        return this.getArrayDesignDao().numBlatResultsById( id );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumGeneProductsById(long)
+     */
+    @Override
+    protected long handleNumGenesById( long id ) throws Exception {
+        return this.getArrayDesignDao().numGenesById( id );
+    }
+
 }

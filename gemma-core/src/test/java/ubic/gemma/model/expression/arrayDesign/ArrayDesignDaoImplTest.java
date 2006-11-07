@@ -69,6 +69,25 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         this.externalDatabaseDao = externalDatabaseDao;
     }
 
+    
+    public void testNumBioSequencesById() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        long num = arrayDesignDao.numBioSequencesById( ad.getId() );
+        assertNotNull(num);
+    }
+    
+    public void testNumBlatResultsById() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        long num = arrayDesignDao.numBlatResultsById( ad.getId() );
+        assertNotNull(num);
+    }
+    
+    public void testNumGenesById() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        long num = arrayDesignDao.numGenesById( ad.getId() );
+        assertNotNull(num);
+    }
+    
     public void testCascadeCreateCompositeSequences() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         flushSession(); // fails without this.

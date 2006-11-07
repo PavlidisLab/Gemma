@@ -8,6 +8,39 @@
 
 	<head><title>Array Design Details</title><content tag="heading">Array Design Details</content></head>
 	<body>
+<!--  Summary of array design associations -->
+	<table class='datasummary'>
+<tr>
+<td colspan=2>
+<b>Array Design Summary</b>
+</td>
+</tr>
+<tr>
+<td>
+	Sequence associations
+</td>
+<td>
+	<c:out value="${numBioSequences}" />
+</td> 
+</tr>
+<tr>
+<td>
+	BLAT associations
+</td>
+<td>
+	<c:out value="${numBlatResults}" />
+</td>
+</tr>
+<tr>
+<td>
+	Genes associations
+</td>
+<td>
+	<c:out value="${numGenes}" />
+</td>
+</tr>
+</table>
+
 		 
 		<table>
 			<tr>
@@ -63,8 +96,7 @@
 				</td>
 			</tr>
 </table>
-			<%-- FIXME - show some of the design elements --%>
-
+			<%-- FIXME - show some of the design elements --%>	
 			<table>
 			<tr>
 				<td colspan="2">

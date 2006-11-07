@@ -2,9 +2,11 @@
 <title><fmt:message key="mainMenu.title" />
 </title>
 <table class="datasummary">
-<thead>
+<tr>
+<td colspan=2>
 <b>Data Summary</b>
-</thead>
+</td>
+</tr>
 <tr>
 	<td>
 		Bioassays:

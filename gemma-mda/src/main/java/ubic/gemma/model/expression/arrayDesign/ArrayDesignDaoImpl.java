@@ -258,4 +258,38 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw super.convertHibernateAccessException( ex );
         }
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBioSequencesById(long)
+     */
+    @Override
+    protected long handleNumBioSequencesById( long id ) throws Exception {
+        final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar " +
+                "inner join cs.biologicalCharacteristic where ar.id = :id and " +
+                "cs.biologicalCharacteristic.sequence IS NOT NULL";
+        return queryByIdReturnInteger( id, queryString );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBlatResultsById(long)
+     */
+    @Override
+    protected long handleNumBlatResultsById( long id ) throws Exception {
+        final String queryString = "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar " +
+        "inner join cs.biologicalCharacteristic, BioSequence2GeneProductImpl as bs2gp " +
+        "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar.id = :id";
+        return queryByIdReturnInteger( id, queryString );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumGeneProductsById(long)
+     */
+    @Override
+    protected long handleNumGenesById( long id ) throws Exception {
+        final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar " +
+        "inner join cs.biologicalCharacteristic, BioSequence2GeneProductImpl bs2gp, GeneImpl gene " +
+        "where bs2gp.bioSequence=cs.biologicalCharacteristic and " +
+        "bs2gp.geneProduct.id=gene.products.id and ar.id = :id";
+        return queryByIdReturnInteger( id, queryString );
+    }
 }
