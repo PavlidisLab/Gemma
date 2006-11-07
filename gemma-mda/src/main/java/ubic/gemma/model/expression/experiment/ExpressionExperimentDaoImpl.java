@@ -129,7 +129,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameter( "id", Id );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                qtCounts.put( (QuantitationType)list.get( 0 ), list.getInteger( 1 ) );
+                qtCounts.put( ( QuantitationType ) list.get( 0 ), list.getInteger( 1 ) );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -239,21 +239,23 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 int count = 0;
                 AuditTrail at; // reused a couple times to delete the audit trails
 
+                log.info( "Removing  Design Element Data Vectors." );
                 for ( DesignElementDataVector dv : designElementDataVectors ) {
                     BioAssayDimension dim = dv.getBioAssayDimension();
                     dims.add( dim );
                     session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        log.info( count + " design Element data vectors deleted" );
-                    }
+                    if ( ++count % 500 == 0 ) log.info( count + " design Element data vectors deleted" );
+
                 }
 
+                log.info( "Removing BioAssay Dimensions." );
                 for ( BioAssayDimension dim : dims ) {
                     session.delete( dim );
                 }
 
                 // Delete BioMaterials
                 for ( BioAssay ba : toDeletePers.getBioAssays() ) {
+
 
                     // fixme this needs to be here for lazy loading issues. Even though the AD isn't getting removed.
                     // Not happy about this at all. but what to do?
@@ -503,19 +505,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         return vectors;
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPerTaxonCount()
      */
     @Override
     protected Map handleGetPerTaxonCount() throws Exception {
         final String queryString = "select SU.sourceTaxon.scientificName, count(distinct EE.id) from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon group by SU.sourceTaxon.scientificName";
-        Map<String,Long> taxonCount = new HashMap<String,Long>();
+        Map<String, Long> taxonCount = new HashMap<String, Long>();
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                taxonCount.put( list.getString( 0 ), new Long(list.getInteger( 1 )) );
+                taxonCount.put( list.getString( 0 ), new Long( list.getInteger( 1 ) ) );
             }
             return taxonCount;
         } catch ( org.hibernate.HibernateException ex ) {

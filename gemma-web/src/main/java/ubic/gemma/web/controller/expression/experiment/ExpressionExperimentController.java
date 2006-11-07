@@ -268,20 +268,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         //return doDelete( request, response, expressionExperiment );
     }
 
-    /**
-     * @param request
-     * @param expressionExperiment
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unused")
-    private ModelAndView doDelete( HttpServletRequest request, HttpServletResponse response,
-            ExpressionExperiment expressionExperiment ) {
-        addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getId() } );
-        expressionExperimentService.delete( expressionExperiment );
-        expressionExperiment = null;
-
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
-    }
     
     
     /*
@@ -305,9 +291,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
                         .getAuthentication().getName(), "Deleting expression experiment: "
                         + ee.getAccession() );
-                
-               // addMessage( request, "object.deleted", new Object[] { messagePrefix, ee.getId() } );
+                               
                 expressionExperimentService.delete( ee );
+                saveMessage( "Expression Experiment " + ee.getShortName() + " removed from Database" );
                 ee = null;
 
 

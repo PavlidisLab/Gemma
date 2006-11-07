@@ -23,6 +23,8 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -30,8 +32,12 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * @author keshav
@@ -41,7 +47,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  */
-public class ArrayDesignController extends BaseMultiActionController {
+public class ArrayDesignController extends BackgroundProcessingMultiActionController {
 
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
 
@@ -130,27 +136,53 @@ public class ArrayDesignController extends BaseMultiActionController {
         // check that no EE depend on the arraydesign we want to delete
         // Do this by checking if there are any bioassays that depend this AD
         Collection assays = arrayDesignService.getAllAssociatedBioAssays( id );
-        if ( assays.size() == 0 ) return doDelete( request, arrayDesign );
+        if ( assays.size() != 0 ) {
+            // String eeName = ( ( BioAssay ) assays.iterator().next() )
+            // todo tell user what EE depends on this array design
+            addMessage( request, "Array Design " + arrayDesign.getName()
+                    + " can't be Deleted. ExpressionExperiments depend on it.", new Object[] { messageName,
+                    arrayDesign.getName() } );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+        }
 
-        // String eeName = ((BioAssay) assays.iterator().next()). //todo tell user what EE depend on this array design
-        addMessage( request, "Array Design " + arrayDesign.getName()
-                + " can't be Deleted. ExpressionExperiments depend on it.", new Object[] { messageName,
-                arrayDesign.getName() } );
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+        String taskId = startJob( arrayDesign, request );
+        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+       
 
     }
 
-    /**
-     * @param request
-     * @param locale
-     * @param bibRef
-     * @return
+     
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseBackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+     *      java.lang.Object, java.lang.String)
      */
-    private ModelAndView doDelete( HttpServletRequest request, ArrayDesign arrayDesign ) {
-        arrayDesignService.remove( arrayDesign );
-        log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
-        addMessage( request, "object.deleted", new Object[] { messageName, arrayDesign.getName() } );
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+
+            @SuppressWarnings("unchecked")
+            public ModelAndView call() throws Exception {
+
+                SecurityContextHolder.setContext( securityContext );
+     
+                ArrayDesign ad = (ArrayDesign) command;
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Deleting Array Design: "
+                        + ad.getShortName());
+                            
+                arrayDesignService.remove( ad );
+                saveMessage( "Array Design "+ad.getShortName()  +" removed from Database." );                
+                ad = null;
+
+
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
+            }
+        };
     }
 
 }
