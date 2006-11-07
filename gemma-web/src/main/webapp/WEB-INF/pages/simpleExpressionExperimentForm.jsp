@@ -2,15 +2,7 @@
 <jsp:useBean id="simpleExpressionExperimentLoadCommand" scope="request"
 	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
 <head>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript'
-		src="<c:url value="/scripts/progress.js"/>"></script>
-
-	<link rel="stylesheet" type="text/css" media="all"
-		href="<c:url value='/styles/progressbar.css'/>" />
+	
 
 </head>
 <h1>
@@ -230,6 +222,4 @@
 	</table>
 
 </form>
-<script type="text/javascript">
-	createProgressBar();
-</script>
+
