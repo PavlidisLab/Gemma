@@ -52,6 +52,8 @@ public abstract class RecordParser implements Parser {
                 record = new StringBuilder();
             }
 
+            if ( record == null ) continue;
+
             record.append( line );
             record.append( "\n" );
 

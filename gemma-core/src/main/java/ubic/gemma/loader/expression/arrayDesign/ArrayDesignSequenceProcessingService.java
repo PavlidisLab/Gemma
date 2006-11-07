@@ -54,7 +54,7 @@ import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressManager;
 
 /**
- * Handles collapsing the sequences, attaching sequences to DesignElements
+ * Handles collapsing the sequences, attaching sequences to DesignElements, either from provided input or via a fetch.
  * 
  * @author pavlidis
  * @version $Id$
@@ -86,23 +86,19 @@ public class ArrayDesignSequenceProcessingService {
 
     private BioSequenceService bioSequenceService;
 
-    // /**
-    // * For the case where the reporter and compositeSequence are the same thing, make a new reporter and add it to the
-    // * array design.
-    // *
-    // * @param arrayDesign
-    // * @param compositeSequence
-    // * @param bioSequence
-    // */
-    // private void addReporter( CompositeSequence compositeSequence ) {
-    // BioSequence bioSequence = compositeSequence.getBiologicalCharacteristic();
-    // Reporter reporter = Reporter.Factory.newInstance();
-    // reporter.setCompositeSequence( compositeSequence );
-    // reporter.setImmobilizedCharacteristic( bioSequence );
-    // reporter.setName( compositeSequence.getName() );
-    // reporter.setDescription( "Reporter same as composite sequence" );
-    // compositeSequence.getComponentReporters().add( reporter );
-    // }
+    /**
+     * @param nameMap
+     * @param sequence
+     */
+    private void addToMaps( Map<String, BioSequence> gbIdMap, Map<String, BioSequence> nameMap, BioSequence sequence ) {
+        nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
+
+        if ( sequence.getSequenceDatabaseEntry() != null ) {
+            gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
+        } else {
+            if ( log.isDebugEnabled() ) log.debug( "No sequence database entry for " + sequence.getName() );
+        }
+    }
 
     /**
      * Associate sequences with an array design.
@@ -216,6 +212,132 @@ public class ArrayDesignSequenceProcessingService {
         return probeId;
     }
 
+    @SuppressWarnings("unchecked")
+    private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
+            Collection<CompositeSequence> csBuffer ) {
+        Collection<BioSequence> newOnes = bioSequenceService.create( sequenceBuffer );
+        bioSequences.addAll( newOnes );
+        Iterator<CompositeSequence> csit = csBuffer.iterator();
+        for ( BioSequence sequence : newOnes ) {
+            CompositeSequence cs = csit.next();
+            cs.setBiologicalCharacteristic( sequence );
+        }
+        csBuffer.clear();
+        sequenceBuffer.clear();
+    }
+
+    /**
+     * Used to check if an IMAGE clone exists to use for an accession. If the IMAGE clone is used instead, we update the
+     * composite sequence.
+     * 
+     * @param cs
+     * @return
+     */
+    private String getAccession( CompositeSequence cs ) {
+        BioSequence bs = cs.getBiologicalCharacteristic();
+        if ( bs.getSequenceDatabaseEntry() == null ) {
+            return null;
+        }
+        return bs.getSequenceDatabaseEntry().getAccession();
+
+    }
+
+    /**
+     * @param accessionsToFetch
+     * @param found
+     * @return
+     */
+    private Collection<String> getUnFound( Collection<String> accessionsToFetch, Map<String, BioSequence> found ) {
+        Collection<String> notFound = new HashSet<String>();
+        for ( String accession : accessionsToFetch ) {
+            if ( !found.containsKey( accession ) ) {
+                notFound.add( accession );
+            }
+        }
+        return notFound;
+    }
+
+    private void informAboutFetchListResults( ArrayDesign arrayDesign, Map<String, BioSequence> accessionsToFetch,
+            int sequenceProvided, int noSequence ) {
+        log.info( "Array Design has " + accessionsToFetch.size() + " accessions to fetch for "
+                + arrayDesign.getCompositeSequences().size() + " compositeSequences" );
+        log.info( sequenceProvided + " had sequences already and will not be replaced" );
+        log.info( noSequence + " has no BioSequence association at all and will not be processed further." );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param accessionsToFetch
+     * @param versionNumber
+     */
+    private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, int versionNumber, boolean force ) {
+        Map<String, BioSequence> accessionsToFetch = new HashMap<String, BioSequence>();
+        int sequenceProvided = 0;
+        int noSequence = 0;
+        boolean warned = false;
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs == null ) {
+                warned = warnAboutMissingSequence( noSequence, warned, cs );
+                noSequence++;
+                continue;
+            }
+
+            if ( !force && StringUtils.isNotBlank( bs.getSequence() ) ) {
+                sequenceProvided++;
+                continue;
+            }
+
+            String accession = getAccession( cs );
+
+            if ( accession == null ) {
+                log.warn( "No accession for " + cs + ": " + bs );
+                continue;
+            }
+
+            // accession = addVersionNumber( accession, versionNumber ); // wild guess - we don't know the version.
+            accessionsToFetch.put( accession, bs );
+        }
+        informAboutFetchListResults( arrayDesign, accessionsToFetch, sequenceProvided, noSequence );
+        return accessionsToFetch;
+    }
+
+    /**
+     * @param arrayDesign
+     * @param notFound
+     * @return
+     */
+    private void logMissingSequences( ArrayDesign arrayDesign, Collection<String> notFound ) {
+        log.warn( notFound.size() + " sequences were not found (or were already filled in) for " + arrayDesign );
+        StringBuilder buf = new StringBuilder();
+        buf.append( "Missing (or already present) sequences for following accessions " + "at version numbers up to "
+                + MAX_VERSION_NUMBER + " : " );
+        for ( String string : notFound ) {
+            string = string.replaceFirst( "\\.\\d$", "" );
+            buf.append( string + " " );
+        }
+        log.info( buf.toString() );
+    }
+
+    private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
+        if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
+            log.warn( "More than " + 20 + " compositeSequences do not have"
+                    + " biologicalCharacteristics, skipping further details." );
+        } else if ( numWithNoSequence < 20 ) {
+            log.warn( "No sequence match for " + compositeSequence + "; it will not have a biologicalCharacteristic!" );
+        }
+    }
+
+    /**
+     * If the sequence already exists, we have to update it.
+     * 
+     * @param sequence
+     * @return
+     */
+    private BioSequence persistSequence( BioSequence sequence ) {
+        return ( BioSequence ) persisterHelper.persistOrUpdate( sequence );
+    }
+
     /**
      * Use this to add sequences to an existing Affymetrix design.
      * 
@@ -307,29 +429,6 @@ public class ArrayDesignSequenceProcessingService {
         return bioSequences;
     }
 
-    private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
-        if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
-            log.warn( "More than " + 20 + " compositeSequences do not have"
-                    + " biologicalCharacteristics, skipping further details." );
-        } else if ( numWithNoSequence < 20 ) {
-            log.warn( "No sequence match for " + compositeSequence + "; it will not have a biologicalCharacteristic!" );
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
-            Collection<CompositeSequence> csBuffer ) {
-        Collection<BioSequence> newOnes = bioSequenceService.create( sequenceBuffer );
-        bioSequences.addAll( newOnes );
-        Iterator<CompositeSequence> csit = csBuffer.iterator();
-        for ( BioSequence sequence : newOnes ) {
-            CompositeSequence cs = csit.next();
-            cs.setBiologicalCharacteristic( sequence );
-        }
-        csBuffer.clear();
-        sequenceBuffer.clear();
-    }
-
     /**
      * Create a new Affymetrix design from scratch, given the name.
      * 
@@ -376,267 +475,6 @@ public class ArrayDesignSequenceProcessingService {
         InputStream probeSequenceFileStream = new BufferedInputStream( new FileInputStream( probeSequenceFile ) );
         return this.processAffymetrixDesign( arrayDesignName, arrayDesignFileStream, probeSequenceFileStream, taxon );
     }
-
-    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, boolean force ) {
-        return this.processArrayDesign( arrayDesign, databaseNames, null, force );
-    }
-
-    /**
-     * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
-     * design must already have the biosequence objects, but they haven't been populated with the actual sequences (if
-     * they have, the values will be replaced if force=true)
-     * <p>
-     * Sequences that appear to be IMAGE clones are given another check and the Genbank accession used to retrieve the
-     * sequence is based on that, not the one provided in the Biosequence; if it differs it will be replaced. This
-     * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
-     * 
-     * @param arrayDesign
-     * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome where to find the blast databases for sequence retrieval
-     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *        overwritten with a new one.
-     * @return
-     */
-    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            String blastDbHome, boolean force ) {
-
-        int versionNumber = 1;
-        Map<String, BioSequence> accessionsToFetch = initializeFetchList( arrayDesign, versionNumber, force );
-        Collection<String> notFound = accessionsToFetch.keySet();
-        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
-
-        while ( versionNumber < MAX_VERSION_NUMBER ) {
-            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
-
-            Map<String, BioSequence> found = updateSequences( accessionsToFetch, retrievedSequences );
-
-            finalResult.addAll( found.values() );
-
-            notFound = getUnFound( notFound, found );
-
-            if ( notFound.isEmpty() ) {
-                break;
-            }
-
-            // bump up the version numbers.
-            ++versionNumber;
-
-            for ( String accession : notFound ) {
-                // remove the version number and increase it
-                BioSequence bs = accessionsToFetch.get( accession );
-                accessionsToFetch.remove( accession );
-                accession = accession.replaceFirst( "\\d$", Integer.toString( versionNumber ) );
-                accessionsToFetch.put( accession, bs );
-            }
-            notFound = accessionsToFetch.keySet();
-
-        }
-
-        if ( !notFound.isEmpty() ) {
-            logMissingSequences( arrayDesign, notFound );
-        }
-        return finalResult;
-
-    }
-
-    /**
-     * @param arrayDesign
-     * @param notFound
-     * @return
-     */
-    private void logMissingSequences( ArrayDesign arrayDesign, Collection<String> notFound ) {
-        log.warn( notFound.size() + " sequences were not found (or were already filled in) for " + arrayDesign );
-        StringBuilder buf = new StringBuilder();
-        buf.append( "Missing (or already present) sequences for following accessions " + "at version numbers up to "
-                + MAX_VERSION_NUMBER + " : " );
-        for ( String string : notFound ) {
-            string = string.replaceFirst( "\\.\\d$", "" );
-            buf.append( string + " " );
-        }
-        log.info( buf.toString() );
-    }
-
-    /**
-     * @param arrayDesign
-     * @param accessionsToFetch
-     * @param versionNumber
-     */
-    private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, int versionNumber, boolean force ) {
-        Map<String, BioSequence> accessionsToFetch = new HashMap<String, BioSequence>();
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs == null ) {
-                log.warn( cs + " has no biosequence" );
-                continue;
-            }
-
-            if ( !force && StringUtils.isNotBlank( bs.getSequence() ) ) {
-                continue;
-            }
-
-            String accession = getAndUpdateAccession( cs );
-
-            if ( accession == null ) {
-                log.warn( "No accession for " + cs + ": " + bs );
-                continue;
-            }
-
-            // accession = addVersionNumber( accession, versionNumber ); // wild guess - we don't know the version.
-            accessionsToFetch.put( accession, bs );
-        }
-        log.info( "Array Design has " + accessionsToFetch.size() + " accessions for "
-                + arrayDesign.getCompositeSequences().size() + " compositeSequences" );
-        return accessionsToFetch;
-    }
-
-    /**
-     * Used to check if an IMAGE clone exists to use for an accession. If the IMAGE clone is used instead, we update the
-     * composite sequence.
-     * 
-     * @param cs
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private String getAndUpdateAccession( CompositeSequence cs ) {
-        BioSequence bs = cs.getBiologicalCharacteristic();
-        // if ( bs.getName().startsWith( "IMAGE" ) ) {
-        // Collection<BioSequence> imageClones = bioSequenceService.findByName( bs.getName() );
-        //
-        // if ( imageClones != null && imageClones.size() > 0 ) {
-        // assert imageClones.size() == 1 : "Expected only a single match for " + bs.getName() + ", found"
-        // + imageClones.size();
-        // BioSequence image = imageClones.iterator().next();
-        //
-        // String origAcc = null;
-        // if ( bs.getSequenceDatabaseEntry() != null ) {
-        // origAcc = bs.getSequenceDatabaseEntry().getAccession();
-        // }
-        //
-        // String imageAcc = image.getSequenceDatabaseEntry().getAccession();
-        //
-        // // we must fill in the accession with an actual genbank accession, not the image id.
-        // if ( origAcc != null ) {
-        // assert !origAcc.startsWith( "IMAGE" ) && !imageAcc.startsWith( "IMAGE" ) : "Got IMAGE clone: "
-        // + imageAcc + " and Original accession: " + origAcc;
-        // }
-        //
-        // if ( origAcc != null && origAcc.equals( imageAcc ) ) {
-        // return origAcc; // easy case.
-        // } else {
-        // // update the composite sequence.
-        // cs.setBiologicalCharacteristic( image );
-        // cs.setDescription( cs.getDescription() + " Note: Biological characteristic reassigned to " + image
-        // + " from " + bs );
-        // compositeSequenceService.update( cs );
-        // return imageAcc;
-        // }
-        // }
-        // }
-
-        if ( bs.getSequenceDatabaseEntry() == null ) {
-            return null;
-        }
-        return bs.getSequenceDatabaseEntry().getAccession();
-
-    }
-
-    /**
-     * @param accessionsToFetch
-     * @param found
-     * @return
-     */
-    private Collection<String> getUnFound( Collection<String> accessionsToFetch, Map<String, BioSequence> found ) {
-        Collection<String> notFound = new HashSet<String>();
-        for ( String accession : accessionsToFetch ) {
-            if ( !found.containsKey( accession ) ) {
-                notFound.add( accession );
-            }
-        }
-        return notFound;
-    }
-
-    /**
-     * Copy sequences into the original versions, unless the sequence is already filled in.
-     * 
-     * @param accessionsToFetch
-     * @param retrievedSequences
-     * @return
-     */
-    private Map<String, BioSequence> updateSequences( Map<String, BioSequence> accessionsToFetch,
-            Collection<BioSequence> retrievedSequences ) {
-
-        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
-        for ( BioSequence sequence : retrievedSequences ) {
-            String newSequence = sequence.getSequence();
-
-            if ( StringUtils.isBlank( newSequence ) ) {
-                log.warn( "Blank sequence for " + sequence );
-                continue;
-            }
-
-            String accession = sequence.getSequenceDatabaseEntry().getAccession();
-            BioSequence old = accessionsToFetch.get( accession );
-
-            if ( old == null ) {
-                log.warn( "accessionsToFetch did not contain " + accession );
-                continue;
-            }
-
-            if ( !StringUtils.isBlank( old.getSequence() ) ) {
-                log.warn( "Sequence entry for " + old + " is not empty, skipping." );
-                // no need to update
-                continue;
-            }
-
-            old.setSequence( newSequence );
-            old.setLength( new Long( sequence.getSequence().length() ) );
-            old.setIsApproximateLength( false );
-            found.put( accession, old );
-            accessionsToFetch.remove( accession );
-        }
-        bioSequenceService.update( found.values() );
-        return found;
-    }
-
-    /**
-     * @param databaseNames
-     * @param blastDbHome
-     * @param accessionsToFetch
-     * @return
-     */
-    private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
-            Collection<String> accessionsToFetch ) {
-        // search the databases.
-        FastaCmd fc = new SimpleFastaCmd();
-        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
-        for ( String dbname : databaseNames ) {
-            Collection<BioSequence> moreBioSequences;
-            if ( blastDbHome != null ) {
-                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname, blastDbHome );
-            } else {
-                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname );
-            }
-
-            if ( log.isDebugEnabled() )
-                log.debug( moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched "
-                        + " from " + dbname );
-            retrievedSequences.addAll( moreBioSequences );
-        }
-        return retrievedSequences;
-    }
-
-    // /**
-    // * Add a version number if it is missing; this is needed for sucessful retrieval from blast databases.
-    // *
-    // * @param accession
-    // * @return
-    // */
-    // private String addVersionNumber( String accession, int versionNumber ) {
-    // if ( !accession.matches( "\\.\\d$" ) ) {
-    // accession = accession + "." + versionNumber;
-    // }
-    // return accession;
-    // }
 
     /**
      * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on
@@ -749,28 +587,130 @@ public class ArrayDesignSequenceProcessingService {
 
     }
 
-    /**
-     * If the sequence already exists, we have to update it.
-     * 
-     * @param sequence
-     * @return
-     */
-    private BioSequence persistSequence( BioSequence sequence ) {
-        return ( BioSequence ) persisterHelper.persistOrUpdate( sequence );
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, boolean force ) {
+        return this.processArrayDesign( arrayDesign, databaseNames, null, force );
     }
 
     /**
-     * @param nameMap
-     * @param sequence
+     * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
+     * design must already have the biosequence objects, but they haven't been populated with the actual sequences (if
+     * they have, the values will be replaced if force=true)
+     * <p>
+     * Sequences that appear to be IMAGE clones are given another check and the Genbank accession used to retrieve the
+     * sequence is based on that, not the one provided in the Biosequence; if it differs it will be replaced. This
+     * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
+     * 
+     * @param arrayDesign
+     * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
+     * @param blastDbHome where to find the blast databases for sequence retrieval
+     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *        overwritten with a new one.
+     * @return
      */
-    private void addToMaps( Map<String, BioSequence> gbIdMap, Map<String, BioSequence> nameMap, BioSequence sequence ) {
-        nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            String blastDbHome, boolean force ) {
 
-        if ( sequence.getSequenceDatabaseEntry() != null ) {
-            gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
-        } else {
-            if ( log.isWarnEnabled() ) log.warn( "No sequence database entry for " + sequence.getName() );
+        int versionNumber = 1;
+        Map<String, BioSequence> accessionsToFetch = initializeFetchList( arrayDesign, versionNumber, force );
+
+        if ( accessionsToFetch.size() == 0 ) {
+            log.info( "No accessions to fetch, no processing will be done" );
+            return null;
         }
+
+        Collection<String> notFound = accessionsToFetch.keySet();
+        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
+
+        while ( versionNumber < MAX_VERSION_NUMBER ) {
+            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
+
+            Map<String, BioSequence> found = updateSequences( accessionsToFetch, retrievedSequences );
+
+            finalResult.addAll( found.values() );
+
+            notFound = getUnFound( notFound, found );
+
+            if ( notFound.isEmpty() ) {
+                break;
+            }
+
+            // bump up the version numbers.
+            ++versionNumber;
+
+            for ( String accession : notFound ) {
+                // remove the version number and increase it
+                BioSequence bs = accessionsToFetch.get( accession );
+                accessionsToFetch.remove( accession );
+                accession = accession.replaceFirst( "\\d$", Integer.toString( versionNumber ) );
+                accessionsToFetch.put( accession, bs );
+            }
+            notFound = accessionsToFetch.keySet();
+
+        }
+
+        if ( !notFound.isEmpty() ) {
+            logMissingSequences( arrayDesign, notFound );
+        }
+        return finalResult;
+
+    }
+
+    // /**
+    // * Add a version number if it is missing; this is needed for sucessful retrieval from blast databases.
+    // *
+    // * @param accession
+    // * @return
+    // */
+    // private String addVersionNumber( String accession, int versionNumber ) {
+    // if ( !accession.matches( "\\.\\d$" ) ) {
+    // accession = accession + "." + versionNumber;
+    // }
+    // return accession;
+    // }
+
+    /**
+     * @param databaseNames
+     * @param blastDbHome
+     * @param accessionsToFetch
+     * @return
+     */
+    private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
+            Collection<String> accessionsToFetch ) {
+        // search the databases.
+        FastaCmd fc = new SimpleFastaCmd();
+        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
+        for ( String dbname : databaseNames ) {
+            Collection<BioSequence> moreBioSequences;
+            if ( blastDbHome != null ) {
+                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname, blastDbHome );
+            } else {
+                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname );
+            }
+
+            if ( log.isDebugEnabled() )
+                log.debug( moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched "
+                        + " from " + dbname );
+            retrievedSequences.addAll( moreBioSequences );
+        }
+        return retrievedSequences;
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param bioSequenceService the bioSequenceService to set
+     */
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     /**
@@ -794,20 +734,57 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * @param arrayDesignService the arrayDesignService to set
+     * Copy sequences into the original versions, unless the sequence is already filled in.
+     * 
+     * @param accessionsToFetch
+     * @param retrievedSequences
+     * @return
      */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
+    private Map<String, BioSequence> updateSequences( Map<String, BioSequence> accessionsToFetch,
+            Collection<BioSequence> retrievedSequences ) {
+
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        for ( BioSequence sequence : retrievedSequences ) {
+            String newSequence = sequence.getSequence();
+
+            if ( StringUtils.isBlank( newSequence ) ) {
+                log.warn( "Blank sequence for " + sequence );
+                continue;
+            }
+
+            String accession = sequence.getSequenceDatabaseEntry().getAccession();
+            BioSequence old = accessionsToFetch.get( accession );
+
+            if ( old == null ) {
+                log.warn( "accessionsToFetch did not contain " + accession );
+                continue;
+            }
+
+            if ( !StringUtils.isBlank( old.getSequence() ) ) {
+                log.warn( "Sequence entry for " + old + " is not empty, skipping." );
+                // no need to update
+                continue;
+            }
+
+            old.setSequence( newSequence );
+            old.setLength( new Long( sequence.getSequence().length() ) );
+            old.setIsApproximateLength( false );
+            found.put( accession, old );
+            accessionsToFetch.remove( accession );
+        }
+        bioSequenceService.update( found.values() );
+        return found;
     }
 
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    private boolean warnAboutMissingSequence( int noSequence, boolean warned, CompositeSequence cs ) {
+        if ( !warned ) {
+            if ( noSequence < 20 ) {
+                log.warn( cs + " has no biosequence" );
+            } else {
+                log.warn( "...More than 20 are missing sequences, details omitted" );
+                warned = true;
+            }
+        }
+        return warned;
     }
 }

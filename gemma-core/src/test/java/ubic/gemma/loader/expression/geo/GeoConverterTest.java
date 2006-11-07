@@ -20,7 +20,6 @@ package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -28,14 +27,11 @@ import junit.framework.TestCase;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Unit test for GeoConversion
