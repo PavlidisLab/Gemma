@@ -144,7 +144,10 @@ public class GeoConverter implements Converter {
 
     private ExternalDatabase genbank;
 
-    private static final String RAT = "rattus";
+    /**
+     * The scientific name used for rat species. FIXME this should be updated elsewhere; avoid this hardcoding.
+     */
+    private static final String RAT = "Rattus norvegicus";
 
     private static Map<String, String> organismDatabases = new HashMap<String, String>();
 
