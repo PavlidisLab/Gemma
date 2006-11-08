@@ -200,4 +200,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numGenesById( id );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetExpressionExperimentsById(long)
+     */
+    @Override
+    protected Collection handleGetExpressionExperimentsById( long id ) throws Exception {
+        return this.getArrayDesignDao().getExpressionExperimentsById( id );
+    }
+
 }

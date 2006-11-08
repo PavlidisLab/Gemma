@@ -292,4 +292,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         "bs2gp.geneProduct.id=gene.products.id and ar.id = :id";
         return queryByIdReturnInteger( id, queryString );
     }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
+     */
+    @Override
+    protected Collection handleGetExpressionExperimentsById( long id ) throws Exception {
+        final String queryString = "select ee from ArrayDesignImpl ad, BioAssayImpl ba, ExpressionExperimentImpl ee where ba.arrayDesignUsed=ad and ee.bioAssays.id=ba.id and ad.id = :id";
+        return queryByIdReturnCollection( id, queryString );
+    }
 }

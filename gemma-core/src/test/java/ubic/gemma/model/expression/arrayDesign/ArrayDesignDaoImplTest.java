@@ -68,6 +68,12 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
     }
+    
+    public void testGetExpressionExperimentsById() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection ee = arrayDesignDao.getExpressionExperimentsById( ad.getId() );
+        assertNotNull(ee);
+    }
 
     
     public void testNumBioSequencesById() {
