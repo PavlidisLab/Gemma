@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -32,6 +33,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -96,13 +98,24 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Long numBioSequences = arrayDesignService.numBioSequencesById( id );
         Long numBlatResults = arrayDesignService.numBlatResultsById( id );
         Long numGenes = arrayDesignService.numGenesById( id );
+        Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperimentsById( id );
+        Long numExpressionExperiments = new Long(ee.size());
         
+        String[] eeIdList = new String[ee.size()];
+        int i = 0;
+        for (ExpressionExperiment e : ee) {
+            eeIdList[i] = e.getId().toString();
+            i++;
+        }
+        String eeIds = StringUtils.join( eeIdList,",");
+
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numBioSequences", numBioSequences );
         mav.addObject( "numBlatResults",numBlatResults);
         mav.addObject( "numGenes", numGenes );
-        
+        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        mav.addObject( "expressionExperimentIds", eeIds );       
         return mav;
     }
 

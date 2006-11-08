@@ -96,6 +96,10 @@
 				</td>
 			</tr>
 </table>
+There are 
+<b><c:out value="${numExpressionExperiments}" /></b>
+expression experiments that use this array design. 
+<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=<c:out value="${expressionExperimentIds}" />">(link)</a>
 			<%-- FIXME - show some of the design elements --%>	
 			<table>
 			<tr>
