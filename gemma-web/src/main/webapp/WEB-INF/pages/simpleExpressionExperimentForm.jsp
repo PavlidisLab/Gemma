@@ -1,9 +1,16 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="simpleExpressionExperimentLoadCommand" scope="request"
 	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
+
+<html>
 <head>
 	
-
+<script type='text/javascript'
+		<script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'> </script>
+		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+		<script type='text/javascript' src='/Gemma/scripts/progressbar.js'></script>
+		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 <h1>
 	Load an expression data set from a flat file
@@ -13,6 +20,7 @@
 	experiment aren't listed, provide a name and it will be created based
 	on the data.
 </p>
+<body>
 <form method="post"
 	action="<c:url value="/loadSimpleExpressionExperiment.html"/>"
 	enctype="multipart/form-data" onsubmit="startProgress()">
@@ -221,5 +229,14 @@
 		</tr>
 	</table>
 
+
 </form>
+
+		<script type="text/javascript">
+			createDeterminateProgressBar();
+		</script>
+
+</body>
+</html>
+
 

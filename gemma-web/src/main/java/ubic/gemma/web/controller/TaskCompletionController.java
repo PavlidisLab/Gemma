@@ -74,7 +74,7 @@ public class TaskCompletionController extends AbstractController {
         if ( request.getAttribute( CANCEL_ATTRIBUTE ) != null ) {
             log.info( "Cancelling " + taskId );
             taskRunningService.cancelTask( taskId );
-            return new ModelAndView( new RedirectView( "/mainMenu.html" ) ); // have to replace this...
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
 
         log.debug( "Checking for job " + taskId );
@@ -88,11 +88,13 @@ public class TaskCompletionController extends AbstractController {
         } catch ( CancellationException e ) {
             log.debug( "Job was cancelled" );
             
-            return new ModelAndView( new RedirectView( "/mainMenu.html" ) ); // have to replace this...
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         } catch ( Throwable e ) {
             log.debug( "Got an exception: " + e );
             if ( e instanceof Exception ) throw ( Exception ) e;
             return null;
         }
+        
     }
+        
 }

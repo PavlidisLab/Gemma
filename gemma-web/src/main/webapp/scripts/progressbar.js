@@ -58,13 +58,14 @@ function startProgress() {
 }
 function createIndeterminateProgressBar() {
 	determinate = 0;
-	var barId = createIndeterminateBarDetails(390,20,'white',1,'black','green',85,7,3,"");
+	var barId = createIndeterminateBarDetails(390,20,'white',1,'black','blue',85,7,3,"");
 	
 }
 
-function crateDeterminateProgressBar(){
+function createDeterminateProgressBar(){
 	determinate = 1;
-	document.write("<div id=\"progressBar\" style=\"display: none;\"> <div id=\"theMeter\">  <div id=\"progressBarText\"></div>   <div id=\"progressBarBox\">  <div id=\"progressBarBoxContent\"></div>  </div>  </div>  </div>");
+	var barHtml = '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>';
+	document.write(barHtml);
 	
 }
 
