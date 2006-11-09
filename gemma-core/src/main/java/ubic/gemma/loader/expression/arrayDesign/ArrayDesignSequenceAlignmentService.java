@@ -67,20 +67,20 @@ public class ArrayDesignSequenceAlignmentService {
      * @param taxon whose database will be queries
      * @return
      */
-    private Map<BioSequence, Collection<BlatResult>> getAlignments( Map<String, BioSequence> sequencesToBlat,
-            Taxon taxon ) {
+    private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
         Blat blat = new Blat();
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
 
         try {
 
-            // First checck if there are alignment results in the goldenpath datbase.
+            // First checck if there are alignment results in the goldenpath
+            // datbase.
             GoldenPathQuery gpq = new GoldenPathQuery( taxon );
 
             Collection<BioSequence> needBlat = new HashSet<BioSequence>();
             int count = 0;
             int totalFound = 0;
-            for ( BioSequence sequence : sequencesToBlat.values() ) {
+            for ( BioSequence sequence : sequencesToBlat ) {
                 boolean found = false;
                 if ( sequence.getSequenceDatabaseEntry() != null ) {
                     Collection<BlatResult> brs = gpq
@@ -128,9 +128,9 @@ public class ArrayDesignSequenceAlignmentService {
      * @param ad
      * @return
      */
-    private Map<String, BioSequence> getSequenceMap( ArrayDesign ad ) {
+    private Collection<BioSequence> getSequenceMap( ArrayDesign ad ) {
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        Map<String, BioSequence> sequencesToBlat = new HashMap<String, BioSequence>();
+        Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
         int numWithNoBioSequence = 0;
         int numWithNoSequenceData = 0;
         boolean warned = false;
@@ -157,7 +157,7 @@ public class ArrayDesignSequenceAlignmentService {
                 }
                 continue;
             }
-            sequencesToBlat.put( bs.getName(), bs );
+            sequencesToBlat.add( bs );
 
         }
         if ( numWithNoBioSequence > 0 || numWithNoSequenceData > 0 ) {
@@ -175,24 +175,18 @@ public class ArrayDesignSequenceAlignmentService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<BlatResult> persistBlatResults( Map<String, BioSequence> sequencesToBlat,
+    private Collection<BlatResult> persistBlatResults( Collection<BioSequence> sequencesToBlat,
             Collection<BlatResult> brs ) {
 
-        int count = 0;
         for ( BlatResult br : brs ) {
-            String acc = br.getQuerySequence().getName();
+            assert br.getQuerySequence() != null;
+            assert br.getQuerySequence().getName() != null;
             Taxon taxon = br.getQuerySequence().getTaxon();
-            assert acc != null && sequencesToBlat.containsKey( acc );
-
+            assert taxon != null ;
             br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
-            br.setQuerySequence( sequencesToBlat.get( acc ) );
-            if ( ++count % 2000 == 0 && log.isInfoEnabled() ) {
-                log.info( "Persisting blat results for " + count + " biosequences" );
-            }
-
         }
-        if ( log.isDebugEnabled() ) log.debug( "Persisting " + brs.size() + " BLAT results" );
+        log.info( "Persisting " + brs.size() + " BLAT results" );
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
 
@@ -201,7 +195,7 @@ public class ArrayDesignSequenceAlignmentService {
      */
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad ) {
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-        Map<String, BioSequence> sequencesToBlat = getSequenceMap( ad );
+        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
 
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
@@ -210,7 +204,7 @@ public class ArrayDesignSequenceAlignmentService {
         log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
 
         int noresults = 0;
-        for ( BioSequence sequence : sequencesToBlat.values() ) {
+        for ( BioSequence sequence : sequencesToBlat ) {
             if ( sequence == null ) {
                 log.warn( "Null sequence!" );
                 continue;
@@ -221,7 +215,8 @@ public class ArrayDesignSequenceAlignmentService {
                 continue;
             }
             for ( BlatResult result : brs ) {
-                result.setQuerySequence( sequence ); // must do this to replace placeholder instance.
+                result.setQuerySequence( sequence ); // must do this to replace
+                // placeholder instance.
             }
             allResults.addAll( persistBlatResults( sequencesToBlat, brs ) );
         }
@@ -239,13 +234,16 @@ public class ArrayDesignSequenceAlignmentService {
      * @return persisted BlatResults.
      */
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults ) {
-        Map<String, BioSequence> sequencesToBlat = getSequenceMap( ad );
+        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
 
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
         ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
 
         for ( BlatResult result : rawBlatResults ) {
+            result.getQuerySequence().setTaxon( taxon );
             result.setSearchedDatabase( searchedDatabase );
+            result.getTargetChromosome().setTaxon( taxon );
+            result.getTargetChromosome().getSequence().setTaxon( taxon );
         }
 
         return persistBlatResults( sequencesToBlat, rawBlatResults );
