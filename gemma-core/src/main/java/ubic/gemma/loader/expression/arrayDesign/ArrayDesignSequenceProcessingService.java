@@ -346,8 +346,8 @@ public class ArrayDesignSequenceProcessingService {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
-            Taxon taxon ) throws IOException {
+    public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile )
+            throws IOException {
 
         log.info( "Processing Affymetrix design" );
 
@@ -363,7 +363,7 @@ public class ArrayDesignSequenceProcessingService {
         Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
 
         int total = compositeSequencesFromProbes.size();
-
+        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
         Collection<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
         Collection<CompositeSequence> csBuffer = new ArrayList<CompositeSequence>();
@@ -435,12 +435,11 @@ public class ArrayDesignSequenceProcessingService {
      * @param arrayDesignName design name.
      * @param arrayDesignFile design file in our 'old fashioned' format.
      * @param probeSequenceFile probe file
-     * @param taxon
      * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
      *         filled in.
      */
     protected ArrayDesign processAffymetrixDesign( String arrayDesignName, InputStream arrayDesignFile,
-            InputStream probeSequenceFile, Taxon taxon ) throws IOException {
+            InputStream probeSequenceFile ) throws IOException {
         ArrayDesign result = ArrayDesign.Factory.newInstance();
         result.setName( arrayDesignName );
 
@@ -456,7 +455,7 @@ public class ArrayDesignSequenceProcessingService {
         Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
         result.setCompositeSequences( rawCompositeSequences );
 
-        this.processAffymetrixDesign( result, probeSequenceFile, taxon );
+        this.processAffymetrixDesign( result, probeSequenceFile );
 
         return result;
     }
@@ -473,7 +472,7 @@ public class ArrayDesignSequenceProcessingService {
             String probeSequenceFile, Taxon taxon ) throws IOException {
         InputStream arrayDesignFileStream = new BufferedInputStream( new FileInputStream( arrayDesignFile ) );
         InputStream probeSequenceFileStream = new BufferedInputStream( new FileInputStream( probeSequenceFile ) );
-        return this.processAffymetrixDesign( arrayDesignName, arrayDesignFileStream, probeSequenceFileStream, taxon );
+        return this.processAffymetrixDesign( arrayDesignName, arrayDesignFileStream, probeSequenceFileStream );
     }
 
     /**
@@ -498,16 +497,15 @@ public class ArrayDesignSequenceProcessingService {
      * @param arrayDesign
      * @param sequenceFile FASTA format
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
-     * @param taxon
      * @throws IOException
      * @see ubic.gemma.loader.genome.FastaParser
      */
     @SuppressWarnings("unchecked")
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
-            SequenceType sequenceType, Taxon taxon ) throws IOException {
+            SequenceType sequenceType ) throws IOException {
 
         if ( sequenceType == SequenceType.AFFY_PROBE ) {
-            return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
+            return this.processAffymetrixDesign( arrayDesign, sequenceFile );
         }
 
         log.info( "Processing non-Affymetrix design" );
@@ -530,6 +528,7 @@ public class ArrayDesignSequenceProcessingService {
         int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
         int done = 0;
         int percent = 0;
+        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         for ( BioSequence sequence : bioSequences ) {
 
             sequence.setType( sequenceType );

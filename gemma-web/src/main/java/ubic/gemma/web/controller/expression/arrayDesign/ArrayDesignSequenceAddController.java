@@ -167,11 +167,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
             if ( cook.getName().equals( COOKIE_NAME ) ) {
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    TaxonPropertyEditor taxed = new TaxonPropertyEditor( taxonService );
-                    taxed.setAsText( cookie.getString( "taxon" ) );
-
                     adsac.setSequenceType( ( SequenceType.fromString( cookie.getString( "sequenceType" ) ) ) );
-                    adsac.setTaxon( ( Taxon ) taxed.getValue() );
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     // that's okay, we just don't get a cookie.
@@ -213,7 +209,6 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
                 ArrayDesign arrayDesign = commandObject.getArrayDesign();
                 SequenceType sequenceType = commandObject.getSequenceType();
-                Taxon taxon = commandObject.getTaxon();
 
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
                         .getAuthentication().getName(), "Loading data from " + fileUpload.getName() );
@@ -227,7 +222,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
                 Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
-                        arrayDesign, stream, sequenceType, taxon );
+                        arrayDesign, stream, sequenceType );
 
                 stream.close();
 
@@ -305,7 +300,6 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         public ArrayDesignSequenceAddCookie( ArrayDesignSequenceAddCommand command ) {
             super( COOKIE_NAME );
             this.setProperty( "sequenceType", command.getSequenceType().toString() );
-            this.setProperty( "taxon", command.getTaxon().getScientificName() );
             this.setMaxAge( 100000 );
             this.setComment( "Information for the Array Design sequence association form" );
         }

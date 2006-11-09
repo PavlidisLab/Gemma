@@ -21,6 +21,8 @@
 package ubic.gemma.model.genome;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -46,6 +48,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Gene find( Gene gene ) {
         try {
@@ -67,10 +70,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     log.error( "Multiple genes found for " + gene + ":" );
                     debug( results );
 
-                    log.error( "Returning arbitrary gene!" );
-
+                    Collections.sort( results, new Comparator<Gene>() {
+                        public int compare( Gene arg0, Gene arg1 ) {
+                            return arg0.getId().compareTo( arg1.getId() );
+                        }
+                    } );
                     result = results.iterator().next();
-
+                    log.error( "Returning arbitrary gene: " + result );
                     // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                     // "More than one instance of '" + Gene.class.getName() + "' was found when executing query" );
 

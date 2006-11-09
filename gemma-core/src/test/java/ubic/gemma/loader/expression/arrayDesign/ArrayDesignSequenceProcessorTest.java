@@ -24,10 +24,6 @@ import java.util.HashSet;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -36,9 +32,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.testing.AbstractGeoServiceTest;
@@ -55,7 +48,6 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     InputStream seqFile;
     InputStream probeFile;
     InputStream designElementStream;
-    Taxon taxon;
     ArrayDesign result;
     ArrayDesignSequenceProcessingService app;
     ArrayDesignService arrayDesignService;
@@ -72,9 +64,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
-        taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Mus musculus" );
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        assert taxon != null;
     }
 
     @Override
@@ -133,7 +123,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     public void testProcessAffymetrixDesign() throws Exception {
         result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign",
-                designElementStream, probeFile, taxon );
+                designElementStream, probeFile );
 
         assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
         assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
@@ -175,19 +165,17 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         z.getNextEntry();
 
-        taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Rattus norvegicus" );
-        assertNotNull( taxon );
-        Collection<BioSequence> res = app.processArrayDesign( ad, z, SequenceType.AFFY_PROBE, taxon );
+        Collection<BioSequence> res = app.processArrayDesign( ad, z, SequenceType.AFFY_PROBE );
         assertEquals( 1322, res.size() );
     }
 
     public void testProcessNonAffyDesign() throws Exception {
         result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign",
-                designElementStream, probeFile, taxon );
+                designElementStream, probeFile );
 
         assertNotNull( result.getId() );
 
-        app.processArrayDesign( result, seqFile, SequenceType.EST, taxon );
+        app.processArrayDesign( result, seqFile, SequenceType.EST );
 
         assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
 

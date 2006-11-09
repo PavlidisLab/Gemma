@@ -2,7 +2,6 @@ package ubic.gemma.apps;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.genome.Taxon;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -58,18 +57,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         Exception err = processCommandLine( "Array design sequence BLAT", args );
         if ( err != null ) return err;
 
-        Taxon taxon = taxonService.findByCommonName( commonName );
-
-        if ( taxon == null ) {
-            log.error( "No taxon " + commonName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
         unlazifyArrayDesign( arrayDesign );
 
-        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon );
+        arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
 
         return null;
     }

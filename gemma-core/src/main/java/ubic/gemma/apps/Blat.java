@@ -265,9 +265,17 @@ public class Blat {
 
         log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
         int count = 0;
+        Collection<Object> identifiers = new HashSet<Object>();
+        int repeats = 0;
         for ( BioSequence b : sequences ) {
             if ( StringUtils.isNotBlank( b.getSequence() ) ) {
-                out.write( ">" + b.getName() + "\n" + b.getSequence() + "\n" );
+                Object identifier = b.getName();
+                if ( identifiers.contains( identifier ) ) {
+                    repeats++;
+                    continue; // don't repeat sequences.
+                }
+                out.write( ">" + identifier + "\n" + b.getSequence() + "\n" );
+                identifiers.add( identifier );
             } else {
                 log.warn( "Blank sequence for " + b );
             }
@@ -276,13 +284,19 @@ public class Blat {
             }
         }
         out.close();
-        log.info( "Wrote " + count + " sequences" );
+
+        if ( count == 0 ) {
+            querySequenceFile.delete();
+            throw new IllegalArgumentException( "No sequences!" );
+        }
+
+        log.info( "Wrote " + count + " sequences( " + repeats + " repeated items were skipped)." );
 
         String outputPath = getTmpPslFilePath();
 
         Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
-        log.info( "Got" + rawresults.size() + " raw blat results" );
+        log.info( "Got " + rawresults.size() + " raw blat results" );
 
         ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
 
@@ -297,7 +311,6 @@ public class Blat {
 
             results.get( query ).add( blatResult );
         }
-
         querySequenceFile.delete();
         return results;
     }

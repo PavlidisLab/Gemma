@@ -302,6 +302,9 @@ abstract public class GenomePersister extends CommonPersister {
      * @param blatResult
      */
     private BlatResult persistBlatResult( BlatResult blatResult ) {
+        if ( blatResult.getQuerySequence() == null ) {
+            throw new IllegalArgumentException( "Blat result with null query sequence" );
+        }
         blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
         blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome() ) );
         blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );

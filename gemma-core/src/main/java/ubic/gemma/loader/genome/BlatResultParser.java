@@ -154,6 +154,7 @@ public class BlatResultParser extends BasicLineParser {
 
             String queryName = f[QNAME_FIELD];
             queryName = cleanUpQueryName( queryName );
+            assert StringUtils.isNotBlank( queryName );
             result.getQuerySequence().setName( queryName );
 
             String chrom = f[TNAME_FIELD];

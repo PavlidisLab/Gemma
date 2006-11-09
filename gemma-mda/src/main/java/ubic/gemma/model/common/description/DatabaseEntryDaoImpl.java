@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -51,9 +52,15 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     log.error( debug( results ) );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
-                            + " instances of '" + ubic.gemma.model.common.description.DatabaseEntry.class.getName()
-                            + "' was found when executing query for " + databaseEntry + ", expected only 1" );
+
+                    result = cleanup( databaseEntry );
+                    if ( result == null ) { // means there were no composite sequences involved.
+                        result = results.iterator().next();
+                    }
+
+                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
+                    // + " instances of '" + ubic.gemma.model.common.description.DatabaseEntry.class.getName()
+                    // + "' was found when executing query for " + databaseEntry + ", expected only 1" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -63,6 +70,45 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /**
+     * This is a hack to fix a problem that is still lingering in the persisting of some genbank identifiers.
+     * 
+     * @param databaseEntry
+     * @return
+     */
+    private DatabaseEntry cleanup( DatabaseEntry databaseEntry ) {
+        final String queryString = "select cs from CompositeSequenceImpl as cs inner join fetch cs.biologicalCharacteristic as bs "
+                + "inner join fetch bs.sequenceDatabaseEntry de inner join de.externalDatabase ed "
+                + "where ed = :expdb and de.accession = :accession";
+        /*
+         * select c.*,b.name,d.* from COMPOSITE_SEQUENCE as c INNER JOIN BIO_SEQUENCE as b ON
+         * c.BIOLOGICAL_CHARACTERISTIC_FK=b.ID inner join DATABASE_ENTRY as d on b.SEQUENCE_DATABASE_ENTRY_FK=d.id where
+         * d.ACCESSION="U46691";
+         */
+        org.hibernate.Query queryObject = getSession( false ).createQuery( queryString );
+        queryObject.setParameter( "expdb", databaseEntry.getExternalDatabase() );
+        queryObject.setParameter( "accession", databaseEntry.getAccession() );
+        List compositeSequences = queryObject.list();
+
+        if ( compositeSequences.size() == 0 ) {
+            // we could delete either of them...
+            log.warn( "No composite sequences are associated with " + databaseEntry );
+            return null;
+        } else if ( compositeSequences.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException( compositeSequences.size()
+                    + " composite sequences associated with multiple database entries for the same accession " );
+        } else {
+            Object o = compositeSequences.iterator().next();
+            assert o instanceof CompositeSequence : "Expected CompositeSequence, got a " + o.getClass().getName();
+            DatabaseEntry sequenceDatabaseEntry = ( ( CompositeSequence ) o ).getBiologicalCharacteristic()
+                    .getSequenceDatabaseEntry();
+            // return the one that is being used
+            log.warn( "Returning " + sequenceDatabaseEntry );
+            return sequenceDatabaseEntry;
+        }
+
     }
 
     @Override

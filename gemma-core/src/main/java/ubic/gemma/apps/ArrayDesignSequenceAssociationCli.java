@@ -27,7 +27,6 @@ import org.apache.commons.lang.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
@@ -114,13 +113,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             Exception err = processCommandLine( "Sequence associator", args );
             if ( err != null ) return err;
 
-            Taxon taxon = taxonService.findByCommonName( commonName );
-
-            if ( taxon == null ) {
-                log.error( "No taxon " + commonName + " found" );
-                bail( ErrorCode.INVALID_OPTION );
-            }
-
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
             unlazifyArrayDesign( arrayDesign );
@@ -146,8 +138,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 }
 
                 log.info( "Processing ArrayDesign..." );
-                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn,
-                        taxon );
+                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn );
                 sequenceFileIs.close();
             } else {
                 log.info( "Retrieving sequences from BLAST databases" );

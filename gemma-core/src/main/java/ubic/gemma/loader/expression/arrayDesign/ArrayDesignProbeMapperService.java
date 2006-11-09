@@ -29,6 +29,7 @@ import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -47,6 +48,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="blatResultService" ref="blatResultService"
  * @spring.property name="blatAssociationService" ref="blatAssociationService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
 public class ArrayDesignProbeMapperService {
 
@@ -58,6 +60,8 @@ public class ArrayDesignProbeMapperService {
 
     PersisterHelper persisterHelper;
 
+    ArrayDesignService arrayDesignService;
+
     private double identityThreshold = ProbeMapper.DEFAULT_IDENTITY_THRESHOLD;
     private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
     private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
@@ -66,8 +70,9 @@ public class ArrayDesignProbeMapperService {
      * @param arrayDesign
      */
     @SuppressWarnings("unchecked")
-    public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon ) {
+    public void processArrayDesign( ArrayDesign arrayDesign ) {
 
+        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         GoldenPathSequenceAnalysis goldenPathDb;
         try {
             goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
@@ -78,6 +83,9 @@ public class ArrayDesignProbeMapperService {
         probeMapper.setIdentityThreshold( identityThreshold );
         probeMapper.setScoreThreshold( scoreThreshold );
         probeMapper.setBlatScoreThreshold( blatScoreThreshold );
+
+        log.info( "Removing any old associations" );
+        arrayDesignService.deleteGeneProductAssociations( arrayDesign );
 
         int count = 0;
         int hits = 0;
@@ -156,6 +164,10 @@ public class ArrayDesignProbeMapperService {
      */
     public void setBlatScoreThreshold( double blatScoreThreshold ) {
         this.blatScoreThreshold = blatScoreThreshold;
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
 }

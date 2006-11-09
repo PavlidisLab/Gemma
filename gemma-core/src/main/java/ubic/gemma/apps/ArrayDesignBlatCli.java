@@ -84,13 +84,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 args );
         if ( err != null ) return err;
 
-        Taxon taxon = taxonService.findByCommonName( commonName );
-
-        if ( taxon == null ) {
-            log.error( "No taxon " + commonName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
         unlazifyArrayDesign( arrayDesign );
@@ -102,7 +95,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     log.error( "Cannot read from " + blatResultFile );
                     bail( ErrorCode.INVALID_OPTION );
                 }
-
+                Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
                 log.info( "Reading blat results in from " + f.getAbsolutePath() );
                 BlatResultParser parser = new BlatResultParser();
                 parser.setTaxon( taxon );
@@ -114,10 +107,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 }
 
                 log.info( "Got " + blatResults.size() + " blat records" );
-                persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, blatResults,
-                        taxon );
+                persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, blatResults );
             } else {
-                persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon );
+                persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign );
             }
         } catch ( FileNotFoundException e ) {
             return e;

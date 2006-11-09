@@ -23,7 +23,6 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -37,17 +36,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
-    String commonName;
-    TaxonService taxonService;
 
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon name" ).withDescription(
-                "Taxon common name, e.g., 'rat'" ).withLongOpt( "taxon" ).create( 't' );
-
-        addOption( taxonOption );
-
         Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array design" ).withDescription(
                 "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
 
@@ -80,14 +72,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( this.hasOption( 't' ) ) {
-            commonName = this.getOptionValue( 't' );
-        }
-
         if ( this.hasOption( 'a' ) ) {
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
-        taxonService = ( TaxonService ) this.getBean( "taxonService" );
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
     }
 

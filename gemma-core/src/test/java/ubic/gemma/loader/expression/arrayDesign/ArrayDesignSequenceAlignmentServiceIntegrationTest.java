@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.Collection;
 
 import ubic.gemma.apps.Blat;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
@@ -54,11 +52,10 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
             }
         }
 
-        Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
         ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
         try {
-            Collection<BlatResult> blatResults = aligner.processArrayDesign( ad, taxon );
+            Collection<BlatResult> blatResults = aligner.processArrayDesign( ad );
             assertEquals( 2, blatResults.size() );
         } catch ( RuntimeException e ) {
             Throwable ec = e.getCause();

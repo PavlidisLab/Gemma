@@ -26,8 +26,10 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -233,7 +235,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                     if ( cs.getBiologicalCharacteristic() != null ) cs.getBiologicalCharacteristic().getTaxon();
                     if ( ++i % 2000 == 0 ) {
-                        log.info( "Progress: " + i + "/" + numToDo + "..." );
+                        log.info( "Thaw progress: " + i + "/" + numToDo + "..." );
                         try {
                             Thread.sleep( 100 );
                         } catch ( InterruptedException e ) {
@@ -259,6 +261,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
     }
 
+
     /* (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBioSequencesById(long)
      */
@@ -281,6 +284,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return queryByIdReturnInteger( id, queryString );
     }
 
+
     /* (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumGeneProductsById(long)
      */
@@ -292,7 +296,42 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         "bs2gp.geneProduct.id=gene.products.id and ar.id = :id";
         return queryByIdReturnInteger( id, queryString );
     }
-    
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
+        final String sequenceQueryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+                + "inner join cs.biologicalCharacteristic bs, BlatAssociationImpl ba "
+                + "where ba.bioSequence = bs and ad=:arrayDesign";
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( sequenceQueryString );
+        queryObject.setParameter( "arrayDesign", arrayDesign );
+        final Collection<BlatAssociation> toBeRemoved = queryObject.list();
+
+        if ( toBeRemoved.size() == 0 ) {
+            log.info( "No old associations to be removed for " + arrayDesign );
+            return;
+        }
+        log.info( "Have " + toBeRemoved.size() + " BlatAssociations to remove for " + arrayDesign );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                int i = 0;
+                for ( java.util.Iterator entityIterator = toBeRemoved.iterator(); entityIterator.hasNext(); ) {
+                    session.delete( entityIterator.next() );
+                    if ( ++i % 1000 == 0 ) {
+                        log.info( "Delete Progress: " + i + "/" + toBeRemoved.size() + "..." );
+                        try {
+                            Thread.sleep( 100 );
+                        } catch ( InterruptedException e ) {
+                            //
+                        }
+                    }
+                }
+                return null;
+            }
+        }, true );
+        log.info( "Done deleting." );
+    }
+        
     /* (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
      */
@@ -301,4 +340,5 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select distinct ee from ArrayDesignImpl ad, BioAssayImpl ba, ExpressionExperimentImpl ee where ba.arrayDesignUsed=ad and ee.bioAssays.id=ba.id and ad.id = :id";
         return queryByIdReturnCollection( id, queryString );
     }
+
 }

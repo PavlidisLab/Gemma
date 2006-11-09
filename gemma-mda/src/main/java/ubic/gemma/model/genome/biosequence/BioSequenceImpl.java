@@ -20,20 +20,41 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import ubic.gemma.model.common.Securable;
+
 /**
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  * @author pavlidis
  * @version $Id$
  */
-public class BioSequenceImpl
-    extends ubic.gemma.model.genome.biosequence.BioSequence
-{
+public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequence {
 
     /**
      * 
      */
     private static final long serialVersionUID = -6620431603579954167L;
-    
-    
-    
+
+    @Override
+    public boolean equals( Object object ) {
+
+        if ( !( object instanceof BioSequence ) ) {
+            return false;
+        }
+        final BioSequence that = ( BioSequence ) object;
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+            if ( this.getName() == null || that.getName() == null ) {
+                return false;
+            }
+            return this.getName().equals( that.getName() );
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        int nameHash = this.getName() == null ? 0 : getName().hashCode();
+        hashCode = 29 * hashCode + ( getId() == null ? nameHash : getId().hashCode() );
+        return hashCode;
+    }
 }

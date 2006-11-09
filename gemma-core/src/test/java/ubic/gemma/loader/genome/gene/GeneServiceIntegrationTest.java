@@ -75,7 +75,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         // needed to fill in the sequence information for blat scoring.
         InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        app.processArrayDesign( ad, sequenceFile, SequenceType.EST, taxon );
+        app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
 
         // fill in the blat results. Note that each time you run this test you get the results loaded again (so they
         // pile up)
@@ -87,11 +87,11 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         Blat blat = new Blat();
         Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-        aligner.processArrayDesign( ad, results, taxon );
+        aligner.processArrayDesign( ad, results );
 
         // real stuff.
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
-        arrayDesignProbeMapperService.processArrayDesign( ad, taxon );
+        arrayDesignProbeMapperService.processArrayDesign( ad );
     }
 }

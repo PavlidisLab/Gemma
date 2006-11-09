@@ -19,6 +19,8 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#find(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
@@ -61,7 +64,11 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                      */
 
                     Gene gene = geneProduct.getGene();
-
+                    Collections.sort( results, new Comparator<GeneProduct>() {
+                        public int compare( GeneProduct arg0, GeneProduct arg1 ) {
+                            return arg0.getId().compareTo( arg1.getId() );
+                        }
+                    } );
                     if ( gene != null ) {
                         GeneProduct keeper = null;
                         int numFound = 0;
@@ -81,8 +88,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                         }
 
                         if ( numFound == 1 ) {
+                            // not so bad, we figured out a match.
                             log.warn( "Multiple gene products match " + geneProduct
-                                    + ", but only one for the right gene (" + gene + ")" );
+                                    + ", but only one for the right gene (" + gene + "), returning " + keeper );
                             return keeper;
                         }
 
