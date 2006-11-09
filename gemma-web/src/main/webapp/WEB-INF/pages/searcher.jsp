@@ -24,21 +24,21 @@
            <c:out value="${hit.data.name}" /> (ExpressionExperiment)
          </a>
      </c:when>
-     
+     <%--  
      <c:when test="${hit.alias == 'bioAssay'}">
        <P>
-         <%-- <a href="<c:url value="/bioAssay/editBioAssay.html?id=${hit.data.id}"/>">--%>
+         <a href="<c:url value="/bioAssay/editBioAssay.html?id=${hit.data.id}"/>">
            <c:out value="${hit.data.name}" /> (BioAssay)
-         <%--</a>--%>
+         </a>
      </c:when>
-
+	--%>
      <c:when test="${hit.alias == 'arrayDesign'}">
        <P>
          <%-- <a href="<c:url value="/arrayDesign/editArrayDesign.html?id=${hit.data.id}"/>">--%>
            <c:out value="${hit.data.name}" /> (ArrayDesign)
          <%--</a>--%>
      </c:when>
-
+	<%--
      <c:when test="${hit.alias == 'contact'}">
        <p>
          <a href="#">
@@ -49,7 +49,7 @@
          Phone: <c:out value="${hit.data.phone}" /><br>
          Email: <c:out value="${hit.data.email}" /><br>
      </c:when>
-
+	--%>
    </c:choose>
 
   </c:forEach>
