@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -41,10 +43,22 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
      */
     @Override
     public Double score() {
-        assert this.getQuerySequence() != null;
-        assert this.getQuerySequence().getLength() != null : this;
+        long length;
+        if ( this.getQuerySequence() == null ) {
+            throw new IllegalArgumentException( "Sequence cannot be null" );
+        }
+        if ( this.getQuerySequence().getLength() != null && this.getQuerySequence().getLength() != 0 ) {
+            if ( StringUtils.isNotBlank( this.getQuerySequence().getSequence() ) ) {
+                length = this.getQuerySequence().getSequence().length();
+            } else {
+                throw new IllegalArgumentException( "No sequence length information for " + this.getQuerySequence() );
+            }
+        } else {
+            length = this.getQuerySequence().getLength();
+        }
+        assert length > 0;
         return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
-                / this.getQuerySequence().getLength();
+                / length;
     }
 
     /**

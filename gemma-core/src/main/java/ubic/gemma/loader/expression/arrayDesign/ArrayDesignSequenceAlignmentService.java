@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathQuery;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -62,6 +63,25 @@ public class ArrayDesignSequenceAlignmentService {
     PersisterHelper persisterHelper;
 
     /**
+     * If necessary, copy the sequence length information over from the blat result to the given sequence. This is often
+     * needed when we get the blat results from golden path.
+     * 
+     * @param sequence that may not have length information
+     * @param result used to get length information
+     */
+    private void copyLengthInformation( BioSequence sequence, BlatResult result ) {
+        if ( result.getQuerySequence() != null && result.getQuerySequence().getLength() == null ) {
+            long length = result.getQuerySequence().getLength();
+            sequence.setLength( length );
+            sequence.setIsApproximateLength( false );
+            sequence.setDescription( StringUtil.append( sequence.getDescription(),
+                    "Length information from GoldenPath annotations.", " -- " ) );
+        } else {
+            assert result.getQuerySequence().getLength().equals( sequence.getLength() );
+        }
+    }
+
+    /**
      * @param sequencesToBlat
      * @param blat
      * @param taxon whose database will be queries
@@ -85,8 +105,10 @@ public class ArrayDesignSequenceAlignmentService {
                 if ( sequence.getSequenceDatabaseEntry() != null ) {
                     Collection<BlatResult> brs = gpq
                             .findAlignments( sequence.getSequenceDatabaseEntry().getAccession() );
+
                     if ( brs != null && brs.size() > 0 ) {
                         for ( BlatResult result : brs ) {
+                            copyLengthInformation( sequence, result );
                             result.setQuerySequence( sequence );
                         }
                         results.put( sequence, brs );
@@ -182,7 +204,7 @@ public class ArrayDesignSequenceAlignmentService {
             assert br.getQuerySequence() != null;
             assert br.getQuerySequence().getName() != null;
             Taxon taxon = br.getQuerySequence().getTaxon();
-            assert taxon != null ;
+            assert taxon != null;
             br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
         }
