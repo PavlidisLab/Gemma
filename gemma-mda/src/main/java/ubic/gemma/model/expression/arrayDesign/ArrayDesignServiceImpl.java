@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
-
+ 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
@@ -235,6 +235,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().deleteGeneProductAssociations( arrayDesign );
+    }
+
+    @Override
+    protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
+        // TODO Auto-generated method stub
+        
     }
 
 }

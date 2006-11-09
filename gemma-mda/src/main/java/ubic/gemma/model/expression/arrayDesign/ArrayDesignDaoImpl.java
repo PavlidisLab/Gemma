@@ -399,4 +399,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         "bs2gp.geneProduct.id=gene.products.id and ar.id = :id";
         return queryByIdReturnInteger( id, queryString );
     }
+
+    @Override
+    protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
 }
