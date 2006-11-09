@@ -47,15 +47,17 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         if ( this.getQuerySequence() == null ) {
             throw new IllegalArgumentException( "Sequence cannot be null" );
         }
+
         if ( this.getQuerySequence().getLength() != null && this.getQuerySequence().getLength() != 0 ) {
+            length = this.getQuerySequence().getLength();
+        } else {
             if ( StringUtils.isNotBlank( this.getQuerySequence().getSequence() ) ) {
                 length = this.getQuerySequence().getSequence().length();
             } else {
                 throw new IllegalArgumentException( "No sequence length information for " + this.getQuerySequence() );
             }
-        } else {
-            length = this.getQuerySequence().getLength();
         }
+
         assert length > 0;
         return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
                 / length;
