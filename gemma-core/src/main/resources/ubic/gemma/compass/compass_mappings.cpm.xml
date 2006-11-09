@@ -28,13 +28,15 @@
       <meta-data>expression experiment description</meta-data>
     </property>
       
-    <!--  <component name="bioAssays" ref-alias="bioAssay" /> -->
+    <component name="bioAssays" ref-alias="bioAssay" />
+    
+    <component name="experimentalDesign" ref-alias="experimentalDesign" />  
 
     <!-- can be a reference instead of component
     <reference name="books" ref-alias="book" /> -->
    
 </class>    
-<!--  
+ 
 <class name="expression.bioAssay.BioAssayImpl" alias="bioAssay">
 	
 	 <id name="id" />
@@ -48,10 +50,33 @@
       <meta-data>bioassay description</meta-data>
     </property>
 	 
-    <component name="arrayDesignUsed" ref-alias="arrayDesign" />
+    <!--  <component name="arrayDesignUsed" ref-alias="arrayDesign" /> -->
 	
 </class>
 
+<class name="expression.experiment.ExperimentalDesignImpl" alias="experimentalDesign">
+	
+	 <id name="id" />
+	 
+    <component name="experimentalFactors" ref-alias="experimentalFactor" />
+	
+</class>
+
+<class name="expression.experiment.ExperimentalFactorImpl" alias="experimentalFactor">
+	
+	 <id name="id" />
+	 
+	 <property name="name">
+      <meta-data>name</meta-data> 
+     </property>
+     
+     <property name="description">
+      <meta-data>description</meta-data>
+      <meta-data>experimentalFactor description</meta-data>
+    </property>
+	
+</class>
+<!--  
 <class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign">
 	
 	 <id name="id" />
