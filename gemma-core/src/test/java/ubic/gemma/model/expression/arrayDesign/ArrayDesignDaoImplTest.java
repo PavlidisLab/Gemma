@@ -71,26 +71,26 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     
     public void testGetExpressionExperimentsById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection ee = arrayDesignDao.getExpressionExperimentsById( ad.getId() );
+        Collection ee = arrayDesignDao.getExpressionExperiments( ad );
         assertNotNull(ee);
     }
 
     
     public void testNumBioSequencesById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignDao.numBioSequencesById( ad.getId() );
+        long num = arrayDesignDao.numBioSequences( ad );
         assertNotNull(num);
     }
     
     public void testNumBlatResultsById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignDao.numBlatResultsById( ad.getId() );
+        long num = arrayDesignDao.numBlatResults( ad );
         assertNotNull(num);
     }
     
     public void testNumGenesById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignDao.numGenesById( ad.getId() );
+        long num = arrayDesignDao.numGenes( ad);
         assertNotNull(num);
     }
     

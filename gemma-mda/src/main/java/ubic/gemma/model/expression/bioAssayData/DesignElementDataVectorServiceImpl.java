@@ -21,6 +21,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -92,6 +93,14 @@ public class DesignElementDataVectorServiceImpl extends
     @Override
     protected void handleThaw( Collection designElementDataVectors ) throws Exception {
         this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenes(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetGenes( Collection dataVectors ) throws Exception {
+        return this.getDesignElementDataVectorDao().getGenes( dataVectors );
     }
 
 }

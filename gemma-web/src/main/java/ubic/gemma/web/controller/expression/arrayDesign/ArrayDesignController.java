@@ -95,10 +95,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
         long id = arrayDesign.getId();
         
-        Long numBioSequences = arrayDesignService.numBioSequencesById( id );
-        Long numBlatResults = arrayDesignService.numBlatResultsById( id );
-        Long numGenes = arrayDesignService.numGenesById( id );
-        Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperimentsById( id );
+        Long numBioSequences = arrayDesignService.numBioSequences( arrayDesign );
+        Long numBlatResults = arrayDesignService.numBlatResults( arrayDesign );
+        Long numGenes = arrayDesignService.numGenes( arrayDesign );
+        Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
         Long numExpressionExperiments = new Long(ee.size());
         
         String[] eeIdList = new String[ee.size()];

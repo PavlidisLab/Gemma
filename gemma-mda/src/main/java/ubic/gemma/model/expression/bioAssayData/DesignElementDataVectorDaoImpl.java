@@ -19,12 +19,17 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -256,4 +261,96 @@ public class DesignElementDataVectorDaoImpl extends
         }
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetGenes(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetGenes( Collection dataVectors ) throws Exception { 
+        HibernateTemplate templ = this.getHibernateTemplate();
+        // implementation details in callback class
+        GetGeneCallbackHandler callback = new GetGeneCallbackHandler(dataVectors);
+        Map<DesignElementDataVector,Collection<Gene>> geneMap = (Map) templ.execute( callback, true );
+        return geneMap;
+    }
+    
+    /**
+     * Private helper class that allows a designElementDataVector collection
+     * to be used as an argument to a HibernateCallback
+     * @author jsantos
+     *
+     */
+    private class GetGeneCallbackHandler implements org.springframework.orm.hibernate3.HibernateCallback {
+        private Collection dataVectors;
+        
+        public GetGeneCallbackHandler (Collection dataVectors) {
+            this.dataVectors = dataVectors;
+        }
+        
+        /**
+         * @param dataVectors the dataVectors to set
+         */
+        public void setDataVectors( Collection dataVectors ) {
+            this.dataVectors = dataVectors;
+        }
+
+
+        /**
+         * Callback method for HibernateTemplate
+         */
+        public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+            /*
+             * Algorithm:
+             * for each 100 designElementDataVectors, do a query to get 
+             * the associated genes. The results will then be pushed into
+             * a map, associating the designElementDataVector with a 
+             * collection of Genes.
+             * 
+             * Return the map.
+             */
+            int MAX_COUNTER = 100;
+            Map<DesignElementDataVector,Collection<Gene>> geneMap =  new HashMap<DesignElementDataVector,Collection<Gene>>();
+
+            Long[] idList = new Long[MAX_COUNTER];
+            final String queryString = "select compositeSequence.designElementDataVectors, gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+                    + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                    + " and compositeSequence.designElementDataVectors.id in (:ids) ";
+            
+            Iterator iter = dataVectors.iterator();
+            int counter = 0;
+            // get up to the next 100 entries
+            while (iter.hasNext()) {
+
+                counter = 0;
+                while ( (counter < MAX_COUNTER) && iter.hasNext()) {
+                    idList[counter] = ((DesignElementDataVector) iter.next()).getId();
+                    counter++;
+                }
+                String ids = StringUtils.join( idList, "," );
+                
+                org.hibernate.Query queryObject = session.createQuery( queryString );
+                queryObject.setString( "ids", ids );
+                // get results and push into hashmap. 
+                ScrollableResults results = queryObject.scroll();
+                while (results.next()) {
+                    DesignElementDataVector dedv = (DesignElementDataVector) results.get( 0 );
+                    Gene g = (Gene) results.get(1);
+                    // if the key exists, push into collection
+                    // if the key does not exist, create and put hashset into the map
+                    if (geneMap.containsKey( dedv )) {
+                        ((Collection)geneMap.get( dedv )).add( g );
+                    }
+                    else {
+                        Collection<Gene> genes = new HashSet<Gene>();
+                        genes.add( g );
+                        geneMap.put( dedv, genes );
+                    }
+                }
+                results.close();
+            }
+            return geneMap;
+        }
+    }   
 }
+    
+
