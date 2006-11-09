@@ -4,10 +4,9 @@
     "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
     
 <!--
-    This document is a Compass mapping file for expression experiments,
-    allowing the ExpressionExperiment object to be indexed and searched.
-    All "searchable" expression experiment attributes (as well as associations) 
-    should be included here.
+    This document is a Compass mapping file, allowing the Gemma objects to be 
+    indexed and searched.  All "searchable" expression experiment attributes 
+    (as well as associations) should be included here.
     
     author: keshav
     version: $Id$
@@ -29,13 +28,13 @@
       <meta-data>expression experiment description</meta-data>
     </property>
       
-    <component name="bioAssays" ref-alias="bioAssay" />
+    <!--  <component name="bioAssays" ref-alias="bioAssay" /> -->
 
     <!-- can be a reference instead of component
     <reference name="books" ref-alias="book" /> -->
    
 </class>    
-
+<!--  
 <class name="expression.bioAssay.BioAssayImpl" alias="bioAssay">
 	
 	 <id name="id" />
@@ -88,5 +87,5 @@
     </property>
 
 </class>
-
+-->
 </compass-core-mapping>

@@ -10,7 +10,7 @@
 	 <bean id="compass" class="org.compass.spring.LocalCompassBean">
         <property name="resourceLocations">
             <list>
-                <value>classpath:ubic/gemma/compass/expression/experiment/expressionExperiment.cpm.xml</value>
+                <value>classpath:ubic/gemma/compass/compass_mappings.cpm.xml</value>
             </list>   
         </property>
         <property name="compassSettings">
