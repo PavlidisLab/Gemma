@@ -38,6 +38,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -49,8 +50,9 @@ import ubic.gemma.persistence.PersisterHelper;
  * @version $Id$
  * @spring.bean name="arrayDesignSequenceAlignmentService"
  * @spring.property name="blatResultService" ref="blatResultService"
- * @spring.property name="persisterHelper" ref="persisterHelper" *
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="bioSequenceService" ref="bioSequenceService"
  */
 public class ArrayDesignSequenceAlignmentService {
 
@@ -61,6 +63,8 @@ public class ArrayDesignSequenceAlignmentService {
     ArrayDesignService arrayDesignService;
 
     PersisterHelper persisterHelper;
+
+    BioSequenceService bioSequenceService;
 
     /**
      * If necessary, copy the sequence length information over from the blat result to the given sequence. This is often
@@ -76,6 +80,7 @@ public class ArrayDesignSequenceAlignmentService {
             sequence.setIsApproximateLength( false );
             sequence.setDescription( StringUtil.append( sequence.getDescription(),
                     "Length information from GoldenPath annotations.", " -- " ) );
+            bioSequenceService.update( sequence );
         } else {
             assert result.getQuerySequence().getLength().equals( sequence.getLength() );
         }
@@ -93,45 +98,7 @@ public class ArrayDesignSequenceAlignmentService {
 
         try {
 
-            // First checck if there are alignment results in the goldenpath
-            // datbase.
-            GoldenPathQuery gpq = new GoldenPathQuery( taxon );
-
-            Collection<BioSequence> needBlat = new HashSet<BioSequence>();
-            int count = 0;
-            int totalFound = 0;
-            for ( BioSequence sequence : sequencesToBlat ) {
-                boolean found = false;
-                if ( sequence.getSequenceDatabaseEntry() != null ) {
-                    Collection<BlatResult> brs = gpq
-                            .findAlignments( sequence.getSequenceDatabaseEntry().getAccession() );
-
-                    if ( brs != null && brs.size() > 0 ) {
-                        for ( BlatResult result : brs ) {
-                            copyLengthInformation( sequence, result );
-                            result.setQuerySequence( sequence );
-                        }
-                        results.put( sequence, brs );
-                        found = true;
-                        totalFound++;
-                    }
-                }
-
-                if ( ++count % 200 == 0 && totalFound > 0 ) {
-                    log
-                            .info( "Alignments in Golden Path database for " + totalFound + "/" + count
-                                    + " checked so far." );
-                }
-
-                if ( !found ) {
-                    needBlat.add( sequence );
-                }
-
-            }
-
-            if ( totalFound > 0 ) {
-                log.info( "Found " + totalFound + "/" + count + " alignments in Golden Path database" );
-            }
+            Collection<BioSequence> needBlat = getGoldenPathAlignments( sequencesToBlat, taxon, results );
 
             if ( needBlat.size() > 0 ) {
                 log.info( "Running blat on " + needBlat.size() + " sequences" );
@@ -140,10 +107,62 @@ public class ArrayDesignSequenceAlignmentService {
             }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
         }
         return results;
+    }
+
+    /**
+     * Check if there are alignment results in the goldenpath database, in which case we do not reanalyze the sequences.
+     * 
+     * @param sequencesToBlat The full set of sequences that need analysis.
+     * @param taxon
+     * @param results Will be stored here.
+     * @return the sequences which ARE NOT found in goldenpath and which therefore DO need blat.
+     * @throws SQLException
+     */
+    private Collection<BioSequence> getGoldenPathAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon,
+            Map<BioSequence, Collection<BlatResult>> results ) {
+
+        GoldenPathQuery gpq;
+        try {
+            gpq = new GoldenPathQuery( taxon );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( "Could not get golden path database for " + taxon, e );
+        }
+
+        Collection<BioSequence> needBlat = new HashSet<BioSequence>();
+        int count = 0;
+        int totalFound = 0;
+        for ( BioSequence sequence : sequencesToBlat ) {
+            boolean found = false;
+            if ( sequence.getSequenceDatabaseEntry() != null ) {
+                Collection<BlatResult> brs = gpq.findAlignments( sequence.getSequenceDatabaseEntry().getAccession() );
+
+                if ( brs != null && brs.size() > 0 ) {
+                    for ( BlatResult result : brs ) {
+                        copyLengthInformation( sequence, result );
+                        result.setQuerySequence( sequence );
+                    }
+                    results.put( sequence, brs );
+                    found = true;
+                    totalFound++;
+                }
+            }
+
+            if ( ++count % 1000 == 0 && totalFound > 0 ) {
+                log.info( "Alignments in Golden Path database for " + totalFound + "/" + count + " checked so far." );
+            }
+
+            if ( !found ) {
+                needBlat.add( sequence );
+            }
+
+        }
+
+        if ( totalFound > 0 ) {
+            log.info( "Found " + totalFound + "/" + count + " alignments in Golden Path database" );
+        }
+        return needBlat;
     }
 
     /**
@@ -197,9 +216,7 @@ public class ArrayDesignSequenceAlignmentService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<BlatResult> persistBlatResults( Collection<BioSequence> sequencesToBlat,
-            Collection<BlatResult> brs ) {
-
+    private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
         for ( BlatResult br : brs ) {
             assert br.getQuerySequence() != null;
             assert br.getQuerySequence().getName() != null;
@@ -208,7 +225,6 @@ public class ArrayDesignSequenceAlignmentService {
             br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
         }
-        log.info( "Persisting " + brs.size() + " BLAT results" );
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
 
@@ -216,6 +232,10 @@ public class ArrayDesignSequenceAlignmentService {
      * @param ad
      */
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad ) {
+
+        log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
+
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
         Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
 
@@ -240,7 +260,7 @@ public class ArrayDesignSequenceAlignmentService {
                 result.setQuerySequence( sequence ); // must do this to replace
                 // placeholder instance.
             }
-            allResults.addAll( persistBlatResults( sequencesToBlat, brs ) );
+            allResults.addAll( persistBlatResults( brs ) );
         }
 
         log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
@@ -252,13 +272,17 @@ public class ArrayDesignSequenceAlignmentService {
     /**
      * @param ad
      * @param rawBlatResults, assumed to be from alignments to the genome for the array design (that is, we don't
-     *        consider aligning mouse to human)
+     *        consider aligning mouse to human). Typically these would have been read in from a file.
      * @return persisted BlatResults.
      */
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults ) {
-        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
 
+        log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
+
+        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+
         ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
 
         for ( BlatResult result : rawBlatResults ) {
@@ -268,7 +292,13 @@ public class ArrayDesignSequenceAlignmentService {
             result.getTargetChromosome().getSequence().setTaxon( taxon );
         }
 
-        return persistBlatResults( sequencesToBlat, rawBlatResults );
+        Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<BioSequence, Collection<BlatResult>>();
+        getGoldenPathAlignments( sequencesToBlat, taxon, goldenPathAlignments );
+        for ( BioSequence sequence : goldenPathAlignments.keySet() ) {
+            rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
+        }
+
+        return persistBlatResults( rawBlatResults );
     }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
@@ -287,5 +317,9 @@ public class ArrayDesignSequenceAlignmentService {
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
+    }
+
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
     }
 }

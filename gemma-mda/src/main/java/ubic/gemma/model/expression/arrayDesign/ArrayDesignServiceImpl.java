@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
- 
+
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
@@ -176,7 +176,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().countAll();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBioSequencesById(long)
      */
     @Override
@@ -184,7 +186,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numBioSequences( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBlatResultsById(long)
      */
     @Override
@@ -192,15 +196,19 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numBlatResults( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumGeneProductsById(long)
      */
     @Override
     protected long handleNumGenes( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().numGenes(arrayDesign );
+        return this.getArrayDesignDao().numGenes( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetExpressionExperimentsById(long)
      */
     @Override
@@ -208,7 +216,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().getExpressionExperiments( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -216,7 +226,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numCompositeSequenceWithBioSequences( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -224,7 +236,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numCompositeSequenceWithBlatResults( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -239,8 +253,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
-        // TODO Auto-generated method stub
-        
+        this.getArrayDesignDao().deleteAlignmentData( arrayDesign );
     }
 
 }
