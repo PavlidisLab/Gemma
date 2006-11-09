@@ -20,7 +20,7 @@
 	Sequence associations
 </td>
 <td>
-	<c:out value="${numBioSequences}" />
+	<c:out value="${numCsBioSequences}" />
 </td> 
 </tr>
 <tr>
@@ -28,12 +28,20 @@
 	BLAT associations
 </td>
 <td>
-	<c:out value="${numBlatResults}" />
+	<c:out value="${numCsBlatResults}" />
 </td>
 </tr>
 <tr>
 <td>
-	Genes associations
+	Gene associations
+</td>
+<td>
+	<c:out value="${numCsGenes}" />
+</td>
+</tr>
+<tr>
+<td>
+	Genes
 </td>
 <td>
 	<c:out value="${numGenes}" />

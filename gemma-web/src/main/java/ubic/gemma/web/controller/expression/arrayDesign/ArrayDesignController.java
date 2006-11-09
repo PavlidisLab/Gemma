@@ -95,8 +95,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
         long id = arrayDesign.getId();
         
-        Long numBioSequences = arrayDesignService.numBioSequences( arrayDesign );
-        Long numBlatResults = arrayDesignService.numBlatResults( arrayDesign );
+        Long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( arrayDesign );
+        Long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( arrayDesign );
+        Long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( arrayDesign );
         Long numGenes = arrayDesignService.numGenes( arrayDesign );
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
         Long numExpressionExperiments = new Long(ee.size());
@@ -111,8 +112,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
         mav.addObject( "arrayDesign", arrayDesign );
-        mav.addObject( "numBioSequences", numBioSequences );
-        mav.addObject( "numBlatResults",numBlatResults);
+        mav.addObject( "numCsBioSequences", numCsBioSequences );
+        mav.addObject( "numCsBlatResults",numCsBlatResults);
+        mav.addObject( "numCsGenes", numCsGenes );
         mav.addObject( "numGenes", numGenes );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         mav.addObject( "expressionExperimentIds", eeIds );       

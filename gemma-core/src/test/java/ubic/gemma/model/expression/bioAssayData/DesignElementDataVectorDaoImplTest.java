@@ -52,17 +52,23 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     @Override
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
-        if ( dedv != null && dedv.getId() != null ) {
-            this.designElementDataVectorDao.remove( dedv );
-        }
     }
 
    public void testGetGenes() {
-       /*Collection<DesignElementDataVector> dataVectors = new ArrayList<DesignElementDataVector>();
-       //dedv = ( DesignElementDataVector ) persisterHelper.persist( dedv );
+       Collection<DesignElementDataVector> dataVectors = new ArrayList<DesignElementDataVector>();
+       dedv = DesignElementDataVector.Factory.newInstance();
        dedv.setId( (long) 1 );
        dataVectors.add( dedv );
+       
+       dedv = DesignElementDataVector.Factory.newInstance();
+       dedv.setId( (long) 2 );
+       dataVectors.add( dedv );
+       
+       dedv = DesignElementDataVector.Factory.newInstance();
+       dedv.setId( (long) 3 );
+       dataVectors.add( dedv );
+       
        Map m = designElementDataVectorDao.getGenes( dataVectors );
-       assertNotNull(m);*/
+       assertNotNull(m);
    }
 }
