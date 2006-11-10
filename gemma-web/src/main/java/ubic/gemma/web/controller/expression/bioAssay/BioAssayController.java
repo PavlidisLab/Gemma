@@ -81,7 +81,6 @@ public class BioAssayController extends BaseMultiActionController {
         }
         
 
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
         request.setAttribute( "id", id );
         return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", bioAssay );
     }
