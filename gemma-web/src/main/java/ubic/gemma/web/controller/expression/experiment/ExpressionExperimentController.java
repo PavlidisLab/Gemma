@@ -98,7 +98,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new EntityNotFoundException( id + " not found" );
         }
 
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
         request.setAttribute( "id", id );
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );

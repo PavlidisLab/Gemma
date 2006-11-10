@@ -64,11 +64,6 @@
             databaseEntry="<%=bioAssay.getAccession()%>" />
         <br/>
         
-        <h3>
-            <fmt:message key="auditTrail.title" />
-        </h3>
-        <Gemma:auditTrail
-            auditTrail="<%=bioAssay.getAuditTrail()%>" />
         <br />
 
         <hr />

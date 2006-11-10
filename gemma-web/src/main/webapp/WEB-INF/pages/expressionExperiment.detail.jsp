@@ -76,6 +76,25 @@
 				</td>
 			</tr>
 			<tr>
+				<td class="label"><fmt:message key="investigators.title" /> 
+				</td>
+				<td>
+					<%
+					if ( (expressionExperiment.getInvestigators()) != null && (expressionExperiment.getInvestigators().size() > 0) ) {
+					%>
+					<c:forEach var="investigator" items="${ expressionExperiment.investigators }" >
+						<c:out value="${ investigator.name}" />
+						<br />
+					</c:forEach>	
+					<%
+					} else {
+						out.print( "No investigators known" );
+					}
+					%>
+				</td>
+			</tr>
+			
+			<tr>
 				<td class="label"><fmt:message key="databaseEntry.title" /> 
 				</td>
 				<td>
@@ -124,25 +143,33 @@
 					</td>
 				</tr>
 			</authz:authorize>
+			<tr>
+				<td class="label"><fmt:message key="bioAssays.title" /> 			
+				<td>
+					<%out.print( expressionExperiment.getBioAssays().size() );%>
+					(
+					<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
+					Click for details</a>
+					)
+				</td>
+
+			</tr>
+			<tr>
+				<td class="label"><fmt:message key="arrayDesigns.title" />
+				<td>
+					<c:forEach var="arrayDesign" items="${ arrayDesigns }" >
+						<c:out value="${ arrayDesign.name}" />
+						<a 
+							href="/Gemma/arrays/showArrayDesign?id=<c:out value="${ arrayDesign.id}" />">
+							(link)
+						</a>
+						<br />
+					</c:forEach>		
+				
+				</td>
+			</tr>				
 		</table>
 
-
-
-		<h3>
-			<fmt:message key="bioAssays.title" />
-			and array designs
-		</h3>
-		<p>
-			There are <%out.print( expressionExperiment.getBioAssays().size() );%>	bioAssays for this expression experiment (
-			<a
-				href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">Click
-				for details</a>), using the following array designs.
-			<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList" pagesize="10">
-				<display:column property="name" sortable="true" maxWords="20" href="/Gemma/arrays/showArrayDesign.html" paramId="id"
-					paramProperty="id" />
-				<display:setProperty name="basic.empty.showtable" value="false" />
-			</display:table>
-		</p>
 
 		<h3>
 			<fmt:message key="experimentalDesign.title" />
@@ -158,6 +185,7 @@
 			<%
 			out.print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(), 100 ) );
 			%>
+			<BR /><BR />
 			This experimental design has
 			<%
 			out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
@@ -165,31 +193,6 @@
 			experimental factors.
 		</p>
 
-
-		<h3>
-			<fmt:message key="investigators.title" />
-		</h3>
-		<% 
-			if ( expressionExperiment.getInvestigators().size() > 0 ) {
-		%>
-		<p>
-			<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" pagesize="10" 
-				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-				<display:column property="name" sortable="true" maxWords="20"
-					href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name" />
-				<display:column property="phone" sortable="true" maxWords="100" />
-				<display:column property="fax" sortable="true" maxWords="100" />
-				<display:column property="email" sortable="true" maxWords="100" />
-				<display:setProperty name="basic.empty.showtable" value="false" />
-				<display:setProperty name="basic.msg.empty_list" value="No investigators are associated with this experiment." />
-			</display:table>
-		</p>
-		<%
-		}
-			else {
-			    out.print("No investigators known");
-			}
-		%>
 		<%
 		if ( expressionExperiment.getAnalyses().size() > 0 ) {
 		%>
@@ -234,8 +237,9 @@
 		</h3>
 		<p>
 			There are
-			<b> <c:out value="${designElementDataVectorCount}" /> </b> design elements for this expression experiment. Details
-			by quantitation type:
+			<b> <c:out value="${designElementDataVectorCount}" /> </b> design elements for this expression experiment. 
+			<BR /> <BR />
+			<b>Details by quantitation type:</b>
 		</p>
 		<aazone tableId="dataVectorList" zone="dataVectorTable" />
 		<aa:zone name="dataVectorTable">
@@ -247,11 +251,13 @@
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
 		</aa:zone>
+		
+		<authz:authorize ifAnyGranted="admin">
 		<h3>
 			Biomaterials and Assays
 		</h3>
 		<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
-
+		</authz:authorize>
 
 
 		<table>
