@@ -20,6 +20,8 @@ package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
@@ -183,4 +185,49 @@ public class DatsetCombinerTest extends TestCase {
         assertTrue( result.getCorrespondingSamples( "GSM4076" ).contains( "GSM4078" ) );
         assertTrue( result.getCorrespondingSamples( "GSM4080" ).contains( "GSM4084" ) );
     }
+
+    /**
+     * Fairly hard case; twelve samples, 3 array design each sample run on each array design
+     * 
+     * @throws Exception
+     */
+    public void testFindGSE611() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GDS428.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GDS429.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GDS430.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 3, gds.size() );
+        fillInDatasetPlatformAndOrganism();
+
+        GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertEquals( 3, c.size() );
+            numBioMaterials++;
+        }
+        assertEquals( 4, numBioMaterials );
+
+        log.info( result );
+    }
+
 }

@@ -254,6 +254,8 @@ public class DatasetCombiner {
     }
 
     /**
+     * This is the main point where comparisons are made.
+     * 
      * @param numDatasets
      * @param accToTitle
      * @param accToDataset
@@ -277,64 +279,156 @@ public class DatasetCombiner {
         // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
         // do pairwise comparisons of all samples.
-        for ( int j = 0; j < sampleAccs.size(); j++ ) {
-            String targetAcc = sampleAccs.get( j );
 
-            int mindistance = Integer.MAX_VALUE;
-            String bestMatch = null;
-            String bestMatchAcc = null;
-            String iTitle = accToTitle.get( targetAcc );
+        // do it by data set, so we constrain comparing items in _this_ data set to ones in _other_ data sets.
+        for ( String dataset : accToDataset.values() ) {
+            for ( int j = 0; j < sampleAccs.size(); j++ ) {
+                String targetAcc = sampleAccs.get( j );
+                // / log.debug( "Target: " + targetAcc );
+                // skip samples that are not in this data set.
+                if ( !accToDataset.get( targetAcc ).equals( dataset ) ) {
+                    continue;
+                }
 
-            if ( StringUtils.isBlank( iTitle ) )
-                throw new IllegalArgumentException( "Can't have blank titles for samples" );
+                int mindistance = Integer.MAX_VALUE;
+                String bestMatch = null;
+                String bestMatchAcc = null;
+                String iTitle = accToTitle.get( targetAcc );
 
-            for ( int i = 0; i < sampleAccs.size(); i++ ) {
-                if ( i == j ) continue;
-
-                String testAcc = sampleAccs.get( i );
-
-                String jTitle = accToTitle.get( testAcc );
-                if ( StringUtils.isBlank( jTitle ) )
+                if ( StringUtils.isBlank( iTitle ) )
                     throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
-                int distance = -1;
-                if ( matrix[i][j] < 0 ) {
-                    distance = StringDistance.editDistance( iTitle, jTitle );
-                    matrix[j][i] = distance;
-                    matrix[i][j] = distance;
-                } else {
-                    distance = matrix[i][j];
+                for ( int i = 0; i < sampleAccs.size(); i++ ) {
+                    String testAcc = sampleAccs.get( i );
+                    if ( accToDataset.get( testAcc ).equals( dataset ) ) {
+                        continue;
+                    }
+                    // log.debug( " Test: " + testAcc );
+                    String jTitle = accToTitle.get( testAcc );
+                    if ( StringUtils.isBlank( jTitle ) )
+                        throw new IllegalArgumentException( "Can't have blank titles for samples" );
+
+                    int distance = -1;
+                    if ( matrix[i][j] < 0 ) {
+                        distance = StringDistance.editDistance( iTitle, jTitle );
+                        matrix[j][i] = distance;
+                        matrix[i][j] = distance;
+                    } else {
+                        distance = matrix[i][j];
+                    }
+
+                    double normalizedDistance = ( double ) distance / Math.max( iTitle.length(), jTitle.length() );
+
+                    // make sure match is to sample in another data set, in the same species, as well as being a good
+                    // match.
+                    assert accToOrganism.containsKey( targetAcc );
+                    assert accToOrganism.containsKey( testAcc );
+                    if ( normalizedDistance < SIMILARITY_THRESHOLD && distance <= mindistance
+                            && accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
+                        //                    
+                        // /*
+                        // * Add rule to enforce: each data set can only have one sample matching with samples in other
+                        // data sets.
+                        // */
+                        // String testDataset = accToDataset.get( testAcc );
+                        // String targetDataset = accToDataset.get(targetAcc);
+                        // if (datasetMatchForSamplesInOtherDatasets.get(testDataset).containsKey(targetDataset);
+                        //                    
+                        //                    
+                        mindistance = distance;
+                        bestMatch = jTitle;
+                        bestMatchAcc = testAcc;
+                    }
+
                 }
 
-                double normalizedDistance = ( double ) distance / Math.max( iTitle.length(), jTitle.length() );
+                assert targetAcc != null;
+                result.addCorrespondence( targetAcc, bestMatchAcc );
 
-                // make sure match is to sample in another data set, in the same species, as well as being a good match.
-                assert accToOrganism.containsKey( targetAcc );
-                assert accToOrganism.containsKey( testAcc );
-                if ( normalizedDistance < SIMILARITY_THRESHOLD && distance <= mindistance
-                        && !( accToDataset.get( targetAcc ).equals( accToDataset.get( testAcc ) ) )
-                        && accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
-                    mindistance = distance;
-                    bestMatch = jTitle;
-                    bestMatchAcc = testAcc;
+                if ( numDatasets > 1 ) {
+                    if ( bestMatchAcc == null ) {
+                        log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + " ("
+                                + accToDataset.get( targetAcc ) + ")"
+                                + " (Can happen if sample was only run on one platform)\n" );
+                    } else {
+                        if ( log.isInfoEnabled() )
+                            log.info( "Match:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc )
+                                    + ")" + "\n" + bestMatchAcc + "\t" + bestMatch + " ("
+                                    + accToDataset.get( bestMatchAcc ) + ")" + " (Distance: " + mindistance + ")\n" );
+                    }
                 }
-            }
 
-            assert targetAcc != null;
-            result.addCorrespondence( targetAcc, bestMatchAcc );
-
-            if ( numDatasets > 1 ) {
-                if ( bestMatchAcc == null ) {
-                    log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc )
-                            + ")" + " (Can happen if sample was only run on one platform)\n" );
-                } else {
-                    if ( log.isInfoEnabled() )
-                        log.info( "Match:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc ) + ")"
-                                + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset.get( bestMatchAcc )
-                                + ")" + " (Distance: " + mindistance + ")\n" );
-                }
             }
         }
+
+        // for ( int j = 0; j < sampleAccs.size(); j++ ) {
+        // String targetAcc = sampleAccs.get( j );
+        //
+        // int mindistance = Integer.MAX_VALUE;
+        // String bestMatch = null;
+        // String bestMatchAcc = null;
+        // String iTitle = accToTitle.get( targetAcc );
+        //
+        // if ( StringUtils.isBlank( iTitle ) )
+        // throw new IllegalArgumentException( "Can't have blank titles for samples" );
+        //
+        // for ( int i = 0; i < sampleAccs.size(); i++ ) {
+        // if ( i == j ) continue;
+        //
+        // String testAcc = sampleAccs.get( i );
+        //
+        // String jTitle = accToTitle.get( testAcc );
+        // if ( StringUtils.isBlank( jTitle ) )
+        // throw new IllegalArgumentException( "Can't have blank titles for samples" );
+        //
+        // int distance = -1;
+        // if ( matrix[i][j] < 0 ) {
+        // distance = StringDistance.editDistance( iTitle, jTitle );
+        // matrix[j][i] = distance;
+        // matrix[i][j] = distance;
+        // } else {
+        // distance = matrix[i][j];
+        // }
+        //
+        // double normalizedDistance = ( double ) distance / Math.max( iTitle.length(), jTitle.length() );
+        //
+        // // make sure match is to sample in another data set, in the same species, as well as being a good match.
+        // assert accToOrganism.containsKey( targetAcc );
+        // assert accToOrganism.containsKey( testAcc );
+        // if ( normalizedDistance < SIMILARITY_THRESHOLD && distance <= mindistance
+        // && !( accToDataset.get( targetAcc ).equals( accToDataset.get( testAcc ) ) )
+        // && accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
+        // //
+        // // /*
+        // // * Add rule to enforce: each data set can only have one sample matching with samples in other
+        // // data sets.
+        // // */
+        // // String testDataset = accToDataset.get( testAcc );
+        // // String targetDataset = accToDataset.get(targetAcc);
+        // // if (datasetMatchForSamplesInOtherDatasets.get(testDataset).containsKey(targetDataset);
+        // //
+        // //
+        // mindistance = distance;
+        // bestMatch = jTitle;
+        // bestMatchAcc = testAcc;
+        // }
+        // }
+        //
+        // assert targetAcc != null;
+        // result.addCorrespondence( targetAcc, bestMatchAcc );
+        //
+        // if ( numDatasets > 1 ) {
+        // if ( bestMatchAcc == null ) {
+        // log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc )
+        // + ")" + " (Can happen if sample was only run on one platform)\n" );
+        // } else {
+        // if ( log.isInfoEnabled() )
+        // log.info( "Match:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc ) + ")"
+        // + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset.get( bestMatchAcc )
+        // + ")" + " (Distance: " + mindistance + ")\n" );
+        // }
+        // }
+        // }
         return result;
     }
 

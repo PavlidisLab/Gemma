@@ -1350,7 +1350,9 @@ public class GeoConverter implements Converter {
 
         int i = 1;
 
-        /* For each _set_ of "corresponding" samples (from the same RNA) we make up a new BioMaterial. */
+        /*
+         * For each _set_ of "corresponding" samples (from the same RNA) we make up a new BioMaterial.
+         */
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
