@@ -245,13 +245,22 @@ public class ArrayDesignSequenceAlignmentService {
 
         log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
 
+        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
+        for ( BioSequence bs : results.keySet() ) {
+            if ( nameMap.containsKey( bs.getName() ) ) {
+                throw new IllegalStateException( "All distinct sequences on the array must have unique names." );
+            }
+            nameMap.put( bs.getName(), bs );
+        }
+
         int noresults = 0;
+        int count = 0;
         for ( BioSequence sequence : sequencesToBlat ) {
             if ( sequence == null ) {
                 log.warn( "Null sequence!" );
                 continue;
             }
-            Collection<BlatResult> brs = results.get( sequence );
+            Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
             if ( brs == null ) {
                 ++noresults;
                 continue;
@@ -261,6 +270,11 @@ public class ArrayDesignSequenceAlignmentService {
                 // placeholder instance.
             }
             allResults.addAll( persistBlatResults( brs ) );
+            
+            if (++count % 2000 == 0) {
+                log.info("Checked results for " + count + " queries, " + allResults.size() + " blat results so far.");
+            }
+            
         }
 
         log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
