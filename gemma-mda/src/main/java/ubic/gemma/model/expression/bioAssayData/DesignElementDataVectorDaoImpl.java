@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -311,10 +313,11 @@ public class DesignElementDataVectorDaoImpl extends
             int MAX_COUNTER = 100;
             Map<DesignElementDataVector,Collection<Gene>> geneMap =  new HashMap<DesignElementDataVector,Collection<Gene>>();
 
-            Long[] idList = new Long[MAX_COUNTER];
-            final String queryString = "select compositeSequence.designElementDataVectors, gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+            ArrayList<Long> idList = new ArrayList<Long>();
+            final String queryString = "select dedv, gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl dedv where gene.products.id=bs2gp.geneProduct.id "
                     + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                    + " and compositeSequence.designElementDataVectors.id in (:ids) ";
+                    + " and compositeSequence.designElementDataVectors.id=dedv.id " 
+                    + " and dedv.id in (:ids) ";
             
             Iterator iter = dataVectors.iterator();
             int counter = 0;
@@ -322,23 +325,26 @@ public class DesignElementDataVectorDaoImpl extends
             while (iter.hasNext()) {
 
                 counter = 0;
+                idList.clear();
                 while ( (counter < MAX_COUNTER) && iter.hasNext()) {
-                    idList[counter] = ((DesignElementDataVector) iter.next()).getId();
+                    idList.add(  ((DesignElementDataVector) iter.next()).getId());
                     counter++;
                 }
-                String ids = StringUtils.join( idList, "," );
-                
+              
                 org.hibernate.Query queryObject = session.createQuery( queryString );
-                queryObject.setString( "ids", ids );
+                queryObject.setParameterList( "ids", idList );
                 // get results and push into hashmap. 
-                ScrollableResults results = queryObject.scroll();
+                
+                ScrollableResults results = queryObject.scroll(ScrollMode.FORWARD_ONLY);
                 while (results.next()) {
                     DesignElementDataVector dedv = (DesignElementDataVector) results.get( 0 );
                     Gene g = (Gene) results.get(1);
                     // if the key exists, push into collection
                     // if the key does not exist, create and put hashset into the map
                     if (geneMap.containsKey( dedv )) {
-                        ((Collection)geneMap.get( dedv )).add( g );
+                        if (!((Collection)geneMap.get( dedv )).add( g )) {
+                            log.debug( "Failed to add " + g.getName() + ";Duplicate" );
+                        }
                     }
                     else {
                         Collection<Gene> genes = new HashSet<Gene>();
@@ -347,6 +353,7 @@ public class DesignElementDataVectorDaoImpl extends
                     }
                 }
                 results.close();
+                
             }
             return geneMap;
         }
