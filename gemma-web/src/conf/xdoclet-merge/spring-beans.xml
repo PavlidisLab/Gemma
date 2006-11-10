@@ -123,7 +123,7 @@
 </bean>
 <!-- ========================= COMPASS START ========================= -->
 <!-- COMPASS CONTROLLER DEFINITIONS -->
-<bean id="searchController" name="/searcher.html" class="org.compass.spring.web.mvc.CompassSearchController">
+<bean id="searchController" name="/searcher.html" class="ubic.gemma.web.controller.compass.CustomCompassSearchController">
 	<property name="compass">
 		<ref bean="compass" />
 	</property>
