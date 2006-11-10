@@ -8,6 +8,10 @@
 		<h2>
 			<fmt:message key="search.results" />
 		</h2>
+		<h3>
+			<c:out value="${numExpressionExperiments }" />
+			Expression Experiments found.
+		</h3>
 		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
 		<display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList"
@@ -17,7 +21,7 @@
 
 			<display:column property="dataSource" sortable="true" titleKey="externalDatabase.title" maxWords="20" />
 
-			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+ 			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 

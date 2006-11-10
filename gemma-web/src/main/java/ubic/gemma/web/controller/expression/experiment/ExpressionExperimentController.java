@@ -233,7 +233,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                         .toExpressionExperimentValueObject( expressionExperiment ) );
             }
         }
-        return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments", expressionExperiments );
+        Long numExpressionExperiments = new Long(expressionExperiments.size());
+        ModelAndView mav = new ModelAndView( "expressionExperiments" );
+        mav.addObject( "expressionExperiments", expressionExperiments );
+        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        return mav;
 
     }
 

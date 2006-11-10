@@ -346,7 +346,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
             return "Taxon unavailable";
         }
-        return taxon.getScientificName();
+        return taxon.getCommonName();
 
         // return ((Taxon) queryByIdReturnObject(object.getId(), queryString)).getScientificName();
 
