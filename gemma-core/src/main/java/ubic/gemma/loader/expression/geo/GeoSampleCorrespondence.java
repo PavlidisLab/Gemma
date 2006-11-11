@@ -110,8 +110,8 @@ public class GeoSampleCorrespondence {
 
             Collections.sort( sortedSet );
             for ( String accession : sortedSet ) {
-                group = group + accession + " (" + accToTitle.get( accession ) + " in " + accToDataset.get( accession )
-                        + ")";
+                group = group + accession + " ('" + accToTitle.get( accession ) + "' in "
+                        + accToDataset.get( accession ) + ")";
 
                 if ( sortedSet.size() == 1 ) {
                     group = group + ( " - singleton" );

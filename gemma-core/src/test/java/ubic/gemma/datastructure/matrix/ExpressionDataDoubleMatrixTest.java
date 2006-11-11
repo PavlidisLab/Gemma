@@ -42,19 +42,27 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
@@ -68,6 +76,21 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     ExpressionExperiment ee = null;
 
+    ExpressionExperimentService expressionExperimentService;
+    ArrayDesignService adService;
+    Collection<ArrayDesign> ads;
+    protected AbstractGeoService geoService;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void onTearDownAfterTransaction() throws Exception {
+        super.onTearDownAfterTransaction();
+        if ( ee != null && ee.getId() != null ) {
+            expressionExperimentService.delete( ee );
+        }
+
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -77,7 +100,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
 
         super.onSetUpInTransaction();
-
+        ads = new HashSet<ArrayDesign>();
         SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
                 .getBean( "simpleExpressionDataLoaderService" );
 
@@ -106,6 +129,73 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         assertNotNull( ee );
         assertEquals( 200, ee.getDesignElementDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
+
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        geoService.setLoadPlatformOnly( false );
+    }
+
+    /**
+     * For bug 553
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testMatrixConversionGSE611() throws Exception {
+        endTransaction();
+        ExpressionExperiment newee;
+        try {
+            String path = ConfigUtils.getString( "gemma.home" );
+            assert path != null;
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE611" );
+
+            // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+            // .fetchAndLoad( "GSE611" );
+            newee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        expressionExperimentService.thaw( newee );
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
+        QuantitationType qt = quantitationTypes.iterator().next();
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        assertEquals( 30, matrix.rows() );
+        assertEquals( 4, matrix.columns() );
+    }
+
+    /**
+     * For bug 553 - original file is corrupted, so this test doesn't really help that much.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testMatrixConversionGSE2870() throws Exception {
+        endTransaction();
+        ExpressionExperiment newee;
+        try {
+            String path = ConfigUtils.getString( "gemma.home" );
+            assert path != null;
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE2870Short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE2870" );
+            newee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        expressionExperimentService.thaw( newee );
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
+        QuantitationType qt = quantitationTypes.iterator().next();
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        assertEquals( 30, matrix.rows() );
+        assertEquals( 4, matrix.columns() );
     }
 
     /**
