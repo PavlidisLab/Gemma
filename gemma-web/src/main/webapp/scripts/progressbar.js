@@ -9,8 +9,12 @@ function updateProgress(data) {
  		updateDeterminateProgress(data);
  	else 
  		updateIndeterminateProgress(data);
+
+//As it turns out the forwardingURL will never be null as its always set by default by the progressManager.
+//Still good to check though, if the size of the forwardingURL is 1 charcter then i know its just a blank character
+//I should implement a setting to turn forwarding on and off in the datapack, or in the progressjob checking for a size == 1 is just bad.
  		
- 	if (data.done && data.forwardingURL != null) {
+ 	if (data.done && data.forwardingURL != null && data.forwardingURL.size != 1) {
 			redirect( data.forwardingURL );
 	} else {
 		window.setTimeout("refreshProgress()", 800);
@@ -53,12 +57,12 @@ function startProgress() {
 		document.getElementById("progressBarText").innerHTML = "Monitoring Progress...";
 	
 	
-	window.setTimeout("refreshProgress()", 500);
+	window.setTimeout("refreshProgress()", 400);
 	return true;
 }
 function createIndeterminateProgressBar() {
 	determinate = 0;
-	var barId = createIndeterminateBarDetails(390,20,'white',1,'black','blue',85,7,3,"");
+	var barId = createIndeterminateBarDetails(390,20,'white',1,'black','#FF9933',85,7,3,"");
 	
 }
 

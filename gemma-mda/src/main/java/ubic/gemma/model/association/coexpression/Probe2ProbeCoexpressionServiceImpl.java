@@ -16,11 +16,13 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
+
 package ubic.gemma.model.association.coexpression;
+
+import java.util.Collection;
+
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
@@ -153,5 +155,12 @@ public class Probe2ProbeCoexpressionServiceImpl extends
       
       return true;
   }
+
+@Override
+protected Collection handleFindCoexpressionRelationships( Gene givenG, Collection ees, QuantitationType qt ) throws Exception {
+   return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( givenG, ees, qt );
+}
+  
+
 
 }

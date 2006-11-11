@@ -70,7 +70,9 @@ public class UploadListener implements OutputStreamListener {
         totalFiles++;
         pJob = ProgressManager.createProgressJob( null, SecurityContextHolder.getContext().getAuthentication()
                 .getName(), "File Upload" );
-       pJob.setForwardingURL( "/Gemma/uploadFile.html" );
+        //If this is set here, then when other programs that have file uploading as a part of their progress they will be forwarded to the wrong place
+        //as the case of just uploading a file isn't really usefull it makes sense for this not to be set
+        pJob.setForwardingURL( " " );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }
 

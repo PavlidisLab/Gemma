@@ -50,7 +50,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  */
 public class ProgressManager {
 
-    private static final String FORWARD_DEFAULT = "checkJobProgress.html";
+    private static final String FORWARD_DEFAULT = "/Gemma/checkJobProgress.html";
 
     protected static final Log log = LogFactory.getLog( ProgressManager.class );
 

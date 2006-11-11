@@ -7,7 +7,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript'
-		src="<c:url value="/scripts/progress.js"/>"></script>
+		src="<c:url value="/scripts/progressbar.js"/>"></script>
 	<link rel="stylesheet" type="text/css" media="all"
 		href="<c:url value='/styles/progressbar.css'/>" />
 </head>
@@ -99,5 +99,5 @@
 
 </form>
 <script type="text/javascript">
-	createProgressBar();
+	createDeterminateProgressBar();
 </script>
