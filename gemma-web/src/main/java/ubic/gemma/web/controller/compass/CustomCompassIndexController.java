@@ -51,8 +51,9 @@ import ubic.gemma.util.CompassUtils;
  * The results of the index operation will be saved under the <code>indexResultsName</code>, which defaults to
  * "indexResults".
  * 
- * @author keshav
  * @author kimchy
+ * @author keshav
+ * @version $Id$
  */
 public class CustomCompassIndexController extends AbstractCompassGpsCommandController {
     private Log log = LogFactory.getLog( CustomCompassIndexController.class );

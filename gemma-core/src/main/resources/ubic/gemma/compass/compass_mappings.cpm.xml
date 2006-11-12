@@ -37,7 +37,7 @@
    
 </class>    
  
-<class name="expression.bioAssay.BioAssayImpl" alias="bioAssay">
+<class name="expression.bioAssay.BioAssayImpl" alias="bioAssay" root="false">
 	
 	 <id name="id" />
 	 
@@ -54,7 +54,7 @@
 	
 </class>
 
-<class name="expression.experiment.ExperimentalDesignImpl" alias="experimentalDesign">
+<class name="expression.experiment.ExperimentalDesignImpl" alias="experimentalDesign" root="false">
 	
 	 <id name="id" />
 	 
@@ -62,7 +62,7 @@
 	
 </class>
 
-<class name="expression.experiment.ExperimentalFactorImpl" alias="experimentalFactor">
+<class name="expression.experiment.ExperimentalFactorImpl" alias="experimentalFactor" root="false">
 	
 	 <id name="id" />
 	 

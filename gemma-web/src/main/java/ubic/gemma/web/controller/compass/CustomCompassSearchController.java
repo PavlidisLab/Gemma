@@ -49,6 +49,7 @@ import org.springframework.web.servlet.ModelAndView;
  *
  * @author kimchy
  * @author keshav
+ * @version $Id$
  */
 public class CustomCompassSearchController extends AbstractCompassCommandController {
 
