@@ -3,6 +3,7 @@ package ubic.gemma.analysis.linkAnalysis;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,9 +11,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.biomage.DesignElement.DesignElement;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -25,7 +28,6 @@ import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.genome.Gene;
@@ -46,8 +48,8 @@ public class LinkAnalysis {
     private Collection<DesignElementDataVector> dataVectors = null;
     private Probe2ProbeCoexpressionService ppService = null;
     private DesignElementDataVectorService deService = null;
-    private HashMap<Object, Object> probeToGeneMap = null;
-    private HashMap<Object, Set> geneToProbeMap = null;
+    private HashMap<Long, Long> probeToGeneMap = null;
+    private HashMap<Long, Set> geneToProbeMap = null;
     private Map<Object, DesignElementDataVector> p2v = null;
     private Taxon taxon = null;
 
@@ -197,7 +199,52 @@ public class LinkAnalysis {
         keep = metricMatrix.getKeepers();
         System.err.println( "Selected " + keep.size() + " values to keep" );
     }
+    public int[] getProbeToGeneAnalysis(){
+    	int [] stats = new int[10];
 
+    	Object[]  allVectors = this.dataVectors.toArray();
+        int ChunkNum = 1000;
+        int end = allVectors.length > ChunkNum? ChunkNum:allVectors.length;
+        HashMap<Object, Set> probeToGeneAssociation = this.getProbeToGeneAssociation(0,end);
+        
+        log.info(" Starting the query to get the mapping between probe and gene ");
+        
+        for ( int i = 0; i < allVectors.length; i++  ) {
+        	if(i >= end) {
+        		int start = end;
+        		end = allVectors.length > end + ChunkNum? end + ChunkNum:allVectors.length;
+        		probeToGeneAssociation = this.getProbeToGeneAssociation(start,end);
+        	}
+        	DesignElementDataVector vector = (DesignElementDataVector)allVectors[i];
+            /** *Initialize the map between probe and designElementDataVector** */
+        	 
+        	/** *Initialize the map between probe and gene n-1 mapping** */
+        	Long probeId = new Long(vector.getDesignElement().getId());
+        	
+            Collection<Gene> geneSet = probeToGeneAssociation.get(vector);
+            
+            Long geneId = null;
+            if ( geneSet != null && !geneSet.isEmpty() ){
+            	if(geneSet.size() >= stats.length) stats[stats.length-1]++;
+            	else
+            		stats[geneSet.size()]++;
+            }
+            else
+            	stats[0]++;
+        }
+    	return stats;
+    }
+    private HashMap <Object, Set> getProbeToGeneAssociation(int start, int end) //From start to end-1
+    {
+    	Collection<DesignElementDataVector> someVectors = new HashSet<DesignElementDataVector>();
+    	HashMap<Object, Set> returnAssocation = null;
+    	Object[]  allVectors = this.dataVectors.toArray();
+    	for(int i = start; i <end; i++){
+    		someVectors.add((DesignElementDataVector)allVectors[i]);
+    	}
+    	returnAssocation = (HashMap)this.deService.getGenes(someVectors);
+    	return returnAssocation;
+    }
     /*
      * @SuppressWarnings("unchecked") private Collection<String> getActiveProbeIdSet() { Collection probeIdSet = new
      * HashSet<String>(); for ( String rowName : ( Collection<String> ) this.dataMatrix.getRowNames() )
@@ -206,38 +253,63 @@ public class LinkAnalysis {
     @SuppressWarnings("unchecked")
     private void init() {
         this.initDB();
-        /*
-         * try { this.geneAnnotations = new GeneAnnotations(this.localHome+"/TestData/" + this.geneAnnotationFile,
-         * rowsToUse, null, null); } catch (IOException e) { log.error("Error in reading GO File"); } this.uniqueItems =
-         * this.geneAnnotations.numGenes();
-         */
+    	int [] stats = new int[10];
         this.p2v = new HashMap<Object, DesignElementDataVector>();
 
-        this.probeToGeneMap = new HashMap<Object, Object>();
-        this.geneToProbeMap = new HashMap<Object, Set>();
-
-        for ( DesignElementDataVector vector : this.dataVectors ) {
+        this.probeToGeneMap = new HashMap<Long, Long>();
+        this.geneToProbeMap = new HashMap<Long, Set>();
+        
+        Object[]  allVectors = this.dataVectors.toArray();
+        int ChunkNum = 1000;
+        int end = allVectors.length > ChunkNum? ChunkNum:allVectors.length;
+        HashMap<Object, Set> probeToGeneAssociation = this.getProbeToGeneAssociation(0,end);
+        
+        StopWatch watch = new StopWatch();
+        watch.start();
+        log.info(" Starting the query to get the mapping between probe and gene ");
+        
+        for ( int i = 0; i < allVectors.length; i++  ) {
+        	if(i >= end) {
+        		int start = end;
+        		end = allVectors.length > end + ChunkNum? end + ChunkNum:allVectors.length;
+        		probeToGeneAssociation = this.getProbeToGeneAssociation(start,end);
+        	}
+        	DesignElementDataVector vector = (DesignElementDataVector)allVectors[i];
             /** *Initialize the map between probe and designElementDataVector** */
-        	DesignElement probe = vector.getDesignElement(); 
-        	p2v.put( probe , vector );
-            /** *Initialize the map between probe and gene 1-1 mapping** */
-            Collection<Gene> geneSet = this.deService.getGenes( vector );
-            Gene gene = null;
-            if ( geneSet != null && !geneSet.isEmpty() )
-                gene = geneSet.iterator().next();
-            else
+        	p2v.put( vector.getDesignElement() , vector );
+        	 
+        	/** *Initialize the map between probe and gene n-1 mapping** */
+        	Long probeId = new Long(vector.getDesignElement().getId());
+        	
+            Collection<Gene> geneSet = probeToGeneAssociation.get(vector);
+            
+            Long geneId = null;
+            if ( geneSet != null && !geneSet.isEmpty() ){
+                geneId = new Long(geneSet.iterator().next().getId());
+               	if(geneSet.size() >= stats.length) stats[stats.length-1]++;
+            	else
+            		stats[geneSet.size()]++;
+            }
+            else{
+               	stats[0]++;
                 continue;
-            this.probeToGeneMap.put( probe, gene );
+            }
+ 
+            this.probeToGeneMap.put( probeId, geneId );
 
             /** *Initialize the map between gene and probeSet 1-n mapping** */
-            Set probeSet = ( Set ) this.geneToProbeMap.get( gene );
+            Set probeSet = ( Set ) this.geneToProbeMap.get( geneId );
             if ( probeSet == null ) {
                 Set tmpSet = new HashSet();
-                tmpSet.add( probe );
-                this.geneToProbeMap.put( gene, tmpSet );
+                tmpSet.add( probeId );
+                this.geneToProbeMap.put( geneId, tmpSet );
             } else
-                probeSet.add( probe );
+                probeSet.add( probeId );
+            if(i % 1000 == 0) System.err.print( " " + i);
         }
+        watch.stop();
+        log.info(" Finish the mapping in " + watch.getTime()/1000 + "seconds");
+        log.info(" Mapping Stats " + ArrayUtils.toString(stats));
         this.uniqueItems = geneToProbeMap.size();
         if(this.uniqueItems == 0) return;
         double scoreP = CorrelationStats.correlationForPvalue( this.fwe / this.uniqueItems, this.dataMatrix.columns() ) - 0.001;
@@ -254,12 +326,12 @@ public class LinkAnalysis {
             int[] p2vAr = new int[keep.size()];
             int[] cbAr = new int[keep.size()];
             int[] pbAr = new int[keep.size()];
-            System.err.println( "Ready to submit to Gemd database." );
+            log.info( "Start submitting data to Gemd database." );
             StopWatch watch = new StopWatch();
             watch.start();
             Collection<Probe2ProbeCoexpression> p2plinks = new HashSet<Probe2ProbeCoexpression>();
             for ( int i = 0, n = keep.size(); i < n; i++ ) {
-                Link m = ( Link ) keep.get( i );
+            	Link m = ( Link ) keep.get( i );
                 double w = m.getWeight();
 
                 Object p1 = dataMatrix.getRowName( m.getx() );
@@ -289,11 +361,17 @@ public class LinkAnalysis {
                     p2plinks.add( ppCoexpression );
                     // Probe2ProbeCoexpression ppCo =
                     // this.ppService.create(ppCoexpression);
+                    if( i%10000 == 0){
+                    	System.err.print( " " + i);
+                        this.ppService.create( p2plinks );
+                        p2plinks.clear();
+                    }
                 }
             }
-            this.ppService.create( p2plinks );
+            if(p2plinks.size() > 0)
+            	this.ppService.create( p2plinks );
             watch.stop();
-            System.err.println( "The time for inserting " + this.keep.size() + " link:" + watch.getTime() );
+            log.info( "The time for inserting " + this.keep.size() + " link:" + watch.getTime()/1000 );
             /**
              * System.err.println( "Ready to submit to tmm database." ); if(this.useDB) { LinkInserter li = new
              * LinkInserter( this.dbManager.getDbHandle() ); int dataSetId = 0; int rd = li.insertBulkLink( dataSetId,
@@ -356,6 +434,7 @@ public class LinkAnalysis {
     }
 
     public void setDataMatrix( DoubleMatrixNamed paraDataMatrix ) {
+    	this.dataMatrix = null;
         this.dataMatrix = paraDataMatrix;
     }
 
@@ -372,6 +451,7 @@ public class LinkAnalysis {
     }
 
     public void setDataVector( Collection<DesignElementDataVector> vectors ) {
+    	this.dataVectors = null;
         this.dataVectors = vectors;
     }
 

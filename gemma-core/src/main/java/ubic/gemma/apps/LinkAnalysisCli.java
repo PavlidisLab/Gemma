@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -14,6 +15,7 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -25,6 +27,8 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -45,13 +49,15 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
 	private String localHome = "c:";
 
-	private LinkAnalysis linkAnalysis = new LinkAnalysis();
-
 	private ExpressionExperimentService eeService = null;
 
 	private ExpressionDataMatrixService expressionDataMatrixService = null;
 
 	private DesignElementDataVectorService vectorService = null;
+
+	private LinkAnalysis linkAnalysis = new LinkAnalysis();
+
+	private double tooSmallToKeep = 0.5;
 
 	@SuppressWarnings("static-access")
 	@Override
@@ -141,8 +147,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 					.setCdfCut(Double.parseDouble(getOptionValue('c')));
 		}
 		if (hasOption('k')) {
-			this.linkAnalysis.setTooSmallToKeep(Double
-					.parseDouble(getOptionValue('k')));
+			this.tooSmallToKeep = Double.parseDouble(getOptionValue('k'));
+			this.linkAnalysis.setTooSmallToKeep(this.tooSmallToKeep);
 		}
 		if (hasOption('w')) {
 			this.linkAnalysis.setFwe(Double.parseDouble(getOptionValue('w')));
@@ -196,7 +202,32 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		}
 		return qtf;
 	}
-
+	
+	private void test(){
+		QuantitationTypeService qts = (QuantitationTypeService)getBean("quantitationTypeService");
+		QuantitationType qtf = QuantitationType.Factory.newInstance();
+		qtf.setName("VALUE"); 
+		qtf.setScale(ScaleType.UNSCALED);
+		qtf.setRepresentation(PrimitiveType.DOUBLE);
+		qtf.setGeneralType(GeneralType.QUANTITATIVE);
+		qtf.setType(StandardQuantitationType.DERIVEDSIGNAL);
+		qtf = qts.find(qtf);
+		if(qtf == null){
+			System.err.println("NO Quantitation Type!");
+			return;
+		}
+		System.err.println("Got Quantitiontype : " + qtf.getId());
+		ExpressionExperiment ee = this.eeService.findById(new Long(1));
+		Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+		ees.add(ee);
+		GeneService geneService = (GeneService)getBean("geneService");
+		Gene gene = geneService.load(461722);
+        Collection<Probe2ProbeCoexpression> p2plinks = null;
+        Probe2ProbeCoexpressionService ppService = (Probe2ProbeCoexpressionService) this
+		.getBean("probe2ProbeCoexpressionService");
+		p2plinks = ppService.findCoexpressionRelationships(gene,ees,qtf);
+		System.err.println("Got links "+ p2plinks.size());
+	}
 	private boolean analysis(ExpressionExperiment ee) {
 		eeService.thaw(ee);
 		QuantitationType qt = this.getQuantitationType(ee);
@@ -204,7 +235,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			log.info("No Quantitation Type in " + ee.getShortName());
 			return false;
 		}
-		
+
 		log.info("Load Data for  " + ee.getShortName());
 		// this.linkAnalysis.setExpressionExperiment(ees.iterator().next());
 		DoubleMatrixNamed dataMatrix = expressionDataMatrixService
@@ -216,6 +247,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			log.info("No data matrix " + ee.getShortName());
 			return false;
 		}
+
 		this.linkAnalysis.setDataMatrix(dataMatrix);
 		Collection<DesignElementDataVector> dataVectors = vectorService
 				.findAllForMatrix(ee, qt);
@@ -225,11 +257,22 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		}
 		this.linkAnalysis.setDataVector(dataVectors);
 		this.linkAnalysis.setTaxon(eeService.getTaxon(ee.getId()));
-		
+
 		log.info("Starting generating Raw Links for " + ee.getShortName());
+		/*this value will be optimized depending on the size of experiment in the analysis.
+		 * So it need to be set as the given value before the analysis.
+		 * Otherwise, the value in the previous experiment will be in effect for the current experiment.
+		 */
+		this.linkAnalysis.setTooSmallToKeep(this.tooSmallToKeep); 
+
+//		int stats[] = this.linkAnalysis.getProbeToGeneAnalysis();
+//		for(int i = 0; i < stats.length; i++) System.err.print(stats[i] + " ");
+		
+		
 		if (this.linkAnalysis.analysis() == true) {
-			log.info("Successful Generating Raw Links for " + ee.getShortName());
+			log.info("Successful Generating Raw Links for "	+ ee.getShortName());
 		}
+		
 		return true;
 	}
 
@@ -251,6 +294,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			this.vectorService = (DesignElementDataVectorService) this
 					.getBean("designElementDataVectorService");
 
+			this.test();
+			if(true) return null;
+			
 			ExpressionExperiment expressionExperiment = null;
 			this.linkAnalysis.setDEService(vectorService);
 			this.linkAnalysis
