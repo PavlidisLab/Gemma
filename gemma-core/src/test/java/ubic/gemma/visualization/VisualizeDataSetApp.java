@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -261,7 +261,7 @@ public class VisualizeDataSetApp {
 
         double[][] rawData = visualizeDataSet.parsePrepareAndConvertRawData();
 
-        DataMatrixVisualizer visualizer = new DefaultDataMatrixVisualizer( "outImage.png" );
+        DataMatrixVisualizer visualizer = new DefaultDataMatrixVisualizer();
 
         ColorMatrix colorMatrix = visualizer.createColorMatrix( rawData, Arrays.asList( visualizeDataSet.converter
                 .getRowNames() ), Arrays.asList( visualizeDataSet.converter.getHeader() ) );
