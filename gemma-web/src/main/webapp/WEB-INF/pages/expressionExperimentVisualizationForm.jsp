@@ -112,8 +112,8 @@
 
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.viewSampling" /> (Get a quick
-					glimpse at the data) </b>
+				<b> <fmt:message key="label.viewSampling" /> <br/>(Get a glimpse
+				of the data) </b>
 			</td>
 			<td>
 				<spring:bind
