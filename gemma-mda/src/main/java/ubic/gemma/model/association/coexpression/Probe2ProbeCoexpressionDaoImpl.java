@@ -65,7 +65,7 @@ public class Probe2ProbeCoexpressionDaoImpl
                     + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
                     + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
                     + " and p2pc.firstVector.expressionExperiment.id in (:collectionOfEE)"
-                    + " and p2pc.quatitationType.id = :givenQtId"
+                    + " and p2pc.quantitationType.id = :givenQtId"                    
                     + " and gene.id = :givenGId";
             
             final String queryStringSecondVector =
@@ -78,7 +78,7 @@ public class Probe2ProbeCoexpressionDaoImpl
                     + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
                     + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
                     + " and p2pc.secondVector.expressionExperiment.id in (:collectionOfEE)"
-                    + " and p2pc.quatitationType.id = :givenQtId"
+                    + " and p2pc.quantitationType.id = :givenQtId"
                     + " and gene.id = :givenGId";
          
             Collection<DesignElementDataVector> dedvs = new HashSet<DesignElementDataVector>();
