@@ -86,19 +86,23 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        
+        if (request.getParameter( "id" ) ==  null) {
+            // should be a validator error on submit
+            return redirectToList( request );     
+        }
+        
         Long id = Long.parseLong( request.getParameter( "id" ) );
 
         if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
+            // should be a validator error on submit
+            return redirectToList( request );
         }
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
-        if ( expressionExperiment == null ) {
-            this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment "} );
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+        if (expressionExperiment == null) {
+            return redirectToList( request );
         }
-
         request.setAttribute( "id", id );
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
@@ -122,6 +126,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         mav.addObject( "designElementDataVectorCount", new Long( expressionExperimentService
                 .getDesignElementDataVectorCountById( id ) ) );
         return mav;
+    }
+
+    private ModelAndView redirectToList( HttpServletRequest request ) {
+        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment "} );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
 
     /**
