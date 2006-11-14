@@ -254,17 +254,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
         if ( expressionExperiment == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
-                    + " found" ) );
-            return super.processFormSubmission( request, response, command, errors );
+            return processError( request, response, command, errors, "No expression experiment with id " + id
+                    + " found" );
         }
 
         QuantitationType quantitationType = eesc.getQuantitationType();
         if ( quantitationType == null ) {
-            String message = "Quantitation type must be provided";
-            log.error( message );
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return super.processFormSubmission( request, response, command, errors );
+            return processError( request, response, command, errors, "Quantitation type must be provided" );
         }
 
         Collection<DesignElementDataVector> dataVectors = getCompositeSequences( command, errors, eesc,
@@ -280,9 +276,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
             String message = "None of the probe sets match the given quantitation type "
                     + quantitationType.getType().getValue();
-            log.error( message );
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return super.processFormSubmission( request, response, command, errors );
+
+            return processError( request, response, command, errors, message );
+
         }
 
         ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer(
@@ -290,6 +286,23 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
                 expressionDataMatrixVisualizer );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @param message
+     * @return ModelAndView
+     * @throws Exception
+     */
+    private ModelAndView processError( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors, String message ) throws Exception {
+        log.error( message );
+        errors.addError( new ObjectError( command.toString(), null, null, message ) );
+        return super.processFormSubmission( request, response, command, errors );
+
     }
 
     /**
@@ -333,8 +346,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
         List<String> searchCategories = new ArrayList<String>();
-        searchCategories.add( "Gene symbol" );
-        searchCategories.add( "Probe id" );
+        searchCategories.add( SEARCH_BY_GENE );
+        searchCategories.add( SEARCH_BY_PROBE );
         searchByMap.put( "searchCategories", searchCategories );
 
         Collection<QuantitationType> types = getQuantitationTypes( request );
