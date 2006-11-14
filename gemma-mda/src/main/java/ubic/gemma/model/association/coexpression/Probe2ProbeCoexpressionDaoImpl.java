@@ -58,9 +58,8 @@ public class Probe2ProbeCoexpressionDaoImpl
             // source tables
             "select distinct p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                     // join table
-                    + p2pClassName + " as p2pc,"
+                    + p2pClassName + " as p2pc "
                     // target tables
-                    + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
                     + " where gene.products.id=bs2gp.geneProduct.id "
                     + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
                     + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
@@ -72,7 +71,7 @@ public class Probe2ProbeCoexpressionDaoImpl
             // source tables
             "select distinct p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                     // join table
-                    + "HumanProbeCoExpressionImpl as p2pc,"
+                    + p2pClassName + " as p2pc "
                     // target tables
                     + " where gene.products.id=bs2gp.geneProduct.id "
                     + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
