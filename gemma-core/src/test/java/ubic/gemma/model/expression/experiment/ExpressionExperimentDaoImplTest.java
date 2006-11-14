@@ -142,6 +142,11 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         Map<String,Long> counts = expressionExperimentDao.getPerTaxonCount();
         assertNotNull(counts);
     }
+    
+    public final void testLoadAllValueObjects() throws Exception {
+        Collection list = expressionExperimentDao.loadAllValueObjects();
+        assertNotNull(list);
+    }
 
     /**
      * @param expressionExperimentDao the expressionExperimentDao to set

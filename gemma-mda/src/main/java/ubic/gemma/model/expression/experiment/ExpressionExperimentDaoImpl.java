@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -323,16 +325,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         vo.setName( entity.getName() );
 
         vo.setSource( entity.getSource() );
-        vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
-        vo.setTaxon( getTaxon( entity ) );
-        vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
 
-        if ( entity != null && entity.getAuditTrail() != null && entity.getAuditTrail().getCreationEvent() != null
-                && entity.getAuditTrail().getCreationEvent().getDate() != null ) {
-            vo.setCreateDate( entity.getAuditTrail().getCreationEvent().getDate() );
-        } else {
-            vo.setCreateDate( null );
-        }
+        vo.setBioAssayCount( 0 );
+        vo.setTaxon( "test" );
+        vo.setDesignElementDataVectorCount( 0 );
+        
+        //vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
+        //vo.setTaxon( getTaxon( entity ) );
+        //vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
 
         return vo;
     }
@@ -525,6 +525,47 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadAllValueObjects()
+     */
+    @Override
+    protected Collection handleLoadAllValueObjects() throws Exception {      
+        Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
+        final String queryString = "select ee.id as id, " +
+                "ee.name as name, " +
+                "ee.accession.externalDatabase.name as externalDatabaseName, " +
+                "ee.accession.externalDatabase.webUri as externalDatabaseUri, " +
+                "ee.source as source, " +
+                "ee.accession.accession as accession, " +
+                "SU.sourceTaxon.commonName as taxonCommonName," +
+                "count(distinct BA) as bioAssayCount, " +
+                "count(distinct dedv) as dedvCount, " +
+                "count(distinct bm) as bioMaterialCount " +
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as bm inner join BA.samplesUsed as SU inner join SU.sourceTaxon inner join ee.designElementDataVectors as dedv group by ee";
+      
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            ScrollableResults list = queryObject.scroll(ScrollMode.FORWARD_ONLY);
+            while (list.next()) {
+                ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
+                v.setId( list.getLong( 0 ).toString() );
+                v.setName( list.getString( 1 ) );
+                v.setExternalDatabase( list.getString( 2 ) );
+                v.setExternalUri( list.getString( 3 ) );
+                v.setSource( list.getString( 4 ) );
+                v.setAccession( list.getString( 5 ) );
+                v.setTaxon( list.getString( 6 ) );
+                v.setBioAssayCount( list.getInteger( 7 ) );
+                v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
+                v.setBioMaterialCount( list.getInteger( 9 ) );
+                vo.add( v );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return vo;
     }
 
 }

@@ -157,23 +157,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     }
 
     /**
-     * @return The creation date.
-     */
-    public String getCreateDate() {
-        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        if ( object != null && object.getCreateDate() != null ) {
-
-            Date date = object.getCreateDate();
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat( "MM/dd/yyyy" );
-            dateFormat.setLenient( false );
-
-            return dateFormat.format( date );
-        }
-        return "Creation date unavailable";
-    }
-
-    /**
      * @return View for key of the quantitation type counts.
      */
     public String getQtName() {

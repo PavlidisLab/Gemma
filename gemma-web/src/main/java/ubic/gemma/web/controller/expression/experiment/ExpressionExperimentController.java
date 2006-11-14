@@ -95,7 +95,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
         if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( id + " not found" );
+            this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment "} );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
         }
 
         request.setAttribute( "id", id );
@@ -206,17 +207,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
         Collection<ExpressionExperimentValueObject> expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
-            Collection<ExpressionExperiment> expressionExperimentCol = expressionExperimentService.loadAll();
-            for ( ExpressionExperiment experiment : expressionExperimentCol ) {
-                expressionExperiments.add( expressionExperimentService.toExpressionExperimentValueObject( experiment ) );
-            }
+            expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
         }
 
         // if ids are specified, then display only those expressionExperiments

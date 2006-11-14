@@ -38,6 +38,14 @@ import ubic.gemma.model.genome.Taxon;
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
+     */
+    @Override
+    protected Collection handleLoadAllValueObjects() throws Exception {
+        return this.getExpressionExperimentDao().loadAllValueObjects();
+    }
+
     /*
      * (non-Javadoc)
      * 
