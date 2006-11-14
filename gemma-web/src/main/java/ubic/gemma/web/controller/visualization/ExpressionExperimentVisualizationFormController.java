@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.visualization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -100,6 +100,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
+        log.debug( "entering formBackingObject" );
+
         Long id = null;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
@@ -122,6 +124,129 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eesc.setSearchString( "probeset_0,probeset_1,probeset_2,probeset_3,probeset_4,probeset_5" );
         return eesc;
 
+    }
+
+    /**
+     * 
+     */
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        log.debug( "entering initBinder" );
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
+                getQuantitationTypes( request ) ) );
+    }
+
+    /**
+     * @param request
+     * @return Map
+     */
+    @Override
+    protected Map referenceData( HttpServletRequest request ) {
+        log.debug( "entering referenceData" );
+
+        Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
+        List<String> searchCategories = new ArrayList<String>();
+        searchCategories.add( SEARCH_BY_GENE );
+        searchCategories.add( SEARCH_BY_PROBE );
+        searchByMap.put( "searchCategories", searchCategories );
+
+        Collection<QuantitationType> types = getQuantitationTypes( request );
+        List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
+        listedTypes.addAll( types );
+
+        searchByMap.put( "quantitationTypes", listedTypes );
+
+        return searchByMap;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        log.debug( "entering processFormSubmission" );
+
+        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        Long id = eesc.getExpressionExperimentId();
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            log.info( "Cancelled" );
+
+            if ( id != null ) {
+                return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id="
+                        + id ) );
+            }
+
+            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" ) );
+
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    @Override
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
+
+        log.debug( "entering onSubmit" );
+
+        Map<String, Object> model = new HashMap<String, Object>();
+        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        String searchCriteria = eesc.getSearchCriteria();
+        Long id = eesc.getExpressionExperimentId();
+
+        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
+        if ( expressionExperiment == null ) {
+            return processErrors( request, response, command, errors, "No expression experiment with id " + id
+                    + " found" );
+        }
+
+        QuantitationType quantitationType = eesc.getQuantitationType();
+        if ( quantitationType == null ) {
+            return processErrors( request, response, command, errors, "Quantitation type must be provided" );
+        }
+
+        Collection<DesignElementDataVector> dataVectors = getCompositeSequences( command, errors, eesc,
+                expressionExperiment, quantitationType );
+        if ( errors.hasErrors() ) {
+            return processErrors( request, response, command, errors, null );
+        }
+
+        designElementDataVectorService.thaw( dataVectors );
+        ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
+        /* deals with the case of probes don't match, for the given quantitation type. */
+        if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
+            String message = "None of the probe sets match the given quantitation type "
+                    + quantitationType.getType().getValue();
+
+            return processErrors( request, response, command, errors, message );
+
+        }
+
+        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer(
+                expressionDataMatrix );
+
+        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
+                expressionDataMatrixVisualizer );
     }
 
     /**
@@ -194,7 +319,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      */
     private Collection<CompositeSequence> getMatchingDesignElements( String[] searchIds,
             Collection<ArrayDesign> arrayDesigns ) {
-        Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
         for ( ArrayDesign design : arrayDesigns ) {
             for ( String searchId : searchIds ) {
                 searchId = StringUtils.trim( searchId );
@@ -225,138 +350,26 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
+     * New errors are added if <tt>message</tt> is not empty (as per the definition of
+     * {@link org.apache.commons.lang.StringUtils#isEmpty}. If empty, a new error will not be added, but existing
+     * errors will still be processed.
      * 
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
-                getQuantitationTypes( request ) ) );
-    }
-
-    /**
      * @param request
      * @param response
      * @param command
      * @param errors
+     * @param message - The error message to be displayed.
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings( { "unused", "unchecked" })
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        Map<String, Object> model = new HashMap<String, Object>();
-        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        String searchCriteria = eesc.getSearchCriteria();
-        Long id = eesc.getExpressionExperimentId();
-
-        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
-        if ( expressionExperiment == null ) {
-            return processError( request, response, command, errors, "No expression experiment with id " + id
-                    + " found" );
-        }
-
-        QuantitationType quantitationType = eesc.getQuantitationType();
-        if ( quantitationType == null ) {
-            return processError( request, response, command, errors, "Quantitation type must be provided" );
-        }
-
-        Collection<DesignElementDataVector> dataVectors = getCompositeSequences( command, errors, eesc,
-                expressionExperiment, quantitationType );
-
-        if ( errors.hasErrors() ) {
-            return super.processFormSubmission( request, response, command, errors );
-        }
-
-        designElementDataVectorService.thaw( dataVectors );
-        ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
-        /* deals with the case of probes don't match, for the given quantitation type. */
-        if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
-            String message = "None of the probe sets match the given quantitation type "
-                    + quantitationType.getType().getValue();
-
-            return processError( request, response, command, errors, message );
-
-        }
-
-        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer(
-                expressionDataMatrix );
-
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
-                expressionDataMatrixVisualizer );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @param message
-     * @return ModelAndView
-     * @throws Exception
-     */
-    private ModelAndView processError( HttpServletRequest request, HttpServletResponse response, Object command,
+    private ModelAndView processErrors( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors, String message ) throws Exception {
-        log.error( message );
-        errors.addError( new ObjectError( command.toString(), null, null, message ) );
-        return super.processFormSubmission( request, response, command, errors );
-
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-
-        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        Long id = eesc.getExpressionExperimentId();
-
-        if ( request.getParameter( "cancel" ) != null ) {
-            log.info( "Cancelled" );
-
-            if ( id != null ) {
-                return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id="
-                        + id ) );
-            }
-
-            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" ) );
-
+        if ( !StringUtils.isEmpty( message ) ) {
+            log.error( message );
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
         }
 
         return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * @param request
-     * @return Map
-     */
-    @Override
-    protected Map referenceData( HttpServletRequest request ) {
-
-        Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
-        List<String> searchCategories = new ArrayList<String>();
-        searchCategories.add( SEARCH_BY_GENE );
-        searchCategories.add( SEARCH_BY_PROBE );
-        searchByMap.put( "searchCategories", searchCategories );
-
-        Collection<QuantitationType> types = getQuantitationTypes( request );
-        List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
-        listedTypes.addAll( types );
-
-        searchByMap.put( "quantitationTypes", listedTypes );
-
-        return searchByMap;
     }
 
     /**
