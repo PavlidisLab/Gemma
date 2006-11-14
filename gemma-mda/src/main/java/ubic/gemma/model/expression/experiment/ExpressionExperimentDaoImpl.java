@@ -539,11 +539,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 "ee.accession.externalDatabase.webUri as externalDatabaseUri, " +
                 "ee.source as source, " +
                 "ee.accession.accession as accession, " +
-                "SU.sourceTaxon.commonName as taxonCommonName," +
-                "count(distinct BA) as bioAssayCount, " +
-                "count(distinct dedv) as dedvCount, " +
-                "count(distinct bm) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as bm inner join BA.samplesUsed as SU inner join SU.sourceTaxon inner join ee.designElementDataVectors as dedv group by ee";
+                "taxon.commonName as taxonCommonName," +
+                "count(distinct BA) as bioAssayCount " +
+                // removed to speed up query
+//                "count(distinct dedv) as dedvCount, " +
+//                "count(distinct SU) as bioMaterialCount " +
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon" +
+                " " +
+                " group by ee";
       
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -558,8 +561,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setAccession( list.getString( 5 ) );
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
-                v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
-                v.setBioMaterialCount( list.getInteger( 9 ) );
+                // removed to speed up query
+//                v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
+//                v.setBioMaterialCount( list.getInteger( 9 ) );
                 vo.add( v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
