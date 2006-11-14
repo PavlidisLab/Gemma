@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +29,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +38,6 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -51,7 +48,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
@@ -191,6 +187,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return vectors;
     }
 
+    /**
+     * @param searchIds
+     * @param arrayDesigns
+     * @return Collection<CompositeSequences>
+     */
     private Collection<CompositeSequence> getMatchingDesignElements( String[] searchIds,
             Collection<ArrayDesign> arrayDesigns ) {
         Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
@@ -206,6 +207,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return compositeSequences;
     }
 
+    /**
+     * @param request
+     * @return Collection<QuantitationType>
+     */
     @SuppressWarnings("unchecked")
     private Collection<QuantitationType> getQuantitationTypes( HttpServletRequest request ) {
         Long id = null;
@@ -219,6 +224,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return types;
     }
 
+    /**
+     * 
+     */
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( request, binder );
@@ -238,12 +246,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-
-        // TODO remove this
-        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
-                + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools.createDir( ConfigUtils
-                .getString( "gemma.appdata.home" )
-                + File.separatorChar + "images" ) );
 
         Map<String, Object> model = new HashMap<String, Object>();
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
@@ -284,12 +286,20 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer(
-                expressionDataMatrix, imageFile.getAbsolutePath() );
+                expressionDataMatrix );
 
         return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
                 expressionDataMatrixVisualizer );
     }
 
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
@@ -343,6 +353,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         this.compositeSequenceService = compositeSequenceService;
     }
 
+    /**
+     * @param designElementDataVectorService
+     */
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
     }
