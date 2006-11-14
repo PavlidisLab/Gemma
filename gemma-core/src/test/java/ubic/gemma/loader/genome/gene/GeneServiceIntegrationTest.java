@@ -51,6 +51,17 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
         assert ( compSequences.size() != 0 );
     }
+    
+    public void testGetGenesByTaxon() throws Exception {
+        // get geneService
+        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        TaxonService taxonService = (TaxonService) this.getBean( "taxonService" );
+       
+        Taxon taxon = taxonService.findByCommonName( "human" );
+        Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );
+        assert ( geneCollection.size() != 0 );
+        
+    }
 
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
     @Override

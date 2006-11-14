@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author pavlidis
@@ -237,6 +238,11 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     @Override
     protected Collection handleGetCoexpressedGenesById( long id ) throws Exception {
         return this.getGeneDao().getCoexpressedGenesById( id );
+    }
+
+    @Override
+    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+        return this.getGeneDao().getGenesByTaxon( taxon );
     }
 
 }

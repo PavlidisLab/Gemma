@@ -318,4 +318,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.handleGetCoexpressedElementsById( gene.getId() );
     }
 
+    @Override
+    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
+    
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "taxon", taxon );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+        
+    }
+
 }
