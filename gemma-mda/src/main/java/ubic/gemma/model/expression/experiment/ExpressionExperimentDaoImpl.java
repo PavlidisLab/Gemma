@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -258,7 +259,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // Delete BioMaterials
                 for ( BioAssay ba : toDeletePers.getBioAssays() ) {
 
-
                     // fixme this needs to be here for lazy loading issues. Even though the AD isn't getting removed.
                     // Not happy about this at all. but what to do?
                     ba.getArrayDesignUsed().getCompositeSequences().size();
@@ -329,10 +329,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         vo.setBioAssayCount( 0 );
         vo.setTaxon( "test" );
         vo.setDesignElementDataVectorCount( 0 );
-        
-        //vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
-        //vo.setTaxon( getTaxon( entity ) );
-        //vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
+
+        // vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
+        // vo.setTaxon( getTaxon( entity ) );
+        // vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
 
         return vo;
     }
@@ -482,7 +482,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         // FIXME: this would be much faster done as a batch query (with "in") instead of once per design element.
         final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dev inner join dev.designElement as de inner join dev.quantitationType as qt where ee.id = :id and de.id = :deid and qt.id = :qtid";
 
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectors = new LinkedHashSet<DesignElementDataVector>();
         for ( DesignElement designElement : ( Collection<DesignElement> ) designElements ) {
             assert designElement.getId() != null;
             try {
@@ -527,31 +527,33 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadAllValueObjects()
      */
     @Override
-    protected Collection handleLoadAllValueObjects() throws Exception {      
+    protected Collection handleLoadAllValueObjects() throws Exception {
         Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
-        final String queryString = "select ee.id as id, " +
-                "ee.name as name, " +
-                "ee.accession.externalDatabase.name as externalDatabaseName, " +
-                "ee.accession.externalDatabase.webUri as externalDatabaseUri, " +
-                "ee.source as source, " +
-                "ee.accession.accession as accession, " +
-                "taxon.commonName as taxonCommonName," +
-                "count(distinct BA) as bioAssayCount " +
+        final String queryString = "select ee.id as id, "
+                + "ee.name as name, "
+                + "ee.accession.externalDatabase.name as externalDatabaseName, "
+                + "ee.accession.externalDatabase.webUri as externalDatabaseUri, "
+                + "ee.source as source, "
+                + "ee.accession.accession as accession, "
+                + "taxon.commonName as taxonCommonName,"
+                + "count(distinct BA) as bioAssayCount "
+                +
                 // removed to speed up query
-//                "count(distinct dedv) as dedvCount, " +
-//                "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon" +
-                " " +
-                " group by ee";
-      
+                // "count(distinct dedv) as dedvCount, " +
+                // "count(distinct SU) as bioMaterialCount " +
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon"
+                + " " + " group by ee";
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            ScrollableResults list = queryObject.scroll(ScrollMode.FORWARD_ONLY);
-            while (list.next()) {
+            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
                 v.setId( list.getLong( 0 ).toString() );
                 v.setName( list.getString( 1 ) );
@@ -562,8 +564,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 // removed to speed up query
-//                v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
-//                v.setBioMaterialCount( list.getInteger( 9 ) );
+                // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
+                // v.setBioMaterialCount( list.getInteger( 9 ) );
                 vo.add( v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
@@ -572,32 +574,34 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return vo;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
         Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
-        final String queryString = "select ee.id as id, " +
-                "ee.name as name, " +
-                "ee.accession.externalDatabase.name as externalDatabaseName, " +
-                "ee.accession.externalDatabase.webUri as externalDatabaseUri, " +
-                "ee.source as source, " +
-                "ee.accession.accession as accession, " +
-                "taxon.commonName as taxonCommonName," +
-                "count(distinct BA) as bioAssayCount " +
+        final String queryString = "select ee.id as id, "
+                + "ee.name as name, "
+                + "ee.accession.externalDatabase.name as externalDatabaseName, "
+                + "ee.accession.externalDatabase.webUri as externalDatabaseUri, "
+                + "ee.source as source, "
+                + "ee.accession.accession as accession, "
+                + "taxon.commonName as taxonCommonName,"
+                + "count(distinct BA) as bioAssayCount "
+                +
                 // removed to speed up query
-//                "count(distinct dedv) as dedvCount, " +
-//                "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon" +
-                " where ee.id in (:ids) " +
-                " group by ee";
-      
+                // "count(distinct dedv) as dedvCount, " +
+                // "count(distinct SU) as bioMaterialCount " +
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon"
+                + " where ee.id in (:ids) " + " group by ee";
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll(ScrollMode.FORWARD_ONLY);
-            while (list.next()) {
+            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
                 v.setId( list.getLong( 0 ).toString() );
                 v.setName( list.getString( 1 ) );
@@ -608,8 +612,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 // removed to speed up query
-//                v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
-//                v.setBioMaterialCount( list.getInteger( 9 ) );
+                // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
+                // v.setBioMaterialCount( list.getInteger( 9 ) );
                 vo.add( v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
