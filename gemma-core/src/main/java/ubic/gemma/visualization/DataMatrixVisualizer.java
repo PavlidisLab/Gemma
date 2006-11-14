@@ -19,8 +19,6 @@
 package ubic.gemma.visualization;
 
 import java.awt.Color;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import ubic.basecode.gui.ColorMatrix;
@@ -38,27 +36,6 @@ public interface DataMatrixVisualizer {
      * @return ColorMatrix
      */
     public ColorMatrix createColorMatrix( double[][] data, List<String> rowLabels, List<String> colLabels );
-
-    /**
-     * @param colorMatrix
-     * @throws IOException
-     */
-    public void saveImage( ColorMatrix colorMatrix ) throws IOException;
-
-    /**
-     * Saves the image to outfile
-     * 
-     * @param outfile
-     * @throws IOException
-     */
-    public void saveImage( File outfile, ColorMatrix colorMatrix ) throws IOException;
-
-    /**
-     * Returns the image file.
-     * 
-     * @return String
-     */
-    public String getImageFile();
 
     /**
      * @return Color[]
