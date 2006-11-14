@@ -219,17 +219,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // if ids are specified, then display only those expressionExperiments
         else {
-            String[] idList = StringUtils.split( sId, ',' );
-
-            for ( int i = 0; i < idList.length; i++ ) {
-                Long id = Long.parseLong( idList[i] );
-                ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
-                if ( expressionExperiment == null ) {
-                    throw new EntityNotFoundException( id + " not found" );
-                }
-                expressionExperiments.add( expressionExperimentService
-                        .toExpressionExperimentValueObject( expressionExperiment ) );
+            Collection ids = new ArrayList<Long>();
+            
+            String[] idList = StringUtils.split( sId, ',' ); 
+            for (int i = 0; i < idList.length; i++ ) {
+                ids.add( new Long( idList[i] ) );
             }
+            expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ));
         }
         Long numExpressionExperiments = new Long(expressionExperiments.size());
         ModelAndView mav = new ModelAndView( "expressionExperiments" );

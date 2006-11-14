@@ -243,4 +243,12 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getPerTaxonCount();
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+        return this.getExpressionExperimentDao().loadValueObjects( ids );
+    }
+
 }

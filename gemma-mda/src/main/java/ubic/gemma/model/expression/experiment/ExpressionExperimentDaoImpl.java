@@ -572,4 +572,50 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return vo;
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+        Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
+        final String queryString = "select ee.id as id, " +
+                "ee.name as name, " +
+                "ee.accession.externalDatabase.name as externalDatabaseName, " +
+                "ee.accession.externalDatabase.webUri as externalDatabaseUri, " +
+                "ee.source as source, " +
+                "ee.accession.accession as accession, " +
+                "taxon.commonName as taxonCommonName," +
+                "count(distinct BA) as bioAssayCount " +
+                // removed to speed up query
+//                "count(distinct dedv) as dedvCount, " +
+//                "count(distinct SU) as bioMaterialCount " +
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon" +
+                " where ee.id in (:ids) " +
+                " group by ee";
+      
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            ScrollableResults list = queryObject.scroll(ScrollMode.FORWARD_ONLY);
+            while (list.next()) {
+                ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
+                v.setId( list.getLong( 0 ).toString() );
+                v.setName( list.getString( 1 ) );
+                v.setExternalDatabase( list.getString( 2 ) );
+                v.setExternalUri( list.getString( 3 ) );
+                v.setSource( list.getString( 4 ) );
+                v.setAccession( list.getString( 5 ) );
+                v.setTaxon( list.getString( 6 ) );
+                v.setBioAssayCount( list.getInteger( 7 ) );
+                // removed to speed up query
+//                v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
+//                v.setBioMaterialCount( list.getInteger( 9 ) );
+                vo.add( v );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return vo;
+    }
+
 }
