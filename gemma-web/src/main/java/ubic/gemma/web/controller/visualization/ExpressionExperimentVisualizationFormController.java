@@ -100,8 +100,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        log.debug( "entering formBackingObject" );
-
         Long id = null;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
@@ -131,7 +129,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      */
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        log.debug( "entering initBinder" );
+
         super.initBinder( request, binder );
         binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
                 getQuantitationTypes( request ) ) );
@@ -173,8 +171,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
-        log.debug( "entering processFormSubmission" );
-
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
         Long id = eesc.getExpressionExperimentId();
 
@@ -207,8 +203,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        log.debug( "entering onSubmit" );
-
         Map<String, Object> model = new HashMap<String, Object>();
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
         String searchCriteria = eesc.getSearchCriteria();
@@ -225,8 +219,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             return processErrors( request, response, command, errors, "Quantitation type must be provided" );
         }
 
-        Collection<DesignElementDataVector> dataVectors = getCompositeSequences( command, errors, eesc,
-                expressionExperiment, quantitationType );
+        Collection<DesignElementDataVector> dataVectors = getVectors( command, errors, eesc, expressionExperiment,
+                quantitationType );
+
+        // dataVectors = processVectors(dataVectors); Matrix should be normalized by default (by row; mean center and
+        // divide by
+
         if ( errors.hasErrors() ) {
             return processErrors( request, response, command, errors, null );
         }
@@ -258,7 +256,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<DesignElementDataVector> getCompositeSequences( Object command, BindException errors,
+    private Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
             ExpressionExperimentVisualizationCommand eesc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
         Collection<DesignElementDataVector> vectors = null;
@@ -315,14 +313,15 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     /**
      * @param searchIds
      * @param arrayDesigns
-     * @return Collection<CompositeSequences>
+     * @return LinkedHashSet<CompositeSequences>
      */
-    private Collection<CompositeSequence> getMatchingDesignElements( String[] searchIds,
+    private LinkedHashSet<CompositeSequence> getMatchingDesignElements( String[] searchIds,
             Collection<ArrayDesign> arrayDesigns ) {
-        Collection<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
+        LinkedHashSet<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
         for ( ArrayDesign design : arrayDesigns ) {
             for ( String searchId : searchIds ) {
                 searchId = StringUtils.trim( searchId );
+                log.debug( "user entered: " + searchId );
                 CompositeSequence cs = compositeSequenceService.findByName( design, searchId );
                 if ( cs != null ) {
                     compositeSequences.add( cs );
