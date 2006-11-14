@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 UniverSity of British Columbia
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 package ubic.gemma.visualization;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -156,7 +155,7 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
         expressionDataMatrix = new ExpressionDataDoubleMatrix( ExpressionExperiment.Factory.newInstance(),
                 designElements, quantitationType );
 
-        matrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix, tmp.getAbsolutePath() );
+        matrixVisualizer = new DefaultExpressionDataMatrixVisualizer( expressionDataMatrix );
 
         matrixVisualizer.setRowLabels( rowLabelsList );
         matrixVisualizer.setColLabels( colLabelsList );
@@ -188,34 +187,5 @@ public class ExpressionDataMatrixVisualizerTest extends TestCase {
 
         assertNotNull( colorMatrix );
 
-    }
-
-    /**
-     * @throws Exception
-     */
-    public void testSaveImage() throws Exception {
-
-        String[] rowLabels = { "a", "b", "c", "d", "e" };
-        List<String> rowLabelsList = new ArrayList<String>();
-        for ( int i = 0; i < rowLabels.length; i++ ) {
-            rowLabelsList.add( i, rowLabels[i] );
-        }
-
-        List<String> colLabelsList = new ArrayList<String>();
-        for ( int i = 0; i < data[0].length; i++ ) {
-            colLabelsList.add( i, String.valueOf( i ) );
-        }
-
-        matrixVisualizer.setRowLabels( rowLabelsList );
-        matrixVisualizer.setColLabels( colLabelsList );
-
-        ColorMatrix colorMatrix = matrixVisualizer.createColorMatrix( expressionDataMatrix );
-
-        matrixVisualizer.saveImage( tmp, colorMatrix );
-        FileInputStream fis = new FileInputStream( tmp );
-
-        assertNotNull( fis );
-        assertTrue( tmp.length() > 0 );
-        fis.close();
     }
 }

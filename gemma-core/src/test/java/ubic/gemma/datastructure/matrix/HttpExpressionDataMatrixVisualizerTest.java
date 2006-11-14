@@ -18,8 +18,6 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -134,21 +132,10 @@ public class HttpExpressionDataMatrixVisualizerTest extends BaseSpringContextTes
 
         // vizualizationData.printData();
 
-        File tmp = File.createTempFile( "testOut", ".png" );
-
-        ExpressionDataMatrixVisualizer visualizer = new DefaultExpressionDataMatrixVisualizer( matrixData, tmp
-                .getAbsolutePath() );
+        ExpressionDataMatrixVisualizer visualizer = new DefaultExpressionDataMatrixVisualizer( matrixData );
 
         ColorMatrix colorMatrix = visualizer.createColorMatrix( matrixData );
 
-        visualizer.saveImage( tmp, colorMatrix );
-
-        tmp.deleteOnExit();
-
-        FileInputStream fis = new FileInputStream( tmp );
-
-        assertNotNull( fis );
-        assertTrue( tmp.length() > 0 );
-        fis.close();
+        assertNotNull( colorMatrix );
     }
 }
