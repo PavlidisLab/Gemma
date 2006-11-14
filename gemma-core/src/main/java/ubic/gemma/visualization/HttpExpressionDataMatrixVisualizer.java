@@ -54,7 +54,7 @@ public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMat
      * @param imageFile
      */
     public HttpExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
-        super( expressionDataMatrix, imageFile );
+        super( expressionDataMatrix );
     }
 
     /**
@@ -64,7 +64,7 @@ public class HttpExpressionDataMatrixVisualizer extends DefaultExpressionDataMat
      */
     public HttpExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String protocol,
             String server, int port, String imageFile ) {
-        super( expressionDataMatrix, imageFile );
+        super( expressionDataMatrix );
 
         this.protocol = protocol;
         this.server = server;

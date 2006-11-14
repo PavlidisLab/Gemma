@@ -1,7 +1,7 @@
 /*
- * The genTools project
+ * The Gemma project
  * 
- * Copyright (c) 2006 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@
 package ubic.gemma.visualization;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +29,6 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
 
 /**
  * @author keshav
@@ -47,20 +43,10 @@ public class DefaultDataMatrixVisualizer implements DataMatrixVisualizer {
 
     protected List<String> colLabels = null;
 
-    protected String imageFile = "Image file not set";
-
     /**
      * Cannot instantiate this.
      */
     public DefaultDataMatrixVisualizer() {
-        throw new RuntimeException( "cannot instantiate using no-arg constructor" );
-    }
-
-    /**
-     * @param imageFile
-     */
-    public DefaultDataMatrixVisualizer( String imageFile ) {
-        this.imageFile = imageFile;
         this.rowLabels = new ArrayList<String>();
         this.colLabels = new ArrayList<String>();
     }
@@ -79,46 +65,6 @@ public class DefaultDataMatrixVisualizer implements DataMatrixVisualizer {
         ColorMatrix colorMatrix = new ColorMatrix( matrix );
 
         return colorMatrix;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#getImageFile()
-     */
-    public String getImageFile() {
-        return imageFile;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#saveImage(java.io.File)
-     */
-    public void saveImage( ColorMatrix colorMatrix ) throws IOException {
-        this.saveImage( imageFile, colorMatrix );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#saveImage(java.io.File)
-     */
-    public void saveImage( File outFile, ColorMatrix colorMatrix ) throws IOException {
-        this.saveImage( outFile.getAbsolutePath(), colorMatrix );
-    }
-
-    /**
-     * @param outfile
-     * @throws IOException
-     */
-    private void saveImage( String outfile, ColorMatrix colorMatrix ) throws IOException {
-        // if ( outfile != null ) this.outfile = outfile;
-
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
-
-        display.setCellSize( new Dimension( 16, 16 ) );
-        display.saveImage( outfile );
     }
 
     /*

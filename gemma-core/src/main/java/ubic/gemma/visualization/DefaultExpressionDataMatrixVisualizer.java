@@ -22,6 +22,8 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.gui.ColorMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -35,6 +37,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  */
 public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisualizer implements
         ExpressionDataMatrixVisualizer, Serializable {
+
+    private Log log = LogFactory.getLog( DefaultExpressionDataMatrixVisualizer.class );
 
     private static final long serialVersionUID = -5075323948059345296L;
 
@@ -51,10 +55,8 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
 
     /**
      * @param expressionDataMatrix
-     * @param imageFile
      */
-    public DefaultExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
-        super( imageFile );
+    public DefaultExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix ) {
         this.expressionDataMatrix = expressionDataMatrix;
     }
 
@@ -95,6 +97,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
                 colLabels.add( String.valueOf( j ) );
             }
         }
+
         return this.createColorMatrix( data, rowLabels, colLabels );
     }
 }
