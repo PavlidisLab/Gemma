@@ -110,7 +110,7 @@ t+=(ie)?'filter:alpha(opacity='+(100-i*(100/blocks))+')':'-Moz-opacity:'+((100-i
 t+='"></span>';
 }
 t+='</span></div>';
-var ipbHeader = '<div id="progressBar"> <div id="theMeter">	<div id="progressBarText"><textarea id="progressTextArea" name="" rows=5 cols=60 readonly=true> </textarea>	</div>';
+var ipbHeader = '<div id="progressBar"> <div id="theMeter">	<div id="progressBarText"><textarea id="progressTextArea" name="" rows=5 cols=60 readonly> </textarea>	</div>';
 var ipbFooter = '</div>	</div>	<form> <input type="hidden" name="taskId\" />		</form> ';
 document.write(ipbHeader + t + ipbFooter);
 var bA=(ie)?document.all['blocks'+N]:document.getElementById('blocks'+N);

@@ -68,7 +68,7 @@ public class ExceptionTag extends TagSupport {
 
                 if ( showStackTrace ) {
                     buf
-                            .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
+                            .append( "<textarea readonly class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
                     if ( exception.getStackTrace() != null ) {
                         buf.append( ExceptionUtils.getFullStackTrace( exception ) );
                     } else {

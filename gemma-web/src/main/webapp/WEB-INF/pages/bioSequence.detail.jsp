@@ -31,7 +31,7 @@
                 </td>
                 <td>
                 	<%if (bioSequence.getDescription() != null){%>
-                    <textarea name="" rows=5 cols=80 readonly=true><jsp:getProperty name="bioSequence" property="description" /></textarea>
+                    <textarea name="" rows=5 cols=80 readonly><jsp:getProperty name="bioSequence" property="description" /></textarea>
                     <%}else{
                     	out.print("Description unavailable");
                     }%>
