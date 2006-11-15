@@ -21,6 +21,10 @@
 
 			<display:column property="dataSource" sortable="true" titleKey="externalDatabase.title" maxWords="20" />
 
+			<authz:authorize ifAnyGranted="admin">
+	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+			</authz:authorize>
+
  			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />

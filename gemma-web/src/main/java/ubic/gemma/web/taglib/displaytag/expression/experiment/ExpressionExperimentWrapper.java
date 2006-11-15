@@ -155,6 +155,19 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
         return "No design";
     }
+    
+    /**
+     * Returns the count of the array designs for the specific expression experiment
+     * 
+     * @return String
+     */
+    public String getArrayDesignLink() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object != null ) {
+            return Long.toString(object.getArrayDesignCount());
+        }
+        return "No design";
+    }
 
     /**
      * @return View for key of the quantitation type counts.

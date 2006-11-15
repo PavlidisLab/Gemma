@@ -542,12 +542,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.source as source, "
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
-                + "count(distinct BA) as bioAssayCount "
+                + "count(distinct BA) as bioAssayCount, "
+                + "count(distinct AD) as arrayDesignCount"
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon"
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon"
                 + " " + " group by ee";
 
         try {
@@ -563,9 +564,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setAccession( list.getString( 5 ) );
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
+                v.setArrayDesignCount( list.getInteger( 8 ) );
                 // removed to speed up query
-                // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
-                // v.setBioMaterialCount( list.getInteger( 9 ) );
+                // v.setDesignElementDataVectorCount( list.getInteger( 9 ) );
+                // v.setBioMaterialCount( list.getInteger( 10 ) );
                 vo.add( v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
@@ -589,12 +591,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.source as source, "
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
-                + "count(distinct BA) as bioAssayCount "
+                + "count(distinct BA) as bioAssayCount, "
+                + "count(distinct AD) as arrayDesignCount"
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon as taxon"
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon"
                 + " where ee.id in (:ids) " + " group by ee";
 
         try {
@@ -611,6 +614,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setAccession( list.getString( 5 ) );
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
+                v.setArrayDesignCount( list.getInteger( 8 ) );
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
                 // v.setBioMaterialCount( list.getInteger( 9 ) );
