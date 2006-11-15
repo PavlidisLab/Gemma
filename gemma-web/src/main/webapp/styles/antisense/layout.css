@@ -158,3 +158,29 @@
 	background-color: white;
 	-moz-border-radius: 0px 0px 0px 0px;
 }
+
+/* styles for pure CSS tooltips */
+a.info{
+    position:relative; 
+    z-index:24; background-color:#ccc;
+    color:#000;
+    text-decoration:none;
+}
+
+a.info:hover{
+	z-index:25; 
+	background-color:#ff0;
+}
+
+a.info span{
+	display: none
+}
+
+a.info:hover span{ /*the span will display just on :hover state*/
+    display:block;
+    position:absolute;
+    top:2em; left:2em; width:15em;
+    border:1px solid #0cf;
+    background-color:#cff; color:#000;
+    text-align: center;
+}
