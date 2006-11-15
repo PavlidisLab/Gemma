@@ -37,9 +37,9 @@ public class TaxonUtility {
      * @return boolean
      */
     public static boolean isHuman( Taxon tax ) {
-        if ( tax.getNcbiId() == 9606 ) return true;
-        if ( tax.getScientificName().equalsIgnoreCase( "homo sapiens" ) ) return true;
-        if ( tax.getCommonName().equalsIgnoreCase( "human" ) ) return true;
+        if ((tax.getNcbiId() != null) && (tax.getNcbiId() == 9606) ) return true;
+        if ((tax.getScientificName() != null) && (tax.getScientificName().equalsIgnoreCase( "homo sapiens" )) ) return true;
+        if ((tax.getCommonName() != null) && (tax.getCommonName().equalsIgnoreCase( "human" )) ) return true;
 
         return false;
     }
@@ -50,9 +50,9 @@ public class TaxonUtility {
      */
     public static boolean isMouse( Taxon tax ) {
 
-        if ( tax.getNcbiId() == 10090 ) return true;
-        if ( tax.getScientificName().equalsIgnoreCase( "mus musculus" ) ) return true;
-        if ( tax.getCommonName().equalsIgnoreCase( "mouse" ) ) return true;
+        if ((tax.getNcbiId() != null) &&  (tax.getNcbiId() == 10090 )) return true;
+        if ((tax.getScientificName() != null) && ( tax.getScientificName().equalsIgnoreCase( "mus musculus" ) )) return true;
+        if ((tax.getCommonName() != null) && ( tax.getCommonName().equalsIgnoreCase( "mouse" ) )) return true;
 
         return false;
     }
@@ -63,9 +63,9 @@ public class TaxonUtility {
      */
     public static boolean isRat( Taxon tax ) {
 
-        if ( tax.getNcbiId() == 10116 ) return true;
-        if ( tax.getScientificName().equalsIgnoreCase( "Rattus norvegicus" ) ) return true;
-        if ( tax.getCommonName().equalsIgnoreCase( "rat" ) ) return true;
+        if ( (tax.getNcbiId() != null) && (tax.getNcbiId() == 10116 )) return true;
+        if ( (tax.getScientificName() != null) && (tax.getScientificName().equalsIgnoreCase( "Rattus norvegicus" ) )) return true;
+        if ( (tax.getCommonName() != null) && (tax.getCommonName().equalsIgnoreCase( "rat" ) )) return true;
 
         return false;
 
