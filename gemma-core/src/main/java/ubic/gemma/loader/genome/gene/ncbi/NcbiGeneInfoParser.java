@@ -48,7 +48,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
     /**
      * 
      */
-    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 13;
+    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 14;
 
     private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
 
@@ -116,7 +116,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
             geneInfo.setNameIsFromAuthority( fields[11].equals( "-" ) ? false : true );
             geneInfo.setNomenclatureStatus( fields[12].equals( "-" ) ? NomenclatureStatus.UNKNOWN : fields[11]
                     .equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
-
+            // ignore 14th field for now - it stores alternate protein names
         } catch ( NumberFormatException e ) {
             throw new FileFormatException( e );
         }

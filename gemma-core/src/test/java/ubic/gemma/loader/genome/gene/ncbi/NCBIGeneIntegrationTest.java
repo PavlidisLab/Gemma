@@ -56,7 +56,7 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
         // producer is done.
         log.debug( "Producer done with number of elements: " + queue.size() );
-        assertTrue( queue.size() == 100 );
+        assertTrue( queue.size() == 99 );
     }
 
     public void testGeneConverter() throws Exception {
@@ -88,7 +88,7 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
         // producer is done.
         log.debug( "Converter done with number of elements: " + geneQueue.size() );
-        assertTrue( geneQueue.size() == 100 );
+        assertTrue( geneQueue.size() == 99 );
     }
 
     /**
@@ -137,7 +137,7 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         // loader is done.
         // check if it loaded 100 elements to the database
         log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
-        assertEquals( 100, loader.getLoadedGeneCount() );
+        assertEquals( 99, loader.getLoadedGeneCount() );
 
         // grab one gene and check its information
         // (depends on information in gene_info and gene2accession file

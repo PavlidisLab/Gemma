@@ -44,7 +44,7 @@ public class NCBIGeneParserTest extends TestCase {
         NcbiGeneInfoParser ngip = new NcbiGeneInfoParser();
         ngip.setFilter( false );
         ngip.parse( is );
-        assertEquals( 100, ngip.getResults().size() );
+        assertEquals( 99, ngip.getResults().size() );
     }
 
     public void testParseGene2Accession() throws Exception {
