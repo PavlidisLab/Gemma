@@ -39,6 +39,14 @@ public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
 
     /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
+       return this.getExpressionExperimentDao().getByTaxon( taxon );
+    }
+
+    /* (non-Javadoc)
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
      */
     @Override

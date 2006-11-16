@@ -50,6 +50,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
@@ -59,6 +60,8 @@ import ubic.gemma.util.BusinessKey;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
+
+  
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
@@ -626,4 +629,26 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return vo;
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
+ 
+
+        Collection<ExpressionExperiment> ee = null;
+        final String queryString = "select ee from ExpressionExperimentImpl as ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+    
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "taxon", taxon );
+            ee = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return ee;
+        
+    }
+    
 }

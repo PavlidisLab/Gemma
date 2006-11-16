@@ -42,6 +42,7 @@ import ubic.gemma.persistence.CrudUtilsTest;
 import ubic.gemma.persistence.GenomePersisterTest;
 import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.security.AllSecurityTests;
+import ubic.gemma.util.TaxonUtilityTest;
 import ubic.gemma.util.progress.ProgressAppenderTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizerTest;
@@ -95,6 +96,8 @@ public class AllCoreTests {
         suite.addTestSuite( GenomePersisterTest.class );
 
         suite.addTestSuite( ExpressionExperimentDeleteTest.class );
+        
+        suite.addTestSuite( TaxonUtilityTest.class );
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );
