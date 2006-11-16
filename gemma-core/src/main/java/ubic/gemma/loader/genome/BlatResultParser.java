@@ -18,8 +18,8 @@
  */
 package ubic.gemma.loader.genome;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -83,7 +83,7 @@ public class BlatResultParser extends BasicLineParser {
      */
     private ExternalDatabase searchedDatabase = null;
 
-    private Collection<BlatResult> results = new HashSet<BlatResult>();
+    private Collection<BlatResult> results = new ArrayList<BlatResult>();
     private double scoreThreshold = 0.0;
 
     /**

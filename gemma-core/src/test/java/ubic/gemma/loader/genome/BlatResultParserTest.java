@@ -19,52 +19,36 @@
 package ubic.gemma.loader.genome;
 
 import java.io.InputStream;
+import java.util.Collection;
+
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import junit.framework.TestCase;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
 public class BlatResultParserTest extends TestCase {
-
-    BlatResultParser bp;
-
-    /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        bp = new BlatResultParser();
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
 
     /*
      * Test method for 'ubic.gemma.loader.loaderutils.BasicLineParser.parse(InputStream)'
      */
     public void testParseInputStreamWheader() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.wheader.txt" );
+        BlatResultParser bp = new BlatResultParser();
         bp.parse( is );
-        bp.getResults();
+        Collection<BlatResult> res = bp.getResults();
+        assertEquals( 15, res.size() );
 
     }
 
     public void testParseInputStreamNoheader() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.noheader.txt" );
+        BlatResultParser bp = new BlatResultParser();
         bp.parse( is );
-        bp.getResults();
+        Collection<BlatResult> res = bp.getResults();
+        assertEquals( 18, res.size() );
     }
 
 }
