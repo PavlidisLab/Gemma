@@ -553,7 +553,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
                 " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon"
-                + " " + " group by ee";
+                + " " + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -604,7 +604,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
                 " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon"
-                + " where ee.id in (:ids) " + " group by ee";
+                + " where ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -641,7 +641,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
  
 
         Collection<ExpressionExperiment> ee = null;
-        final String queryString = "select ee from ExpressionExperimentImpl as ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
     
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
