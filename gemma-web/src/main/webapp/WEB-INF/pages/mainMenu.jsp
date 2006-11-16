@@ -12,20 +12,27 @@
 		Bioassays:
 	</td>
 	<td align="right"> 
-	<c:out value="${ stats.bioAssayCount }" />
+	<b><c:out value="${ stats.bioAssayCount }" /></b>
 	</td>
 </tr>
 <tr>
 	<td>
+	<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>">
 	Array Designs:
+	</a>
 	</td>
 	<td align="right">
-	<c:out value="${ stats.arrayDesignCount }" />	
+	<b><c:out value="${ stats.arrayDesignCount }" /></b>
 	</td>
 </tr>
 <tr>
 	<td>
+		<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>">
 		Expression Experiments:
+		</a>
+	</td>
+	<td align="right">
+		<b><c:out value="${ expressionExperimentCount}" /></b>
 	</td>
 </tr>
 <c:forEach var="taxon" items="${ taxonCount }" >
@@ -45,6 +52,7 @@
 
 <div class="separator"></div>
 <ul class="glassList">
+<!--  Moved expression experiment and array design link to summary table
 	<li>
 	<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
 	</li>
@@ -52,6 +60,7 @@
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>"> <fmt:message
 				key="menu.ExpressionExperimentSearch" /> </a>
 	</li>
+-->
 	<li>
 		<a href="<c:url value="/geneFinder.html"/>"> <fmt:message key="menu.GeneFinder" /> </a>
 	</li>

@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.Collection;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -140,9 +141,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns", arrayDesignService.loadAll() );
+        Collection arrayDesigns = arrayDesignService.loadAll();
+        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns", arrayDesigns );
     }
 
     /**

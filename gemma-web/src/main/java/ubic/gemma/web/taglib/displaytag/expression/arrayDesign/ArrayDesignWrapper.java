@@ -43,6 +43,7 @@ public class ArrayDesignWrapper extends TableDecorator {
      */
      public String getShortDescription() {
          ArrayDesign object = ( ArrayDesign ) getCurrentRowObject();
-         return StringUtils.abbreviate( object.getDescription(), 200 );
+         String shortDescription = StringUtils.abbreviate( object.getDescription(), 200 );
+         return shortDescription;
      }
 }

@@ -18,15 +18,10 @@
  */
 package ubic.gemma.web.controller.common;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -148,9 +143,14 @@ public class MainMenuController extends BaseFormController {
         long arrayDesignCount = arrayDesignService.countAll();
         stats.put( "arrayDesignCount", arrayDesignCount );
         Map<String,Long> taxonCount = expressionExperimentService.getPerTaxonCount();
-
+        long expressionExperimentCount = 0;
+        Collection<Long> values = taxonCount.values();
+        for ( Long count : values ) {
+            expressionExperimentCount += count;
+        }
         mav.addObject( "stats", stats );
         mav.addObject( "taxonCount",taxonCount );
+        mav.addObject( "expressionExperimentCount", expressionExperimentCount);
         return mav;        
     }
 
