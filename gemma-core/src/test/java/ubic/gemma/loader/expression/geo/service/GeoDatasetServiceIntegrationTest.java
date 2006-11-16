@@ -189,7 +189,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     //
     // }
     // /**
-    // * GDS246 results in 'not in experiment' error.
+    // * GDS246 results in duplicate platfomr error
     // */
     // @SuppressWarnings("unchecked")
     // public void testFetchAndLoadGDS246() throws Exception {
@@ -202,7 +202,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // ee = results.iterator().next();
     // assertEquals( 1, results.size() );
     //
-    // }
+    //    }
+
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
