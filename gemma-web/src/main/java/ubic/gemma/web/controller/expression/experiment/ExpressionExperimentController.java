@@ -296,7 +296,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 ExpressionExperiment ee = (ExpressionExperiment) command;
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
                         .getAuthentication().getName(), "Deleting expression experiment: "
-                        + ee.getAccession() );
+                        + ee.getId());
                                
                 expressionExperimentService.delete( ee );
                 saveMessage( "Expression Experiment " + ee.getShortName() + " removed from Database" );
