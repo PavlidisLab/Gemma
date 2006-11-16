@@ -204,7 +204,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     //
     // }
     /**
-     * Has multiple species (mouse and human, one and two platforms respectively)
+     * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGSE1133() throws Exception {
@@ -215,6 +215,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE1133" );
         ee = results.iterator().next(); // fixme, need to delete both.
+        assertNotNull( ee.getPrimaryPublication() );
+        assertEquals( "6062-7", ee.getPrimaryPublication().getPages() );
         assertEquals( 2, results.size() );
 
     }
@@ -439,8 +441,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // expressionExperimentService.thaw( newee );
     // Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( newee );
     // ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qts.iterator().next() );
-    //        assertNotNull( matrix );
-    //    }
+    // assertNotNull( matrix );
+    // }
 
     /**
      * This test uses 4 data sets, 4 platforms, and samples that aren't run on all platforms. Insane! And has messed up

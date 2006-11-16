@@ -22,10 +22,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -89,12 +91,29 @@ public class GeoDatasetService extends AbstractGeoService {
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
+        getPubMedInfo( result );
+
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
         Collection persistedResult = persisterHelper.persist( result );
         log.info( "Persisted " + series.getGeoAccession() );
         this.geoConverter.clear();
         return persistedResult;
+    }
+
+    /**
+     * @param result
+     */
+    private void getPubMedInfo( Collection<ExpressionExperiment> result ) {
+        for ( ExpressionExperiment experiment : result ) {
+            BibliographicReference pubmed = experiment.getPrimaryPublication();
+            if ( pubmed == null ) continue;
+            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+            pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
+            if ( pubmed == null ) continue;
+            experiment.setPrimaryPublication( pubmed );
+
+        }
     }
 
     /**

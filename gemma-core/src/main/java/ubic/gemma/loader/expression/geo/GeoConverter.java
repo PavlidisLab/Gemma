@@ -62,6 +62,7 @@ import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -1296,6 +1297,8 @@ public class GeoConverter implements Converter {
 
         convertContacts( series, expExp );
 
+        convertPubMedIds( series, expExp );
+
         expExp.setAccession( convertDatabaseEntry( series ) );
 
         LocalFile expExpRawDataFile = convertSupplementaryFileToLocalFile( series );
@@ -1424,6 +1427,26 @@ public class GeoConverter implements Converter {
         }
 
         return expExp;
+    }
+
+    /**
+     * @param series
+     * @param expExp
+     */
+    private void convertPubMedIds( GeoSeries series, ExpressionExperiment expExp ) {
+        Collection<String> ids = series.getPubmedIds();
+        if ( ids == null || ids.size() == 0 ) return;
+        for ( String string : ids ) {
+            BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+            DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
+            pubAccession.setAccession( string );
+            ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+            ed.setName( "PubMed" );
+            pubAccession.setExternalDatabase( ed );
+            bibRef.setPubAccession( pubAccession );
+            expExp.setPrimaryPublication( bibRef );
+            break; // usually just one...
+        }
     }
 
     /**

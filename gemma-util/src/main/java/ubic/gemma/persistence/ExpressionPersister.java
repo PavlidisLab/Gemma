@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import ubic.basecode.util.CancellationException;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
@@ -402,6 +403,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                     + "), returning it (this method does not handle updates)" );
             return existing;
         }
+
+        entity.setPrimaryPublication( ( BibliographicReference ) persist( entity.getPrimaryPublication() ) );
 
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
