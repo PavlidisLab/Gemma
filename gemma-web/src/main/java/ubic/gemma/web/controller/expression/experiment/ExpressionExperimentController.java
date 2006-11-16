@@ -20,9 +20,9 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -220,7 +220,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
             expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );

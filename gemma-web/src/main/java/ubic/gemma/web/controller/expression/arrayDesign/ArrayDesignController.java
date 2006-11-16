@@ -34,6 +34,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -70,7 +71,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param errors
      * @return
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
@@ -99,8 +100,17 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( arrayDesign );
         Long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( arrayDesign );
         Long numGenes = arrayDesignService.numGenes( arrayDesign );
+        Long numCompositeSequences = new Long(arrayDesignService.getCompositeSequenceCount( arrayDesign ));
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
         Long numExpressionExperiments = new Long(ee.size());
+        Taxon t = arrayDesignService.getTaxon( id );
+        String taxon = "";
+        if (t != null) {
+            taxon = t.getScientificName();
+        }
+        else {
+            taxon = "(No taxon available)";
+        }
         
         String[] eeIdList = new String[ee.size()];
         int i = 0;
@@ -111,11 +121,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String eeIds = StringUtils.join( eeIdList,",");
 
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
+        mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numCsBioSequences", numCsBioSequences );
         mav.addObject( "numCsBlatResults",numCsBlatResults);
         mav.addObject( "numCsGenes", numCsGenes );
         mav.addObject( "numGenes", numGenes );
+        mav.addObject( "numCompositeSequences",  numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         mav.addObject( "expressionExperimentIds", eeIds );       
         return mav;

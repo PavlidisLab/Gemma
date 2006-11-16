@@ -9,13 +9,18 @@
 	<head><title>Array Design Details</title><content tag="heading">Array Design Details</content></head>
 	<body>
 <!--  Summary of array design associations -->
-	<table class='datasummary'>
+<table class='datasummary'>
+<caption>
+	<jsp:getProperty name="arrayDesign" property="name" />
+</caption>
 <tr>
-<td colspan=2>
-<b>Array Design Summary</b>
+<td colspan=2 align=center>
+<b>Summary</b>
 </td>
 </tr>
 <tr>
+<!-- Admin only for sequence and blat associations -->
+<authz:authorize ifAnyGranted="admin">
 <td>
 	Sequence associations
 </td>
@@ -31,6 +36,8 @@
 	<c:out value="${numCsBlatResults}" />
 </td>
 </tr>
+</authz:authorize>
+<!--  End admin only -->
 <tr>
 <td>
 	Gene associations
@@ -79,10 +86,29 @@
 			</tr>
 			<tr>
 				<td class="label">
-					Number Of Features (according to provider)
+					Species
 				</td>
 				<td>
-					<jsp:getProperty name="arrayDesign" property="advertisedNumberOfDesignElements" />
+					<c:out value="${taxon}" />
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					Number of probes
+				</td>
+				<td>
+					<c:out value="${numCompositeSequences}" />
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					Expression experiments using this array
+				</td>
+				<td>
+					<c:out value="${numExpressionExperiments}" />
+					<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=<c:out value="${expressionExperimentIds}" />">
+						<img src="/Gemma/images/magnifier.png" />
+					</a>
 				</td>
 			</tr>
 			<tr>
@@ -103,11 +129,7 @@
 					%>
 				</td>
 			</tr>
-</table>
-There are 
-<b><c:out value="${numExpressionExperiments}" /></b>
-expression experiments that use this array design. 
-<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=<c:out value="${expressionExperimentIds}" />">(link)</a>
+
 			<%-- FIXME - show some of the design elements --%>	
 			<table>
 			<tr>
