@@ -87,9 +87,15 @@ public class DatsetCombinerTest extends TestCase {
         parser.parse( is );
         is.close();
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/twoDatasets/GSE674_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/twoDatasets/GDS473.soft.gz" ) );
         parser.parse( is );
         is.close();
+
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
 
         gds = parseResult.getDatasets().values();
@@ -97,8 +103,8 @@ public class DatsetCombinerTest extends TestCase {
         fillInDatasetPlatformAndOrganism();
 
         assertEquals( 2, gds.size() );
-
-        GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
         // log.info( result );
         assertEquals( 15, result.size() );
@@ -132,7 +138,7 @@ public class DatsetCombinerTest extends TestCase {
 
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGSECorrespondence(Collection<GeoDataset>)'
-     * This is a really hard case.
+     * This is a really hard case because the sample names are very similar. It has 8 samples, each on three arrays.
      */
     public void testFindGSECorrespondenceThreeDatasets() throws Exception {
 
@@ -142,6 +148,12 @@ public class DatsetCombinerTest extends TestCase {
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS242.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/threeDatasets/GSE479_family.soft.gz" ) );
         parser.parse( is );
         assert is != null;
         is.close();
@@ -160,22 +172,54 @@ public class DatsetCombinerTest extends TestCase {
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
 
-        String[] keys = new String[] { "GSM4076", "GSM4047", "GSM4071", "GSM4052", "GSM4077", "GSM4070", "GSM4053",
-                "GSM4046", "GSM4089", "GSM4082", "GSM4083", "GSM4088", "GSM4058", "GSM4065", "GSM4064", "GSM4059",
-                "GSM4055", "GSM4079", "GSM4048", "GSM4078", "GSM4072", "GSM4054", "GSM4073", "GSM4049", "GSM4090",
-                "GSM4067", "GSM4061", "GSM4085", "GSM4060", "GSM4091", "GSM4084", "GSM4066", "GSM4081", "GSM4087",
-                "GSM4086", "GSM4062", "GSM4057", "GSM4056", "GSM4080", "GSM4063", "GSM4068", "GSM4044", "GSM4050",
-                "GSM4051", "GSM4069", "GSM4045", "GSM4074", "GSM4075" };
+        String[] keys = new String[] { "GSM4045", "GSM4047", "GSM4049", "GSM4051", "GSM4053", "GSM4055", "GSM4057",
+                "GSM4059", "GSM4061", "GSM4063", "GSM4065", "GSM4067", "GSM4069", "GSM4071", "GSM4073", "GSM4075",
+                "GSM4077", "GSM4081", "GSM4079", "GSM4083", "GSM4085", "GSM4087", "GSM4089", "GSM4091" };
 
+        assert keys.length == 24;
         gds = parseResult.getDatasets().values();
+
+        // Where did these come from?
+        // "GSM4076","GSM4052","GSM4070","GSM4046","GSM4082", "GSM4088","GSM4058","GSM4064","GSM4048",
+        // "GSM4078","GSM4072","GSM4054","GSM4090", "GSM4060","GSM4084","GSM4066", "GSM4086","GSM4062",
+        // "GSM4056","GSM4080", "GSM4068","GSM4044","GSM4050","GSM4074",
+
+        /**
+         * <pre>
+         *                       GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
+         *                       GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
+         *                       GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
+         *                       GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
+         *                       GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
+         *                       GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
+         *                       GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
+         *                       GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
+         *                       GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
+         *                       GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
+         *                       GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
+         *                       GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
+         *                       GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
+         *                       GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
+         *                       GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
+         *                       GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
+         *                       GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
+         *                       GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
+         *                       GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
+         *                       GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
+         *                       GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
+         *                       GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
+         *                       GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
+         *                       GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
+         * </pre>
+         */
 
         assertEquals( 3, gds.size() );
 
         fillInDatasetPlatformAndOrganism();
-
-        GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
         log.info( result );
-        assertEquals( 16, result.size() );
+        assertEquals( 8, result.size() );
 
         for ( int i = 0; i < keys.length; i++ ) {
             String string = keys[i];
@@ -183,23 +227,9 @@ public class DatsetCombinerTest extends TestCase {
             assertTrue( "Wrong result for " + keys[i] + ", expected 3",
                     result.getCorrespondingSamples( string ).size() == 3 );
         }
-        assertTrue( result.getCorrespondingSamples( "GSM4076" ).contains( "GSM4078" ) );
-        // assertTrue( result.getCorrespondingSamples( "GSM4080" ).contains( "GSM4084" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM4051" ).contains( "GSM4053" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM4083" ).contains( "GSM4085" ) );
 
-        /**
-         * Here are two desired matches that get confused.
-         * 
-         * <pre>
-         *    GSM4080 PGA-MFD-MutantPD5-1aAv2-s1 
-         *    GSM4084 PGA-MFD-MutantPD5-1aCv2-s1 
-         *    
-         *    harder because there are two differences. 
-         *    GSM4068 PGA-MFD-MutantPD1-1aAv2-s1b 
-         *    GSM4072 PGA-MFD-MutantPD1-1aCv2-s1
-         * </pre>
-         * 
-         * Easy to get mixed up in the s1b vs s1 and PD1 vs PD5 thing (PD1/PD5 is what matters, I think)
-         */
     }
 
     /**
@@ -237,8 +267,8 @@ public class DatsetCombinerTest extends TestCase {
         gds = parseResult.getDatasets().values();
         assertEquals( 3, gds.size() );
         fillInDatasetPlatformAndOrganism();
-
-        GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -250,6 +280,53 @@ public class DatsetCombinerTest extends TestCase {
         assertEquals( 4, numBioMaterials );
 
         log.info( result );
+    }
+
+    /**
+     * Really hard case.
+     * 
+     * @throws Exception
+     */
+    public void testFindGSE1133Human() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse1133Short/GDS594.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse1133Short/GSE1133_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse1133Short/GDS596.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+        fillInDatasetPlatformAndOrganism();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+        assertEquals( 158, numBioMaterials );
+
     }
 
 }

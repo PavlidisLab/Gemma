@@ -350,7 +350,7 @@ public class ArrayDesignSequenceProcessingService {
             throws IOException {
 
         log.info( "Processing Affymetrix design" );
-
+        arrayDesignService.thaw( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
         Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
@@ -424,6 +424,7 @@ public class ArrayDesignSequenceProcessingService {
 
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
         log.info( "Updating " + arrayDesign );
+
         arrayDesignService.update( arrayDesign );
         log.info( "Done adding sequence information!" );
         return bioSequences;
@@ -438,22 +439,26 @@ public class ArrayDesignSequenceProcessingService {
      * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
      *         filled in.
      */
-    protected ArrayDesign processAffymetrixDesign( String arrayDesignName, InputStream arrayDesignFile,
+    protected ArrayDesign processAffymetrixDesign( String arrayDesignName, Taxon taxon, InputStream arrayDesignFile,
             InputStream probeSequenceFile ) throws IOException {
         ArrayDesign result = ArrayDesign.Factory.newInstance();
         result.setName( arrayDesignName );
 
         Contact contact = Contact.Factory.newInstance();
         contact.setName( "Affymetrix" );
-        contact = ( Contact ) persisterHelper.persist( contact );
 
         result.setDesignProvider( contact );
-        result = arrayDesignService.create( result );
 
         CompositeSequenceParser csp = new CompositeSequenceParser();
+        csp.setTaxon( taxon );
         csp.parse( arrayDesignFile );
         Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
+        for ( CompositeSequence sequence : rawCompositeSequences ) {
+            sequence.setArrayDesign( result );
+        }
         result.setCompositeSequences( rawCompositeSequences );
+
+        result = ( ArrayDesign ) persisterHelper.persist( result );
 
         this.processAffymetrixDesign( result, probeSequenceFile );
 
@@ -472,7 +477,7 @@ public class ArrayDesignSequenceProcessingService {
             String probeSequenceFile, Taxon taxon ) throws IOException {
         InputStream arrayDesignFileStream = new BufferedInputStream( new FileInputStream( arrayDesignFile ) );
         InputStream probeSequenceFileStream = new BufferedInputStream( new FileInputStream( probeSequenceFile ) );
-        return this.processAffymetrixDesign( arrayDesignName, arrayDesignFileStream, probeSequenceFileStream );
+        return this.processAffymetrixDesign( arrayDesignName, taxon, arrayDesignFileStream, probeSequenceFileStream );
     }
 
     /**

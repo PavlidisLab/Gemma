@@ -69,15 +69,6 @@ public class RMATest extends TestCase {
     }
 
     /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        if ( connected ) aa.cleanup();
-    }
-
-    /*
      * Test method for 'ubic.gemma.tools.AffyAnalyze.rma(DoubleMatrixNamed, ArrayDesign)'
      */
     public void testRma() {

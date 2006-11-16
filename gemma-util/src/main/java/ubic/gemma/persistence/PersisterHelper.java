@@ -46,6 +46,7 @@ public class PersisterHelper extends RelationshipPersister {
             a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
             return super.persist( a );
         }
+        this.getSession().flush();
         return super.persist( entity );
     }
 

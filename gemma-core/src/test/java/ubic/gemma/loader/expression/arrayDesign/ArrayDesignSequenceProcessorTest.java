@@ -32,6 +32,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.testing.AbstractGeoServiceTest;
@@ -51,6 +53,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     ArrayDesign result;
     ArrayDesignSequenceProcessingService app;
     ArrayDesignService arrayDesignService;
+    Taxon taxon;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
@@ -65,6 +68,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        taxon = taxonService.findByCommonName( "mouse" );
     }
 
     @Override
@@ -122,7 +127,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     public void testProcessAffymetrixDesign() throws Exception {
-        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign",
+        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
                 designElementStream, probeFile );
 
         assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
@@ -138,12 +143,13 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
         geoService.setLoadPlatformOnly( true );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL890" );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226" );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
         Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
                 ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
                 false );
+        assertNotNull( res );
         for ( BioSequence sequence : res ) {
             assertNotNull( sequence.getSequence() );
         }
@@ -170,7 +176,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     public void testProcessNonAffyDesign() throws Exception {
-        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign",
+        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
                 designElementStream, probeFile );
 
         assertNotNull( result.getId() );

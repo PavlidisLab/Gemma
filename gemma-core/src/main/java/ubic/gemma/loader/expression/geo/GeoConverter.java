@@ -508,7 +508,8 @@ public class GeoConverter implements Converter {
         /*
          * Tricky thing is that series contains data from multiple platforms.
          */
-        Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( geoSeries );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        Map<GeoPlatform, List<GeoSample>> platformSamples = datasetCombiner.getPlatformSampleMap( geoSeries );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             convertSampleOnPlatformVectors( expExp, platformSamples.get( platform ), platform );

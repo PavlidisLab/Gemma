@@ -27,6 +27,7 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -40,6 +41,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 public class CompositeSequenceParser extends BasicLineParser {
 
     private Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
+
+    private Taxon taxon;
 
     @Override
     protected void addResult( Object obj ) {
@@ -70,6 +73,7 @@ public class CompositeSequenceParser extends BasicLineParser {
 
         BioSequence biologicalCharacteristic = BioSequence.Factory.newInstance();
         biologicalCharacteristic.setName( genbankAcc ); // this will be changed later, typically.
+        biologicalCharacteristic.setTaxon( taxon );
 
         // this will be changed later, typically.
         biologicalCharacteristic.setDescription( description + " (From microarray manufacturer)" );
@@ -80,6 +84,14 @@ public class CompositeSequenceParser extends BasicLineParser {
 
         return result;
 
+    }
+
+    public Taxon getTaxon() {
+        return taxon;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 
 }

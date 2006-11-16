@@ -69,7 +69,8 @@ public class GeoSampleCorrespondence {
 
     /**
      * @param gsmNumberA
-     * @param gsmNumberB If null, interpreted as meaning there is no correspondence to worry about
+     * @param gsmNumberB If null, interpreted as meaning there is no correspondence to worry about, though they can be
+     *        added later.
      */
     public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
 
@@ -103,20 +104,21 @@ public class GeoSampleCorrespondence {
     public String toString() {
         StringBuffer buf = new StringBuffer();
 
+        StringBuffer singletons = new StringBuffer();
         List<String> groupStrings = new ArrayList<String>();
         for ( Set<String> set : sets ) {
             String group = "";
             List<String> sortedSet = new ArrayList<String>( set );
-
             Collections.sort( sortedSet );
             for ( String accession : sortedSet ) {
                 group = group + accession + " ('" + accToTitle.get( accession ) + "' in "
                         + accToDataset.get( accession ) + ")";
 
                 if ( sortedSet.size() == 1 ) {
+                    singletons.append( group + "\n" );
                     group = group + ( " - singleton" );
                 } else {
-                    group = group + ( " <==> " );
+                    group = group + ( "\t<==>\t" );
                 }
             }
             group = group + "\n";
@@ -128,7 +130,8 @@ public class GeoSampleCorrespondence {
             buf.append( string );
         }
 
-        return buf.toString().replaceAll( " <==> \\n", "\n" );
+        return buf.toString().replaceAll( "\\t<==>\\t\\n", "\n" )
+                + ( singletons.length() > 0 ? "\nSingletons:\n" + singletons.toString() : "" );
     }
 
     public void setAccToTitleMap( Map<String, String> accToTitle ) {

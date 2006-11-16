@@ -401,7 +401,7 @@ public class GeoFamilyParser implements Parser {
      * (in a platform section of a GSE file):
      * 
      * <pre>
-     *     #SEQ_LEN = Sequence length
+     *                #SEQ_LEN = Sequence length
      * </pre>
      * 
      * @param line
@@ -483,8 +483,8 @@ public class GeoFamilyParser implements Parser {
      * For samples in GSE files, they become values for the data in the sample. For example
      * 
      * <pre>
-     *       #ID_REF = probe id
-     *       #VALUE = RMA value
+     *                  #ID_REF = probe id
+     *                  #VALUE = RMA value
      * </pre>
      * 
      * <p>
@@ -495,9 +495,9 @@ public class GeoFamilyParser implements Parser {
      * provided. Here is an example.
      * 
      * <pre>
-     *         #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
-     *         #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
-     *         #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                    #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
+     *                    #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                    #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
      * 
      * @param line
@@ -514,6 +514,11 @@ public class GeoFamilyParser implements Parser {
         } else if ( inDataset ) {
             if ( processPlatformsOnly ) return;
 
+            /*
+             * Datasets give titles to samples that sometimes differ from the ones given in the GSE files. Sometimes
+             * these are useful to keep around (for matching across data sets), so we store it in an "auxiliary" title.
+             */
+
             extractColumnIdentifier( line, currentDataset() );
             Map<String, String> res = extractKeyValue( line );
             String potentialSampleAccession = res.keySet().iterator().next();
@@ -525,14 +530,10 @@ public class GeoFamilyParser implements Parser {
                 this.addNewSample( potentialSampleAccession );
             }
 
-            // Set the title, if it hasn't been set before.
-            if ( potentialSampleAccession.startsWith( "GSM" ) && !StringUtils.isBlank( potentialTitle )
-                    && StringUtils.isBlank( results.getSampleMap().get( potentialSampleAccession ).getTitle() ) ) {
-                potentialTitle = potentialTitle.substring( potentialTitle.indexOf( ':' ) + 2 ); // throw out the "Value
-                // for GSM1949024:"
-                // part.
-                log.debug( potentialSampleAccession + " " + potentialTitle );
-                sampleSet( potentialSampleAccession, "title", potentialTitle );
+            // Set the titleInDataset
+            if ( potentialSampleAccession.startsWith( "GSM" ) && !StringUtils.isBlank( potentialTitle ) ) {
+                potentialTitle = potentialTitle.substring( potentialTitle.indexOf( ':' ) + 2 ); // throw out the
+                sampleSet( potentialSampleAccession, "titleInDataset", potentialTitle );
             }
 
         } else {
@@ -946,7 +947,7 @@ public class GeoFamilyParser implements Parser {
             return;
         }
 
-        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
+        String[] tokens = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
 
         assert tokens != null;
 
@@ -991,10 +992,10 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!sample_table_end" ) ) {
             inSampleTable = false;
         } else if ( startsWithIgnoreCase( line, "!Sample_title" ) ) {
-            if ( StringUtils.isBlank( currentSample().getTitle() ) ) {
-                sampleSet( currentSampleAccession, "title", value );
+            if ( this.inDataset ) {
+                sampleSet( currentSampleAccession, "titleInDataset", value );
             } else {
-                log.info( "Sample " + currentSample() + " already has title " + currentSample().getTitle() );
+                sampleSet( currentSampleAccession, "title", value );
             }
         } else if ( startsWithIgnoreCase( line, "!Sample_geo_accession" ) ) {
             currentSampleAccession = value;

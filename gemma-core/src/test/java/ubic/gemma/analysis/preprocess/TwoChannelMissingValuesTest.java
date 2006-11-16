@@ -49,7 +49,8 @@ public class TwoChannelMissingValuesTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2221" );
-        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( series );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );

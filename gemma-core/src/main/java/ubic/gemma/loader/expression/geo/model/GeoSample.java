@@ -48,6 +48,12 @@ public class GeoSample extends GeoData implements Comparable {
     private String supplementaryFile = "";
     private String lastUpdateDate = "";
 
+    /**
+     * This is used to store the title for the sample as found in the GDS file, if it differs from the one in the GSE
+     * file
+     */
+    private String titleInDataset = null;
+
     private boolean isGenePix = false;
 
     /**
@@ -134,6 +140,13 @@ public class GeoSample extends GeoData implements Comparable {
 
         Object convertedValue = convertValue( quantitationType, value );
 
+        /*
+         * Make sure we aren't getting duplicate data. This happens in some corrupt files?
+         */
+        if ( data.get( quantitationType ).containsKey( designElement ) ) {
+            throw new IllegalStateException( "There is already a datum for " + designElement + " in "
+                    + quantitationType );
+        }
         data.get( quantitationType ).put( designElement, convertedValue );
     }
 
@@ -492,6 +505,14 @@ public class GeoSample extends GeoData implements Comparable {
 
     public boolean isGenePix() {
         return isGenePix;
+    }
+
+    public String getTitleInDataset() {
+        return titleInDataset;
+    }
+
+    public void setTitleInDataset( String titleInDataset ) {
+        this.titleInDataset = titleInDataset;
     }
 
 }

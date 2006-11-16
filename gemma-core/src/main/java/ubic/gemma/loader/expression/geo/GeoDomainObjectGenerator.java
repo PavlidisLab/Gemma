@@ -221,8 +221,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             log.info( "Processing " + dataSetAccession );
             processDataSet( series, dataSetAccession );
         }
-
-        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( series );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
         return series;
     }

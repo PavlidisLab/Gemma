@@ -56,12 +56,17 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
-    public void testParseBigB() throws Exception {
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
-        parser.parse( is );
-        assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
-    }
+    // /**
+    // * This is a SAGE file, with repeated tags. - we don't support this.
+    // *
+    // * @throws Exception
+    // */
+    // public void testParseBigB() throws Exception {
+    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
+    // parser.parse( is );
+    // assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+    // }
 
     public void testParseGenePix() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -75,7 +80,7 @@ public class GeoFamilyParserTest extends TestCase {
 
     public void testParseBigBPlatformOnly() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
+                "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
         parser.setProcessPlatformsOnly( true );
         parser.parse( is );
         assertEquals( 0, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
@@ -83,7 +88,7 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatforms().size() );
         GeoPlatform p = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatforms().values().iterator()
                 .next();
-        assertEquals( 32097, p.getColumnData( "ORF" ).size() );
+        assertEquals( 12488, p.getColumnData( "GB_ACC" ).size() );
     }
 
     public void testParseDataset() throws Exception {

@@ -28,6 +28,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.geo.util.GeoConstants;
+
 /**
  * Bean describing a microarray platform in GEO
  * 
@@ -39,7 +41,8 @@ public class GeoPlatform extends GeoData {
     private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
 
     /**
-     * Store information on the platform here. Map of designElements to other information.
+     * Store information on the platform here. Map of designElements to other information. This has to be lists so the
+     * values "line up".
      */
     private Map<String, List<String>> data = new HashMap<String, List<String>>();
 
@@ -74,6 +77,8 @@ public class GeoPlatform extends GeoData {
     private String lastUpdateDate = "";
 
     private String supplementaryFile = "";
+
+    private Collection<String> designElements = new HashSet<String>();
 
     /**
      * @param s
@@ -119,6 +124,24 @@ public class GeoPlatform extends GeoData {
             if ( log.isDebugEnabled() ) log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
             data.put( columnName, new ArrayList<String>() );
         }
+
+        // don't add values twice. Occurs in corrupt files.
+        if ( GeoConstants.likelyId( columnName ) ) {
+            if ( designElements.contains( value ) ) {
+
+                /*
+                 * This is not easily recoverable, because all the other columns will have the wrong number of items.
+                 */
+
+                // log.warn( "Column " + columnName + " contains the value " + value
+                // + " twice; check the GEO file for validity!" );
+                throw new IllegalStateException( "Column " + columnName + " contains the value " + value
+                        + " twice; check the GEO file for validity!" );
+                // return;
+            }
+            designElements.add( value );
+        }
+
         getColumnData( columnName ).add( value );
     }
 

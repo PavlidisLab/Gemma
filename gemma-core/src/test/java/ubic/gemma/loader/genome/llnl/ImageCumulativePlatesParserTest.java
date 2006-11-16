@@ -44,7 +44,7 @@ public class ImageCumulativePlatesParserTest extends TestCase {
         ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         parser.parse( is );
         Collection<BioSequence> bs = parser.getResults();
-        assertEquals( 425, bs.size() );
+        assertEquals( 418, bs.size() );
     }
 
     @Override

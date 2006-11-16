@@ -35,7 +35,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,7 +80,7 @@ import ubic.gemma.loader.expression.geo.model.GeoSubset;
  */
 public class DatasetCombiner {
 
-    private static final double LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING = 1.2;
+    private final double LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING = 1.2;
     /**
      * 
      */
@@ -98,7 +99,7 @@ public class DatasetCombiner {
      * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
      * as a maximum distance (the pair of descriptors must be at least this close).
      */
-    private static final double SIMILARITY_THRESHOLD = 0.2;
+    private final double SIMILARITY_THRESHOLD = 0.5;
 
     /**
      * Use d for short strings.
@@ -106,18 +107,23 @@ public class DatasetCombiner {
      * @see SIMILARITY_THRESHOLD
      * @see SHORT_STRING_THRESHOLD
      */
-    private static final double SHORT_STRING_SIMILARITY_THRESHOLD = 0.4;
+    private final double SHORT_STRING_SIMILARITY_THRESHOLD = 0.5;
 
     /**
      * At this length a string is considered "short".
      */
-    private static final int SHORT_STRING_THRESHOLD = 20;
+    private final int SHORT_STRING_THRESHOLD = 20;
 
-    private DatasetCombiner() {
-        // nobody can instantiate this class.
+    public DatasetCombiner() {
     }
 
     private static Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
+
+    LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<String, String>();
 
     /**
      * Given a GDS, find the corresponding GSE.
@@ -180,7 +186,7 @@ public class DatasetCombiner {
      * @param seriesAccession
      * @return
      */
-    public static Collection<String> findGDSforGDS( String datasetAccession ) {
+    public Collection<String> findGDSforGDS( String datasetAccession ) {
         return findGDSforGSE( findGSEforGDS( datasetAccession ) );
     }
 
@@ -237,16 +243,13 @@ public class DatasetCombiner {
      * @param series
      * @return
      */
-    public static GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
+    public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
         if ( series.getDatasets() != null && series.getDatasets().size() > 0 ) {
             return findGSECorrespondence( series.getDatasets() );
         }
 
-        LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
-        LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<String, String>();
-        LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<String, String>();
-        int numPlatforms = fillAccessionMaps( series, accToTitle, accToPlatform, accToOrganism );
-        return findCorrespondence( numPlatforms, accToTitle, accToPlatform, accToOrganism );
+        int numPlatforms = fillAccessionMaps( series );
+        return findCorrespondence( numPlatforms );
     }
 
     /**
@@ -254,18 +257,18 @@ public class DatasetCombiner {
      * 
      * @param dataSets
      */
-    public static GeoSampleCorrespondence findGSECorrespondence( Collection<GeoDataset> dataSets ) {
+    public GeoSampleCorrespondence findGSECorrespondence( Collection<GeoDataset> dataSets ) {
 
         if ( dataSets == null ) return null;
+        if ( dataSets.size() == 0 ) {
+            throw new IllegalArgumentException( "No datasets!" );
+        }
 
         int numDatasets = dataSets.size();
 
-        LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
-        LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
-        LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<String, String>();
-        fillAccessionMaps( dataSets, accToTitle, accToDataset, accToOrganism );
+        fillAccessionMaps( dataSets );
 
-        return findCorrespondence( numDatasets, accToTitle, accToDataset, accToOrganism );
+        return findCorrespondence( numDatasets );
     }
 
     /**
@@ -276,9 +279,7 @@ public class DatasetCombiner {
      * @param accToDataset
      * @return
      */
-    private static GeoSampleCorrespondence findCorrespondence( int numDatasets,
-            LinkedHashMap<String, String> accToTitle, LinkedHashMap<String, String> accToDataset,
-            LinkedHashMap<String, String> accToOrganism ) {
+    private GeoSampleCorrespondence findCorrespondence( int numDatasets ) {
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
 
         result.setAccToTitleMap( accToTitle );
@@ -293,7 +294,6 @@ public class DatasetCombiner {
 
         // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
-        // do pairwise comparisons of all samples.
 
         Map<String, Collection<String>> alreadyMatched = new HashMap<String, Collection<String>>();
 
@@ -301,8 +301,8 @@ public class DatasetCombiner {
         // The inner loops are just to get the samples in the data set being considered.
         Collection<String> alreadyTestedDatasets = new HashSet<String>();
 
-        Set<String> dataSets = new HashSet<String>();
-        Set<String> allmatched = new HashSet<String>();
+        SortedSet<String> dataSets = new TreeSet<String>();
+
         dataSets.addAll( accToDataset.values() );
         log.info( dataSets.size() + " datasets" );
 
@@ -312,7 +312,6 @@ public class DatasetCombiner {
             }
             return result;
         }
-
         for ( String datasetA : dataSets ) {
             alreadyTestedDatasets.add( datasetA );
             log.debug( "Finding matches for samples in " + datasetA );
@@ -321,29 +320,35 @@ public class DatasetCombiner {
             for ( int j = 0; j < sampleAccs.size(); j++ ) {
                 String targetAcc = sampleAccs.get( j );
 
-                if ( allmatched.contains( targetAcc ) ) {
-                    continue;
-                }
-
                 // skip samples that are not in this data set.
                 if ( !accToDataset.get( targetAcc ).equals( datasetA ) ) {
                     continue;
                 }
 
-                log.debug( "Target: " + targetAcc + " (" + datasetA + ")" );
-                String targetTitle = accToTitle.get( targetAcc );
+                String targetTitle = accToTitle.get( targetAcc ).toLowerCase();
+                String targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
 
+                log.debug( "Target: " + targetAcc + " (" + datasetA + ") " + targetTitle
+                        + ( targetSecondaryTitle == null ? "" : " a.k.a " + targetSecondaryTitle ) );
                 if ( StringUtils.isBlank( targetTitle ) )
                     throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
                 Collection<String> bonusWords = getMicroarrayStringsToMatch( targetTitle );
 
-                log.debug( bonusWords.size() + " bonus words" );
+                // log.debug( bonusWords.size() + " bonus words" );
 
                 /*
                  * For each of the other data sets
                  */
                 for ( String datasetB : dataSets ) {
+
+                    // if ( alreadyTestedDatasets.contains( datasetB ) ) {
+                    // log.debug( "Skip self" );
+                    // continue;
+                    // }
+                    if ( datasetB.equals( datasetA ) ) {
+                        continue;
+                    }
 
                     // initialize data structure.
                     if ( alreadyMatched.get( targetAcc ) == null ) {
@@ -354,7 +359,6 @@ public class DatasetCombiner {
                      * Keep us from getting multiple matches.
                      */
                     if ( alreadyMatched.get( targetAcc ).contains( datasetB ) ) {
-                        // log.debug( targetAcc + " already matched to a sample in " + datasetB + ", skipping" );
                         continue;
                     }
 
@@ -363,28 +367,28 @@ public class DatasetCombiner {
                     String bestMatch = null;
                     String bestMatchAcc = null;
 
-                    if ( alreadyTestedDatasets.contains( datasetB ) ) {
-                        continue;
-                    }
-
+                    int numTested = 0;
                     for ( int i = 0; i < sampleAccs.size(); i++ ) {
 
                         String testAcc = sampleAccs.get( i );
 
-                        boolean shouldTest = shouldTest( accToDataset, accToOrganism, alreadyMatched, allmatched,
-                                datasetA, targetAcc, datasetB, testAcc );
+                        boolean shouldTest = shouldTest( accToDataset, accToOrganism, alreadyMatched, datasetA,
+                                targetAcc, datasetB, testAcc );
 
                         if ( !shouldTest ) continue;
 
-                        log.debug( " Test: " + testAcc + " (" + datasetB + ")" );
-                        String testTitle = accToTitle.get( testAcc );
+                        numTested++;
+
+                        String testTitle = accToTitle.get( testAcc ).toLowerCase();
+                        String testSecondaryTitle = accToSecondaryTitle.get( testAcc ).toLowerCase();
+
                         if ( StringUtils.isBlank( testTitle ) )
                             throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
                         double bonus = 0.0;
                         for ( String n : bonusWords ) {
                             if ( testTitle.contains( n ) ) {
-                                log.debug( testTitle + " gets a bonus in matching " + targetTitle );
+                                // log.debug( testTitle + " gets a bonus in matching " + targetTitle );
                                 bonus = 1.0; // this basically means we discount that difference.
                                 break;
                             }
@@ -401,10 +405,10 @@ public class DatasetCombiner {
                                 / Math.min( testTitle.length(), targetTitle.length() ) > LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING ) {
                             if ( testTitle.length() > targetTitle.length() ) {
                                 trimmedTest = testTitle.substring( 0, targetTitle.length() );
-                                log.debug( "Trimmed test title to " + trimmedTest );
+                                // log.debug( "Trimmed test title to " + trimmedTest );
                             } else {
                                 trimmedTarget = targetTitle.substring( 0, testTitle.length() );
-                                log.debug( "Trimmed target title to " + trimmedTarget );
+                                // log.debug( "Trimmed target title to " + trimmedTarget );
                             }
                         }
 
@@ -413,15 +417,23 @@ public class DatasetCombiner {
 
                         distance -= bonus;
 
+                        double secondaryDistance = computeDistance( matrix, j, i, targetSecondaryTitle,
+                                testSecondaryTitle );
+
+                        if ( secondaryDistance < distance ) {
+                            distance = secondaryDistance;
+                        }
+
                         double normalizedDistance = ( double ) distance
                                 / Math.max( trimmedTarget.length(), trimmedTest.length() );
 
-                        if ( !meetsMinimalThreshold( testAcc, trimmedTest, trimmedTarget, distance, normalizedDistance ) )
+                        if ( !meetsMinimalThreshold( testAcc, trimmedTest, trimmedTarget, distance, normalizedDistance ) ) {
                             continue;
+                        }
 
                         // better than last one?
                         if ( distance > mindistance ) {
-                            log.debug( "Didn't beat best previous match, " + bestMatch );
+                            // log.debug( "Didn't beat best previous match, " + bestMatch );
                             continue;
                         }
 
@@ -447,6 +459,14 @@ public class DatasetCombiner {
                                     mindistance = distance;
                                     bestMatch = testTitle;
                                     bestMatchAcc = testAcc;
+                                    log.debug( "Current best match (tie broken): "
+                                            + testAcc
+                                            + " ("
+                                            + datasetB
+                                            + ") "
+                                            + testTitle
+                                            + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle
+                                                    + ", distance = " + distance ) );
                                 }
                                 if ( suffixWeightedDistanceA > suffixWeightedDistanceB ) {
                                     // old one is still better.
@@ -457,37 +477,51 @@ public class DatasetCombiner {
                                 mindistance = distance;
                                 bestMatch = testTitle;
                                 bestMatchAcc = testAcc;
+                                log.debug( "Current best match (tie broken): "
+                                        + testAcc
+                                        + " ("
+                                        + datasetB
+                                        + ") "
+                                        + testTitle
+                                        + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle
+                                                + ", distance = " + distance ) );
                             } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
                                 continue; // old best is still better.
                             }
                         } else {
-                            // clear winner.
+                            // clear new winner no tie
                             mindistance = distance;
                             bestMatch = testTitle;
                             bestMatchAcc = testAcc;
+                            log.debug( "Current best match: "
+                                    + testAcc
+                                    + " ("
+                                    + datasetB
+                                    + ") "
+                                    + testTitle
+                                    + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle
+                                            + ", distance = " + distance ) );
                         }
 
                     } // end loop over samples in second data set.
+                    log.debug( "Tested " + numTested + " samples" );
 
                     /*
                      * Now have the best hit for outer dataset, in the inner data set.
                      */
-                    assert targetAcc != null;
-
                     if ( bestMatchAcc == null ) {
-                        log.warn( "No match found in " + datasetB + " for " + targetAcc + "\t" + targetTitle + " ("
-                                + datasetA + ") (This can happen if sample was not run on all the platforms used)\n" );
+                        log.debug( "No match found in " + datasetB + " for " + targetAcc + "\t" + targetTitle + " ("
+                                + datasetA + ") (This can happen if sample was not run on all the platforms used)" );
+                        result.addCorrespondence( targetAcc, null );
                     } else {
                         if ( log.isDebugEnabled() )
                             log.debug( "Match:\n" + targetAcc + "\t" + targetTitle + " ("
                                     + accToDataset.get( targetAcc ) + ")" + "\n" + bestMatchAcc + "\t" + bestMatch
                                     + " (" + accToDataset.get( bestMatchAcc ) + ")" + " (Distance: " + mindistance
-                                    + ")\n" );
+                                    + ")" );
                         result.addCorrespondence( targetAcc, bestMatchAcc );
                         alreadyMatched.get( bestMatchAcc ).add( datasetA );
                         alreadyMatched.get( targetAcc ).add( datasetB );
-                        allmatched.add( bestMatchAcc );
-                        allmatched.add( targetAcc );
                     }
 
                 } // loop second data sets
@@ -495,11 +529,11 @@ public class DatasetCombiner {
             } // loop over samples in first data set
         } // loop over data sets
 
-        log.info( result );
+        log.debug( result );
         return result;
     }
 
-    private static Collection<String> getMicroarrayStringsToMatch( String targetTitle ) {
+    private Collection<String> getMicroarrayStringsToMatch( String targetTitle ) {
         Collection<String> result = new HashSet<String>();
         boolean found = false;
         for ( String key : microarrayNameStrings.keySet() ) {
@@ -533,13 +567,10 @@ public class DatasetCombiner {
      * @param testAcc
      * @return
      */
-    private static boolean shouldTest( LinkedHashMap<String, String> accToDataset,
+    private boolean shouldTest( LinkedHashMap<String, String> accToDataset,
             LinkedHashMap<String, String> accToOrganism, Map<String, Collection<String>> alreadyMatched,
-            Set<String> allmatched, String datasetA, String targetAcc, String datasetB, String testAcc ) {
+            String datasetA, String targetAcc, String datasetB, String testAcc ) {
         boolean shouldTest = true;
-        if ( allmatched.contains( testAcc ) ) {
-            shouldTest = false;
-        }
 
         // initialize data structure.
         if ( alreadyMatched.get( testAcc ) == null ) {
@@ -563,17 +594,17 @@ public class DatasetCombiner {
         return shouldTest;
     }
 
-    private static boolean meetsMinimalThreshold( String testAcc, String trimmedTest, String trimmedTarget,
-            double distance, double normalizedDistance ) {
-        log.debug( testAcc + "\n" + trimmedTest + "\n" + trimmedTarget + " distance = " + distance );
+    private boolean meetsMinimalThreshold( String testAcc, String trimmedTest, String trimmedTarget, double distance,
+            double normalizedDistance ) {
+        // log.debug( testAcc + "\n" + trimmedTest + "\n" + trimmedTarget + " distance = " + distance );
         if ( Math.min( trimmedTarget.length(), trimmedTest.length() ) <= SHORT_STRING_THRESHOLD
                 && normalizedDistance > SHORT_STRING_SIMILARITY_THRESHOLD ) {
-            log.debug( testAcc + " Didn't meet short string threshold, score for '" + trimmedTest + "' vs '"
-                    + trimmedTarget + "' was " + normalizedDistance );
+            // log.debug( testAcc + " Didn't meet short string threshold, score for '" + trimmedTest + "' vs '"
+            // + trimmedTarget + "' was " + normalizedDistance );
             return false;
         } else if ( normalizedDistance > SIMILARITY_THRESHOLD ) {
-            log.debug( testAcc + " Didn't meet threshold, score for '" + trimmedTest + "' vs '" + trimmedTarget
-                    + "' was " + normalizedDistance );
+            // log.debug( testAcc + " Didn't meet threshold, score for '" + trimmedTest + "' vs '" + trimmedTarget
+            // + "' was " + normalizedDistance );
             return false;
         }
         return true;
@@ -589,19 +620,20 @@ public class DatasetCombiner {
      * @param trimmedTarget
      * @return
      */
-    private static double computeDistance( double[][] matrix, int j, int i, String trimmedTest, String trimmedTarget ) {
+    private double computeDistance( double[][] matrix, int j, int i, String trimmedTest, String trimmedTarget ) {
 
         double distance = -1.0;
         if ( matrix[i][j] < 0 ) {
-            if ( Math.min( trimmedTarget.length(), trimmedTest.length() ) > SHORT_STRING_THRESHOLD ) {
-                distance = StringDistance.editDistance( trimmedTarget, trimmedTest );
-            } else {
-                distance = StringDistance.prefixWeightedHammingDistance( trimmedTarget, trimmedTest, 0.8 );
-            }
-            matrix[j][i] = distance;
-            matrix[i][j] = distance;
+            // if ( Math.max( trimmedTarget.length(), trimmedTest.length() ) > SHORT_STRING_THRESHOLD ) {
+            distance = StringDistance.editDistance( trimmedTarget, trimmedTest );
+            // } else {
+            // distance = StringDistance.prefixWeightedHammingDistance( trimmedTarget, trimmedTest, 0.8 );
+            // }
+            // log.debug( "\n" + trimmedTarget + "\n" + trimmedTest + " " + distance );
+            // matrix[j][i] = distance;
+            // matrix[i][j] = distance;
         } else {
-            distance = matrix[i][j];
+            // distance = matrix[i][j];
         }
         return distance;
     }
@@ -610,7 +642,7 @@ public class DatasetCombiner {
      * @param geoSeries
      * @return
      */
-    public static Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {
+    public Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {
         Map<GeoPlatform, List<GeoSample>> platformSamples = new HashMap<GeoPlatform, List<GeoSample>>();
 
         for ( GeoSample sample : geoSeries.getSamples() ) {
@@ -631,12 +663,11 @@ public class DatasetCombiner {
      * @param accToDataset
      * @param accToOrganism
      */
-    private static void fillAccessionMaps( Collection<GeoDataset> dataSets, LinkedHashMap<String, String> accToTitle,
-            LinkedHashMap<String, String> accToDataset, LinkedHashMap<String, String> accToOrganism ) {
+    private void fillAccessionMaps( Collection<GeoDataset> dataSets ) {
         for ( GeoDataset dataset : dataSets ) {
             for ( GeoSubset subset : dataset.getSubsets() ) {
                 for ( GeoSample sample : subset.getSamples() ) {
-                    fillAccessionMap( sample, dataset, accToTitle, accToDataset, accToOrganism );
+                    fillAccessionMap( sample, dataset );
                 }
             }
         }
@@ -649,15 +680,14 @@ public class DatasetCombiner {
      * @param accToOrganism
      * @return
      */
-    private static int fillAccessionMaps( GeoSeries series, LinkedHashMap<String, String> accToTitle,
-            LinkedHashMap<String, String> accToOwneracc, LinkedHashMap<String, String> accToOrganism ) {
+    private int fillAccessionMaps( GeoSeries series ) {
 
-        Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( series );
+        Map<GeoPlatform, List<GeoSample>> platformSamples = getPlatformSampleMap( series );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             for ( GeoSample sample : platformSamples.get( platform ) ) {
                 assert sample != null : "Null sample for platform " + platform.getDescription();
-                fillAccessionMap( sample, platform, accToTitle, accToOwneracc, accToOrganism );
+                fillAccessionMap( sample, platform );
             }
         }
 
@@ -669,15 +699,14 @@ public class DatasetCombiner {
      * @param accToTitle
      * @param accToDataset
      */
-    private static void fillAccessionMap( GeoSample sample, GeoData owner, LinkedHashMap<String, String> accToTitle,
-            LinkedHashMap<String, String> accToOwneracc, LinkedHashMap<String, String> accToOrganism ) {
+    private void fillAccessionMap( GeoSample sample, GeoData owner ) {
         String title = sample.getTitle();
         if ( StringUtils.isBlank( title ) ) {
             return; // the same sample may show up more than once with a blank title.
         }
         accToTitle.put( sample.getGeoAccession(), title );
-        accToOwneracc.put( sample.getGeoAccession(), owner.getGeoAccession() );
-
+        accToDataset.put( sample.getGeoAccession(), owner.getGeoAccession() );
+        accToSecondaryTitle.put( sample.getGeoAccession(), sample.getTitleInDataset() ); // could be null.
         String organism = getSampleOrganism( sample );
 
         accToOrganism.put( sample.getGeoAccession(), organism );
@@ -687,7 +716,7 @@ public class DatasetCombiner {
      * @param sample
      * @return
      */
-    private static String getSampleOrganism( GeoSample sample ) {
+    private String getSampleOrganism( GeoSample sample ) {
         Collection<GeoPlatform> platforms = sample.getPlatforms();
         assert platforms.size() > 0 : sample + " had no platform assigned";
         GeoPlatform platform = platforms.iterator().next();

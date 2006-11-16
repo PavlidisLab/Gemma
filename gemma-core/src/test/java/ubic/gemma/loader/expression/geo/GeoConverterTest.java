@@ -83,7 +83,26 @@ public class GeoConverterTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2221" );
-        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( series );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+    }
+
+    /**
+     * caused "GSM3059 had no platform assigned"
+     * 
+     * @throws Exception
+     */
+    public void testConvertGSE106() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE106" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
@@ -92,7 +111,7 @@ public class GeoConverterTest extends TestCase {
     @SuppressWarnings("unchecked")
     public void testImageClones() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GPL226.soft.gz" ) );
+                "/data/loader/expression/geo/GPL226_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
@@ -111,10 +130,16 @@ public class GeoConverterTest extends TestCase {
         fail( "No IMAGE clones!" );
     }
 
+    /**
+     * Has image clones.
+     * 
+     * @throws Exception
+     */
     public final void testWithImages() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GPL890.soft.gz" ) );
+                "/data/loader/expression/geo/GPL890_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
+        parser.setProcessPlatformsOnly( true );
         parser.parse( is );
         GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
                 "GPL890" );
@@ -136,7 +161,8 @@ public class GeoConverterTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE96" );
-        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( series );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
