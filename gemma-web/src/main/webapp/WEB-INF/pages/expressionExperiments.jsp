@@ -19,11 +19,14 @@
 
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 
+			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+
 			<display:column property="dataSource" sortable="true" titleKey="externalDatabase.title" maxWords="20" />
 
 			<authz:authorize ifAnyGranted="admin">
 	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
 			</authz:authorize>
+		
 
  			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
 

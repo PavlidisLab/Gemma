@@ -546,7 +546,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
                 + "count(distinct BA) as bioAssayCount, "
-                + "count(distinct AD) as arrayDesignCount"
+                + "count(distinct AD) as arrayDesignCount, "
+                + "ee.shortName as shortName "
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
@@ -568,9 +569,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
+                v.setShortName( list.getString( 9 ));
                 // removed to speed up query
-                // v.setDesignElementDataVectorCount( list.getInteger( 9 ) );
-                // v.setBioMaterialCount( list.getInteger( 10 ) );
+                // v.setDesignElementDataVectorCount( list.getInteger( 10 ) );
+                // v.setBioMaterialCount( list.getInteger( 11 ) );
                 vo.add( v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
@@ -595,7 +597,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
                 + "count(distinct BA) as bioAssayCount, "
-                + "count(distinct AD) as arrayDesignCount"
+                + "count(distinct AD) as arrayDesignCount, "
+                + "ee.shortName as shortName "
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
@@ -618,6 +621,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
+                v.setShortName( list.getString( 9 ));
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
                 // v.setBioMaterialCount( list.getInteger( 9 ) );
