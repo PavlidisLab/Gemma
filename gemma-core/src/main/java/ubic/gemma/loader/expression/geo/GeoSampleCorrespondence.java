@@ -18,17 +18,20 @@
  */
 package ubic.gemma.loader.expression.geo;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
- * Holds information about GEO samples that "go together".
+ * Holds information about GEO samples that "go together" across datasets (GDS), because they came from the same sample
+ * (or so we infer)
  * 
  * @author pavlidis
  * @version $Id$
@@ -36,6 +39,12 @@ import java.util.Set;
 public class GeoSampleCorrespondence {
 
     Collection<Set<String>> sets = new LinkedHashSet<Set<String>>();
+
+    /**
+     * Keeps track of which datasets already have a match involving a given sample
+     */
+    Map<String, Collection<String>> datasetMapping = new HashMap<String, Collection<String>>();
+
     private Map<String, String> accToTitle;
     private Map<String, String> accToDataset;
 
@@ -74,12 +83,14 @@ public class GeoSampleCorrespondence {
      */
     public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
 
-        assert gsmNumberA != null : "Must pass at least one GSM accession";
+        if ( StringUtils.isBlank( gsmNumberA ) )
+            throw new IllegalArgumentException( "Must pass at least one GSM accession" );
 
+    
         // the following is to make sets that each contain just the samples that group together.
         boolean found = false;
         for ( Set<String> set : sets ) {
-            if ( set.contains( gsmNumberA ) ) {
+            if ( set.contains( gsmNumberA ) && gsmNumberB != null ) {
                 set.add( gsmNumberB );
                 found = true;
                 break;
@@ -105,11 +116,10 @@ public class GeoSampleCorrespondence {
         StringBuffer buf = new StringBuffer();
 
         StringBuffer singletons = new StringBuffer();
-        List<String> groupStrings = new ArrayList<String>();
+        SortedSet<String> groupStrings = new TreeSet<String>();
         for ( Set<String> set : sets ) {
             String group = "";
-            List<String> sortedSet = new ArrayList<String>( set );
-            Collections.sort( sortedSet );
+            SortedSet<String> sortedSet = new TreeSet<String>( set );
             for ( String accession : sortedSet ) {
                 group = group + accession + " ('" + accToTitle.get( accession ) + "' in "
                         + accToDataset.get( accession ) + ")";
@@ -125,7 +135,6 @@ public class GeoSampleCorrespondence {
             groupStrings.add( group );
         }
 
-        Collections.sort( groupStrings );
         for ( String string : groupStrings ) {
             buf.append( string );
         }
