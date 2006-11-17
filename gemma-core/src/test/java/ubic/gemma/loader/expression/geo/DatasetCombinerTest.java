@@ -186,30 +186,30 @@ public class DatasetCombinerTest extends TestCase {
 
         /**
          * <pre>
-         *                              GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
-         *                              GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
-         *                              GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
-         *                              GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
-         *                              GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
-         *                              GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
-         *                              GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
-         *                              GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
-         *                              GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
-         *                              GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
-         *                              GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
-         *                              GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
-         *                              GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
-         *                              GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
-         *                              GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
-         *                              GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
-         *                              GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
-         *                              GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
-         *                              GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
-         *                              GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
-         *                              GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
-         *                              GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
-         *                              GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
-         *                              GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
+         *                                       GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
+         *                                       GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
+         *                                       GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
+         *                                       GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
+         *                                       GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
+         *                                       GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
+         *                                       GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
+         *                                       GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
+         *                                       GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
+         *                                       GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
+         *                                       GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
+         *                                       GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
+         *                                       GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
+         *                                       GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
+         *                                       GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
+         *                                       GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
+         *                                       GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
+         *                                       GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
+         *                                       GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
+         *                                       GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
+         *                                       GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
+         *                                       GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
+         *                                       GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
+         *                                       GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
          * </pre>
          */
 
@@ -329,6 +329,138 @@ public class DatasetCombinerTest extends TestCase {
 
     }
 
+    public void testFindGSE91() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE91Short/GDS168.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE91Short/GSE91_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE91Short/GDS169.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+        fillInDatasetPlatformAndOrganism();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+        assertEquals( 9, numBioMaterials );
+        assertTrue( result.getCorrespondingSamples( "GSM2560" ).contains( "GSM2561" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM2573" ).contains( "GSM2574" ) );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM2564" ).size() );
+
+    }
+
+    public void testFindGSE13() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE13Short/GDS44.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE13Short/GSE13_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE13Short/GDS52.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+        fillInDatasetPlatformAndOrganism();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+        assertEquals( 28, numBioMaterials );
+        assertTrue( result.getCorrespondingSamples( "GSM623" ).contains( "GSM650" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM612" ).contains( "GSM638" ) );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM618" ).size() );
+    }
+
+    public void testFindGSE469() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE469Short/GSE469_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE469Short/GDS234.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+        fillInDatasetPlatformAndOrganism();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+        // there are some questionable matches, but I can't really tell!
+        assertEquals( 54, numBioMaterials );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM4301" ).size() );
+    }
+
     /**
      * A difficult case, lots of singletons.
      * 
@@ -393,12 +525,56 @@ public class DatasetCombinerTest extends TestCase {
         int numBioMaterials = 0;
         while ( it.hasNext() ) {
             Collection c = it.next();
-            // assertTrue( c.size() == 1 || c.size() == 2 || c.size() == 6);
+            assertTrue( "Unexpected group size: " + c.size(), c.size() == 1 || c.size() == 2 || c.size() == 6
+                    || c.size() == 5 );
             numBioMaterials++;
         }
-        // This is not really known to be the correct answer; it's just a regression test.
-        assertEquals( 34, numBioMaterials );
+        assertEquals( 30, numBioMaterials );
 
+    }
+
+    public void testFindGSE493() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GDS215.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GDS258.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+        fillInDatasetPlatformAndOrganism();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        } // there are some questionable matches, but I can't really tell!
+        assertEquals( 10, numBioMaterials );
+        assertTrue( result.getCorrespondingSamples( "GSM4362" ).contains( "GSM4363" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM4366" ).contains( "GSM4368" ) );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM4371" ).size() );
     }
 
 }

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -45,6 +46,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.math.StringDistance;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
@@ -80,6 +82,7 @@ import ubic.gemma.loader.expression.geo.model.GeoSubset;
  */
 public class DatasetCombiner {
 
+    private static final String PUNCTUATION_REGEXP = "[\\(\\)\\s-\\._]";
     private final double LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING = 1.2;
     /**
      * 
@@ -98,21 +101,10 @@ public class DatasetCombiner {
      * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
      * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
      * as a maximum distance (the pair of descriptors must be at least this close).
+     * <p>
+     * Setting this correctly is important if there are to be singletons (samples that don't match to others)
      */
     private final double SIMILARITY_THRESHOLD = 0.5;
-
-    /**
-     * Use d for short strings.
-     * 
-     * @see SIMILARITY_THRESHOLD
-     * @see SHORT_STRING_THRESHOLD
-     */
-    private final double SHORT_STRING_SIMILARITY_THRESHOLD = 0.5;
-
-    /**
-     * At this length a string is considered "short".
-     */
-    private final int SHORT_STRING_THRESHOLD = 20;
 
     public DatasetCombiner() {
     }
@@ -290,7 +282,18 @@ public class DatasetCombiner {
             Arrays.fill( matrix[i], -1.0 );
         }
 
-        List<String> sampleAccs = new ArrayList<String>( accToTitle.keySet() );
+        final List<String> sampleAccs = new ArrayList<String>( accToTitle.keySet() );
+
+        String commonPrefix = StringUtil.commonPrefix( accToTitle.values() );
+        if ( commonPrefix != null ) {
+            log.info( "Common prefix = " + commonPrefix );
+            commonPrefix = commonPrefix.toLowerCase();
+        }
+        String commonSuffix = StringUtil.commonSuffix( accToTitle.values() );
+        if ( commonSuffix != null ) {
+            log.info( "Common suffix = " + commonSuffix );
+            commonSuffix = commonSuffix.toLowerCase();
+        }
 
         // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
@@ -301,10 +304,35 @@ public class DatasetCombiner {
         // The inner loops are just to get the samples in the data set being considered.
         Collection<String> alreadyTestedDatasets = new HashSet<String>();
 
-        SortedSet<String> dataSets = new TreeSet<String>();
+        List<String> dataSets = new ArrayList<String>();
 
         dataSets.addAll( accToDataset.values() );
         log.info( dataSets.size() + " datasets" );
+        // we start with the smallest dataset.
+        Collections.sort( dataSets, new Comparator<String>() {
+            public int compare( String arg0, String arg1 ) {
+                int numSamples0 = 0;
+                int numSamples1 = 0;
+                for ( int j = 0; j < sampleAccs.size(); j++ ) {
+                    String targetAcc = sampleAccs.get( j );
+
+                    // skip samples that are not in this data set.
+                    if ( accToDataset.get( targetAcc ).equals( arg0 ) ) {
+                        numSamples0++;
+                    } else if ( accToDataset.get( targetAcc ).equals( arg1 ) ) {
+                        numSamples1++;
+                    }
+                }
+
+                if ( numSamples0 == numSamples1 ) {
+                    return 0;
+                } else if ( numSamples0 < numSamples1 ) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        } );
 
         if ( numDatasets == 1 ) {
             for ( String sample : sampleAccs ) {
@@ -312,6 +340,8 @@ public class DatasetCombiner {
             }
             return result;
         }
+
+        Collection<String> allMatched = new HashSet<String>();
         for ( String datasetA : dataSets ) {
             alreadyTestedDatasets.add( datasetA );
             log.debug( "Finding matches for samples in " + datasetA );
@@ -324,6 +354,7 @@ public class DatasetCombiner {
                 if ( !accToDataset.get( targetAcc ).equals( datasetA ) ) {
                     continue;
                 }
+                if ( allMatched.contains( targetAcc ) ) continue;
 
                 String targetTitle = accToTitle.get( targetAcc ).toLowerCase();
                 String targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
@@ -372,6 +403,8 @@ public class DatasetCombiner {
 
                         String testAcc = sampleAccs.get( i );
 
+                        if ( allMatched.contains( testAcc ) ) continue;
+
                         boolean shouldTest = shouldTest( accToDataset, accToOrganism, alreadyMatched, datasetA,
                                 targetAcc, datasetB, testAcc );
 
@@ -386,10 +419,11 @@ public class DatasetCombiner {
                             throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
                         double bonus = 0.0;
+                        bonusWords.addAll( getMicroarrayStringsToMatch( testTitle ) );
                         for ( String n : bonusWords ) {
                             if ( testTitle.contains( n ) ) {
-                                // log.debug( testTitle + " gets a bonus in matching " + targetTitle );
-                                bonus = 1.0; // this basically means we discount that difference.
+                                log.debug( testTitle + " gets a bonus in matching " + targetTitle );
+                                bonus = 1; // this basically means we discount that difference.
                                 break;
                             }
                         }
@@ -401,31 +435,47 @@ public class DatasetCombiner {
                          */
                         String trimmedTest = testTitle;
                         String trimmedTarget = targetTitle;
-                        if ( Math.max( testTitle.length(), targetTitle.length() )
-                                / Math.min( testTitle.length(), targetTitle.length() ) > LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING ) {
-                            if ( testTitle.length() > targetTitle.length() ) {
-                                trimmedTest = testTitle.substring( 0, targetTitle.length() );
-                                // log.debug( "Trimmed test title to " + trimmedTest );
-                            } else {
-                                trimmedTarget = targetTitle.substring( 0, testTitle.length() );
-                                // log.debug( "Trimmed target title to " + trimmedTarget );
-                            }
+
+                        if ( commonPrefix != null ) {
+                            trimmedTest = trimmedTest.replaceFirst( "^" + commonPrefix, "" );
+                            trimmedTarget = trimmedTarget.replaceFirst( "^" + commonPrefix, "" );
                         }
+                        if ( commonSuffix != null ) {
+                            trimmedTest = trimmedTest.replaceFirst( commonSuffix + "$", "" );
+                            trimmedTarget = trimmedTarget.replaceFirst( commonSuffix + "$", "" );
+                        }
+
+                        // remove some punctuation
+                        trimmedTest = trimmedTest.replaceAll( PUNCTUATION_REGEXP, "" );
+                        trimmedTarget = trimmedTarget.replaceAll( PUNCTUATION_REGEXP, "" );
+
+//                        if ( Math.max( trimmedTest.length(), trimmedTarget.length() )
+//                                / Math.min( trimmedTest.length(), trimmedTarget.length() ) > LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING ) {
+//                            if ( trimmedTest.length() > trimmedTarget.length() ) {
+//                                trimmedTest = trimmedTest.substring( 0, trimmedTarget.length() );
+//                                // log.debug( "Trimmed test title to " + trimmedTest );
+//                            } else {
+//                                trimmedTarget = trimmedTarget.substring( 0, trimmedTest.length() );
+//                                // log.debug( "Trimmed target title to " + trimmedTarget );
+//                            }
+//                        }
 
                         // Computing the distance
                         double distance = computeDistance( matrix, j, i, trimmedTest, trimmedTarget );
 
                         distance -= bonus;
 
+                        double normalizedDistance = ( double ) distance
+                                / Math.max( trimmedTarget.length(), trimmedTest.length() );
+
                         double secondaryDistance = computeDistance( matrix, j, i, targetSecondaryTitle,
                                 testSecondaryTitle );
 
                         if ( secondaryDistance < distance ) {
                             distance = secondaryDistance;
+                            normalizedDistance = ( double ) distance
+                                    / Math.max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
                         }
-
-                        double normalizedDistance = ( double ) distance
-                                / Math.max( trimmedTarget.length(), trimmedTest.length() );
 
                         if ( !meetsMinimalThreshold( testAcc, trimmedTest, trimmedTarget, distance, normalizedDistance ) ) {
                             continue;
@@ -441,7 +491,7 @@ public class DatasetCombiner {
                         if ( distance == mindistance ) {
                             log.warn( "Tie for match to " + targetAcc + ": " + bestMatchAcc + " and " + testAcc );
                             /*
-                             * Try to resolve the tie. Messy, yes. FIXME, clean up.
+                             * Try to resolve the tie. Messy, yes.
                              */
                             double prefixWeightedDistanceA = StringDistance.prefixWeightedHammingDistance( targetAcc,
                                     bestMatchAcc, 1.0 );
@@ -513,6 +563,7 @@ public class DatasetCombiner {
                         log.debug( "No match found in " + datasetB + " for " + targetAcc + "\t" + targetTitle + " ("
                                 + datasetA + ") (This can happen if sample was not run on all the platforms used)" );
                         result.addCorrespondence( targetAcc, null );
+                        allMatched.add( targetAcc );
                     } else {
                         if ( log.isDebugEnabled() )
                             log.debug( "Match:\n" + targetAcc + "\t" + targetTitle + " ("
@@ -522,6 +573,8 @@ public class DatasetCombiner {
                         result.addCorrespondence( targetAcc, bestMatchAcc );
                         alreadyMatched.get( bestMatchAcc ).add( datasetA );
                         alreadyMatched.get( targetAcc ).add( datasetB );
+                        allMatched.add( targetAcc );
+                        allMatched.add( bestMatchAcc );
                     }
 
                 } // loop second data sets
@@ -533,22 +586,22 @@ public class DatasetCombiner {
         return result;
     }
 
-    private Collection<String> getMicroarrayStringsToMatch( String targetTitle ) {
+    /**
+     * Identify stop-strings relating to microarray names.
+     * 
+     * @param title
+     * @return
+     */
+    private Collection<String> getMicroarrayStringsToMatch( String title ) {
         Collection<String> result = new HashSet<String>();
-        boolean found = false;
         for ( String key : microarrayNameStrings.keySet() ) {
-            if ( targetTitle.contains( key ) ) {
+            if ( title.contains( key ) ) {
                 for ( String value : microarrayNameStrings.get( key ) ) {
-                    if ( found ) {
+                    if ( title.contains( value ) ) {
+                        log.info( title + " : " + value );
                         result.add( value );
                     }
-                    if ( targetTitle.contains( value ) ) {
-                        found = true;
-                    }
                 }
-            }
-            if ( found ) {
-                break;
             }
         }
         return result;
@@ -577,11 +630,12 @@ public class DatasetCombiner {
             alreadyMatched.put( testAcc, new HashSet<String>() );
         }
 
-        // screen out samples from other data sets.
+        // only use samples from the current test dataset.
         if ( !accToDataset.get( testAcc ).equals( datasetB ) ) {
             shouldTest = false;
         }
 
+        // disallow multiple matches.
         if ( alreadyMatched.get( testAcc ).contains( datasetA ) ) {
             // log.debug( testAcc + " already matched to a sample in " + datasetA + ", skipping" );
             shouldTest = false;
@@ -596,13 +650,7 @@ public class DatasetCombiner {
 
     private boolean meetsMinimalThreshold( String testAcc, String trimmedTest, String trimmedTarget, double distance,
             double normalizedDistance ) {
-        // log.debug( testAcc + "\n" + trimmedTest + "\n" + trimmedTarget + " distance = " + distance );
-        if ( Math.min( trimmedTarget.length(), trimmedTest.length() ) <= SHORT_STRING_THRESHOLD
-                && normalizedDistance > SHORT_STRING_SIMILARITY_THRESHOLD ) {
-            // log.debug( testAcc + " Didn't meet short string threshold, score for '" + trimmedTest + "' vs '"
-            // + trimmedTarget + "' was " + normalizedDistance );
-            return false;
-        } else if ( normalizedDistance > SIMILARITY_THRESHOLD ) {
+        if ( normalizedDistance > SIMILARITY_THRESHOLD ) {
             // log.debug( testAcc + " Didn't meet threshold, score for '" + trimmedTest + "' vs '" + trimmedTarget
             // + "' was " + normalizedDistance );
             return false;
@@ -726,30 +774,37 @@ public class DatasetCombiner {
         return organism;
     }
 
+    /**
+     * Used to help ignore identifiers of microarrays in sample titles.
+     */
     private static Map<String, Collection<String>> microarrayNameStrings = new HashMap<String, Collection<String>>();
 
     static {
-        microarrayNameStrings.put( "U133", new HashSet<String>() );
-        microarrayNameStrings.put( "U95", new HashSet<String>() );
-        microarrayNameStrings.put( "U74", new HashSet<String>() );
+        // note : all lower case!
+        microarrayNameStrings.put( "u133", new HashSet<String>() );
+        microarrayNameStrings.put( "u95", new HashSet<String>() );
+        microarrayNameStrings.put( "u74", new HashSet<String>() );
         microarrayNameStrings.put( "v2", new HashSet<String>() );
-        microarrayNameStrings.put( "Chip", new HashSet<String>() );
-        microarrayNameStrings.get( "U133" ).add( "U133A" );
-        microarrayNameStrings.get( "U133" ).add( "U133B" );
-        microarrayNameStrings.get( "U95" ).add( "U95A" );
-        microarrayNameStrings.get( "U95" ).add( "U95B" );
-        microarrayNameStrings.get( "U95" ).add( "U95C" );
-        microarrayNameStrings.get( "U95" ).add( "U95D" );
-        microarrayNameStrings.get( "U95" ).add( "U95E" );
-        microarrayNameStrings.get( "U74" ).add( "U74A" );
-        microarrayNameStrings.get( "U74" ).add( "U74B" );
-        microarrayNameStrings.get( "U74" ).add( "U74C" );
-        microarrayNameStrings.get( "v2" ).add( "Av2" );
-        microarrayNameStrings.get( "v2" ).add( "Bv2" );
-        microarrayNameStrings.get( "v2" ).add( "Cv2" );
-        microarrayNameStrings.get( "Chip" ).add( "Chip A" );
-        microarrayNameStrings.get( "Chip" ).add( "Chip B" );
-        microarrayNameStrings.get( "Chip" ).add( "Chip C" );
+        microarrayNameStrings.put( "chip", new HashSet<String>() );
+        microarrayNameStrings.get( "u133" ).add( "u133A" );
+        microarrayNameStrings.get( "u133" ).add( "u133B" );
+        microarrayNameStrings.get( "u95" ).add( "u95A" );
+        microarrayNameStrings.get( "u95" ).add( "u95B" );
+        microarrayNameStrings.get( "u95" ).add( "u95C" );
+        microarrayNameStrings.get( "u95" ).add( "u95D" );
+        microarrayNameStrings.get( "u95" ).add( "u95E" );
+        microarrayNameStrings.get( "u74" ).add( "u74A" );
+        microarrayNameStrings.get( "u74" ).add( "u74B" );
+        microarrayNameStrings.get( "u74" ).add( "u74C" );
+        microarrayNameStrings.get( "v2" ).add( "av2" );
+        microarrayNameStrings.get( "v2" ).add( "av2" );
+        microarrayNameStrings.get( "v2" ).add( "av2" );
+        microarrayNameStrings.get( "chip" ).add( "chip a" );
+        microarrayNameStrings.get( "chip" ).add( "chip b" );
+        microarrayNameStrings.get( "chip" ).add( "chip c" );
+        microarrayNameStrings.get( "chip" ).add( "chipa" );
+        microarrayNameStrings.get( "chip" ).add( "chipb" );
+        microarrayNameStrings.get( "chip" ).add( "chipc" );
     }
 
 }
