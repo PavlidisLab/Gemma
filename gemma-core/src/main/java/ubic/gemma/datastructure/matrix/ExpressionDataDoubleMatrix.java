@@ -50,6 +50,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     private DoubleMatrixNamed matrix;
 
     /**
+     * To comply with bean specifications. Not to be instantiated.
+     */
+    public ExpressionDataDoubleMatrix() {
+        throw new RuntimeException( "This default, no-arg constructor cannot be instantiated.  This constructor "
+                + "allows java constructs to inspect this class as a java bean." );
+    }
+
+    /**
      * @param dataVectors
      * @param quantitationType
      */
