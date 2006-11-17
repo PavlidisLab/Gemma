@@ -20,6 +20,7 @@ package ubic.gemma.visualization;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
@@ -27,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.gui.ColorMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -76,7 +78,7 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
      */
     @SuppressWarnings("unchecked")
     public ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
-        Collection<DesignElement> rowMap = expressionDataMatrix.getRowMap(); // row labels
+        Collection<DesignElement> rowMap = expressionDataMatrix.getRowElements(); // row labels
 
         if ( expressionDataMatrix == null || rowMap.size() == 0 ) {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
@@ -91,12 +93,32 @@ public class DefaultExpressionDataMatrixVisualizer extends DefaultDataMatrixVisu
             i++;
         }
 
-        // TODO add biomaterial column labels.
-        if ( colLabels.size() == 0 ) {
-            for ( int j = 0; j < data[0].length; j++ ) {
+         int j = 0;
+        while ( j < data[0].length ) {
+            Collection<BioMaterial> bioMaterials = expressionDataMatrix.getBioMaterialsForColumn( j );
+            if ( bioMaterials == null || bioMaterials.size() == 0 ) {
+                log.warn( "No BioMaterials found for index + " + j + ". Setting label to column number " + j );
                 colLabels.add( String.valueOf( j ) );
+            } else {
+                if ( bioMaterials.size() > 1 )
+                    log.warn( "More than one BioMaterial. Using first one found as column label." );
+
+                Iterator iter = bioMaterials.iterator();
+                while ( iter.hasNext() ) {
+                    BioMaterial bm = ( BioMaterial ) iter.next();
+                    if ( !colLabels.contains( bm.getName() ) ) {
+                        log.debug( "adding label " + bm.getName() );
+                        colLabels.add( bm.getName() );
+                    }
+                }
+
             }
+            j++;
         }
+
+//        for ( int k = 0; k < data[0].length; k++ ) {
+//            colLabels.add( String.valueOf( k ) );
+//        }
 
         return this.createColorMatrix( data, rowLabels, colLabels );
     }
