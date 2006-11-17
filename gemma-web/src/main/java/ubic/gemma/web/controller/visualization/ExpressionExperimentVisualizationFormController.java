@@ -75,10 +75,10 @@ import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
 
+    private static Log log = LogFactory.getLog( ExpressionExperimentVisualizationFormController.class.getName() );
+
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
-
-    private static Log log = LogFactory.getLog( ExpressionExperimentVisualizationFormController.class.getName() );
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
@@ -222,16 +222,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Collection<DesignElementDataVector> dataVectors = getVectors( command, errors, eesc, expressionExperiment,
                 quantitationType );
 
-        // dataVectors = normalizeVectors(dataVectors); Matrix should be normalized by default (by row; mean center and
-        // divide by
-
         if ( errors.hasErrors() ) {
             return processErrors( request, response, command, errors, null );
         }
 
         designElementDataVectorService.thaw( dataVectors );
         ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
-        /* deals with the case of probes don't match, for the given quantitation type. */
+        /* deals with the case where probes don't match for the given quantitation type. */
         if ( expressionDataMatrix.getRowElements().size() == 0
                 && expressionDataMatrix.getBioMaterialsForColumn( 0 ).size() == 0 ) {
             String message = "None of the probe sets match the given quantitation type "

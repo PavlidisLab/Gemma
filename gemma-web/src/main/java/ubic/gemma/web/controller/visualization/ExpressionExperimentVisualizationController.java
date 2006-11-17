@@ -31,19 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.date.MonthConstants;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.gui.ColorMatrix;
@@ -85,12 +77,11 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
 
         ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
 
-        type = "matrix";
         OutputStream out = null;
         try {
             out = response.getOutputStream();
             if ( type.equals( "matrix" ) ) {
-                String title = "Heat Map of Expression Values";// TODO read in?
+                String title = "Heat Map of Expression Values";
                 JMatrixDisplay display = createHeatMap( title, expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( "image/png" );
@@ -106,14 +97,6 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             // ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
             // }
             // }
-
-            else if ( type.equals( "bar" ) ) {
-                JFreeChart chart = createBarChart();
-                if ( chart != null ) {
-                    response.setContentType( "image/png" );
-                    ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
-                }
-            }
         } catch ( Exception e ) {
             log.error( "Error is: " );
             e.printStackTrace();
@@ -141,7 +124,6 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
 
         ColorMatrix colorMatrix = expressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
 
-        // TODO move from JMatrixDisplay
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
 
         display.setCellSize( new Dimension( 10, 10 ) );
@@ -180,99 +162,5 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         chart.addSubtitle( new TextTitle( "(Raw data values)", new Font( "SansSerif", Font.BOLD, 14 ) ) );
 
         return chart;
-    }
-
-    /**
-     * Creates a sample pie chart.
-     * 
-     * @return a pie chart.
-     */
-    private JFreeChart createPieChart() {
-        // FIXME
-        // create a dataset...
-        DefaultPieDataset data = new DefaultPieDataset();
-        data.setValue( "One", new Double( 43.2 ) );
-        data.setValue( "Two", new Double( 10.0 ) );
-        data.setValue( "Three", new Double( 27.5 ) );
-        data.setValue( "Four", new Double( 17.5 ) );
-        data.setValue( "Five", new Double( 11.0 ) );
-        data.setValue( "Six", new Double( 19.4 ) );
-
-        JFreeChart chart = ChartFactory.createPieChart( "Pie Chart", data, true, true, false );
-        return chart;
-
-    }
-
-    /**
-     * Creates a sample bar chart.
-     * 
-     * @return a bar chart.
-     */
-    private JFreeChart createBarChart() {
-        // FIXME
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        dataset.addValue( 10.0, "S1", "C1" );
-        dataset.addValue( 4.0, "S1", "C2" );
-        dataset.addValue( 15.0, "S1", "C3" );
-        dataset.addValue( 14.0, "S1", "C4" );
-        dataset.addValue( -5.0, "S2", "C1" );
-        dataset.addValue( -7.0, "S2", "C2" );
-        dataset.addValue( 14.0, "S2", "C3" );
-        dataset.addValue( -3.0, "S2", "C4" );
-        dataset.addValue( 6.0, "S3", "C1" );
-        dataset.addValue( 17.0, "S3", "C2" );
-        dataset.addValue( -12.0, "S3", "C3" );
-        dataset.addValue( 7.0, "S3", "C4" );
-        dataset.addValue( 7.0, "S4", "C1" );
-        dataset.addValue( 15.0, "S4", "C2" );
-        dataset.addValue( 11.0, "S4", "C3" );
-        dataset.addValue( 0.0, "S4", "C4" );
-        dataset.addValue( -8.0, "S5", "C1" );
-        dataset.addValue( -6.0, "S5", "C2" );
-        dataset.addValue( 10.0, "S5", "C3" );
-        dataset.addValue( -9.0, "S5", "C4" );
-        dataset.addValue( 9.0, "S6", "C1" );
-        dataset.addValue( 8.0, "S6", "C2" );
-        dataset.addValue( null, "S6", "C3" );
-        dataset.addValue( 6.0, "S6", "C4" );
-        dataset.addValue( -10.0, "S7", "C1" );
-        dataset.addValue( 9.0, "S7", "C2" );
-        dataset.addValue( 7.0, "S7", "C3" );
-        dataset.addValue( 7.0, "S7", "C4" );
-        dataset.addValue( 11.0, "S8", "C1" );
-        dataset.addValue( 13.0, "S8", "C2" );
-        dataset.addValue( 9.0, "S8", "C3" );
-        dataset.addValue( 9.0, "S8", "C4" );
-        dataset.addValue( -3.0, "S9", "C1" );
-        dataset.addValue( 7.0, "S9", "C2" );
-        dataset.addValue( 11.0, "S9", "C3" );
-        dataset.addValue( -10.0, "S9", "C4" );
-
-        JFreeChart chart = ChartFactory.createBarChart3D( "Bar Chart", "Category", "Value", dataset,
-                PlotOrientation.VERTICAL, true, true, false );
-        return chart;
-
-    }
-
-    /**
-     * Creates a sample time series chart.
-     * 
-     * @return a time series chart.
-     */
-    private JFreeChart createTimeSeriesChart() {
-        // FIXME
-        // here we just populate a series with random data...
-        TimeSeries series = new TimeSeries( "Random Data" );
-        Day current = new Day( 1, MonthConstants.JANUARY, 2001 );
-        for ( int i = 0; i < 100; i++ ) {
-            series.add( current, Math.random() * 100 );
-            current = ( Day ) current.next();
-        }
-        XYDataset data = new TimeSeriesCollection( series );
-
-        JFreeChart chart = ChartFactory.createTimeSeriesChart( "Time Series Chart", "Date", "Rate", data, true, true,
-                false );
-        return chart;
-
     }
 }
