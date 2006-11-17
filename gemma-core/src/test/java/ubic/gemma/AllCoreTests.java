@@ -23,7 +23,6 @@ import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.sequence.ProbeMapperTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
-import ubic.gemma.datastructure.matrix.HttpExpressionDataMatrixVisualizerTest;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.NCBIGene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
@@ -86,10 +85,6 @@ public class AllCoreTests {
         suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
-        suite.addTestSuite( HttpExpressionDataMatrixVisualizerTest.class );
-        suite.addTestSuite( ExpressionDataMatrixVisualizerTest.class );
-
-        
         suite.addTestSuite( ProgressAppenderTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );
