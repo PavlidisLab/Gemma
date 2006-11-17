@@ -51,9 +51,14 @@ public class ArrayDesignWrapper extends TableDecorator {
      
      public String getExpressionExperimentCountLink() {
          ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-         long id = object.getId();
-
-         return object.getExpressionExperimentCount() + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
-                 + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+         if (object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0) {
+             long id = object.getId();
+         
+             return object.getExpressionExperimentCount() + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
+                     + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+         }
+         else {
+             return "0";
+         }
      }
 }
