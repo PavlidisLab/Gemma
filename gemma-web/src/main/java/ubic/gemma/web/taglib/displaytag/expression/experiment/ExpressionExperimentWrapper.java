@@ -96,7 +96,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         long count = object.getBioAssayCount();
 
         return count + " <a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
-                + "<img src=\"/Gemma/images/magnifier.png\" /></a>";
+                + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
     }
 
     /**

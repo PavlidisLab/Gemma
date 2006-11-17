@@ -9,24 +9,6 @@
 </tr>
 <tr>
 	<td>
-		Bioassays:
-	</td>
-	<td align="right"> 
-	<b><c:out value="${ stats.bioAssayCount }" /></b>
-	</td>
-</tr>
-<tr>
-	<td>
-	<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>">
-	Array Designs:
-	</a>
-	</td>
-	<td align="right">
-	<b><c:out value="${ stats.arrayDesignCount }" /></b>
-	</td>
-</tr>
-<tr>
-	<td>
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>">
 		Expression Experiments:
 		</a>
@@ -45,6 +27,24 @@
 	</td>
 </tr>
 </c:forEach>
+<tr>
+	<td>
+	<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>">
+	Array Designs:
+	</a>
+	</td>
+	<td align="right">
+	<b><c:out value="${ stats.arrayDesignCount }" /></b>
+	</td>
+</tr>
+<tr>
+	<td>
+		Assays:
+	</td>
+	<td align="right"> 
+	<b><c:out value="${ stats.bioAssayCount }" /></b>
+	</td>
+</tr>
 </table>
 <p>
 	<fmt:message key="mainMenu.message" />
@@ -81,9 +81,7 @@
 		Administrative functions
 	</h2>
 	<ul class="glassList">
-		<li>
-			<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a>
-		</li>
+
 		<li>
 			<a href="<c:url value="/searcher.html"/>"> <fmt:message key="menu.compassSearcher" /> </a>
 		</li>

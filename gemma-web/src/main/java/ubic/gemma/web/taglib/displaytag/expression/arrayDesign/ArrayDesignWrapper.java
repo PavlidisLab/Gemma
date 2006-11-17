@@ -24,6 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -45,5 +47,13 @@ public class ArrayDesignWrapper extends TableDecorator {
          ArrayDesign object = ( ArrayDesign ) getCurrentRowObject();
          String shortDescription = StringUtils.abbreviate( object.getDescription(), 200 );
          return shortDescription;
+     }
+     
+     public String getExpressionExperimentCountLink() {
+         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+         long id = object.getId();
+
+         return object.getExpressionExperimentCount() + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
+                 + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
      }
 }

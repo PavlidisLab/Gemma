@@ -14,14 +14,12 @@
 		</h3>
 		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
-		<display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList"
+		<display:table pagesize="50" name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 
 			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
-
-			<display:column property="dataSource" sortable="true" titleKey="externalDatabase.title" maxWords="20" />
 
 			<authz:authorize ifAnyGranted="admin">
 	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />

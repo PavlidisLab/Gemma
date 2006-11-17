@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -35,6 +36,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
@@ -58,6 +60,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private ArrayDesignService arrayDesignService = null;
     private final String messageName = "Array design with name";
     private final String messageId = "Array design with id";
+    private final String identifierNotFound = "Must provide a valid Array Design identifier";
 
     /**
      * @param arrayDesignService The arrayDesignService to set.
@@ -143,8 +146,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        Collection arrayDesigns = arrayDesignService.loadAll();
-        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns", arrayDesigns );
+        Collection arrayDesigns = arrayDesignService.loadAllValueObjects();
+        Long numArrayDesigns = new Long(arrayDesigns.size());
+        ModelAndView mav = new ModelAndView( "arrayDesigns" );
+        mav.addObject( "arrayDesigns", arrayDesigns );
+        mav.addObject("numArrayDesigns", numArrayDesigns);
+        return mav;
     }
 
     /**
@@ -189,6 +196,37 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
        
 
+    }
+    
+    /**
+     * shows a list of BioAssays for an expression experiment subset
+     * 
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        if ( id == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( identifierNotFound );
+        }
+
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        if (arrayDesign == null) {
+            this.addMessage( request, "errors.objectnotfound", new Object[] { "Array Design "} );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+        }
+    
+        Collection ees = arrayDesignService.getExpressionExperiments( arrayDesign );
+        Collection<Long> eeIds = new ArrayList<Long>();
+        for ( Object object : ees ) {
+            eeIds.add( ((ExpressionExperiment) object).getId() );
+        }
+        String ids = StringUtils.join( eeIds.toArray() );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + ids ) );
     }
 
      

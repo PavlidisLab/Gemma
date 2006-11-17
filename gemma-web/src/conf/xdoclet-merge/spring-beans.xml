@@ -55,7 +55,6 @@
             <prop key="/gene/*">geneController</prop>
             <prop key="/geneFinder.html">geneFinderController</prop>
             <prop key="/addTestData.html">testDataAddingController</prop>
-            <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
             <prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
             <prop key="/genome/bioSequence/*">bioSequenceController</prop>
             <prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
@@ -174,6 +173,7 @@
 			<prop key="/arrays/showAllArrayDesigns.html">showAll</prop>
 			<prop key="/arrays/deleteArrayDesign.html">delete</prop>
 			<prop key="/arrays/showArrayDesign.html">show</prop>
+			<prop key="/arrays/showExpressionExperimentsFromArrayDesign.html">showExpressionExperiments</prop>
 		</props>
 	</property>
 </bean>

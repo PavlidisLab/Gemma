@@ -256,4 +256,20 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         this.getArrayDesignDao().deleteAlignmentData( arrayDesign );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadAllValueObjects()
+     */
+    @Override
+    protected Collection handleLoadAllValueObjects() throws Exception {
+        return this.getArrayDesignDao().loadAllValueObjects();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadValueObjects(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().loadValueObjects( ids );
+    }
+
 }

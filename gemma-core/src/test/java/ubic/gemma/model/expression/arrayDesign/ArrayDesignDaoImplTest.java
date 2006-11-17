@@ -214,6 +214,11 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         assertNotNull(count);
         assertTrue(count > 0);
     }
+    
+    public void testLoadAllValueObjects() {
+        Collection vos = arrayDesignDao.loadAllValueObjects();
+        assertNotNull(vos);
+    }
 
     /**
      * @param accession
