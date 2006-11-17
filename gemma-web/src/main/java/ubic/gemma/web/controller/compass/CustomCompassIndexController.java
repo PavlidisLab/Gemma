@@ -24,17 +24,25 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
-import org.compass.spring.web.mvc.AbstractCompassGpsCommandController;
 import org.compass.spring.web.mvc.CompassIndexCommand;
 import org.compass.spring.web.mvc.CompassIndexResults;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.util.CompassUtils;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * A general Spring's MVC Controller that perform the index operation of <code>CompassGps</code>. The indexing here
@@ -55,7 +63,8 @@ import ubic.gemma.util.CompassUtils;
  * @author keshav
  * @version $Id$
  */
-public class CustomCompassIndexController extends AbstractCompassGpsCommandController {
+public class CustomCompassIndexController extends BackgroundProcessingCompassIndexController {
+
     private Log log = LogFactory.getLog( CustomCompassIndexController.class );
 
     private String indexView;
@@ -101,18 +110,41 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
             return new ModelAndView( getIndexView(), getCommandName(), indexCommand );
         }
 
-        long time = System.currentTimeMillis();
+        String taskId = startJob( command, request );
+        return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
+    }
 
-        log.info( "Rebuilding compass index." );
-        CompassUtils.rebuildCompassIndex( ( CompassGpsInterfaceDevice ) this.getWebApplicationContext().getBean(
-                "compassGps" ) );
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
 
-        time = System.currentTimeMillis() - time;
-        CompassIndexResults indexResults = new CompassIndexResults( time );
-        Map<Object, Object> data = new HashMap<Object, Object>();
-        data.put( getCommandName(), indexCommand );
-        data.put( getIndexResultsName(), indexResults );
-        return new ModelAndView( getIndexResultsView(), data );
+            @SuppressWarnings("unchecked")
+            public ModelAndView call() throws Exception {
+
+                SecurityContextHolder.setContext( securityContext );
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Attempting to index EE Database" );
+
+                long time = System.currentTimeMillis();
+
+                log.info( "Rebuilding compass index." );
+                CompassUtils.rebuildCompassIndex( ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
+                        "compassGps" ) );
+
+                CompassIndexCommand indexCommand = ( CompassIndexCommand ) command;
+
+                time = System.currentTimeMillis() - time;
+                CompassIndexResults indexResults = new CompassIndexResults( time );
+                Map<Object, Object> data = new HashMap<Object, Object>();
+                data.put( getCommandName(), indexCommand );
+                data.put( getIndexResultsName(), indexResults );
+                
+                ProgressManager.destroyProgressJob( job );
+                return new ModelAndView( getIndexResultsView(), data );
+            }
+        };
+
     }
 
     /**
@@ -162,4 +194,5 @@ public class CustomCompassIndexController extends AbstractCompassGpsCommandContr
     public void setIndexResultsView( String indexResultsView ) {
         this.indexResultsView = indexResultsView;
     }
+
 }

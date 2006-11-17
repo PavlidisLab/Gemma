@@ -147,6 +147,12 @@
 	<property name="indexResultsView">
 		<value>indexer</value>
 	</property>
+	<property name="taskRunningService">
+      <ref bean="taskRunningService"/>
+    </property>
+    <property name="messageUtil">
+      <ref bean="messageUtil"/>
+    </property>
 </bean>
 <!-- COMPASS END -->
 <!-- ==================================================== -->
