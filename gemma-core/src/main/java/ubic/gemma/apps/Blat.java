@@ -52,6 +52,11 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
  */
 public class Blat {
 
+    /**
+     * Spaces in the sequence name will cause problems when converting back from the PSL format, so they are replaced.
+     */
+    public static final String SPACE_REPLACEMENT = "_____";
+
     private static final Log log = LogFactory.getLog( Blat.class );
     public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.8;
     public static final double STEPSIZE = 5;
@@ -269,7 +274,8 @@ public class Blat {
         int repeats = 0;
         for ( BioSequence b : sequences ) {
             if ( StringUtils.isNotBlank( b.getSequence() ) ) {
-                Object identifier = b.getName();
+                String identifier = b.getName();
+                identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
                 if ( identifiers.contains( identifier ) ) {
                     repeats++;
                     continue; // don't repeat sequences.
