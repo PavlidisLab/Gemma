@@ -44,31 +44,49 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
     private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
-    protected Collection<DesignElement> rowElements;
+    protected LinkedHashSet<DesignElement> rowElements;
     protected Collection<BioAssayDimension> bioAssayDimensions;
     protected Map<BioAssay, Integer> columnAssayMap;
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
+    protected Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
+    protected Map<Integer, Collection<BioMaterial>> columnBioMaterialMapByInteger;
 
     protected void init() {
         rowElements = new LinkedHashSet<DesignElement>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
+        columnBioAssayMapByInteger = new LinkedHashMap<Integer, Collection<BioAssay>>();
+        columnBioMaterialMapByInteger = new LinkedHashMap<Integer, Collection<BioMaterial>>();
+
     }
 
-    /**
-     * Returns the column map.
+    /*
+     * (non-Javadoc)
      * 
-     * @return Map<BioAssay,Integer>
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssaysForColumn(int)
      */
-    public Collection<Integer> getColumnMap() {
-        return columnAssayMap.values();
+    public Collection<BioAssay> getBioAssaysForColumn( int index ) {
+
+        return columnBioAssayMapByInteger.get( index );
     }
 
-    /**
+    /*
+     * (non-Javadoc)
      * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialsForColumn(int)
      */
-    public Collection<DesignElement> getRowMap() {
+    public Collection<BioMaterial> getBioMaterialsForColumn( int index ) {
+
+        return columnBioMaterialMapByInteger.get( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
+     */
+    public Collection<DesignElement> getRowElements() {
         return this.rowElements;
     }
 
@@ -150,6 +168,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             /*
              * We "line up" the data so all the data for a given biomaterial shows up in the same column.
              */
+            Collection<BioMaterial> bioMaterials = new LinkedHashSet<BioMaterial>();
             int i = 0;
             for ( BioAssay assay : dimension.getBioAssays() ) {
                 for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
@@ -161,10 +180,11 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                         log.debug( bioMaterial + " --> column " + i );
                         log.debug( assay + " --> column " + i );
                         this.columnBioMaterialMap.put( bioMaterial, i );
+                        bioMaterials.add( bioMaterial );
                         this.columnAssayMap.put( assay, i );
                     }
                 }
-
+                columnBioMaterialMapByInteger.put( i, bioMaterials );
                 i++;
             }
         }

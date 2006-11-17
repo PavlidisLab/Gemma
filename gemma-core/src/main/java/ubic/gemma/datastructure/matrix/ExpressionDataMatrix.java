@@ -22,12 +22,14 @@ import java.util.Collection;
 import java.util.List;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
  * Represents a matrix of data from an expression experiment.
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  */
 public interface ExpressionDataMatrix<T> {
@@ -36,7 +38,7 @@ public interface ExpressionDataMatrix<T> {
      * Access a single row of the matrix.
      * 
      * @param designElement
-     * @return
+     * @return T[][]
      */
     public T[] getRow( DesignElement designElement );
 
@@ -44,7 +46,7 @@ public interface ExpressionDataMatrix<T> {
      * Access a single column of the matrix.
      * 
      * @param bioAssay
-     * @return
+     * @return T[][]
      */
     public T[] getColumn( BioAssay bioAssay );
 
@@ -53,7 +55,7 @@ public interface ExpressionDataMatrix<T> {
      * 
      * @param designElement
      * @param bioAssay
-     * @return
+     * @return T[][]
      */
     public T get( DesignElement designElement, BioAssay bioAssay );
 
@@ -62,7 +64,7 @@ public interface ExpressionDataMatrix<T> {
      * 
      * @param designElements
      * @param bioAssays
-     * @return
+     * @return T[][]
      */
     public T[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays );
 
@@ -70,7 +72,7 @@ public interface ExpressionDataMatrix<T> {
      * Access a submatrix
      * 
      * @param designElements
-     * @return
+     * @return T[][]
      */
     public T[][] getRows( List<DesignElement> designElements );
 
@@ -78,33 +80,44 @@ public interface ExpressionDataMatrix<T> {
      * Access a submatrix
      * 
      * @param bioAssays
-     * @return
+     * @return T[][]
      */
     public T[][] getColumns( List<BioAssay> bioAssays );
 
     /**
      * Access the entire matrix.
      * 
-     * @return
+     * @return T[][]
      */
     public T[][] getMatrix();
 
     /**
      * Gets all the design elements in the matrix.
      * 
-     * @return Map<DesignElement,Integer>
+     * @return LinkedHashSet<DesignElement>
      */
-    public Collection<DesignElement> getRowMap();
+    public Collection<DesignElement> getRowElements();
 
     /**
-     * Gets all the bioassays in the matrix.
-     * 
-     * @return Map<BioAssay,Integer>
+     * @param index
+     * @return Collection<BioMaterial>
      */
-    public Collection<BioAssay> getColumnMap();
+    public Collection<BioMaterial> getBioMaterialsForColumn( int index );
 
+    /**
+     * @param index
+     * @return Collection<BioAssay>
+     */
+    public Collection<BioAssay> getBioAssaysForColumn( int index );
+
+    /**
+     * @return int
+     */
     public int columns();
 
+    /**
+     * @return int
+     */
     public int rows();
 
 }

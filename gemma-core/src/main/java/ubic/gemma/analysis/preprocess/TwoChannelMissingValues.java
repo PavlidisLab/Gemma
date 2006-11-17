@@ -130,7 +130,7 @@ public class TwoChannelMissingValues {
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         QuantitationType present = getQuantitationType( signalToNoiseThreshold );
 
-        for ( DesignElement designElement : signalChannelA.getRowMap() ) {
+        for ( DesignElement designElement : signalChannelA.getRowElements() ) {
             DesignElementDataVector vect = DesignElementDataVector.Factory.newInstance();
             vect.setQuantitationType( present );
             vect.setExpressionExperiment( source );
