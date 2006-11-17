@@ -35,7 +35,7 @@ public class AllGeoTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.expression.geo" );
         // $JUnit-BEGIN$
-        suite.addTestSuite( DatsetCombinerTest.class );
+        suite.addTestSuite( DatasetCombinerTest.class );
         suite.addTestSuite( GeoFamilyParserTest.class );
         suite.addTestSuite( GeoConverterTest.class );
         suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
