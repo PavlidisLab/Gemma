@@ -21,6 +21,8 @@ import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
 import ubic.basecode.datafilter.Filter;
+import ubic.basecode.datafilter.RowLevelFilter;
+import ubic.basecode.datafilter.RowMissingFilter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
@@ -48,7 +50,7 @@ public class LinkAnalysis {
     private Collection<DesignElementDataVector> dataVectors = null;
     private Probe2ProbeCoexpressionService ppService = null;
     private DesignElementDataVectorService deService = null;
-    private HashMap<Long, Long> probeToGeneMap = null;
+    private HashMap<Long, Set> probeToGeneMap = null;
     private HashMap<Long, Set> geneToProbeMap = null;
     private Map<Object, DesignElementDataVector> p2v = null;
     private Taxon taxon = null;
@@ -66,11 +68,12 @@ public class LinkAnalysis {
     private double cdfCut = 0.01; // 1.0 means, keep everything.
     private double minPresentFraction = 0.3;
     private double lowExpressionCut = 0.3;
+    private double highExpressionCut = 0.0;
     private double binSize = 0.01;
     private boolean useDB = false;
 
-    private boolean minPresentFractionIsSet = false;
-    private boolean lowExpressionCutIsSet = false;
+    private boolean minPresentFractionIsSet = true;
+    private boolean lowExpressionCutIsSet = true;
 
     private String localHome = "c:";
 
@@ -80,26 +83,36 @@ public class LinkAnalysis {
         form = new Format( "%.4g" );
     }
 
-    public void initDB() {
-    	return;
-    	/*
-    	if ( useDB ) {
-        	try {
-                dbManager = new DbManager( "tmm" );
-            } catch ( SQLException e ) {
-                System.err.print( "Errors in Connecting the Database" );
-                e.printStackTrace();
-            }
-        }
-        */
-    }
-
     private void filter() {
-        Filter x = new AffymetrixProbeNameFilter();
-        DoubleMatrixNamed r = ( DoubleMatrixNamed ) x.filter( this.dataMatrix );
-        this.dataMatrix = r;
-        System.err.println( this.dataMatrix );
-        this.uniqueItems = this.dataMatrix.rows();
+        DoubleMatrixNamed r = this.dataMatrix;
+
+        log.info( "Data set has " + r.rows() + " rows and " + r.columns() + " columns." );
+
+        if ( minPresentFractionIsSet ) {
+
+            log.info( "Filtering out genes that are missing too many values" );
+            RowMissingFilter x = new RowMissingFilter();
+            x.setMinPresentFraction( minPresentFraction );
+            r = ( DoubleMatrixNamed ) x.filter( r );
+        }
+
+        if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do this
+            // as well as affy filtering.
+            log.info( "Filtering out genes with low expression" );
+            RowLevelFilter x = new RowLevelFilter();
+            x.setLowCut( this.lowExpressionCut );
+            x.setHighCut(this.highExpressionCut);
+            x.setRemoveAllNegative( true ); // todo: fix
+            x.setUseAsFraction( true );
+            r = ( DoubleMatrixNamed ) x.filter( r );
+        }
+
+        log.info( "Filtering by Affymetrix probe name" );
+        Filter x = new AffymetrixProbeNameFilter(new int[] { 2 } );
+        r = ( DoubleMatrixNamed ) x.filter( r );
+
+        dataMatrix = r;
+        this.uniqueItems = dataMatrix.rows(); // this does not take into account 'replicates'.
     }
 
     private void calculateDistribution() {
@@ -114,7 +127,7 @@ public class LinkAnalysis {
 
         metricMatrix.setUseAbsoluteValue( this.absoluteValue );
         metricMatrix.calculateMetrics();
-        System.err.println( "Completed first pass over the data. Cached " + metricMatrix.numCached()
+        log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + this.tooSmallToKeep );
 
     }
@@ -149,7 +162,7 @@ public class LinkAnalysis {
                     break;
                 }
             }
-            System.err.println( form.format( cdfLowerCutScore ) + " is the lower cdf cutpoint at " + cdfTailCut );
+            log.info( form.format( cdfLowerCutScore ) + " is the lower cdf cutpoint at " + cdfTailCut );
         }
 
         // find the upper cut point.
@@ -160,7 +173,7 @@ public class LinkAnalysis {
             }
         }
 
-        System.err.println( form.format( cdfUpperCutScore ) + " is the upper cdf cutpoint at " + cdfTailCut );
+        log.info( form.format( cdfUpperCutScore ) + " is the upper cdf cutpoint at " + cdfTailCut );
 
         // get the cutpoint based on statistical signficance.
         double maxP = 1.0;
@@ -168,7 +181,7 @@ public class LinkAnalysis {
         if ( fwe != 0.0 ) {
             maxP = fwe / uniqueItems; // bonferroni.
             scoreAtP = CorrelationStats.correlationForPvalue( maxP, this.dataMatrix.columns() );
-            System.err.println( "Minimum correlation to get " + form.format( maxP ) + " is about "
+            log.info( "Minimum correlation to get " + form.format( maxP ) + " is about "
                     + form.format( scoreAtP ) + " for " + uniqueItems + " unique items (if all "
                     + this.dataMatrix.columns() + " items are present)" );
         }
@@ -176,11 +189,11 @@ public class LinkAnalysis {
         // value.
 
         upperTailCut = Math.max( scoreAtP, cdfUpperCutScore );
-        System.err.println( "Final upper cut is " + form.format( upperTailCut ) );
+        log.info( "Final upper cut is " + form.format( upperTailCut ) );
 
         if ( !this.absoluteValue ) {
             lowerTailCut = Math.min( -scoreAtP, cdfLowerCutScore );
-            System.err.println( "Final lower cut is " + form.format( lowerTailCut ) );
+            log.info( "Final lower cut is " + form.format( lowerTailCut ) );
         }
 
         metricMatrix.setUpperTailThreshold( upperTailCut );
@@ -197,7 +210,7 @@ public class LinkAnalysis {
         chooseCutPoints();
         metricMatrix.calculateMetrics();
         keep = metricMatrix.getKeepers();
-        System.err.println( "Selected " + keep.size() + " values to keep" );
+        log.info( "Selected " + keep.size() + " values to keep" );
     }
     public int[] getProbeToGeneAnalysis(){
     	int [] stats = new int[10];
@@ -222,10 +235,19 @@ public class LinkAnalysis {
         	Long probeId = new Long(vector.getDesignElement().getId());
         	
             Collection<Gene> geneSet = probeToGeneAssociation.get(vector);
+    		if(geneSet.size() >= 7){
+    			System.err.println(" Probe: " + vector.getDesignElement().getName()+ "[" + vector.getDesignElement().getId() + "] ");
+    			for(Gene gene:geneSet){
+    				System.err.print(gene.getName() + "[" + gene.getId() + "] ");
+    			}
+    		}
+
             
             Long geneId = null;
             if ( geneSet != null && !geneSet.isEmpty() ){
-            	if(geneSet.size() >= stats.length) stats[stats.length-1]++;
+            	if(geneSet.size() >= stats.length){
+            		stats[stats.length-1]++;
+            	}
             	else
             		stats[geneSet.size()]++;
             }
@@ -246,17 +268,14 @@ public class LinkAnalysis {
     	return returnAssocation;
     }
     /*
-     * @SuppressWarnings("unchecked") private Collection<String> getActiveProbeIdSet() { Collection probeIdSet = new
-     * HashSet<String>(); for ( String rowName : ( Collection<String> ) this.dataMatrix.getRowNames() )
-     * probeIdSet.add(rowName); return probeIdSet; }
+     * @SuppressWarnings("unchecked") 
      */
     @SuppressWarnings("unchecked")
     private void init() {
-        this.initDB();
-    	int [] stats = new int[10];
+     	int [] stats = new int[10];
         this.p2v = new HashMap<Object, DesignElementDataVector>();
 
-        this.probeToGeneMap = new HashMap<Long, Long>();
+        this.probeToGeneMap = new HashMap<Long, Set>();
         this.geneToProbeMap = new HashMap<Long, Set>();
         
         Object[]  allVectors = this.dataVectors.toArray();
@@ -267,7 +286,8 @@ public class LinkAnalysis {
         StopWatch watch = new StopWatch();
         watch.start();
         log.info(" Starting the query to get the mapping between probe and gene ");
-        
+
+        this.uniqueItems = 0;
         for ( int i = 0; i < allVectors.length; i++  ) {
         	if(i >= end) {
         		int start = end;
@@ -282,10 +302,21 @@ public class LinkAnalysis {
         	Long probeId = new Long(vector.getDesignElement().getId());
         	
             Collection<Gene> geneSet = probeToGeneAssociation.get(vector);
+/*
+    		if(geneSet != null && geneSet.size() >= 7){
+    			System.err.println("\n");
+    			System.err.println(" Probe: " + vector.getDesignElement().getName()+ "[" + vector.getDesignElement().getId() + "] ");
+    			for(Gene gene:geneSet){
+    				System.err.print(gene.getName() + "[" + gene.getId() + "] ");
+    			}
+    		}*/
             
-            Long geneId = null;
+            Set <Long> geneIdSet = new HashSet();
             if ( geneSet != null && !geneSet.isEmpty() ){
-                geneId = new Long(geneSet.iterator().next().getId());
+            	for(Gene gene:geneSet){
+            		Long geneId = gene.getId();
+            		geneIdSet.add(geneId);
+            	}
                	if(geneSet.size() >= stats.length) stats[stats.length-1]++;
             	else
             		stats[geneSet.size()]++;
@@ -295,28 +326,32 @@ public class LinkAnalysis {
                 continue;
             }
  
-            this.probeToGeneMap.put( probeId, geneId );
+            this.probeToGeneMap.put( probeId, geneIdSet );
 
             /** *Initialize the map between gene and probeSet 1-n mapping** */
-            Set probeSet = ( Set ) this.geneToProbeMap.get( geneId );
-            if ( probeSet == null ) {
-                Set tmpSet = new HashSet();
-                tmpSet.add( probeId );
-                this.geneToProbeMap.put( geneId, tmpSet );
-            } else
-                probeSet.add( probeId );
-            if(i % 1000 == 0) System.err.print( " " + i);
+            boolean countOnce = false;
+            for(Long geneId:geneIdSet){
+            	Set probeSet = ( Set ) this.geneToProbeMap.get( geneId );
+            	if ( probeSet == null ) {
+            		Set <Long> probeIdSet = new HashSet();
+            		probeIdSet.add( probeId );
+            		this.geneToProbeMap.put( geneId, probeIdSet );
+            		if(!countOnce){
+            			this.uniqueItems++;
+            			countOnce = true;
+            		}
+            	} else
+            		probeSet.add( probeId );
+            }
+            if(i % 1000 == 0) log.debug( " " + i);
         }
         watch.stop();
         log.info(" Finish the mapping in " + watch.getTime()/1000 + "seconds");
         log.info(" Mapping Stats " + ArrayUtils.toString(stats));
-        this.uniqueItems = geneToProbeMap.size();
         if(this.uniqueItems == 0) return;
         double scoreP = CorrelationStats.correlationForPvalue( this.fwe / this.uniqueItems, this.dataMatrix.columns() ) - 0.001;
         if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
-    
-
-    }
+     }
 
     private void saveLinks() {
         try {
@@ -359,10 +394,8 @@ public class LinkAnalysis {
                     ppCoexpression.setPvalue( CorrelationStats.pvalue( w, c ) );
                     ppCoexpression.setQuantitationType( v1.getQuantitationType() );
                     p2plinks.add( ppCoexpression );
-                    // Probe2ProbeCoexpression ppCo =
-                    // this.ppService.create(ppCoexpression);
                     if( i%10000 == 0){
-                    	System.err.print( " " + i);
+                    	log.debug( " " + i);
                         this.ppService.create( p2plinks );
                         p2plinks.clear();
                     }
@@ -378,7 +411,7 @@ public class LinkAnalysis {
              * p1vAr, p2vAr, cbAr, pbAr ); System.err.println( "Inserted " + rd + " links into the database" ); }
              */
         } catch ( Exception e ) {
-            System.err.println( "Errors when inserting the links into database" );
+            log.error( "Errors when inserting the links into database" );
             e.printStackTrace();
         }
 
@@ -390,8 +423,9 @@ public class LinkAnalysis {
         assert this.ppService != null;
         assert this.taxon != null;
         assert this.deService != null;
-        System.err.println( "Taxon: " + this.taxon.getCommonName() );
-
+        log.info( "Taxon: " + this.taxon.getCommonName() );
+        
+        this.filter();
         this.init();
         if(this.uniqueItems == 0){
         	log.info("Couldn't find the map between probe and gene ");
@@ -405,16 +439,16 @@ public class LinkAnalysis {
     }
 
     public void outputOptions() {
-        System.err.println( "Current Setting" );
-        System.err.println( "AbsouteValue Setting:" + this.absoluteValue );
-        System.err.println( "BinSize:" + this.binSize );
-        System.err.println( "cdfCut:" + this.cdfCut );
-        System.err.println( "catchCut:" + this.tooSmallToKeep );
-        System.err.println( "Unique Items:" + this.uniqueItems );
-        System.err.println( "fwe:" + this.fwe );
-        System.err.println( "useDB:" + this.useDB );
-        System.err.println( "lowExpressionCut:" + this.lowExpressionCut );
-        System.err.println( "minPresentationCut:" + this.minPresentFraction );
+        log.info( "Current Setting" );
+        log.info( "AbsouteValue Setting:" + this.absoluteValue );
+        log.info( "BinSize:" + this.binSize );
+        log.info( "cdfCut:" + this.cdfCut );
+        log.info( "catchCut:" + this.tooSmallToKeep );
+        log.info( "Unique Items:" + this.uniqueItems );
+        log.info( "fwe:" + this.fwe );
+        log.info( "useDB:" + this.useDB );
+        log.info( "lowExpressionCut:" + this.lowExpressionCut );
+        log.info( "minPresentationCut:" + this.minPresentFraction );
     }
 
     public void setAbsoluteValue() {

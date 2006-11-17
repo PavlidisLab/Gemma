@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Random;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -58,6 +59,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 	private LinkAnalysis linkAnalysis = new LinkAnalysis();
 
 	private double tooSmallToKeep = 0.5;
+	
+	final static int MINIMUM_SAMPLE = 7;
 
 	@SuppressWarnings("static-access")
 	@Override
@@ -213,10 +216,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		qtf.setType(StandardQuantitationType.DERIVEDSIGNAL);
 		qtf = qts.find(qtf);
 		if(qtf == null){
-			System.err.println("NO Quantitation Type!");
+			log.info("NO Quantitation Type!");
 			return;
 		}
-		System.err.println("Got Quantitiontype : " + qtf.getId());
+		log.debug("Got Quantitiontype : " + qtf.getId());
 		ExpressionExperiment ee = this.eeService.findById(new Long(1));
 		Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
 		ees.add(ee);
@@ -226,7 +229,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         Probe2ProbeCoexpressionService ppService = (Probe2ProbeCoexpressionService) this
 		.getBean("probe2ProbeCoexpressionService");
 		p2plinks = ppService.findCoexpressionRelationships(gene,ees,qtf);
-		System.err.println("Got links "+ p2plinks.size());
+		log.debug("Got links "+ p2plinks.size());
 	}
 	private boolean analysis(ExpressionExperiment ee) {
 		eeService.thaw(ee);
@@ -247,7 +250,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			log.info("No data matrix " + ee.getShortName());
 			return false;
 		}
-
+		if (dataMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE){
+			log.info("No enough samples " + ee.getShortName());
+			return false;
+		}
 		this.linkAnalysis.setDataMatrix(dataMatrix);
 		Collection<DesignElementDataVector> dataVectors = vectorService
 				.findAllForMatrix(ee, qt);
@@ -265,10 +271,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		 */
 		this.linkAnalysis.setTooSmallToKeep(this.tooSmallToKeep); 
 
-//		int stats[] = this.linkAnalysis.getProbeToGeneAnalysis();
-//		for(int i = 0; i < stats.length; i++) System.err.print(stats[i] + " ");
-		
-		
 		if (this.linkAnalysis.analysis() == true) {
 			log.info("Successful Generating Raw Links for "	+ ee.getShortName());
 		}
@@ -294,14 +296,11 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			this.vectorService = (DesignElementDataVectorService) this
 					.getBean("designElementDataVectorService");
 
-			this.test();
-			if(true) return null;
-			
+//			this.test();
+//			if(true) return null;
 			ExpressionExperiment expressionExperiment = null;
 			this.linkAnalysis.setDEService(vectorService);
-			this.linkAnalysis
-					.setPPService((Probe2ProbeCoexpressionService) this
-							.getBean("probe2ProbeCoexpressionService"));
+			this.linkAnalysis.setPPService((Probe2ProbeCoexpressionService) this.getBean("probe2ProbeCoexpressionService"));
 
 			if (this.geneExpressionFile == null) {
 				if (this.geneExpressionList == null) {
@@ -317,11 +316,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 					while ((accession = br.readLine()) != null) {
 						if (StringUtils.isBlank(accession))
 							continue;
-						expressionExperiment = eeService
-								.findByShortName(accession);
+						expressionExperiment = eeService.findByShortName(accession);
 						if (expressionExperiment == null) {
-							System.err.println(accession
-									+ " is not loaded yet!");
+							log.info(accession+ " is not loaded yet!");
 							continue;
 						}
 
@@ -329,25 +326,12 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 					}
 				}
 			} else {
-				expressionExperiment = eeService
-						.findByShortName(this.geneExpressionFile);
+				expressionExperiment = eeService.findByShortName(this.geneExpressionFile);
 				if (expressionExperiment == null) {
-					System.err.println(this.geneExpressionFile
-							+ " is not loaded yet!");
+					log.info(this.geneExpressionFile + " is not loaded yet!");
 					return null;
 				}
 				this.analysis(expressionExperiment);
-				/*
-				 * { GeoDatasetService geoService = ( GeoDatasetService )
-				 * this.getBean( "geoDatasetService" );
-				 * //geoService.setGeoDomainObjectGenerator( new
-				 * GeoDomainObjectGenerator() );
-				 * geoService.setGeoDomainObjectGenerator( new
-				 * GeoDomainObjectGeneratorLocal( this.localHome+"/TestData/" ) );
-				 * geoService.setLoadPlatformOnly( false ); Collection<ExpressionExperiment>
-				 * ees = geoService.fetchAndLoad( this.geneExpressionFile );
-				 * expressionExperiment = ees.iterator().next(); }
-				 */
 			}
 		} catch (Exception e) {
 			log.error(e);

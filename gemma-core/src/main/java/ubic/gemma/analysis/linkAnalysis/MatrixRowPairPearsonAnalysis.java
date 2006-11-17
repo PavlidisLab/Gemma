@@ -257,10 +257,14 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      */
     private boolean checkAssociation( Object probeA, Object probeB ) {
         if ( this.probeToGeneMap == null || this.geneToProbeMap == null ) return false;
-        Long geneId = ( Long ) this.probeToGeneMap.get( ((DesignElement)probeA).getId());
-        // Map geneToProbeMap = geneData.getProbeToGeneMap();
-        // return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
-        if ( geneId != null ) return ( ( Set ) geneToProbeMap.get( geneId ) ).contains( ((DesignElement)probeB).getId() );
+        Set <Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)probeA).getId());
+        if(geneIdSet != null){
+        	for(Long geneId:geneIdSet){
+        		if( (( Set ) geneToProbeMap.get( geneId ) ).contains( ((DesignElement)probeB).getId() ))
+        				return true;;
+        	}
+        }
+        
         return false;
     }
 
@@ -272,10 +276,13 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      */
     private boolean checkDuplication(  Object probe ) {
         if ( this.probeToGeneMap == null || this.geneToProbeMap == null ) return false;
-        Long geneId = ( Long ) this.probeToGeneMap.get( ((DesignElement)probe).getId() );
-
-        if ( geneId != null ) return ( ( Set ) geneToProbeMap.get( geneId ) ).size() > 1;
-
+        Set <Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)probe).getId());
+        if(geneIdSet != null){
+        	for(Long geneId:geneIdSet){
+        		if(( ( Set ) geneToProbeMap.get( geneId ) ).size() > 1)
+        			return true;
+        	}
+        }
         return false;
     }
 
@@ -521,17 +528,24 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             // return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
             double k = 1, m = 1;
             // String geneId = duplicateMap.getProbeGeneName(dataMatrix.getRowName(i));
-            Long geneId = ( Long ) this.probeToGeneMap.get( ((DesignElement)dataMatrix.getRowName( i )).getId() );
+            Set<Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)dataMatrix.getRowName( i )).getId() );
+            if(geneIdSet != null){
+            	for(Long geneId:geneIdSet){
+            		int tmpK = ( ( Set ) this.geneToProbeMap.get( geneId ) ).size() + 1;
+            		if(k < tmpK) k = tmpK;
+            	}
+            }
+            
+            geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)dataMatrix.getRowName( j )).getId() );
+            if(geneIdSet != null){
+            	for(Long geneId:geneIdSet){
+            		int tmpM = ( ( Set ) this.geneToProbeMap.get( geneId ) ).size() + 1;
+            		if(m < tmpM) m = tmpM;
+            	}
+            }
 
-            if ( geneId != null )
-            // k = ( double ) duplicateMap.numProbesForGene( geneId ) + 1;
-                k = ( ( Set ) this.geneToProbeMap.get( geneId ) ).size() + 1;
-
+            
             // geneId = duplicateMap.getProbeGeneName(dataMatrix.getRowName(j));
-            geneId = ( Long ) this.probeToGeneMap.get(((DesignElement) dataMatrix.getRowName( j )).getId() );
-            if ( geneId != null )
-            // m = ( double ) duplicateMap.numProbesForGene( geneId ) + 1;
-                m = ( ( Set ) this.geneToProbeMap.get( geneId ) ).size() + 1;
             p = p * k * m;
         }
 
