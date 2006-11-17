@@ -67,8 +67,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssaysForColumn(int)
      */
     public Collection<BioAssay> getBioAssaysForColumn( int index ) {
-
-        return columnBioAssayMapByInteger.get( index );
+        // TODO implement me - fill in the columnBioAssayByInteger in setUpColumnElements
+        // return columnBioAssayMapByInteger.get( index );
+        throw new RuntimeException( "Method not yet implemented." );
     }
 
     /*
