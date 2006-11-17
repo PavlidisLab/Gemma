@@ -27,8 +27,6 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand;
-
 /**
  * @author klc
  * @version $Id$
@@ -64,7 +62,6 @@ public class ProcessDeleteController extends BaseFormController {
             return new ModelAndView( new RedirectView( "/mainMenu.html" ) );
         }
 
- 
         taskRunningService.cancelTask( taskId );
         this.saveMessage( request, "Process has been deleted." );
 
@@ -80,10 +77,11 @@ public class ProcessDeleteController extends BaseFormController {
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
+        // FIXME do you need this method at all?
 
-        return csc;
+        Object dummy = new Object();
 
+        return dummy;
     }
 
     /**
@@ -99,10 +97,10 @@ public class ProcessDeleteController extends BaseFormController {
         return this.processFormSubmission( request, response, null, null );
     }
 
-    //todo:  some code that i wrote that this controller isn't using anymore.
-    //i just can't bring myself to delete unused but usefull code......
-    
-    //Get the root thread
+    // todo: some code that i wrote that this controller isn't using anymore.
+    // i just can't bring myself to delete unused but usefull code......
+
+    // Get the root thread
     @SuppressWarnings("unused")
     private ThreadGroup getRoot() {
         ThreadGroup root = Thread.currentThread().getThreadGroup().getParent();
