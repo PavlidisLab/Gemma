@@ -72,6 +72,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
+    @SuppressWarnings("unchecked")
     public int doStartTag() throws JspException {
 
         log.debug( "start tag" );
@@ -82,7 +83,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
-            Collection<DesignElement> compositeSequences = expressionDataMatrix.getRowMap();
+            Collection<DesignElement> compositeSequences = expressionDataMatrix.getRowElements();
 
             StringBuilder buf = new StringBuilder();
 

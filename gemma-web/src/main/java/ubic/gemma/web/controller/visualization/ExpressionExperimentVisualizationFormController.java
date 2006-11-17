@@ -222,7 +222,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Collection<DesignElementDataVector> dataVectors = getVectors( command, errors, eesc, expressionExperiment,
                 quantitationType );
 
-        // dataVectors = processVectors(dataVectors); Matrix should be normalized by default (by row; mean center and
+        // dataVectors = normalizeVectors(dataVectors); Matrix should be normalized by default (by row; mean center and
         // divide by
 
         if ( errors.hasErrors() ) {
@@ -232,7 +232,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         designElementDataVectorService.thaw( dataVectors );
         ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
         /* deals with the case of probes don't match, for the given quantitation type. */
-        if ( expressionDataMatrix.getRowMap().size() == 0 && expressionDataMatrix.getColumnMap().size() == 0 ) {
+        if ( expressionDataMatrix.getRowElements().size() == 0
+                && expressionDataMatrix.getBioMaterialsForColumn( 0 ).size() == 0 ) {
             String message = "None of the probe sets match the given quantitation type "
                     + quantitationType.getType().getValue();
 

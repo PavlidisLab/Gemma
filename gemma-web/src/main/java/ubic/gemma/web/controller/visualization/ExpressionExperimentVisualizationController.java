@@ -137,7 +137,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
     private JMatrixDisplay createHeatMap( String title, ExpressionDataMatrix expressionDataMatrix ) {
 
         if ( expressionDataMatrixVisualizer == null )
-            throw new RuntimeException( "Cannot create color matrix due to null HttpExpressionDataMatrixVisualizer" );
+            throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrixVisualizer" );
 
         ColorMatrix colorMatrix = expressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
 
