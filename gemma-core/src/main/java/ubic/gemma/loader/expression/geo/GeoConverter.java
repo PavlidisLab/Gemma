@@ -854,7 +854,7 @@ public class GeoConverter implements Converter {
                 bs.setIsApproximateLength( false );
                 bs.setLength( new Long( bs.getSequence().length() ) );
                 bs.setType( SequenceType.DNA );
-                bs.setName( id + " sequence" );
+                bs.setName( id + "_sequence" );
                 bs.setDescription( "Sequence provided by manufacturer, used in leiu of " + externalAccession );
             } else if ( externalAccession != null && !isImage ) {
                 /*
