@@ -22,12 +22,15 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
@@ -38,10 +41,13 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -55,7 +61,13 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    private ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
+    private ExpressionDataMatrix expressionDataMatrix = null;
+
+    private String type = null;
+
+    protected List<String> rowLabels = null;
+
+    protected List<String> colLabels = null;
 
     private static final int DEFAULT_MAX_SIZE = 3;
 
@@ -68,28 +80,22 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
-        String type = ( String ) request.getSession().getAttribute( "type" );
-        log.debug( "attribute \"type\" from tag: " + type );
+        init( request, response );
 
-        expressionDataMatrixVisualizer = ( ExpressionDataMatrixVisualizer ) request.getSession().getAttribute(
-                "expressionDataMatrixVisualizer" );
-        log.debug( "attribute \"expressionDataMatrixVisualizer\" from tag: " + expressionDataMatrixVisualizer );
-
-        ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
-
+        String title = null;
         OutputStream out = null;
         try {
             out = response.getOutputStream();
-            if ( type.equals( "matrix" ) ) {
-                String title = "Heat Map of Expression Values";
+            if ( type.equalsIgnoreCase( "matrix" ) ) {
+                title = "Heat Map of Expression Values";
                 JMatrixDisplay display = createHeatMap( title, expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( "image/png" );
                     display.writeOutAsPNG( out, true, true );
                 }
             }
-            // else if ( type.equals( "profile" ) ) {
-            // String title = "Expression Profiles";
+            // else if ( type.equalsIgnoreCase( "profile" ) ) {
+            // title = "Expression Profiles";
             // JFreeChart chart = createXYLineChart( title, httpExpressionDataMatrixVisualizer
             // .getRowData( expressionDataMatrix ), DEFAULT_MAX_SIZE );
             // if ( chart != null ) {
@@ -109,7 +115,26 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                 }
             }
         }
+
         return null; // nothing to return;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return OutputStream
+     */
+    private void init( HttpServletRequest request, HttpServletResponse response ) {
+
+        this.rowLabels = new ArrayList<String>();
+
+        this.colLabels = new ArrayList<String>();
+
+        type = ( String ) request.getSession().getAttribute( "type" );
+        log.debug( "attribute \"type\" from tag: " + type );
+
+        expressionDataMatrix = ( ExpressionDataMatrix ) request.getSession().getAttribute( "expressionDataMatrix" );
+        log.debug( "attribute \"expressionDataMatrix\" from tag: " + expressionDataMatrix );
     }
 
     /**
@@ -119,16 +144,80 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
      */
     private JMatrixDisplay createHeatMap( String title, ExpressionDataMatrix expressionDataMatrix ) {
 
-        if ( expressionDataMatrixVisualizer == null )
-            throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrixVisualizer" );
+        if ( expressionDataMatrix == null )
+            throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrix" );
 
-        ColorMatrix colorMatrix = expressionDataMatrixVisualizer.createColorMatrix( expressionDataMatrix );
+        ColorMatrix colorMatrix = createColorMatrix( expressionDataMatrix );
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
 
         display.setCellSize( new Dimension( 10, 10 ) );
 
         return display;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
+     */
+    @SuppressWarnings("unchecked")
+    public ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+        Collection<DesignElement> rowMap = expressionDataMatrix.getRowElements(); // row labels
+
+        if ( expressionDataMatrix == null || rowMap.size() == 0 ) {
+            throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
+        }
+
+        double[][] data = new double[rowMap.size()][];
+        int i = 0;
+        for ( DesignElement designElement : rowMap ) {
+            Double[] row = ( Double[] ) expressionDataMatrix.getRow( designElement );
+            data[i] = ArrayUtils.toPrimitive( row );
+            rowLabels.add( designElement.getName() );
+            i++;
+        }
+
+        int j = 0;
+        while ( j < data[0].length ) {
+            Collection<BioMaterial> bioMaterials = expressionDataMatrix.getBioMaterialsForColumn( j );
+            if ( bioMaterials == null || bioMaterials.size() == 0 ) {
+                log.warn( "No BioMaterials found for index + " + j + ". Setting label to column number " + j );
+                colLabels.add( String.valueOf( j ) );
+            } else {
+                if ( bioMaterials.size() > 1 )
+                    log.warn( "More than one BioMaterial. Using first one found as column label." );
+
+                Iterator iter = bioMaterials.iterator();
+                while ( iter.hasNext() ) {
+                    BioMaterial bm = ( BioMaterial ) iter.next();
+                    if ( !colLabels.contains( bm.getName() ) ) {
+                        log.debug( "adding label " + bm.getName() );
+                        colLabels.add( bm.getName() );
+                    }
+                }
+
+            }
+            j++;
+        }
+
+        return this.createColorMatrix( data, rowLabels, colLabels );
+    }
+
+    /**
+     * @param data
+     * @param rowLabels
+     * @param colorMatrix
+     */
+    public ColorMatrix createColorMatrix( double[][] data, List<String> rowLabels, List<String> colLabels ) {
+        assert rowLabels != null && colLabels != null : "Labels not set";
+
+        DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
+        matrix.setRowNames( rowLabels );
+        matrix.setColumnNames( colLabels );
+        ColorMatrix colorMatrix = new ColorMatrix( matrix );
+
+        return colorMatrix;
     }
 
     /**

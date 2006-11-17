@@ -35,10 +35,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceServiceImpl;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 
 /**
- * @jsp.tag name="expressionDataMatrixVisualizer" body-content="empty"
+ * @jsp.tag name="expressionDataMatrix" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -55,14 +54,14 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
 
-    private ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = null;
+    private ExpressionDataMatrix expressionDataMatrix = null;
 
     /**
-     * @jsp.attribute description="The visualizer object" required="true" rtexprvalue="true"
-     * @param expressionDataMatrixVisualizer
+     * @jsp.attribute description="The object to visualize." required="true" rtexprvalue="true"
+     * @param expressionDataMatrix
      */
-    public void setExpressionDataMatrixVisualizer( ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer ) {
-        this.expressionDataMatrixVisualizer = expressionDataMatrixVisualizer;
+    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+        this.expressionDataMatrix = expressionDataMatrix;
         this.compositeSequenceService = new CompositeSequenceServiceImpl();
     }
 
@@ -78,8 +77,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         log.debug( "start tag" );
 
         try {
-            /* get metadata from ExpressionDataMatrixVisualizer */
-            ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualizer.getExpressionDataMatrix();
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
@@ -91,7 +88,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             String type = "matrix";
             HttpSession session = this.pageContext.getSession();
             session.setAttribute( "type", type );
-            session.setAttribute( "expressionDataMatrixVisualizer", expressionDataMatrixVisualizer );
+            session.setAttribute( "expressionDataMatrix", expressionDataMatrix );
 
             if ( expressionDataMatrix == null || m.length == 0 ) {
                 buf.append( "No data to display" );

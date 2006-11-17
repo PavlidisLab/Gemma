@@ -48,8 +48,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.visualization.DefaultExpressionDataMatrixVisualizer;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 
@@ -238,11 +236,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         }
 
-        ExpressionDataMatrixVisualizer expressionDataMatrixVisualizer = new DefaultExpressionDataMatrixVisualizer(
-                expressionDataMatrix );
-
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualizer",
-                expressionDataMatrixVisualizer );
+        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrix", expressionDataMatrix );
     }
 
     /**
