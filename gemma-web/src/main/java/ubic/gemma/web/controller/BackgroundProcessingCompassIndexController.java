@@ -22,8 +22,6 @@ import java.util.concurrent.FutureTask;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.compass.spring.web.mvc.AbstractCompassGpsCommandController;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -34,9 +32,8 @@ import ubic.gemma.web.util.MessageUtil;
  * call startJob in your onSubmit method.
  * 
  * @author klc
+ * 
  * @version $Id$
- * @spring.property name="taskRunningService" ref="taskRunningService"
- * @spring.property name="messageUtil" ref="messageUtil"
  */
 public abstract class BackgroundProcessingCompassIndexController extends AbstractCompassGpsCommandController {
 
@@ -58,40 +55,31 @@ public abstract class BackgroundProcessingCompassIndexController extends Abstrac
         this.taskRunningService = taskRunningService;
     }
 
+    
     /**
-     * @param command
+     * @param  BackgroundControllerJob<ModelAndView> job
      * @param request
      * @return task id
+     * 
+     * This allows the background controller job to be created outside and passed in effectively allowing one controller to create more than 1 job
      */
-    protected synchronized String startJob( Object command, HttpServletRequest request ) {
+    protected synchronized String startJob( HttpServletRequest request,  BackgroundControllerJob<ModelAndView> job ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
-        SecurityContext context = SecurityContextHolder.getContext();
 
         String taskId = TaskRunningService.generateTaskId();
 
-        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
-
         assert taskId != null;
         request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
+        job.setTaskId(taskId);   
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
         return taskId;
     }
 
-    /**
-     * You have to implement this in your subclass.
-     * 
-     * @param securityContext
-     * @param command from form
-     * @return
-     */
-    protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger );
-    
-    /**
+     /**
      * @param messageUtil the messageUtil to set
      */
     public void setMessageUtil( MessageUtil messageUtil ) {

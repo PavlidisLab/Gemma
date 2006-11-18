@@ -80,7 +80,7 @@ public class CompassUtils {
      * @param gps
      * @throws IOException
      */
-    public static void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
+    public static synchronized void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();
 
         log.debug( "CompassGps was running? " + wasRunningBefore );

@@ -24,8 +24,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.web.util.MessageUtil;
 
@@ -33,9 +35,17 @@ import ubic.gemma.web.util.MessageUtil;
  * @author pavlidis
  * @version $Id$
  */
+/**
+ * 
+ *
+ * <hr>
+ * <p>Copyright (c) 2006 UBC Pavlab
+ * @author klc
+ * @version $Id$
+ */
 public abstract class BackgroundControllerJob<T> implements Callable<T> {
 
-    Log loadLog = LogFactory.getLog( this.getClass().getName() );
+    protected Log log = LogFactory.getLog( this.getClass().getName() );
 
     protected String taskId;
     protected Object command;
@@ -59,20 +69,31 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
     public String getTaskId() {
         return this.taskId;
     }
+    
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
 
     /**
      * @param securityContext
      * @param command
      * @param jobDescription
+     * 
      */
     public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
             Object commandObj, MessageUtil messenger ) {
-        this.taskId = taskId;
-        this.securityContext = parentSecurityContext;
+        this(request);
+        this.taskId = taskId;      
         this.command = commandObj;
-        this.session = request.getSession();
+        
         this.messageUtil = messenger;
+    }
+    
+    public BackgroundControllerJob(HttpServletRequest request) {
+        super();
+        this.securityContext = SecurityContextHolder.getContext();
         this.request = request;
+        this.session = request.getSession();
     }
 
     /**
@@ -81,8 +102,16 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
      */
     public void saveMessage( String msg ) {
-        loadLog.info( msg );
+        log.info( msg );
         this.messageUtil.saveMessage( session, msg );
     }
-
+    
+    
+    /**
+     * This should be called in the first line of the implementation of the call method.
+     *  
+     */
+    protected void init() {
+        SecurityContextHolder.setContext( securityContext );        
+    }
 }
