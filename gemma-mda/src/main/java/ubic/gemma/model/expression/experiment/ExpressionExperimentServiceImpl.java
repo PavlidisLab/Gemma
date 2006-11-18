@@ -214,6 +214,11 @@ public class ExpressionExperimentServiceImpl extends
     protected void handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().thaw( expressionExperiment );
     }
+    
+    @Override
+    protected void handleThawLite( ExpressionExperiment expressionExperiment ) throws Exception {
+        this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
+    }
 
     /*
      * (non-Javadoc) This only returns 1 taxon, the 1st taxon as decided by the join which ever that is. The good news

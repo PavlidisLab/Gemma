@@ -42,6 +42,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -50,7 +51,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
@@ -60,8 +60,6 @@ import ubic.gemma.util.BusinessKey;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
-
-  
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
@@ -235,6 +233,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final ExpressionExperiment toDelete = expressionExperiment;
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
+
+                log.info( "Loading data for deletion..." );
                 ExpressionExperiment toDeletePers = ( ExpressionExperiment ) session.merge( toDelete );
 
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
@@ -250,7 +250,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     BioAssayDimension dim = dv.getBioAssayDimension();
                     dims.add( dim );
                     session.delete( dv );
-                    if ( ++count % 500 == 0 ) log.info( count + " design Element data vectors deleted" );
+                    // would it be faster to delete in a batch?
+                    if ( ++count % 5000 == 0 ) log.info( count + " design Element data vectors deleted" );
 
                 }
 
@@ -286,8 +287,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         session.delete( at );
                     }
 
-                    log.info( "Removed BioAssay " + ba.getName() + " and its assciations." );
+                    log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
 
+                }
+
+                // Delete investigators
+                for ( Contact ct : toDeletePers.getInvestigators() ) {
+                    session.delete( ct );
                 }
 
                 // Remove audit information for ee from the db. We might want to keep this but......
@@ -399,7 +405,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             }
 
         }, true );
-
     }
 
     @Override
@@ -569,7 +574,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
-                v.setShortName( list.getString( 9 ));
+                v.setShortName( list.getString( 9 ) );
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 10 ) );
                 // v.setBioMaterialCount( list.getInteger( 11 ) );
@@ -621,7 +626,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setTaxon( list.getString( 6 ) );
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
-                v.setShortName( list.getString( 9 ));
+                v.setShortName( list.getString( 9 ) );
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
                 // v.setBioMaterialCount( list.getInteger( 9 ) );
@@ -633,16 +638,17 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return vo;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
     protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
- 
 
         Collection<ExpressionExperiment> ee = null;
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
-    
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "taxon", taxon );
@@ -652,7 +658,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
         return ee;
-        
+
     }
-    
+
 }

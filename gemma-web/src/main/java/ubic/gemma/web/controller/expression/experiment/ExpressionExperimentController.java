@@ -86,12 +86,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        
-        if (request.getParameter( "id" ) ==  null) {
+
+        if ( request.getParameter( "id" ) == null ) {
             // should be a validator error on submit
-            return redirectToList( request );     
+            return redirectToList( request );
         }
-        
+
         Long id = Long.parseLong( request.getParameter( "id" ) );
 
         if ( id == null ) {
@@ -100,7 +100,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
-        if (expressionExperiment == null) {
+        if ( expressionExperiment == null ) {
             return redirectToList( request );
         }
         request.setAttribute( "id", id );
@@ -129,7 +129,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     private ModelAndView redirectToList( HttpServletRequest request ) {
-        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment "} );
+        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment " } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
 
@@ -142,13 +142,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     @SuppressWarnings("unused")
     public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         String idStr = request.getParameter( "id" );
-        
+
         if ( idStr == null ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( identifierNotFound );
         }
-        Long id = Long.parseLong(idStr);
-
+        Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
         Map m = expressionExperimentService.getQuantitationTypeCountById( id );
@@ -216,7 +215,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
@@ -229,14 +228,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // if ids are specified, then display only those expressionExperiments
         else {
             Collection ids = new ArrayList<Long>();
-            
-            String[] idList = StringUtils.split( sId, ',' ); 
-            for (int i = 0; i < idList.length; i++ ) {
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
                 ids.add( new Long( idList[i] ) );
             }
-            expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ));
+            expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
-        Long numExpressionExperiments = new Long(expressionExperiments.size());
+        Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
@@ -271,11 +270,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         String taskId = startJob( expressionExperiment, request );
         return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        //return doDelete( request, response, expressionExperiment );
+        // return doDelete( request, response, expressionExperiment );
     }
 
-    
-    
     /*
      * (non-Javadoc)
      * 
@@ -292,22 +289,21 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             public ModelAndView call() throws Exception {
 
                 SecurityContextHolder.setContext( securityContext );
-     
-                ExpressionExperiment ee = (ExpressionExperiment) command;
+
+                ExpressionExperiment ee = ( ExpressionExperiment ) command;
+                expressionExperimentService.thawLite( ee );
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Deleting expression experiment: "
-                        + ee.getId());
-                               
+                        .getAuthentication().getName(), "Deleting expression experiment: " + ee.getId() );
+
                 expressionExperimentService.delete( ee );
                 saveMessage( "Expression Experiment " + ee.getShortName() + " removed from Database" );
                 ee = null;
 
-
                 ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html") );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
             }
         };
     }
-    
 
 }
