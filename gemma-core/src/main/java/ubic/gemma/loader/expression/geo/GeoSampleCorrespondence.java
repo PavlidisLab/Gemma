@@ -86,7 +86,6 @@ public class GeoSampleCorrespondence {
         if ( StringUtils.isBlank( gsmNumberA ) )
             throw new IllegalArgumentException( "Must pass at least one GSM accession" );
 
-    
         // the following is to make sets that each contain just the samples that group together.
         boolean found = false;
         for ( Set<String> set : sets ) {
@@ -121,8 +120,12 @@ public class GeoSampleCorrespondence {
             String group = "";
             SortedSet<String> sortedSet = new TreeSet<String>( set );
             for ( String accession : sortedSet ) {
-                group = group + accession + " ('" + accToTitle.get( accession ) + "' in "
-                        + accToDataset.get( accession ) + ")";
+                group = group
+                        + accession
+                        + " ('"
+                        + ( accToTitle != null && accToTitle.containsKey( accession ) ? accToTitle.get( accession )
+                                : "[no title]" ) + "' in "
+                        + ( accToDataset != null ? accToDataset.get( accession ) : "" ) + ")";
 
                 if ( sortedSet.size() == 1 ) {
                     singletons.append( group + "\n" );

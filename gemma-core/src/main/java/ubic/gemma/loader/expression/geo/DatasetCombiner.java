@@ -36,8 +36,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -276,13 +274,21 @@ public class DatasetCombiner {
 
         result.setAccToTitleMap( accToTitle );
         result.setAccToDatasetMap( accToDataset );
-        // allocate matrix.
-        double[][] matrix = new double[accToTitle.keySet().size()][accToTitle.keySet().size()];
-        for ( int i = 0; i < matrix.length; i++ ) {
-            Arrays.fill( matrix[i], -1.0 );
-        }
+//        // allocate matrix.
+//        double[][] matrix = new double[accToTitle.keySet().size()][accToTitle.keySet().size()];
+//        for ( int i = 0; i < matrix.length; i++ ) {
+//            Arrays.fill( matrix[i], -1.0 );
+//        }
 
-        final List<String> sampleAccs = new ArrayList<String>( accToTitle.keySet() );
+        final List<String> sampleAccs = new ArrayList<String>( accToDataset.keySet() );
+        assert sampleAccs.size() > 0;
+
+        if ( numDatasets <= 1 ) {
+            for ( String sample : sampleAccs ) {
+                result.addCorrespondence( sample, null );
+            }
+            return result;
+        }
 
         String commonPrefix = StringUtil.commonPrefix( accToTitle.values() );
         if ( commonPrefix != null ) {
@@ -307,39 +313,11 @@ public class DatasetCombiner {
         List<String> dataSets = new ArrayList<String>();
 
         dataSets.addAll( accToDataset.values() );
+
         log.info( dataSets.size() + " datasets" );
+
         // we start with the smallest dataset.
-        Collections.sort( dataSets, new Comparator<String>() {
-            public int compare( String arg0, String arg1 ) {
-                int numSamples0 = 0;
-                int numSamples1 = 0;
-                for ( int j = 0; j < sampleAccs.size(); j++ ) {
-                    String targetAcc = sampleAccs.get( j );
-
-                    // skip samples that are not in this data set.
-                    if ( accToDataset.get( targetAcc ).equals( arg0 ) ) {
-                        numSamples0++;
-                    } else if ( accToDataset.get( targetAcc ).equals( arg1 ) ) {
-                        numSamples1++;
-                    }
-                }
-
-                if ( numSamples0 == numSamples1 ) {
-                    return 0;
-                } else if ( numSamples0 < numSamples1 ) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            }
-        } );
-
-        if ( numDatasets == 1 ) {
-            for ( String sample : sampleAccs ) {
-                result.addCorrespondence( sample, null );
-            }
-            return result;
-        }
+        sortDataSets( sampleAccs, dataSets );
 
         Collection<String> allMatched = new HashSet<String>();
         for ( String datasetA : dataSets ) {
@@ -356,6 +334,9 @@ public class DatasetCombiner {
                 }
                 if ( allMatched.contains( targetAcc ) ) continue;
 
+                if ( !accToTitle.containsKey( targetAcc ) ) {
+                    continue;
+                }
                 String targetTitle = accToTitle.get( targetAcc ).toLowerCase();
                 String targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
 
@@ -412,6 +393,9 @@ public class DatasetCombiner {
 
                         numTested++;
 
+                        if ( !accToTitle.containsKey( testAcc ) ) {
+                            continue;
+                        }
                         String testTitle = accToTitle.get( testAcc ).toLowerCase();
                         String testSecondaryTitle = accToSecondaryTitle.get( testAcc ).toLowerCase();
 
@@ -449,27 +433,27 @@ public class DatasetCombiner {
                         trimmedTest = trimmedTest.replaceAll( PUNCTUATION_REGEXP, "" );
                         trimmedTarget = trimmedTarget.replaceAll( PUNCTUATION_REGEXP, "" );
 
-//                        if ( Math.max( trimmedTest.length(), trimmedTarget.length() )
-//                                / Math.min( trimmedTest.length(), trimmedTarget.length() ) > LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING ) {
-//                            if ( trimmedTest.length() > trimmedTarget.length() ) {
-//                                trimmedTest = trimmedTest.substring( 0, trimmedTarget.length() );
-//                                // log.debug( "Trimmed test title to " + trimmedTest );
-//                            } else {
-//                                trimmedTarget = trimmedTarget.substring( 0, trimmedTest.length() );
-//                                // log.debug( "Trimmed target title to " + trimmedTarget );
-//                            }
-//                        }
+                        // if ( Math.max( trimmedTest.length(), trimmedTarget.length() )
+                        // / Math.min( trimmedTest.length(), trimmedTarget.length() ) >
+                        // LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING ) {
+                        // if ( trimmedTest.length() > trimmedTarget.length() ) {
+                        // trimmedTest = trimmedTest.substring( 0, trimmedTarget.length() );
+                        // // log.debug( "Trimmed test title to " + trimmedTest );
+                        // } else {
+                        // trimmedTarget = trimmedTarget.substring( 0, trimmedTest.length() );
+                        // // log.debug( "Trimmed target title to " + trimmedTarget );
+                        // }
+                        // }
 
                         // Computing the distance
-                        double distance = computeDistance( matrix, j, i, trimmedTest, trimmedTarget );
+                        double distance = computeDistance( trimmedTest, trimmedTarget );
 
                         distance -= bonus;
 
                         double normalizedDistance = ( double ) distance
                                 / Math.max( trimmedTarget.length(), trimmedTest.length() );
 
-                        double secondaryDistance = computeDistance( matrix, j, i, targetSecondaryTitle,
-                                testSecondaryTitle );
+                        double secondaryDistance = computeDistance( targetSecondaryTitle, testSecondaryTitle );
 
                         if ( secondaryDistance < distance ) {
                             distance = secondaryDistance;
@@ -586,6 +570,33 @@ public class DatasetCombiner {
         return result;
     }
 
+    private void sortDataSets( final List<String> sampleAccs, List<String> dataSets ) {
+        Collections.sort( dataSets, new Comparator<String>() {
+            public int compare( String arg0, String arg1 ) {
+                int numSamples0 = 0;
+                int numSamples1 = 0;
+                for ( int j = 0; j < sampleAccs.size(); j++ ) {
+                    String targetAcc = sampleAccs.get( j );
+
+                    // skip samples that are not in this data set.
+                    if ( accToDataset.get( targetAcc ).equals( arg0 ) ) {
+                        numSamples0++;
+                    } else if ( accToDataset.get( targetAcc ).equals( arg1 ) ) {
+                        numSamples1++;
+                    }
+                }
+
+                if ( numSamples0 == numSamples1 ) {
+                    return 0;
+                } else if ( numSamples0 < numSamples1 ) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        } );
+    }
+
     /**
      * Identify stop-strings relating to microarray names.
      * 
@@ -598,7 +609,6 @@ public class DatasetCombiner {
             if ( title.contains( key ) ) {
                 for ( String value : microarrayNameStrings.get( key ) ) {
                     if ( title.contains( value ) ) {
-                        log.info( title + " : " + value );
                         result.add( value );
                     }
                 }
@@ -659,31 +669,16 @@ public class DatasetCombiner {
     }
 
     /**
-     * compute and store the distance.
+     * compute the distance.
      * 
-     * @param matrix
-     * @param j
-     * @param i
      * @param trimmedTest
      * @param trimmedTarget
      * @return
      */
-    private double computeDistance( double[][] matrix, int j, int i, String trimmedTest, String trimmedTarget ) {
+    private double computeDistance( String trimmedTest, String trimmedTarget ) {
 
-        double distance = -1.0;
-        if ( matrix[i][j] < 0 ) {
-            // if ( Math.max( trimmedTarget.length(), trimmedTest.length() ) > SHORT_STRING_THRESHOLD ) {
-            distance = StringDistance.editDistance( trimmedTarget, trimmedTest );
-            // } else {
-            // distance = StringDistance.prefixWeightedHammingDistance( trimmedTarget, trimmedTest, 0.8 );
-            // }
-            // log.debug( "\n" + trimmedTarget + "\n" + trimmedTest + " " + distance );
-            // matrix[j][i] = distance;
-            // matrix[i][j] = distance;
-        } else {
-            // distance = matrix[i][j];
-        }
-        return distance;
+        return StringDistance.editDistance( trimmedTarget, trimmedTest );
+
     }
 
     /**
@@ -707,15 +702,21 @@ public class DatasetCombiner {
 
     /**
      * @param dataSets
-     * @param accToTitle
-     * @param accToDataset
-     * @param accToOrganism
      */
     private void fillAccessionMaps( Collection<GeoDataset> dataSets ) {
         for ( GeoDataset dataset : dataSets ) {
-            for ( GeoSubset subset : dataset.getSubsets() ) {
-                for ( GeoSample sample : subset.getSamples() ) {
-                    fillAccessionMap( sample, dataset );
+            if ( dataset.getSubsets().size() == 0 ) {
+                assert dataset.getSeries().size() > 0;
+                for ( GeoSeries series : dataset.getSeries() ) {
+                    for ( GeoSample sample : series.getSamples() ) {
+                        fillAccessionMap( sample, dataset );
+                    }
+                }
+            } else {
+                for ( GeoSubset subset : dataset.getSubsets() ) {
+                    for ( GeoSample sample : subset.getSamples() ) {
+                        fillAccessionMap( sample, dataset );
+                    }
                 }
             }
         }
@@ -749,15 +750,15 @@ public class DatasetCombiner {
      */
     private void fillAccessionMap( GeoSample sample, GeoData owner ) {
         String title = sample.getTitle();
-        if ( StringUtils.isBlank( title ) ) {
-            return; // the same sample may show up more than once with a blank title.
+        if ( StringUtils.isNotBlank( title ) ) {
+            accToTitle.put( sample.getGeoAccession(), title );
         }
-        accToTitle.put( sample.getGeoAccession(), title );
         accToDataset.put( sample.getGeoAccession(), owner.getGeoAccession() );
         accToSecondaryTitle.put( sample.getGeoAccession(), sample.getTitleInDataset() ); // could be null.
         String organism = getSampleOrganism( sample );
-
-        accToOrganism.put( sample.getGeoAccession(), organism );
+        if ( StringUtils.isNotBlank( organism ) ) {
+            accToOrganism.put( sample.getGeoAccession(), organism );
+        }
     }
 
     /**

@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -31,6 +32,7 @@ import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 
 /**
@@ -179,37 +181,37 @@ public class DatasetCombinerTest extends TestCase {
         assert keys.length == 24;
         gds = parseResult.getDatasets().values();
 
-        // Where did these come from?
+        // These are 'loner' samples that aren't part of this series.
         // "GSM4076","GSM4052","GSM4070","GSM4046","GSM4082", "GSM4088","GSM4058","GSM4064","GSM4048",
         // "GSM4078","GSM4072","GSM4054","GSM4090", "GSM4060","GSM4084","GSM4066", "GSM4086","GSM4062",
         // "GSM4056","GSM4080", "GSM4068","GSM4044","GSM4050","GSM4074",
 
         /**
          * <pre>
-         *                                       GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
-         *                                       GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
-         *                                       GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
-         *                                       GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
-         *                                       GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
-         *                                       GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
-         *                                       GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
-         *                                       GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
-         *                                       GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
-         *                                       GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
-         *                                       GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
-         *                                       GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
-         *                                       GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
-         *                                       GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
-         *                                       GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
-         *                                       GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
-         *                                       GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
-         *                                       GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
-         *                                       GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
-         *                                       GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
-         *                                       GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
-         *                                       GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
-         *                                       GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
-         *                                       GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
+         *                                            GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
+         *                                            GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
+         *                                            GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
+         *                                            GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
+         *                                            GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
+         *                                            GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
+         *                                            GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
+         *                                            GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
+         *                                            GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
+         *                                            GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
+         *                                            GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
+         *                                            GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
+         *                                            GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
+         *                                            GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
+         *                                            GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
+         *                                            GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
+         *                                            GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
+         *                                            GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
+         *                                            GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
+         *                                            GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
+         *                                            GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
+         *                                            GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
+         *                                            GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
+         *                                            GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
          * </pre>
          */
 
@@ -575,6 +577,45 @@ public class DatasetCombinerTest extends TestCase {
         assertTrue( result.getCorrespondingSamples( "GSM4362" ).contains( "GSM4363" ) );
         assertTrue( result.getCorrespondingSamples( "GSM4366" ).contains( "GSM4368" ) );
         assertEquals( 1, result.getCorrespondingSamples( "GSM4371" ).size() );
+    }
+
+    public void testFindGSE88() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE88Short/GDS184.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE88Short/GSE88_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        GeoDataset gd = parseResult.getDatasets().values().iterator().next();
+        GeoSeries gse = parseResult.getSeries().values().iterator().next();
+        gd.getSeries().add( gse );
+        gds = new HashSet<GeoDataset>();
+        gds.add( gd );
+        fillInDatasetPlatformAndOrganism();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 );
+            numBioMaterials++;
+        }
+        assertEquals( 31, numBioMaterials );
+
     }
 
 }

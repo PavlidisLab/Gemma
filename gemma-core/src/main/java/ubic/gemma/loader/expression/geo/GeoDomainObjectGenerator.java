@@ -85,7 +85,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     public void processDataSet( GeoSeries series, String dataSetAccession ) {
         log.info( "Processing " + dataSetAccession );
         GeoDataset gds = processDataSet( dataSetAccession );
+        assert gds != null;
         series.addDataSet( gds );
+        gds.getSeries().add( series );
     }
 
     /**
@@ -223,6 +225,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        assert correspondence != null;
         series.setSampleCorrespondence( correspondence );
         return series;
     }
