@@ -1,6 +1,22 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
+
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
@@ -33,9 +49,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * Command Line tools for loading the expression experiment in flat files
  * 
  * @author xiangwan
- */
-/**
- * @author xiangwan
+ * @version $Id$
  */
 public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
@@ -54,28 +68,17 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     final static int QDESCRIPTIONI = QNAMEI + 1;
     final static int QTYPEI = QDESCRIPTIONI + 1;
     final static int QSCALEI = QTYPEI + 1;
-    final static int TOTALFIELDS = QSCALEI + 1;
-    final static String ALLQTYPE[] = { StandardQuantitationType.PRESENTABSENT.toString(),
-            StandardQuantitationType.RATIO.toString(), StandardQuantitationType.FAILED.toString(),
-            StandardQuantitationType.DERIVEDSIGNAL.toString(), StandardQuantitationType.CONFIDENCEINDICATOR.toString(),
-            StandardQuantitationType.EXPECTEDVALUE.toString(), StandardQuantitationType.ERROR.toString(),
-            StandardQuantitationType.CORRELATION.toString(), StandardQuantitationType.ODDS.toString(),
-            StandardQuantitationType.ODDSRATIO.toString(), StandardQuantitationType.MEASUREDSIGNAL.toString(),
-            StandardQuantitationType.COORDINATE.toString(), StandardQuantitationType.TIME.toString(),
-            StandardQuantitationType.DURATION.toString(), StandardQuantitationType.OTHER.toString() };
-    final static String ALLSCALETYPE[] = { ScaleType.LINEAR.toString(), ScaleType.LN.toString(),
-            ScaleType.LOG2.toString(), ScaleType.LOG10.toString(), ScaleType.LOGBASEUNKNOWN.toString(),
-            ScaleType.FOLDCHANGE.toString(), ScaleType.OTHER.toString(), ScaleType.UNSCALED.toString(),
-            ScaleType.FRACTION.toString(), ScaleType.PERCENT.toString() };
+    final static int IMAGECLONEI = QSCALEI + 1;
+    final static int TOTALFIELDS = IMAGECLONEI + 1;
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
         Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "File Name" ).withDescription(
                 "the list of experiments in flat file" ).withLongOpt( "file" ).create( 'f' );
         addOption( fileOption );
@@ -129,113 +132,24 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         taxon.setCommonName( oneLoad[SPECIESI] );
         metaData.setTaxon( taxon );
 
-        //InputStream data = this.getClass().getResourceAsStream( this.dirName + oneLoad[DATAFILEI] );
-        InputStream data = new FileInputStream( new File(this.dirName,oneLoad[DATAFILEI] ));
-        if(data == null){
+        // InputStream data = this.getClass().getResourceAsStream( this.dirName + oneLoad[DATAFILEI] );
+        InputStream data = new FileInputStream( new File( this.dirName, oneLoad[DATAFILEI] ) );
+        if ( data == null ) {
             log.info( "Data File " + this.dirName + oneLoad[DATAFILEI] + " doesn't exist" );
             return false;
         }
-        	
+
         metaData.setQuantitationTypeName( oneLoad[QNAMEI] );
         metaData.setQuantitationTypeDescription( oneLoad[QDESCRIPTIONI] );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
-
-        for ( i = 0; i < ALLQTYPE.length; i++ )
-            if ( ALLQTYPE[i].equalsIgnoreCase( oneLoad[QTYPEI] ) ) break;
-        if ( i == ALLQTYPE.length ) {
-            log.info( "Quantitivate Type " + oneLoad[QTYPEI] + " is not defined" );
-            return false;
+        if ( oneLoad.length >= IMAGECLONEI - 1 ) {
+            metaData.setProbeIdsAreImageClones( Boolean.parseBoolean( oneLoad[IMAGECLONEI] ) );
         }
-        StandardQuantitationType sQType = StandardQuantitationType.OTHER;
-        switch ( i ) {
-            case 0:
-                sQType = StandardQuantitationType.PRESENTABSENT;
-                break;
-            case 1:
-                sQType = StandardQuantitationType.RATIO;
-                break;
-            case 2:
-                sQType = StandardQuantitationType.FAILED;
-                break;
-            case 3:
-                sQType = StandardQuantitationType.DERIVEDSIGNAL;
-                break;
-            case 4:
-                sQType = StandardQuantitationType.CONFIDENCEINDICATOR;
-                break;
-            case 5:
-                sQType = StandardQuantitationType.EXPECTEDVALUE;
-                break;
-            case 6:
-                sQType = StandardQuantitationType.ERROR;
-                break;
-            case 7:
-                sQType = StandardQuantitationType.CORRELATION;
-                break;
-            case 8:
-                sQType = StandardQuantitationType.ODDS;
-                break;
-            case 9:
-                sQType = StandardQuantitationType.ODDSRATIO;
-                break;
-            case 10:
-                sQType = StandardQuantitationType.MEASUREDSIGNAL;
-                break;
-            case 11:
-                sQType = StandardQuantitationType.COORDINATE;
-                break;
-            case 12:
-                sQType = StandardQuantitationType.TIME;
-                break;
-            case 13:
-                sQType = StandardQuantitationType.DURATION;
-                break;
-            case 14:
-                sQType = StandardQuantitationType.OTHER;
-                break;
 
-        }
+        StandardQuantitationType sQType = StandardQuantitationType.fromString( oneLoad[QTYPEI] );
         metaData.setType( sQType );
 
-        ScaleType sType = ScaleType.OTHER;
-        for ( i = 0; i < ALLSCALETYPE.length; i++ )
-            if ( ALLSCALETYPE[i].equalsIgnoreCase( oneLoad[QSCALEI] ) ) break;
-        if ( i == ALLSCALETYPE.length ) {
-            log.info( "Quantitivate Scale Type " + oneLoad[QSCALEI] + " is not defined" );
-            return false;
-        }
-        switch ( i ) {
-            case 0:
-                sType = ScaleType.LINEAR;
-                break;
-            case 1:
-                sType = ScaleType.LN;
-                break;
-            case 2:
-                sType = ScaleType.LOG2;
-                break;
-            case 3:
-                sType = ScaleType.LOG10;
-                break;
-            case 4:
-                sType = ScaleType.LOGBASEUNKNOWN;
-                break;
-            case 5:
-                sType = ScaleType.FOLDCHANGE;
-                break;
-            case 6:
-                sType = ScaleType.OTHER;
-                break;
-            case 7:
-                sType = ScaleType.UNSCALED;
-                break;
-            case 8:
-                sType = ScaleType.FRACTION;
-                break;
-            case 9:
-                sType = ScaleType.PERCENT;
-                break;
-        }
+        ScaleType sType = ScaleType.fromString( oneLoad[QSCALEI] );
         metaData.setScale( sType );
 
         ExpressionExperiment ee = eeLoaderService.load( metaData, data );
@@ -289,8 +203,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
                 }
             }
         } catch ( IOException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            return e;
         }
         return null;
     }
@@ -299,7 +212,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        // TODO Auto-generated method stub
         LoadSimpleExpressionDataCli p = new LoadSimpleExpressionDataCli();
         StopWatch watch = new StopWatch();
         watch.start();

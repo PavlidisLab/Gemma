@@ -29,6 +29,8 @@ import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
@@ -114,6 +116,46 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertEquals( 200, ee.getDesignElementDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
         // setComplete();
+    }
+
+    public final void testLoadImageCloneDesign() throws Exception {
+        SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
+                .getBean( "simpleExpressionDataLoaderService" );
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
+
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( "human" );
+        metaData.setTaxon( taxon );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setQuantitationTypeName( "testing" );
+        metaData.setGeneralType( GeneralType.QUANTITATIVE );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.RATIO );
+        metaData.setProbeIdsAreImageClones( true );
+
+        InputStream data = this.getClass().getResourceAsStream( "/data/loader/expression/luo-prostate.sample.txt" );
+
+        ExpressionExperiment ee = service.load( metaData, data );
+
+        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        eeService.thaw( ee );
+
+        assertNotNull( ee );
+
+        for ( DesignElementDataVector vector : ee.getDesignElementDataVectors() ) {
+            assertTrue( ( ( CompositeSequence ) vector.getDesignElement() ).getBiologicalCharacteristic().getName()
+                    .startsWith( "IMAGE:" ) );
+        }
+
+        assertEquals( 173, ee.getDesignElementDataVectors().size() );
+        assertEquals( 25, ee.getBioAssays().size() );
     }
 
 }

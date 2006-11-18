@@ -50,6 +50,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -238,7 +239,7 @@ public class SimpleExpressionDataLoaderService {
         }
 
         if ( newDesign != null ) {
-            newArrayDesign( matrix, newDesign );
+            newArrayDesign( matrix, newDesign, metaData.isProbeIdsAreImageClones(), metaData.getTaxon() );
             existingDesigns.add( newDesign );
         }
 
@@ -248,17 +249,45 @@ public class SimpleExpressionDataLoaderService {
 
     }
 
-    private void newArrayDesign( DoubleMatrixNamed matrix, ArrayDesign newDesign ) {
+    /**
+     * @param matrix
+     * @param newDesign
+     */
+    private void newArrayDesign( DoubleMatrixNamed matrix, ArrayDesign newDesign, boolean probeNamesAreImageClones,
+            Taxon taxon ) {
         log.info( "Creating new ArrayDesign " + newDesign );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( matrix.getRowName( i ).toString() );
             cs.setArrayDesign( newDesign );
+
+            if ( probeNamesAreImageClones ) {
+                provideImageClone( cs, taxon );
+            }
+
             newDesign.getCompositeSequences().add( cs );
         }
-
         log.info( "New array design has " + newDesign.getCompositeSequences().size() + " compositeSequences" );
+    }
+
+    /**
+     * @param cs
+     * @param taxon
+     */
+    private void provideImageClone( CompositeSequence cs, Taxon taxon ) {
+        BioSequence bs = BioSequence.Factory.newInstance();
+        bs.setTaxon( taxon );
+        String imageId = cs.getName();
+        if ( imageId == null )
+            throw new IllegalArgumentException( "ComposisteSequence must have name filled in first" );
+        imageId = imageId.replaceFirst( "__\\d$", "" );
+        if ( !imageId.startsWith( "IMAGE:" ) ) {
+            imageId = "IMAGE:" + imageId;
+        }
+        assert imageId.matches( "^IMAGE:\\d+$" );
+        bs.setName( imageId );
+        cs.setBiologicalCharacteristic( bs );
     }
 
     /**

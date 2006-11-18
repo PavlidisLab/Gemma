@@ -58,6 +58,8 @@ public class SimpleExpressionExperimentMetaData {
 
     private DatabaseEntry externalReference;
 
+    private boolean probeIdsAreImageClones;
+
     /**
      * Publication reference.
      */
@@ -221,6 +223,14 @@ public class SimpleExpressionExperimentMetaData {
      */
     public void setUser( Contact user ) {
         this.user = user;
+    }
+
+    public boolean isProbeIdsAreImageClones() {
+        return probeIdsAreImageClones;
+    }
+
+    public void setProbeIdsAreImageClones( boolean probeIdsAreImageClones ) {
+        this.probeIdsAreImageClones = probeIdsAreImageClones;
     }
 
 }

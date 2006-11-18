@@ -3,14 +3,14 @@
 	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
 
 <html>
-<head>
-	
-<script type='text/javascript'
-		<script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'> </script>
-		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-		<script type='text/javascript' src='/Gemma/scripts/progressbar.js'></script>
-		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+	<head>
+
+		<script type='text/javascript'
+			<script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'> </script>
+			<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+			<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+			<script type='text/javascript' src='/Gemma/scripts/progressbar.js'></script>
+			<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 <h1>
 	Load an expression data set from a flat file
@@ -21,7 +21,7 @@
 	on the data.
 </p>
 <body>
-<form method="post"
+<form method="post" name="arrayDesign"
 	action="<c:url value="/loadSimpleExpressionExperiment.html"/>"
 	enctype="multipart/form-data" onsubmit="startProgress()">
 
@@ -95,7 +95,18 @@
 						value="<c:out value="${status.value}"/>" />
 					<span class="fieldError">${status.errorMessage}</span>
 				</spring:bind>
+			</td> 
+			
+			<td>
+				<Gemma:label styleClass="desc" key="arrayDesign.imageClones" />
+						<spring:bind path="simpleExpressionExperimentLoadCommand.probeIdsAreImageClones">
+							<input type="hidden" name="_<c:out value="${status.expression}"/>">
+							<input align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+								<c:if test="${status.value}">checked</c:if> />
+							<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+						</spring:bind>
 			</td>
+			
 
 		</tr>
 		<tr>
