@@ -94,22 +94,29 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
 
         // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
-//        NcbiGeneLoader loader = new NcbiGeneLoader();
-//        loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
-//        String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
-//        assert filePath != null;
-//        filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
-//        String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
-//        String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
-//        loader.load( geneInfoFile, gene2AccFile, true );
-//
-//        // needed to fill in the sequence information for blat scoring.
-//        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
-//        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-//        app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
-//
-//        // fill in the blat results. Note that each time you run this test you get the results loaded again (so they
-//        // pile up)
+        NcbiGeneLoader loader = new NcbiGeneLoader();
+		loader.setPersisterHelper((PersisterHelper) this
+				.getBean("persisterHelper"));
+		String filePath = ConfigUtils.getString("gemma.home")
+				+ File.separatorChar;
+		assert filePath != null;
+		filePath = filePath
+				+ "gemma-core/src/test/resources/data/loader/genome/gene";
+		String geneInfoFile = filePath + File.separatorChar
+				+ "selected_gene_info.gz";
+		String gene2AccFile = filePath + File.separatorChar
+				+ "selected_gene2accession.gz";
+		loader.load(geneInfoFile, gene2AccFile, true);
+
+		// needed to fill in the sequence information for blat scoring.
+		InputStream sequenceFile = this.getClass().getResourceAsStream(
+				"/data/loader/genome/gpl140.sequences.fasta");
+		ArrayDesignSequenceProcessingService app = (ArrayDesignSequenceProcessingService) getBean("arrayDesignSequenceProcessingService");
+		app.processArrayDesign(ad, sequenceFile, SequenceType.EST);
+
+		// fill in the blat results. Note that each time you run this test you
+		// get the results loaded again (so they
+		// pile up)
         ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
         InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
