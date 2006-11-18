@@ -19,6 +19,8 @@
                 <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma.lock</prop>
                 <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
                 <prop key="compass.transaction.lockTimeout">20</prop>
+                <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
+                <prop key="compass.engine.analyzer.default.name">English</prop>
             </props>
         </property>
         <property name="transactionManager">

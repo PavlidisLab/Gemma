@@ -27,6 +27,11 @@
       <meta-data>description</meta-data>
       <meta-data>expression experiment description</meta-data>
     </property>
+    
+    <property name="shortName">
+      <meta-data>shortName</meta-data>
+      <meta-data>expression experiment short name</meta-data>
+    </property>
       
     <component name="bioAssays" ref-alias="bioAssay" />
     
