@@ -86,7 +86,6 @@
 			<a href="<c:url value="/searcher.html"/>"> <fmt:message key="menu.compassSearcher" /> </a>
 		</li>
 		<li>
-		<li>
 			<a href="<c:url value="/indexer.html"/>"> <fmt:message key="menu.compassIndexer" /> </a>
 		</li>
 		<li>
