@@ -56,21 +56,6 @@
             <tr>
                 <td valign="top">
                     <b>
-                        <fmt:message key="bioSequence.isCircular" />
-                    </b>
-                </td>
-                <td>
-                	<%if ( (bioSequence.getIsCircular() != null) && (bioSequence.getIsCircular()) ){
-                    	out.print("Yes");
-                    }else{
-                    	out.print("No");
-                    }%>
-                </td>
-            </tr>
-            
-            <tr>
-                <td valign="top">
-                    <b>
                         <fmt:message key="bioSequence.length" />
                     </b>
                 </td>
