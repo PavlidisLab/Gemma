@@ -46,11 +46,6 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     Blat blat = new Blat();
 
     @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-    }
-
-    @Override
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
         // TODO: delete blat results that were loaded.
