@@ -81,12 +81,16 @@
 				<td>
 					<%
 					if ( (expressionExperiment.getInvestigators()) != null && (expressionExperiment.getInvestigators().size() > 0) ) {
+						
 					%>
-					<c:forEach var="investigator" items="${ expressionExperiment.investigators }" >
+					<c:forEach end="0" var="investigator" items="${ expressionExperiment.investigators }" >
 						<c:out value="${ investigator.name}" />
 						<br />
 					</c:forEach>	
 					<%
+						if (expressionExperiment.getInvestigators().size() > 1) {
+						    out.print(" et al. ");
+						}
 					} else {
 						out.print( "No investigators known" );
 					}
@@ -119,12 +123,10 @@
 				<td>
 					<%
 					if ( expressionExperiment.getPrimaryPublication() != null ) {
-					%>
-					<jsp:getProperty name="expressionExperiment" property="primaryPublication" />
-					<%
-					                } else {
-					                out.print( "Primary publication unavailable" );
-					            }
+						out.print(expressionExperiment.getPrimaryPublication().getCitation());
+	                } else {
+		                out.print( "Primary publication unavailable" );
+		            }
 					%>
 				</td>
 			</tr>
