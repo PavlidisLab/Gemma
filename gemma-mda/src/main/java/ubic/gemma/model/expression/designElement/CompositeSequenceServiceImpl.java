@@ -22,8 +22,11 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Vector;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -163,6 +166,38 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected void handleUpdate( CompositeSequence compositeSequence ) throws Exception {
         this.getCompositeSequenceDao().update( compositeSequence );
+    }
+
+    /*
+     * Internally stores the collection of composite sequences as a
+     * {@link LinkedHashSet), preserving order based on insertion.  
+     * 
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetMatchingCompositeSequences(java.lang.String[],
+     *      java.util.Collection)
+     */
+    @Override
+    protected Collection handleGetMatchingCompositeSequences( String[] compositeSequenceNames, Collection arrayDesigns )
+            throws Exception {
+        LinkedHashSet<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
+
+        Iterator iter = arrayDesigns.iterator();
+
+        while ( iter.hasNext() ) {
+            ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
+
+            for ( String officialSymbol : compositeSequenceNames ) {
+                officialSymbol = StringUtils.trim( officialSymbol );
+                log.debug( "user entered: " + officialSymbol );
+                CompositeSequence cs = this.findByName( arrayDesign, officialSymbol );
+                if ( cs != null ) {
+                    compositeSequences.add( cs );
+                }
+            }
+        }
+
+        return compositeSequences;
     }
 
 }
