@@ -78,6 +78,11 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
         assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
     }
 
+    /**
+     * Tests the "view a sample of the data" functionality.
+     * 
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     public void testOnSubmitViewSampling() throws Exception {
         endTransaction();
@@ -95,5 +100,4 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
         assertEquals( "showExpressionExperimentVisualization", mav.getViewName() );
 
     }
-
 }
