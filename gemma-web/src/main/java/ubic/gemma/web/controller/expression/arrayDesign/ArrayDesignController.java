@@ -146,7 +146,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        Collection arrayDesigns = arrayDesignService.loadAll();
+        Collection arrayDesigns = arrayDesignService.loadAllValueObjects();
         Long numArrayDesigns = new Long(arrayDesigns.size());
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", arrayDesigns );

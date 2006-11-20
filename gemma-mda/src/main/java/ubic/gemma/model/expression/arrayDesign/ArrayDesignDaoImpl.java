@@ -452,14 +452,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // get the expression experiment counts
         Map eeCounts = this.getExpressionExperimentCountMap();
+        // get the composite sequence counts
+        //Map csCounts = this.getCompositeSequenceCountMap();
         Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
+        // removed join from taxon as it is slowing down the system
         final String queryString = "select ad.id as id, " +
                 " ad.name as name, " +
-                " ad.shortName as shortName, " +
-                " taxon.commonName as taxonName, " +
-                " count(distinct cs) as designElementCount " +
+                " ad.shortName as shortName " +
                 " " +
-                " from ArrayDesignImpl ad inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bioC inner join bioC.taxon as taxon " +
+                " " +
+                " from ArrayDesignImpl as ad " +
                 " " + 
                 " group by ad order by ad.name";
 
@@ -471,10 +473,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setId( list.getLong( 0 ) );
                 v.setName( list.getString( 1 ) );
                 v.setShortName( list.getString( 2 ) );
-                v.setTaxon( list.getString( 3 ) );
-                v.setDesignElementCount( new Long(list.getInteger( 4 )) );
+                //v.setTaxon( list.getString( 3 ) );
                 
                 
+                
+                //v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
                 v.setExpressionExperimentCount( (Long) eeCounts.get( v.getId() ) );
 
                 vo.add( v );
@@ -505,6 +508,28 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw super.convertHibernateAccessException( ex );
         }
         return eeCount;
+    }
+    
+    /**
+     * queries the database and gets the number of composite sequences per ArrayDesign
+     * @return Map
+     */
+    private Map getCompositeSequenceCountMap() {
+        final String queryString = "select ad.id, count(distinct cs) from ArrayDesignImpl ad inner join ad.compositeSequences as cs group by ad";    
+        
+        Map<Long,Long> csCount =  new HashMap<Long,Long>();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( list.next() ) {
+                Long id = list.getLong( 0 );
+                Long count = new Long(list.getInteger( 1 ));
+                csCount.put( id, count );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return csCount;
     }
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
