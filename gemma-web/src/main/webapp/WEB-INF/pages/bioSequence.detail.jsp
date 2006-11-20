@@ -60,7 +60,7 @@
                     </b>
                 </td>
                 <td>
-                	<%if (bioSequence.getIsCircular()){
+                	<%if ( (bioSequence.getIsCircular() != null) && (bioSequence.getIsCircular()) ){
                     	out.print("Yes");
                     }else{
                     	out.print("No");
