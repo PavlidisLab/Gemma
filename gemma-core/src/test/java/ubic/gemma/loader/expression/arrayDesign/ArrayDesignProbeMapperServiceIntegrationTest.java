@@ -24,6 +24,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.genome.Taxon;
@@ -38,8 +41,14 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
+    private Log log = LogFactory.getLog( this.getClass() );
 
     Blat blat = new Blat();
+
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+    }
 
     @Override
     protected void onTearDownInTransaction() throws Exception {
@@ -95,28 +104,22 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
 
         // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
         NcbiGeneLoader loader = new NcbiGeneLoader();
-		loader.setPersisterHelper((PersisterHelper) this
-				.getBean("persisterHelper"));
-		String filePath = ConfigUtils.getString("gemma.home")
-				+ File.separatorChar;
-		assert filePath != null;
-		filePath = filePath
-				+ "gemma-core/src/test/resources/data/loader/genome/gene";
-		String geneInfoFile = filePath + File.separatorChar
-				+ "selected_gene_info.gz";
-		String gene2AccFile = filePath + File.separatorChar
-				+ "selected_gene2accession.gz";
-		loader.load(geneInfoFile, gene2AccFile, true);
+        loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+        String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
+        assert filePath != null;
+        filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
+        String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
+        String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
+        loader.load( geneInfoFile, gene2AccFile, true );
 
-		// needed to fill in the sequence information for blat scoring.
-		InputStream sequenceFile = this.getClass().getResourceAsStream(
-				"/data/loader/genome/gpl140.sequences.fasta");
-		ArrayDesignSequenceProcessingService app = (ArrayDesignSequenceProcessingService) getBean("arrayDesignSequenceProcessingService");
-		app.processArrayDesign(ad, sequenceFile, SequenceType.EST);
+        // needed to fill in the sequence information for blat scoring.
+        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
 
-		// fill in the blat results. Note that each time you run this test you
-		// get the results loaded again (so they
-		// pile up)
+        // fill in the blat results. Note that each time you run this test you
+        // get the results loaded again (so they
+        // pile up)
         ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
         InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
