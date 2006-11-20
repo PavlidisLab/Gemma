@@ -155,6 +155,28 @@ public class GeoConverterTest extends TestCase {
         fail( "No sequences!" );
     }
 
+    /**
+     * Platform has IMAGE:CCCCC in CLONE_ID column, no genbank accessions anywhere.
+     * 
+     * @throws Exception
+     */
+    public final void testWithImageNoGenbank() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GPL222_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.setProcessPlatformsOnly( true );
+        parser.parse( is );
+        GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
+                "GPL222" );
+        Object result = this.gc.convert( platform );
+        ArrayDesign ad = ( ArrayDesign ) result;
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            assertTrue( bs.getName().startsWith( "IMAGE" ) );
+        }
+
+    }
+
     public void testConvertWithNulls() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gds181Short/GSE96_family.soft.gz" ) );

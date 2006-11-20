@@ -789,18 +789,22 @@ public class GeoConverter implements Converter {
         String sequenceColumn = determinePlatformSequenceColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
-        assert externalDb != null;
-
         List<String> identifiers = platform.getColumnData( identifier );
-        List<List<String>> externalRefs = platform.getColumnData( externalReferences );
         List<String> descriptions = platform.getColumnData( descriptionColumn );
         List<String> sequences = platform.getColumnData( sequenceColumn );
         List<String> cloneIdentifiers = platform.getColumnData( "CLONE_ID" );
 
+        List<List<String>> externalRefs = null;
+        if ( externalReferences != null ) {
+            externalRefs = platform.getColumnData( externalReferences );
+        }
+
         assert identifier != null;
-        assert externalRefs != null : "No externalRefs found";
-        assert externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
-                + externalRefs.iterator().next().size() + " != " + identifiers.size();
+
+        if ( externalRefs != null ) {
+            assert externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
+                    + externalRefs.iterator().next().size() + " != " + identifiers.size();
+        }
         assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
 
         if ( log.isDebugEnabled() ) {
@@ -818,7 +822,10 @@ public class GeoConverter implements Converter {
         Collection compositeSequences = new ArrayList( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
-            String externalAccession = getExternalAccession( externalRefs, i );
+            String externalAccession = null;
+            if ( externalRefs != null ) {
+                externalAccession = getExternalAccession( externalRefs, i );
+            }
 
             String cloneIdentifier = cloneIdentifiers == null ? null : cloneIdentifiers.get( i );
 
@@ -856,11 +863,12 @@ public class GeoConverter implements Converter {
                 bs.setType( SequenceType.DNA );
                 bs.setName( id + "_sequence" );
                 bs.setDescription( "Sequence provided by manufacturer, used in leiu of " + externalAccession );
-            } else if ( externalAccession != null && !isImage ) {
+            } else if ( externalAccession != null && !isImage && externalDb != null ) {
                 /*
                  * We don't use this if we have an IMAGE clone because the accession might be wrong (e.g., for a
                  * Refseq). During persisting the IMAGE clone will be replaced with the 'real' thing.
                  */
+
                 DatabaseEntry dbe = createDatabaseEntry( externalDb, externalAccession, bs );
                 bs.setSequenceDatabaseEntry( dbe );
             }
@@ -1862,7 +1870,7 @@ public class GeoConverter implements Converter {
 
         String url = null;
         if ( dbIdentifierDescription == null ) {
-            throw new IllegalStateException( "Could not identify database identifier column in " + platform );
+            return null;
         } else if ( dbIdentifierDescription.indexOf( "LINK_PRE:" ) >= 0 ) {
             // example: #ORF = ORF reference LINK_PRE:"http://genome-www4.stanford.edu/cgi-bin/SGD/locus.pl?locus="
             url = dbIdentifierDescription.substring( dbIdentifierDescription.indexOf( "LINK_PRE:" ) );
