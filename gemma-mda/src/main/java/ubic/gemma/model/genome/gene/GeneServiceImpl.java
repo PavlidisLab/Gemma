@@ -21,7 +21,15 @@ package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -32,6 +40,7 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.genome.gene.GeneService
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
+    private Log log = LogFactory.getLog( GeneServiceImpl.class );
 
     /*
      * (non-Javadoc)
@@ -65,6 +74,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      */
     @Override
     protected Collection handleGetCompositeSequencesById( long id ) throws Exception {
+        // TODO change name to getCompositeSequenceByGene(Gene gene)
         return this.getGeneDao().getCompositeSequencesById( id );
     }
 
@@ -243,6 +253,59 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     @Override
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
         return this.getGeneDao().getGenesByTaxon( taxon );
+    }
+
+    /*
+     * (non-Javadoc) Returns a map of composite sequence collections, keyed by the gene (insert order of Map is
+     * preserved).
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesForGenes(java.lang.String[])
+     */
+    @Override
+    protected Map handleGetCompositeSequencesForGenes( String[] officialSymbols ) throws Exception {
+
+        Map<String, Collection<Gene>> genesMap = this.getMatchingGenes( officialSymbols );
+
+        LinkedHashSet<String> geneOfficialSymbolKeyset = new LinkedHashSet<String>();
+
+        LinkedHashMap<Gene, Collection<CompositeSequence>> compositeSequencesForGeneMap = new LinkedHashMap<Gene, Collection<CompositeSequence>>();
+
+        for ( String officialSymbol : geneOfficialSymbolKeyset ) {
+            log.debug( "official symbol: " + officialSymbol );
+            Collection<Gene> genes = genesMap.get( officialSymbol );
+            for ( Gene g : genes ) {
+                Collection<CompositeSequence> compositeSequences = this.getCompositeSequencesById( g.getId() );
+                compositeSequencesForGeneMap.put( g, compositeSequences );
+            }
+        }
+        return compositeSequencesForGeneMap;
+    }
+
+    /*
+     * (non-Javadoc) If gene with searchId[i] does not exist, it is discarded. Internal storage of the map is ordered
+     * (insert order).
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMatchingGenes(java.lang.String[])
+     */
+    @Override
+    protected Map handleGetMatchingGenes( String[] officialSymbols ) throws Exception {
+
+        LinkedHashMap<String, Collection<Gene>> geneMap = new LinkedHashMap<String, Collection<Gene>>();
+        /* for each gene, get the matching composite sequence. if it exists, remove. */
+        for ( String officialSymbol : officialSymbols ) {
+            officialSymbol = StringUtils.trim( officialSymbol );
+            log.debug( "entered: " + officialSymbol );
+            Collection<Gene> genes = this.findByOfficialSymbol( officialSymbol );// TODO restrict by qt.
+            if ( genes == null || genes.isEmpty() ) {
+                log
+                        .warn( "Discarding genes with official symbol " + officialSymbol
+                                + " do not exist.  Discarding ... " );
+                continue;
+            }
+            geneMap.put( officialSymbol, genes );
+        }
+
+        return geneMap;
     }
 
 }
