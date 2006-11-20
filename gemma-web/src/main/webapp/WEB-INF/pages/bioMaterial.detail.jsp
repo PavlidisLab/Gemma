@@ -37,6 +37,36 @@
                     }%>
                 </td>
             </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="taxon.title" />
+                    </b>
+                </td>
+                <td>
+                	<%if (bioMaterial.getSourceTaxon() != null){
+                    	out.print(bioMaterial.getSourceTaxon().getScientificName());
+                    }else{
+                    	out.print("Taxon unavailable");
+                    }%>
+                </td>
+            </tr>
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="databaseEntry.title" />
+                    </b>
+                </td>
+                <td>
+                	<%if (bioMaterial.getExternalAccession() != null){
+                    	out.print(bioMaterial.getExternalAccession().getAccession() + "." + bioMaterial.getExternalAccession().getAccessionVersion());
+                    }else{
+                    	out.print("No accession");
+                    }%>
+                </td>
+            </tr>
                  
          </table>  
         <h3>
@@ -44,7 +74,6 @@
         </h3>
         <display:table name="bioMaterial.treatments" class="list" requestURI="" id="treatmentList"
          pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
-       	    <display:column property="id" sortable="true" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
             <display:column property="name" maxWords="20" />
             <display:column property="description" maxWords="100" />
             <display:column property="orderApplied" maxWords="100" />
@@ -55,30 +84,12 @@
         </h3>
         <display:table name="bioMaterial.characteristics" class="list" requestURI="" id="characteristicList"
         pagesize="10" >
-            <display:column property="id" maxWords="20" sortable="true" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
             <display:column property="category" maxWords="100" />
             <display:column property="value" maxWords="100" />
         </display:table>
-		
-		<h3>
-            <fmt:message key="taxon.title" />
-        </h3>
-        <Gemma:taxon
-            taxon="<%=bioMaterial.getSourceTaxon()%>" />
-        <br />
-        		
-		<h3>
-            <fmt:message key="databaseEntry.title" />
-        </h3>
-        <Gemma:databaseEntry
-            databaseEntry="<%=bioMaterial.getExternalAccession()%>" />
+	    		
         <br/>
         
-        <h3>
-            <fmt:message key="auditTrail.title" />
-        </h3>
-        <Gemma:auditTrail
-            auditTrail="<%=bioMaterial.getAuditTrail()%>" />
         <br />
 
         <hr />
