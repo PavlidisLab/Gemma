@@ -63,7 +63,7 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( this.hasOption( 'a' ) ) {
+        if ( this.hasOption( 'e' ) ) {
             this.experimentShortName = this.getOptionValue( 'e' );
         }
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
