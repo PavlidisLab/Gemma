@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.visualization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +47,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 
@@ -68,7 +69,8 @@ import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
  * @spring.property name = "successView" value="showExpressionExperimentVisualization"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService" *
+ * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
@@ -81,6 +83,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private DesignElementDataVectorService designElementDataVectorService;
+    private GeneService geneService = null;
     private final int MAX_ELEMENTS_TO_VISUALIZE = 50;
 
     public ExpressionExperimentVisualizationFormController() {
@@ -251,21 +254,30 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
             ExpressionExperimentVisualizationCommand eesc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
+
         Collection<DesignElementDataVector> vectors = null;
 
         String[] searchIds = new String[MAX_ELEMENTS_TO_VISUALIZE];
+
+        Collection<CompositeSequence> compositeSequences = null;
+
         boolean viewSampling = ( ( ExpressionExperimentVisualizationCommand ) command ).isViewSampling();
-        if ( viewSampling ) {/* check size if 'viewSampling' is set. */
+
+        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expressionExperiment );
+
+        String searchString = eesc.getSearchString();
+
+        searchIds = StringUtils.split( searchString, "," );
+
+        /* check size if 'viewSampling' is set. */
+        if ( viewSampling ) {
             vectors = expressionExperimentService.getSamplingOfVectors( expressionExperiment, quantitationType,
                     MAX_ELEMENTS_TO_VISUALIZE );
-            /* handle search by design element */
-        } else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
+        }
 
-            String searchString = eesc.getSearchString();
-            searchIds = StringUtils.split( searchString, "," );
+        /* handle search by design element */
+        else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
 
-            Collection<ArrayDesign> arrayDesigns = expressionExperimentService
-                    .getArrayDesignsUsed( expressionExperiment );
             if ( arrayDesigns.size() == 0 ) {
                 String message = "No array designs found for " + expressionExperiment;
                 log.error( message );
@@ -273,7 +285,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 return null;
             }
 
-            Collection<CompositeSequence> compositeSequences = getMatchingDesignElements( searchIds, arrayDesigns );
+            compositeSequences = compositeSequenceService.getMatchingCompositeSequences( searchIds, arrayDesigns );
 
             if ( compositeSequences.size() == 0 ) {
                 String message = "No probes could be found matching the query.";
@@ -285,42 +297,42 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             vectors = expressionExperimentService.getDesignElementDataVectors( expressionExperiment,
                     compositeSequences, quantitationType );
 
-        } else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
-            /* handle search by gene */
+        }
 
-            String searchString = eesc.getSearchString();
-            searchIds = StringUtils.split( searchString, "," );
+        /* handle search by gene */
+        else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
 
-            // TODO add search by gene symbol; use regular gene search.
+            // TODO comment me out to add this gene search functionality.
             errors.addError( new ObjectError( command.toString(), null, null,
                     "Search by gene symbol unsupported at this time." ) );
+            if ( errors.getErrorCount() > 0 ) return null;
+            // end
+
+            if ( arrayDesigns.size() == 0 ) {
+                String message = "No array designs found for " + expressionExperiment;
+                log.error( message );
+                errors.addError( new ObjectError( command.toString(), null, null, message ) );
+                return null;
+            }
+
+            Map<Gene, Collection<CompositeSequence>> compositeSequencesForGene = geneService
+                    .getCompositeSequencesForGenes( searchIds );
+            Collection<Gene> geneKeySet = compositeSequencesForGene.keySet();
+
+            for ( Gene g : geneKeySet ) {
+                Collection<CompositeSequence> csCol = compositeSequencesForGene.get( g );
+                log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + csCol.size()
+                        + " composite sequences associated with it." );
+            }
+
+            vectors = expressionExperimentService.getDesignElementDataVectors( expressionExperiment,
+                    compositeSequences, quantitationType );
 
         }
         if ( vectors == null || vectors.size() == 0 ) {
             errors.addError( new ObjectError( command.toString(), null, null, "No data could be found." ) );
         }
         return vectors;
-    }
-
-    /**
-     * @param searchIds
-     * @param arrayDesigns
-     * @return LinkedHashSet<CompositeSequences>
-     */
-    private LinkedHashSet<CompositeSequence> getMatchingDesignElements( String[] searchIds,
-            Collection<ArrayDesign> arrayDesigns ) {
-        LinkedHashSet<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
-        for ( ArrayDesign design : arrayDesigns ) {
-            for ( String searchId : searchIds ) {
-                searchId = StringUtils.trim( searchId );
-                log.debug( "user entered: " + searchId );
-                CompositeSequence cs = compositeSequenceService.findByName( design, searchId );
-                if ( cs != null ) {
-                    compositeSequences.add( cs );
-                }
-            }
-        }
-        return compositeSequences;
     }
 
     /**
@@ -382,5 +394,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 }
