@@ -194,6 +194,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                     if ( !colLabels.contains( bm.getName() ) ) {
                         log.debug( "adding label " + bm.getName() );
                         colLabels.add( bm.getName() );
+                        break;
                     }
                 }
 
