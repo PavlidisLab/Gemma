@@ -281,7 +281,7 @@ public class SimpleExpressionDataLoaderService {
         String imageId = cs.getName();
         if ( imageId == null )
             throw new IllegalArgumentException( "ComposisteSequence must have name filled in first" );
-        imageId = imageId.replaceFirst( "__\\d$", "" );
+        imageId = imageId.replaceFirst( "___\\d$", "" );
         if ( !imageId.startsWith( "IMAGE:" ) ) {
             imageId = "IMAGE:" + imageId;
         }
