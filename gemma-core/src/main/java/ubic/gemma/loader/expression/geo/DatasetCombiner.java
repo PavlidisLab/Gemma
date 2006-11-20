@@ -274,11 +274,11 @@ public class DatasetCombiner {
 
         result.setAccToTitleMap( accToTitle );
         result.setAccToDatasetMap( accToDataset );
-//        // allocate matrix.
-//        double[][] matrix = new double[accToTitle.keySet().size()][accToTitle.keySet().size()];
-//        for ( int i = 0; i < matrix.length; i++ ) {
-//            Arrays.fill( matrix[i], -1.0 );
-//        }
+        // // allocate matrix.
+        // double[][] matrix = new double[accToTitle.keySet().size()][accToTitle.keySet().size()];
+        // for ( int i = 0; i < matrix.length; i++ ) {
+        // Arrays.fill( matrix[i], -1.0 );
+        // }
 
         final List<String> sampleAccs = new ArrayList<String>( accToDataset.keySet() );
         assert sampleAccs.size() > 0;
@@ -338,7 +338,10 @@ public class DatasetCombiner {
                     continue;
                 }
                 String targetTitle = accToTitle.get( targetAcc ).toLowerCase();
-                String targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
+                String targetSecondaryTitle = null;
+                if ( accToSecondaryTitle.get( targetAcc ) != null ) {
+                    targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
+                }
 
                 log.debug( "Target: " + targetAcc + " (" + datasetA + ") " + targetTitle
                         + ( targetSecondaryTitle == null ? "" : " a.k.a " + targetSecondaryTitle ) );
@@ -396,8 +399,12 @@ public class DatasetCombiner {
                         if ( !accToTitle.containsKey( testAcc ) ) {
                             continue;
                         }
+
                         String testTitle = accToTitle.get( testAcc ).toLowerCase();
-                        String testSecondaryTitle = accToSecondaryTitle.get( testAcc ).toLowerCase();
+                        String testSecondaryTitle = null;
+                        if ( accToSecondaryTitle.get( testAcc ) != null ) {
+                            testSecondaryTitle = accToSecondaryTitle.get( testAcc ).toLowerCase();
+                        }
 
                         if ( StringUtils.isBlank( testTitle ) )
                             throw new IllegalArgumentException( "Can't have blank titles for samples" );
@@ -453,7 +460,10 @@ public class DatasetCombiner {
                         double normalizedDistance = ( double ) distance
                                 / Math.max( trimmedTarget.length(), trimmedTest.length() );
 
-                        double secondaryDistance = computeDistance( targetSecondaryTitle, testSecondaryTitle );
+                        double secondaryDistance = Double.MAX_VALUE;
+                        if ( targetSecondaryTitle != null && testSecondaryTitle != null ) {
+                            secondaryDistance = computeDistance( targetSecondaryTitle, testSecondaryTitle );
+                        }
 
                         if ( secondaryDistance < distance ) {
                             distance = secondaryDistance;
