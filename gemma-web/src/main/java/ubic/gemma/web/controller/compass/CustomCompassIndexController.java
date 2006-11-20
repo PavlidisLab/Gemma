@@ -56,11 +56,17 @@ import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
  * @author kimchy
  * @author keshav
  * @version $Id$
+ * @spring.bean id="indexController"
+ * @spring.property name = "compassGps" ref="compassGps"
+ * @spring.property name = "indexView" value="indexer"
+ * @spring.property name = "indexResultsView" value="indexer"
+ * @spring.property name = "taskRunningService" ref="taskRunningService"
+ * @spring.property name = "messageUtil" ref="messageUtil"
  */
 
 public class CustomCompassIndexController extends BackgroundProcessingCompassIndexController {
 
-    //private Log log = LogFactory.getLog( CustomCompassIndexController.class );
+    // private Log log = LogFactory.getLog( CustomCompassIndexController.class );
 
     private String indexView;
 
@@ -114,16 +120,14 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
         return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
     }
 
-    
     /**
-     * 
-     *
      * <hr>
-     * <p>Copyright (c) 2006 UBC Pavlab
-     * @author klc
-     * @version $Id$
+     * <p>
+     * Copyright (c) 2006 UBC Pavlab
      * 
-     * This inner class is used for creating a seperate thread that will delete the compass ee index
+     * @author klc
+     * @version $Id$ This inner class is used
+     *          for creating a seperate thread that will delete the compass ee index
      */
     class IndexExpressionExperimentsJob extends BackgroundControllerJob<ModelAndView> {
 
@@ -162,19 +166,17 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
 
         }
     }
-    
-    
+
     /**
-     * 
-     *
      * <hr>
-     * <p>Copyright (c) 2006 UBC Pavlab
-     * @author klc
-     * @version $Id$
+     * <p>
+     * Copyright (c) 2006 UBC Pavlab
      * 
-     * Used for creating a seperate thread in rebuilding the Gene's index
+     * @author klc
+     * @version $Id$ Used for creating a
+     *          seperate thread in rebuilding the Gene's index
      */
-    
+
     class IndexGenesJob extends BackgroundControllerJob<ModelAndView> {
 
         private CompassIndexCommand indexCommand;

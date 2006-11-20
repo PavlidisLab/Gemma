@@ -61,6 +61,8 @@
             <prop key="/processDelete.html">processDeleteController</prop>
             <prop key="/checkJobProgress.html">taskCompletionController</prop>
             <prop key="/mock.html">mockController</prop>
+            <prop key="/indexer.html">indexController</prop>
+            <prop key="/searcher.html">searchController</prop>
         </props>
 	</property>
 </bean>
@@ -120,40 +122,7 @@
 		</props>
 	</property>
 </bean>
-<!-- ========================= COMPASS START ========================= -->
-<!-- COMPASS CONTROLLER DEFINITIONS -->
-<bean id="searchController" name="/searcher.html" class="ubic.gemma.web.controller.compass.CustomCompassSearchController">
-	<property name="compass">
-		<ref bean="compass" />
-	</property>
-	<property name="searchView">
-		<value>searcher</value>
-	</property>
-	<property name="searchResultsView">
-		<value>searcher</value>
-	</property>
-	<property name="pageSize">
-		<value>10</value>
-	</property>
-</bean>
-<bean id="indexController" name="/indexer.html" class="ubic.gemma.web.controller.compass.CustomCompassIndexController">
-	<property name="compassGps">
-		<ref bean="compassGps" />
-	</property>
-	<property name="indexView">
-		<value>indexer</value>
-	</property>
-	<property name="indexResultsView">
-		<value>indexer</value>
-	</property>
-	<property name="taskRunningService">
-      <ref bean="taskRunningService"/>
-    </property>
-    <property name="messageUtil">
-      <ref bean="messageUtil"/>
-    </property>
-</bean>
-<!-- COMPASS END -->
+
 <!-- ==================================================== -->
 <!-- Action resolvers for MultiActionControllers -->
 <!-- ==================================================== -->

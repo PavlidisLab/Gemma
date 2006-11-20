@@ -50,6 +50,11 @@ import org.springframework.web.servlet.ModelAndView;
  * @author kimchy
  * @author keshav
  * @version $Id$
+ * @spring.bean id="searchController"
+ * @spring.property name = "compass" ref="compass"
+ * @spring.property name = "searchView" value="searcher"
+ * @spring.property name = "searchResultsView" value="searcher"
+ * @spring.property name = "pageSize" value="10"
  */
 public class CustomCompassSearchController extends AbstractCompassCommandController {
 
