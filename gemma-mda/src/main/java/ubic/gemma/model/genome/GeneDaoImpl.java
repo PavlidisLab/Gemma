@@ -33,6 +33,7 @@ import org.hibernate.Criteria;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.TaxonUtility;
 
 /**
  * @author pavlidis
@@ -251,12 +252,25 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetCoexpressedGenesById( long id ) throws Exception {
+        Gene givenG = (Gene) this.load( id );
+        
+        String p2pClassName;
+        if (TaxonUtility.isHuman(givenG.getTaxon()))
+            p2pClassName = "HumanProbeCoExpressionImpl";
+        else if (TaxonUtility.isMouse(givenG.getTaxon()))
+            p2pClassName = "MouseProbeCoExpressionImpl";       
+        else if (TaxonUtility.isRat(givenG.getTaxon()))
+            p2pClassName = "RatProbeCoExpressionImpl";        
+        else //must be other
+            p2pClassName = "OtherProbeCoExpressionImpl";
+        
         Collection<Gene> genes = new HashSet<Gene>();
+        
         final String queryStringFirstVector =
         // source tables
         "select distinct coGene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
-                + "HumanProbeCoExpressionImpl as p2pc,"
+                + p2pClassName + " as p2pc,"
                 // target tables
                 + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
                 + " where gene.products.id=bs2gp.geneProduct.id "
@@ -269,7 +283,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // source tables
         "select distinct coGene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
-                + "HumanProbeCoExpressionImpl as p2pc,"
+                + p2pClassName + " as p2pc,"
                 // target tables
                 + "GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
                 + " where gene.products.id=bs2gp.geneProduct.id "
