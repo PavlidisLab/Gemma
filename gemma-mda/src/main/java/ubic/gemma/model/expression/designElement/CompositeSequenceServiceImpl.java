@@ -170,9 +170,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * Internally stores the collection of composite sequences as a
-     * {@link LinkedHashSet), preserving order based on insertion.  
-     * 
-     * (non-Javadoc)
+     * {@link LinkedHashSet), preserving order based on insertion.   (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetMatchingCompositeSequences(java.lang.String[],
      *      java.util.Collection)
@@ -189,7 +187,7 @@ public class CompositeSequenceServiceImpl extends
 
             for ( String officialSymbol : compositeSequenceNames ) {
                 officialSymbol = StringUtils.trim( officialSymbol );
-                log.debug( "user entered: " + officialSymbol );
+                log.debug( "entered: " + officialSymbol );
                 CompositeSequence cs = this.findByName( arrayDesign, officialSymbol );
                 if ( cs != null ) {
                     compositeSequences.add( cs );
