@@ -63,21 +63,21 @@ public class TwoChannelMissingValues {
         QuantitationType signalChannelB = null;
         QuantitationType backgroundChannelA = null;
         QuantitationType backgroundChannelB = null;
-        // FIXME this only supports Genepix data, and in a very primitive way.
+        // FIXME this only supports Genepix and QuantArray data, and in a very primitive way.
         for ( DesignElementDataVector vector : allVectors ) {
             QuantitationType qType = vector.getQuantitationType();
             String name = qType.getName();
             // if ( qType.getType().equals( StandardQuantitationType.MEASUREDSIGNAL ) ) {
             // if ( qType.getIsBackground() == true ) {
-            if ( name.equals( "CH1B_MEDIAN" ) ) {
+            if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" ) ) {
                 backgroundChannelA = qType;
-            } else if ( name.equals( "CH2B_MEDIAN" ) ) {
+            } else if ( name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" ) ) {
                 backgroundChannelB = qType;
             } else
             // } else {
-            if ( name.equals( "CH1I_MEDIAN" ) ) {
+            if ( name.equals( "CH1I_MEDIAN" ) || name.equals( "CH1_MEAN" ) ) {
                 signalChannelA = qType;
-            } else if ( name.equals( "CH2I_MEDIAN" ) ) {
+            } else if ( name.equals( "CH2I_MEDIAN" ) || name.equals( "CH2_MEAN" ) ) {
                 signalChannelB = qType;
             }
             // }
@@ -165,6 +165,10 @@ public class TwoChannelMissingValues {
         return sigAV > bkgAV * signalToNoiseThreshold || sigBV > bkgBV * signalToNoiseThreshold;
     }
 
+    /**
+     * @param signalToNoiseThreshold
+     * @return
+     */
     private QuantitationType getQuantitationType( double signalToNoiseThreshold ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
         present.setName( "Detection call" );
@@ -177,6 +181,13 @@ public class TwoChannelMissingValues {
         return present;
     }
 
+    /**
+     * @param signalChannelA
+     * @param signalChannelB
+     * @param bkgChannelA
+     * @param bkgChannelB
+     * @param signalToNoiseThreshold
+     */
     private void validate( ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
             ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
             double signalToNoiseThreshold ) {
