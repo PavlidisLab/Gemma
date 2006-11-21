@@ -66,14 +66,9 @@ public class LinkAnalysis {
     private boolean absoluteValue = false;
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
-    private double minPresentFraction = 0.3;
-    private double lowExpressionCut = 0.3;
-    private double highExpressionCut = 0.0;
     private double binSize = 0.01;
     private boolean useDB = false;
 
-    private boolean minPresentFractionIsSet = true;
-    private boolean lowExpressionCutIsSet = true;
 
     private String localHome = "c:";
 
@@ -83,37 +78,6 @@ public class LinkAnalysis {
         form = new Format( "%.4g" );
     }
 
-    private void filter() {
-        DoubleMatrixNamed r = this.dataMatrix;
-
-        log.info( "Data set has " + r.rows() + " rows and " + r.columns() + " columns." );
-
-        if ( minPresentFractionIsSet ) {
-
-            log.info( "Filtering out genes that are missing too many values" );
-            RowMissingFilter x = new RowMissingFilter();
-            x.setMinPresentFraction( minPresentFraction );
-            r = ( DoubleMatrixNamed ) x.filter( r );
-        }
-
-        if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do this
-            // as well as affy filtering.
-            log.info( "Filtering out genes with low expression" );
-            RowLevelFilter x = new RowLevelFilter();
-            x.setLowCut( this.lowExpressionCut );
-            x.setHighCut(this.highExpressionCut);
-            x.setRemoveAllNegative( true ); // todo: fix
-            x.setUseAsFraction( true );
-            r = ( DoubleMatrixNamed ) x.filter( r );
-        }
-
-        log.info( "Filtering by Affymetrix probe name" );
-        Filter x = new AffymetrixProbeNameFilter(new int[] { 2 } );
-        r = ( DoubleMatrixNamed ) x.filter( r );
-
-        dataMatrix = r;
-        this.uniqueItems = dataMatrix.rows(); // this does not take into account 'replicates'.
-    }
 
     private void calculateDistribution() {
         if ( metric.equals( "pearson" ) ) {
@@ -425,7 +389,6 @@ public class LinkAnalysis {
         assert this.deService != null;
         log.info( "Taxon: " + this.taxon.getCommonName() );
         
-        this.filter();
         this.init();
         if(this.uniqueItems == 0){
         	log.info("Couldn't find the map between probe and gene ");
@@ -447,8 +410,6 @@ public class LinkAnalysis {
         log.info( "Unique Items:" + this.uniqueItems );
         log.info( "fwe:" + this.fwe );
         log.info( "useDB:" + this.useDB );
-        log.info( "lowExpressionCut:" + this.lowExpressionCut );
-        log.info( "minPresentationCut:" + this.minPresentFraction );
     }
 
     public void setAbsoluteValue() {
@@ -489,18 +450,8 @@ public class LinkAnalysis {
         this.dataVectors = vectors;
     }
 
-    public void setLowExpressionCut( double lowExpressionCut ) {
-        this.lowExpressionCut = lowExpressionCut;
-        this.lowExpressionCutIsSet = true;
-    }
-
     public void setMetric( String metric ) {
         this.metric = metric;
-    }
-
-    public void setMinPresentFraction( double minPresentFraction ) {
-        this.minPresentFraction = minPresentFraction;
-        this.minPresentFractionIsSet = true;
     }
 
     public void setTooSmallToKeep( double tooSmallToKeep ) {
