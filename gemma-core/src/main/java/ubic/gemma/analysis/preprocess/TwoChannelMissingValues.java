@@ -172,7 +172,8 @@ public class TwoChannelMissingValues {
     private QuantitationType getQuantitationType( double signalToNoiseThreshold ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
         present.setName( "Detection call" );
-        present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold );
+        present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
+                + " (Computed by Gemma)" );
         present.setGeneralType( GeneralType.CATEGORICAL );
         present.setIsBackground( false );
         present.setRepresentation( PrimitiveType.BOOLEAN );

@@ -43,6 +43,26 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
     GeoConverter gc = new GeoConverter();
 
+    public void testMissingValueGSE523() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE523_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE523" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+
+        TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
+
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0 );
+
+        assertEquals( 20, calls.size() );
+    }
+
     public void testMissingValue() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
@@ -98,19 +118,19 @@ public class TwoChannelMissingValuesTest extends TestCase {
             }
         }
 
-//        System.err.print( "\n" );
-//        for ( BioAssay bas : dim.getBioAssays() ) {
-//            System.err.print( "\t" + bas );
-//        }
-//        for ( DesignElementDataVector vector : calls ) {
-//            System.err.print( vector.getDesignElement() );
-//            byte[] dat = vector.getData();
-//            boolean[] row = bac.byteArrayToBooleans( dat );
-//            for ( boolean b : row ) {
-//                System.err.print( "\t" + b );
-//            }
-//            System.err.print( "\n" );
-//        }
+        // System.err.print( "\n" );
+        // for ( BioAssay bas : dim.getBioAssays() ) {
+        // System.err.print( "\t" + bas );
+        // }
+        // for ( DesignElementDataVector vector : calls ) {
+        // System.err.print( vector.getDesignElement() );
+        // byte[] dat = vector.getData();
+        // boolean[] row = bac.byteArrayToBooleans( dat );
+        // for ( boolean b : row ) {
+        // System.err.print( "\t" + b );
+        // }
+        // System.err.print( "\n" );
+        // }
 
         assertTrue( foundA && foundB );
 
