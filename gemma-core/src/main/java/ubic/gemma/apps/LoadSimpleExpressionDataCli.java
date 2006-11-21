@@ -30,6 +30,7 @@ import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
@@ -62,14 +63,14 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     final static int NAMEI = 0;
     final static int DESCRIPTIONI = NAMEI + 1;
     final static int ARRAYDESIGNI = DESCRIPTIONI + 1;
-    final static int SPECIESI = ARRAYDESIGNI + 1;
-    final static int DATAFILEI = SPECIESI + 1;
-    final static int QNAMEI = DATAFILEI + 1;
+    final static int DATAFILEI = ARRAYDESIGNI + 1;
+    final static int SPECIESI = DATAFILEI + 1;
+    final static int QNAMEI = SPECIESI + 1;
     final static int QDESCRIPTIONI = QNAMEI + 1;
     final static int QTYPEI = QDESCRIPTIONI + 1;
     final static int QSCALEI = QTYPEI + 1;
-    final static int IMAGECLONEI = QSCALEI + 1;
-    final static int TOTALFIELDS = IMAGECLONEI + 1;
+//    final static int IMAGECLONEI = QSCALEI + 1;
+    final static int TOTALFIELDS = QSCALEI + 1;
 
     /*
      * (non-Javadoc)
@@ -116,18 +117,27 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
         metaData.setName( oneLoad[NAMEI] );
         metaData.setDescription( oneLoad[DESCRIPTIONI] );
-        ArrayDesign ad = adService.findByShortName( oneLoad[ARRAYDESIGNI] );
-        if ( ad == null ) {
-            log.info( "Array Design " + oneLoad[ARRAYDESIGNI] + " is not loaded" );
-            return false;
-        }
-
+        
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        ads.add( ad );
-
-        // ArrayDesign.Factory.newInstance();
-        // ad.setName( oneLoad[ARRAYDESIGNI] );
-        metaData.setArrayDesigns( ads );
+        if(oneLoad[ARRAYDESIGNI].trim().equals("IMAGE")){
+            ArrayDesign ad = ArrayDesign.Factory.newInstance();
+            ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+            ads.add( ad );        	
+        	metaData.setProbeIdsAreImageClones( true );
+        }
+        else{
+        	String allADs[] = oneLoad[ARRAYDESIGNI].split("\\+");
+        	for(i = 0; i <allADs.length; i++){
+        		ArrayDesign ad = adService.findByShortName( allADs[i] );
+        		if ( ad == null ) {
+        			log.info( "Array Design " + allADs[i] + " is not loaded" );
+        			return false;
+        		}
+        		ads.add( ad );
+        	}
+        }
+    	metaData.setArrayDesigns( ads );
+    	 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( oneLoad[SPECIESI] );
         metaData.setTaxon( taxon );
@@ -142,9 +152,9 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         metaData.setQuantitationTypeName( oneLoad[QNAMEI] );
         metaData.setQuantitationTypeDescription( oneLoad[QDESCRIPTIONI] );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
-        if ( oneLoad.length >= IMAGECLONEI - 1 ) {
-            metaData.setProbeIdsAreImageClones( Boolean.parseBoolean( oneLoad[IMAGECLONEI] ) );
-        }
+//        if ( oneLoad.length >= IMAGECLONEI - 1 ) {
+//            metaData.setProbeIdsAreImageClones( Boolean.parseBoolean( oneLoad[IMAGECLONEI] ) );
+//        }
 
         StandardQuantitationType sQType = StandardQuantitationType.fromString( oneLoad[QTYPEI] );
         metaData.setType( sQType );
