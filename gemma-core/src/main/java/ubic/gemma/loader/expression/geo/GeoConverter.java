@@ -76,6 +76,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -587,7 +588,7 @@ public class GeoConverter implements Converter {
             qt.setName( quantitationType );
             String description = quantitationTypeDescriptions.get( quantitationTypeIndex );
             qt.setDescription( description );
-            guessQuantitationTypeParameters( qt, quantitationType, description );
+            QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description );
 
             int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
@@ -918,6 +919,20 @@ public class GeoConverter implements Converter {
         arrayDesign.setName( platform.getTitle() );
         arrayDesign.setShortName( platform.getGeoAccession() );
         arrayDesign.setDescription( platform.getDescriptions() );
+        PlatformType technology = platform.getTechnology();
+        if ( technology == PlatformType.dualChannel
+                || technology == PlatformType.dualChannelGenomic
+                || technology == PlatformType.spottedOligonucleotide
+                || technology == PlatformType.spottedDNAOrcDNA ) {
+            arrayDesign.setTechnologyType( TechnologyType.TWOCOLOR );
+        } else if ( technology == PlatformType.singleChannel
+                || technology == PlatformType.oligonucleotideBeads
+                || technology == PlatformType.inSituOligonucleotide ) {
+            arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
+        } else {
+            throw new IllegalArgumentException( "Don't know how to interpret technology type "
+                    + technology );
+        }
         return arrayDesign;
     }
 
@@ -2055,106 +2070,7 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Attempt to fill in the details of the quantitation type.
-     * 
-     * @param qt QuantitationType to fill in details for.
-     * @param name of the quantitation type from the GEO sample column
-     * @param description of the quantitation type from the GEO sample column
-     */
-    private void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
-
-        GeneralType gType = GeneralType.QUANTITATIVE;
-        ScaleType sType = ScaleType.UNSCALED;
-        StandardQuantitationType qType = StandardQuantitationType.MEASUREDSIGNAL;
-        Boolean isBackground = Boolean.FALSE;
-
-        qt.setRepresentation( guessRepresentation( name, description ) );
-
-        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
-            /*
-             * special case...not a quantitation type.
-             */
-            qType = StandardQuantitationType.OTHER;
-            sType = ScaleType.UNSCALED;
-            gType = GeneralType.CATEGORICAL;
-        } else if ( name.matches( "CH[12][IB]_(MEAN|MEDIAN)" ) ) { // genepix I = intensity, B = background.
-            qType = StandardQuantitationType.MEASUREDSIGNAL;
-            sType = ScaleType.LINEAR;
-        } else if ( name.matches( "CH[12][ND]_(MEAN|MEDIAN)" ) ) { // genepix normalized or subtracted.
-            qType = StandardQuantitationType.DERIVEDSIGNAL;
-            sType = ScaleType.LINEAR;
-        } else if ( name.equals( "DET_P" ) || name.equals( "DETECTION P-VALUE" )
-                || name.equalsIgnoreCase( "Detection_p-value" ) ) {
-            qType = StandardQuantitationType.CONFIDENCEINDICATOR;
-        } else if ( name.equals( "VALUE" ) ) {
-            if ( description.toLowerCase().contains( "signal" ) || description.contains( "RMA" ) ) {
-                qType = StandardQuantitationType.DERIVEDSIGNAL;
-            }
-        } else if ( name.matches( "ABS_CALL" ) ) {
-            qType = StandardQuantitationType.PRESENTABSENT;
-            sType = ScaleType.OTHER;
-            gType = GeneralType.CATEGORICAL;
-        }
-
-        if ( description.toLowerCase().contains( "background" ) ) {
-            qType = StandardQuantitationType.MEASUREDSIGNAL;
-            isBackground = Boolean.TRUE;
-        }
-
-        if ( name.matches( "CH[12]B_(MEAN|MEDIAN)" ) ) { // genepix B = background.
-            isBackground = Boolean.TRUE;
-        }
-
-        if ( description.contains( "log2" ) ) {
-            sType = ScaleType.LOG2;
-        } else if ( description.contains( "log10" ) ) {
-            sType = ScaleType.LOG10;
-        } else if ( description.contains( "log" ) ) {
-            sType = ScaleType.LOGBASEUNKNOWN; // though probably log 2.
-        }
-
-        if ( name.matches( "TOP" ) || name.matches( "LEFT" ) || name.matches( "RIGHT" ) || name.matches( "^BOT.*" ) ) {
-            qType = StandardQuantitationType.COORDINATE;
-        } else if ( name.matches( "^RAT[12]N?_(MEAN|MEDIAN)" ) ) {
-            qType = StandardQuantitationType.RATIO;
-        } else if ( name.matches( "fold_change" ) || description.contains( "log ratio" )
-                || name.toLowerCase().contains( "ratio" ) || description.contains( "ratio" ) ) {
-            qType = StandardQuantitationType.RATIO;
-        }
-
-        qt.setGeneralType( gType );
-        qt.setScale( sType );
-        qt.setType( qType );
-        qt.setIsBackground( isBackground );
-
-        if ( log.isInfoEnabled() ) {
-            log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
-                    + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
-                    + " Encoding=" + qt.getRepresentation() );
-        }
-    }
-
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
-    private PrimitiveType guessRepresentation( String name, String description ) {
-        PrimitiveType pType = PrimitiveType.DOUBLE;
-        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
-            /*
-             * special case...not a quantitation type.
-             */
-            pType = PrimitiveType.STRING;
-        } else if ( name.matches( "ABS_CALL" ) ) {
-            pType = PrimitiveType.STRING;
-        }
-        return pType;
-
-    }
-
-    /**
-     * Deal with missing values, identified by nulls or number format exceptions.
+     * /** Deal with missing values, identified by nulls or number format exceptions.
      * 
      * @param toConvert
      * @param pt
