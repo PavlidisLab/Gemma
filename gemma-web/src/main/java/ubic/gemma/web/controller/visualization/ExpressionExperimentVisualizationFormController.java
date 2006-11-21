@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.visualization;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -48,7 +50,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 
@@ -69,8 +70,8 @@ import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
  * @spring.property name = "successView" value="showExpressionExperimentVisualization"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService" *
- * @spring.property name = "geneService" ref="geneService"
+ * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name = "compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
@@ -83,7 +84,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private DesignElementDataVectorService designElementDataVectorService;
-    private GeneService geneService = null;
+    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
     private final int MAX_ELEMENTS_TO_VISUALIZE = 50;
 
     public ExpressionExperimentVisualizationFormController() {
@@ -315,8 +316,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 return null;
             }
 
-            Map<Gene, Collection<CompositeSequence>> compositeSequencesForGene = geneService
-                    .getCompositeSequencesForGenes( searchIds );
+            List searchIdsAsList = Arrays.asList( searchIds );// TODO remove searchIds[]
+            Map<Gene, Collection<CompositeSequence>> compositeSequencesForGene = compositeSequenceGeneMapperService
+                    .getCompositeSequencesForGenesByOfficialSymbols( searchIdsAsList );
+
             Collection<Gene> geneKeySet = compositeSequencesForGene.keySet();
 
             for ( Gene g : geneKeySet ) {
@@ -397,9 +400,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
-     * @param geneService The geneService to set.
+     * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
      */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    public void setCompositeSequenceGeneMapperService(
+            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 }
