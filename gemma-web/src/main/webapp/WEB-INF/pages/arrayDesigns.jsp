@@ -17,7 +17,7 @@
 		</h3>
 		<table>
 			<tr>
-				<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList"
+				<display:table name="arrayDesigns" sort="list" class="list" requestURI="" id="arrayDesignList"
 				pagesize="30" decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 					<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
 						titleKey="arrayDesign.name" />
