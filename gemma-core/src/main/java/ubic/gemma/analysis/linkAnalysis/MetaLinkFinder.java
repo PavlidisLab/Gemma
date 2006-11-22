@@ -155,16 +155,15 @@ public class MetaLinkFinder {
     private void init(Collection<Gene> genes, Collection <ExpressionExperiment> ees, Collection<Gene> genesInTaxon){
     	int index = 0;
     	
-    	this.linkCount = new CompressedNamedBitMatrix(genes.size(), genesInTaxon.size(), ees.size());
-    	
-    	for(Gene geneIter:genes){
-    		this.linkCount.addRowName(geneIter.getId());
-    	}
-    	
-    	for(Gene geneIter:genesInTaxon){
-    		this.linkCount.addColumnName(geneIter.getId());
-    	}
-    	
+        if(this.linkCount == null){
+            this.linkCount = new CompressedNamedBitMatrix(genes.size(), genesInTaxon.size(), ees.size());
+            for(Gene geneIter:genes){
+                this.linkCount.addRowName(geneIter.getId());
+            }
+            for(Gene geneIter:genesInTaxon){
+                this.linkCount.addColumnName(geneIter.getId());
+            }
+        }
     	this.eeMap = new HashMap();
     	this.allEE = new Vector();
     	for(ExpressionExperiment eeIter:ees){

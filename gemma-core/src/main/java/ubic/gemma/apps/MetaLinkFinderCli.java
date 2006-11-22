@@ -4,7 +4,10 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 
@@ -34,6 +37,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 	/* (non-Javadoc)
 	 * @see ubic.gemma.util.AbstractCLI#buildOptions()
 	 */
+    private ExpressionExperimentService eeService;
 	@Override
 	protected void buildOptions() {
 		// TODO Auto-generated method stub
@@ -42,21 +46,29 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 	protected void processOptions() {
 		super.processOptions();
 	}
-	private QuantitationType getQTF(){
-		QuantitationTypeService qts = (QuantitationTypeService)getBean("quantitationTypeService");
-		QuantitationType qtf = QuantitationType.Factory.newInstance();
-		qtf.setName("VALUE"); 
-		qtf.setScale(ScaleType.UNSCALED);
-		qtf.setRepresentation(PrimitiveType.DOUBLE);
-		qtf.setGeneralType(GeneralType.QUANTITATIVE);
-		qtf.setType(StandardQuantitationType.DERIVEDSIGNAL);
-		qtf = qts.find(qtf);
-		if(qtf == null){
-			log.info("NO Quantitation Type!");
-			return null;
-		}
-		log.debug("Got Quantitiontype : " + qtf.getId());
-		return qtf;
+	/****distribute the expression experiments to the different classes of quantitation type.
+     *  The reason to do this is because the collection of expression experiment for Probe2Probe2
+     *  Query should share the same preferred quantitation type. The returned object is a map between
+     *  quantitation type and a set of expression experiment perferring this quantitation type.
+     * @return
+	 */
+	private Map<QuantitationType, Collection> preprocess(Collection<ExpressionExperiment> ees){
+        Map eemap = new HashMap<QuantitationType, Collection>();
+        for(ExpressionExperiment ee:ees){
+            Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes(ee);
+            for (QuantitationType qt : eeQT) {
+                if(qt.getIsPreferred()){
+                    Collection<ExpressionExperiment> eeCollection = (Collection)eemap.get( qt );
+                    if(eeCollection == null){
+                        eeCollection = new HashSet<ExpressionExperiment>();
+                        eemap.put( qt, eeCollection );
+                    }
+                    eeCollection.add( ee );
+                    break;
+                }
+            }
+        }
+		return null;
 	}
 	private Collection <Gene> getGenes(GeneService geneService){
 		HashSet<Gene> genes = new HashSet();
@@ -89,7 +101,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 
 			DesignElementDataVectorService deService = (DesignElementDataVectorService) this.getBean("designElementDataVectorService");
 
-			ExpressionExperimentService eeService = (ExpressionExperimentService) this.getBean("expressionExperimentService");			
+			eeService = (ExpressionExperimentService) this.getBean("expressionExperimentService");			
 			
 			GeneService geneService = (GeneService) this.getBean("geneService");
 			
@@ -99,20 +111,23 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 			Collection<ExpressionExperiment> ees = null;
 			if(taxon != null)
 				ees = eeService.getByTaxon(taxon);
-			//ExpressionExperiment ee = eeService.findById(new Long(1));
-			//ees.add(ee);
-			ees = eeService.loadAll();
+            else
+                ees = eeService.loadAll();
 			if(ees == null || ees.size() == 0){
 				log.info("No Expression Experiment is found");
 				return null;
 			}
 			else
 				log.info("Found " + ees.size() + " Expression Experiment");
-			linkFinder.find(this.getGenes(geneService), ees, this.getQTF());
-			
-			linkFinder.output(2);
-					
+            
+            Map<QuantitationType, Collection> eeMap = preprocess(ees);
+            
+            for(QuantitationType qt:eeMap.keySet()){
+                ees = eeMap.get( qt );
+                linkFinder.find(this.getGenes(geneService), ees, qt);
+            }
 
+            linkFinder.output(2);
 		} catch (Exception e) {
 			log.error(e);
 			return e;
