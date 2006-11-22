@@ -63,6 +63,7 @@
             <prop key="/mock.html">mockController</prop>
             <prop key="/indexer.html">indexController</prop>
             <prop key="/searcher.html">searchController</prop>
+            <prop key="/searchCoexpression.html">coexpressionSearchController</prop> 
         </props>
 	</property>
 </bean>

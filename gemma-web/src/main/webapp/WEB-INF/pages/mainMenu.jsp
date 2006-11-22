@@ -82,6 +82,9 @@
 	</h2>
 	<ul class="glassList">
 
+        <li> 
+			 <a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a> 
+        </li> 
 		<li>
 			<a href="<c:url value="/searcher.html"/>"> <fmt:message key="menu.compassSearcher" /> </a>
 		</li>
