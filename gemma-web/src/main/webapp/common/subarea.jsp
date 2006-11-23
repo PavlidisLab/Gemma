@@ -3,14 +3,27 @@
 <h2>
 	Welcome to Gemma
 </h2>
-<p >Gemma is a database and software system for the meta-analysis of gene expression data.</p>
+<p>
+	Gemma is a database and software system for the
+	<strong>meta-analysis of gene expression data</strong>. Currently Gemma
+	is focused on using "guilt-by-association" to assist in gene function
+	prediction. Later stages of the project will introduce additional types
+	of analysis.
+</p>
 <hr />
-<h2>
-	News
-</h2>
+
 <p class="line">
-	The Gemma alpha build is now up! Use at your own risk.
+	<strong>To use Gemma</strong>, enter a term to locate a gene of
+	interest; Gemma will tell you what genes are coexpressed (have
+	correlated expression profiles) with your selected genes. Gemma
+	contains data from dozens (soon to be hundreds) of public microarray
+	data sets.
 </p>
 <p class="line">
-	We're working hard to get Gemma ready for an initial launch...
+	<strong>We're in an alpha-release stage</strong>, so use the site at
+	your own risk. We're very interested in your
+	<a href="mailto:gemma@ubic.ca">feedback</a>. More information about the
+	project is available
+	<a href="<c:url value="/static/about.html"/>">here</a>.
+
 </p>

@@ -13,7 +13,15 @@
 		<Displayer name="CSSListMenu" type="net.sf.navigator.displayer.CSSListMenuDisplayer" />
 	</Displayers>
 	<Menus>
-		<Menu name="MainMenu" title="mainMenu.title" page="/mainMenu.html" />
+		<Menu name="MainMenu" title="mainMenu.title">
+			<Item name="Home" title="menu.home" page="/mainMenu.html" />
+			<Item name="Analyze" title="menu.analyze" page="/searchCoexpression.html" />
+			<Item name="Search" title="menu.search" page="/searcher.html" />
+			<Item name="Experiments" title="menu.experiments"
+				page="/expressionExperiment/showAllExpressionExperiments.html" />
+			<Item name="Array Designs" title="menu.arrays" page="/arrays/showAllArrayDesigns.html" />
+			<Item name="Help" title="menu.help" page="/static/about.jsp" />
+		</Menu>
 		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" roles="admin,user" />
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
 			<Item name="ViewUsers" title="menu.admin.users" page="/activeUsers.html" />
