@@ -65,7 +65,7 @@
 		<a href="<c:url value="/geneFinder.html"/>"> <fmt:message key="menu.GeneFinder" /> </a>
 	</li>
 	<li>
-		<a href="<c:url value="/about.jsp"/>">About this site</a>
+		<a href="<c:url value="/static/about.html"/>">About this site</a>
 	</li>
 	<authz:authorize ifAnyGranted="user,admin">
 		<li>
