@@ -162,7 +162,7 @@
 					<c:forEach var="arrayDesign" items="${ arrayDesigns }" >
 						<c:out value="${ arrayDesign.name}" />
 						<a 
-							href="/Gemma/arrays/showArrayDesign?id=<c:out value="${ arrayDesign.id}" />">
+							href="/Gemma/arrays/showArrayDesign.html?id=<c:out value="${ arrayDesign.id}" />">
 							(link)
 						</a>
 						<br />
