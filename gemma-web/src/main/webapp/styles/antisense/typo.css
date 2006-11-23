@@ -158,6 +158,19 @@
           font-family: verdana, arial, helvetica, sans-serif;
           font-size: 1em;
         }
+        
+        .clob {
+          border-style:solid;
+          padding: 2px 2px 2px 2px;
+          border-width:thin;
+          border-color:#AAAAAA; 
+          font-size: 1em;
+          line-height: 1.3em;
+          height:100px;
+          overflow:auto;
+        }
+        
+                
     /* END TEXT */
 
     /* LISTS */
