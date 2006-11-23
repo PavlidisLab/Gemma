@@ -4,6 +4,14 @@
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
+<head>
+<title>Dataset details <%
+					if ( expressionExperiment.getName() != null ) {
+					%>: <jsp:getProperty name="expressionExperiment" property="name" />
+					<%
+					                } 
+					%></title>
+</head>
 	<body>
 		<h2>
 			<fmt:message key="expressionExperiment.details" />
@@ -38,7 +46,7 @@
 					<%
 					if ( expressionExperiment.getDescription() != null ) {
 					%>
-					<div class="clob"><jsp:getProperty name="expressionExperiment"
+                    <div class="clob"><jsp:getProperty name="expressionExperiment"
 							property="description" /></div>
 				 
 					<%
@@ -185,80 +193,83 @@
 			</tr>
 		</table>
 
-
-		<h3>
-			<fmt:message key="experimentalDesign.title" />
-			:
-			<a
-				href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+		<authz:authorize ifAnyGranted="admin">
+			<h3>
+				<fmt:message key="experimentalDesign.title" />
+				:
+				<a
+					href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+					<%
+					out.print( expressionExperiment.getExperimentalDesign().getName() );
+					%> </a>
+			</h3>
+			<p>
+				<b>Description:</b>
 				<%
-				out.print( expressionExperiment.getExperimentalDesign().getName() );
-				%> </a>
-		</h3>
-		<p>
-			<b>Description:</b>
-			<%
-			out.print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(), 100 ) );
-			%>
-			<BR />
-			<BR />
-			This experimental design has
-			<%
-			out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
-			%>
-			experimental factors.
-		</p>
+				                        out
+				                        .print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(),
+				                                100 ) );
+				%>
+				<BR />
+				<BR />
+				This experimental design has
+				<%
+				out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+				%>
+				experimental factors.
+			</p>
 
-		<%
-		if ( expressionExperiment.getAnalyses().size() > 0 ) {
-		%>
-		<h3>
-			<fmt:message key="analyses.title" />
-		</h3>
-		<display:table name="expressionExperiment.analyses" class="list"
-			requestURI="" id="analysisList" pagesize="10"
-			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-			<display:column property="name" sortable="true" maxWords="20"
-				href="/Gemma/experimentalDesign/showExperimentalDesign.html"
-				paramId="name" paramProperty="name" />
-			<display:column property="description" sortable="true" maxWords="100" />
-			<display:setProperty name="basic.empty.showtable" value="false" />
-		</display:table>
-		<%
-		}
-		%>
-		<%
-		if ( expressionExperiment.getSubsets().size() > 0 ) {
-		%>
-		<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
-		<h3>
-			<fmt:message key="expressionExperimentSubsets.title" />
-		</h3>
-		<aazone tableId="subsetList" zone="subsetTable" />
-		<aa:zone name="subsetTable">
-			<display:table name="expressionExperiment.subsets" class="list"
-				requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
-				id="subsetList" pagesize="10"
-				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
-				<display:column property="nameLink" sortable="true" maxWords="20"
-					titleKey="expressionExperimentSubsets.name" />
+			<%
+			if ( expressionExperiment.getAnalyses().size() > 0 ) {
+			%>
+			<h3>
+				<fmt:message key="analyses.title" />
+			</h3>
+			<display:table name="expressionExperiment.analyses" class="list"
+				requestURI="" id="analysisList" pagesize="10"
+				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+				<display:column property="name" sortable="true" maxWords="20"
+					href="/Gemma/experimentalDesign/showExperimentalDesign.html"
+					paramId="name" paramProperty="name" />
 				<display:column property="description" sortable="true"
 					maxWords="100" />
 				<display:setProperty name="basic.empty.showtable" value="false" />
 			</display:table>
-		</aa:zone>
-		<%
-		}
-		%>
-
+			<%
+			}
+			%>
+			<%
+			if ( expressionExperiment.getSubsets().size() > 0 ) {
+			%>
+			<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
+			<h3>
+				<fmt:message key="expressionExperimentSubsets.title" />
+			</h3>
+			<aazone tableId="subsetList" zone="subsetTable" />
+			<aa:zone name="subsetTable">
+				<display:table name="expressionExperiment.subsets" class="list"
+					requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
+					id="subsetList" pagesize="10"
+					decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
+					<display:column property="nameLink" sortable="true" maxWords="20"
+						titleKey="expressionExperimentSubsets.name" />
+					<display:column property="description" sortable="true"
+						maxWords="100" />
+					<display:setProperty name="basic.empty.showtable" value="false" />
+				</display:table>
+			</aa:zone>
+			<%
+			}
+			%>
+		</authz:authorize>
 
 		<h3>
 			<fmt:message key="designElementDataVectors.title" />
 		</h3>
 		<p>
 			There are
-			<b> <c:out value="${designElementDataVectorCount}" /> </b> design
-			elements for this expression experiment.
+			<b> <c:out value="${designElementDataVectorCount}" /> </b>
+			expression profiles for this experiment.
 			<BR />
 			<BR />
 			<b>Details by quantitation type:</b>
