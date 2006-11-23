@@ -225,7 +225,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         for ( Object object : ees ) {
             eeIds.add( ((ExpressionExperiment) object).getId() );
         }
-        String ids = StringUtils.join( eeIds.toArray() );
+        String ids = StringUtils.join( eeIds.toArray(),"," );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + ids ) );
     }
 
