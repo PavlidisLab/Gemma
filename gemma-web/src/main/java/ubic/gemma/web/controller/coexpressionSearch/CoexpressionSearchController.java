@@ -18,16 +18,15 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List; 
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,10 +35,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -49,8 +46,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
-import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
+import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
@@ -77,6 +74,8 @@ import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 public class CoexpressionSearchController extends BaseFormController {
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
+    private static final String COOKIE_NAME = "coexpressionSearchCookie";
+    
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private GeneService geneService = null;
@@ -100,6 +99,7 @@ public class CoexpressionSearchController extends BaseFormController {
     protected Object formBackingObject( HttpServletRequest request ) {
 
         CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
+        loadCookie( request, csc );
         return csc;
 
     }
@@ -144,10 +144,11 @@ public class CoexpressionSearchController extends BaseFormController {
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-
-        log.debug( "entering onSubmit" );
         
         CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
+
+        Cookie cookie = new CoexpressionSearchCookie( csc );
+        response.addCookie( cookie );
         
         Collection<Gene> genesFound;
         // find the genes specified by the search
@@ -171,9 +172,7 @@ public class CoexpressionSearchController extends BaseFormController {
         // return error 
         if (genesFound.size() == 0) {
             saveMessage( request, "No genes found based on criteria." );
-            ModelAndView mav = new ModelAndView(getFormView());
-            mav.addObject( "coexpressionSearchCommand", csc );
-            return mav;
+            return showForm( request, response, errors );
         }
         
         // check if more than 1 gene found
@@ -247,6 +246,32 @@ public class CoexpressionSearchController extends BaseFormController {
         super.initBinder( request, binder );
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
+    
+    /**
+     * @param request
+     * @param adsac
+     */
+    private void loadCookie( HttpServletRequest request, CoexpressionSearchCommand csc ) {
+
+        // cookies aren't all that important, if they're missing we just go on.
+        if ( request == null || request.getCookies() == null ) return;
+
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    csc.setEeSearchString( cookie.getString( "eeSearchString" ) );
+                    csc.setSearchString( cookie.getString( "searchString" ) );
+                    csc.setStringency( cookie.getInt( "stringency" ) );
+                    Taxon taxon = taxonService.findByScientificName(cookie.getString( "taxonScientificName" ));
+                    csc.setTaxon( taxon );
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
+    }
 
     /**
      * @param expressionExperimentService
@@ -275,4 +300,20 @@ public class CoexpressionSearchController extends BaseFormController {
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }    
+    
+    class CoexpressionSearchCookie extends ConfigurationCookie {
+
+        public CoexpressionSearchCookie( CoexpressionSearchCommand command ) {
+            super( COOKIE_NAME );
+
+            this.setProperty( "eeSearchString", command.getEeSearchString() );
+            this.setProperty( "searchString", command.getSearchString() );
+            this.setProperty( "stringency", command.getStringency() );
+            this.setProperty( "taxonScientificName", command.getTaxon().getScientificName() );
+            
+            this.setMaxAge( 100000 );
+            this.setComment( "Information for coexpression search form" );
+        }
+
+    }
 }
