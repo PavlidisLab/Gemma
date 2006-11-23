@@ -43,6 +43,31 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
     GeoConverter gc = new GeoConverter();
 
+    /**
+     * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
+     * 
+     * @throws Exception
+     */
+    public void testMissingValueGSE56() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE56" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+
+        TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
+
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0 );
+
+        assertEquals( 20, calls.size() );
+    }
+
     public void testMissingValueGSE523() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE523_family.soft.gz" ) );

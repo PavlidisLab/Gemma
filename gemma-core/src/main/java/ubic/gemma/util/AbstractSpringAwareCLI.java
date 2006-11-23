@@ -18,6 +18,8 @@
  */
 package ubic.gemma.util;
 
+import java.util.Collection;
+
 import org.apache.commons.lang.StringUtils;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.springframework.beans.factory.BeanFactory;
@@ -130,6 +132,35 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void processOptions() {
         createSpringContext();
         authenticate();
+    }
+
+    /**
+     * @param errorObjects
+     * @param successObjects
+     */
+    protected void summarizeProcessing( Collection<String> errorObjects, Collection<String> successObjects ) {
+        if ( successObjects.size() > 0 ) {
+            StringBuilder buf = new StringBuilder();
+            buf.append( "\n---------------------\n   Processed:\n" );
+            for ( String object : successObjects ) {
+                buf.append( "    " + object + "\n" );
+            }
+            buf.append( "---------------------\n" );
+
+            log.info( buf );
+        } else {
+            log.error( "No objects processed successfully!" );
+        }
+
+        if ( errorObjects.size() > 0 ) {
+            StringBuilder buf = new StringBuilder();
+            buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
+            for ( String object : errorObjects ) {
+                buf.append( "    " + object + "\n" );
+            }
+            buf.append( "---------------------\n" );
+            log.error( buf );
+        }
     }
 
 }

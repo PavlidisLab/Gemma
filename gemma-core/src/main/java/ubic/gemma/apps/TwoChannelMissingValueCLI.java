@@ -22,18 +22,22 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
- * CLI for computing and persisting the
+ * CLI for computing and persisting the 'present' calls for two-channel data
  * 
  * @author Paul
  * @version $Id$
@@ -45,8 +49,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
      */
     private static final double DEFAULT_SIGNAL_TO_NOISE_THRESHOLD = 2.0;
     private double s2n = DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
-
-    // private DesignElementDataVectorService designElementDataVectorService;
+    private boolean doAll = false;
+    private boolean force = false;
 
     /*
      * (non-Javadoc)
@@ -63,6 +67,15 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                         + DEFAULT_SIGNAL_TO_NOISE_THRESHOLD ).withLongOpt( "signal2noise" ).create( 's' );
 
         addOption( signal2noiseOption );
+
+        Option doAllOption = OptionBuilder.withDescription( "Process all two-color experiments" ).create( "all" );
+
+        addOption( doAllOption );
+
+        Option force = OptionBuilder.withDescription(
+                "Replace existing missing value data (two-color experiments only)" ).create( "force" );
+
+        addOption( force );
     }
 
     /*
@@ -70,34 +83,100 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "Two-channel missing values", args );
         if ( err != null ) return err;
 
-        ExpressionExperiment ee = locateExpressionExperiment( this.getExperimentShortName() );
+        if ( doAll ) {
 
-        if ( ee == null ) {
-            log.error( "No expression experiment with name " + this.getExperimentShortName() );
-            bail( ErrorCode.INVALID_OPTION );
+            Collection<String> errorObjects = new HashSet<String>();
+            Collection<String> persistedObjects = new HashSet<String>();
+
+            Collection<ExpressionExperiment> ees = this.getExpressionExperimentService().loadAll();
+            for ( ExpressionExperiment ee : ees ) {
+
+                boolean hasTwoColor = false;
+                Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService().getArrayDesignsUsed(
+                        ee );
+                for ( ArrayDesign design : arrayDesignsUsed ) {
+                    TechnologyType tt = design.getTechnologyType();
+                    if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+                        hasTwoColor = true;
+                        break;
+                    }
+                }
+
+                if ( !hasTwoColor ) {
+                    continue;
+                }
+
+                log.info( ee + " uses a two-color array design, processing..." );
+
+                try {
+                    processExperiment( ee );
+                    persistedObjects.add( ee.toString() );
+                } catch ( Exception e ) {
+                    errorObjects.add( ee + ": " + e.getMessage() );
+                    log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+                }
+            }
+
+            summarizeProcessing( errorObjects, persistedObjects );
+
+        } else {
+            ExpressionExperiment ee = locateExpressionExperiment( this.getExperimentShortName() );
+
+            if ( ee == null ) {
+                log.error( "No expression experiment with name " + this.getExperimentShortName() );
+                bail( ErrorCode.INVALID_OPTION );
+            }
+
+            processExperiment( ee );
+
         }
 
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processExperiment( ExpressionExperiment ee ) {
+
+        Collection<QuantitationType> types = this.getExpressionExperimentService().getQuantitationTypes( ee );
+
+        if ( !force ) {
+            boolean hasMissingValues = false;
+            for ( QuantitationType qType : types ) {
+                if ( qType.getType() == StandardQuantitationType.PRESENTABSENT ) {
+                    hasMissingValues = true;
+                }
+            }
+
+            if ( hasMissingValues ) {
+                log.warn( ee + " already has missing value vectors" );
+                return;
+            }
+        } // FIXME: delete old values if force.
+
+        log.info( "Got " + ee + ", thawing..." );
         this.getExpressionExperimentService().thaw( ee );
         TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
+        log.info( "Checking for existing missing value data.." );
+
         Collection<DesignElementDataVector> vectors = tcmv.computeMissingValues( ee, s2n );
-        
+
         PersisterHelper persisterHelper = this.getPersisterHelper();
-        
+
+        log.info( "Persisting results..." );
         for ( DesignElementDataVector vector : vectors ) {
-            vector.setQuantitationType( ( QuantitationType ) persisterHelper.persist(vector.getQuantitationType()) );
+            vector.setQuantitationType( ( QuantitationType ) persisterHelper.persist( vector.getQuantitationType() ) );
         }
 
         ee.getDesignElementDataVectors().addAll( vectors );
         this.getExpressionExperimentService().update( ee );
-
-        return null;
     }
 
     public static void main( String[] args ) {
@@ -118,8 +197,13 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         if ( this.hasOption( 's' ) ) {
             this.s2n = this.getDoubleOptionValue( 's' );
         }
+        if ( this.hasOption( "all" ) ) {
+            this.doAll = true;
+        }
+        if ( hasOption( "force" ) ) {
+            this.force = true;
+        }
         // this.designElementDataVectorService = ( DesignElementDataVectorService ) getBean(
         // "designElementDataVectorService" );
     }
-
 }

@@ -34,12 +34,12 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 public abstract class ExpressionExperimentManipulatingCli extends AbstractSpringAwareCLI {
 
     ExpressionExperimentService expressionExperimentService;
-    private String experimentShortName;
+    private String experimentShortName = null;
 
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Expression experiment" )
-                .withDescription( "Expression experiment short name" ).withLongOpt( "experiment" ).create( 'e' );
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Expression experiment" ).withDescription(
+                "Expression experiment short name" ).withLongOpt( "experiment" ).create( 'e' );
 
         addOption( arrayDesignOption );
 
@@ -50,6 +50,10 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
      * @return
      */
     protected ExpressionExperiment locateExpressionExperiment( String name ) {
+
+        if ( name == null ) {
+            throw new IllegalArgumentException( "Expression experiment name must be provided" );
+        }
 
         ExpressionExperiment experiment = expressionExperimentService.findByShortName( name );
 

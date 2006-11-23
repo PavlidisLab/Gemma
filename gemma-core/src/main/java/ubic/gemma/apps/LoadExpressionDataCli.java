@@ -159,28 +159,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 }
             }
 
-            if ( persistedObjects.size() > 0 ) {
-                StringBuilder buf = new StringBuilder();
-                buf.append( "\n---------------------\n   Processed:\n" );
-                for ( String object : persistedObjects ) {
-                    buf.append( "    " + object + "\n" );
-                }
-                buf.append( "---------------------\n" );
-
-                log.info( buf );
-            } else {
-                log.error( "No experiments loaded!" );
-            }
-
-            if ( errorObjects.size() > 0 ) {
-                StringBuilder buf = new StringBuilder();
-                buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
-                for ( String object : errorObjects ) {
-                    buf.append( "    " + object + "\n" );
-                }
-                buf.append( "---------------------\n" );
-                log.error( buf );
-            }
+            summarizeProcessing( errorObjects, persistedObjects );
 
         } catch ( Exception e ) {
             log.error( e );
