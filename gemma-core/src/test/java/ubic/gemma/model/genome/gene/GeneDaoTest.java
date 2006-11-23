@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -100,17 +101,8 @@ public class GeneDaoTest extends BaseSpringContextTest {
         Gene gene = Gene.Factory.newInstance();
         gene.setId( (long) 1 );
         gene.setName( "test_genedao" );
-        Collection<Gene> genes = geneDao.getCoexpressedGenes( gene );
-        assertNotNull(genes);
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void testGetCoexpressedGenesById() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
-        gene.setName( "test_genedao" );
-        Collection<Gene> genes = geneDao.getCoexpressedGenesById( (long) 1 );
+        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+        Collection<Gene> genes = geneDao.getCoexpressedGenes( gene, ees );
         assertNotNull(genes);
     }
 

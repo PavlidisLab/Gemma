@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.io.Serializable;
 
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * Expression experiment command object that wraps expression experiment search preferences.
  * 
@@ -31,43 +33,19 @@ public class CoexpressionSearchCommand implements Serializable {
     private static final long serialVersionUID = 2166768356457316142L;
 
     private int stringency;
-
-    private String searchCriteria = null;
     
     private String searchString = null;
+    
+    private String eeSearchString = null;
 
     private boolean suppressVisualizations;
-
-    private String filename = null;
     
-    private String species = null;
-
-    /**
-     * @return Returns the filename.
-     */
-    public String getFilename() {
-        return filename;
-    }
-
-    /**
-     * @param filename The filename to set.
-     */
-    public void setFilename( String filename ) {
-        this.filename = filename;
-    }
+    private Taxon taxon;
     
-    /**
-     * @return Returns the species.
-     */
-    public String getSpecies() {
-        return species;
-    }
-
-    /**
-     * @param filename The species to set.
-     */
-    public void setSpecies( String species ) {
-        this.species = species;
+    private boolean exactSearch = true;
+    
+    public CoexpressionSearchCommand() {
+        this.setTaxon( Taxon.Factory.newInstance() );
     }
 
     /**
@@ -113,16 +91,44 @@ public class CoexpressionSearchCommand implements Serializable {
     }
 
     /**
-     * @return String
+     * @return the exactSearch
      */
-    public String getSearchCriteria() {
-        return searchCriteria;
+    public boolean isExactSearch() {
+        return exactSearch;
     }
 
     /**
-     * @param searchCriteria
+     * @param exactSearch the exactSearch to set
      */
-    public void setSearchCriteria( String searchCriteria ) {
-        this.searchCriteria = searchCriteria;
+    public void setExactSearch( boolean exactSearch ) {
+        this.exactSearch = exactSearch;
+    }
+
+    /**
+     * @return the eeSearchString
+     */
+    public String getEeSearchString() {
+        return eeSearchString;
+    }
+
+    /**
+     * @param eeSearchString the eeSearchString to set
+     */
+    public void setEeSearchString( String eeSearchString ) {
+        this.eeSearchString = eeSearchString;
+    }
+
+    /**
+     * @return the taxon
+     */
+    public Taxon getTaxon() {
+        return taxon;
+    }
+
+    /**
+     * @param taxon the taxon to set
+     */
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 }

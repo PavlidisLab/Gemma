@@ -236,18 +236,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedGenes(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleGetCoexpressedGenes( Gene gene ) throws Exception {
-        return this.getGeneDao().getCoexpressedGenes( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedGenesById(long)
-     */
-    @Override
-    protected Collection handleGetCoexpressedGenesById( long id ) throws Exception {
-        return this.getGeneDao().getCoexpressedGenesById( id );
+    protected Collection handleGetCoexpressedGenes( Gene gene, Collection ees ) throws Exception {
+        return this.getGeneDao().getCoexpressedGenes( gene, ees );
     }
 
     @Override

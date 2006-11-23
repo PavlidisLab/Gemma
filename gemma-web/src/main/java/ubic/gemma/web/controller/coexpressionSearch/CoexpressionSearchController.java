@@ -19,7 +19,10 @@
 package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List; 
@@ -28,21 +31,26 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.loader.genome.taxon.SupportedTaxa;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
+import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 
 /**
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
@@ -63,6 +71,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "geneService" ref="geneService"
+ * @spring.property name = "taxonService" ref="taxonService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class CoexpressionSearchController extends BaseFormController {
@@ -71,6 +80,7 @@ public class CoexpressionSearchController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private GeneService geneService = null;
+    private TaxonService taxonService = null;
     private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
     private List<DesignElement> compositeSequences = null;
 
@@ -90,11 +100,6 @@ public class CoexpressionSearchController extends BaseFormController {
     protected Object formBackingObject( HttpServletRequest request ) {
 
         CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
-
-        csc.setSearchString( "" );
-        csc.setStringency( 1 );
-        csc.setSpecies("Human");
-
         return csc;
 
     }
@@ -107,6 +112,7 @@ public class CoexpressionSearchController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
+/*
     @SuppressWarnings("unchecked")
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
@@ -124,7 +130,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         return super.processFormSubmission( request, response, command, errors );
     }
-
+*/
     /**
      * Mock function - do not use.
      * @param request
@@ -134,7 +140,7 @@ public class CoexpressionSearchController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -142,21 +148,61 @@ public class CoexpressionSearchController extends BaseFormController {
         log.debug( "entering onSubmit" );
         
         CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
-        String searchCriteria = ( (CoexpressionSearchCommand ) command ).getSearchCriteria();
-        boolean suppressVisualizations = ( ( CoexpressionSearchCommand ) command ).isSuppressVisualizations();
+        
+        Collection<Gene> genesFound;
+        // find the genes specified by the search
+        if (csc.isExactSearch()) {
+            genesFound = geneService.findByOfficialSymbol( csc.getSearchString( ) );
+        }
+        else {
+            genesFound = geneService.findByOfficialSymbolInexact( csc.getSearchString() );
+        }
+        
+        // filter genes by Taxon
+        Collection<Gene> genesToRemove = new ArrayList<Gene>();
+        for ( Gene gene : genesFound ) {
+            if (!gene.getTaxon().getCommonName().equalsIgnoreCase( csc.getTaxon().getCommonName() ) ) {
+                genesToRemove.add( gene );
+            }
+        }
+        genesFound.removeAll( genesToRemove );
 
-        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
-                + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools
-                .createDir( "../webapps/ROOT/visualization/" ) );
+        // if no genes found
+        // return error 
+        if (genesFound.size() == 0) {
+            saveMessage( request, "No genes found based on criteria." );
+            ModelAndView mav = new ModelAndView(getFormView());
+            mav.addObject( "coexpressionSearchCommand", csc );
+            return mav;
+        }
+        
+        // check if more than 1 gene found
+        // if yes, then query user for gene to be used
+        if (genesFound.size() > 1) {
+            saveMessage( request, "Multiple genes matched. Choose which gene to use." );        
+            ModelAndView mav = new ModelAndView(getFormView());
+            mav.addObject( "coexpressionSearchCommand", csc );
+            mav.addObject( "genes", genesFound );
+            return mav;
+        }
 
-        log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
-        Collection foundGenes = null;
-        ExpressionDataMatrix expressionDataMatrix = null;
+        // find expressionExperiments via lucene
+        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+        // only one gene found, find coexpressed genes
+        Gene sourceGene = (Gene) (genesFound.toArray())[0];
+        Collection<Gene> coexpressedGenes = geneService.getCoexpressedGenes( sourceGene, ees );
 
+        
+        // no genes are coexpressed
+        // return error 
+        if (coexpressedGenes.size() == 0) {
+            saveMessage( request, "No genes are coexpressed with the given stringency." );
+            return showForm( request, response, errors );
+        }
+        
         ModelAndView mav = new ModelAndView(getSuccessView());
-
-        mav.addObject( "foundGenes", foundGenes );
-        mav.addObject( "coexpressionSearchCommand", csc );
+        mav.addObject( "coexpressedGenes", coexpressedGenes );
+ //       mav.addObject( "coexpressionSearchCommand", csc );
         return mav;
     }
 
@@ -167,24 +213,39 @@ public class CoexpressionSearchController extends BaseFormController {
     @SuppressWarnings("unused")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
-        // add search categories
-        Collection<String> searchCategories = new HashSet<String>();
-        searchCategories.add( "gene symbol" );
-        //searchCategories.add( "probe set id" );
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();       
 
-        Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
-        
-        searchByMap.put( "searchCategories", searchCategories );
         
         // add species
-        Collection<String> speciesCategories = new HashSet<String>();
-        speciesCategories.add( "Human" );
-        speciesCategories.add( "Mouse" );
-        speciesCategories.add( "Rat" );        
+        populateTaxonReferenceData( mapping );      
         
-        searchByMap.put( "speciesCategories", speciesCategories );        
-        
-        return searchByMap;
+        return mapping;
+    }
+    
+    /**
+     * @param mapping
+     */
+    @SuppressWarnings("unchecked")
+    private void populateTaxonReferenceData( Map<String, List<? extends Object>> mapping ) {
+        List<Taxon> taxa = new ArrayList<Taxon>();
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            if ( !SupportedTaxa.contains( taxon ) ) {
+                continue;
+            }
+            taxa.add( taxon );
+        }
+        Collections.sort( taxa, new Comparator<Taxon>() {
+            public int compare( Taxon o1, Taxon o2 ) {
+                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
+            }
+        } );
+        mapping.put( "taxa", taxa );
+    }
+    
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
     /**
@@ -206,5 +267,12 @@ public class CoexpressionSearchController extends BaseFormController {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }    
 }

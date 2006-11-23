@@ -22,35 +22,45 @@
 	<table>
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.search" /> </b>
-			</td>
-
-			<td>
-
-				<spring:bind path="coexpressionSearchCommand.searchCriteria">
-					<select name="${status.expression}">
-						<c:forEach items="${searchCategories}" var="searchCategory">
-							<option value="${searchCategory}"
-								<c:if test="${status.value == searchCategory}">selected="selected" </c:if>>
-								${searchCategory}
-							</option>
-						</c:forEach>
-					</select>
-					<span class="fieldError">${status.errorMessage}</span>
-				</spring:bind>
-			</td>
-		</tr>
-
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="label.searchString" /> <br /> </b>
+				<b> Gene Name </b>
 			</td>
 			<td>
 				<spring:bind path="coexpressionSearchCommand.searchString">
-					<input type="text" size=10
+					<input type="text" size=15
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
+				<spring:bind path="coexpressionSearchCommand.exactSearch">
+					<input type="checkbox" name="${status.expression}" 
+					<c:if test="${status.value}">checked="checked"</c:if> 
+					/>
+				</spring:bind>
+				Exact search
+			</td>
+			<td>
+				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				'Official symbol of a gene'); return false">
+				<img src="/Gemma/images/help.png" />
+				</a>
+			</td>
+		</tr>
+		
+		<tr>
+			<td valign="top">
+				<b> Experiment keywords </b>
+			</td>
+			<td>
+				<spring:bind path="coexpressionSearchCommand.eeSearchString">
+					<input type="text" size=30
+						name="<c:out value="${status.expression}"/>"
+						value="<c:out value="${status.value}"/>" />
+				</spring:bind>
+			</td>
+			<td>
+				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				'keywords of experiments to use in the coexpression analysis'); return false">
+				<img src="/Gemma/images/help.png" />
+				</a>
 			</td>
 		</tr>
 		
@@ -58,17 +68,26 @@
 			<td valign="top">
 				<b> <fmt:message key="label.species" /> </b>
 			</td>
+			
+			
 			<td>
-				<spring:bind path="coexpressionSearchCommand.species">
+				<spring:bind path="coexpressionSearchCommand.taxon">
 					<select name="${status.expression}">
-						<c:forEach items="${speciesCategories}" var="speciesCategory">
-							<option value="${speciesCategory}"
-								<c:if test="${status.value == speciesCategory}">selected="selected" </c:if>>
-								${speciesCategory}
+						<c:forEach items="${taxa}" var="taxon">
+							<spring:transform value="${taxon}" var="scientificName" />
+							<option value="${scientificName}"
+								<c:if test="${status.value == taxon}">selected </c:if>>
+								${scientificName}
 							</option>
 						</c:forEach>
 					</select>
 				</spring:bind>
+			</td>
+			<td>
+				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				'Species to use in the coexpression search'); return false">
+				<img src="/Gemma/images/help.png" />
+				</a>
 			</td>
 		</tr>
 
@@ -83,21 +102,14 @@
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
-		</tr>
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="label.suppressVisualizations" /> </b>
-			</td>
 			<td>
-				<spring:bind
-					path="coexpressionSearchCommand.suppressVisualizations">
-					<input type="hidden" name="_${status.expression}" />
-					<input type="checkbox" name="${status.expression}" value="true" />
-					<c:if test="${status.value}">checked="checked"</c:if>
-					<span class="fieldError">${status.errorMessage}</span>
-				</spring:bind>
+				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				'The number of datasets (experiments) that coexpress the gene before it is considered a positive result'); return false">
+				<img src="/Gemma/images/help.png" />
+				</a>
 			</td>
 		</tr>
+
 	</table>
 	<br />
 	
@@ -106,8 +118,6 @@
 			<td>
 				<input type="submit" class="button" name="submit"
 					value="<fmt:message key="button.submit"/>" />
-				<input type="submit" class="button" name="cancel"
-					value="<fmt:message key="button.cancel"/>" />
 			</td>
 		</tr>
 	</table>

@@ -5,7 +5,7 @@
 
 
 <h2>Results for
-<% out.print(coexpressionSearchCommand.getSearchString() + "(" + coexpressionSearchCommand.getSearchCriteria() + ")"); %>
+<% out.print(coexpressionSearchCommand.getSearchString()); %>
 </h2> 
 
 <display:table name="foundGenes"
