@@ -204,20 +204,51 @@
     </servlet>
     
     <!--  servlet mappings -->
-    <servlet-mapping>
-        <servlet-name>action</servlet-name>
-        <url-pattern>*.htm</url-pattern>
-    </servlet-mapping>
-    
-    <servlet-mapping>
-        <servlet-name>action</servlet-name>
-        <url-pattern>*.html</url-pattern>
-    </servlet-mapping>
-    
-    <servlet-mapping>
-        <servlet-name>action</servlet-name>
-        <url-pattern>/dwr/*</url-pattern>
-    </servlet-mapping>
+ 	<servlet-mapping>
+		<servlet-name>action</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.css</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.js</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.gif</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.png</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.txt</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.ico</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.jpg</url-pattern>
+	</servlet-mapping>
+
+	<!-- static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. -->
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>/s/*</url-pattern>
+	</servlet-mapping>
     
     <session-config>
         <session-timeout>60</session-timeout>
