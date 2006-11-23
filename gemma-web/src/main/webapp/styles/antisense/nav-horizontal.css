@@ -118,7 +118,6 @@
                 position: absolute;
                 display: none;
                 left: 0px; /* Set 1px less than menu width */
-                top: 22px;
             }
 
                 ul#primary-nav ul li {
