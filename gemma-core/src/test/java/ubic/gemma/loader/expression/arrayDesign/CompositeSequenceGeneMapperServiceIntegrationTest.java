@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.apps.LoadExpressionDataCli;
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
@@ -53,6 +55,8 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSpringContextTest {
 
+    CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
+
     CompositeSequenceService compositeSequenceService = null;
 
     ArrayDesignService arrayDesignService = null;
@@ -63,16 +67,21 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
 
     String eeShortName = "GSE994";
 
+    String csName = "218120_s_at";
+
     ArrayDesign ad = null;
 
     Blat blat = new Blat();
 
     /**
-     * 
+     *
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        //
+        compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
+                .getBean( "compositeSequenceGeneMapperService" );
 
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
@@ -83,20 +92,18 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
 
         if ( ad == null ) {
 
-            // first load small twoc-color
+            // first load small two-color
             AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             geoService.setLoadPlatformOnly( true );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession );
             ad = ads.iterator().next();
-
         }
-
         arrayDesignService.thaw( ad );
     }
 
     /**
-     * 
+     *
      */
     @Override
     protected void onTearDownInTransaction() throws Exception {
@@ -166,7 +173,37 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
     }
 
     /**
-     * Tests getting matching composite sequences for a given string name of the composite sequence. names.
+     * Tests findGenesByOfficialSymbols
+     */
+    public void testFindGenesByOfficialSymbols() {
+
+        String geneOfficialSymbol = "HMOX2";
+
+        Collection<String> geneSymbols = new HashSet<String>();
+        geneSymbols.add( geneOfficialSymbol );
+
+        LinkedHashMap<String, Collection<Gene>> genesMap = compositeSequenceGeneMapperService
+                .findGenesByOfficialSymbols( geneSymbols );
+
+        Collection<String> keyset = genesMap.keySet();
+        for ( String key : keyset ) {
+            log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
+        }
+        assertNotNull( genesMap );
+
+    }
+
+    public void testGetGenesForCompositeSequences() {
+        ArrayDesign ad = arrayDesignService.findByShortName( arrayAccession );
+
+        CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
+
+        compositeSequenceGeneMapperService.getGenesForCompositeSequence( cs );
+
+    }
+
+    /**
+     * Tests getting matching composite sequences for a given array of the composite sequence names.
      * 
      * @throws Exception
      */
@@ -189,22 +226,29 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
         }
 
         /* test getting the matching composite sequences */
-        String[] compositeSequenceNames = { eeShortName };
+        String[] compositeSequenceNames = { csName };
+
         ArrayDesign ad = arrayDesignService.findByShortName( arrayAccession );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
+        arrayDesignService.thaw( ad );
         Collection<CompositeSequence> compositeSequences = compositeSequenceService.getMatchingCompositeSequences(
-                compositeSequenceNames, ads );
+                compositeSequenceNames, ads );// TODO refactor this to not use ads and String[]
 
         assertNotNull( compositeSequences );
 
         for ( CompositeSequence cs : compositeSequences ) {
-            log.info( "CompositeSequence: " + cs.getName() );
-            Collection<Gene> genes = compositeSequenceService.getAssociatedGenes( cs );
+            log.info( "CompositeSequence: " + cs.getName() + " assays genes: " );
+            Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( cs );
+
             assertNotNull( genes );
             for ( Gene g : genes ) {
                 log.info( "Gene: " + g.getOfficialSymbol() );
             }
         }
+    }
+    
+    public void testGetCompositeSequencesByGeneId(){
+        
     }
 }
