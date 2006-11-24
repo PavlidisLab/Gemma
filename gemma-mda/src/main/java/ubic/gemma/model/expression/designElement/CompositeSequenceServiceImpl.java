@@ -122,29 +122,6 @@ public class CompositeSequenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetAssociatedGenes(ubic.gemma.model.expression.designElement.CompositeSequence)
-     */
-    @Override
-    protected Collection<Gene> handleGetAssociatedGenes( CompositeSequence compositeSequence ) throws Exception {
-
-        Collection<Gene> genes = null;
-
-        if ( compositeSequence.getBiologicalCharacteristic() != null ) {
-            genes = new HashSet<Gene>();
-            for ( BioSequence2GeneProduct bs2gp : compositeSequence.getBiologicalCharacteristic()
-                    .getBioSequence2GeneProduct() ) {
-                if ( bs2gp != null ) {
-                    GeneProduct geneProduct = bs2gp.getGeneProduct();
-                    if ( geneProduct != null ) genes.add( geneProduct.getGene() );
-                }
-            }
-        }
-        return genes;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleRemove(Collection)
      */
     @Override
