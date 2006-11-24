@@ -4,10 +4,6 @@
 	class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
 
 
-<h2>Results for
-<% out.print(coexpressionSearchCommand.getSearchString()); %>
-</h2> 
-
 <display:table name="coexpressedGenes"
 	class="list" requestURI="" id="foundGenes" 
 	pagesize="200">
