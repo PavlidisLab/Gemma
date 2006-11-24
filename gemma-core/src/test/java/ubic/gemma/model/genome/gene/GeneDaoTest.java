@@ -102,7 +102,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setId( (long) 1 );
         gene.setName( "test_genedao" );
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
-        Collection<Gene> genes = geneDao.getCoexpressedGenes( gene, ees );
+        Collection<Gene> genes = geneDao.getCoexpressedGenes( gene, ees, 1 );
         assertNotNull(genes);
     }
 

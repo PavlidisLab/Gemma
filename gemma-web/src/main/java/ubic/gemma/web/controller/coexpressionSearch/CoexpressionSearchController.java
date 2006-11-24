@@ -25,14 +25,17 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List; 
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -64,7 +67,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "commandClass"
  *                  value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
  * @spring.property name = "formView" value="searchCoexpression"
- * @spring.property name = "successView" value="showCoexpressionSearchResults"
+ * @spring.property name = "successView" value="searchCoexpression"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "geneService" ref="geneService"
@@ -99,7 +102,13 @@ public class CoexpressionSearchController extends BaseFormController {
     protected Object formBackingObject( HttpServletRequest request ) {
 
         CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
-        loadCookie( request, csc );
+
+        if (request.getParameter( "searchString" ) != null) {
+            loadGETParameters( request, csc );
+        }
+        else {
+            loadCookie( request, csc );
+        }
         return csc;
 
     }
@@ -146,7 +155,7 @@ public class CoexpressionSearchController extends BaseFormController {
         // return error 
         if (genesFound.size() == 0) {
             saveMessage( request, "No genes found based on criteria." );
-            return showForm( request, response, errors );
+            return super.showForm( request, response, errors );
         }
         
         // check if more than 1 gene found
@@ -157,26 +166,35 @@ public class CoexpressionSearchController extends BaseFormController {
             mav.addObject( "coexpressionSearchCommand", csc );
             mav.addObject( "genes", genesFound );
             return mav;
-        }
+        } 
 
         // find expressionExperiments via lucene
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
         // only one gene found, find coexpressed genes
         Gene sourceGene = (Gene) (genesFound.toArray())[0];
+        // stringency. Cannot be less than 1; set to one if it is
+        Integer stringency = csc.getStringency();
+        if (stringency < 1) {
+            stringency = 1;
+        }
+        
 
-        Collection<Gene> coexpressedGenes = geneService.getCoexpressedGenes( sourceGene, ees );
+        Collection<Gene> coexpressedGenes = geneService.getCoexpressedGenes( sourceGene, ees, stringency );
 
         
         // no genes are coexpressed
         // return error 
         if (coexpressedGenes.size() == 0) {
            saveMessage( request, "No genes are coexpressed with the given stringency." );
-           return showForm( request, response, errors );
+           return super.showForm( request, response, errors );
         }
+
+        Long numCoexpressedGenes = new Long(coexpressedGenes.size());
         
-        ModelAndView mav = new ModelAndView(getSuccessView());
+        ModelAndView mav = super.showForm( request, errors, getSuccessView() );
         mav.addObject( "coexpressedGenes", coexpressedGenes );
- //       mav.addObject( "coexpressionSearchCommand", csc );
+        mav.addObject( "numCoexpressedGenes", numCoexpressedGenes);
+        
         return mav;
     }
 
@@ -196,11 +214,12 @@ public class CoexpressionSearchController extends BaseFormController {
         return mapping;
     }
     
+    
     /**
      * @param mapping
      */
     @SuppressWarnings("unchecked")
-    private void populateTaxonReferenceData( Map<String, List<? extends Object>> mapping ) {
+    private void populateTaxonReferenceData( Map mapping ) {
         List<Taxon> taxa = new ArrayList<Taxon>();
         for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
             if ( !SupportedTaxa.contains( taxon ) ) {
@@ -224,7 +243,7 @@ public class CoexpressionSearchController extends BaseFormController {
     
     /**
      * @param request
-     * @param adsac
+     * @param csc
      */
     private void loadCookie( HttpServletRequest request, CoexpressionSearchCommand csc ) {
 
@@ -248,11 +267,39 @@ public class CoexpressionSearchController extends BaseFormController {
         }
     }
     
+    /**
+     * Fills in the command object in the case that GET parameters are passed in
+     * @param request
+     * @param csc
+     */
+    private void loadGETParameters( HttpServletRequest request, CoexpressionSearchCommand csc ) {
+        if ( request == null || (request.getParameter( "searchString" ) == null) ) return;
+
+        Map params = request.getParameterMap();
+        
+        if ( params.get( "eeSearchString" ) != null ) {
+            csc.setEeSearchString( ((String[]) params.get( "eeSearchString" ))[0] );
+        }
+        if (params.get( "searchString" ) != null) {
+            csc.setSearchString( ((String[]) params.get( "searchString" ))[0] );
+        }
+        if (params.get( "stringency" ) != null) {
+            String[] stringency =  (String[]) params.get( "stringency" );
+            Integer num = Integer.parseInt(stringency[0]);
+            csc.setStringency(num  );
+        }
+        if (params.get( "taxon" ) != null) {
+            Taxon taxon = taxonService.findByScientificName( ((String[]) params.get( "taxon" ))[0]);
+            csc.setTaxon( taxon );
+        }
+    }
+    
     /* (non-Javadoc)
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) throws Exception {
+        // if there are GET parameters, process them into the formBackingObject
         if (request.getParameter( "searchString" ) != null) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
