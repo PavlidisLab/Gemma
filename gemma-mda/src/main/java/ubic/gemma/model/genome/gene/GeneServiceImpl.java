@@ -57,27 +57,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().countAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceCountById(long)
-     */
-    @Override
-    protected long handleGetCompositeSequenceCountById( long id ) throws Exception {
-        return this.getGeneDao().getCompositeSequenceCountById( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(long)
-     */
-    @Override
-    protected Collection handleGetCompositeSequencesById( long id ) throws Exception {
-        // TODO change name to getCompositeSequenceByGene(Gene gene)
-        return this.getGeneDao().getCompositeSequencesById( id );
-    }
-
     /**
      * This was created because calling saveGene with an existant gene actually causes a caching error in Spring.
      * 
