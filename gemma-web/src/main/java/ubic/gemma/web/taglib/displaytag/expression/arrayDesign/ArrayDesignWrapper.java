@@ -40,14 +40,6 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-     /**
-     * @return String
-     */
-     public String getShortDescription() {
-         ArrayDesign object = ( ArrayDesign ) getCurrentRowObject();
-         String shortDescription = StringUtils.abbreviate( object.getDescription(), 200 );
-         return shortDescription;
-     }
      
      public String getExpressionExperimentCountLink() {
          ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
@@ -57,8 +49,22 @@ public class ArrayDesignWrapper extends TableDecorator {
              return object.getExpressionExperimentCount() + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
                      + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
          }
-         else {
-             return "0";
-         }
+        
+         return "0";
+
      }
+     
+     public String getDelete() {
+         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+         if ( object == null ) {
+             return "Array Design unavailable";
+         }
+
+         return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
+                 + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
+                 + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+
+     }
+     
 }

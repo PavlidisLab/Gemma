@@ -255,7 +255,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
             // FIXME this happens when the object is a proxy.
-            log.error( "No EntityPersister found for " + object.getClass().getName() );
+            log.error( "No Entity Persister found for " + object.getClass().getName() );
             return;
         }
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();

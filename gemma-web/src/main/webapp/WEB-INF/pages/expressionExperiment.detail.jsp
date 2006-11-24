@@ -324,14 +324,18 @@
 						</div>
 					</td>
 				</authz:acl>
-
+				
+				<authz:authorize ifAnyGranted="admin">
 				<td COLSPAN="2">
 					<div align="left">
 						<input type="button"
-							onclick="location.href='deleteExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>'"
+							onclick=" if (confirmDelete('Expression experiment'))  {location.href='deleteExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>';} else{ return false;}" 
 							value="Delete">
 					</div>
+					
+					
 				</td>
+				</authz:authorize>
 			</tr>
 		</table>
 		<script type="text/javascript"

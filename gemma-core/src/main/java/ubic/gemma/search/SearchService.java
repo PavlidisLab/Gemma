@@ -144,7 +144,7 @@ public class SearchService {
      * @param query
      * @return
      */
-    public List<Gene> compassGeneSearch(final String query){
+    public List<CompassHit> compassGeneSearch(final String query){
         
         CompassSearchResults searchResults;
         
@@ -161,12 +161,13 @@ public class SearchService {
     }
     
     //fixme:  there should be a static method in the java package to do this.  Just need to find it. :)
-    protected List<Gene> convert2List( CompassHit[] anArray ) {
+    protected List<CompassHit> convert2List( CompassHit[] anArray ) {
 
-        ArrayList<Gene> converted = new ArrayList<Gene>( anArray.length );
+        ArrayList<CompassHit> converted = new ArrayList<CompassHit>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
-            converted.add( (Gene) anArray[i].getData() );
+            converted.add(anArray[i]); //converted.add( (Gene) anArray[i].getData() );
+            
 
         return converted;
 

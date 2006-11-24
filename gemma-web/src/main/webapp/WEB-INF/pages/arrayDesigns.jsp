@@ -24,8 +24,7 @@
 					<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName" />
 					<display:column property="expressionExperimentCountLink" sortable="true" title="Expts" />
 					<authz:authorize ifAnyGranted="admin">
-						<display:column sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"
-							titleKey="arrayDesign.delete">Delete</display:column>
+						<display:column property="delete" sortable="false" titleKey="arrayDesign.delete" />
 					</authz:authorize>
 					<display:setProperty name="basic.empty.showtable" value="true" />
 				</display:table>

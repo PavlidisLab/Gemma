@@ -16,24 +16,23 @@
 
 
 
-<class name="genome.GeneImpl" alias="gene" root="true">
+<class name="genome.GeneImpl" alias="gene" all="false" root="true">
 
     <id name="id" />
    
     <property name="name" managed-id="false" managed-id-index="no">
-      <meta-data index="no" store="yes"> name </meta-data>     
+      
     </property>
    
-    <property name="description" managed-id="false"  managed-id-index="no">
-      <meta-data  index="no" store="yes"> description </meta-data>
+    <property name="description" managed-id="false"  managed-id-index="no" exclude-from-all="true">
     </property>
     
     <property name="officialName">
       <meta-data>official name</meta-data>
     </property>
 
-    <property name="officialSymbol" managed-id="false"  managed-id-index="no">
-      <meta-data index="no" store="yes"> official Symbol </meta-data>
+    <property name="officialSymbol" managed-id="false"  managed-id-index="no" exclude-from-all="false">
+
     </property>
 
     <property name="ncbiId">

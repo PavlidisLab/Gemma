@@ -19,7 +19,6 @@
 
 package ubic.gemma.web.controller;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -52,6 +51,7 @@ public class ProcessDeleteController extends BaseFormController {
      * 
      */
     @Override
+    @SuppressWarnings("unused")
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
@@ -63,7 +63,7 @@ public class ProcessDeleteController extends BaseFormController {
         }
 
         taskRunningService.cancelTask( taskId );
-        this.saveMessage( request, "Process has been deleted." );
+        this.saveMessage( request, "Job cancelled." );
 
         return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
 
@@ -75,7 +75,9 @@ public class ProcessDeleteController extends BaseFormController {
      * @throws ServletException
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
+    @SuppressWarnings("unused")
+    protected Object formBackingObject( 
+    HttpServletRequest request ) {
 
         // FIXME do you need this method at all?
 
