@@ -8,8 +8,9 @@
 <% out.print(coexpressionSearchCommand.getSearchString()); %>
 </h2> 
 
-<display:table name="foundGenes"
+<display:table name="coexpressedGenes"
 	class="list" requestURI="" id="foundGenes" 
-	pagesize="10">
+	pagesize="200">
+	<display:column property="name" sortable="true" titleKey="gene.name" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>

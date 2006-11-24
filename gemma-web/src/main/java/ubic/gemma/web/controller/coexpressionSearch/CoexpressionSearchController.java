@@ -104,33 +104,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
     }
 
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-/*
-    @SuppressWarnings("unchecked")
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
 
-        log.debug( "entering processFormSubmission" );
-
-        CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
-
-        if ( request.getParameter( "cancel" ) != null ) {
-            log.info( "Canceled" );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ));
-
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-*/
     /**
      * Mock function - do not use.
      * @param request
@@ -162,7 +136,7 @@ public class CoexpressionSearchController extends BaseFormController {
         // filter genes by Taxon
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
         for ( Gene gene : genesFound ) {
-            if (!gene.getTaxon().getCommonName().equalsIgnoreCase( csc.getTaxon().getCommonName() ) ) {
+            if ( gene.getTaxon().getId() != csc.getTaxon().getId() ) {
                 genesToRemove.add( gene );
             }
         }
@@ -189,15 +163,16 @@ public class CoexpressionSearchController extends BaseFormController {
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
         // only one gene found, find coexpressed genes
         Gene sourceGene = (Gene) (genesFound.toArray())[0];
+
         Collection<Gene> coexpressedGenes = geneService.getCoexpressedGenes( sourceGene, ees );
 
         
         // no genes are coexpressed
         // return error 
-        if (coexpressedGenes.size() == 0) {
-            saveMessage( request, "No genes are coexpressed with the given stringency." );
-            return showForm( request, response, errors );
-        }
+        //if (coexpressedGenes.size() == 0) {
+         //   saveMessage( request, "No genes are coexpressed with the given stringency." );
+         //   return showForm( request, response, errors );
+        //}
         
         ModelAndView mav = new ModelAndView(getSuccessView());
         mav.addObject( "coexpressedGenes", coexpressedGenes );
