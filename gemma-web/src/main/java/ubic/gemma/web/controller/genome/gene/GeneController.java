@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -40,12 +41,14 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @version $Id$
  * @spring.bean id="geneController"
  * @spring.property name="geneService" ref="geneService"
+ * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="methodNameResolver" ref="geneActions"
  */
 public class GeneController extends BaseMultiActionController {
     private GeneService geneService = null;
     private BibliographicReferenceService bibliographicReferenceService = null;
+    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
 
     /**
      * @return Returns the geneService.
@@ -145,20 +148,20 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        ModelAndView mav = new ModelAndView("gene.detail");
+        ModelAndView mav = new ModelAndView( "gene.detail" );
         mav.addObject( "gene", gene );
-        Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
+        Long compositeSequenceCount = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         return mav;
     }
-    
+
     /**
      * @param request
      * @param response
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         Gene gene = geneService.load( id );
@@ -166,12 +169,20 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        ModelAndView mav = new ModelAndView("compositeSequences");
+        ModelAndView mav = new ModelAndView( "compositeSequences" );
         mav.addObject( "gene", gene );
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
+        Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
+                .getCompositeSequencesByGeneId( id );
         mav.addObject( "compositeSequences", compositeSequences );
         return mav;
     }
-    
-    
+
+    /**
+     * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
+     */
+    public void setCompositeSequenceGeneMapperService(
+            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
+    }
+
 }

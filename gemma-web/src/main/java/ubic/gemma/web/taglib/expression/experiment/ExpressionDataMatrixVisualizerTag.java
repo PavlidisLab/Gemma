@@ -30,8 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceServiceImpl;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
@@ -47,7 +47,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private CompositeSequenceService compositeSequenceService = null;
+    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
 
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
@@ -62,7 +62,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      */
     public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
         this.expressionDataMatrix = expressionDataMatrix;
-        this.compositeSequenceService = new CompositeSequenceServiceImpl();
+        this.compositeSequenceGeneMapperService = new CompositeSequenceGeneMapperService();
     }
 
     /*
@@ -115,7 +115,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                     buf.append( cs.getName() );
                     buf.append( "</font>" );
 
-                    Collection associatedGenes = compositeSequenceService.getAssociatedGenes( ( CompositeSequence ) cs );
+                    Collection associatedGenes = compositeSequenceGeneMapperService
+                            .getGenesForCompositeSequence( ( CompositeSequence ) cs );
                     Iterator iter = associatedGenes.iterator();
                     // FIXME only adding the first gene
                     if ( iter.hasNext() ) {
