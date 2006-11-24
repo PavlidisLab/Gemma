@@ -43,8 +43,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString() {
-        return trackingId;
+    public String toString(){ 
+        return "TrackingId: " + trackingId + "  JobID: " + jInfo.getId() + "  TaskID: " + jInfo.getTaskId();
     }
 
     /**

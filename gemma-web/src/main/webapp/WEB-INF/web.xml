@@ -243,6 +243,16 @@
 		<servlet-name>default</servlet-name>
 		<url-pattern>*.jpg</url-pattern>
 	</servlet-mapping>
+	
+	<servlet-mapping>
+        <servlet-name>action</servlet-name>
+        <url-pattern>*.html</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>action</servlet-name>
+        <url-pattern>/dwr/*</url-pattern>
+    </servlet-mapping>
 
 	<!-- static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. -->
 	<servlet-mapping>
