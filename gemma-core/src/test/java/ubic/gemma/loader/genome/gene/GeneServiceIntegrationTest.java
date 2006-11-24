@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -36,7 +37,11 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         // get a gene to get the id
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         Gene g = geneCollection.iterator().next();
-        long count = geneService.getCompositeSequenceCountById( g.getId() );
+
+        CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
+                .getBean( "compositeSequenceGeneMapperService" );
+
+        long count = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( g.getId() );
         assert ( count != 0 );
     }
 
@@ -48,19 +53,24 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         // get a gene to get the id
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         Gene g = geneCollection.iterator().next();
-        Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
+
+        CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
+                .getBean( "compositeSequenceGeneMapperService" );
+
+        Collection<CompositeSequence> compSequences = compositeSequenceGeneMapperService
+                .getCompositeSequencesByGeneId( g.getId() );
         assert ( compSequences.size() != 0 );
     }
-    
+
     public void testGetGenesByTaxon() throws Exception {
         // get geneService
         GeneService geneService = ( GeneService ) this.getBean( "geneService" );
-        TaxonService taxonService = (TaxonService) this.getBean( "taxonService" );
-       
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
         Taxon taxon = taxonService.findByCommonName( "human" );
         Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );
         assert ( geneCollection.size() != 0 );
-        
+
     }
 
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
