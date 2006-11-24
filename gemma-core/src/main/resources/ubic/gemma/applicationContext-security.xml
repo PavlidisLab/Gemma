@@ -273,7 +273,6 @@
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.create=user,admin
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.getAssociatedGenes=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.designElement.ReporterService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.designElement.ReporterService.remove=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.create=user,admin
