@@ -10,6 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -30,14 +31,14 @@ public class CoexpressionWrapper extends TableDecorator {
      * @return String
      */
     public String getNameLink() {
-        Gene object = ( Gene ) getCurrentRowObject();
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
         StringBuffer link = new StringBuffer();
         
         // gene link to gemma
         link.append( "<a href=\"/Gemma/gene/showGene.html?id=" );
-        link.append( object.getId() );
+        link.append( object.getGeneId() );
         link.append( "\">" );
-        link.append( object.getName() );
+        link.append( object.getGeneName() );
         link.append( "</a>" );
         
         // tmm-style coexpression search link
@@ -52,7 +53,7 @@ public class CoexpressionWrapper extends TableDecorator {
         excludeList.add( "exactSearch" );
         extractParameters( paramList, excludeList );
         // add in the current gene with exactSearch
-        paramList.add( "searchString=" + object.getName() );
+        paramList.add( "searchString=" + object.getGeneName() );
         paramList.add( "exactSearch=on" );
         
         // put in the tmm link
@@ -62,6 +63,13 @@ public class CoexpressionWrapper extends TableDecorator {
         link.append( "\"><img src=\"/Gemma/images/logo/gemmaTiny.gif\" /></a>" );
         
         return link.toString();
+    }
+    
+    public String getDataSetCount() {
+        String count;
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        count = (new Integer(object.getExpressionExperimentValueObjects().size())).toString();
+        return count; 
     }
 
     /**

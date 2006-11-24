@@ -179,7 +179,7 @@ public class CoexpressionSearchController extends BaseFormController {
         }
         
 
-        Collection<Gene> coexpressedGenes = geneService.getCoexpressedGenes( sourceGene, ees, stringency );
+        Collection coexpressedGenes = geneService.getCoexpressedGenes( sourceGene, ees, stringency );
 
         
         // no genes are coexpressed
