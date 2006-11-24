@@ -28,6 +28,27 @@
         </property>
     </bean>
 	 
+	 
+	 	 <bean id="compassGene" class="org.compass.spring.LocalCompassBean">
+        <property name="resourceLocations">
+            <list>
+                <value>classpath:ubic/gemma/compass/gene_mappings.cpm.xml</value>
+            </list>   
+        </property>
+        <property name="compassSettings">
+            <props>
+                <prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/gene</prop>
+                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gene/gene.lock</prop>
+                <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
+                <prop key="compass.transaction.lockTimeout">20</prop>
+                <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
+                <prop key="compass.engine.analyzer.default.name">English</prop>
+            </props>
+        </property>
+        <property name="transactionManager">
+            <ref bean="transactionManager" />
+        </property>
+    </bean>
      <!-- COMPASS END -->
 </beans>
      

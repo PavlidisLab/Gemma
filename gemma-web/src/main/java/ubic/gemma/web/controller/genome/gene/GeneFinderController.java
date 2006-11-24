@@ -18,13 +18,8 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,11 +30,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.model.genome.gene.GeneProductService;
-import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /** 
@@ -48,76 +40,18 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.bean id="geneFinderController"  
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="geneProductService" ref="geneProductService" 
- * @spring.property name="bioSequenceService" ref="bioSequenceService" 
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"  
+ * @spring.property name="searchService" ref="searchService"
+ 
  */
 public class GeneFinderController extends BaseFormController {
+    
     private static Log log = LogFactory.getLog( GeneFinderController.class.getName() );
     
-    private GeneService geneService;
-    private GeneProductService geneProductService;
-    private CompositeSequenceService compositeSequenceService;
-    private BioSequenceService bioSequenceService;
+    private SearchService searchService;
     
     
-    /**
-     * @return the bioSequenceService
-     */
-    public BioSequenceService getBioSequenceService() {
-        return bioSequenceService;
-    }
-
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
     
-    /**
-     * @return the compositeSequenceService
-     */
-    public CompositeSequenceService getCompositeSequenceService() {
-        return compositeSequenceService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @return the geneProductService
-     */
-    public GeneProductService getGeneProductService() {
-        return geneProductService;
-    }
-
-    /**
-     * @param geneProductService the geneProductService to set
-     */
-    public void setGeneProductService( GeneProductService geneProductService ) {
-        this.geneProductService = geneProductService;
-    }
-
-    /**
-     * @return Returns the bibliographicReferenceService.
-     */
-    public GeneService getGeneService() {
-        return geneService;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
+  
     @Override
     @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -127,72 +61,37 @@ public class GeneFinderController extends BaseFormController {
         
         // first check - searchString should allow searches of 3 characters or more ONLY
         // this is to prevent a huge wildcard search
-        if ( StringUtils.isEmpty( searchString ) ) {
+        if (!searchStringValidator( searchString )) {
             this.saveMessage( request, "Must use at least three characters for search" );
+            log.info( "User entered an invalid search" );
             return new ModelAndView("geneFinder");
         }
         
-        Map params = request.getParameterMap();
-
-        String previousSearch = (String)request.getSession().getAttribute( "previousSearch");
-        // check to see if the modelAndView is saved in the session
-        // make sure that this is a pagination or sort (not a re-search)
-        // the current search string and the previous search string should not be null
-        // and the previous search should be the same as the current one.
-        if ( (request.getSession().getAttribute( "modelAndView") != null) && 
-                (params.size() > 1) &&
-                (previousSearch != null) &&
-                (previousSearch.equals( searchString ))
-                ) {
-            return (ModelAndView) request.getSession().getAttribute( "modelAndView");
-        }
+//        Map params = request.getParameterMap();
+//
+//        String previousSearch = (String)request.getSession().getAttribute( "previousSearch");
+//        // check to see if the modelAndView is saved in the session
+//        // make sure that this is a pagination or sort (not a re-search)
+//        // the current search string and the previous search string should not be null
+//        // and the previous search should be the same as the current one.
+//        if ( (request.getSession().getAttribute( "modelAndView") != null) && 
+//                (params.size() > 1) &&
+//                (previousSearch != null) &&
+//                (previousSearch.equals( searchString ))
+//                ) {
+//            return (ModelAndView) request.getSession().getAttribute( "modelAndView");
+//        }
         
 
         
-        // search by inexact symbol
-        Set<Gene> geneSet =  new HashSet<Gene>();
-        Set<Gene> geneMatch = new HashSet<Gene>();
-        Set<Gene> aliasMatch = new HashSet<Gene>();
-        Set<Gene> geneProductMatch = new HashSet<Gene>();
-        Set<Gene> bioSequenceMatch = new HashSet<Gene>();
         
-        geneMatch.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
-        aliasMatch.addAll( geneService.getByGeneAlias( searchString ) );
-        
-        geneProductMatch.addAll( geneProductService.getGenesByName( searchString ) );
-        geneProductMatch.addAll( geneProductService.getGenesByNcbiId( searchString ) );
-        
-        bioSequenceMatch.addAll( bioSequenceService.getGenesByAccession( searchString ) );
-        bioSequenceMatch.addAll( bioSequenceService.getGenesByName( searchString ) );
-         
-        geneSet.addAll(geneMatch);
-        geneSet.addAll(aliasMatch);
-        geneSet.addAll( geneProductMatch );
-        geneSet.addAll( bioSequenceMatch );
-        
-        // trick to get around lazy load
-        // touch all taxa in geneSet
-        for (Gene g : geneSet) {
-            String name = g.getTaxon().getScientificName();
-        }
-        
-        List<Gene> geneList = new ArrayList<Gene>(geneSet);
-        Comparator<Gene> comparator = new GeneComparator();
-        Collections.sort( geneList, comparator );
-      
+              
         ModelAndView mav = new ModelAndView("geneFinderList");
-        mav.addObject( "genes", geneList );
-        mav.addObject( "geneMatch", geneMatch );
-        mav.addObject( "aliasMatch", aliasMatch );
-        mav.addObject( "geneProductMatch", geneProductMatch );
-        mav.addObject( "bioSequenceMatch", bioSequenceMatch );
-        mav.addObject( "searchParameter", searchString );
-        
-        // cache modelandview
-        
-        request.getSession().setAttribute( "modelAndView", mav );
-        request.getSession().setAttribute( "previousSearch", searchString );   
-        
+        log.info( "Attempting exact DB query" );
+        mav.addObject( "genes", searchService.geneDbSearch( searchString ) );
+        log.info( "Attempting loose compass query" );
+        mav.addObject( "compassGenes", searchService.compassGeneSearch( searchString ) );
+                
         return mav;
     }
 
@@ -243,6 +142,35 @@ public class GeneFinderController extends BaseFormController {
 
             return obj0.getName().compareTo( obj1.getName() );
         }
+    }
+
+
+    /**
+     * Validates the query string
+     * @param query
+     * @return
+     */
+    protected boolean searchStringValidator( String query ) {
+
+        if ( StringUtils.isBlank( query ) ) return false;
+
+        if ( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) ) return false;
+
+        return true;
+    }
+    
+    /**
+     * @return the searchService
+     */
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
 

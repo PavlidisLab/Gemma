@@ -106,16 +106,28 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
             BindException errors ) throws Exception {
 
         CompassIndexCommand indexCommand = ( CompassIndexCommand ) command;
-
+        
+        
         if ( !StringUtils.hasText( indexCommand.getDoIndex() ) || !indexCommand.getDoIndex().equalsIgnoreCase( "true" ) ) {
             return new ModelAndView( getIndexView(), getCommandName(), indexCommand );
         }
 
-        IndexExpressionExperimentsJob indexEE = new IndexExpressionExperimentsJob( request,
+        
+        IndexJob index;
+        
+        if (request.getParameter( "geneIndex") != null ) {
+            index = new IndexJob( request,
+                    ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
+                            "geneCompassGps" ) );
+            
+        }
+        else {
+         index = new IndexJob( request,
                 ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
                         "compassGps" ) );
-
-        String taskId = startJob( request, indexEE );
+        }
+        
+        String taskId = startJob( request, index );
 
         return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
     }
@@ -129,12 +141,12 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
      * @version $Id$ This inner class is used
      *          for creating a seperate thread that will delete the compass ee index
      */
-    class IndexExpressionExperimentsJob extends BackgroundControllerJob<ModelAndView> {
+    class IndexJob extends BackgroundControllerJob<ModelAndView> {
 
         private CompassIndexCommand indexCommand;
         private CompassGpsInterfaceDevice gpsDevice;
 
-        public IndexExpressionExperimentsJob( HttpServletRequest request, CompassIndexCommand indexCommand,
+        public IndexJob( HttpServletRequest request, CompassIndexCommand indexCommand,
                 CompassGpsInterfaceDevice gpsDevice ) {
             super( request );
             this.indexCommand = indexCommand;
@@ -147,7 +159,7 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
             init();
 
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Attempting to index EE Database" );
+                    .getName(), "Attempting to index" );
 
             long time = System.currentTimeMillis();
 

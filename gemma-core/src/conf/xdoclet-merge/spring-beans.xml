@@ -110,7 +110,8 @@
 <bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
 	   <property name="name"><value>hibernateDevice</value></property>
 	   <property name="sessionFactory"><ref bean="sessionFactory" /></property>
-	 </bean>
+</bean>
+	 
 	 <bean id="compassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 	   <property name="compass"><ref bean="compass" /></property>
 	   <property name="gpsDevices">
@@ -122,6 +123,16 @@
 	   </property>
 	 </bean>
 
+	 <bean id="geneCompassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	   <property name="compass"><ref bean="compassGene" /></property>
+	   <property name="gpsDevices">
+	     <list>
+             <bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+                 <property name="gpsDevice" ref="hibernateGpsDevice" />
+             </bean>
+	     </list>
+	   </property>
+	 </bean>
 
 <!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->

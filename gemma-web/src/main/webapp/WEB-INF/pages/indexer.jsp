@@ -12,7 +12,9 @@ defined in the Compass::Gps configuration context.
 	<spring:bind path="command.doIndex">
 		<input type="hidden" name="doIndex" value="true" />
 	</spring:bind>
-    <input type="submit" value="Index"/>
+    <input type="submit" value="eeIndex"/>
+    <input type="submit" value="geneIndex"/>
+    
 </form>
 
 <c:if test="${! empty indexResults}">
