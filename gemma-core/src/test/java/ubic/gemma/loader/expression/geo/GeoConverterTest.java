@@ -20,7 +20,11 @@ package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
@@ -30,7 +34,9 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -188,6 +194,49 @@ public class GeoConverterTest extends TestCase {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
+    }
+
+    /**
+     * Case where the same sample can be in multiple series - file is confusing.
+     * 
+     * @throws Exception
+     */
+    public void testConvertMultiSeriesPerSample() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3193" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        ExpressionExperiment ee = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+        assertEquals( 85, ee.getBioAssays().size() );
+        Map<ArrayDesign, Integer> ads = new HashMap<ArrayDesign, Integer>();
+        for ( BioAssay b : ee.getBioAssays() ) {
+            if ( ads.containsKey( b.getArrayDesignUsed() ) ) {
+                ads.put( b.getArrayDesignUsed(), ads.get( b.getArrayDesignUsed() ) + 1 );
+            } else {
+                ads.put( b.getArrayDesignUsed(), new Integer( 1 ) );
+            }
+        }
+        assertEquals( 4, ads.size() );
+        for ( ArrayDesign ad : ads.keySet() ) {
+            Integer count = ads.get( ad );
+            if ( ad.getName().equals( "SHAC" ) ) {
+                assertEquals( 8, count.intValue() ); // ok
+            } else if ( ad.getName().equals( "SVJ" ) ) {
+                assertEquals( 1, count.intValue() );// ok
+            } else if ( ad.getName().equals( "SVL_SVM_SVN_SVO" ) ) {
+                assertEquals( 32, count.intValue() );
+            } else if ( ad.getName().equals( "SVC" ) ) {
+                assertEquals( 44, count.intValue() );
+            } else {
+                fail( "Name was " + ad.getName() );
+            }
+        }
     }
 
     public void testConvertDataDoubles() {

@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -155,6 +156,30 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
             // .fetchAndLoad( "GSE611" );
+            newee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        expressionExperimentService.thaw( newee );
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
+        QuantitationType qt = quantitationTypes.iterator().next();
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        assertEquals( 30, matrix.rows() );
+        assertEquals( 4, matrix.columns() );
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testMatrixConversionGSE3193() throws Exception {
+        endTransaction();
+        ExpressionExperiment newee;
+        try {
+            String path = ConfigUtils.getString( "gemma.home" );
+            assert path != null;
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE3193" );
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();

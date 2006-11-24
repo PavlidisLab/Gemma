@@ -1,300 +1,300 @@
 .ID	NAME	DESCRIPTION	IS_BACKGROUND	REPRESENTATION	GENERAL_TYPE	TYPE	SCALE	IS_PREFERRED	IS_NORMALIZED	IS_BACKGROUND_SUBTRACTED	numdatasets	NAME
-2	VALUE	MAS5 Signal - scaling factor = 1000	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	0	0	75	VALUE
-7	VALUE	A quantitative measure of the relative abundance of a transcript	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	UNSCALED	1	0	0	57	VALUE
-103	VALUE	"Normalised, background-corrected signal intensity"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	1	34	VALUE
-20	VALUE	Normalized log2(Test/Reference)	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	6	VALUE
-16	VALUE	log(NormCH2/NormCH1)	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	1	1	0	3	VALUE
-262	UNF_VALUE	"aka LOG_RAT2N_MEAN, or log2 of ratio of CH2DN_MEAN and CH1DN_MEAN"	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	3	UNF_VALUE
-15	VALUE	log ratio (log2 of PRE_VALUE)	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	0	0	2	VALUE
-54	VALUE	log ratio of PRE_VALUE	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	0	0	2	VALUE
-66	UNF_VALUE	log ratio of PRE_VALUE	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	1	1	0	2	UNF_VALUE
-259	UNF_VALUE	"aka LOG_RAT2N_MEAN, or log10 of ratio of CH2DN_MEAN and CH1DN_MEAN"	0	DOUBLE	QUANTITATIVE	RATIO	LOG10	1	1	0	2	UNF_VALUE
-36	VALID	"sub-standard features will have value 0, while a good feature will have value 1"	0	DOUBLE	CATEGORICAL	OTHER	UNSCALED	1	1	0	1	VALID
-161	VALUE_2	dChip calculated expression value	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	0	0	1	VALUE_2
-165	SIGNAL_Log2	log2 of Value	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	1	0	0	1	SIGNAL_Log2
-167	SUBMITTED_VALUE	Log2 RMA Values	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	1	1	1	1	SUBMITTED_VALUE
-184	VALUE	LOG2 ratio	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	0	0	1	VALUE
-271	UNF_VALUE	Normalize ratio of means defined as Channel 2 divided by Channel 1	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	1	1	0	1	UNF_VALUE
-297	UNF_VALUE	"log2 (F635/F532), after Lowess normalization"	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	1	UNF_VALUE
-1	ABS_CALL	"MAS5 present/absent call (P=present,M=marginal,A=absent)"	0	STRING	CATEGORICAL	PRESENTABSENT	OTHER	0	0	0	98	ABS_CALL
-126	G_BG_MEAN	Green Channel Mean Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_BG_MEAN
-127	R_MEDIAN	Red Channel Median Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_MEDIAN
-128	R_BG_MEAN	Red Channel Mean Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_BG_MEAN
-129	R_SD	Red Channel Standard Deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	R_SD
-130	G_MEDIAN	Green Channel Median Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_MEDIAN
-131	R_BG_MEDIAN	Red Channel Median Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_BG_MEDIAN
-132	G_PROCESSED	"Green Processed signal, after dye normalization and background subtraction, used for computation of log ratio"	1	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	0	0	0	33	G_PROCESSED
-133	R_MEAN	Red Channel Mean Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_MEAN
-134	G_MEAN	Green Channel Mean Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_MEAN
-135	G_BG_MEDIAN	Green Channel Median Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_BG_MEDIAN
-136	RATIO	Raw Log10  Ratio	0	DOUBLE	QUANTITATIVE	RATIO	LOG10	0	0	0	33	RATIO
-137	R_PROCESSED	"Red Processed signal, after dye normalization and background subtraction, used for computation of log ratio"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOGBASEUNKNOWN	0	0	0	33	R_PROCESSED
-138	G_BG_SD	Green Channel Background Standard Deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	G_BG_SD
-139	G_SD	Green Channel Standard Deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	G_SD
-140	R_BG_SD	Red Channel Background Standard Deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	R_BG_SD
-3	DETECTION P-VALUE	MAS5 detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	27	DETECTION P-VALUE
-199	LEFT	Box left: int(((centerY - radius) - yoffset) / pixelSize).; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	LEFT
-206	RAT2N_MEAN	Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	0	6	RAT2N_MEAN
-208	CH2B_MEDIAN	The median feature background intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale; Channel: Cy5 channel; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	6	CH2B_MEDIAN
-209	RIGHT	Box right: int(((centerY + radius) - yoffset) / pixelSize); Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	RIGHT
-218	CORR	"The correlation between channel1 (Cy3) & Channel 2 (Cy5) pixels within the spot, and is a useful quality control parameter. Generally, high values imply better fit & good spot quality.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	6	CORR
-219	TOP	Box top: int(((centerX - radius) - Xoffset) / pixelSize).; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	TOP
-222	CH2I_MEAN	Mean feature pixel intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	6	CH2I_MEAN
-225	FLAG	The type of flag associated with a feature: -100 = user-flagged null spot; -50 = software-flagged null spot; 0 = spot valid.; Type: INT; Scale: linear_scale	0	DOUBLE	CATEGORICAL	OTHER	LINEAR	0	0	0	6	FLAG
-226	CH2IN_MEAN	Normalized value of mean Channel 2 (usually 635 nm) intensity (CH2I_MEAN/Normalization factor).; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	6	CH2IN_MEAN
-232	BOT	Box bottom: int(((centerX + radius) - Xoffset) / pixelSize).; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	BOT
-244	CH1B_MEDIAN	The median feature background intensity at wavelength 532 nm.; Type: INT; Scale: linear_scale; Channel: Cy3 Channel; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	6	CH1B_MEDIAN
-19	Detection p-value	p-value to decide presence or absence	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	5	Detection p-value
-56	Positive	Number of positive probe pairs	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	5	Positive
-59	Negative	Number of negative probe pairs	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	5	Negative
-251	REGR	slope of the simple regression line of channel 2 to channel 1 pixels	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	5	REGR
-252	RAT1N_MEAN	ratio of CH1DN_MEAN to CH2DN_MEAN	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	5	RAT1N_MEAN
-253	CH2BN_MEDIAN	normalized CH2B_MEDIAN	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	5	CH2BN_MEDIAN
-254	RAT1_MEAN	ratio of CH1D_MEAN to CH2D_MEAN	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	5	RAT1_MEAN
-255	PERGTBCH1I_1SD	standard deviation of fraction of pixels greater than CH1B_MEAN	0	INT	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	5	PERGTBCH1I_1SD
-256	CH2DN_MEAN	normalized CH2D_MEAN	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	5	CH2DN_MEAN
-257	CH1D_MEAN	difference between CH1I_MEAN and CH1B_MEAN	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	5	CH1D_MEAN
-258	CH2D_MEAN	difference of CH2I_MEAN and CH2B_MEAN	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	5	CH2D_MEAN
-260	RAT2_MEAN	ratio of CH2D_MEAN to CH1D_MEAN	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	5	RAT2_MEAN
-261	PERGTBCH2I_1SD	standard deviation of fraction of pixels greater than CH2B_MEAN	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	PERCENT	0	0	0	5	PERGTBCH2I_1SD
-57	Pairs	Number of probe set specific probe pairs on the array	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	4	Pairs
-63	Pos/Neg	Positive/Negative	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	4	Pos/Neg
-12	PRE_VALUE	Normalized value by GeneSpring after per-chip and per-gene normalization	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	3	PRE_VALUE
-37	Y	"Y-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	3	Y
-49	X	"X-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	3	X
-55	Pairs_InAvg	Pairs in average	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	Pairs_InAvg
-58	PM_Excess	Number of probe pairs where PM/MM exceeds the ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	PM_Excess
-60	MM_Excess	Number of probe pairs where MM/PM exceeds 1/ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	MM_Excess
-61	Log_Avg	Log average	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOGBASEUNKNOWN	0	0	0	3	Log_Avg
-64	Pairs_Used	Pairs used	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	Pairs_Used
-125	Flags	"0 denotes satisfactory features, while <0 denotes features that did not meet our filter criteria"	0	DOUBLE	QUANTITATIVE	FAILED	LINEAR	0	0	0	3	Flags
-145	CH2_MEAN	Channel 2 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	3	CH2_MEAN
-148	CH1_MEAN	Channel 1 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	3	CH1_MEAN
-157	D_P-VALUE	"'detection p-value', p-value that indicates the significance level of the detection call"	0	DOUBLE	CATEGORICAL	CONFIDENCEINDICATOR	LINEAR	0	0	0	3	D_P-VALUE
-200	PIX_RAT2_MEDIAN	Contains median of Ch2PI-CH2B/Ch1PI-CH1B where Ch1PI & Ch2PI represent single pixel intensities.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	3	PIX_RAT2_MEDIAN
-34	F635 Median	median pixel intensity of feature for Cy5 channel - in this experiment Cy5 channel is the sample reference throughout the data set	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0		2	F635 Median
-35	B635 Mean	mean Cy5 feature background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B635 Mean
-39	F532 Median	"median feature pixel intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	F532 Median
-43	B635 Median	median Cy5 feature background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B635 Median
-44	RATIO	"ratio of the  normalized background subtracted median pixel intensity at the second wavelength (Cy3), to the  normalized background subtracted median pixel intensity at the first wavelength(Cy5). Substandard features will have default value 1"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	1	2	RATIO
-45	Dia.	diameter in ?m of the feature-indicator	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	Dia.
-47	B532 Median	"median feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B532 Median
-48	F635 Mean	mean pixel intensity of feature for Cy5 channel	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	F635 Mean
-50	B532 Mean	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B532 Mean
-104	CH2_BKD_ SD	Channel 2 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH2_BKD_ SD
-108	% > CH2_BKD_+2SD	Percent of feature pixels that were greater than two standard deviations of the background over the background signal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	2	% > CH2_BKD_+2SD
-109	Ratio of Means	"Unnormalized, untransformed ratio of means"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	2	Ratio of Means
 111	% > CH1_BKD_+2SD	Percent of feature pixels that were greater than two standard deviations of the background over the background signal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	2	% > CH1_BKD_+2SD
-113	CH1_BKD_ SD	Channel 1 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH1_BKD_ SD
-115	CH2_BKD_ Mean	Channel 2 mean background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH2_BKD_ Mean
-117	AREA	Number of pixels used to calculate a feature's intensity	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	AREA
-118	CH2_BKD_ Median	Channel 2 median background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH2_BKD_ Median
-119	CH1_BKD_ Median	Channel 1 median background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH1_BKD_ Median
-122	CH1_BKD_ Mean	Channel 1 mean background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH1_BKD_ Mean
-124	BKD_AREA	Number of pixels used to calculate a feature's background	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	BKD_AREA
-147	CH2_SD	Channel 2 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH2_SD
-150	CH1_SD	Channel 1 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH1_SD
-154	Stat Pairs Used	number of probe pairs used in calculating VALUE	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	Stat Pairs Used
-155	Stat Pairs	number of probe pairs on the probe array for a specific gene target	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	Stat Pairs
-164	QUALITY	Detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	QUALITY
-191	Pairs InAvg	Trimmed probe pair set	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	Pairs InAvg
-192	Pos Fraction	Positive/Pairs Used	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	Pos Fraction
-202	TOT_SPIX	The total number of feature pixels.; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	TOT_SPIX
-216	CH2B_MEAN	Mean intensities of background pixels of Cy5.; Type: INT; Scale: linear_scale; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH2B_MEAN
-237	TOT_BPIX	Number of background pixels.; Type: INT; Scale: linear_scale	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	TOT_BPIX
-246	CH1B_MEAN	The mean feature background intensity at wavelength 532 nm.; Type: INT; Scale: linear_scale; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH1B_MEAN
-268	Pos_Fraction	Positive/Pairs_Used	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	2	Pos_Fraction
-4	DETECTION P-VALUE_LB	"'detection p-value', negative log of the p-value from the Wilcoxon signed rank test, relative version that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LOGBASEUNKNOWN	0	0	0	1	DETECTION P-VALUE_LB
-5	DETECTION P-VALUE	"'detection p-value', negative log of the p-value that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LOGBASEUNKNOWN	0	0	0	1	DETECTION P-VALUE
+108	% > CH2_BKD_+2SD	Percent of feature pixels that were greater than two standard deviations of the background over the background signal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	2	% > CH2_BKD_+2SD
+101	%_>_B532+1SD	"percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B532+1SD
+100	%_>_B532+2SD	"percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B532+2SD
+72	%_>_B635+1SD	"percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #1 (635 nm, Cy5)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B635+1SD
+71	%_>_B635+2SD	"percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength #1 (635 nm, Cy5)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B635+2SD
+292	A	1/2 log2 F635 + 1/2 log2 F532	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	0	0	0	1	A
 6	ABS CALL	"the call in an absolute analysis that indicates if the transcript was present (P), absent (A), marginal (M), or reverse present (RP)"	0	STRING	CATEGORICAL	PRESENTABSENT	OTHER	0	0	0	1	ABS CALL
-8	CH2_SIG_MEAN	rProcessedSignal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	CH2_SIG_MEAN
-9	CH1_BKG_MEAN	gBGMeanSignal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_BKG_MEAN
-10	CH2_BKG_MEAN	rBGMeanSignal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_BKG_MEAN
-11	CH1_SIG_MEAN	gProcessedSignal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	CH1_SIG_MEAN
-13	RAW_DATA	raw data signal reading Generated by GEMTools 2.4	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	RAW_DATA
-14	RAW_CONTROL	raw control signal reading Generated by GEMTools 2.4	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	RAW_CONTROL
-17	NormCH2	thioridazine-treated	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	NormCH2
-18	NormCH1	vehicle-treated control	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	NormCH1
-21	SC851_cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC851_cy3
-22	SC851_cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC851_cy5
+1	ABS_CALL	"MAS5 present/absent call (P=present,M=marginal,A=absent)"	0	STRING	CATEGORICAL	PRESENTABSENT	OTHER	0	0	0	98	ABS_CALL
 23	AF625_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AF625_Cy3
 24	AF625_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AF625_Cy5
-25	AO092_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AO092_Cy5
-26	AO092_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AO092_Cy3
+31	AH593_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AH593_Cy3
+32	AH593_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AH593_Cy5
 27	AM079_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AM079_Cy3
 28	AM079_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AM079_Cy5
 29	AN914_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AN914_Cy3
 30	AN914_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AN914_Cy5
-31	AH593_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AH593_Cy3
-32	AH593_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AH593_Cy5
-33	F Pixels	number of feature pixels	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F Pixels
-38	B532 SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B532 SD
+26	AO092_Cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AO092_Cy3
+25	AO092_Cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	AO092_Cy5
+117	AREA	Number of pixels used to calculate a feature's intensity	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	AREA
+286	ARRAY_COLUMN	Array column	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	ARRAY_COLUMN
+283	ARRAY_ROW	Array row	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	ARRAY_ROW
 40	B Pixels	number of background pixels	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B Pixels
-41	F635 SD	Cy5 pixel intensity standard deviation	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F635 SD
-42	F532 Mean	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532 Mean
-46	F532 SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F532 SD
-51	B635 SD	Cy5 background pixel intensity standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B635 SD
-52	F532.Median	Median signal intensity of channel 2 (=532nm) minus local background (data generated using GenePix3.0)	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	F532.Median
-53	F635.Median	Median signal intensity of channel 1 (=635nm) minus local background (data generated using GenePix3.0)	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	F635.Median
-62	Pos_fraction	Positive fraction	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	Pos_fraction
-65	MEAN_OF_RATIOS	arithmetic mean of the pixel-by-pixel ratios of the raw pixel intensities of wavelength 2 (Cy3) to wavelength 1 (Cy5)	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	MEAN_OF_RATIOS
+95	B_PIXELS	number of background pixels	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B_PIXELS
+50	B532 Mean	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B532 Mean
+47	B532 Median	"median feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B532 Median
+38	B532 SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B532 SD
+94	B532_MEAN	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B532_MEAN
 67	B532_MEDIAN	"median feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B532_MEDIAN
-68	RATIOS_SD	standard deviation of the log of pixel intensity ratios. Note: ratios greater than 100 and less than 0.01 are excluded when calculating this data type	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	RATIOS_SD
+74	B532_SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B532_SD
+35	B635 Mean	mean Cy5 feature background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B635 Mean
+43	B635 Median	median Cy5 feature background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	B635 Median
+51	B635 SD	Cy5 background pixel intensity standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B635 SD
 69	B635_MEAN	mean Cy5 feature background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B635_MEAN
 70	B635_MEDIAN	median Cy5 feature background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B635_MEDIAN
-71	%_>_B635+2SD	"percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength #1 (635 nm, Cy5)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B635+2SD
-72	%_>_B635+1SD	"percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #1 (635 nm, Cy5)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B635+1SD
-73	RGN_R?	coefficient of determination provides a measure of the level of accuracy of the fit of the linear regression curve	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	1	RGN_R?
-74	B532_SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B532_SD
-75	F635_MEDIAN_B635	Cy5 median feature intensity subtracted by Cy5 median background intensity	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F635_MEDIAN_B635
-76	SUM_OF_MEDIANS	"sum of the median of the pixel intensities at each wavelength, with the median background pixel intensity at each wavelength subtracted"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_OF_MEDIANS
-77	F635_SD	Cy5 pixel intensity standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F635_SD
-78	F635_MEAN	mean pixel intensity of feature for Cy5 channel	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F635_MEAN
-79	RGN_RATIO	regression ratio is determined by computing a linear regression between the population of pixels represented by wavelength 1 and wavelength 2	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	1	RGN_RATIO
-80	F532_SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F532_SD
-81	F635_MEAN_B635	Cy5 mean feature intensity subtracted by Cy5 mean background intensity	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	F635_MEAN_B635
-82	F532_MEAN	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532_MEAN
-83	RATIO_OF_MEANS	"ratio of the arithmetic mean of the background subtracted raw pixel intensities at the second wavelength (Cy3), to the arithmetic mean of the background subtracted raw pixel intensities at the first wavelength (Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RATIO_OF_MEANS
-84	FLAGS	"sub-standard features will have a negative value, while a good feature will have a positive value"	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	FLAGS
-85	F532_%_SAT.	percentage of feature pixels at wavelength #2 (Cy3) that are saturated	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	F532_%_SAT.
-86	F635_%_SAT.	percentage of pixel saturation within feature	0	DOUBLE	QUANTITATIVE	RATIO	PERCENT	0	0	0	1	F635_%_SAT.
-87	LOG_RATIO	base two logarithm of the ratio of medians	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	0	0	0	1	LOG_RATIO
-88	PRE_VALUE	Cy3 background subtracted median intensity divided by Cy5 background subtracted intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	PRE_VALUE
 89	B635_SD	Cy5 background pixel intensity standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	B635_SD
-90	DIA.	diameter in ?m of the feature-indicator	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	DIA.
-91	F532_MEAN_B532	Cy3 mean feature intensity subtracted by Cy3 mean background intensity	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532_MEAN_B532
-92	F_PIXELS	number of feature pixels	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F_PIXELS
-93	RATIO_OF_MEDIANS	"ratio of the background subtracted median pixel intensity at the second wavelength (Cy3), to the background subtracted median pixel intensity at the first wavelength(Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RATIO_OF_MEDIANS
-94	B532_MEAN	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B532_MEAN
-95	B_PIXELS	number of background pixels	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	B_PIXELS
-96	F635_MEDIAN	median pixel intensity of feature for Cy5 channel - in this experiment Cy5 channel is normal whole brain (reference) throughout the data set	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	F635_MEDIAN
-97	SUM_OF_MEANS	"sum of the arithmetic mean of the pixel intensities at each wavelength, with the median background pixel intensity at each wavelength subtracted"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_OF_MEANS
-98	F532_MEDIAN_B532	Cy3 median feature intensity subtracted by Cy3 median background intensity	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532_MEDIAN_B532
-99	F532_MEDIAN	"median feature pixel intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532_MEDIAN
-100	%_>_B532+2SD	"percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B532+2SD
-101	%_>_B532+1SD	"percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	%_>_B532+1SD
-102	MEDIAN_OF_RATIOS	median of the pixel-by-pixel ratios of pixel intensities that have had the median background intensity subtracted of wavelength 2 (Cy3) to wavelength one (Cy5)	1	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	MEDIAN_OF_RATIOS
-105	CH1_ Median	Channel 1 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Median
-106	CH1_ Mean - CH1_BKD_	Channel 1 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Mean - CH1_BKD_
-107	CH2_ Median - CH2_BKD_	Channel 2 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Median - CH2_BKD_
-110	CH2_ SD	Channel 2 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2_ SD
-112	CH2_ Mean - CH2_BKD_	Channel 2 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Mean - CH2_BKD_
-114	CH2_ Mean	Channel 2 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Mean
-116	CH1_ Median - CH1_BKD_	Channel 1 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Median - CH1_BKD_
+170	BACKGROUND_CHANNEL 1MEDIAN	Cy5 sample background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	BACKGROUND_CHANNEL 1MEDIAN
+173	BACKGROUND_CHANNEL 2MEDIAN	Cy3 reference background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	BACKGROUND_CHANNEL 2MEDIAN
+124	BKD_AREA	Number of pixels used to calculate a feature's background	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	BKD_AREA
+232	BOT	Box bottom: int(((centerX + radius) - Xoffset) / pixelSize).; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	BOT
 120	CH1_ Mean	Channel 1 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Mean
+106	CH1_ Mean - CH1_BKD_	Channel 1 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Mean - CH1_BKD_
+105	CH1_ Median	Channel 1 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Median
+116	CH1_ Median - CH1_BKD_	Channel 1 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_ Median - CH1_BKD_
 121	CH1_ SD	Channel 1 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1_ SD
-123	CH2_ Median	Channel 2 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Median
+275	CH1_AREA	Number of pixels used in calculating the channel 1 intensity values	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_AREA
+122	CH1_BKD_ Mean	Channel 1 mean background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH1_BKD_ Mean
+119	CH1_BKD_ Median	Channel 1 median background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH1_BKD_ Median
+113	CH1_BKD_ SD	Channel 1 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH1_BKD_ SD
+272	CH1_BKD_MEAN	Channel 1 background mean	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_BKD_MEAN
+280	CH1_BKD_SD	Channel 1 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1_BKD_SD
+9	CH1_BKG_MEAN	gBGMeanSignal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_BKG_MEAN
+274	CH1_CONFIDENCE	Channel 1 confidence level as defined by QuantArray	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1_CONFIDENCE
+148	CH1_MEAN	Channel 1 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	3	CH1_MEAN
+284	CH1_Mean - CH1_BKD	Channel 1 mean signal background subtracted	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH1_Mean - CH1_BKD
+144	CH1_Mean - CH1_BKD_	Channel 1 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_Mean - CH1_BKD_
 141	CH1_Median	Channel 1 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_Median
 142	CH1_Median - CH1_BKD_	Channel 1 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_Median - CH1_BKD_
-143	CH2_Median - CH2_BKD_	Channel 2 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_Median - CH2_BKD_
-144	CH1_Mean - CH1_BKD_	Channel 1 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_Mean - CH1_BKD_
-146	CH2_Median	Channel 2 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_Median
-149	CH2_Mean - CH2_BKD_	Channel 2 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_Mean - CH2_BKD_
-151	Stat_Pairs	Number of probe pairs for a particular probe set	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	Stat_Pairs
-152	Stat_Pairs_Used	Number of probe pairs per probe set used in the analysis	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	Stat_Pairs_Used
-153	Detection_p-value	P-value associated with detection call	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	Detection_p-value
-156	SIGNAL_RAW	raw signal strength	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SIGNAL_RAW
-158	DETECTION-p-VALUE	p-value that indicates the detection confidence as calculated by the MAS 5.0 software	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION-p-VALUE
-159	VALUE_DET_P	Microarray Suite 5.0 detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	VALUE_DET_P
-160	VALUE_2_CALL	dChip detection call	0	DOUBLE	QUANTITATIVE	PRESENTABSENT	LINEAR	0	0	0	1	VALUE_2_CALL
-162	DETECTION_P-VALUE	"'detection p-value', p-value that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION_P-VALUE
-163	P_VALUE	P-Value that indicates the significance level of the detection call	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	P_VALUE
-166	DETECTION_P	MAS 5.0 detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION_P
-168	CHANNEL_1 SIGNAL - BACKGROUND	Cy5 signal minus Cy5 background	0	DOUBLE	QUANTITATIVE	FAILED	LINEAR	0	0	1	1	CHANNEL_1 SIGNAL - BACKGROUND
-169	CHANNEL_2 SIGNAL - BACKGROUND	Cy3 signal minus Cy3 background	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CHANNEL_2 SIGNAL - BACKGROUND
-170	BACKGROUND_CHANNEL 1MEDIAN	Cy5 sample background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	BACKGROUND_CHANNEL 1MEDIAN
-171	PRE_VALUE	ratio of medians for background subtracted signals	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	PRE_VALUE
-172	SIGNAL_CHANNEL 1MEDIAN	Cy5 sample signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SIGNAL_CHANNEL 1MEDIAN
-173	BACKGROUND_CHANNEL 2MEDIAN	Cy3 reference background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	BACKGROUND_CHANNEL 2MEDIAN
-174	SIGNAL_CHANNEL 2MEDIAN	Cy3 reference signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SIGNAL_CHANNEL 2MEDIAN
-175	LOG	log 2 normalized ADI	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	0	1	0	1	LOG
-176	PRE_DIFFERENCE CALL	Difference call (compared to normal pool of 37 samples)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	PRE_DIFFERENCE CALL
-177	DIFFERENCE CALL	Difference call (compared to normal pool of 37 samples)	0	DOUBLE	CATEGORICAL	DERIVEDSIGNAL	LINEAR	0	0	0	1	DIFFERENCE CALL
-178	PRE_CALL	Absolute call	0	DOUBLE	CATEGORICAL	PRESENTABSENT	LINEAR	0	0	0	1	PRE_CALL
-179	PRE_COMPARISON FC	Fold change (compared to normal pool of 37 samples)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	PRE_COMPARISON FC
-180	COMPARISON FC	Fold change (compared to normal pool of 37 samples)	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	COMPARISON FC
-181	DETECTION_P_VALUE		0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION_P_VALUE
+214	CH1_PER_SAT	The percentage of feature pixels at wavelength 532 nm that are saturated.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	CH1_PER_SAT
+150	CH1_SD	Channel 1 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH1_SD
+11	CH1_SIG_MEAN	gProcessedSignal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	CH1_SIG_MEAN
 182	CH1_SMTM	Control Channel (cy5)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_SMTM
-183	CH2_SMTM	Individual Channel (cy3)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_SMTM
-185	PAIRS_USED	Pairs used	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PAIRS_USED
-186	POSITIVE	Number of positive probe pairs	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	POSITIVE
-187	Experiment Name	Experiment name	0	STRING	UNKNOWN	OTHER	OTHER	0	0	0	1	Experiment Name
-188	Log Avg	Log average	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOGBASEUNKNOWN	0	0	0	1	Log Avg
-189	NEGATIVE	Number of negative probe pairs	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	NEGATIVE
-190	PM Excess	Number of probe pairs where PM/MM exceeds the ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PM Excess
-193	MM Excess	Number of probe pairs where MM/PM exceeds 1/ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	MM Excess
-194	POS/NEG	Positive/negative	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	POS/NEG
-195	Pairs Used	number of unmasked probe pairs	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	Pairs Used
-196	PAIRS	Number of probe set specific probe pairs on the array	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PAIRS
-197	POS_FRACTION	Positive/pairs used	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	POS_FRACTION
-198	PAIRS_IN_AVG	Trimmed probe pair set	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PAIRS_IN_AVG
+246	CH1B_MEAN	The mean feature background intensity at wavelength 532 nm.; Type: INT; Scale: linear_scale; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH1B_MEAN
+244	CH1B_MEDIAN	The median feature background intensity at wavelength 532 nm.; Type: INT; Scale: linear_scale; Channel: Cy3 Channel; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	6	CH1B_MEDIAN
+228	CH1B_SD	The standard deviation of the feature background intensity at wavelength 532 nm.; Type: float; Scale: linear_scale; Channel: Cy3 Channel; Background	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1B_SD
+257	CH1D_MEAN	difference between CH1I_MEAN and CH1B_MEAN	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	5	CH1D_MEAN
 201	CH1D_MEAN	The mean feature pixel intensity at wavelength 532 nm with the median background subtracted.; Type: INT; Scale: linear_scale; Channel: Cy3 Channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH1D_MEAN
-203	PERGTBCH1I_1SD	"The percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength 532 nm.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	PERGTBCH1I_1SD
-204	PERGTBCH1I_2SD	"The percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength 532 nm.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	PERGTBCH1I_2SD
-205	SUM_MEDIAN	"The sum of the median intensities for each wavelength, with the median background subtracted.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_MEDIAN
-207	RAT2N_MEDIAN	"Channel 2/Channel 1 ratio normalized, RAT2_MEDIAN/Normalization factor or Red/Green median ratio normalized.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	0	1	RAT2N_MEDIAN
 210	CH1D_MEDIAN	The median feature pixel intensity at wavelength 532 nm with the median background subtracted.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH1D_MEDIAN
 211	CH1I_MEAN	Uncorrected Cy3 mean pixel intensity.; Type: INT; Scale: linear_scale; Channel: Cy3 Channel	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1I_MEAN
-212	CH2D_MEDIAN	The median feature pixel intensity at wavelength 635 nm with the median background subtracted.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH2D_MEDIAN
-213	X_COORD	"X-coordinate of the center of the spot-indicator associated with the spot, where (0,0) is the top left of the image.; Type: INT; Scale: linear_scale"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	X_COORD
-214	CH1_PER_SAT	The percentage of feature pixels at wavelength 532 nm that are saturated.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	CH1_PER_SAT
-215	RAT2_MEAN	"The ratio of the arithmetic mean intensities of each feature for each wavelength, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RAT2_MEAN
-217	CH2IN_MEDIAN	Normalized value of median Channel 2 (usually 635 nm) intensity (CH2I_MEDIAN/Normalization factor).; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	CH2IN_MEDIAN
-220	Y_COORD	"Y-coordinate of the center of the spot-indicator associated with the spot, where (0,0) is the top left of the image.; Type: INT; Scale: linear_scale"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	Y_COORD
-221	PIX_RAT2_MEDIAN	"The median of pixel-by-pixel ratios of pixel intensities, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	PIX_RAT2_MEDIAN
-223	DIAMETER	The diameter in um of the feature-indicator.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	DIAMETER
-224	CH2DN_MEAN	Normalized value of mean Channel 2 (usually 635 nm) intensity with normalized background subtracted (CH2IN_MEAN - CH2BN_MEDIAN).; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	CH2DN_MEAN
 227	CH1I_MEDIAN	Median feature pixel intensity at wavelength 532 nm.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1I_MEDIAN
-228	CH1B_SD	The standard deviation of the feature background intensity at wavelength 532 nm.; Type: float; Scale: linear_scale; Channel: Cy3 Channel; Background	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1B_SD
-229	RAT2_MEDIAN	"The ratio of the median intensities of each feature for each wavelength, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RAT2_MEDIAN
-230	CH2BN_MEDIAN	Normalized value of median Channel 2 (usually 635 nm) background (CH2B_MEDIAN/Normalization factor).; Type: INT; Scale: linear_scale; Channel: Cy5 channel; Background	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	1	CH2BN_MEDIAN
 231	CH1I_SD	The standard deviation of the feature intensity at wavelength 532 nm.; Type: INT; Scale: linear_scale; Channel: Cy3 Channel	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1I_SD
+114	CH2_ Mean	Channel 2 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Mean
+112	CH2_ Mean - CH2_BKD_	Channel 2 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Mean - CH2_BKD_
+123	CH2_ Median	Channel 2 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Median
+107	CH2_ Median - CH2_BKD_	Channel 2 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_ Median - CH2_BKD_
+110	CH2_ SD	Channel 2 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2_ SD
+279	CH2_AREA	Number of pixels used in calculating the channel 2 intensity values	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_AREA
+115	CH2_BKD_ Mean	Channel 2 mean background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH2_BKD_ Mean
+118	CH2_BKD_ Median	Channel 2 median background intensity	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH2_BKD_ Median
+104	CH2_BKD_ SD	Channel 2 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH2_BKD_ SD
+273	CH2_BKD_MEAN	Channel 2 background mean	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_BKD_MEAN
+277	CH2_BKD_SD	Channel 2 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2_BKD_SD
+10	CH2_BKG_MEAN	rBGMeanSignal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_BKG_MEAN
+282	CH2_CONFIDENCE	Channel 2 confidence level as defined by QuantArray	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2_CONFIDENCE
+145	CH2_MEAN	Channel 2 mean intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	3	CH2_MEAN
+285	CH2_Mean - CH2_BKD	Channel 2 mean signal background subtracted	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH2_Mean - CH2_BKD
+149	CH2_Mean - CH2_BKD_	Channel 2 mean signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_Mean - CH2_BKD_
+146	CH2_Median	Channel 2 median intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_Median
+143	CH2_Median - CH2_BKD_	Channel 2 median signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_Median - CH2_BKD_
+241	CH2_PER_SAT	The percentage of feature pixels at wavelength 635 nm that are saturated.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	CH2_PER_SAT
+147	CH2_SD	Channel 2 mean standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	CH2_SD
+8	CH2_SIG_MEAN	rProcessedSignal	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	CH2_SIG_MEAN
+183	CH2_SMTM	Individual Channel (cy3)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_SMTM
+216	CH2B_MEAN	Mean intensities of background pixels of Cy5.; Type: INT; Scale: linear_scale; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	CH2B_MEAN
+208	CH2B_MEDIAN	The median feature background intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale; Channel: Cy5 channel; Background	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	6	CH2B_MEDIAN
+247	CH2B_SD	The standard deviation of the feature background intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale; Channel: Cy5 channel; Background	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2B_SD
+253	CH2BN_MEDIAN	normalized CH2B_MEDIAN	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	5	CH2BN_MEDIAN
+230	CH2BN_MEDIAN	Normalized value of median Channel 2 (usually 635 nm) background (CH2B_MEDIAN/Normalization factor).; Type: INT; Scale: linear_scale; Channel: Cy5 channel; Background	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	1	CH2BN_MEDIAN
+258	CH2D_MEAN	difference of CH2I_MEAN and CH2B_MEAN	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	5	CH2D_MEAN
+250	CH2D_MEAN	The mean feature pixel intensity with the median background subtracted (channel 2).; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH2D_MEAN
+212	CH2D_MEDIAN	The median feature pixel intensity at wavelength 635 nm with the median background subtracted.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH2D_MEDIAN
+256	CH2DN_MEAN	normalized CH2D_MEAN	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	5	CH2DN_MEAN
+224	CH2DN_MEAN	Normalized value of mean Channel 2 (usually 635 nm) intensity with normalized background subtracted (CH2IN_MEAN - CH2BN_MEDIAN).; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	CH2DN_MEAN
+242	CH2DN_MEDIAN	Normalized value of median Channel 2 (usually 635 nm) intensity with normalized background subtracted (CH2IN_MEDIAN - CH2BN_MEDIAN).; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	CH2DN_MEDIAN
+222	CH2I_MEAN	Mean feature pixel intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	6	CH2I_MEAN
+238	CH2I_MEDIAN	Median feature pixel intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2I_MEDIAN
+240	CH2I_SD	The standard deviation of the feature pixel intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2I_SD
+226	CH2IN_MEAN	Normalized value of mean Channel 2 (usually 635 nm) intensity (CH2I_MEAN/Normalization factor).; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	6	CH2IN_MEAN
+217	CH2IN_MEDIAN	Normalized value of median Channel 2 (usually 635 nm) intensity (CH2I_MEDIAN/Normalization factor).; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	1	CH2IN_MEDIAN
+168	CHANNEL_1 SIGNAL - BACKGROUND	Cy5 signal minus Cy5 background	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CHANNEL_1 SIGNAL - BACKGROUND
+169	CHANNEL_2 SIGNAL - BACKGROUND	Cy3 signal minus Cy3 background	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CHANNEL_2 SIGNAL - BACKGROUND
+276	COLUMN	Subarray column	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	COLUMN
+180	COMPARISON FC	Fold change (compared to normal pool of 37 samples)	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	COMPARISON FC
+218	CORR	"The correlation between channel1 (Cy3) & Channel 2 (Cy5) pixels within the spot, and is a useful quality control parameter. Generally, high values imply better fit & good spot quality.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	6	CORR
+157	D_P-VALUE	"'detection p-value', p-value that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	3	D_P-VALUE
+269	DETECTION	"A qualitative measurement indicating if the probe set is detected (Present; P), not detected (Absent; A), or marginally detected (Marginal;M)"	0	DOUBLE	CATEGORICAL	PRESENTABSENT	OTHER	0	0	0	0	DETECTION
+3	DETECTION P-VALUE	MAS5 detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	27	DETECTION P-VALUE
+19	Detection p-value	p-value to decide presence or absence	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	5	Detection p-value
+5	DETECTION P-VALUE	"'detection p-value', negative log of the p-value that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LOGBASEUNKNOWN	0	0	0	1	DETECTION P-VALUE
+4	DETECTION P-VALUE_LB	"'detection p-value', negative log of the p-value from the Wilcoxon signed rank test, relative version that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LOGBASEUNKNOWN	0	0	0	1	DETECTION P-VALUE_LB
+166	DETECTION_P	MAS 5.0 detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION_P
+181	DETECTION_P_VALUE		0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION_P_VALUE
+153	Detection_p-value	P-value associated with detection call	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	Detection_p-value
+162	DETECTION_P-VALUE	"'detection p-value', p-value that indicates the significance level of the detection call"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION_P-VALUE
+158	DETECTION-p-VALUE	p-value that indicates the detection confidence as calculated by the MAS 5.0 software	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	DETECTION-p-VALUE
+45	Dia.	diameter in ?m of the feature-indicator	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	Dia.
+90	DIA.	diameter in ?m of the feature-indicator	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	DIA.
+223	DIAMETER	The diameter in um of the feature-indicator.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	DIAMETER
+177	DIFFERENCE CALL	Difference call (compared to normal pool of 37 samples)	0	DOUBLE	CATEGORICAL	DERIVEDSIGNAL	LINEAR	0	0	0	1	DIFFERENCE CALL
+187	Experiment Name	Experiment name	0	STRING	UNKNOWN	OTHER	OTHER	0	0	0	1	Experiment Name
+33	F Pixels	number of feature pixels	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F Pixels
+92	F_PIXELS	number of feature pixels	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F_PIXELS
+42	F532 Mean	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532 Mean
+291	F532 Mean	mean Cy3 signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532 Mean
+288	F532 Mean - B532	Cy3 mean feature intensity subtracted by Cy3 mean background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532 Mean - B532
+39	F532 Median	"median feature pixel intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	F532 Median
+289	F532 Median - B532	Cy3 median feature intensity subtracted by Cy3 median background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532 Median - B532
+46	F532 SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F532 SD
+52	F532.Median	Median signal intensity of channel 2 (=532nm) minus local background (data generated using GenePix3.0)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532.Median
+85	F532_%_SAT.	percentage of feature pixels at wavelength #2 (Cy3) that are saturated	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	F532_%_SAT.
+82	F532_MEAN	"mean feature background intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532_MEAN
+91	F532_MEAN_B532	Cy3 mean feature intensity subtracted by Cy3 mean background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532_MEAN_B532
+99	F532_MEDIAN	"median feature pixel intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532_MEDIAN
+98	F532_MEDIAN_B532	Cy3 median feature intensity subtracted by Cy3 median background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532_MEDIAN_B532
+80	F532_SD	"standard deviation of the feature background intensity at wavelength #2 (532 nm, Cy3)"	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F532_SD
+48	F635 Mean	mean pixel intensity of feature for Cy5 channel	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	F635 Mean
+298	F635 Mean - B635	Cy5 mean feature intensity subtracted by Cy5 mean background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F635 Mean - B635
+34	F635 Median	median pixel intensity of feature for Cy5 channel - in this experiment Cy5 channel is the sample reference throughout the data set	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	F635 Median
+295	F635 Median - B635	Cy5 median feature intensity subtracted by Cy5 median background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F635 Median - B635
+41	F635 SD	Cy5 pixel intensity standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F635 SD
+53	F635.Median	Median signal intensity of channel 1 (=635nm) minus local background (data generated using GenePix3.0)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F635.Median
+86	F635_%_SAT.	percentage of pixel saturation within feature	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	F635_%_SAT.
+78	F635_MEAN	mean pixel intensity of feature for Cy5 channel	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F635_MEAN
+81	F635_MEAN_B635	Cy5 mean feature intensity subtracted by Cy5 mean background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	F635_MEAN_B635
+96	F635_MEDIAN	median pixel intensity of feature for Cy5 channel - in this experiment Cy5 channel is normal whole brain (reference) throughout the data set	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F635_MEDIAN
+75	F635_MEDIAN_B635	Cy5 median feature intensity subtracted by Cy5 median background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F635_MEDIAN_B635
+77	F635_SD	Cy5 pixel intensity standard deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	F635_SD
+225	FLAG	The type of flag associated with a feature: -100 = user-flagged null spot; -50 = software-flagged null spot; 0 = spot valid.; Type: INT; Scale: linear_scale	0	INT	CATEGORICAL	OTHER	LINEAR	0	0	0	6	FLAG
+125	Flags	"0 denotes satisfactory features, while <0 denotes features that did not meet our filter criteria"	0	DOUBLE	QUANTITATIVE	FAILED	LINEAR	0	0	0	3	Flags
+84	FLAGS	"sub-standard features will have a negative value, while a good feature will have a positive value"	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	FLAGS
+126	G_BG_MEAN	Green Channel Mean Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_BG_MEAN
+135	G_BG_MEDIAN	Green Channel Median Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_BG_MEDIAN
+138	G_BG_SD	Green Channel Background Standard Deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	G_BG_SD
+134	G_MEAN	Green Channel Mean Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_MEAN
+130	G_MEDIAN	Green Channel Median Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	G_MEDIAN
+132	G_PROCESSED	"Green Processed signal, after dye normalization and background subtraction, used for computation of log ratio"	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	0	0	0	33	G_PROCESSED
+139	G_SD	Green Channel Standard Deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	G_SD
+199	LEFT	Box left: int(((centerY - radius) - yoffset) / pixelSize).; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	LEFT
+175	LOG	log 2 normalized ADI	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	0	1	0	1	LOG
+188	Log Avg	Log average	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOGBASEUNKNOWN	0	0	0	1	Log Avg
+294	Log Ratio (635/532)	base two logarithm of the ratio of medians	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	0	0	0	1	Log Ratio (635/532)
+61	Log_Avg	Log average	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOGBASEUNKNOWN	0	0	0	3	Log_Avg
 233	LOG_RAT2N_MEDIAN	Log (base 2) of the ratio of the median of Channel 2 (usually 635 nm) to Channel 1 (usually 532 nm) [log (base 2) (RAT2N_MEDIAN)].; Type: float; Scale: log_base_2	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	0	0	0	1	LOG_RAT2N_MEDIAN
-234	RAT2_SD	The geometric standard deviation of the pixel intensity ratios.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	RAT2_SD
+87	LOG_RATIO	base two logarithm of the ratio of medians	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	0	0	0	1	LOG_RATIO
+299	Mean of Ratios (635/532)	arithmetic mean of the pixel-by-pixel ratios of the raw pixel intensities of wavelength 2 (Cy3) to wavelength 1 (Cy5)	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	Mean of Ratios (635/532)
+65	MEAN_OF_RATIOS	arithmetic mean of the pixel-by-pixel ratios of the raw pixel intensities of wavelength 2 (Cy3) to wavelength 1 (Cy5)	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	MEAN_OF_RATIOS
+293	Median of Ratios (635/532)	median of the pixel-by-pixel ratios of pixel intensities that have had the median background intensity subtracted of wavelength 2 (Cy3) to wavelength one (Cy5)	1	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	Median of Ratios (635/532)
+102	MEDIAN_OF_RATIOS	median of the pixel-by-pixel ratios of pixel intensities that have had the median background intensity subtracted of wavelength 2 (Cy3) to wavelength one (Cy5)	1	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	MEDIAN_OF_RATIOS
+193	MM Excess	Number of probe pairs where MM/PM exceeds 1/ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	MM Excess
+60	MM_Excess	Number of probe pairs where MM/PM exceeds 1/ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	MM_Excess
+59	Negative	Number of negative probe pairs	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	5	Negative
+189	NEGATIVE	Number of negative probe pairs	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	NEGATIVE
+270	Normalized Value	"An adjusted signal value which sets the baseline transcript, GapC (ID_REF = 258588_s_at) to a target value of 8500.  This normalized signal is more accurately comparable across different tissue type experiments our group has submitted."	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	1	0	Normalized Value
+18	NormCH1	vehicle-treated control	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	NormCH1
+17	NormCH2	thioridazine-treated	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	NormCH2
+163	P_VALUE	P-Value that indicates the significance level of the detection call	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	P_VALUE
+57	Pairs	Number of probe set specific probe pairs on the array	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	4	Pairs
+196	PAIRS	Number of probe set specific probe pairs on the array	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PAIRS
+191	Pairs InAvg	Trimmed probe pair set	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	Pairs InAvg
+195	Pairs Used	number of unmasked probe pairs	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	Pairs Used
+198	PAIRS_IN_AVG	Trimmed probe pair set	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PAIRS_IN_AVG
+55	Pairs_InAvg	Pairs in average	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	Pairs_InAvg
+64	Pairs_Used	Pairs used	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	Pairs_Used
+185	PAIRS_USED	Pairs used	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PAIRS_USED
+255	PERGTBCH1I_1SD	standard deviation of fraction of pixels greater than CH1B_MEAN	0	INT	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	5	PERGTBCH1I_1SD
+203	PERGTBCH1I_1SD	"The percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength 532 nm.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	PERGTBCH1I_1SD
+204	PERGTBCH1I_2SD	"The percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength 532 nm.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	PERGTBCH1I_2SD
+261	PERGTBCH2I_1SD	standard deviation of fraction of pixels greater than CH2B_MEAN	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	PERCENT	0	0	0	5	PERGTBCH2I_1SD
 235	PERGTBCH2I_1SD	"The percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength 635 nm.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	PERGTBCH2I_1SD
 236	PERGTBCH2I_2SD	"The percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, at wavelength 532 nm.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	PERGTBCH2I_2SD
-238	CH2I_MEDIAN	Median feature pixel intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2I_MEDIAN
-239	RAT1_MEAN	"Ratio of the arithmetic mean intensities of each spot for each wavelength, with the median background subtracted. Channel 1/Channel 2 ratio, (CH1I_MEAN - CH1B_MEDIAN)/(CH2I_MEAN - CH2B_MEDIAN) or Green/Red ratio.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RAT1_MEAN
-240	CH2I_SD	The standard deviation of the feature pixel intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2I_SD
-241	CH2_PER_SAT	The percentage of feature pixels at wavelength 635 nm that are saturated.; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	PERCENT	0	0	0	1	CH2_PER_SAT
-242	CH2DN_MEDIAN	Normalized value of median Channel 2 (usually 635 nm) intensity with normalized background subtracted (CH2IN_MEDIAN - CH2BN_MEDIAN).; Type: INT; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	1	1	CH2DN_MEDIAN
 243	PIX_RAT2_MEAN	"The geometric mean of the pixel-by-pixel ratios of pixel intensities, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	PIX_RAT2_MEAN
-245	REGR	The regression ratio of every pixel in a 2-feature-diameter circle around the center of the feature.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	1	REGR
-247	CH2B_SD	The standard deviation of the feature background intensity at wavelength 635 nm.; Type: INT; Scale: linear_scale; Channel: Cy5 channel; Background	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2B_SD
+200	PIX_RAT2_MEDIAN	Contains median of Ch2PI-CH2B/Ch1PI-CH1B where Ch1PI & Ch2PI represent single pixel intensities.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	3	PIX_RAT2_MEDIAN
+221	PIX_RAT2_MEDIAN	"The median of pixel-by-pixel ratios of pixel intensities, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	PIX_RAT2_MEDIAN
+190	PM Excess	Number of probe pairs where PM/MM exceeds the ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	1	PM Excess
+58	PM_Excess	Number of probe pairs where PM/MM exceeds the ratio limit (10 by default)	0	INT	QUANTITATIVE	OTHER	LINEAR	0	0	0	3	PM_Excess
+192	Pos Fraction	Positive/Pairs Used	0	DOUBLE	QUANTITATIVE	OTHER	LINEAR	0	0	0	2	Pos Fraction
+63	Pos/Neg	Positive/Negative	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	4	Pos/Neg
+194	POS/NEG	Positive/negative	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	POS/NEG
+268	Pos_Fraction	Positive/Pairs_Used	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	2	Pos_Fraction
+62	Pos_fraction	Positive fraction	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	Pos_fraction
+197	POS_FRACTION	Positive/pairs used	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	0	1	POS_FRACTION
+56	Positive	Number of positive probe pairs	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	5	Positive
+186	POSITIVE	Number of positive probe pairs	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	POSITIVE
+178	PRE_CALL	Absolute call	0	DOUBLE	CATEGORICAL	PRESENTABSENT	LINEAR	0	0	0	1	PRE_CALL
+179	PRE_COMPARISON FC	Fold change (compared to normal pool of 37 samples)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	PRE_COMPARISON FC
+176	PRE_DIFFERENCE CALL	Difference call (compared to normal pool of 37 samples)	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	PRE_DIFFERENCE CALL
+12	PRE_VALUE	Normalized value by GeneSpring after per-chip and per-gene normalization	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	1	0	3	PRE_VALUE
+88	PRE_VALUE	Cy3 background subtracted median intensity divided by Cy5 background subtracted intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	PRE_VALUE
+171	PRE_VALUE	ratio of medians for background subtracted signals	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	PRE_VALUE
+164	QUALITY	Detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	2	QUALITY
+128	R_BG_MEAN	Red Channel Mean Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_BG_MEAN
+131	R_BG_MEDIAN	Red Channel Median Background Level	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_BG_MEDIAN
+140	R_BG_SD	Red Channel Background Standard Deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	R_BG_SD
+133	R_MEAN	Red Channel Mean Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_MEAN
+127	R_MEDIAN	Red Channel Median Intensity	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	33	R_MEDIAN
+137	R_PROCESSED	"Red Processed signal, after dye normalization and background subtraction, used for computation of log ratio"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOGBASEUNKNOWN	0	0	0	33	R_PROCESSED
+129	R_SD	Red Channel Standard Deviation	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	33	R_SD
+254	RAT1_MEAN	ratio of CH1D_MEAN to CH2D_MEAN	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	5	RAT1_MEAN
+239	RAT1_MEAN	"Ratio of the arithmetic mean intensities of each spot for each wavelength, with the median background subtracted. Channel 1/Channel 2 ratio, (CH1I_MEAN - CH1B_MEDIAN)/(CH2I_MEAN - CH2B_MEDIAN) or Green/Red ratio.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RAT1_MEAN
+252	RAT1N_MEAN	ratio of CH1DN_MEAN to CH2DN_MEAN	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	5	RAT1N_MEAN
 248	RAT1N_MEAN	Ratio of the means of Channel 1 (usually 532 nm) intensity to normalized Channel 2 (usually 635 nm) intensity with median background subtracted (CH1D_MEAN/CH2DN_MEAN). Channel 1/Channel 2 ratio normalized or Green/Red ratio normalized.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	1	1	RAT1N_MEAN
-249	SUM_MEAN	"The sum of the arithmetic mean intensities for each wavelength, with the median background subtracted.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_MEAN
-250	CH2D_MEAN	The mean feature pixel intensity with the median background subtracted (channel 2).; Type: INT; Scale: linear_scale; Channel: Cy5 channel	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH2D_MEAN
-263	SC2_P_DET	detection P Ab-enhanced scan	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC2_P_DET
-264	SC1_RATIO	"ratio relative to 12 in series, initial scan"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	SC1_RATIO
-265	SC2_RATIO	"ratio relative to 12 arrays in series, Ab-enhanced scan"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	SC2_RATIO
-266	SC1_P_DET	detection P initial scan	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	SC1_P_DET
-267	SC1_VALUE	signal from initial scan not Ab-enhanced	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC1_VALUE
-272	CH1_BKD_MEAN	Channel 1 background mean	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_BKD_MEAN
-273	CH2_BKD_MEAN	Channel 2 background mean	1	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_BKD_MEAN
-274	CH1_CONFIDENCE	Channel 1 confidence level as defined by QuantArray	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1_CONFIDENCE
-275	CH1_AREA	Number of pixels used in calculating the channel 1 intensity values	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH1_AREA
-276	COLUMN	Subarray column	0	DOUBLE	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	COLUMN
-277	CH2_BKD_SD	Channel 2 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2_BKD_SD
-278	Y_LOCATION	Y-coordinate on array	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	Y_LOCATION
-279	CH2_AREA	Number of pixels used in calculating the channel 2 intensity values	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	CH2_AREA
-280	CH1_BKD_SD	Channel 1 background standard deviation	1	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH1_BKD_SD
-281	X_LOCATION	X-coordinate on array	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	X_LOCATION
-282	CH2_CONFIDENCE	Channel 2 confidence level as defined by QuantArray	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	CH2_CONFIDENCE
-283	ARRAY_ROW	Array row	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	ARRAY_ROW
-284	CH1_Mean - CH1_BKD	Channel 1 mean signal background subtracted	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH1_Mean - CH1_BKD
-285	CH2_Mean - CH2_BKD	Channel 2 mean signal background subtracted	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	CH2_Mean - CH2_BKD
-286	ARRAY_COLUMN	Array column	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	ARRAY_COLUMN
+260	RAT2_MEAN	ratio of CH2D_MEAN to CH1D_MEAN	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	5	RAT2_MEAN
+215	RAT2_MEAN	"The ratio of the arithmetic mean intensities of each feature for each wavelength, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RAT2_MEAN
+229	RAT2_MEDIAN	"The ratio of the median intensities of each feature for each wavelength, with the median background subtracted.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RAT2_MEDIAN
+234	RAT2_SD	The geometric standard deviation of the pixel intensity ratios.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	RAT2_SD
+206	RAT2N_MEAN	Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	0	6	RAT2N_MEAN
+207	RAT2N_MEDIAN	"Channel 2/Channel 1 ratio normalized, RAT2_MEDIAN/Normalization factor or Red/Green median ratio normalized.; Type: float; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	0	1	RAT2N_MEDIAN
+136	RATIO	Raw Log10  Ratio	0	DOUBLE	QUANTITATIVE	RATIO	LOG10	0	0	0	33	RATIO
+44	RATIO	"ratio of the  normalized background subtracted median pixel intensity at the second wavelength (Cy3), to the  normalized background subtracted median pixel intensity at the first wavelength(Cy5). Substandard features will have default value 1"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	1	2	RATIO
+109	Ratio of Means	"Unnormalized, untransformed ratio of means"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	2	Ratio of Means
+296	Ratio of Means (635/532)	"ratio of the arithmetic mean of the background subtracted raw pixel intensities at the second wavelength (Cy3), to the arithmetic mean of the background subtracted raw pixel intensities at the first wavelength (Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	Ratio of Means (635/532)
+290	Ratio of Medians (635/532)	"ratio of the background subtracted median pixel intensity at the second wavelength (Cy3), to the background subtracted median pixel intensity at the first wavelength(Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	Ratio of Medians (635/532)
+83	RATIO_OF_MEANS	"ratio of the arithmetic mean of the background subtracted raw pixel intensities at the second wavelength (Cy3), to the arithmetic mean of the background subtracted raw pixel intensities at the first wavelength (Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RATIO_OF_MEANS
+93	RATIO_OF_MEDIANS	"ratio of the background subtracted median pixel intensity at the second wavelength (Cy3), to the background subtracted median pixel intensity at the first wavelength(Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	RATIO_OF_MEDIANS
+68	RATIOS_SD	standard deviation of the log of pixel intensity ratios. Note: ratios greater than 100 and less than 0.01 are excluded when calculating this data type	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	RATIOS_SD
+14	RAW_CONTROL	raw control signal reading Generated by GEMTools 2.4	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	RAW_CONTROL
+13	RAW_DATA	raw data signal reading Generated by GEMTools 2.4	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	RAW_DATA
+251	REGR	slope of the simple regression line of channel 2 to channel 1 pixels	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	5	REGR
+245	REGR	The regression ratio of every pixel in a 2-feature-diameter circle around the center of the feature.; Type: float; Scale: linear_scale	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	1	REGR
+73	RGN_R?	coefficient of determination provides a measure of the level of accuracy of the fit of the linear regression curve	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	1	RGN_R?
+79	RGN_RATIO	regression ratio is determined by computing a linear regression between the population of pixels represented by wavelength 1 and wavelength 2	0	DOUBLE	QUANTITATIVE	CORRELATION	LINEAR	0	0	0	1	RGN_RATIO
+209	RIGHT	Box right: int(((centerY + radius) - yoffset) / pixelSize); Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	RIGHT
 287	ROW	Subarray row	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	ROW
-288	F532 Mean - B532	Cy3 mean feature intensity subtracted by Cy3 mean background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532 Mean - B532
-289	F532 Median - B532	Cy3 median feature intensity subtracted by Cy3 median background intensity	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F532 Median - B532		
-290	Ratio of Medians (635/532)	"ratio of the background subtracted median pixel intensity at the second wavelength (Cy3), to the background subtracted median pixel intensity at the first wavelength(Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	Ratio of Medians (635/532)		
-291	F532 Mean	mean Cy3 signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	F532 Mean		
-292	A	1/2 log2 F635 + 1/2 log2 F532	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	0	0	0	1	A		
-293	Median of Ratios (635/532)	median of the pixel-by-pixel ratios of pixel intensities that have had the median background intensity subtracted of wavelength 2 (Cy3) to wavelength one (Cy5)	1	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	Median of Ratios (635/532)		
-294	Log Ratio (635/532)	base two logarithm of the ratio of medians	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	0	0	0	1	Log Ratio (635/532)		
-295	F635 Median - B635	Cy5 median feature intensity subtracted by Cy5 median background intensity	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F635 Median - B635		
-296	Ratio of Means (635/532)	"ratio of the arithmetic mean of the background subtracted raw pixel intensities at the second wavelength (Cy3), to the arithmetic mean of the background subtracted raw pixel intensities at the first wavelength (Cy5)"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	1	1	Ratio of Means (635/532)		
-298	F635 Mean - B635	Cy5 mean feature intensity subtracted by Cy5 mean background intensity	1	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	F635 Mean - B635		
-299	Mean of Ratios (635/532)	arithmetic mean of the pixel-by-pixel ratios of the raw pixel intensities of wavelength 2 (Cy3) to wavelength 1 (Cy5)	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	Mean of Ratios (635/532)		
-269	DETECTION	"A qualitative measurement indicating if the probe set is detected (Present; P), not detected (Absent; A), or marginally detected (Marginal;M)"	0	DOUBLE	CATEGORICAL	PRESENTABSENT	OTHER	0	0	0	0	DETECTION		
-270	Normalized Value	"An adjusted signal value which sets the baseline transcript, GapC (ID_REF = 258588_s_at) to a target value of 8500.  This normalized signal is more accurately comparable across different tissue type experiments our group has submitted."	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	1	0	Normalized Value		
+266	SC1_P_DET	detection P initial scan	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	SC1_P_DET
+264	SC1_RATIO	"ratio relative to 12 in series, initial scan"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	SC1_RATIO
+267	SC1_VALUE	signal from initial scan not Ab-enhanced	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC1_VALUE
+263	SC2_P_DET	detection P Ab-enhanced scan	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC2_P_DET
+265	SC2_RATIO	"ratio relative to 12 arrays in series, Ab-enhanced scan"	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	0	0	1	SC2_RATIO
+21	SC851_cy3	Reference	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC851_cy3
+22	SC851_cy5	Test	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SC851_cy5
+172	SIGNAL_CHANNEL 1MEDIAN	Cy5 sample signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SIGNAL_CHANNEL 1MEDIAN
+174	SIGNAL_CHANNEL 2MEDIAN	Cy3 reference signal	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SIGNAL_CHANNEL 2MEDIAN
+165	SIGNAL_Log2	log2 of Value	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	1	0	0	1	SIGNAL_Log2
+156	SIGNAL_RAW	raw signal strength	0	DOUBLE	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	SIGNAL_RAW
+155	Stat Pairs	number of probe pairs on the probe array for a specific gene target	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	Stat Pairs
+154	Stat Pairs Used	number of probe pairs used in calculating VALUE	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	Stat Pairs Used
+151	Stat_Pairs	Number of probe pairs for a particular probe set	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	Stat_Pairs
+152	Stat_Pairs_Used	Number of probe pairs per probe set used in the analysis	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	1	Stat_Pairs_Used
+167	SUBMITTED_VALUE	Log2 RMA Values	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LOG2	1	1	1	1	SUBMITTED_VALUE
+249	SUM_MEAN	"The sum of the arithmetic mean intensities for each wavelength, with the median background subtracted.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_MEAN
+205	SUM_MEDIAN	"The sum of the median intensities for each wavelength, with the median background subtracted.; Type: INT; Scale: linear_scale"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_MEDIAN
+97	SUM_OF_MEANS	"sum of the arithmetic mean of the pixel intensities at each wavelength, with the median background pixel intensity at each wavelength subtracted"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_OF_MEANS
+76	SUM_OF_MEDIANS	"sum of the median of the pixel intensities at each wavelength, with the median background pixel intensity at each wavelength subtracted"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	0	0	1	1	SUM_OF_MEDIANS
+219	TOP	Box top: int(((centerX - radius) - Xoffset) / pixelSize).; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	6	TOP
+237	TOT_BPIX	Number of background pixels.; Type: INT; Scale: linear_scale	1	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	TOT_BPIX
+202	TOT_SPIX	The total number of feature pixels.; Type: INT; Scale: linear_scale	0	INT	QUANTITATIVE	MEASUREDSIGNAL	LINEAR	0	0	0	2	TOT_SPIX
+262	UNF_VALUE	"aka LOG_RAT2N_MEAN, or log2 of ratio of CH2DN_MEAN and CH1DN_MEAN"	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	0	1	0	3	UNF_VALUE
+66	UNF_VALUE	log ratio of PRE_VALUE	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	0	1	0	2	UNF_VALUE
+259	UNF_VALUE	"aka LOG_RAT2N_MEAN, or log10 of ratio of CH2DN_MEAN and CH1DN_MEAN"	0	DOUBLE	QUANTITATIVE	RATIO	LOG10	0	1	0	2	UNF_VALUE
+271	UNF_VALUE	Normalize ratio of means defined as Channel 2 divided by Channel 1	0	DOUBLE	QUANTITATIVE	RATIO	LINEAR	0	1	0	1	UNF_VALUE
+297	UNF_VALUE	"log2 (F635/F532), after Lowess normalization"	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	0	1	0	1	UNF_VALUE
+36	VALID	"sub-standard features will have value 0, while a good feature will have value 1"	0	DOUBLE	CATEGORICAL	OTHER	UNSCALED	1	1	0	1	VALID
+2	VALUE	MAS5 Signal - scaling factor = 1000	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	0	75	VALUE
+7	VALUE	A quantitative measure of the relative abundance of a transcript	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	0	57	VALUE
+103	VALUE	"Normalised, background-corrected signal intensity"	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	1	34	VALUE
+20	VALUE	Normalized log2(Test/Reference)	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	6	VALUE
+16	VALUE	log(NormCH2/NormCH1)	0	DOUBLE	QUANTITATIVE	RATIO	LOGBASEUNKNOWN	1	1	0	3	VALUE
+15	VALUE	log ratio (log2 of PRE_VALUE)	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	2	VALUE
+54	VALUE	log ratio of PRE_VALUE	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	2	VALUE
+184	VALUE	LOG2 ratio	0	DOUBLE	QUANTITATIVE	RATIO	LOG2	1	1	0	1	VALUE
+161	VALUE_2	dChip calculated expression value	0	DOUBLE	QUANTITATIVE	DERIVEDSIGNAL	LINEAR	1	1	0	1	VALUE_2
+160	VALUE_2_CALL	dChip detection call	0	DOUBLE	QUANTITATIVE	PRESENTABSENT	LINEAR	0	0	0	1	VALUE_2_CALL
+159	VALUE_DET_P	Microarray Suite 5.0 detection p-value	0	DOUBLE	QUANTITATIVE	CONFIDENCEINDICATOR	LINEAR	0	0	0	1	VALUE_DET_P
+49	X	"X-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	3	X
+213	X_COORD	"X-coordinate of the center of the spot-indicator associated with the spot, where (0,0) is the top left of the image.; Type: INT; Scale: linear_scale"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	X_COORD
+281	X_LOCATION	X-coordinate on array	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	X_LOCATION
+37	Y	"Y-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	3	Y
+220	Y_COORD	"Y-coordinate of the center of the spot-indicator associated with the spot, where (0,0) is the top left of the image.; Type: INT; Scale: linear_scale"	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	Y_COORD
+278	Y_LOCATION	Y-coordinate on array	0	INT	QUANTITATIVE	COORDINATE	LINEAR	0	0	0	1	Y_LOCATION

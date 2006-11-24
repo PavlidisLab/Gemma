@@ -127,10 +127,10 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         assertEquals( Boolean.FALSE, s );
 
     }
-    
-    
+
     public void testRatio() throws Exception {
-        String a = "RAT1_MEAN"; String b =   "ratio of CH1D_MEAN to CH2D_MEAN";
+        String a = "RAT1_MEAN";
+        String b = "ratio of CH1D_MEAN to CH2D_MEAN";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
         assertEquals( StandardQuantitationType.RATIO, s );
     }
@@ -158,24 +158,41 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
             StandardQuantitationType type = StandardQuantitationType.fromString( fields[6] );
             ScaleType scale = ScaleType.fromString( fields[7] );
 
+            Boolean isPreferred = fields[8].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+            Boolean isNormalized = fields[9].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+            Boolean isBackgroundSubtracted = fields[10].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+
             qt = QuantitationType.Factory.newInstance();
+            qt.setName( name );
+            qt.setDescription( description );
             QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, name, description );
 
             if ( qt.getGeneralType() != generalType ) {
                 failed.add( line );
-                log.info( ">>> Failed general type for '" + line + "', got " + qt.getGeneralType() );
+                log.info( ">>> Failed general type for '" + fields[1] + "', got " + qt.getGeneralType() );
             } else if ( qt.getType() != type ) {
                 failed.add( line );
-                log.info( ">>> Failed standard type for '" + line + "', got " + qt.getType() );
+                log.info( ">>> Failed standard type for '" + fields[1] + "', got " + qt.getType() );
             } else if ( qt.getRepresentation() != representation ) {
                 failed.add( line );
-                log.info( ">>> Failed representation type for '" + line + "', got " + qt.getRepresentation() );
+                log.info( ">>> Failed representation type for '" + fields[1] + "', got " + qt.getRepresentation() );
             } else if ( qt.getIsBackground() != isBackground ) {
                 failed.add( line );
-                log.info( ">>> Failed isBackground for '" + line + "', got " + qt.getIsBackground() );
+                log.info( ">>> Failed isBackground for '" + fields[1] + "', got " + qt.getIsBackground() );
             } else if ( qt.getScale() != scale ) {
                 failed.add( line );
-                log.info( ">>> Failed scale type for '" + line + "', got " + qt.getScale() );
+                log.info( ">>> Failed scale type for '" + fields[1] + "', got " + qt.getScale() );
+            } else if ( qt.getIsBackgroundSubtracted() != isBackgroundSubtracted ) {
+                failed.add( line );
+                log.info( ">>> Failed isBackgroundSubtracted for '" + fields[1] + "', got "
+                        + qt.getIsBackgroundSubtracted() );
+            } else if ( qt.getIsPreferred() != isPreferred ) {
+                failed.add( line );
+                log.info( ">>> Failed isPreferred for '" + fields[1] + "', got " + qt.getIsPreferred() );
+            } else if ( qt.getIsNormalized() != isNormalized ) {
+                failed.add( line );
+                log.info( ">>> Failed isNormalized for '" + fields[1] + "', got " + qt.getIsNormalized() );
+
             } else {
                 passed.add( line );
             }
@@ -185,7 +202,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         StringBuilder buf = new StringBuilder();
         buf.append( "\n***** PASSED: " + passed.size() + " *******\n" );
         for ( String string : passed ) {
-           //   buf.append( string + "\n" );
+            // buf.append( string + "\n" );
         }
 
         buf.append( "***** FAILED " + failed.size() + " *******\n" );

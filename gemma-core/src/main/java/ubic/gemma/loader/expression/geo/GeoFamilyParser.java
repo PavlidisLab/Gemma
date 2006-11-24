@@ -401,7 +401,7 @@ public class GeoFamilyParser implements Parser {
      * (in a platform section of a GSE file):
      * 
      * <pre>
-     *                #SEQ_LEN = Sequence length
+     *                 #SEQ_LEN = Sequence length
      * </pre>
      * 
      * @param line
@@ -483,8 +483,8 @@ public class GeoFamilyParser implements Parser {
      * For samples in GSE files, they become values for the data in the sample. For example
      * 
      * <pre>
-     *                  #ID_REF = probe id
-     *                  #VALUE = RMA value
+     *                   #ID_REF = probe id
+     *                   #VALUE = RMA value
      * </pre>
      * 
      * <p>
@@ -495,9 +495,9 @@ public class GeoFamilyParser implements Parser {
      * provided. Here is an example.
      * 
      * <pre>
-     *                    #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
-     *                    #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
-     *                    #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                     #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
+     *                     #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                     #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
      * 
      * @param line
@@ -685,6 +685,9 @@ public class GeoFamilyParser implements Parser {
                 if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentSeriesAccession = value;
+                if ( results.getSeriesMap().keySet().size() > 1 ) {
+                    log.warn( "Multple series referred to in family." );
+                }
                 if ( results.getSeriesMap().containsKey( value ) ) return;
                 GeoSeries series = new GeoSeries();
                 series.setGeoAccession( value );
