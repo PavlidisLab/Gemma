@@ -3,6 +3,10 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -171,6 +176,103 @@ public class MetaLinkFinder {
     		this.allEE.add(eeIter.getId());
     		index++;
     	}
-    	
+    }
+    public boolean toFile(String matrixFile, String eeMapFile){
+        if(!this.linkCount.toFile( matrixFile )) return false;
+        try{
+            FileWriter out = new FileWriter(new File(eeMapFile));
+            for(Long index:this.eeMap.keySet()){
+                out.write( index + "\t"+(Integer)this.eeMap.get( index )+ "\n" );
+            }
+            out.close();
+        }catch(Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+    public boolean fromFile(String matrixFile, String eeMapFile){
+        try{
+            BufferedReader in = new BufferedReader(new FileReader(new File(matrixFile)));
+            String row = null;
+            int i;
+            boolean hasConfig = false, hasRowNames = false, hasColNames = false;
+            while ( ( row = in.readLine() ) != null ) {
+                row = row.trim();
+                if(StringUtils.isBlank( row )) continue;
+                String [] subItems = row.split( "\t" );
+                for( i = 0; i < subItems.length; i++)
+                    if(StringUtils.isBlank( subItems[i] )) break;
+                if( i != subItems.length){
+                    log.info( "The empty Element is not allowed: " + row );
+                    return false;
+                }
+                if(!hasConfig){
+                    if(subItems.length != 3){
+                        log.info( "Data File Format Error for configuration " + row );
+                        return false;
+                    }
+                    this.linkCount = new CompressedNamedBitMatrix(Integer.valueOf( subItems[0] ),Integer.valueOf( subItems[1] ),Integer.valueOf( subItems[2] ));
+                    hasConfig = true;
+                } else if(!hasRowNames){
+                    if(subItems.length != this.linkCount.rows()){
+                        log.info( "Data File Format Error for Row Names " + row );
+                        return false;
+                    }
+                    for( i = 0; i < subItems.length; i++)
+                        this.linkCount.addRowName( new Long(subItems[i].trim()) );
+                    hasRowNames = true;;
+                }
+                else if(!hasColNames){
+                    if(subItems.length != this.linkCount.columns()){
+                        log.info( "Data File Format Error for Col Names " + row );
+                        return false;
+                    }
+                    for( i = 0; i < subItems.length; i++)
+                        this.linkCount.addColumnName( new Long(subItems[i].trim()) );
+                    hasColNames = true;
+                } else{                    
+                    int rowIndex = Integer.valueOf( subItems[0] );
+                    int colIndex = Integer.valueOf( subItems[1] );
+                    double values[] = new double[subItems.length - 2];
+                    for( i = 2; i < subItems.length; i++)
+                        values[i-2] = Double.longBitsToDouble(Long.parseLong(subItems[i],16));
+                    if(!this.linkCount.set( rowIndex, colIndex, values)){
+                        log.info( "Data File Format Error for Data " + row );
+                        return false;
+                    }
+                }
+            }
+            in.close();
+            
+        }catch(Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        try{
+            BufferedReader in = new BufferedReader(new FileReader(new File(eeMapFile)));
+            this.eeMap = new HashMap<Long, Integer>();
+            String row = null;
+            while ( ( row = in.readLine() ) != null ) {
+                row = row.trim();
+                if(StringUtils.isBlank( row )) continue;
+                String [] subItems = row.split( "\t" );
+                if(subItems.length != 2) continue;
+                int i = 0;
+                for( i = 0; i < subItems.length; i++)
+                    if(StringUtils.isBlank( subItems[i] )) break;
+                if( i != subItems.length){
+                    log.info( "Data File Format Error for ee Map " + row );
+                    return false;
+                }
+                this.eeMap.put( new Long( subItems[0].trim() ), new Integer( subItems[1].trim() ) );
+            }
+            log.info( "Got " + this.eeMap.size() + " in EE MAP" );
+            in.close();
+        }catch(Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

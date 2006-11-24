@@ -9,8 +9,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -38,13 +42,41 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 	 * @see ubic.gemma.util.AbstractCLI#buildOptions()
 	 */
     private ExpressionExperimentService eeService;
+    private boolean operRead = false, operWrite = false;
+    private String matrixFile = null, eeMapFile = null;
 	@Override
 	protected void buildOptions() {
 		// TODO Auto-generated method stub
+        Option write = OptionBuilder.withDescription("If Saving the link into File").withLongOpt("write").create('w');
+        addOption(write);
+        Option read = OptionBuilder.withDescription("If Saving the link into File").withLongOpt("read").create('r');
+        addOption(read);
+        Option matrixFile = OptionBuilder.hasArg().withArgName("Bit Matrixfile").isRequired().withDescription("The file for savming bit matrix")
+        .withLongOpt("matrixfile").create('m');
+        addOption(matrixFile);
+
+        Option mapFile = OptionBuilder.hasArg().withArgName("Expression Experiment Map File").isRequired().withDescription("The File for Savming the Expression Experiment Mapping").withLongOpt(
+        "mapfile").create('e');
+        addOption(mapFile);
 
 	}
 	protected void processOptions() {
 		super.processOptions();
+        if (hasOption('w')) {
+            this.operWrite = true;
+        }
+
+        if (hasOption('r')) {
+            this.operRead = true;
+        }
+
+        if (hasOption('m')) {
+            this.matrixFile = getOptionValue('m');
+        }
+        
+        if (hasOption('e')) {
+            this.eeMapFile = getOptionValue('e');
+        }
 	}
 	/****distribute the expression experiments to the different classes of quantitation type.
      *  The reason to do this is because the collection of expression experiment for Probe2Probe2
@@ -86,6 +118,26 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 		}
 		return taxon;
 	}
+    private void test(){
+        CompressedNamedBitMatrix matrix = new CompressedNamedBitMatrix(21, 11, 125);
+        for(int i = 0; i < 21; i++)
+            matrix.addRowName( new Long(i) );
+        for(int i = 0; i < 11; i++)
+            matrix.addColumnName( new Long(i) );
+        matrix.set( 0,0,0);
+        matrix.set( 0,0,12);
+        matrix.set( 0,0,24);
+        matrix.set( 20,0,0);
+        matrix.set( 20,0,12);
+        matrix.set( 20,0,24);
+        matrix.set( 0,10,0);
+        matrix.set( 0,10,12);
+        matrix.set( 0,10,24);
+        matrix.set( 20,10,0);
+        matrix.set( 20,10,12);
+        matrix.set( 20,10,24);
+        matrix.toFile( "test.File" );
+    }
 	/* (non-Javadoc)
 	 * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
 	 */
@@ -107,27 +159,43 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 			
 			MetaLinkFinder linkFinder = new MetaLinkFinder(p2pService, deService, eeService, geneService);
 			
-			Taxon taxon = this.getTaxon("human");
-			Collection<ExpressionExperiment> ees = null;
-			if(taxon != null)
-				ees = eeService.getByTaxon(taxon);
-            else
-                ees = eeService.loadAll();
-			if(ees == null || ees.size() == 0){
-				log.info("No Expression Experiment is found");
-				return null;
-			}
-			else
-				log.info("Found " + ees.size() + " Expression Experiment");
+            test();
+            linkFinder.fromFile( "test.File", "test.map");
+            linkFinder.toFile( "test1.File", "test1.map");
+            if(true)return null;
+			if(this.operWrite){
+			    Taxon taxon = this.getTaxon("human");
+			    Collection<ExpressionExperiment> ees = null;
+			    if(taxon != null)
+			        ees = eeService.getByTaxon(taxon);
+			    else
+			        ees = eeService.loadAll();
+			    if(ees == null || ees.size() == 0){
+			        log.info("No Expression Experiment is found");
+			        return null;
+			    }
+			    else
+			        log.info("Found " + ees.size() + " Expression Experiment");
             
-            Map<QuantitationType, Collection> eeMap = preprocess(ees);
+			    Map<QuantitationType, Collection> eeMap = preprocess(ees);
             
-            for(QuantitationType qt:eeMap.keySet()){
-                ees = eeMap.get( qt );
-                linkFinder.find(this.getGenes(geneService), ees, qt);
+			    for(QuantitationType qt:eeMap.keySet()){
+			        ees = eeMap.get( qt );
+			        linkFinder.find(this.getGenes(geneService), ees, qt);
+			    }
+                if(!linkFinder.toFile( this.matrixFile, this.eeMapFile )){
+                    log.info( "Couldn't save the results into the files ");
+                    return null;
+                }
             }
-
-            linkFinder.output(2);
+            else{
+                if(!linkFinder.fromFile(  this.matrixFile, this.eeMapFile )){
+                    log.info( "Couldn't load the data from the files ");
+                    return null;
+                }
+            }
+			    
+			linkFinder.output(2);
 		} catch (Exception e) {
 			log.error(e);
 			return e;
