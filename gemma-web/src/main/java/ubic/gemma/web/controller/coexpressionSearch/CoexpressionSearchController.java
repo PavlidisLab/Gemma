@@ -169,10 +169,10 @@ public class CoexpressionSearchController extends BaseFormController {
         
         // no genes are coexpressed
         // return error 
-        //if (coexpressedGenes.size() == 0) {
-         //   saveMessage( request, "No genes are coexpressed with the given stringency." );
-         //   return showForm( request, response, errors );
-        //}
+        if (coexpressedGenes.size() == 0) {
+           saveMessage( request, "No genes are coexpressed with the given stringency." );
+           return showForm( request, response, errors );
+        }
         
         ModelAndView mav = new ModelAndView(getSuccessView());
         mav.addObject( "coexpressedGenes", coexpressedGenes );
@@ -246,6 +246,18 @@ public class CoexpressionSearchController extends BaseFormController {
                 }
             }
         }
+    }
+    
+    /* (non-Javadoc)
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     */
+    @Override
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) throws Exception {
+        if (request.getParameter( "searchString" ) != null) {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
+        
+        return super.showForm( request, response, errors );
     }
 
     /**
