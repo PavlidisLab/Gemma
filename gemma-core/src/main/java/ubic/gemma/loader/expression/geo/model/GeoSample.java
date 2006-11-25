@@ -47,6 +47,14 @@ public class GeoSample extends GeoData implements Comparable {
     private String type = "DNA";
     private String supplementaryFile = "";
     private String lastUpdateDate = "";
+    private Collection<String> seriesAppearsIn = new HashSet<String>();
+
+    /**
+     * @return true if this sample appears in more than one GEO Series.
+     */
+    public boolean appearsInMultipleSeries() {
+        return seriesAppearsIn.size() > 1;
+    }
 
     /**
      * This is used to store the title for the sample as found in the GDS file, if it differs from the one in the GSE
@@ -513,6 +521,25 @@ public class GeoSample extends GeoData implements Comparable {
 
     public void setTitleInDataset( String titleInDataset ) {
         this.titleInDataset = titleInDataset;
+    }
+
+    public Collection<String> getSeriesAppearsIn() {
+        return seriesAppearsIn;
+    }
+
+    public void setSeriesAppearsIn( Collection<String> otherSeriesAppearsIn ) {
+        this.seriesAppearsIn = otherSeriesAppearsIn;
+    }
+
+    /**
+     * @param value
+     */
+    public void addSeriesAppearsIn( String value ) {
+
+        this.getSeriesAppearsIn().add( value );
+        if ( this.getSeriesAppearsIn().size() > 1 ) {
+            if ( log.isDebugEnabled() ) log.debug( this.getGeoAccession() + " appears in more than one series" );
+        }
     }
 
 }

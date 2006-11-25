@@ -28,6 +28,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Holds information about GEO samples that "go together" across datasets (GDS), because they came from the same sample
@@ -37,6 +39,8 @@ import org.apache.commons.lang.StringUtils;
  * @version $Id$
  */
 public class GeoSampleCorrespondence {
+
+    private static Log log = LogFactory.getLog( GeoSampleCorrespondence.class.getName() );
 
     Collection<Set<String>> sets = new LinkedHashSet<Set<String>>();
 
@@ -60,6 +64,17 @@ public class GeoSampleCorrespondence {
             }
         }
         return null; // not found!
+    }
+
+    /**
+     * Remove a sample from the maps
+     * 
+     * @param gsmNumber
+     */
+    public void removeSample( String gsmNumber ) {
+        for ( Set<String> set : sets ) {
+            set.remove( gsmNumber );
+        }
     }
 
     /**
@@ -90,24 +105,51 @@ public class GeoSampleCorrespondence {
         boolean found = false;
         for ( Set<String> set : sets ) {
             if ( set.contains( gsmNumberA ) && gsmNumberB != null ) {
+                if ( !sanity( gsmNumberB ) ) return;
                 set.add( gsmNumberB );
                 found = true;
                 break;
                 // gsmNumberB will be null if there is just one data set - that is, no correspondence.
             } else if ( gsmNumberB != null && set.contains( gsmNumberB ) ) {
+                if ( !sanity( gsmNumberA ) ) return;
                 set.add( gsmNumberA );
+
                 found = true;
                 break;
             }
         }
 
         if ( !found ) {
+            if ( !sanity( gsmNumberA ) || !sanity( gsmNumberB ) ) {
+                return;
+            }
             Set<String> newSet = new LinkedHashSet<String>();
             newSet.add( gsmNumberA );
-            if ( gsmNumberB != null ) newSet.add( gsmNumberB );
+            if ( gsmNumberB != null ) {
+                newSet.add( gsmNumberB );
+            }
             sets.add( newSet );
+
         }
 
+    }
+
+    /**
+     * Make sure only one set contains gsmNumberB
+     * 
+     * @param gsmNumberB
+     */
+    private boolean sanity( String gsmNumber ) {
+        int count = 0;
+        for ( Set<String> set : sets ) {
+            if ( set.contains( gsmNumber ) ) {
+                ++count;
+            }
+        }
+        if ( count != 0 ) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -150,7 +192,7 @@ public class GeoSampleCorrespondence {
         this.accToTitle = accToTitle;
     }
 
-    public void setAccToDatasetMap( Map<String, String> accToDataset ) {
+    public void setAccToDatasetOrPlatformMap( Map<String, String> accToDataset ) {
         this.accToDataset = accToDataset;
     }
 }

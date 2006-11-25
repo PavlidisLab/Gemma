@@ -19,6 +19,7 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -113,9 +114,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 matrix.setQuick( i, j, Double.NaN );
             }
         }
+        log.info( "Creating a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
 
         ByteArrayConverter bac = new ByteArrayConverter();
         int rowNum = 0;
+        Collection<BioAssayDimension> seenDims = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
             matrix.addRowName( vector.getDesignElement() );
             byte[] bytes = vector.getData();
@@ -123,7 +126,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Iterator<BioAssay> it = dimension.getBioAssays().iterator();
-
+            seenDims.add( dimension );
             assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
                     + dimension.getBioAssays().size();
             for ( int i = 0; i < vals.length; i++ ) {
@@ -133,8 +136,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
             rowNum++;
         }
+        log.info( seenDims.size() + " bioAssayDimensions observed" );
 
-        for ( Object obj : columnBioMaterialMap.values() ) {
+        for ( Object obj : columnBioMaterialMap.keySet() ) {
             matrix.addColumnName( obj );
         }
 

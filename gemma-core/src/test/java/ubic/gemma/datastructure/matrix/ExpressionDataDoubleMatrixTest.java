@@ -152,10 +152,6 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                     .fetchAndLoad( "GSE611" );
-
-            // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-            // .fetchAndLoad( "GSE611" );
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
@@ -187,10 +183,16 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         expressionExperimentService.thaw( newee );
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
-        QuantitationType qt = quantitationTypes.iterator().next();
+        QuantitationType qt = null;
+        for ( QuantitationType qts : quantitationTypes ) {
+            if ( qts.getName().equals( "CH1I_MEAN" ) ) {
+                qt = qts;
+                break;
+            }
+        }
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
-        assertEquals( 30, matrix.rows() );
-        assertEquals( 4, matrix.columns() );
+        assertEquals( 200, matrix.rows() );
+        assertEquals( 34, matrix.columns() );
     }
 
     /**

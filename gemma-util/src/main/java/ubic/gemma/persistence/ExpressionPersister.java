@@ -208,7 +208,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         int count = 0;
         for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
-
             BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
             bioAssays.addAll( baDim.getBioAssays() );
 

@@ -27,7 +27,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -81,7 +80,7 @@ import ubic.gemma.loader.expression.geo.model.GeoSubset;
 public class DatasetCombiner {
 
     private static final String PUNCTUATION_REGEXP = "[\\(\\)\\s-\\._]";
-    private final double LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING = 1.2;
+
     /**
      * 
      */
@@ -264,16 +263,16 @@ public class DatasetCombiner {
     /**
      * This is the main point where comparisons are made.
      * 
-     * @param numDatasets
+     * @param numDatasetsOrPlatforms
      * @param accToTitle
      * @param accToDataset
      * @return
      */
-    private GeoSampleCorrespondence findCorrespondence( int numDatasets ) {
+    private GeoSampleCorrespondence findCorrespondence( int numDatasetsOrPlatforms ) {
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
 
         result.setAccToTitleMap( accToTitle );
-        result.setAccToDatasetMap( accToDataset );
+
         // // allocate matrix.
         // double[][] matrix = new double[accToTitle.keySet().size()][accToTitle.keySet().size()];
         // for ( int i = 0; i < matrix.length; i++ ) {
@@ -283,7 +282,7 @@ public class DatasetCombiner {
         final List<String> sampleAccs = new ArrayList<String>( accToDataset.keySet() );
         assert sampleAccs.size() > 0;
 
-        if ( numDatasets <= 1 ) {
+        if ( numDatasetsOrPlatforms <= 1 ) {
             for ( String sample : sampleAccs ) {
                 result.addCorrespondence( sample, null );
             }
@@ -306,30 +305,49 @@ public class DatasetCombiner {
 
         Map<String, Collection<String>> alreadyMatched = new HashMap<String, Collection<String>>();
 
-        // do it by data set, so we constrain comparing items in _this_ data set to ones in _other_ data sets.
-        // The inner loops are just to get the samples in the data set being considered.
-        Collection<String> alreadyTestedDatasets = new HashSet<String>();
+        // do it by data set, so we constrain comparing items in _this_ data set to ones in _other_ data sets (or other
+        // platforms)
+        // The inner loops are just to get the samples in the data set (platform) being considered.
+        Collection<String> alreadyTestedDatasetsOrPlatforms = new HashSet<String>();
 
         List<String> dataSets = new ArrayList<String>();
+        dataSets.addAll( new HashSet<String>( accToDataset.values() ) );
 
-        dataSets.addAll( accToDataset.values() );
+        List<String> platforms = new ArrayList<String>();
+        platforms.addAll( new HashSet<String>( accToPlatform.values() ) );
 
-        log.info( dataSets.size() + " datasets" );
+        List<String> valuesToUse;
+        LinkedHashMap<String, String> accToDatasetOrPlatform;
 
-        // we start with the smallest dataset.
-        sortDataSets( sampleAccs, dataSets );
+        if ( dataSets.size() > 0 ) {
+            valuesToUse = dataSets;
+            sortDataSets( sampleAccs, valuesToUse );
+            accToDatasetOrPlatform = accToDataset;
+            result.setAccToDatasetOrPlatformMap( accToDataset );
+            log.info( dataSets.size() + " datasets" );
+        } else {
+            valuesToUse = platforms;
+            sortPlatforms( sampleAccs, valuesToUse );
+            accToDatasetOrPlatform = accToPlatform;
+            result.setAccToDatasetOrPlatformMap( accToPlatform );
+            log.info( platforms.size() + " platforms" );
+        }
+
+        // we start with the smallest dataset/platform.
 
         Collection<String> allMatched = new HashSet<String>();
-        for ( String datasetA : dataSets ) {
-            alreadyTestedDatasets.add( datasetA );
-            log.debug( "Finding matches for samples in " + datasetA );
+        for ( String datasetOrPlatformA : valuesToUse ) {
+            alreadyTestedDatasetsOrPlatforms.add( datasetOrPlatformA );
+            log.debug( "Finding matches for samples in " + datasetOrPlatformA );
 
             // for each sample in this data set...
             for ( int j = 0; j < sampleAccs.size(); j++ ) {
+
+                boolean wasTied = false;
                 String targetAcc = sampleAccs.get( j );
 
                 // skip samples that are not in this data set.
-                if ( !accToDataset.get( targetAcc ).equals( datasetA ) ) {
+                if ( !accToDataset.get( targetAcc ).equals( datasetOrPlatformA ) ) {
                     continue;
                 }
                 if ( allMatched.contains( targetAcc ) ) continue;
@@ -343,7 +361,7 @@ public class DatasetCombiner {
                     targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
                 }
 
-                log.debug( "Target: " + targetAcc + " (" + datasetA + ") " + targetTitle
+                log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle
                         + ( targetSecondaryTitle == null ? "" : " a.k.a " + targetSecondaryTitle ) );
                 if ( StringUtils.isBlank( targetTitle ) )
                     throw new IllegalArgumentException( "Can't have blank titles for samples" );
@@ -355,13 +373,13 @@ public class DatasetCombiner {
                 /*
                  * For each of the other data sets
                  */
-                for ( String datasetB : dataSets ) {
+                for ( String datasetOrPlatformB : valuesToUse ) {
 
                     // if ( alreadyTestedDatasets.contains( datasetB ) ) {
                     // log.debug( "Skip self" );
                     // continue;
                     // }
-                    if ( datasetB.equals( datasetA ) ) {
+                    if ( datasetOrPlatformB.equals( datasetOrPlatformA ) ) {
                         continue;
                     }
 
@@ -373,7 +391,7 @@ public class DatasetCombiner {
                     /*
                      * Keep us from getting multiple matches.
                      */
-                    if ( alreadyMatched.get( targetAcc ).contains( datasetB ) ) {
+                    if ( alreadyMatched.get( targetAcc ).contains( datasetOrPlatformB ) ) {
                         continue;
                     }
 
@@ -389,8 +407,8 @@ public class DatasetCombiner {
 
                         if ( allMatched.contains( testAcc ) ) continue;
 
-                        boolean shouldTest = shouldTest( accToDataset, accToOrganism, alreadyMatched, datasetA,
-                                targetAcc, datasetB, testAcc );
+                        boolean shouldTest = shouldTest( accToDatasetOrPlatform, accToOrganism, alreadyMatched,
+                                datasetOrPlatformA, targetAcc, datasetOrPlatformB, testAcc );
 
                         if ( !shouldTest ) continue;
 
@@ -440,18 +458,6 @@ public class DatasetCombiner {
                         trimmedTest = trimmedTest.replaceAll( PUNCTUATION_REGEXP, "" );
                         trimmedTarget = trimmedTarget.replaceAll( PUNCTUATION_REGEXP, "" );
 
-                        // if ( Math.max( trimmedTest.length(), trimmedTarget.length() )
-                        // / Math.min( trimmedTest.length(), trimmedTarget.length() ) >
-                        // LENGTH_DIFFERENCE_THRESHOLD_TO_TRIGGER_TRIMMING ) {
-                        // if ( trimmedTest.length() > trimmedTarget.length() ) {
-                        // trimmedTest = trimmedTest.substring( 0, trimmedTarget.length() );
-                        // // log.debug( "Trimmed test title to " + trimmedTest );
-                        // } else {
-                        // trimmedTarget = trimmedTarget.substring( 0, trimmedTest.length() );
-                        // // log.debug( "Trimmed target title to " + trimmedTarget );
-                        // }
-                        // }
-
                         // Computing the distance
                         double distance = computeDistance( trimmedTest, trimmedTarget );
 
@@ -483,7 +489,7 @@ public class DatasetCombiner {
 
                         // handle ties
                         if ( distance == mindistance ) {
-                            log.warn( "Tie for match to " + targetAcc + ": " + bestMatchAcc + " and " + testAcc );
+                            wasTied = true;
                             /*
                              * Try to resolve the tie. Messy, yes.
                              */
@@ -506,14 +512,16 @@ public class DatasetCombiner {
                                     log.debug( "Current best match (tie broken): "
                                             + testAcc
                                             + " ("
-                                            + datasetB
+                                            + datasetOrPlatformB
                                             + ") "
                                             + testTitle
                                             + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle
                                                     + ", distance = " + distance ) );
+                                    wasTied = false;
                                 }
                                 if ( suffixWeightedDistanceA > suffixWeightedDistanceB ) {
                                     // old one is still better.
+                                    wasTied = false;
                                     continue;
                                 }
                             } else if ( prefixWeightedDistanceA > prefixWeightedDistanceB ) {
@@ -524,38 +532,50 @@ public class DatasetCombiner {
                                 log.debug( "Current best match (tie broken): "
                                         + testAcc
                                         + " ("
-                                        + datasetB
+                                        + datasetOrPlatformB
                                         + ") "
                                         + testTitle
                                         + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle
                                                 + ", distance = " + distance ) );
+                                wasTied = false;
                             } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
+                                wasTied = false;
                                 continue; // old best is still better.
                             }
                         } else {
-                            // clear new winner no tie
+                            // definite new winner no tie
                             mindistance = distance;
                             bestMatch = testTitle;
                             bestMatchAcc = testAcc;
                             log.debug( "Current best match: "
                                     + testAcc
                                     + " ("
-                                    + datasetB
+                                    + datasetOrPlatformB
                                     + ") "
                                     + testTitle
                                     + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle
                                             + ", distance = " + distance ) );
+                            wasTied = false;
                         }
 
                     } // end loop over samples in second data set.
                     log.debug( "Tested " + numTested + " samples" );
 
                     /*
-                     * Now have the best hit for outer dataset, in the inner data set.
+                     * Now have the best hit for sample from the outer dataset, in the inner data set.
                      */
-                    if ( bestMatchAcc == null ) {
-                        log.debug( "No match found in " + datasetB + " for " + targetAcc + "\t" + targetTitle + " ("
-                                + datasetA + ") (This can happen if sample was not run on all the platforms used)" );
+                    if ( bestMatchAcc == null || wasTied ) {
+                        if ( log.isDebugEnabled() )
+                            log
+                                    .debug( "No match found in "
+                                            + datasetOrPlatformB
+                                            + " for "
+                                            + targetAcc
+                                            + "\t"
+                                            + targetTitle
+                                            + " ("
+                                            + datasetOrPlatformA
+                                            + ") (This can happen if sample was not run on all the platforms used; or if there were ties that could not be broken; or when we were unable to match)" );
                         result.addCorrespondence( targetAcc, null );
                         allMatched.add( targetAcc );
                     } else {
@@ -565,8 +585,8 @@ public class DatasetCombiner {
                                     + " (" + accToDataset.get( bestMatchAcc ) + ")" + " (Distance: " + mindistance
                                     + ")" );
                         result.addCorrespondence( targetAcc, bestMatchAcc );
-                        alreadyMatched.get( bestMatchAcc ).add( datasetA );
-                        alreadyMatched.get( targetAcc ).add( datasetB );
+                        alreadyMatched.get( bestMatchAcc ).add( datasetOrPlatformA );
+                        alreadyMatched.get( targetAcc ).add( datasetOrPlatformB );
                         allMatched.add( targetAcc );
                         allMatched.add( bestMatchAcc );
                     }
@@ -607,6 +627,33 @@ public class DatasetCombiner {
         } );
     }
 
+    private void sortPlatforms( final List<String> sampleAccs, List<String> platforms ) {
+        Collections.sort( platforms, new Comparator<String>() {
+            public int compare( String arg0, String arg1 ) {
+                int numSamples0 = 0;
+                int numSamples1 = 0;
+                for ( int j = 0; j < sampleAccs.size(); j++ ) {
+                    String targetAcc = sampleAccs.get( j );
+
+                    // skip samples that are not in this data set.
+                    if ( accToPlatform.get( targetAcc ).equals( arg0 ) ) {
+                        numSamples0++;
+                    } else if ( accToPlatform.get( targetAcc ).equals( arg1 ) ) {
+                        numSamples1++;
+                    }
+                }
+
+                if ( numSamples0 == numSamples1 ) {
+                    return 0;
+                } else if ( numSamples0 < numSamples1 ) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        } );
+    }
+
     /**
      * Identify stop-strings relating to microarray names.
      * 
@@ -630,7 +677,7 @@ public class DatasetCombiner {
     /**
      * Implements constraints on samples to test.
      * 
-     * @param accToDataset
+     * @param accToDatasetOrPlatform (depending on which we are using, platforms or data sets)
      * @param accToOrganism
      * @param alreadyMatched
      * @param allmatched
@@ -640,7 +687,7 @@ public class DatasetCombiner {
      * @param testAcc
      * @return
      */
-    private boolean shouldTest( LinkedHashMap<String, String> accToDataset,
+    private boolean shouldTest( LinkedHashMap<String, String> accToDatasetOrPlatform,
             LinkedHashMap<String, String> accToOrganism, Map<String, Collection<String>> alreadyMatched,
             String datasetA, String targetAcc, String datasetB, String testAcc ) {
         boolean shouldTest = true;
@@ -651,7 +698,7 @@ public class DatasetCombiner {
         }
 
         // only use samples from the current test dataset.
-        if ( !accToDataset.get( testAcc ).equals( datasetB ) ) {
+        if ( !accToDatasetOrPlatform.get( testAcc ).equals( datasetB ) ) {
             shouldTest = false;
         }
 

@@ -25,10 +25,14 @@ import java.util.Set;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -39,10 +43,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @version $Id$
  * @spring.bean id="geoDatasetService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="bioAssayService" ref="bioAssayService"
  */
 public class GeoDatasetService extends AbstractGeoService {
 
+    /**
+     * 
+     */
+    private static final String GEO_DB_NAME = "GEO";
     ExpressionExperimentService expressionExperimentService;
+    BioAssayService bioAssayService;
 
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
@@ -87,6 +97,8 @@ public class GeoDatasetService extends AbstractGeoService {
 
         checkPlatformUniqueness( series );
 
+        checkSamplesAreNew( series );
+
         log.info( "Generated GEO domain objects for " + geoAccession );
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
@@ -99,6 +111,67 @@ public class GeoDatasetService extends AbstractGeoService {
         log.info( "Persisted " + series.getGeoAccession() );
         this.geoConverter.clear();
         return persistedResult;
+    }
+
+    /**
+     * Another rare case, typified by samples in GSE3193. We must confirm that all samples included in the data set are
+     * not included in other data sets.
+     * 
+     * @param series
+     */
+    @SuppressWarnings("unchecked")
+    private void checkSamplesAreNew( GeoSeries series ) {
+        Collection<BioAssay> bioAssays = null;
+        Collection<GeoSample> toSkip = new HashSet<GeoSample>();
+        for ( GeoSample sample : series.getSamples() ) {
+            if ( sample.appearsInMultipleSeries() ) {
+                String sampleId = sample.getGeoAccession();
+
+                if ( bioAssays == null ) {
+                    log.info( "Loading all bioassays to check for duplication..." );
+                    bioAssays = bioAssayService.loadAll();
+                }
+
+                for ( BioAssay ba : bioAssays ) {
+                    String existingAcc = ba.getAccession().getAccession();
+                    if ( existingAcc.equals( sampleId )
+                            && ba.getAccession().getExternalDatabase().getName().equals( GEO_DB_NAME ) ) {
+                        log.info( sampleId + " appears in an expression experiment already in the system, skipping" );
+                        toSkip.add( sample );
+                    }
+                }
+            }
+        }
+
+        StringBuilder buf = new StringBuilder();
+        for ( GeoSample gs : toSkip ) {
+            series.getSamples().remove( gs );
+            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            buf.append( gs + ", " );
+        }
+
+        for ( GeoDataset gds : series.getDatasets() ) {
+            for ( GeoSubset gsub : gds.getSubsets() ) {
+                for ( GeoSample gs : toSkip ) {
+                    gsub.getSamples().remove( gs );
+                }
+            }
+        }
+
+        log.info( "Series now contains " + series.getSamples().size() + " (removed " + toSkip.size() + ")" );
+
+        // update the description, so we keep some kind of record.
+        series.setSummaries( series.getSummaries() + "\nNote: " + toSkip
+                + " samples from this series, which appear in other Expression Experiments in Gemma, "
+                + "were not imported from the GEO source. The following samples were removed: " + buf.toString() );
+
+        if ( series.getSamples().size() == 0 ) {
+            throw new AlreadyExistsInSystemException( "All the samples in " + series
+                    + " are in the system already (in other ExpressionExperiments" );
+        }
+
+        // log.info( series.getSampleCorrespondence() );
+
     }
 
     /**
@@ -154,6 +227,10 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
     }
 
 }

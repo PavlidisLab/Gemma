@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.testing.AbstractGeoServiceTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * This is an integration test
@@ -202,8 +203,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // ee = results.iterator().next();
     // assertEquals( 1, results.size() );
     //
-    //    }
-
+    // }
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
@@ -221,6 +221,14 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertEquals( 2, results.size() );
 
     }
+
+    // Please leave this here, we use it to load data sets for chopping.
+    // @SuppressWarnings("unchecked")
+    // public void testFetchASeries() throws Exception {
+    // endTransaction();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    // geoService.fetchAndLoad( "GDS84" );// replace accession.
+    // }
 
     /**
      * GSE3434 has no dataset. It's small so okay to download.
@@ -578,6 +586,40 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Double actualValue = ( Double ) matrix.get( soughtDesignElement, soughtBioAssay );
         assertEquals( expectedValue, actualValue, 0.00001 );
 
+    }
+
+    /**
+     * This is a important but rare case: when a sample is in more then one Series, we have to make sure we don't input
+     * it more than once.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE3193() throws Exception {
+        endTransaction();
+
+        String path = ConfigUtils.getString( "gemma.home" );
+
+        // First load the data set that has overlapping samples with GSE3193, GSE61.
+        try {
+
+            assert path != null;
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE61Short" ) );
+            geoService.fetchAndLoad( "GSE61" );
+        } catch ( AlreadyExistsInSystemException e ) {
+            // ok
+        }
+
+        // it is important for this test that GSE3193 not already be in the database.
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE3193" );
+        ee = results.iterator().next();
+        assertNotNull( ee );
+
+        // FIXME: check that we haven't loaded samples twice.
     }
 
     /**

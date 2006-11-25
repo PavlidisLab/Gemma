@@ -19,6 +19,7 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -151,49 +152,96 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     /**
-     * Deals with the fact that the bioassay dimensions can vary in size. In the case where there is a single
-     * bioassaydimension this reduces to simply associating each column with a bioassay (though we are forced to use an
-     * integer under the hood).
+     * Deals with the fact that the bioassay dimensions can vary in size, and don't even need to overlap in the
+     * biomaterials used. In the case where there is a single bioassaydimension this reduces to simply associating each
+     * column with a bioassay (though we are forced to use an integer under the hood).
+     * <p>
+     * For example, in the following diagram "-" indicates a biomaterial, while "*" indicates a bioassay. Each row of
+     * "*" indicates samples run on a different microarray design (a different bio assay material). In the examples we
+     * assume there is just a single biomaterial dimension.
+     * 
+     * <pre>
+     *       ----------------
+     *       ******              -- only a few samples run on this platform
+     *         **********        -- ditto
+     *                   ****    -- these samples were not run on any of the other platforms (rare but possible).
+     * </pre>
+     * 
+     * <p>
+     * A simpler case:
+     * </p>
+     * 
+     * <pre>
+     *       ----------------
+     *       ****************
+     *       ************
+     *       ********
+     * </pre>
+     * 
+     * <p>
+     * A more typical and easy case (one microarray design used):
+     * </p>
+     * 
+     * <pre>
+     *       -----------------
+     *       *****************
+     * </pre>
+     * 
+     * <p>
+     * If every sample was run on two different array designs:
+     * </p>
+     * 
+     * <pre>
+     *       -----------------
+     *       *****************
+     *       *****************
+     * </pre>
+     * 
+     * <p>
+     * Clearly the first case is the only challenge. Because there can be limited or no overlap between the bioassay
+     * dimensions,we cannot assume the dimensions of the matrix will be defined by the longest bioassaydimension.
+     * </p>
      */
     protected int setUpColumnElements() {
         log.debug( "Setting up column elements" );
         assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0;
-        int maxSize = 0;
-        for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
-            Collection<BioAssay> bioAssays = dimension.getBioAssays();
-            assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
-            if ( bioAssays.size() > maxSize ) {
-                maxSize = bioAssays.size();
-            }
 
-            /*
-             * We "line up" the data so all the data for a given biomaterial shows up in the same column.
-             */
-            Collection<BioMaterial> bioMaterials = new LinkedHashSet<BioMaterial>();
-            int i = maxSize - 1;
-            for ( BioAssay assay : bioAssays ) {
-                for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
+        // build a map of biomaterials to bioassays.
+        Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new HashMap<BioMaterial, Collection<BioAssay>>();
+        Collection<Collection<BioMaterial>> bioMaterialGroups = new HashSet<Collection<BioMaterial>>();
+        for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
+            for ( BioAssay ba : dimension.getBioAssays() ) {
+                Collection<BioMaterial> bms = ba.getSamplesUsed();
+                bioMaterialGroups.add( bms );
+                for ( BioMaterial material : bms ) {
+                    if ( !bioMaterialMap.containsKey( material ) ) {
+                        bioMaterialMap.put( material, new HashSet<BioAssay>() );
+                    }
+                    bioMaterialMap.get( material ).add( ba );
+                }
+            }
+        }
+
+        int column = 0;
+        for ( Collection<BioMaterial> bms : bioMaterialGroups ) {
+            for ( BioMaterial bioMaterial : bms ) {
+                for ( BioAssay assay : bioMaterialMap.get( bioMaterial ) ) {
                     if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
                         int columnIndex = columnBioMaterialMap.get( bioMaterial );
                         this.columnAssayMap.put( assay, columnIndex );
                         log.debug( assay + " --> column " + columnIndex );
                     } else {
-                        log.debug( bioMaterial + " --> column " + i );
-                        log.debug( assay + " --> column " + i );
-                        this.columnBioMaterialMap.put( bioMaterial, i );
-                        bioMaterials.add( bioMaterial );
-                        this.columnAssayMap.put( assay, i );
+                        log.debug( bioMaterial + " --> column " + column );
+                        log.debug( assay + " --> column " + column );
+                        this.columnBioMaterialMap.put( bioMaterial, column );
+                        this.columnAssayMap.put( assay, column );
                     }
                 }
-                columnBioMaterialMapByInteger.put( i, bioMaterials );
-                i--;
+                column++;
             }
         }
-        // assert this.columnAssayMap.values().size() == maxSize : "Expected " + maxSize + " got "
-        // + this.columnAssayMap.values().size();
-        // assert this.columnBioMaterialMap.values().size() == maxSize;
 
-        return maxSize;
+        return bioMaterialGroups.size();
     }
 
     protected abstract void vectorsToMatrix( Collection<DesignElementDataVector> vectors );

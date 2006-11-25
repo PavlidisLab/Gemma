@@ -127,6 +127,7 @@ public class DatasetCombinerTest extends TestCase {
     }
 
     private void fillInDatasetPlatformAndOrganism() {
+        if ( gds == null ) return;
         for ( GeoDataset geods : gds ) {
             GeoPlatform platform = geods.getPlatform();
             platform.getOrganisms().add( geods.getOrganism() );
@@ -188,30 +189,30 @@ public class DatasetCombinerTest extends TestCase {
 
         /**
          * <pre>
-         *                                            GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
-         *                                            GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
-         *                                            GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
-         *                                            GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
-         *                                            GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
-         *                                            GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
-         *                                            GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
-         *                                            GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
-         *                                            GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
-         *                                            GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
-         *                                            GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
-         *                                            GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
-         *                                            GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
-         *                                            GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
-         *                                            GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
-         *                                            GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
-         *                                            GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
-         *                                            GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
-         *                                            GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
-         *                                            GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
-         *                                            GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
-         *                                            GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
-         *                                            GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
-         *                                            GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
+         *                                                  GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
+         *                                                  GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
+         *                                                  GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
+         *                                                  GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
+         *                                                  GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
+         *                                                  GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
+         *                                                  GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
+         *                                                  GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
+         *                                                  GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
+         *                                                  GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
+         *                                                  GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
+         *                                                  GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
+         *                                                  GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
+         *                                                  GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
+         *                                                  GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
+         *                                                  GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
+         *                                                  GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
+         *                                                  GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
+         *                                                  GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
+         *                                                  GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
+         *                                                  GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
+         *                                                  GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
+         *                                                  GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
+         *                                                  GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
          * </pre>
          */
 
@@ -615,6 +616,40 @@ public class DatasetCombinerTest extends TestCase {
             numBioMaterials++;
         }
         assertEquals( 31, numBioMaterials );
+
+    }
+
+    /**
+     * Has multiple platforms, but no GES's are defined.
+     * 
+     * @throws Exception
+     */
+    public void testFindGSE3193() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        // GeoDataset gd = parseResult.getDatasets().values().iterator().next();
+        GeoSeries gse = parseResult.getSeries().values().iterator().next();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gse );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            // assertTrue( c.size() == 1 );
+            numBioMaterials++;
+        }
+        assertEquals( 60, numBioMaterials ); // note, i'm not at all sure these are right!
 
     }
 
