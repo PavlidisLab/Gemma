@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.zip.GZIPInputStream;
 
@@ -40,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -59,6 +61,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
 
     CompositeSequenceService compositeSequenceService = null;
 
+    GeneService geneService = null;
+
     ArrayDesignService arrayDesignService = null;
 
     ExpressionExperimentService expressionExperimentService = null;
@@ -68,6 +72,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
     String eeShortName = "GSE994";
 
     String csName = "218120_s_at";
+
+    String geneOfficialSymbol = "HMOX2";
 
     ArrayDesign ad = null;
 
@@ -86,6 +92,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+
+        geneService = ( GeneService ) this.getBean( "geneService" );
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ad = arrayDesignService.findByShortName( arrayAccession );
@@ -177,8 +185,6 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
      */
     public void testFindGenesByOfficialSymbols() {
 
-        String geneOfficialSymbol = "HMOX2";
-
         Collection<String> geneSymbols = new HashSet<String>();
         geneSymbols.add( geneOfficialSymbol );
 
@@ -208,6 +214,9 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
      * @throws Exception
      */
     public void testGetMatchingCompositeSequences() {
+        // TODO change the name of this test when you change compositeSequenceService.getMatchingCompositeSequences
+        // (this is just a
+        // findByName)
         log.warn( " *** THIS IS A LONG RUNNING TEST . *** " );
 
         if ( expressionExperimentService.findByShortName( eeShortName ) == null ) {
@@ -247,8 +256,28 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
             }
         }
     }
-    
-    public void testGetCompositeSequencesByGeneId(){
-        
+
+    /**
+     * Tests getting the composite sequences for a given gene id.
+     */
+    public void testGetCompositeSequencesByGeneId() {
+
+        Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );
+
+        assertNotNull( genes );
+        assertEquals( genes.size(), 1 );
+
+        Iterator iter = genes.iterator();
+        Gene g = ( Gene ) iter.next();
+
+        Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
+                .getCompositeSequencesByGeneId( g.getId() );
+
+        log.info( compositeSequences.size() + " composite sequences for gene " + g.getOfficialSymbol()
+                + " .These are: " );
+        for ( CompositeSequence cs : compositeSequences ) {
+            log.info( "CompositeSequence: " + cs.getName() );
+        }
+
     }
 }
