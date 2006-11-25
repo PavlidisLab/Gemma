@@ -49,13 +49,13 @@ public class DesignElementDataVectorImpl extends ubic.gemma.model.expression.bio
                 return false;
             }
 
-            // if ( this.getExpressionExperiment() == null || that.getExpressionExperiment() == null ) {
-            // return false;
-            // }
+            if ( this.getBioAssayDimension() == null || that.getBioAssayDimension() == null ) {
+                return false;
+            }
 
             return this.getDesignElement().getName().equals( that.getDesignElement().getName() )
-                    && this.getQuantitationType().getName().equals( that.getQuantitationType().getName() );
-            // && this.getExpressionExperiment().getName().equals( that.getExpressionExperiment().getName() );
+                    && this.getQuantitationType().getName().equals( that.getQuantitationType().getName() )
+                    && this.getBioAssayDimension().getName().equals( that.getBioAssayDimension().getName() );
         }
         return true;
     }
@@ -81,6 +81,10 @@ public class DesignElementDataVectorImpl extends ubic.gemma.model.expression.bio
 
         if ( this.getQuantitationType() != null ) {
             hashCode += this.getQuantitationType().getName().hashCode();
+        }
+
+        if ( this.getBioAssayDimension() != null ) {
+            hashCode += this.getBioAssayDimension().getName().hashCode();
         }
 
         // least important as it is unlikely we would have multiple expression experiments in the same collection.
