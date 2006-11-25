@@ -170,8 +170,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
              * We "line up" the data so all the data for a given biomaterial shows up in the same column.
              */
             Collection<BioMaterial> bioMaterials = new LinkedHashSet<BioMaterial>();
-            int i = 0;
-            for ( BioAssay assay : dimension.getBioAssays() ) {
+            int i = maxSize - 1;
+            for ( BioAssay assay : bioAssays ) {
                 for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
                     if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
                         int columnIndex = columnBioMaterialMap.get( bioMaterial );
@@ -186,7 +186,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                     }
                 }
                 columnBioMaterialMapByInteger.put( i, bioMaterials );
-                i++;
+                i--;
             }
         }
         // assert this.columnAssayMap.values().size() == maxSize : "Expected " + maxSize + " got "
