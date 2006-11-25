@@ -80,4 +80,32 @@ public class CompositeSequenceMapSummary {
         return compositeSequence;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( compositeSequence.getName() + "\t" );
+        buf.append( compositeSequence.getBiologicalCharacteristic().getName() + "\t" );
+        buf.append( blatResults.size() + "\t" );
+
+        for ( GeneProduct gp : geneProducts ) {
+            buf.append( gp.getName() + "|" );
+        }
+
+        buf.append( "\t" );
+
+        for ( Gene g : genes ) {
+            buf.append( g.getOfficialSymbol() + "|" );
+        }
+
+        return buf.toString().replaceAll( "\\|\t", "\t" );
+    }
+
+    /**
+     * @return
+     */
+    public static String header() {
+        return "CompSeq\tBioSeq\t#BlatRes\tGeneProds\tGenes";
+    }
+
 }

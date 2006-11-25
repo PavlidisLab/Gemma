@@ -46,32 +46,16 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
  */
 public class ArrayDesignMapResultService {
 
-    private CompositeSequenceService compositeSequenceService;
     private BlatResultService blatResultService;
     private BlatAssociationService blatAssociationService;
-    private GeneProductService geneProductService;
-    private GeneService geneService;
-    private BioSequenceService bioSequenceService;
     private ArrayDesignService arrayDesignService;
-
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
 
     public void setBlatResultService( BlatResultService blatResultService ) {
         this.blatResultService = blatResultService;
     }
 
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    public void setGeneProductService( GeneProductService geneProductService ) {
-        this.geneProductService = geneProductService;
-    }
-
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
+        this.blatAssociationService = blatAssociationService;
     }
 
     /**
