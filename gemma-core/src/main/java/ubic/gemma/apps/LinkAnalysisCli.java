@@ -28,11 +28,15 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -189,14 +193,20 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			this.linkAnalysis.setUseDB();
 		}
 	}
-
+	/***Use the one with the preferred set to TRUE******/
 	private QuantitationType getQuantitationType(ExpressionExperiment ee) {
 		QuantitationType qtf = null;
 		Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes(ee);
 		for (QuantitationType qt : eeQT) {
-			System.err.print( qt.getId() + " ");
-		}
-		for (QuantitationType qt : eeQT) {
+			if(qt.getIsPreferred()) {
+				qtf = qt;
+				StandardQuantitationType tmpQT = qt.getType();
+				if (tmpQT != StandardQuantitationType.DERIVEDSIGNAL	&& tmpQT != StandardQuantitationType.RATIO) {
+					log.info("Preferred Quantitation Type may not be correct." + ee.getShortName() + ":" + tmpQT.toString());
+				}
+				break;
+			}
+			/*
 			StandardQuantitationType tmpQT = qt.getType();
 			if (tmpQT == StandardQuantitationType.DERIVEDSIGNAL
 					|| tmpQT == StandardQuantitationType.MEASUREDSIGNAL
@@ -204,49 +214,78 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 				qtf = qt;
 				break;
 			}
+			*/
+		}
+		if(qtf == null){
+			log.info("Expression Experiment " + ee.getShortName() + " doesn't have a preferred quantitation type");
 		}
 		return qtf;
 	}
     private DoubleMatrixNamed filter(DoubleMatrixNamed dataMatrix, ExpressionExperiment ee) {
- 
+    	/********Check the array design technology to choose the filter****/
     	DoubleMatrixNamed r = dataMatrix;
-    	//ArrayDesignService adService = this.getBean("arrayDesignService");
     	if(r == null) return r;
-    	
-    	//if(this.eeService.)
         log.info( "Data set has " + r.rows() + " rows and " + r.columns() + " columns." );
+    	ArrayDesign arrayDesign = (ArrayDesign)this.eeService.getArrayDesignsUsed(ee).iterator().next();
+    	TechnologyType techType = arrayDesign.getTechnologyType();
+        
+    	if(techType.equals(TechnologyTypeEnum.TWOCOLOR)){
+    		/***Apply for two color missing value filtered*/
+        	if ( minPresentFractionIsSet ) {
 
-        if ( minPresentFractionIsSet ) {
-
-            log.info( "Filtering out genes that are missing too many values" );
-            RowMissingFilter x = new RowMissingFilter();
-            x.setMinPresentFraction( minPresentFraction );
-            r = ( DoubleMatrixNamed ) x.filter( r );
-        }
-
-        if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do this
-            // as well as affy filtering.
-            log.info( "Filtering out genes with low expression" );
-            RowLevelFilter x = new RowLevelFilter();
-            x.setLowCut( this.lowExpressionCut );
-            x.setHighCut(this.highExpressionCut);
-            x.setRemoveAllNegative( true ); // todo: fix
-            x.setUseAsFraction( true );
-            r = ( DoubleMatrixNamed ) x.filter( r );
-        }
-
-        log.info( "Filtering by Affymetrix probe name" );
-        Filter x = new AffymetrixProbeNameFilter(new int[] { 2 } );
-        r = ( DoubleMatrixNamed ) x.filter( r );
+        		/*
+                log.info( "Filtering out genes that are missing too many values" );
+                RowMissingFilter x = new RowMissingFilter();
+                x.setMinPresentFraction( minPresentFraction );
+                r = ( DoubleMatrixNamed ) x.filter( r );
+                */
+            }
+    	}
+    	if(techType.equals(TechnologyTypeEnum.ONECOLOR)){
+    		if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do this
+    			// as well as affy filtering.
+    			log.info( "Filtering out genes with low expression for " + ee.getShortName() );
+    			RowLevelFilter x = new RowLevelFilter();
+    			x.setLowCut( this.lowExpressionCut );
+    			x.setHighCut(this.highExpressionCut);
+    			x.setRemoveAllNegative( true ); // todo: fix
+    			x.setUseAsFraction( true );
+    			r = ( DoubleMatrixNamed ) x.filter( r );
+    		}
+    		if(arrayDesign.getName().toUpperCase().contains("AFFYMETRIX")){
+    			log.info( "Filtering by Affymetrix probe name for " + ee.getShortName());
+    			Filter x = new AffymetrixProbeNameFilter(new int[] { 2 } );
+    			r = ( DoubleMatrixNamed ) x.filter( r );
+    		}
+    	}
         return r;
     }
-
+	private void test(){
+		QuantitationTypeService qts = (QuantitationTypeService)getBean("quantitationTypeService");
+		QuantitationType qtf = QuantitationType.Factory.newInstance();
+		qtf.setName("VALUE"); 
+		qtf.setScale(ScaleType.UNSCALED);
+		qtf.setRepresentation(PrimitiveType.DOUBLE);
+		qtf.setGeneralType(GeneralType.QUANTITATIVE);
+		qtf.setType(StandardQuantitationType.DERIVEDSIGNAL);
+		qtf = qts.find(qtf);
+		if(qtf == null){
+			log.info("NO Quantitation Type!");
+			return;
+		}
+		log.debug("Got Quantitiontype : " + qtf.getId());
+		ExpressionExperiment ee = this.eeService.findById(new Long(1));
+		Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+		ees.add(ee);
+		GeneService geneService = (GeneService)getBean("geneService");
+		Gene gene = geneService.load(461722);
+		Collection<Probe2ProbeCoexpression> p2plinks = null;
+        Probe2ProbeCoexpressionService ppService = (Probe2ProbeCoexpressionService) this
+		.getBean("probe2ProbeCoexpressionService");
+		p2plinks = ppService.findCoexpressionRelationships(gene,ees,qtf);
+		log.info("Got links "+ p2plinks.size());
+	}
 	private boolean analysis(ExpressionExperiment ee) {
-		System.err.println("");
-		System.err.print(ee.getShortName() + " ");
-		QuantitationType qt1 = this.getQuantitationType(ee);
-		if(true)return true;
-		
 		eeService.thaw(ee);
 		QuantitationType qt = this.getQuantitationType(ee);
 		if (qt == null) {
@@ -261,6 +300,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			
 		if (dataMatrix == null) {
 			log.info("No data matrix " + ee.getShortName());
+			return false;
+		}
+		if (dataMatrix.rows() < 100){
+			log.info("Most Probes are filtered out " + ee.getShortName());
 			return false;
 		}
 		if (dataMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE){
@@ -308,8 +351,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			this.vectorService = (DesignElementDataVectorService) this
 					.getBean("designElementDataVectorService");
 
-//			this.test();
-//			if(true) return null;
 			ExpressionExperiment expressionExperiment = null;
 			this.linkAnalysis.setDEService(vectorService);
 			this.linkAnalysis.setPPService((Probe2ProbeCoexpressionService) this.getBean("probe2ProbeCoexpressionService"));

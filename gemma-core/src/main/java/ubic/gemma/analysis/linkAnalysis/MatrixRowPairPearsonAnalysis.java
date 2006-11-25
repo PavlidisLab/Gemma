@@ -24,6 +24,9 @@ import hep.aida.ref.Histogram1D;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
@@ -80,7 +83,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private double globalTotal = 0.0; // used to store the running total of the matrix values.
     private double globalMean = 0.0; // mean of the entire distribution.
     private int numVals = 0; // number of values actually stored in the matrix
-
+    protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
     /**
      *
      */
@@ -246,7 +249,16 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
         return sxy / ( rowSumSquaresSqrt[i] * rowSumSquaresSqrt[j] );
     }
-
+    
+    /***Skip the probes without blat association****/
+    private boolean blatValidation(Object probeA){
+    	if(this.probeToGeneMap != null){
+            Set <Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)probeA).getId());
+            if(geneIdSet != null)
+            	return true;
+    	}
+    	return false;
+    }
     /**
      * check if probeA and probeB are mapped to the same gene
      * 
@@ -318,7 +330,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         boolean AhasDuplicates = false;
         int duplicateSkip = 0;
         for ( int i = 0; i < numrows; i++ ) {
-
+        	if(!this.blatValidation(this.dataMatrix.getRowName(i))) continue;
             if ( docalcs ) {
                 if ( this.probeToGeneMap != null && this.geneToProbeMap != null ) {
                     itemA = this.dataMatrix.getRowName( i );
@@ -329,6 +341,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             }
 
             for ( int j = i + 1; j < numrows; j++ ) {
+            	if(!this.blatValidation(this.dataMatrix.getRowName(j))) continue;
                 if ( !docalcs || C.getQuick( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it if we
                     // already have it. Just do the requisite checks.
                     keepCorrel( i, j, C.getQuick( i, j ), numcols );
@@ -392,7 +405,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         double[] ival = null;
         double syy, sxy, sxx, sx, sy, xj, yj;
         for ( int i = 0; i < numrows; i++ ) { // first vector
-
+        	if(!this.blatValidation(this.dataMatrix.getRowName(i))) continue;
             if ( docalcs ) {
                 rowStatistics();
                 if ( this.geneToProbeMap != null && this.probeToGeneMap != null ) {
@@ -405,6 +418,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             boolean thisRowHasMissing = hasMissing[i];
 
             for ( int j = i + 1; j < numrows; j++ ) { // second vector
+            	if(!this.blatValidation(this.dataMatrix.getRowName(j))) continue;
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !docalcs || C.getQuick( i, j ) != 0.0 ) {
@@ -504,9 +518,9 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
 
         if ( numMissing == 0 ) {
-            System.err.println( "No missing values" );
+            log.info( "No missing values" );
         } else {
-            System.err.println( numMissing + " missing values" );
+            log.info( numMissing + " missing values" );
         }
         return numMissing;
     }

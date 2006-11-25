@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -43,8 +44,10 @@ public class MetaLinkFinder {
     private ExpressionExperimentService eeService = null;
     private CompressedNamedBitMatrix linkCount = null;
     private HashMap<Long, Integer> eeMap = null;
+    private HashMap<Object, Set> probeToGenes = null;
     private Vector allEE = null;
     protected static final Log log = LogFactory.getLog( MetaLinkFinder.class );
+    private int bitNum = 0;
     
     public MetaLinkFinder(Probe2ProbeCoexpressionService ppService, DesignElementDataVectorService deService, ExpressionExperimentService eeService, GeneService geneService){
     	assert(ppService != null);
@@ -56,42 +59,62 @@ public class MetaLinkFinder {
     	this.geneService = geneService;
     	this.eeService = eeService;
     }
-    
-    private Collection getExpressionExperiment(Taxon taxon){
-    	Collection<ExpressionExperiment> all_ee = this.eeService.loadAll();
-    	Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-    	if(all_ee == null || all_ee.size() == 0) return null;
-    	
-    	for(ExpressionExperiment ee:all_ee){
-    		if(this.eeService.getTaxon(ee.getId()).equals(taxon))
-    			ees.add(ee);
-    	}
-    	return ees;
-    }
-    public void find(Taxon taxon, QuantitationType qt){
+ 
+    /****distribute the expression experiments to the different classes of quantitation type.
+     *  The reason to do this is because the collection of expression experiment for Probe2Probe2
+     *  Query should share the same preferred quantitation type. The returned object is a map between
+     *  quantitation type and a set of expression experiment perferring this quantitation type.
+     * @return
+	 */    
+    private Map<QuantitationType, Collection> preprocess(Collection<ExpressionExperiment> ees){
+        Map eemap = new HashMap<QuantitationType, Collection>();
+        for(ExpressionExperiment ee:ees){
+            Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes(ee);
+            for (QuantitationType qt : eeQT) {
+                if(qt.getIsPreferred()){
+                    Collection<ExpressionExperiment> eeCollection = (Collection)eemap.get( qt );
+                    if(eeCollection == null){
+                    	log.info(" Get Quantitation Type : " + qt.getName()+ ":"+qt.getType());
+                        eeCollection = new HashSet<ExpressionExperiment>();
+                        eemap.put( qt, eeCollection );
+                    }
+                    eeCollection.add( ee );
+                    break;
+                }
+            }
+        }
+		return eemap;
+	}
+    public void find(Taxon taxon){
     	Collection <Gene> genes = geneService.getGenesByTaxon(taxon);
     	if(genes == null || genes.size() == 0) return;
-    	this.find(genes, qt);
+    	this.find(genes);
     }
-    public void find(Collection<Gene> genes, QuantitationType qt){
+    public void find(Collection<Gene> genes){
     	if(genes == null || genes.size() == 0) return;
     	Taxon taxon = genes.iterator().next().getTaxon();
-    	Collection <ExpressionExperiment> ees = this.getExpressionExperiment(taxon);
+    	Collection <ExpressionExperiment> ees = this.eeService.getByTaxon(taxon);
     	if(ees == null || ees.size() == 0) return;
-    	this.find(genes, ees, qt);
+    	this.find(genes, ees);
     }
-    
-    public void find(Collection<Gene> genes, Collection <ExpressionExperiment> ees, QuantitationType qt){
-    	if(genes == null || ees == null || qt == null || genes.size() == 0 || ees.size() == 0) return;
+    public void find(Collection<Gene> genes, Collection <ExpressionExperiment> ees){
+    	if(genes == null || ees == null ||  genes.size() == 0 || ees.size() == 0) return;
     	Collection <Gene> genesInTaxon = this.geneService.getGenesByTaxon(genes.iterator().next().getTaxon());
     	if(genesInTaxon == null || genesInTaxon.size() == 0) return;
-    	
     	this.init(genes, ees, genesInTaxon);
+
+    	Map<QuantitationType, Collection> eeMap = preprocess(ees);
+        for(QuantitationType qt:eeMap.keySet()){
+            ees = eeMap.get( qt );
+            this.finder(genes, ees, qt);
+        }
+    }
+    private void finder(Collection<Gene> genes, Collection <ExpressionExperiment> ees, QuantitationType qt){
     	
     	for(Gene gene:genes){
     		Collection<DesignElementDataVector> p2plinks = ppService.findCoexpressionRelationships(gene,ees,qt);
     		if(p2plinks == null || p2plinks.size() == 0) continue;
-    		log.info("Get "+ p2plinks.size() + " links");
+    		log.info("Get "+ p2plinks.size() + " links for " + gene.getName());
     		this.count(gene, p2plinks);
     	}
 
@@ -127,13 +150,21 @@ public class MetaLinkFinder {
     }
     private void count(Gene rowGene, Collection<DesignElementDataVector> p2plinks){
     	int rowIndex = -1, colIndex = -1, eeIndex = -1;
-    	ExpressionExperiment ee = null;
-    	
     	rowIndex = this.linkCount.getRowIndexByName(rowGene.getId());
-
-    	Integer index = null;
     	
-    	HashMap<Object, Set> probeToGenes = (HashMap)this.deService.getGenes(p2plinks);
+    	if(this.probeToGenes.size() > 50000) this.probeToGenes.clear();
+    	Collection<DesignElementDataVector> probes = new HashSet<DesignElementDataVector>();
+    	for(DesignElementDataVector p2pIter:p2plinks){
+    		HashSet <Gene> pairedGenes = (HashSet)probeToGenes.get(p2pIter);
+    		if(pairedGenes == null)
+    			probes.add(p2pIter);
+    	}
+    	HashMap<Object, Set> tmpProbeToGenes = (HashMap)this.deService.getGenes(probes);
+    	this.probeToGenes.putAll(tmpProbeToGenes);
+    	
+    	//this.probeToGenes= (HashMap)this.deService.getGenes(p2plinks);
+    	Integer index = null;
+    	ExpressionExperiment ee = null;
     	for(DesignElementDataVector p2pIter:p2plinks){
     		ee = p2pIter.getExpressionExperiment();
     		index = this.eeMap.get(ee.getId());
@@ -158,19 +189,17 @@ public class MetaLinkFinder {
     	}
     }
     private void init(Collection<Gene> genes, Collection <ExpressionExperiment> ees, Collection<Gene> genesInTaxon){
-    	int index = 0;
-    	
-        if(this.linkCount == null){
-            this.linkCount = new CompressedNamedBitMatrix(genes.size(), genesInTaxon.size(), ees.size());
-            for(Gene geneIter:genes){
-                this.linkCount.addRowName(geneIter.getId());
-            }
-            for(Gene geneIter:genesInTaxon){
-                this.linkCount.addColumnName(geneIter.getId());
-            }
-        }
+    	this.linkCount = new CompressedNamedBitMatrix(genes.size(), genesInTaxon.size(), ees.size());
+    	this.probeToGenes = new HashMap<Object, Set>();
+    	for(Gene geneIter:genes){
+    		this.linkCount.addRowName(geneIter.getId());
+    	}
+    	for(Gene geneIter:genesInTaxon){
+    		this.linkCount.addColumnName(geneIter.getId());
+    	}
     	this.eeMap = new HashMap();
     	this.allEE = new Vector();
+    	int index = 0;
     	for(ExpressionExperiment eeIter:ees){
     		eeMap.put(eeIter.getId(), new Integer(index));
     		this.allEE.add(eeIter.getId());

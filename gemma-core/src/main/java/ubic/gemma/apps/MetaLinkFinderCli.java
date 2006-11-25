@@ -78,30 +78,8 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             this.eeMapFile = getOptionValue('e');
         }
 	}
-	/****distribute the expression experiments to the different classes of quantitation type.
-     *  The reason to do this is because the collection of expression experiment for Probe2Probe2
-     *  Query should share the same preferred quantitation type. The returned object is a map between
-     *  quantitation type and a set of expression experiment perferring this quantitation type.
-     * @return
-	 */
-	private Map<QuantitationType, Collection> preprocess(Collection<ExpressionExperiment> ees){
-        Map eemap = new HashMap<QuantitationType, Collection>();
-        for(ExpressionExperiment ee:ees){
-            Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes(ee);
-            for (QuantitationType qt : eeQT) {
-                if(qt.getIsPreferred()){
-                    Collection<ExpressionExperiment> eeCollection = (Collection)eemap.get( qt );
-                    if(eeCollection == null){
-                        eeCollection = new HashSet<ExpressionExperiment>();
-                        eemap.put( qt, eeCollection );
-                    }
-                    eeCollection.add( ee );
-                    break;
-                }
-            }
-        }
-		return null;
-	}
+	
+	
 	private Collection <Gene> getGenes(GeneService geneService){
 		HashSet<Gene> genes = new HashSet();
 		Gene gene = geneService.load(461722);
@@ -159,12 +137,13 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 			
 			MetaLinkFinder linkFinder = new MetaLinkFinder(p2pService, deService, eeService, geneService);
 			
-            test();
-            linkFinder.fromFile( "test.File", "test.map");
-            linkFinder.toFile( "test1.File", "test1.map");
-            if(true)return null;
+//            test();
+//            linkFinder.fromFile( "test.File", "test.map");
+//            linkFinder.toFile( "test1.File", "test1.map");
+//            if(true)return null;
 			if(this.operWrite){
 			    Taxon taxon = this.getTaxon("human");
+			    /*
 			    Collection<ExpressionExperiment> ees = null;
 			    if(taxon != null)
 			        ees = eeService.getByTaxon(taxon);
@@ -176,17 +155,15 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 			    }
 			    else
 			        log.info("Found " + ees.size() + " Expression Experiment");
-            
-			    Map<QuantitationType, Collection> eeMap = preprocess(ees);
-            
-			    for(QuantitationType qt:eeMap.keySet()){
-			        ees = eeMap.get( qt );
-			        linkFinder.find(this.getGenes(geneService), ees, qt);
-			    }
+
+		        linkFinder.find(this.getGenes(geneService), ees);
+		        */
+			    linkFinder.find(taxon);
                 if(!linkFinder.toFile( this.matrixFile, this.eeMapFile )){
                     log.info( "Couldn't save the results into the files ");
                     return null;
                 }
+			    
             }
             else{
                 if(!linkFinder.fromFile(  this.matrixFile, this.eeMapFile )){
@@ -195,7 +172,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 }
             }
 			    
-			linkFinder.output(2);
+			linkFinder.output(5);
 		} catch (Exception e) {
 			log.error(e);
 			return e;

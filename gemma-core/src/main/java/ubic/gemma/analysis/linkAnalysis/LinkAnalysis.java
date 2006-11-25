@@ -1,15 +1,22 @@
 package ubic.gemma.analysis.linkAnalysis;
 
+import hep.aida.IHistogram1D;
+
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -19,10 +26,12 @@ import org.biomage.DesignElement.DesignElement;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.NamedMatrix;
 import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
 import ubic.basecode.datafilter.Filter;
 import ubic.basecode.datafilter.RowLevelFilter;
 import ubic.basecode.datafilter.RowMissingFilter;
+import ubic.basecode.io.writer.HistogramWriter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
@@ -34,6 +43,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 import corejava.Format;
@@ -259,9 +269,7 @@ public class LinkAnalysis {
         		probeToGeneAssociation = this.getProbeToGeneAssociation(start,end);
         	}
         	DesignElementDataVector vector = (DesignElementDataVector)allVectors[i];
-            /** *Initialize the map between probe and designElementDataVector** */
-        	p2v.put( vector.getDesignElement() , vector );
-        	 
+
         	/** *Initialize the map between probe and gene n-1 mapping** */
         	Long probeId = new Long(vector.getDesignElement().getId());
         	
@@ -277,6 +285,9 @@ public class LinkAnalysis {
             
             Set <Long> geneIdSet = new HashSet();
             if ( geneSet != null && !geneSet.isEmpty() ){
+                /** *add into the map between probe and designElementDataVector** */
+            	p2v.put( vector.getDesignElement() , vector );
+            	
             	for(Gene gene:geneSet){
             		Long geneId = gene.getId();
             		geneIdSet.add(geneId);
@@ -293,22 +304,17 @@ public class LinkAnalysis {
             this.probeToGeneMap.put( probeId, geneIdSet );
 
             /** *Initialize the map between gene and probeSet 1-n mapping** */
-            boolean countOnce = false;
             for(Long geneId:geneIdSet){
             	Set probeSet = ( Set ) this.geneToProbeMap.get( geneId );
             	if ( probeSet == null ) {
-            		Set <Long> probeIdSet = new HashSet();
-            		probeIdSet.add( probeId );
-            		this.geneToProbeMap.put( geneId, probeIdSet );
-            		if(!countOnce){
-            			this.uniqueItems++;
-            			countOnce = true;
-            		}
-            	} else
-            		probeSet.add( probeId );
+            		probeSet = new HashSet();
+            		this.geneToProbeMap.put( geneId, probeSet );
+            	} 
+            	probeSet.add( probeId );
             }
             if(i % 1000 == 0) log.debug( " " + i);
         }
+        this.uniqueItems  = this.geneToProbeMap.keySet().size();
         watch.stop();
         log.info(" Finish the mapping in " + watch.getTime()/1000 + "seconds");
         log.info(" Mapping Stats " + ArrayUtils.toString(stats));
@@ -345,13 +351,17 @@ public class LinkAnalysis {
                 if ( this.useDB ) {
                     Probe2ProbeCoexpression ppCoexpression = null;
 
-                    if ( taxon.getCommonName().equals( "mouse" ) ) {
+                    if ( TaxonUtility.isMouse(taxon) ) {
                         ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
-                    } else if ( taxon.getCommonName().equals( "rat" ) ) {
+                    } else if ( TaxonUtility.isRat(taxon) ) {
                         ppCoexpression = RatProbeCoExpression.Factory.newInstance();
-                    } else if ( taxon.getCommonName().equals( "human" ) ) {
+                    } else if ( TaxonUtility.isHuman(taxon) ) {
                         ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
+                    } else {
+                    	log.info("Taxon :" + taxon.toString() + " is not defined");
+                    	return;
                     }
+                    
                     ppCoexpression.setFirstVector( v1 );
                     ppCoexpression.setSecondVector( v2 );
                     ppCoexpression.setScore( w );
@@ -359,7 +369,7 @@ public class LinkAnalysis {
                     ppCoexpression.setQuantitationType( v1.getQuantitationType() );
                     p2plinks.add( ppCoexpression );
                     if( i%10000 == 0){
-                    	log.debug( " " + i);
+                    	System.err.print( " " + i);
                         this.ppService.create( p2plinks );
                         p2plinks.clear();
                     }
@@ -380,7 +390,6 @@ public class LinkAnalysis {
         }
 
     }
-
     public boolean analysis() {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
@@ -396,6 +405,19 @@ public class LinkAnalysis {
         }
         this.outputOptions();
         this.calculateDistribution();
+        HistogramWriter aa = new HistogramWriter();
+        try{
+        	IHistogram1D h = this.metricMatrix.getHistogram();
+        	System.err.println("Total :" + h.allEntries());
+        	System.err.println("Bins :" + h.xAxis().bins());
+        	FileOutputStream out = new FileOutputStream(new File("hist.txt"));
+        	aa.write(h, out);
+        	out.close();
+        	if(true)return true;
+        }catch(Exception e){
+        	e.printStackTrace();
+        	return false;
+        }
         this.getLinks();
         this.saveLinks();
         return true;
