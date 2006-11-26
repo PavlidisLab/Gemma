@@ -257,30 +257,32 @@ public class VisualizeDataSetApp {
      */
     public static void main( String[] args ) {
 
-//        VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
-//
-//        double[][] rawData = visualizeDataSet.parsePrepareAndConvertRawData();
-//        
-//        //TODO - not using this visualizer anymore.
-//        DataMatrixVisualizer visualizer = new DefaultDataMatrixVisualizer();
-//
-//        ColorMatrix colorMatrix = visualizer.createColorMatrix( rawData, Arrays.asList( visualizeDataSet.converter
-//                .getRowNames() ), Arrays.asList( visualizeDataSet.converter.getHeader() ) );
-//
-//        visualizeDataSet.showDataMatrix( "aov.results-2-monocyte-data-bytime.bypat.data.sort", new JMatrixDisplay(
-//                colorMatrix ) );
-//
-//        List<double[]> data = new ArrayList<double[]>();
-//
-//        data.add( rawData[4] );
-//        data.add( rawData[13] );
-//        data.add( rawData[22] );
-//        data.add( rawData[26] );
-//        data.add( rawData[36] );
-//        visualizeDataSet.showProfilesLineChartView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
-//
-//        // visualizeDataSet
-//        // .showProfilesPolarView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
+        // VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
+        //
+        // double[][] rawData = visualizeDataSet.parsePrepareAndConvertRawData();
+        //
+        // TODO - not using this visualizer anymore.
+        // ExpressionDataMatrixVisualizationService visualizationService = new
+        // ExpressionDataMatrixVisualizationService();
+        //
+        // ColorMatrix colorMatrix = visualizationService.createColorMatrix( rawData, Arrays
+        // .asList( visualizeDataSet.converter.getRowNames() ), Arrays.asList( visualizeDataSet.converter
+        // .getHeader() ) );
+        //
+        // visualizeDataSet.showDataMatrix( "aov.results-2-monocyte-data-bytime.bypat.data.sort", new JMatrixDisplay(
+        // colorMatrix ) );
+        //
+        // List<double[]> data = new ArrayList<double[]>();
+        //
+        // data.add( rawData[4] );
+        // data.add( rawData[13] );
+        // data.add( rawData[22] );
+        // data.add( rawData[26] );
+        // data.add( rawData[36] );
+        // visualizeDataSet.showProfilesLineChartView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
+        //
+        // visualizeDataSet
+        // .showProfilesPolarView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
 
     }
 
