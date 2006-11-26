@@ -100,15 +100,15 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * @param index
-     * @return Collection<BioMaterial>
+     * @return BioMaterial
      */
-    public Collection<BioMaterial> getBioMaterialsForColumn( int index );
+    public BioMaterial getBioMaterialForColumn( int index );
 
     /**
      * @param index
-     * @return Collection<BioAssay>
+     * @return BioAssay
      */
-    public Collection<BioAssay> getBioAssaysForColumn( int index );
+    public BioAssay getBioAssayForColumn( int index );
 
     /**
      * @return int
