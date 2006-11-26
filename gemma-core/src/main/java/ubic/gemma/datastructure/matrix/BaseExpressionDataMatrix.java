@@ -92,7 +92,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     /**
      * @param designElements
      * @param quantitationType
-     * @return
+     * @return Collection<DesignElementDataVector>
      */
     protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElement> designElements,
             QuantitationType quantitationType ) {
@@ -121,7 +121,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     /**
      * @param expressionExperiment
      * @param quantitationType
-     * @return
+     * @return Collection<DesignElementDataVector>
      */
     protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
@@ -132,7 +132,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     /**
      * @param quantitationType
      * @param vectors
-     * @return
+     * @return Collection<DesignElementDataVector>
      */
     protected Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
             Collection<DesignElementDataVector> vectors ) {
@@ -198,6 +198,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * Clearly the first case is the only challenge. Because there can be limited or no overlap between the bioassay
      * dimensions,we cannot assume the dimensions of the matrix will be defined by the longest bioassaydimension.
      * </p>
+     * 
+     * @return int
      */
     protected int setUpColumnElements() {
         log.debug( "Setting up column elements" );
