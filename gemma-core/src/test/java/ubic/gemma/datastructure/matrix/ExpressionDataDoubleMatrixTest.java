@@ -40,8 +40,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
@@ -55,7 +57,11 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -192,7 +198,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertEquals( 200, matrix.rows() );
-        assertEquals( 34, matrix.columns() );
+        assertEquals( 57, matrix.columns() );
     }
 
     @SuppressWarnings("unchecked")
@@ -311,5 +317,103 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         // ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, quantitationType );
         /* Constructor 3 */
         // ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix(ee.getDesignElementDataVectors());
+    }
+
+    /**
+     * This is a self-contained test. That is, it does not depend on the setup in {@link onSetUpInTransaction}. It
+     * tests creating an {@link ExpressionDataDoubleMatrix} using real values from the Gene Expression Omnibus (GEO).
+     * That is, we have obtained information from GSE994. The probe sets used are 218120_s_at and 121_at, and the
+     * samples used are GSM15697 and GSM15744. Specifically, we the Gemma objects that correspond to the GEO objects
+     * are:
+     * <p>
+     * DesignElement 1 = 218120_s_at, DesignElement 2 = 121_at
+     * <p>
+     * BioAssay 1 = "Current Smoker 73", BioAssay 2 = "Former Smoker 34"
+     * <p>
+     * BioMaterial 1 = "GSM15697", BioMaterial 2 = "GSM15744"
+     * <p>
+     * BioAssayDimension = "GSM15697, GSM15744" (the names of all the biomaterials).
+     */
+    public void testConstructExpressionDataDoubleMatrixWithGeoValues() {
+        ByteArrayConverter bac = new ByteArrayConverter();
+
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "VALUE" );
+
+        BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
+        bioAssayDimension.setName( "GSM15697, GSM15744" );
+
+        Collection<BioAssay> assays = new LinkedHashSet<BioAssay>();
+
+        BioAssay assay1 = BioAssay.Factory.newInstance();
+        assay1.setName( "Current Smoker 73" );
+
+        Collection<BioMaterial> samplesUsed1 = new LinkedHashSet<BioMaterial>();
+        BioMaterial sample1 = BioMaterial.Factory.newInstance();
+        sample1.setName( "GSM15697" );
+        samplesUsed1.add( sample1 );
+
+        assay1.setSamplesUsed( samplesUsed1 );
+
+        assays.add( assay1 );
+
+        BioAssay assay2 = BioAssay.Factory.newInstance();
+        assay2.setName( "Former Smoker 34" );
+
+        Collection<BioMaterial> samplesUsed2 = new LinkedHashSet<BioMaterial>();
+        BioMaterial sample2 = BioMaterial.Factory.newInstance();
+        sample2.setName( "GSM15744" );
+        samplesUsed2.add( sample2 );
+
+        assay2.setSamplesUsed( samplesUsed2 );
+
+        assays.add( assay2 );
+
+        bioAssayDimension.setBioAssays( assays );
+
+        Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<DesignElementDataVector>();
+        DesignElementDataVector vector1 = DesignElementDataVector.Factory.newInstance();
+        double[] ddata1 = { 74.9, 101.7 };
+        byte[] bdata1 = bac.doubleArrayToBytes( ddata1 );
+        vector1.setData( bdata1 );
+        vector1.setQuantitationType( qt );
+        vector1.setBioAssayDimension( bioAssayDimension );
+        vectors1.add( vector1 );
+
+        Collection<DesignElementDataVector> vectors2 = new LinkedHashSet<DesignElementDataVector>();
+        DesignElementDataVector vector2 = DesignElementDataVector.Factory.newInstance();
+        double[] ddata2 = { 404.6, 318.7 };
+        byte[] bdata2 = bac.doubleArrayToBytes( ddata2 );
+        vector2.setData( bdata2 );
+        vector2.setQuantitationType( qt );
+        vector2.setBioAssayDimension( bioAssayDimension );
+        vectors2.add( vector2 );
+
+        Collection<DesignElement> designElements = new LinkedHashSet<DesignElement>();
+
+        DesignElement de1 = CompositeSequence.Factory.newInstance();
+        de1.setName( "218120_s_at" );
+        de1.setDesignElementDataVectors( vectors1 );
+
+        DesignElement de2 = CompositeSequence.Factory.newInstance();
+        de2.setName( "121_at" );
+        de2.setDesignElementDataVectors( vectors2 );
+
+        designElements.add( de1 );
+        designElements.add( de2 );
+
+        Collection<DesignElementDataVector> eeVectors = new LinkedHashSet<DesignElementDataVector>();
+        eeVectors.add( vector1 );
+        eeVectors.add( vector2 );
+
+        ee.setDesignElementDataVectors( eeVectors );
+
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, designElements, qt );
+
+        assertNotNull( expressionDataMatrix );
+        assertEquals( expressionDataMatrix.rows(), 2 );
+        assertEquals( expressionDataMatrix.columns(), 2 );
     }
 }
