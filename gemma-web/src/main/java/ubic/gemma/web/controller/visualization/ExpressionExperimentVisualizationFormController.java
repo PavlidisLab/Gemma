@@ -231,13 +231,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         designElementDataVectorService.thaw( dataVectors );
         ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
         /* deals with the case where probes don't match for the given quantitation type. */
-        if ( expressionDataMatrix.getRowElements().size() == 0
-                && expressionDataMatrix.getBioMaterialsForColumn( 0 ).size() == 0 ) {
+        if ( expressionDataMatrix.getRowElements().size() == 0 ) {
             String message = "None of the probe sets match the given quantitation type "
                     + quantitationType.getType().getValue();
 
             return processErrors( request, response, command, errors, message );
-
         }
 
         return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrix", expressionDataMatrix );
