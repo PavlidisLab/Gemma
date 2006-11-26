@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean name="expressionDataMatrixVisualizationService"
  */
 public class ExpressionDataMatrixVisualizationService {
 
