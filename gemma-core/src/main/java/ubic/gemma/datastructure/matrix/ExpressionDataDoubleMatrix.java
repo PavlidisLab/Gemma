@@ -103,7 +103,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * 
      * @param vectors
      * @param maxSize
-     * @return
+     * @return DoubleMatrixNamed
      */
     private DoubleMatrixNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), maxSize );
@@ -138,8 +138,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         }
         log.info( seenDims.size() + " bioAssayDimensions observed" );
 
-        for ( Object obj : columnBioMaterialMap.keySet() ) {
-            matrix.addColumnName( obj );
+        for ( int i = 0; i < columnBioMaterialMapByInteger.size(); i++ ) {
+            matrix.addColumnName( columnBioMaterialMapByInteger.get( i ) );
         }
 
         return matrix;
