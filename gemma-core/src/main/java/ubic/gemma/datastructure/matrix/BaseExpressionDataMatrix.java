@@ -49,38 +49,35 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<BioAssayDimension> bioAssayDimensions;
     protected Map<BioAssay, Integer> columnAssayMap;
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
-    protected Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
-    protected Map<Integer, Collection<BioMaterial>> columnBioMaterialMapByInteger;
+    protected Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
 
     protected void init() {
         rowElements = new LinkedHashSet<DesignElement>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
-        columnBioAssayMapByInteger = new LinkedHashMap<Integer, Collection<BioAssay>>();
-        columnBioMaterialMapByInteger = new LinkedHashMap<Integer, Collection<BioMaterial>>();
+        columnBioMaterialMapByInteger = new LinkedHashMap<Integer, BioMaterial>();
 
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssaysForColumn(int)
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayForColumn(int)
      */
-    public Collection<BioAssay> getBioAssaysForColumn( int index ) {
-        // TODO implement me - fill in the columnBioAssayByInteger in setUpColumnElements
-        // return columnBioAssayMapByInteger.get( index );
+    public BioAssay getBioAssayForColumn( int index ) {
+        // TODO implement me
         throw new RuntimeException( "Method not yet implemented." );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialsForColumn(int)
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialForColumn(int)
      */
-    public Collection<BioMaterial> getBioMaterialsForColumn( int index ) {
+    public BioMaterial getBioMaterialForColumn( int index ) {
 
-        return columnBioMaterialMapByInteger.get( index );
+        return this.columnBioMaterialMapByInteger.get( index );
     }
 
     /*
@@ -139,7 +136,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      */
     protected Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
             Collection<DesignElementDataVector> vectors ) {
-        Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
@@ -161,10 +158,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *       ----------------
-     *       ******              -- only a few samples run on this platform
-     *         **********        -- ditto
-     *                   ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *              ----------------
+     *              ******              -- only a few samples run on this platform
+     *                **********        -- ditto
+     *                          ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -172,10 +169,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *       ----------------
-     *       ****************
-     *       ************
-     *       ********
+     *              ----------------
+     *              ****************
+     *              ************
+     *              ********
      * </pre>
      * 
      * <p>
@@ -183,8 +180,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *       -----------------
-     *       *****************
+     *              -----------------
+     *              *****************
      * </pre>
      * 
      * <p>
@@ -192,9 +189,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *       -----------------
-     *       *****************
-     *       *****************
+     *              -----------------
+     *              *****************
+     *              *****************
      * </pre>
      * 
      * <p>
@@ -230,11 +227,14 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                         int columnIndex = columnBioMaterialMap.get( bioMaterial );
                         this.columnAssayMap.put( assay, columnIndex );
                         log.debug( assay + " --> column " + columnIndex );
+
+                        columnBioMaterialMapByInteger.put( columnIndex, bioMaterial );
                     } else {
                         log.debug( bioMaterial + " --> column " + column );
                         log.debug( assay + " --> column " + column );
                         this.columnBioMaterialMap.put( bioMaterial, column );
                         this.columnAssayMap.put( assay, column );
+                        columnBioMaterialMapByInteger.put( column, bioMaterial );
                     }
                 }
                 column++;
