@@ -59,4 +59,14 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
         return this.getBlatAssociationDao().find( gene );
     }
 
+    @Override
+    protected void handleThaw( BlatAssociation blatAssociation ) throws Exception {
+        this.getBlatAssociationDao().thaw( blatAssociation );
+    }
+
+    @Override
+    protected void handleThaw( Collection blatAssociations ) throws Exception {
+        this.getBlatAssociationDao().thaw( blatAssociations );
+    }
+
 }

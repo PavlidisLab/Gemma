@@ -34,6 +34,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -626,9 +627,44 @@ public class BusinessKey {
         }
     }
 
+    /**
+     * @param queryObject
+     * @param databaseEntry
+     */
     public static void addRestrictions( Criteria queryObject, DatabaseEntry databaseEntry ) {
         queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
                 "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+    }
+
+    /**
+     * @param queryObject
+     * @param quantitationType
+     */
+    public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
+        queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
+
+        queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
+
+        queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
+
+        if ( quantitationType.getIsBackground() != null )
+            queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
+
+        if ( quantitationType.getRepresentation() != null )
+            queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
+
+        if ( quantitationType.getScale() != null )
+            queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
+
+        if ( quantitationType.getIsBackgroundSubtracted() != null )
+            queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
+
+        if ( quantitationType.getIsPreferred() != null )
+            queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
+
+        if ( quantitationType.getIsNormalized() != null )
+            queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
+
     }
 
 }

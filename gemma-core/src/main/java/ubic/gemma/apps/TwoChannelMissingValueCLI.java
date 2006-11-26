@@ -97,25 +97,24 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
             Collection<ExpressionExperiment> ees = this.getExpressionExperimentService().loadAll();
             for ( ExpressionExperiment ee : ees ) {
-
-                boolean hasTwoColor = false;
-                Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService().getArrayDesignsUsed(
-                        ee );
-                for ( ArrayDesign design : arrayDesignsUsed ) {
-                    TechnologyType tt = design.getTechnologyType();
-                    if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-                        hasTwoColor = true;
-                        break;
-                    }
-                }
-
-                if ( !hasTwoColor ) {
-                    continue;
-                }
-
-                log.info( ee + " uses a two-color array design, processing..." );
-
                 try {
+                    boolean hasTwoColor = false;
+                    Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService()
+                            .getArrayDesignsUsed( ee );
+                    for ( ArrayDesign design : arrayDesignsUsed ) {
+                        TechnologyType tt = design.getTechnologyType();
+                        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+                            hasTwoColor = true;
+                            break;
+                        }
+                    }
+
+                    if ( !hasTwoColor ) {
+                        continue;
+                    }
+
+                    log.info( ee + " uses a two-color array design, processing..." );
+
                     processExperiment( ee );
                     persistedObjects.add( ee.toString() );
                 } catch ( Exception e ) {

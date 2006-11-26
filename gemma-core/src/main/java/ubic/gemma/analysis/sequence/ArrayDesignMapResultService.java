@@ -21,14 +21,13 @@ package ubic.gemma.analysis.sequence;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.model.genome.gene.GeneProductService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -45,6 +44,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
  * @version $Id$
  */
 public class ArrayDesignMapResultService {
+
+    private static Log log = LogFactory.getLog( ArrayDesignMapResultService.class.getName() );
 
     private BlatResultService blatResultService;
     private BlatAssociationService blatAssociationService;
@@ -76,6 +77,7 @@ public class ArrayDesignMapResultService {
     public Collection<CompositeSequenceMapSummary> summarizeMapResults( Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapSummary> result = new HashSet<CompositeSequenceMapSummary>();
 
+        int count = 0;
         for ( CompositeSequence cs : compositeSequences ) {
             CompositeSequenceMapSummary summary = new CompositeSequenceMapSummary( cs );
 
@@ -87,15 +89,20 @@ public class ArrayDesignMapResultService {
             }
 
             Collection<BlatAssociation> maps = blatAssociationService.find( bioSequence );
+            blatAssociationService.thaw( maps );
             for ( BlatAssociation association : maps ) {
-                summary.getGeneProducts().add( association.getGeneProduct() ); // need to thaw?
+                summary.getGeneProducts().add( association.getGeneProduct() );
                 summary.getGenes().add( association.getGeneProduct().getGene() );
             }
 
             result.add( summary );
 
-        }
+            if ( ++count % 1000 == 0 ) {
+                log.info( "Processed " + count + " elements..." );
+            }
 
+        }
+        log.info( "Done, processed " + count + " elements" );
         return result;
     }
 

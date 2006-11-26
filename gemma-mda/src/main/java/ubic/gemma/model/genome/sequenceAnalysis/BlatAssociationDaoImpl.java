@@ -28,6 +28,7 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -95,4 +96,45 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
     }
 
+    @Override
+    protected void handleThaw( final BlatAssociation blatAssociation ) throws Exception {
+        if ( blatAssociation == null ) return;
+        if ( blatAssociation.getId() == null ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                thawBlatAssociation( session, blatAssociation );
+                return null;
+            }
+        }, true );
+    }
+
+    private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {
+        session.update( blatAssociation );
+        session.update( blatAssociation.getBioSequence() );
+        session.update( blatAssociation.getGeneProduct() );
+        session.update( blatAssociation.getGeneProduct().getGene() );
+        session.update( blatAssociation.getGeneProduct().getGene().getPhysicalLocation() );
+        blatAssociation.getGeneProduct().getGene().getProducts().size();
+        session.update( blatAssociation.getBioSequence() );
+        blatAssociation.getBioSequence().getSequenceDatabaseEntry();
+    }
+
+    @Override
+    protected void handleThaw( final Collection blatAssociations ) throws Exception {
+        if ( blatAssociations == null ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( Object object : blatAssociations ) {
+                    BlatAssociation blatAssociation = ( BlatAssociation ) object;
+                    if ( ( ( BlatAssociation ) blatAssociation ).getId() == null ) continue;
+                    thawBlatAssociation( session, blatAssociation );
+                }
+
+                return null;
+            }
+
+        }, true );
+    }
 }

@@ -31,8 +31,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequence; 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -510,27 +509,27 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eeCount;
     }
     
-    /**
-     * queries the database and gets the number of composite sequences per ArrayDesign
-     * @return Map
-     */
-    private Map getCompositeSequenceCountMap() {
-        final String queryString = "select ad.id, count(distinct cs) from ArrayDesignImpl ad inner join ad.compositeSequences as cs group by ad";    
-        
-        Map<Long,Long> csCount =  new HashMap<Long,Long>();
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                Long count = new Long(list.getInteger( 1 ));
-                csCount.put( id, count );
-            }
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return csCount;
-    }
+//    /**
+//     * queries the database and gets the number of composite sequences per ArrayDesign
+//     * @return Map
+//     */
+//    private Map getCompositeSequenceCountMap() {
+//        final String queryString = "select ad.id, count(distinct cs) from ArrayDesignImpl ad inner join ad.compositeSequences as cs group by ad";    
+//        
+//        Map<Long,Long> csCount =  new HashMap<Long,Long>();
+//        try {
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+//            while ( list.next() ) {
+//                Long id = list.getLong( 0 );
+//                Long count = new Long(list.getInteger( 1 ));
+//                csCount.put( id, count );
+//            }
+//        } catch ( org.hibernate.HibernateException ex ) {
+//            throw super.convertHibernateAccessException( ex );
+//        }
+//        return csCount;
+//    }
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
         Long id = arrayDesignValueObject.getId();

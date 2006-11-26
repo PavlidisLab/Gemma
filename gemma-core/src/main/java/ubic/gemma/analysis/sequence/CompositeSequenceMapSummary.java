@@ -98,7 +98,7 @@ public class CompositeSequenceMapSummary {
             buf.append( g.getOfficialSymbol() + "|" );
         }
 
-        return buf.toString().replaceAll( "\\|\t", "\t" );
+        return buf.toString().replaceAll( "\\|\t", "\t" ).replaceFirst( "\\|$", "" );
     }
 
     /**

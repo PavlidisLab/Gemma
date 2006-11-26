@@ -22,10 +22,13 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
+
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
@@ -39,25 +42,13 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( QuantitationType.class );
 
-            queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
-
-            queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
-
-            queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
-
-            if ( quantitationType.getIsBackground() != null )
-                queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
-
-            if ( quantitationType.getRepresentation() != null )
-                queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
-
-            if ( quantitationType.getScale() != null )
-                queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
+            BusinessKey.addRestrictions( queryObject, quantitationType );
 
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
+                    debug( results );
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
                                     + ubic.gemma.model.common.quantitationtype.QuantitationType.class.getName()
@@ -71,6 +62,19 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /**
+     * @param results
+     */
+    private void debug( Collection results ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\nMultiple QuantitationTypes found matching query:\n" );
+        for ( Object object : results ) {
+            QuantitationType entity = ( QuantitationType ) object;
+            sb.append( entity + "\n" );
+        }
+        log.error( sb.toString() );
     }
 
     @Override

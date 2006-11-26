@@ -201,14 +201,8 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
 
         StringBuilder buf = new StringBuilder();
         buf.append( "\n***** PASSED: " + passed.size() + " *******\n" );
-        for ( String string : passed ) {
-            // buf.append( string + "\n" );
-        }
 
         buf.append( "***** FAILED " + failed.size() + " *******\n" );
-        for ( String string : failed ) {
-            // buf.append( string + "\n" );
-        }
 
         log.info( buf );
 
