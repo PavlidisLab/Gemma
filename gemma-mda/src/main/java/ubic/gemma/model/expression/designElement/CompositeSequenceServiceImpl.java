@@ -136,20 +136,27 @@ public class CompositeSequenceServiceImpl extends
         return;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleUpdate(ubic.gemma.model.expression.designElement.CompositeSequence)
+     */
     @Override
     protected void handleUpdate( CompositeSequence compositeSequence ) throws Exception {
         this.getCompositeSequenceDao().update( compositeSequence );
     }
 
     /*
-     * Internally stores the collection of composite sequences as a
-     * {@link LinkedHashSet), preserving order based on insertion.   (non-Javadoc)
+     * Checks to see if the CompositeSequence exists in any of the array designs. If so, it is internally stored int the
+     * collection of composite sequences as a {@link LinkedHashSet), preserving order based on insertion.   
+     * 
+     * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetMatchingCompositeSequences(java.lang.String[],
      *      java.util.Collection)
      */
     @Override
-    protected Collection handleGetMatchingCompositeSequences( String[] compositeSequenceNames, Collection arrayDesigns )
+    protected Collection handleFindByNamesInArrayDesigns( Collection compositeSequenceNames, Collection arrayDesigns )
             throws Exception {
         LinkedHashSet<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
 
@@ -158,7 +165,8 @@ public class CompositeSequenceServiceImpl extends
         while ( iter.hasNext() ) {
             ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
 
-            for ( String officialSymbol : compositeSequenceNames ) {
+            for ( Object obj : compositeSequenceNames ) {
+                String officialSymbol = ( String ) obj;
                 officialSymbol = StringUtils.trim( officialSymbol );
                 log.debug( "entered: " + officialSymbol );
                 CompositeSequence cs = this.findByName( arrayDesign, officialSymbol );

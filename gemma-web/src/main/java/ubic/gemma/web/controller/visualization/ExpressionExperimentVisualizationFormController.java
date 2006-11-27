@@ -268,6 +268,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         searchIds = StringUtils.split( searchString, "," );
 
+        List searchIdsAsList = Arrays.asList( searchIds );
+
         /* check size if 'viewSampling' is set. */
         if ( viewSampling ) {
             vectors = expressionExperimentService.getSamplingOfVectors( expressionExperiment, quantitationType,
@@ -284,7 +286,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 return null;
             }
 
-            compositeSequences = compositeSequenceService.getMatchingCompositeSequences( searchIds, arrayDesigns );
+            compositeSequences = compositeSequenceService.findByNamesInArrayDesigns( searchIdsAsList, arrayDesigns );
 
             if ( compositeSequences.size() == 0 ) {
                 String message = "No probes could be found matching the query.";
@@ -314,7 +316,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 return null;
             }
 
-            List searchIdsAsList = Arrays.asList( searchIds );// TODO remove searchIds[]
             Map<Gene, Collection<CompositeSequence>> compositeSequencesForGene = compositeSequenceGeneMapperService
                     .getCompositeSequencesForGenesByOfficialSymbols( searchIdsAsList );
 
