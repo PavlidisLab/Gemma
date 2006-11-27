@@ -20,10 +20,12 @@ package ubic.gemma.loader.expression.arrayDesign;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
@@ -209,14 +211,12 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
     }
 
     /**
-     * Tests getting matching composite sequences for a given array of the composite sequence names.
+     * Tests getting matching composite sequences for a given collection of composite sequence names.
      * 
      * @throws Exception
      */
-    public void testGetMatchingCompositeSequences() {
-        // TODO change the name of this test when you change compositeSequenceService.getMatchingCompositeSequences
-        // (this is just a
-        // findByName)
+    public void testfindByNamesInArrayDesigns() {
+
         log.warn( " *** THIS IS A LONG RUNNING TEST . *** " );
 
         if ( expressionExperimentService.findByShortName( eeShortName ) == null ) {
@@ -235,14 +235,15 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
         }
 
         /* test getting the matching composite sequences */
-        String[] compositeSequenceNames = { csName };
+        List<String> compositeSequenceNames = new ArrayList<String>();
+        compositeSequenceNames.add( csName );
 
         ArrayDesign ad = arrayDesignService.findByShortName( arrayAccession );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
         arrayDesignService.thaw( ad );
-        Collection<CompositeSequence> compositeSequences = compositeSequenceService.getMatchingCompositeSequences(
-                compositeSequenceNames, ads );// TODO refactor this to not use ads and String[]
+        Collection<CompositeSequence> compositeSequences = compositeSequenceService.findByNamesInArrayDesigns(
+                compositeSequenceNames, ads );
 
         assertNotNull( compositeSequences );
 
