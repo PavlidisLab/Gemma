@@ -301,11 +301,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         /* handle search by gene */
         else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
 
-            // TODO comment me out to add this gene search functionality.
-            errors.addError( new ObjectError( command.toString(), null, null,
-                    "Search by gene symbol unsupported at this time." ) );
-            if ( errors.getErrorCount() > 0 ) return null;
-            // end
+            /* comment me out to add this gene search functionality. */
+            // errors.addError( new ObjectError( command.toString(), null, null,
+            // "Search by gene symbol unsupported at this time." ) );
+            // if ( errors.getErrorCount() > 0 ) return null;
+            /* end */
 
             if ( arrayDesigns.size() == 0 ) {
                 String message = "No array designs found for " + expressionExperiment;
@@ -321,8 +321,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             Collection<Gene> geneKeySet = compositeSequencesForGene.keySet();
 
             for ( Gene g : geneKeySet ) {
-                Collection<CompositeSequence> csCol = compositeSequencesForGene.get( g );
-                log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + csCol.size()
+                compositeSequences = compositeSequencesForGene.get( g );
+                log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + compositeSequences.size()
                         + " composite sequences associated with it." );
             }
 

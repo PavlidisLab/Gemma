@@ -21,7 +21,7 @@ package ubic.gemma.genome;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,7 +60,7 @@ public class CompositeSequenceGeneMapperService {
 
         LinkedHashMap<String, Collection<Gene>> genesMap = findGenesByOfficialSymbols( officialSymbols );
 
-        LinkedHashSet<String> geneOfficialSymbolKeyset = new LinkedHashSet<String>();
+        Set<String> geneOfficialSymbolKeyset = genesMap.keySet();
 
         LinkedHashMap<Gene, Collection<CompositeSequence>> compositeSequencesForGeneMap = new LinkedHashMap<Gene, Collection<CompositeSequence>>();
 
