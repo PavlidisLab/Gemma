@@ -230,7 +230,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     }
 
     /**
-     * @return
+     * @return DoubleMatrixNamed
      * @deprecated Supplied for backwards compatibility. Access to the data should be through the ExpressionDataMatrix
      *             interface
      */
@@ -251,6 +251,24 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             result[i] = rawResult[i];
         }
         return result;
+    }
+
+    /**
+     * Sets the row of matrix to the input data.
+     * 
+     * @param rowIndex The row index of the data in the matrix to be replaced.
+     * @param data The input data.
+     */
+    public void setRow( int rowIndex, Double[] data ) {
+        // TODO make part of interface?
+        if ( rowIndex > this.matrix.rows() ) {
+            throw new RuntimeException( "Specified row index " + rowIndex + " is larger than the matrix of size "
+                    + this.matrix.rows() + "." );
+        }
+
+        for ( int j = 0; j < data.length; j++ ) {
+            this.matrix.set( rowIndex, j, data[j] );
+        }
     }
 
     /*
@@ -275,17 +293,27 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#rows()
+     */
     public int rows() {
         return matrix.rows();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
         return matrix.toString();
     }
 
     /**
-     * Convert {@link DesignElementDataVector}s into Boolean matrix.
+     * Convert {@link DesignElementDataVector}s into Double matrix.
      * 
      * @param vectors
      * @return DoubleMatrixNamed

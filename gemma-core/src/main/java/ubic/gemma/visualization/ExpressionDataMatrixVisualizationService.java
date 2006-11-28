@@ -40,9 +40,12 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * A service to generate visualizations. Can be used to generate a color mosaic and x y line charts.
@@ -178,5 +181,48 @@ public class ExpressionDataMatrixVisualizationService {
         ColorMatrix colorMatrix = new ColorMatrix( matrix );
 
         return colorMatrix;
+    }
+
+    /**
+     * Normalize the data centered on the mean. This is similar to the z-score calculation, although we are dividing by
+     * the variance as opposed to the square root of the variance.
+     * <p>
+     * More information on z-scores can be found at http://en.wikipedia.org/wiki/Z_score.
+     * </p>
+     * 
+     * @param expressionDataDoubleMatrix
+     * @return ExpressionDataMatrix
+     */
+    public ExpressionDataMatrix normalizeExpressionDataDoubleMatrixByRowMean( ExpressionDataMatrix expressionDataMatrix ) {
+        // TODO move this?
+        ExpressionDataMatrix normalizedExpressionDataMatrix = expressionDataMatrix;
+
+        Object[][] matrix = normalizedExpressionDataMatrix.getMatrix();
+
+        for ( int i = 0; i < matrix.length; i++ ) {
+            Object[] vector = matrix[i];
+
+            double[] ddata = new double[vector.length];
+
+            /* first, we convert each Object to a Double */
+            for ( int j = 0; j < ddata.length; j++ ) {
+                ddata[j] = ( Double ) vector[j];
+            }
+
+            Double[] ndata = new Double[ddata.length];
+
+            double mean = DescriptiveWithMissing.mean( new DoubleArrayList( ddata ) );
+
+            double variance = DescriptiveWithMissing.variance( new DoubleArrayList( ddata ) );
+
+            for ( int j = 0; j < ddata.length; j++ ) {
+                ndata[j] = ( ddata[j] - mean ) / variance;
+            }
+
+            ( ( ExpressionDataDoubleMatrix ) normalizedExpressionDataMatrix ).setRow( i, ndata );
+        }
+
+        return normalizedExpressionDataMatrix;
+
     }
 }
