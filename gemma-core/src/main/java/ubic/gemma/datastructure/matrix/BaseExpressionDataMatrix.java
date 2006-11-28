@@ -67,7 +67,14 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      */
     public BioAssay getBioAssayForColumn( int index ) {
         // TODO implement me
-        throw new RuntimeException( "Method not yet implemented." );
+    	BioAssay returnVal = null;
+    	for(BioAssay bioAssay:columnAssayMap.keySet()){
+    		if(columnAssayMap.get(bioAssay).intValue() == index){
+    			returnVal = bioAssay;
+    			break;
+    		}
+    	}
+    	return returnVal;
     }
 
     /*
