@@ -123,4 +123,16 @@
 	</table>
 
 
+There are 
+<c:out value="${numCoexpressedGenes}" /> coexpressed genes.
+
+<display:table name="coexpressedGenes"
+	class="list" requestURI="" id="foundGenes" 
+	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
+	pagesize="200">
+	<display:column property="nameLink" sortable="true" titleKey="gene.name" />
+	<display:column property="geneOfficialName" sortable="true" titleKey="gene.officialName" />
+	<display:setProperty name="basic.empty.showtable" value="false" />
+</display:table>
+
 </form>
