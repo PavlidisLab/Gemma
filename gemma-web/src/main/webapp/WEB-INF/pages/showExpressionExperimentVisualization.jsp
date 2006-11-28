@@ -7,6 +7,18 @@
         <h2>
             <fmt:message key="expression.visualization.results" />
         </h2>
+        Expression Experiment : <br />
+        <ul>
+        <li><c:out value="${expressionExperiment.name}" /> </li>
+        </ul>
+        Quantitation Type : <br />
+        <ul>
+        <li><c:out value="${quantitationType}" /> </li>
+        </ul>
+        Search Criteria : <br />
+       	<ul>
+       	<li><c:out value="${searchCriteria}" /> (<c:out value="${searchCriteriaValue}" />)</li>
+       	</ul>
 		<div id="logo">
             <a> 
                 <Gemma:expressionDataMatrix expressionDataMatrix="<%=expressionDataMatrix%>"/>

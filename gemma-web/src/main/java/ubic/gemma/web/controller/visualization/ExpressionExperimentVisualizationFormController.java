@@ -237,8 +237,17 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
             return processErrors( request, response, command, errors, message );
         }
-
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrix", expressionDataMatrix );
+        
+        ExpressionExperimentVisualizationCommand eevc = ( ExpressionExperimentVisualizationCommand ) command;
+        
+        ModelAndView mav = new ModelAndView( getSuccessView() );
+        mav.addObject( "expressionDataMatrix", expressionDataMatrix );
+        // add in information about the query
+        mav.addObject( "expressionExperiment", expressionExperiment );
+        mav.addObject( "quantitationType", eevc.getQuantitationType().getName() );
+        mav.addObject( "searchCriteria", eevc.getSearchCriteria() );
+        mav.addObject( "searchCriteriaValue", eevc.getSearchString() );
+        return mav;
     }
 
     /**
