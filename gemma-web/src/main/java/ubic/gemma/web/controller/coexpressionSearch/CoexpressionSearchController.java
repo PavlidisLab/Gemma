@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
@@ -138,6 +139,7 @@ public class CoexpressionSearchController extends BaseFormController {
         }
         else {
             genesFound = searchService.geneDbSearch( csc.getSearchString() );
+            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
         }
         
         // filter genes by Taxon
@@ -168,9 +170,17 @@ public class CoexpressionSearchController extends BaseFormController {
             return mav;
         } 
 
-        // find expressionExperiments via lucene
-        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
-        // only one gene found, find coexpressed genes
+        // At this point, only one gene has been found, find coexpressed genes
+        
+        // find expressionExperiments via lucene if the query is eestring-constrained
+        Collection<ExpressionExperiment> ees;
+        if (StringUtils.isNotBlank( csc.getEeSearchString() ) ) {
+            ees = searchService.compassExpressionSearch( csc.getEeSearchString() );
+        }
+        else {
+            ees = new ArrayList<ExpressionExperiment>();
+        }
+
         Gene sourceGene = (Gene) (genesFound.toArray())[0];
         // stringency. Cannot be less than 1; set to one if it is
         Integer stringency = csc.getStringency();
