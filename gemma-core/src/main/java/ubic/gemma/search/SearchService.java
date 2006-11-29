@@ -42,6 +42,7 @@ import org.compass.core.CompassTransaction;
 import org.compass.spring.web.mvc.CompassSearchResults;
 
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
@@ -62,7 +63,8 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="bioSequenceService" ref="bioSequenceService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="geneBean" ref="compassGene"
- * @spring.property name="eeBean" ref="compass"
+ * @spring.property name="eeBean" ref="compassExpression"
+ * @spring.property name="arrayBean" ref="compassArray"
  */
 
 
@@ -78,6 +80,7 @@ public class SearchService {
     private BioSequenceService bioSequenceService;
     private Compass geneBean;
     private Compass eeBean;
+    private Compass arrayBean;
 
     
     
@@ -144,7 +147,7 @@ public class SearchService {
      * @param query
      * @return
      */
-    public List<CompassHit> compassGeneSearch(final String query){
+    public List<Gene> compassGeneSearch(final String query){
         
         CompassSearchResults searchResults;
         
@@ -157,20 +160,48 @@ public class SearchService {
                     }
                 } );
         
-        return convert2List(searchResults.getHits());
+        return convert2GeneList(searchResults.getHits());
     }
     
     //fixme:  there should be a static method in the java package to do this.  Just need to find it. :)
-    protected List<CompassHit> convert2List( CompassHit[] anArray ) {
+    protected List<Gene> convert2GeneList( CompassHit[] anArray ) {
 
-        ArrayList<CompassHit> converted = new ArrayList<CompassHit>( anArray.length );
+        ArrayList<Gene> converted = new ArrayList<Gene>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
-            converted.add(anArray[i]); //converted.add( (Gene) anArray[i].getData() );
+            converted.add( (Gene) anArray[i].getData() );
             
 
         return converted;
 
+    }
+    
+    protected List<ExpressionExperiment> convert2ExpressionList( CompassHit[] anArray ) {
+
+        ArrayList<ExpressionExperiment> converted = new ArrayList<ExpressionExperiment>( anArray.length );
+
+        for ( int i = 0; i < anArray.length; i++ )
+            converted.add( (ExpressionExperiment) anArray[i].getData() );
+            
+
+        return converted;
+
+    }
+    
+  public List<ExpressionExperiment> compassExpressionSearch(final String query){
+        
+        CompassSearchResults searchResults;
+        
+        CompassTemplate template = new CompassTemplate(eeBean);
+        
+        searchResults = ( CompassSearchResults ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( query, session );
+                    }
+                } );
+        
+        return convert2ExpressionList(searchResults.getHits());
     }
 
     
@@ -187,6 +218,8 @@ public class SearchService {
 
         return searchResults;
     }
+    
+    
     
     /**
      * @return the bioSequenceService
@@ -272,6 +305,20 @@ public class SearchService {
      */
     public void setEeBean( Compass eeBean ) {
         this.eeBean = eeBean;
+    }
+
+    /**
+     * @return the arrayBean
+     */
+    public Compass getArrayBean() {
+        return arrayBean;
+    }
+
+    /**
+     * @param arrayBean the arrayBean to set
+     */
+    public void setArrayBean( Compass arrayBean ) {
+        this.arrayBean = arrayBean;
     }
     
 }
