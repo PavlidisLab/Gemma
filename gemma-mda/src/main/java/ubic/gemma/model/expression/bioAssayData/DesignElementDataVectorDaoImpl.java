@@ -35,7 +35,9 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
@@ -357,6 +359,24 @@ public class DesignElementDataVectorDaoImpl extends
             }
             return geneMap;
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
+     */
+    @Override
+    protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    @Override
+    protected void handleRemoveDataFromQuantitationType( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) throws Exception {
+        // TODO Auto-generated method stub
+        
     }   
 }
     
