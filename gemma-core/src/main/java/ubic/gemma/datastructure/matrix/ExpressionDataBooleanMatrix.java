@@ -81,6 +81,9 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
                 matrix.setQuick( i, j, Double.NaN );
             }
         }
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+        	matrix.addColumnName(j);
+        }
 
         ByteArrayConverter bac = new ByteArrayConverter();
         int rowNum = 0;
@@ -160,7 +163,11 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
      */
     public Boolean[] getRow( DesignElement designElement ) {
-        return ( Boolean[] ) this.matrix.getRow( matrix.getRowIndexByName( designElement ) );
+    	Object[] objects = this.matrix.getRow( matrix.getRowIndexByName( designElement )) ;
+    	Boolean[] returnArray = new Boolean[objects.length];
+    	for(int i = 0; i < objects.length; i++)
+    		returnArray[i] = (Boolean)objects[i];
+        return returnArray;
     }
 
     /*
