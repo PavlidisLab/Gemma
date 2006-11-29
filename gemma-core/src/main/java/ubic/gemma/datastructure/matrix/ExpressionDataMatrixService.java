@@ -75,7 +75,7 @@ public class ExpressionDataMatrixService {
 
         // designElementDataVectorService.thaw(vectors); // FIXME this is needed.
 
-        return new ExpressionDataDoubleMatrix( vectors, qt );
+        return new ExpressionDataDoubleMatrix( expExp, qt );
 
     }
 
