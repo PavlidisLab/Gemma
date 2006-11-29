@@ -32,7 +32,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceServiceImpl;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 

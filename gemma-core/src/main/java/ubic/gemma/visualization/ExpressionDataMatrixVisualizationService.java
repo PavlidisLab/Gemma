@@ -194,7 +194,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @return ExpressionDataMatrix
      */
     public ExpressionDataMatrix normalizeExpressionDataDoubleMatrixByRowMean( ExpressionDataMatrix expressionDataMatrix ) {
-        // TODO move this?
+        // TODO move me?
         ExpressionDataMatrix normalizedExpressionDataMatrix = expressionDataMatrix;
 
         Object[][] matrix = normalizedExpressionDataMatrix.getMatrix();
@@ -209,12 +209,13 @@ public class ExpressionDataMatrixVisualizationService {
                 ddata[j] = ( Double ) vector[j];
             }
 
-            Double[] ndata = new Double[ddata.length];
-
+            /* calculate mean and variance for row */
             double mean = DescriptiveWithMissing.mean( new DoubleArrayList( ddata ) );
 
             double variance = DescriptiveWithMissing.variance( new DoubleArrayList( ddata ) );
 
+            /* normalize the data */
+            Double[] ndata = new Double[ddata.length];
             for ( int j = 0; j < ddata.length; j++ ) {
                 ndata[j] = ( ddata[j] - mean ) / variance;
             }
