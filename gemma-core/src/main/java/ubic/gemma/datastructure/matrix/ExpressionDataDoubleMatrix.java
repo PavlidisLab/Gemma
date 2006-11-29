@@ -114,6 +114,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 matrix.setQuick( i, j, Double.NaN );
             }
         }
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+            matrix.addColumnName(j);
+        }
         log.info( "Creating a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
 
         ByteArrayConverter bac = new ByteArrayConverter();
@@ -137,10 +140,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             rowNum++;
         }
         log.info( seenDims.size() + " bioAssayDimensions observed" );
-
-        for ( int i = 0; i < columnBioMaterialMapByInteger.size(); i++ ) {
-            matrix.addColumnName( columnBioMaterialMapByInteger.get( i ) );
-        }
 
         return matrix;
     }
