@@ -25,15 +25,35 @@
 				<b> Gene Name </b>
 			</td>
 			<td>
-				<spring:bind path="coexpressionSearchCommand.searchString">
-					<input type="text" size=15
-						name="<c:out value="${status.expression}"/>"
-						value="<c:out value="${status.value}"/>" />
-				</spring:bind>
+			<!-- If there are genes defined, just show those genes in a pulldown menu. 
+				Otherwise, show a text field
+			 -->
+			 	<c:if test="${genes != null}">
+					<spring:bind path="coexpressionSearchCommand.searchString">
+						<select name="${status.expression}">
+							<c:forEach items="${genes}" var="gene">
+								<option value="${gene.officialSymbol}">
+									${gene.officialSymbol} : ${gene.officialName }
+								</option>
+							</c:forEach>
+						</select>
+					
+					</spring:bind>					
+				</c:if>
+				<c:if test="${genes == null}">
+					<spring:bind path="coexpressionSearchCommand.searchString">
+						<input type="text" size=15
+							name="<c:out value="${status.expression}"/>"
+							value="<c:out value="${status.value}"/>" />
+					</spring:bind>
+				</c:if>
+				
+
 				<spring:bind path="coexpressionSearchCommand.exactSearch">
 					<input type="checkbox" name="${status.expression}" 
 					<c:if test="${status.value}">checked="checked"</c:if> 
 					/>
+					<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				</spring:bind>
 				Exact search
 			</td>

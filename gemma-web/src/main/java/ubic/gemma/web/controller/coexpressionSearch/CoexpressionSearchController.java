@@ -48,6 +48,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -68,10 +69,9 @@ import ubic.gemma.web.util.ConfigurationCookie;
  *                  value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
  * @spring.property name = "formView" value="searchCoexpression"
  * @spring.property name = "successView" value="searchCoexpression"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "taxonService" ref="taxonService"
+ * @spring.property name = "searchService" ref="searchService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class CoexpressionSearchController extends BaseFormController {
@@ -79,12 +79,10 @@ public class CoexpressionSearchController extends BaseFormController {
 
     private static final String COOKIE_NAME = "coexpressionSearchCookie";
     
-    private ExpressionExperimentService expressionExperimentService = null;
-    private CompositeSequenceService compositeSequenceService = null;
+
     private GeneService geneService = null;
     private TaxonService taxonService = null;
-    private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
-    private List<DesignElement> compositeSequences = null;
+    private SearchService searchService = null;
 
     public CoexpressionSearchController() {
         /*
@@ -139,7 +137,7 @@ public class CoexpressionSearchController extends BaseFormController {
             genesFound = geneService.findByOfficialSymbol( csc.getSearchString( ) );
         }
         else {
-            genesFound = geneService.findByOfficialSymbolInexact( csc.getSearchString() );
+            genesFound = searchService.geneDbSearch( csc.getSearchString() );
         }
         
         // filter genes by Taxon
@@ -162,8 +160,10 @@ public class CoexpressionSearchController extends BaseFormController {
         // if yes, then query user for gene to be used
         if (genesFound.size() > 1) {
             saveMessage( request, "Multiple genes matched. Choose which gene to use." );        
-            ModelAndView mav = new ModelAndView(getFormView());
-            mav.addObject( "coexpressionSearchCommand", csc );
+
+            // set to exact search
+            csc.setExactSearch( true );
+            ModelAndView mav = super.showForm( request, errors, getFormView() );
             mav.addObject( "genes", genesFound );
             return mav;
         } 
@@ -306,20 +306,6 @@ public class CoexpressionSearchController extends BaseFormController {
         
         return super.showForm( request, response, errors );
     }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param compositeSequenceService
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
     
     /**
      * @param geneService
@@ -333,7 +319,14 @@ public class CoexpressionSearchController extends BaseFormController {
      */
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
-    }    
+    }
+    
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
     
     class CoexpressionSearchCookie extends ConfigurationCookie {
 
