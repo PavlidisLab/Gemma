@@ -11,7 +11,7 @@
 
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 		<link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/${appConfig["theme"]}/print.css'/>" />
-
+		<!--[if gte IE 6]><link rel="stylesheet" type="text/css" media="screen" href="/styles/css/ie_standard.css" /><![endif]-->
 		<script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/prototype.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/scriptaculous.js'/>"></script>
