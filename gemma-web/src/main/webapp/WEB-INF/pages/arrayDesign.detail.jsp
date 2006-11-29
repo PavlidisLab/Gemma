@@ -102,6 +102,14 @@
 			</tr>
 			<tr>
 				<td class="label">
+					Type
+				</td>
+				<td>
+					<c:out value="${technologyType}" />
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
 					Expression experiments using this array
 				</td>
 				<td>
@@ -129,6 +137,7 @@
 					%>
 				</td>
 			</tr>
+			
 
 			<%-- FIXME - show some of the design elements --%>	
 			<table>

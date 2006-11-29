@@ -67,4 +67,27 @@ public class ArrayDesignWrapper extends TableDecorator {
 
      }
      
+     public String getColor() {
+         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+         
+         if ( object == null ) {
+             return "Array Design unavailable";
+         }
+         
+         String colorString = "";
+         if (object.getColor().equalsIgnoreCase( "ONECOLOR" )) {
+             colorString = "one-color";
+         }
+         else if (object.getColor().equalsIgnoreCase( "TWOCOLOR" )) {
+             colorString = "two-color";   
+         }
+         else if (object.getColor().equalsIgnoreCase( "DUALMODE" )) {
+             colorString = "dual mode"; 
+         }
+         else {
+             colorString = "No color";
+         }
+         return colorString;         
+     }
+     
 }

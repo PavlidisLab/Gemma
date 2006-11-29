@@ -442,8 +442,44 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        // get the expression experiment counts
+        Map eeCounts = this.getExpressionExperimentCountMap();
+        // get the composite sequence counts
+        //Map csCounts = this.getCompositeSequenceCountMap();
+        Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
+        // removed join from taxon as it is slowing down the system
+        final String queryString = "select ad.id as id, " +
+                " ad.name as name, " +
+                " ad.shortName as shortName, " +
+                " ad.technologyType " +
+                " from ArrayDesignImpl as ad " +
+                " where ad.id in (:ids) " +
+                " group by ad order by ad.name";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( list.next() ) {
+                ArrayDesignValueObject v = new ArrayDesignValueObject();
+                v.setId( list.getLong( 0 ) );
+                v.setName( list.getString( 1 ) );
+                v.setShortName( list.getString( 2 ) );
+                TechnologyType color = (TechnologyType) list.get( 3 );
+                v.setColor( color.getValue() );
+                //v.setTaxon( list.getString( 3 ) );
+                
+                
+                
+                //v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
+                v.setExpressionExperimentCount( (Long) eeCounts.get( v.getId() ) );
+
+                vo.add( v );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return vo;
     }
     
     @Override
@@ -457,8 +493,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         // removed join from taxon as it is slowing down the system
         final String queryString = "select ad.id as id, " +
                 " ad.name as name, " +
-                " ad.shortName as shortName " +
-                " " +
+                " ad.shortName as shortName, " +
+                " ad.technologyType " +
                 " " +
                 " from ArrayDesignImpl as ad " +
                 " " + 
@@ -472,6 +508,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setId( list.getLong( 0 ) );
                 v.setName( list.getString( 1 ) );
                 v.setShortName( list.getString( 2 ) );
+                TechnologyType color = (TechnologyType) list.get( 3 );
+                v.setColor( color.getValue() );
                 //v.setTaxon( list.getString( 3 ) );
                 
                 

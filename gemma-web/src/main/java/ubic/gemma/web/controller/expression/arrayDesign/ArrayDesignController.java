@@ -115,6 +115,20 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         else {
             taxon = "(No taxon available)";
         }
+        String techType = arrayDesign.getTechnologyType().getValue();
+        String colorString = "";
+        if (techType.equalsIgnoreCase( "ONECOLOR" )) {
+            colorString = "one-color";
+        }
+        else if (techType.equalsIgnoreCase( "TWOCOLOR" )) {
+            colorString = "two-color";   
+        }
+        else if (techType.equalsIgnoreCase( "DUALMODE" )) {
+            colorString = "dual mode"; 
+        }
+        else {
+            colorString = "No color";
+        }
         
         String[] eeIdList = new String[ee.size()];
         int i = 0;
@@ -133,7 +147,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "numGenes", numGenes );
         mav.addObject( "numCompositeSequences",  numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-        mav.addObject( "expressionExperimentIds", eeIds );       
+        mav.addObject( "expressionExperimentIds", eeIds );      
+        mav.addObject( "technologyType", colorString );
         return mav;
     }
 
