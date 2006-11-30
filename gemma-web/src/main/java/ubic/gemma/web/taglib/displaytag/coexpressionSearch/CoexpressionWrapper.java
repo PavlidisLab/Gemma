@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -65,11 +66,35 @@ public class CoexpressionWrapper extends TableDecorator {
         return link.toString();
     }
     
+    /**
+     * Function to return the number of data sets for a coexpression match
+     * @return the data set count column
+     */
     public String getDataSetCount() {
         String count;
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
         count = (new Integer(object.getExpressionExperimentValueObjects().size())).toString();
         return count; 
+    }
+    
+    /**
+     * Function to return the data sets for a coexpression match
+     * @return the data set column
+     */
+    @SuppressWarnings("unchecked")
+    public String getDataSets() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Collection<ExpressionExperimentValueObject> ees = object.getExpressionExperimentValueObjects();
+        Collection<String> dsLinks = new ArrayList<String>();
+        for ( ExpressionExperimentValueObject ee : ees ) {
+            String link = "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
+                    ee.getId() + 
+                    "\">" + 
+                    ee.getShortName() + 
+                    "</a>";
+            dsLinks.add(link);
+        }
+        return StringUtils.join( dsLinks.toArray(), "," ); 
     }
 
     /**

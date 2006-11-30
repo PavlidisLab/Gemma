@@ -39,6 +39,7 @@ import org.hibernate.Criteria;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -263,7 +264,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
+    protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
         Gene givenG = gene;
         long id = givenG.getId();
         
@@ -277,12 +278,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         else //must be other
             p2pClassName = "OtherProbeCoExpressionImpl";
         
-        Collection<CoexpressionValueObject> genes = new HashSet<CoexpressionValueObject>();
         Map<Long,CoexpressionValueObject> geneMap = new HashMap<Long,CoexpressionValueObject>();
         
         String queryStringFirstVector =
             // return values
-            "select coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.name " 
+            "select coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.shortName " 
                 // source tables
                 + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
@@ -298,7 +298,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String queryStringSecondVector =
             // return values
-            "select coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.name " 
+            "select coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.shortName " 
                 // source tables
                 + "from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
@@ -315,6 +315,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // OPTIONAL joins
         // if there are expressionExperiment arguments
         Collection<Long> eeIds = new ArrayList<Long>();
+        CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
         if (ees.size() > 0) {
             queryStringFirstVector += " and p2pc.firstVector.expressionExperiment.id in (:ees) ";
             queryStringSecondVector += " and p2pc.secondVector.expressionExperiment.id in (:ees) ";
@@ -360,7 +361,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 // add the expression experiment
                 ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
                 eeVo.setId( scroll.getLong( 3 ).toString() );
-                eeVo.setName( scroll.getString( 4 ) );
+                eeVo.setShortName( scroll.getString( 4 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
             }
             
@@ -391,23 +392,27 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 // add the expression experiment
                 ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
                 eeVo.setId( scroll.getLong( 3 ).toString() );
-                eeVo.setName( scroll.getString( 4 ) );
+                eeVo.setShortName( scroll.getString( 4 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
             }
             
+            // add count of original matches to coexpression data
+            coexpressions.setLinkCount( geneMap.size() );
             // parse out stringency failures
             Set keys = geneMap.keySet();
             for ( Object object : keys ) {
                 Long key = (Long) object;
                 if (geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency) {
-                    genes.add( geneMap.get( key ) );
+                    coexpressions.getCoexpressionData().add( geneMap.get( key ) );
                 }
             }
+            // add count of pruned matches to coexpression data
+            coexpressions.setStringencyLinkCount( coexpressions.getCoexpressionData().size() );
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return genes;
+        return coexpressions;
     } 
 
     /**

@@ -143,15 +143,20 @@
 	</table>
 
 
-There are 
-<c:out value="${numCoexpressedGenes}" /> coexpressed genes.
+Searched <c:out value="${numExpressionExperiments}" /> datasets. <br />
+<c:if test="${numCoexpressedGenes != null}">
+There are <c:out value="${numMatchedLinks}" /> unique links found for this gene. <br />
+There are <c:out value="${numCoexpressedGenes}" /> coexpressed genes that meet stringency criteria. <br />
+</c:if>
 
 <display:table name="coexpressedGenes"
-	class="list" requestURI="" id="foundGenes" 
+	class="list" sort="list" requestURI="" id="foundGenes" 
 	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
 	pagesize="200">
 	<display:column property="nameLink" sortable="true" titleKey="gene.name" />
 	<display:column property="geneOfficialName" sortable="true" titleKey="gene.officialName" />
+	<display:column property="dataSetCount" sortable="true" title="#DS" />	
+	<display:column property="dataSets" sortable="true" title="Data Sets" />	
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
