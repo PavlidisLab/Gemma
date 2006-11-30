@@ -247,6 +247,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         mav.addObject( "quantitationType", eevc.getQuantitationType().getName() );
         mav.addObject( "searchCriteria", eevc.getSearchCriteria() );
         mav.addObject( "searchCriteriaValue", eevc.getSearchString() );
+        mav.addObject( "viewSampling", new Boolean(eevc.isViewSampling()) );
         return mav;
     }
 

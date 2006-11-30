@@ -15,10 +15,18 @@
         <ul>
         <li><c:out value="${quantitationType}" /> </li>
         </ul>
-        Search Criteria : <br />
-       	<ul>
-       	<li><c:out value="${searchCriteria}" /> (<c:out value="${searchCriteriaValue}" />)</li>
-       	</ul>
+        
+        <c:if test="${!viewSampling}">
+        	Search Criteria : <br />
+       		<ul>
+       		<li><c:out value="${searchCriteria}" /> (<c:out value="${searchCriteriaValue}" />)</li>
+       		</ul>
+       	</c:if>
+       	
+       	<c:if test="${viewSampling}">
+       	       (Viewing a sampling of the data) <br />
+       	</c:if>
+       	
 		<div id="logo">
             <a> 
                 <Gemma:expressionDataMatrix expressionDataMatrix="<%=expressionDataMatrix%>"/>
