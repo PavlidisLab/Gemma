@@ -73,8 +73,6 @@ public class DesignElementDataVectorDaoImpl extends
             queryObject.createCriteria( "expressionExperiment" ).add(
                     Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
 
-            // FIXME - finish filling in criteria so we never use 'equals' on a domain object.
-
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -265,32 +263,34 @@ public class DesignElementDataVectorDaoImpl extends
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetGenes(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetGenes( Collection dataVectors ) throws Exception { 
+    protected Map handleGetGenes( Collection dataVectors ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
         // implementation details in callback class
-        GetGeneCallbackHandler callback = new GetGeneCallbackHandler(dataVectors);
-        Map<DesignElementDataVector,Collection<Gene>> geneMap = (Map) templ.execute( callback, true );
+        GetGeneCallbackHandler callback = new GetGeneCallbackHandler( dataVectors );
+        Map<DesignElementDataVector, Collection<Gene>> geneMap = ( Map ) templ.execute( callback, true );
         return geneMap;
     }
-    
+
     /**
-     * Private helper class that allows a designElementDataVector collection
-     * to be used as an argument to a HibernateCallback
+     * Private helper class that allows a designElementDataVector collection to be used as an argument to a
+     * HibernateCallback
+     * 
      * @author jsantos
-     *
      */
     private class GetGeneCallbackHandler implements org.springframework.orm.hibernate3.HibernateCallback {
         private Collection dataVectors;
-        
-        public GetGeneCallbackHandler (Collection dataVectors) {
+
+        public GetGeneCallbackHandler( Collection dataVectors ) {
             this.dataVectors = dataVectors;
         }
-        
+
         /**
          * @param dataVectors the dataVectors to set
          */
@@ -298,86 +298,138 @@ public class DesignElementDataVectorDaoImpl extends
             this.dataVectors = dataVectors;
         }
 
-
         /**
          * Callback method for HibernateTemplate
          */
         public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
             /*
-             * Algorithm:
-             * for each 100 designElementDataVectors, do a query to get 
-             * the associated genes. The results will then be pushed into
-             * a map, associating the designElementDataVector with a 
-             * collection of Genes.
-             * 
+             * Algorithm: for each 100 designElementDataVectors, do a query to get the associated genes. The results
+             * will then be pushed into a map, associating the designElementDataVector with a collection of Genes.
              * Return the map.
              */
             int MAX_COUNTER = 100;
-            Map<DesignElementDataVector,Collection<Gene>> geneMap =  new HashMap<DesignElementDataVector,Collection<Gene>>();
+            Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
             ArrayList<Long> idList = new ArrayList<Long>();
             final String queryString = "select dedv, gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl dedv where gene.products.id=bs2gp.geneProduct.id "
                     + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                    + " and compositeSequence.designElementDataVectors.id=dedv.id " 
-                    + " and dedv.id in (:ids) ";
-            
+                    + " and compositeSequence.designElementDataVectors.id=dedv.id " + " and dedv.id in (:ids) ";
+
             Iterator iter = dataVectors.iterator();
             int counter = 0;
             // get up to the next 100 entries
-            while (iter.hasNext()) {
+            while ( iter.hasNext() ) {
 
                 counter = 0;
                 idList.clear();
-                while ( (counter < MAX_COUNTER) && iter.hasNext()) {
-                    idList.add(  ((DesignElementDataVector) iter.next()).getId());
+                while ( ( counter < MAX_COUNTER ) && iter.hasNext() ) {
+                    idList.add( ( ( DesignElementDataVector ) iter.next() ).getId() );
                     counter++;
                 }
-              
+
                 org.hibernate.Query queryObject = session.createQuery( queryString );
                 queryObject.setParameterList( "ids", idList );
-                // get results and push into hashmap. 
-                
-                ScrollableResults results = queryObject.scroll(ScrollMode.FORWARD_ONLY);
-                while (results.next()) {
-                    DesignElementDataVector dedv = (DesignElementDataVector) results.get( 0 );
-                    Gene g = (Gene) results.get(1);
+                // get results and push into hashmap.
+
+                ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                while ( results.next() ) {
+                    DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
+                    Gene g = ( Gene ) results.get( 1 );
                     // if the key exists, push into collection
                     // if the key does not exist, create and put hashset into the map
-                    if (geneMap.containsKey( dedv )) {
-                        if (!((Collection)geneMap.get( dedv )).add( g )) {
+                    if ( geneMap.containsKey( dedv ) ) {
+                        if ( !( ( Collection<Gene> ) geneMap.get( dedv ) ).add( g ) ) {
                             log.debug( "Failed to add " + g.getName() + ";Duplicate" );
                         }
-                    }
-                    else {
+                    } else {
                         Collection<Gene> genes = new HashSet<Gene>();
                         genes.add( g );
                         geneMap.put( dedv, genes );
                     }
                 }
                 results.close();
-                
             }
             return geneMap;
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
-    protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
-        // TODO Auto-generated method stub
-        
+    protected void handleRemoveDataForCompositeSequence( final CompositeSequence compositeSequence ) throws Exception {
+
+        String[] probeCoexpTypes = new String[] { "Mouse", "Human", "Rat", "Other" };
+
+        for ( String type : probeCoexpTypes ) {
+
+            final String dedvRemovalQuery = "from DesignElementDataVectorImpl dedv where dedv.designElement = :cs";
+
+            final String ppcRemoveFirstQuery = "from " + type
+                    + "ProbeCoExpressionImpl as p where p.firstVector.designElement = :cs)";
+            final String ppcRemoveSecondQuery = "from " + type
+                    + "ProbeCoExpressionImpl as p where p.secondVector.designElement = :cs)";
+
+            HibernateTemplate templ = this.getHibernateTemplate();
+            templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+                public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                    assert session != null;
+                    
+                    org.hibernate.Query queryObject = session.createQuery( ppcRemoveFirstQuery );
+                    queryObject.setParameter( "cs", compositeSequence );
+
+                    Collection os = queryObject.list();
+                    for ( Object obj : os ) {
+                        session.delete( obj );
+                    }
+
+                    queryObject = session.createQuery( ppcRemoveSecondQuery );
+                    queryObject.setParameter( "cs", compositeSequence );
+                    os = queryObject.list();
+                    for ( Object obj : os ) {
+                        session.delete( obj );
+                    }
+
+                    queryObject = session.createQuery( dedvRemovalQuery );
+                    queryObject.setParameter( "cs", compositeSequence );
+                    os = queryObject.list();
+                    for ( Object obj : os ) {
+                        session.delete( obj );
+                    }
+
+                    return null;
+                }
+            }, true );
+        }
+
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleRemoveDataFromQuantitationType( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) throws Exception {
-        // TODO Auto-generated method stub
-        
-    }   
-}
-    
+    protected void handleRemoveDataFromQuantitationType( final ExpressionExperiment expressionExperiment,
+            final QuantitationType quantitationType ) throws Exception {
+        final String dedvRemovalQuery = "delete from DesignElementDataVectorImpl as dedv where dedv.expressionExperiment = :ee and dedv.quantitationType = :qt";
 
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
+                org.hibernate.Query queryObject = session.createQuery( dedvRemovalQuery );
+                queryObject.setParameter( "ee", expressionExperiment );
+                queryObject.setParameter( "qt", quantitationType );
+                int modified = queryObject.executeUpdate();
+                log.info( "Deleted " + modified + " data vector elements" );
+
+                return null;
+            }
+        } );
+
+    }
+}

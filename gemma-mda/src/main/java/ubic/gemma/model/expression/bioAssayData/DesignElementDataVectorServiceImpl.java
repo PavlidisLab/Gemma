@@ -96,7 +96,9 @@ public class DesignElementDataVectorServiceImpl extends
         this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenes(java.util.Collection)
      */
     @Override
@@ -104,22 +106,26 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getDesignElementDataVectorDao().getGenes( dataVectors );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
     protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
-        // TODO Auto-generated method stub
-        
+        this.getDesignElementDataVectorDao().removeDataForCompositeSequence( compositeSequence );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleRemoveDataForQuantitationType( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) throws Exception {
-        // TODO Auto-generated method stub
-        
+    protected void handleRemoveDataForQuantitationType( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType ) throws Exception {
+        this.getDesignElementDataVectorDao().removeDataFromQuantitationType( expressionExperiment, quantitationType );
     }
 
 }

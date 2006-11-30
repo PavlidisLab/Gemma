@@ -57,13 +57,12 @@ public class CompositeSequenceServiceImpl extends
 
     @Override
     protected CompositeSequence handleFindOrCreate( CompositeSequence compositeSequence ) throws Exception {
-
         return this.getCompositeSequenceDao().findOrCreate( compositeSequence );
     }
 
     @Override
     protected void handleRemove( CompositeSequence compositeSequence ) throws Exception {
-        this.getCompositeSequenceDao().findOrCreate( compositeSequence );
+        this.getCompositeSequenceDao().remove( compositeSequence );
 
     }
 
