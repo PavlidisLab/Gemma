@@ -142,9 +142,8 @@
 		</tr>
 	</table>
 
-
-Searched <c:out value="${numExpressionExperiments}" /> datasets. <br />
 <c:if test="${numCoexpressedGenes != null}">
+Searched <c:out value="${numExpressionExperiments}" /> datasets. <br />
 There are <c:out value="${numMatchedLinks}" /> unique links found for this gene. <br />
 There are <c:out value="${numCoexpressedGenes}" /> coexpressed genes that meet stringency criteria. <br />
 </c:if>
