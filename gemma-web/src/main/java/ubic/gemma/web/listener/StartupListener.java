@@ -99,7 +99,8 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         CompassUtils.deleteCompassLocks();
 
         /* disable compass indexing. */
-        CompassUtils.disableIndexMirroring( ( SingleCompassGps ) ctx.getBean( "compassGps" ) );
+        CompassUtils.disableIndexMirroring( ( SingleCompassGps ) ctx.getBean( "expressionCompassGps" ) );
+        CompassUtils.disableIndexMirroring( ( SingleCompassGps ) ctx.getBean( "geneCompassGps" ) );
 
         loadRememberMeStatus( config, ctx );
 

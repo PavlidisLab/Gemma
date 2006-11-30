@@ -107,7 +107,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     void createSpringContext() {
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false );
         CompassUtils.deleteCompassLocks();
-        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "compassGps" ) );
+        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "expressionCompassGps" ) );
+        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "geneCompassGps" ) );
+
     }
 
     public void setCtx( BeanFactory ctx ) {

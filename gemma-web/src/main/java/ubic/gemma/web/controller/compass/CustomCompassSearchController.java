@@ -51,7 +51,7 @@ import org.springframework.web.servlet.ModelAndView;
  * @author keshav
  * @version $Id$
  * @spring.bean id="searchController"
- * @spring.property name = "compass" ref="compass"
+ * @spring.property name = "compass" ref="compassExpression"
  * @spring.property name = "searchView" value="searcher"
  * @spring.property name = "searchResultsView" value="searcher"
  * @spring.property name = "pageSize" value="10"

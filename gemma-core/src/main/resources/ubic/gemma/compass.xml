@@ -7,16 +7,16 @@
 <!-- ========================= COMPASS START ========================= -->
 
 	 <!-- COMPASS HIBERNATE DEFINITIONS -->
-	 <bean id="compass" class="org.compass.spring.LocalCompassBean">
+	 <bean id="compassExpression" class="org.compass.spring.LocalCompassBean">
         <property name="resourceLocations">
             <list>
-                <value>classpath:ubic/gemma/compass/compass_mappings.cpm.xml</value>
+                <value>classpath:ubic/gemma/compass/expression_mappings.cpm.xml</value>
             </list>   
         </property>
         <property name="compassSettings">
             <props>
-                <prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma</prop>
-                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma.lock</prop>
+                <prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/expression</prop>
+                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/expression/expression.lock</prop>
                 <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
                 <prop key="compass.transaction.lockTimeout">20</prop>
                 <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
@@ -38,7 +38,7 @@
         <property name="compassSettings">
             <props>
                 <prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/gene</prop>
-                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gene/gene.lock</prop>
+                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/gene/gene.lock</prop>
                 <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
                 <prop key="compass.transaction.lockTimeout">20</prop>
                 <prop key="compass.engine.analyzer.default.type">Snowball</prop> 

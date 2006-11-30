@@ -57,7 +57,7 @@ import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
  * @author keshav
  * @version $Id$
  * @spring.bean id="indexController"
- * @spring.property name = "compassGps" ref="compassGps"
+ * @spring.property name = "compassGps" ref="expressionCompassGps"
  * @spring.property name = "indexView" value="indexer"
  * @spring.property name = "indexResultsView" value="indexer"
  * @spring.property name = "taskRunningService" ref="taskRunningService"
@@ -124,7 +124,7 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
         else {
          index = new IndexJob( request,
                 ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
-                        "compassGps" ) );
+                        "expressionCompassGps" ) );
         }
         
         String taskId = startJob( request, index );
