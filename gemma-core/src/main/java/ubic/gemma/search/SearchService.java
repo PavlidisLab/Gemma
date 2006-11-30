@@ -64,7 +64,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="geneBean" ref="compassGene"
  * @spring.property name="eeBean" ref="compassExpression"
- * @spring.property name="arrayBean" ref="compassArray"
  */
 
 
