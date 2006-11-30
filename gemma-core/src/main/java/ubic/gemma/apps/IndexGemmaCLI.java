@@ -1,4 +1,5 @@
 /*
+ /*
  * The Gemma project
  * 
  * Copyright (c) 2006 University of British Columbia
@@ -21,7 +22,6 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
-import org.compass.core.config.CompassConfiguration;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -103,9 +103,9 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         }
         try {
             if ( this.indexG )
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneCompassGps" ), "gene index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "gene index" );
             if ( this.indexEE )
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionCompassGps" ), "Expression Experiment index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ), "Expression Experiment index" );
             if ( this.indexAD )
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ),
                         "Array Design index" );
@@ -115,10 +115,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
             return e;
         }
         return null;
-        
-        
-        
-        
     }
 
     protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) throws Exception {
@@ -126,7 +122,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         long time = System.currentTimeMillis();
 
         log.info( "Rebuilding " + whatIndexingMsg );
-        //device.index();
+        ///device.index();
         CompassUtils.rebuildCompassIndex( device );
 
         time = System.currentTimeMillis() - time;
