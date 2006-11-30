@@ -48,6 +48,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * <li>CH1_SMTM (found in GPL230)</li>
  * <li>Caltech (GPL260)</li>
  * </ul>
+ * <p>
+ * The missing values are computed with the following considerations with respect to available data
+ * </p>
+ * <ol>
+ * <li>This only works if there are signal values for both channels
+ * <li>If there are background values, they are used to compute signal-to-noise ratios</li>
+ * <li>If the signal values already contain missing data, these are still considered missing.</li>
+ * <li>If there are no background values, all values will be considered 'present' unless the signal values are both
+ * zero or missing.
+ * <li>If the preferred quantitation type data is missing, then the data are considered missing (for consistency)
+ * </ol>
  * 
  * @author pavlidis
  * @version $Id$
@@ -61,7 +72,8 @@ public class TwoChannelMissingValues {
      *        you want more control use computeMissingValues(signalDataA, signalDataB, bkgDataA,
      *        bkgDataB,signalToNoiseThreshold)
      * @param signalToNoiseThreshold A value such as 1.5 or 2.0; only spots for which at least ONE of the channel signal
-     *        is more than signalToNoiseThreshold*background will be considered present.
+     *        is more than signalToNoiseThreshold*background (and the preferred data are not missing) will be considered
+     *        present.
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp,
@@ -80,12 +92,15 @@ public class TwoChannelMissingValues {
         QuantitationType backgroundChannelB = null;
 
         QuantitationType bkgSubChannelA = null;
+        QuantitationType preferred = null;
 
         for ( DesignElementDataVector vector : allVectors ) {
             QuantitationType qType = vector.getQuantitationType();
             String name = qType.getName();
 
-            if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
+            if ( qType.getIsPreferred() ) {
+                preferred = qType;
+            } else if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
                     || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                     || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" ) ) {
                 backgroundChannelA = qType;
@@ -129,11 +144,17 @@ public class TwoChannelMissingValues {
             }
         }
 
+        if ( preferred == null ) {
+            throw new IllegalStateException( "No preferred quantitation type for data set" );
+        }
+
         if ( backgroundChannelA == null || backgroundChannelB == null ) {
             log.warn( "No background values found, proceeding with raw signals" );
         }
 
         for ( BioAssayDimension bioAssayDimension : dimensions ) {
+
+            ExpressionDataDoubleMatrix preferredDAta = new ExpressionDataDoubleMatrix( expExp, preferred );
 
             ExpressionDataDoubleMatrix bkgDataA = null;
             if ( backgroundChannelA != null ) {
@@ -157,8 +178,9 @@ public class TwoChannelMissingValues {
 
             ExpressionDataDoubleMatrix signalDataB = new ExpressionDataDoubleMatrix( expExp, signalChannelB );
 
-            Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension, signalDataA,
-                    signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold, channelANeedsReconstruction );
+            Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
+                    preferredDAta, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
+                    channelANeedsReconstruction );
 
             finalResults.addAll( dimRes );
         }
@@ -170,6 +192,7 @@ public class TwoChannelMissingValues {
     /**
      * @param source
      * @param bioAssayDimension
+     * @param preferred
      * @param signalChannelA
      * @param signalChannelB
      * @param bkgChannelA
@@ -180,9 +203,10 @@ public class TwoChannelMissingValues {
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )
      */
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment source,
-            BioAssayDimension bioAssayDimension, ExpressionDataDoubleMatrix signalChannelA,
-            ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
-            ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold, boolean channelANeedsReconstruction ) {
+            BioAssayDimension bioAssayDimension, ExpressionDataDoubleMatrix preferred,
+            ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
+            ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
+            double signalToNoiseThreshold, boolean channelANeedsReconstruction ) {
 
         validate( signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
 
@@ -199,7 +223,7 @@ public class TwoChannelMissingValues {
             vect.setBioAssayDimension( bioAssayDimension );
 
             boolean[] detectionCalls = new boolean[signalChannelB.columns()];
-
+            Double[] prefRow = preferred.getRow( designElement );
             Double[] signalA = signalChannelA.getRow( designElement );
             Double[] signalB = signalChannelB.getRow( designElement );
             Double[] bkgA = null;
@@ -210,6 +234,13 @@ public class TwoChannelMissingValues {
             if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
 
             for ( int col = 0; col < signalA.length; col++ ) {
+
+                Double pref = prefRow[col];
+                if ( pref == null || pref.isNaN() ) {
+                    detectionCalls[col] = false;
+                    continue;
+                }
+
                 Double bkgAV = 0.0;
                 Double bkgBV = 0.0;
 
@@ -217,7 +248,7 @@ public class TwoChannelMissingValues {
 
                 if ( bkgB != null ) bkgBV = bkgB[col];
 
-                Double sigAV = signalA[col];
+                Double sigAV = signalA[col] == null ? 0.0 : signalA[col];
 
                 /*
                  * Put the background value back on.
@@ -225,7 +256,7 @@ public class TwoChannelMissingValues {
                 if ( channelANeedsReconstruction ) {
                     sigAV = sigAV + bkgAV;
                 }
-                Double sigBV = signalB[col];
+                Double sigBV = signalB[col] == null ? 0.0 : signalB[col];
 
                 boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
                 detectionCalls[col] = call;
@@ -244,6 +275,7 @@ public class TwoChannelMissingValues {
     }
 
     private boolean computeCall( double signalToNoiseThreshold, Double sigAV, Double sigBV, Double bkgAV, Double bkgBV ) {
+        if ( ( sigAV == null && sigBV == null ) || ( sigAV.isNaN() && sigBV.isNaN() ) ) return false;
         return sigAV > bkgAV * signalToNoiseThreshold || sigBV > bkgBV * signalToNoiseThreshold;
     }
 
