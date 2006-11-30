@@ -47,5 +47,27 @@
             <ref bean="transactionManager" />
         </property>
     </bean>
+    
+        <bean id="compassArray" class="org.compass.spring.LocalCompassBean">
+        <property name="resourceLocations">
+            <list>
+                <value>classpath:ubic/gemma/compass/array_mappings.cpm.xml</value>
+            </list>   
+        </property>
+        <property name="compassSettings">
+            <props>
+                <prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/array</prop>
+                <prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/array/array.lock</prop>
+                <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
+                <prop key="compass.transaction.lockTimeout">20</prop>
+                <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
+                <prop key="compass.engine.analyzer.default.name">English</prop>
+            </props>
+        </property>
+        <property name="transactionManager">
+            <ref bean="transactionManager" />
+        </property>
+    </bean>
+    
      <!-- COMPASS END -->
 </beans>

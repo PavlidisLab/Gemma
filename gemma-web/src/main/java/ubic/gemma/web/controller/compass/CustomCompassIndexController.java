@@ -57,7 +57,7 @@ import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
  * @author keshav
  * @version $Id$
  * @spring.bean id="indexController"
- * @spring.property name = "compassGps" ref="expressionCompassGps"
+ * @spring.property name = "compassGps" ref="expressionGps"
  * @spring.property name = "indexView" value="indexer"
  * @spring.property name = "indexResultsView" value="indexer"
  * @spring.property name = "taskRunningService" ref="taskRunningService"
@@ -115,16 +115,15 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
         
         IndexJob index;
         
-        if (request.getParameter( "geneIndex") != null ) {
+        if (StringUtils.hasText( request.getParameter( "geneIndex")) ) {
             index = new IndexJob( request,
                     ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
-                            "geneCompassGps" ) );
-            
+                            "geneGps" ) );         
         }
         else {
          index = new IndexJob( request,
                 ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
-                        "expressionCompassGps" ) );
+                        "expressionGps" ) );
         }
         
         String taskId = startJob( request, index );
@@ -164,8 +163,8 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
             long time = System.currentTimeMillis();
 
             log.info( "Rebuilding compass index." );
-            CompassUtils.rebuildCompassIndex( gpsDevice );
-
+            //CompassUtils.rebuildCompassIndex( gpsDevice );
+            gpsDevice.index();
             time = System.currentTimeMillis() - time;
             CompassIndexResults indexResults = new CompassIndexResults( time );
             Map<Object, Object> data = new HashMap<Object, Object>();

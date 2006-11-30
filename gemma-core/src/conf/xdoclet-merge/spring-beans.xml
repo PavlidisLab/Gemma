@@ -107,12 +107,12 @@
 </bean>
 
 <!-- Generic compass configuration bean - for the rest see compass.xml and compasstest.xml -->
-<bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
+<bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice" singleton="false">
 	   <property name="name"><value>hibernateDevice</value></property>
 	   <property name="sessionFactory"><ref bean="sessionFactory" /></property>
 </bean>
 	 
-	 <bean id="expressionCompassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	 <bean id="expressionGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 	   <property name="compass"><ref bean="compassExpression" /></property>
 	   <property name="gpsDevices">
 	     <list>
@@ -123,8 +123,19 @@
 	   </property>
 	 </bean>
 
-	 <bean id="geneCompassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	 
+	 	 <bean id="geneGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 	   <property name="compass"><ref bean="compassGene" /></property>
+	   <property name="gpsDevices">
+	     <list>
+             <bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+                 <property name="gpsDevice" ref="hibernateGpsDevice" />
+             </bean>
+	     </list>
+	   </property>
+	 </bean>
+	  <bean id="arrayGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	   <property name="compass"><ref bean="compassArray" /></property>
 	   <property name="gpsDevices">
 	     <list>
              <bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">

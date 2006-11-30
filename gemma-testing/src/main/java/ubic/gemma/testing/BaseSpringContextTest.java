@@ -379,9 +379,9 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
         hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
         CompassUtils.deleteCompassLocks();
-        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "expressionCompassGps" ) );
-        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "geneCompassGps" ) );
-
+        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "arrayGps" ) );
+        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "expressionGps" ) );
+        CompassUtils.disableIndexMirroring( ( CompassGpsInterfaceDevice ) getBean( "geneGps" ) );
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
         this.testHelper = new TestPersistentObjectHelper();
 

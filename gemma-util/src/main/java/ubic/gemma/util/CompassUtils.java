@@ -121,4 +121,9 @@ public class CompassUtils {
     public static void enableIndexMirroring( CompassGpsInterfaceDevice device ) {
         device.start();
     }
+    
+    public static void configure() {
+        
+   
+    }
 }
