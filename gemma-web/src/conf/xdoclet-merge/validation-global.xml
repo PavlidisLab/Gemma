@@ -56,8 +56,14 @@
         </form>
         
         <form name="coexpressionSearchCommand">
-            <field property="searchString" depends="required">
+            <field property="searchString" depends="required,minlength">
                 <arg0 key="coexpressionSearchCommand.searchString"/>
+                <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+                <var>
+                    <var-name>minlength</var-name>
+                    <var-value>3</var-value>
+                </var>
+                
             </field>
             <field property="stringency" depends="required">
                 <arg0 key="coexpressionSearchCommand.stringency"/>

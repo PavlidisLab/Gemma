@@ -79,7 +79,9 @@ import ubic.gemma.web.util.ConfigurationCookie;
  */
 public class CoexpressionSearchController extends BaseFormController {
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
-
+    
+    private int MAX_GENES_TO_RETURN = 50;
+    
     private static final String COOKIE_NAME = "coexpressionSearchCookie";
     
 
@@ -166,8 +168,24 @@ public class CoexpressionSearchController extends BaseFormController {
         // check if more than 1 gene found
         // if yes, then query user for gene to be used
         if (genesFound.size() > 1) {
+            // check if more than 50 genes have been found.
+            // if there are more, then warn the user and truncate list
+            if (genesFound.size() > MAX_GENES_TO_RETURN) {  
+                genesToRemove = new ArrayList<Gene>();
+                int count = 0;
+                for (Gene gene : genesFound) {
+                    if (count >= MAX_GENES_TO_RETURN) {
+                        genesToRemove.add( gene );
+                    }
+                    count++;                    
+                }
+                genesFound.removeAll( genesToRemove );
+                saveMessage( request, "Found " + count + " genes. Truncating list to first "+ MAX_GENES_TO_RETURN + "." );  
+            }
+
             saveMessage( request, "Multiple genes matched. Choose which gene to use." );        
 
+            
             // set to exact search
             csc.setExactSearch( true );
             ModelAndView mav = super.showForm( request, errors, getFormView() );

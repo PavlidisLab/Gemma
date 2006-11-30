@@ -16,7 +16,7 @@
 	</c:if>
 </spring:bind>
 
-<form method="post"
+<form method="post" name="coexpressionSearch"
 	action="<c:url value="/searchCoexpression.html"/>">
 
 	<table>
