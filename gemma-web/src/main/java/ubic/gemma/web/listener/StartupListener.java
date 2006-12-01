@@ -34,7 +34,6 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.gps.impl.SingleCompassGps;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
