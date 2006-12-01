@@ -152,10 +152,10 @@ There are <c:out value="${numCoexpressedGenes}" /> coexpressed genes that meet s
 	class="list" sort="list" requestURI="" id="foundGenes" 
 	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
 	pagesize="200">
-	<display:column property="nameLink" sortable="true" titleKey="gene.name" />
-	<display:column property="geneOfficialName" sortable="true" titleKey="gene.officialName" />
+	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
+	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
 	<display:column property="dataSetCount" sortable="true" title="#DS" />	
-	<display:column property="dataSets" sortable="true" title="Data Sets" />	
+	<display:column property="dataSets" title="Data Sets" />	
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
