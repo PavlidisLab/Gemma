@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -374,9 +375,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
-        for ( QuantitationType type : types ) {
+        Iterator iter = types.iterator();
+        while ( iter.hasNext() ) {
+            QuantitationType type = ( QuantitationType ) iter.next();
             if ( !type.getIsPreferred() ) {
-                types.remove( type );
+                iter.remove();
             }
         }
         return types;
