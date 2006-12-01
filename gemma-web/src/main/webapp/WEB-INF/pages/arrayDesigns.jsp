@@ -8,6 +8,11 @@
 		<title>Array designs</title>
 	</head>
 	<body>
+	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
+			<input type="text" name="filter" />
+			<input type="submit" value="filter">
+		</form>
+	
 		<h2>
 			Search results
 		</h2>
@@ -35,4 +40,6 @@
 		</table>
 	</body>
 </html>
+
+
 
