@@ -208,16 +208,19 @@ public class CoexpressionSearchController extends BaseFormController {
             ees = new ArrayList<ExpressionExperiment>();
         }
         
+        Gene sourceGene = (Gene) (genesFound.toArray())[0];
         // if there is no expressionExperiment criteria or 
         // there are no matches, search all expression experiments
         if (ees.size() > 0) {
             numExpressionExperiments = ees.size();
         }
         else {
-            numExpressionExperiments = expressionExperimentService.countAll();
+            Map taxonCount = expressionExperimentService.getPerTaxonCount();
+            numExpressionExperiments = ((Long)taxonCount.get( sourceGene.getTaxon().getScientificName() )).intValue();
+            
         }
         
-        Gene sourceGene = (Gene) (genesFound.toArray())[0];
+
         // stringency. Cannot be less than 1; set to one if it is
         Integer stringency = csc.getStringency();
         if (stringency < 1) {
