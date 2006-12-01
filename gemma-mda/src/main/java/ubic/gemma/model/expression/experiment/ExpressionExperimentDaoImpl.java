@@ -466,12 +466,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleGetSamplingOfVectors( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, Integer limit ) throws Exception {
-        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee"
-                + " inner join ee.designElementDataVectors as dev  where ee.id = :id";
+        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dev inner join dev.quantitationType as qt where ee.id = :id and qt.id = :qtid";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setMaxResults( limit );
             queryObject.setParameter( "id", expressionExperiment.getId() );
+            queryObject.setParameter( "qtid", quantitationType.getId() );
             List results = queryObject.list();
             return results;
         } catch ( org.hibernate.HibernateException ex ) {
