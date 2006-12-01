@@ -43,7 +43,7 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.DoubleArrayList;
 
@@ -125,7 +125,7 @@ public class ExpressionDataMatrixVisualizationService {
 
         Collection<DesignElement> rowElements = expressionDataMatrix.getRowElements();
 
-        Collection<BioMaterial> colElements = new LinkedHashSet<BioMaterial>();
+        Collection<BioAssay> colElements = new LinkedHashSet<BioAssay>();
 
         if ( expressionDataMatrix == null || rowElements.size() == 0 ) {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
@@ -140,9 +140,9 @@ public class ExpressionDataMatrixVisualizationService {
         }
 
         for ( int j = 0; j < data[0].length; j++ ) {
-            BioMaterial bm = expressionDataMatrix.getBioMaterialForColumn( j );
+            BioAssay ba = expressionDataMatrix.getBioAssayForColumn( j );
 
-            colElements.add( bm );
+            colElements.add( ba );
 
         }
 
@@ -156,7 +156,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @return ColorMatrix
      */
     private ColorMatrix createColorMatrix( double[][] data, Collection<DesignElement> rowElements,
-            Collection<BioMaterial> colElements ) {
+            Collection<BioAssay> colElements ) {
 
         assert rowElements != null && colElements != null : "Labels cannot be set";
 
@@ -168,8 +168,8 @@ public class ExpressionDataMatrixVisualizationService {
             rowLabels.add( de.getName() );
         }
 
-        for ( BioMaterial bm : colElements ) {
-            colLabels.add( bm.getName() );
+        for ( BioAssay ba : colElements ) {
+            colLabels.add( ba.getName() );
         }
 
         DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );

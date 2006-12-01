@@ -49,14 +49,14 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<BioAssayDimension> bioAssayDimensions;
     protected Map<BioAssay, Integer> columnAssayMap;
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
-    protected Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
+    protected Map<Integer, BioAssay> columnBioAssayMapByInteger;
 
     protected void init() {
         rowElements = new LinkedHashSet<DesignElement>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
-        columnBioMaterialMapByInteger = new LinkedHashMap<Integer, BioMaterial>();
+        columnBioAssayMapByInteger = new LinkedHashMap<Integer, BioAssay>();
 
     }
 
@@ -66,15 +66,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayForColumn(int)
      */
     public BioAssay getBioAssayForColumn( int index ) {
-        // TODO implement me
-    	BioAssay returnVal = null;
-    	for(BioAssay bioAssay:columnAssayMap.keySet()){
-    		if(columnAssayMap.get(bioAssay).intValue() == index){
-    			returnVal = bioAssay;
-    			break;
-    		}
-    	}
-    	return returnVal;
+        return this.columnBioAssayMapByInteger.get( index );
     }
 
     /*
@@ -84,7 +76,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      */
     public BioMaterial getBioMaterialForColumn( int index ) {
 
-        return this.columnBioMaterialMapByInteger.get( index );
+        throw new RuntimeException( "Method not yet implemented." );
     }
 
     /*
@@ -237,13 +229,13 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                         this.columnAssayMap.put( assay, columnIndex );
                         log.debug( assay + " --> column " + columnIndex );
 
-                        columnBioMaterialMapByInteger.put( columnIndex, bioMaterial );
+                        columnBioAssayMapByInteger.put( columnIndex, assay );
                     } else {
                         log.debug( bioMaterial + " --> column " + column );
                         log.debug( assay + " --> column " + column );
                         this.columnBioMaterialMap.put( bioMaterial, column );
                         this.columnAssayMap.put( assay, column );
-                        columnBioMaterialMapByInteger.put( column, bioMaterial );
+                        columnBioAssayMapByInteger.put( column, assay );
                     }
                 }
                 column++;
