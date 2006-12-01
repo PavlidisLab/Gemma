@@ -279,6 +279,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             p2pClassName = "OtherProbeCoExpressionImpl";
         
         Map<Long,CoexpressionValueObject> geneMap = new HashMap<Long,CoexpressionValueObject>();
+        Map<Long,ExpressionExperimentValueObject> eeMap = new HashMap<Long,ExpressionExperimentValueObject>();
         
         String queryStringFirstVector =
             // return values
@@ -360,6 +361,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeVo.setShortName( scroll.getString( 4 ) );
                 eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
+                eeMap.put( Long.parseLong( eeVo.getId()), eeVo );
             }
             
             // do query joining coexpressed genes through the secondVector to the firstVector
@@ -393,8 +395,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeVo.setShortName( scroll.getString( 4 ) );
                 eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
+                eeMap.put( Long.parseLong( eeVo.getId()), eeVo );
             }
             
+            // add the distinct set of expression experiments involved
+            // in the query to coexpression data
+            coexpressions.setExpressionExperiments( eeMap.values() );
             // add count of original matches to coexpression data
             coexpressions.setLinkCount( geneMap.size() );
             // parse out stringency failures

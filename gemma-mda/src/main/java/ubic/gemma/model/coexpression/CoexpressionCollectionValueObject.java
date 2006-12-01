@@ -3,15 +3,19 @@ package ubic.gemma.model.coexpression;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+
 public class CoexpressionCollectionValueObject {
     private int linkCount;
     private int stringencyLinkCount;
+    private Collection<ExpressionExperimentValueObject> expressionExperiments;
     private Collection<CoexpressionValueObject> coexpressionData;
     
     public CoexpressionCollectionValueObject() {
         linkCount = 0;
         stringencyLinkCount = 0;
         coexpressionData = new HashSet<CoexpressionValueObject>();
+        expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
     }
     
     /**
@@ -49,6 +53,36 @@ public class CoexpressionCollectionValueObject {
      */
     public void setStringencyLinkCount( int stringencyLinkCount ) {
         this.stringencyLinkCount = stringencyLinkCount;
+    }
+
+    /**
+     * @return the expressionExperiments
+     */
+    public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
+        return expressionExperiments;
+    }
+
+    /**
+     * @param expressionExperiments the expressionExperiments to set
+     */
+    public void setExpressionExperiments( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
+        this.expressionExperiments = expressionExperiments;
+    }
+    
+    /**
+     * Add an expression experiment to the list
+     * @param vo
+     */
+    public void addExpressionExperiment( ExpressionExperimentValueObject vo) {
+        this.expressionExperiments.add( vo );
+    }
+    
+    /**
+     * Add a collection of expression experiment to the list
+     * @param vo
+     */
+    public void addExpressionExperiment( Collection<ExpressionExperimentValueObject> vos) {
+        this.expressionExperiments.addAll( vos );
     }
     
 }

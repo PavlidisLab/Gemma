@@ -34,35 +34,19 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getNameLink() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
         StringBuffer link = new StringBuffer();
-        
+       
+        // tmm-style coexpression search link
+
         // gene link to gemma
         link.append( "<a href=\"/Gemma/gene/showGene.html?id=" );
         link.append( object.getGeneId() );
         link.append( "\">" );
         link.append( object.getGeneName() );
         link.append( "</a>" );
-        
-        // tmm-style coexpression search link
-        
-        // build the GET parameters
 
-        Collection<String> paramList = new ArrayList<String>();
-        Collection<String> excludeList = new ArrayList<String>();
-        // exclude the submit, searchString, and exactSearch params
-        excludeList.add( "submit" );
-        excludeList.add( "searchString" );
-        excludeList.add( "exactSearch" );
-        extractParameters( paramList, excludeList );
-        // add in the current gene with exactSearch
-        paramList.add( "searchString=" + object.getGeneName() );
-        paramList.add( "exactSearch=on" );
-        
-        // put in the tmm link
-        link.append( "&nbsp;" );
-        link.append( "<a href=\"/Gemma/searchCoexpression.html?" );
-        link.append( StringUtils.join( paramList.toArray(), "&" ) );
-        link.append( "\"><img src=\"/Gemma/images/logo/gemmaTiny.gif\" /></a>" );
-        
+        // build the GET parameters
+        link.append( getCoexpressionLink(object, "<img src=\"/Gemma/images/logo/gemmaTiny.gif\" />")  );
+
         return link.toString();
     }
     
@@ -99,6 +83,43 @@ public class CoexpressionWrapper extends TableDecorator {
             dsLinks.add(link);
         }
         return StringUtils.join( dsLinks.toArray(), "," ); 
+    }
+    
+    /**
+     * Function to build a GET coexpression link, given a coexpressionValueObect 
+     * @param object the CoexpressionValueObject to build the link for
+     * @param innerHTML The html to show as a link. This is typically an image link or a gene name.
+     * @return
+     */
+    public String getCoexpressionLink(CoexpressionValueObject object, String innerHTML) {
+        StringBuffer link = new StringBuffer();
+        Collection<String> paramList = new ArrayList<String>();
+        Collection<String> excludeList = new ArrayList<String>();
+        // exclude the submit, searchString, and exactSearch params
+        excludeList.add( "submit" );
+        excludeList.add( "searchString" );
+        excludeList.add( "exactSearch" );
+        extractParameters( paramList, excludeList );
+        // add in the current gene with exactSearch
+        paramList.add( "searchString=" + object.getGeneName() );
+        paramList.add( "exactSearch=on" );
+        
+        // put in the tmm link
+        link.append( "&nbsp;" );
+        link.append( "<a href=\"/Gemma/searchCoexpression.html?" );
+        link.append( StringUtils.join( paramList.toArray(), "&" ) );
+        link.append( "\">" + innerHTML + "</a>" );
+        
+        return link.toString();
+    }
+    
+    /**
+     * Function to build a GET coexpression link
+     * @return
+     */
+    public String getCoexpressionLink() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        return getCoexpressionLink(object, "<img src=\"/Gemma/images/logo/gemmaTiny.gif\" />");
     }
 
     /**

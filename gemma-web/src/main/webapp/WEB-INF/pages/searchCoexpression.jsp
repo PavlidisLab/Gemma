@@ -19,8 +19,10 @@
 <c:if test="${numCoexpressedGenes != null}">
 <table class="datasummary">
 	<tr>
-		<td colspan=2>
-			<b>Coexpression Summary</b>
+		<td colspan=2 align=center>
+			<b>
+				<c:out value="${sourceGene.officialSymbol}" /> 
+			</b>
 		</td>
 	</tr>
 	<tr>
@@ -28,7 +30,21 @@
 			Datasets searched
 		</td>
 		<td>
-			<c:out value="${numExpressionExperiments}" />
+			<c:out value="${numSearchedExpressionExperiments}" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Datasets involved
+		</td>
+		<td>
+			<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=
+				<c:forEach items="${expressionExperiments}" var="expressionExperiment">
+					${expressionExperiment.id},
+				</c:forEach>
+				">
+			<c:out value="${numLinkedExpressionExperiments}" />
+			</a>
 		</td>
 	</tr>
 	<tr>
@@ -47,6 +63,19 @@
 			<c:out value="${numCoexpressedGenes}" />
 		</td>
 	</tr>
+	<tr>
+		<td colspan=2>
+			<a href="/Gemma/searchCoexpression.html?
+			searchString=${coexpressionSearchCommand.searchString}&
+			stringency=${ coexpressionSearchCommand.stringency}&
+			taxon=${coexpressionSearchCommand.taxon.scientificName}&
+			eeSearchString=${coexpressionSearchCommand.eeSearchString}&
+			exactSearch=on">
+				(Bookmark this search)
+			</a>
+		</td>
+	</tr>
+
 </table>
 </c:if>
 
@@ -152,7 +181,7 @@
 			</td>
 			<td>
 				<spring:bind path="coexpressionSearchCommand.stringency">
-					<input "type="text" size=1
+					<input type="text" size=1
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
@@ -164,18 +193,22 @@
 				</a>
 			</td>
 		</tr>
-
-	</table>
-	<br />
-	
-	<table>
+		
 		<tr>
-			<td>
-				<input type="submit" class="button" name="submit"
+			<td colspan=2 align="right">
+					<input type="submit" class="button" name="submit"
 					value="<fmt:message key="button.submit"/>" />
 			</td>
 		</tr>
 	</table>
+	<br />
+	
+	
+<c:if test="${numCoexpressedGenes != null}">
+	Searched for 
+	<c:out value="${sourceGene.officialName}" /> 
+	<br />
+</c:if>
 
 <display:table name="coexpressedGenes"
 	class="list" sort="list" requestURI="" id="foundGenes" 

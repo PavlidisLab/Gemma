@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -235,11 +236,15 @@ public class CoexpressionSearchController extends BaseFormController {
 
         CoexpressionCollectionValueObject coexpressions = (CoexpressionCollectionValueObject) geneService.getCoexpressedGenes( sourceGene, ees, stringency );
 
+        // get all the coexpressed genes and sort them by dataset count
         ArrayList<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();            
         coexpressedGenes.addAll(coexpressions.getCoexpressionData());
         
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedGenes, new CoexpressionComparator()  );
+        
+        ArrayList<ExpressionExperimentValueObject> eeVos = new ArrayList<ExpressionExperimentValueObject>(); 
+        eeVos.addAll( coexpressions.getExpressionExperiments() );
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
         
         // no genes are coexpressed
@@ -253,8 +258,11 @@ public class CoexpressionSearchController extends BaseFormController {
         
         mav.addObject( "coexpressedGenes", coexpressedGenes );
         mav.addObject( "numCoexpressedGenes", numCoexpressedGenes);
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
         mav.addObject( "numMatchedLinks", numMatchedLinks );
+        mav.addObject( "sourceGene", sourceGene );
+        mav.addObject( "expressionExperiments", eeVos );
+        mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
         
         
         return mav;

@@ -260,7 +260,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
-                ids.add( new Long( idList[i] ) );
+                if (StringUtils.isNotBlank( idList[i] ) ){
+                    ids.add( new Long( idList[i] ) );
+                }
             }
             expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
