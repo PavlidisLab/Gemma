@@ -38,7 +38,7 @@
 </class>    
  
 
-<class name="common.auditAndSecurity.ContactImpl" alias="contact">
+<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
 	
 	 <id name="id" />
 	 

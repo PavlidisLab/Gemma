@@ -32,13 +32,15 @@
       <meta-data>shortName</meta-data>
       <meta-data>expression experiment short name</meta-data>
     </property>
-      
+       
     <component name="bioAssays" ref-alias="bioAssay" />
+    
+    <!--
+    <component name="owner" ref-alias="contact" />
+    -->
     
     <component name="experimentalDesign" ref-alias="experimentalDesign" />  
 
-    <!-- can be a reference instead of component
-    <reference name="books" ref-alias="book" /> -->
    
 </class>    
  
@@ -81,20 +83,9 @@
     </property>
 	
 </class>
-<!--  
-<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign">
-	
-	 <id name="id" />
-	 
-	 <property name="name">
-      <meta-data>name</meta-data>
-     </property>
-	 
-    <component name="designProvider" ref-alias="contact" />
 
-</class>
-
-<class name="common.auditAndSecurity.ContactImpl" alias="contact">
+<!-- 
+<class name="common.auditAndSecurity.Contact" alias="owner" root="false">
 	
 	 <id name="id" />
 	 
@@ -117,5 +108,6 @@
     </property>
 
 </class>
+
 -->
 </compass-core-mapping>
