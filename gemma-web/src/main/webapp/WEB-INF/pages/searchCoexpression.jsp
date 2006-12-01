@@ -38,6 +38,7 @@
 			Datasets involved
 		</td>
 		<td>
+			<c:if test="${numLinkedExpressionExperiments != 0}">
 			<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=
 				<c:forEach items="${expressionExperiments}" var="expressionExperiment">
 					${expressionExperiment.id},
@@ -45,6 +46,10 @@
 				">
 			<c:out value="${numLinkedExpressionExperiments}" />
 			</a>
+			</c:if>
+			<c:if test="${numLinkedExpressionExperiments == 0}">
+				<c:out value="${numLinkedExpressionExperiments}" />
+			</c:if>
 		</td>
 	</tr>
 	<tr>
@@ -194,13 +199,9 @@
 			</td>
 		</tr>
 		
-		<tr>
-			<td colspan=2 align="right">
-					<input type="submit" class="button" name="submit"
-					value="<fmt:message key="button.submit"/>" />
-			</td>
-		</tr>
 	</table>
+	<input type="submit" class="button" name="submit"
+		value="<fmt:message key="button.submit"/>" />
 	<br />
 	
 	
