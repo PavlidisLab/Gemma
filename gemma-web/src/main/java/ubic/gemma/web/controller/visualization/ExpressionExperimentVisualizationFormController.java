@@ -88,7 +88,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private DesignElementDataVectorService designElementDataVectorService;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
     private ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = null;
-    private final int MAX_ELEMENTS_TO_VISUALIZE = 50;
+    private final int MAX_ELEMENTS_TO_VISUALIZE = 70;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -374,6 +374,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
+        for ( QuantitationType type : types ) {
+            if ( !type.getIsPreferred() ) {
+                types.remove( type );
+            }
+        }
         return types;
     }
 
