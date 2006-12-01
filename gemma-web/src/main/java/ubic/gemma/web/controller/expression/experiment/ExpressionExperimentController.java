@@ -86,14 +86,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            this.saveMessage( request, "No parameters to filter on. Displaying all expression experiments" );
+            this.saveMessage( request, "No search critera provided" );
             return showAll( request, response );
         }
 
         List<ExpressionExperiment> searchResults = searchService.compassExpressionSearch( filter );
 
        if ((searchResults == null) || (searchResults.size() == 0)) {
-           this.saveMessage( request, "Your filter yielded no results.  Displaying entire list.");
+           this.saveMessage( request, "Your search yielded no results.");
            return showAll(request, response);
        }
            
@@ -101,7 +101,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         for ( ExpressionExperiment ee : searchResults )
             list += ee.getId() + ",";
         
-        this.saveMessage( request, "Used " + filter + " to filter out expression experiments.");
+        this.saveMessage( request, "Search Criteria: " + filter );
+        this.saveMessage( request, searchResults.size() + " Expression Experiments matched your search." );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ));
     }
 
@@ -249,6 +250,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Expression Experiments" );
             expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
         }
 
