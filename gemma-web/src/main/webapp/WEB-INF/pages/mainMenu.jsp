@@ -1,4 +1,22 @@
 <%@ include file="/common/taglibs.jsp"%>
+
+<jsp:useBean id="coexpressionSearchCommand" scope="request"
+	class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
+
+<spring:bind path="coexpressionSearchCommand.*">
+	<c:if test="${not empty status.errorMessages}">
+		<div class="error">
+			<c:forEach var="error" items="${status.errorMessages}">
+				<img src="<c:url value="/images/iconWarning.gif"/>"
+					alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<c:out value="${error}" escapeXml="false" />
+				<br />
+			</c:forEach>
+		</div>
+	</c:if>
+</spring:bind>
+
+
 <title><fmt:message key="mainMenu.title" /></title>
 <table class="datasummary">
 	<tr>
@@ -50,9 +68,80 @@
 <div class="separator"></div>
 
 
-<p>
-	Query form coming soon!
-</p>
+<form method="post" name="coexpressionSearch"
+	action="<c:url value="/searchCoexpression.html"/>">
+
+	<table>
+		<caption>
+		Coexpression Analysis
+		</caption>
+		<tr>
+			<td valign="top">
+				<b> Gene Name </b>
+			</td>
+			<td>
+
+				<spring:bind path="coexpressionSearchCommand.searchString">
+					<input type="text" size=15
+						name="<c:out value="${status.expression}"/>"
+						value="<c:out value="${status.value}"/>" />
+				</spring:bind>
+				<spring:bind path="coexpressionSearchCommand.exactSearch">
+					<input type="checkbox" name="${status.expression}" 
+					<c:if test="${status.value}">checked="checked"</c:if> 
+					/>
+					<input type="hidden" name="_<c:out value="${status.expression}"/>">
+				</spring:bind>
+				Exact
+			</td>
+			<td>
+				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				'Official symbol of a gene'); return false">
+				<img src="/Gemma/images/help.png" />
+				</a>
+			</td>
+		</tr>
+		
+		
+		<tr>
+			<td valign="top">
+				<b> <fmt:message key="label.species" /> </b>
+			</td>
+			
+			
+			<td>
+				<spring:bind path="coexpressionSearchCommand.taxon">
+					<select name="${status.expression}">
+						<c:forEach items="${taxa}" var="taxon">
+							<spring:transform value="${taxon}" var="scientificName" />
+							<option value="${taxon.scientificName}"
+								<c:if test="${status.value == taxon}">selected </c:if>>
+								${taxon.scientificName}
+							</option>
+						</c:forEach>
+					</select>
+				</spring:bind>
+			</td>
+			<td>
+				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				'Species to use in the coexpression search'); return false">
+				<img src="/Gemma/images/help.png" />
+				</a>
+			</td>
+		</tr>
+
+	</table>
+	<br />
+	
+	<table>
+		<tr>
+			<td>
+				<input type="submit" class="button" name="submit"
+					value="<fmt:message key="button.submit"/>" />
+			</td>
+		</tr>
+	</table>
+</form>
 
 
 <authz:authorize ifAnyGranted="admin">

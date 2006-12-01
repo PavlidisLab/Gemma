@@ -82,6 +82,7 @@ public class CoexpressionSearchController extends BaseFormController {
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
     
     private int MAX_GENES_TO_RETURN = 50;
+    private int DEFAULT_STRINGENCY = 3;
     
     private static final String COOKIE_NAME = "coexpressionSearchCookie";
     
@@ -223,9 +224,13 @@ public class CoexpressionSearchController extends BaseFormController {
 
         // stringency. Cannot be less than 1; set to one if it is
         Integer stringency = csc.getStringency();
-        if (stringency < 1) {
+        if (stringency == null) {
+            stringency = DEFAULT_STRINGENCY;
+        }
+        else if (stringency < 1) {
             stringency = 1;
         }
+        csc.setStringency( stringency );
         
 
         CoexpressionCollectionValueObject coexpressions = (CoexpressionCollectionValueObject) geneService.getCoexpressedGenes( sourceGene, ees, stringency );

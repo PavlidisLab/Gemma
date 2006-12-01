@@ -16,6 +16,41 @@
 	</c:if>
 </spring:bind>
 
+<c:if test="${numCoexpressedGenes != null}">
+<table class="datasummary">
+	<tr>
+		<td colspan=2>
+			<b>Coexpression Summary</b>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Datasets searched
+		</td>
+		<td>
+			<c:out value="${numExpressionExperiments}" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Unique links
+		</td>
+		<td>
+			<c:out value="${numMatchedLinks}" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Links that met stringency
+		</td>
+		<td>
+			<c:out value="${numCoexpressedGenes}" />
+		</td>
+	</tr>
+</table>
+</c:if>
+
+
 <form method="post" name="coexpressionSearch"
 	action="<c:url value="/searchCoexpression.html"/>">
 
@@ -141,12 +176,6 @@
 			</td>
 		</tr>
 	</table>
-
-<c:if test="${numCoexpressedGenes != null}">
-Searched <c:out value="${numExpressionExperiments}" /> datasets. <br />
-There are <c:out value="${numMatchedLinks}" /> unique links found for this gene. <br />
-There are <c:out value="${numCoexpressedGenes}" /> coexpressed genes that meet stringency criteria. <br />
-</c:if>
 
 <display:table name="coexpressedGenes"
 	class="list" sort="list" requestURI="" id="foundGenes" 

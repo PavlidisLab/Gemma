@@ -18,8 +18,12 @@
  */
 package ubic.gemma.web.controller.common;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -30,21 +34,26 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand;
+import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 
 /** 
  * @author joseph
@@ -52,9 +61,13 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.bean id="mainMenuController"  
  * @spring.property name="formView" value="mainMenu"
  * @spring.property name="successView" value="mainMenu"
+ * @spring.property name = "commandClass"
+ *                  value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioAssayService" ref="bioAssayService" 
  * @spring.property name="arrayDesignService" ref="arrayDesignService" 
+ * @spring.property name="taxonService" ref="taxonService" 
+ * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class MainMenuController extends BaseFormController {
     private static Log log = LogFactory.getLog( MainMenuController.class.getName() );
@@ -62,8 +75,15 @@ public class MainMenuController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService;
     private BioAssayService bioAssayService;
     private ArrayDesignService arrayDesignService;
-    
+    private TaxonService taxonService; 
 
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
 
     /**
      * @return the arrayDesignService
@@ -126,7 +146,8 @@ public class MainMenuController extends BaseFormController {
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        return request;
+        CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
+        return csc;
     }
    
     
@@ -135,7 +156,7 @@ public class MainMenuController extends BaseFormController {
      */
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) throws Exception {
-        ModelAndView mav = new ModelAndView(getFormView());
+        ModelAndView mav = super.showForm( request, response, errors );
 
         Map<String,Long> stats = new HashMap<String,Long>();
         long bioAssayCount = bioAssayService.countAll();
@@ -153,10 +174,48 @@ public class MainMenuController extends BaseFormController {
         mav.addObject( "expressionExperimentCount", expressionExperimentCount);
         return mav;        
     }
+    
+    /**
+     * @param request
+     * @return Map
+     */
+    @SuppressWarnings("unused")
+    @Override
+    protected Map referenceData( HttpServletRequest request ) {
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();       
 
-
-
-
+        
+        // add species
+        populateTaxonReferenceData( mapping );      
+        
+        return mapping;
+    }
+    
+    /**
+     * @param mapping
+     */
+    @SuppressWarnings("unchecked")
+    private void populateTaxonReferenceData( Map mapping ) {
+        List<Taxon> taxa = new ArrayList<Taxon>();
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            if ( !SupportedTaxa.contains( taxon ) ) {
+                continue;
+            }
+            taxa.add( taxon );
+        }
+        Collections.sort( taxa, new Comparator<Taxon>() {
+            public int compare( Taxon o1, Taxon o2 ) {
+                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
+            }
+        } );
+        mapping.put( "taxa", taxa );
+    }
+    
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
+    }
 
 
 }
