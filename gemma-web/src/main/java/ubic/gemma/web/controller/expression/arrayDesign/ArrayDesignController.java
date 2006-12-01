@@ -169,6 +169,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Array Designs" );
             arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
         }
 
@@ -272,15 +273,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            this.addMessage( request, "No parameters to filter on. Displaying all Array Designs",
-                    new Object[] {} );
+            this.saveMessage( request, "No search critera provided" );
             return showAll( request, response );
         }
 
         List<ArrayDesign> searchResults = searchService.compassArrayDesignSearch( filter );
 
        if ((searchResults == null) || (searchResults.size() == 0)) {
-           this.addMessage( request, "Your filter yielded no results.  Displaying entire list.",  new Object[] {} );
+           this.saveMessage( request, "Your search yielded no results");
            return showAll(request, response);
        }
            
@@ -288,7 +288,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         for ( ArrayDesign ad : searchResults )
             list += ad.getId() + ",";
         
-        this.addMessage( request, "Used " + filter + " to filter out array designs.",  new Object[] {} );
+        this.saveMessage( request, "Search Criteria: " + filter );
+        this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
         return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ));
     }
 

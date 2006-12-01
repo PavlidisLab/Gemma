@@ -53,6 +53,10 @@ public abstract class BaseMultiActionController extends MultiActionController {
         }
     }
     
+    protected void saveMessage( HttpServletRequest request, String msg ) {
+        this.messageUtil.saveMessage( request, msg );
+    }
+
     /**
      * @return the messageUtil
      */

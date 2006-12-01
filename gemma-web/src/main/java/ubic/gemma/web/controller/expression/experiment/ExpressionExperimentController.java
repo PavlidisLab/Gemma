@@ -86,15 +86,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            this.addMessage( request, "No parameters to filter on. Displaying all expression experiments",
-                    new Object[] {} );
+            this.saveMessage( request, "No parameters to filter on. Displaying all expression experiments" );
             return showAll( request, response );
         }
 
         List<ExpressionExperiment> searchResults = searchService.compassExpressionSearch( filter );
 
        if ((searchResults == null) || (searchResults.size() == 0)) {
-           this.addMessage( request, "Your filter yielded no results.  Displaying entire list.",  new Object[] {} );
+           this.saveMessage( request, "Your filter yielded no results.  Displaying entire list.");
            return showAll(request, response);
        }
            
@@ -102,7 +101,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         for ( ExpressionExperiment ee : searchResults )
             list += ee.getId() + ",";
         
-        this.addMessage( request, "Used " + filter + " to filter out expression experiments.",  new Object[] {} );
+        this.saveMessage( request, "Used " + filter + " to filter out expression experiments.");
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ));
     }
 

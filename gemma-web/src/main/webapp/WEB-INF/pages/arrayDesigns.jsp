@@ -9,16 +9,13 @@
 	</head>
 	<body>
 	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
-			<input type="text" name="filter" />
-			<input type="submit" value="filter">
-		</form>
+			<h4> Enter search criteria for finding a specific array design here </h4>
+			<input type="text" name="filter" size="66" />
+			<input type="submit" value="Find"/>			
+	</form>
 	
-		<h2>
-			Search results
-		</h2>
 		<h3>
-			<c:out value="${numArrayDesigns }" />
-			Array Designs found.
+			Displaying <c:out value="${numArrayDesigns}" /> Array Designs.
 		</h3>
 
 				<display:table name="arrayDesigns" sort="list" class="list" requestURI="" id="arrayDesignList"

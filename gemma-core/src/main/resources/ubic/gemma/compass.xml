@@ -21,8 +21,9 @@
                 <prop key="compass.transaction.lockTimeout">20</prop>
                 <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
                 <prop key="compass.engine.analyzer.default.name">English</prop>
-                <prop key="compass.engine.opitmizer.schedule">false</prop>
-                <prop key="compass.engine.opitmizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
+                <prop key="compass.engine.optimizer.schedule">false</prop>
+                <prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
+                <prop key="compass.engine.indexManagerScheduleInterval">-1</prop>                             
             </props>
         </property>
         <property name="transactionManager">
@@ -45,8 +46,9 @@
                 <prop key="compass.transaction.lockTimeout">20</prop>
                 <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
                 <prop key="compass.engine.analyzer.default.name">English</prop>
-                <prop key="compass.engine.opitmizer.schedule">false</prop>
-                <prop key="compass.engine.opitmizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
+                <prop key="compass.engine.optimizer.schedule">false</prop>
+                <prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
+                <prop key="compass.engine.indexManagerScheduleInterval">-1</prop>             
             </props>
         </property>
         <property name="transactionManager">
@@ -68,8 +70,10 @@
                 <prop key="compass.transaction.lockTimeout">20</prop>
                 <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
                 <prop key="compass.engine.analyzer.default.name">English</prop>
-                <prop key="compass.engine.opitmizer.schedule">false</prop>
-                <prop key="compass.engine.opitmizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
+                <prop key="compass.engine.optimizer.schedule">false</prop>
+                <prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
+                <prop key="compass.engine.indexManagerScheduleInterval">-1</prop>             
+                
             </props>
         </property>
         <property name="transactionManager">
