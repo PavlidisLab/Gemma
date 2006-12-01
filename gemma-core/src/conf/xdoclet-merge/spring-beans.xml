@@ -110,6 +110,7 @@
 <bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice" singleton="false">
 	   <property name="name"><value>hibernateDevice</value></property>
 	   <property name="sessionFactory"><ref bean="sessionFactory" /></property>
+	   <property name="mirrorDataChanges"><value>false</value> </property>
 </bean>
 	 
 	 <bean id="expressionGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
