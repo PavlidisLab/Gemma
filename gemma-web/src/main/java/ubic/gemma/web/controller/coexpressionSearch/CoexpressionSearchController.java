@@ -42,6 +42,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -226,7 +227,11 @@ public class CoexpressionSearchController extends BaseFormController {
 
         CoexpressionCollectionValueObject coexpressions = (CoexpressionCollectionValueObject) geneService.getCoexpressedGenes( sourceGene, ees, stringency );
 
-        Collection coexpressedGenes = coexpressions.getCoexpressionData();
+        ArrayList<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();            
+        coexpressedGenes.addAll(coexpressions.getCoexpressionData());
+        
+        // sort coexpressed genes by dataset count
+        Collections.sort( coexpressedGenes, new CoexpressionComparator()  );
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
         
         // no genes are coexpressed
@@ -398,5 +403,31 @@ public class CoexpressionSearchController extends BaseFormController {
             this.setComment( "Information for coexpression search form" );
         }
 
+    }
+    
+    /**
+     * 
+     * @author jsantos
+     *
+     */
+    class CoexpressionComparator implements Comparator {
+
+        public CoexpressionComparator() {
+            super();
+        }
+
+        public int compare( Object o1, Object o2 ) {
+            int o1Size =  ((CoexpressionValueObject)o1).getExpressionExperimentValueObjects().size();
+            int o2Size = ((CoexpressionValueObject)o2).getExpressionExperimentValueObjects().size();
+            if ( o1Size > o2Size) {
+               return -1; 
+            }
+            else if (o1Size < o2Size) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
     }
 }
