@@ -180,7 +180,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertEquals( 200, matrix.rows() );
-        assertEquals( 57, matrix.columns() );
+        assertEquals( 34, matrix.columns() );
     }
 
     @SuppressWarnings("unchecked")
