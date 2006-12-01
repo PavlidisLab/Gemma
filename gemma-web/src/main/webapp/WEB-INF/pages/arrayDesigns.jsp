@@ -20,8 +20,7 @@
 			<c:out value="${numArrayDesigns }" />
 			Array Designs found.
 		</h3>
-		<table>
-			<tr>
+
 				<display:table name="arrayDesigns" sort="list" class="list" requestURI="" id="arrayDesignList"
 				pagesize="30" decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 					<display:column property="name" sortable="true" href="showArrayDesign.html" paramId="id" paramProperty="id"
@@ -36,8 +35,7 @@
 					</authz:authorize>
 					<display:setProperty name="basic.empty.showtable" value="true" />
 				</display:table>
-			</tr>
-		</table>
+
 	</body>
 </html>
 
