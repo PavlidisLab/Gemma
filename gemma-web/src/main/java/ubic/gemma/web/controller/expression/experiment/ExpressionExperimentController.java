@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,6 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -53,11 +55,13 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
+ * @spring.property name="searchService" ref="searchService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
+    private SearchService searchService;
 
     private final String messagePrefix = "Expression experiment with id";
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
@@ -75,6 +79,31 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     public void setExpressionExperimentSubSetService(
             ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
         this.expressionExperimentSubSetService = expressionExperimentSubSetService;
+    }
+
+    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
+        String filter = request.getParameter( "filter" );
+
+        // Validate the filtering search criteria.
+        if ( StringUtils.isBlank( filter ) ) {
+            this.addMessage( request, "No parameters to filter on. Displaying all expression experiments",
+                    new Object[] {} );
+            return showAll( request, response );
+        }
+
+        List<ExpressionExperiment> searchResults = searchService.compassExpressionSearch( filter );
+
+       if ((searchResults == null) || (searchResults.size() == 0)) {
+           this.addMessage( request, "Your filter yielded no results.  Displaying entire list.",  new Object[] {} );
+           return showAll(request, response);
+       }
+           
+        String list = "";
+        for ( ExpressionExperiment ee : searchResults )
+            list += ee.getId() + ",";
+        
+        this.addMessage( request, "Used " + filter + " to filter out expression experiments.",  new Object[] {} );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ));
     }
 
     /**
@@ -303,6 +332,20 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                         "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
             }
         };
+    }
+
+    /**
+     * @return the searchService
+     */
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
 }

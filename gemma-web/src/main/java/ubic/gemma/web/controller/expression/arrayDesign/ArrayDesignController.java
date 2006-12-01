@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.TreeSet;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,9 +35,10 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -52,11 +53,13 @@ import ubic.gemma.web.util.MessageUtil;
  * @springproperty name="validator" ref="arrayDesignValidator"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
+ * @spring.property name="searchService" ref="searchService"
  */
 public class ArrayDesignController extends BackgroundProcessingMultiActionController {
 
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
 
+    private SearchService searchService;
     private ArrayDesignService arrayDesignService = null;
     private final String messageName = "Array design with name";
     private final String messageId = "Array design with id";
@@ -75,7 +78,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param errors
      * @return
      */
-    @SuppressWarnings({ "unused", "unchecked" })
+   // @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
@@ -159,9 +162,27 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
-    @SuppressWarnings({ "unused", "unchecked" })
+  //  @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        Collection arrayDesigns = arrayDesignService.loadAllValueObjects();
+        
+        String sId = request.getParameter( "id" );
+        Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
+        // if no IDs are specified, then load all expressionExperiments
+        if ( sId == null ) {
+            arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
+        }
+
+        // if ids are specified, then display only those arrayDesigns
+        else {
+            Collection ids = new ArrayList<Long>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                ids.add( new Long( idList[i] ) );
+            }
+            arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) );
+        }
+        
         Long numArrayDesigns = new Long(arrayDesigns.size());
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", arrayDesigns );
@@ -222,7 +243,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return ModelAndView
      */
     @SuppressWarnings("unused")
-    public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
+  public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
             // should be a validation error, on 'submit'.
@@ -244,6 +265,34 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + ids ) );
     }
 
+    
+    
+    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
+        String filter = request.getParameter( "filter" );
+
+        // Validate the filtering search criteria.
+        if ( StringUtils.isBlank( filter ) ) {
+            this.addMessage( request, "No parameters to filter on. Displaying all Array Designs",
+                    new Object[] {} );
+            return showAll( request, response );
+        }
+
+        List<ArrayDesign> searchResults = searchService.compassArrayDesignSearch( filter );
+
+       if ((searchResults == null) || (searchResults.size() == 0)) {
+           this.addMessage( request, "Your filter yielded no results.  Displaying entire list.",  new Object[] {} );
+           return showAll(request, response);
+       }
+           
+        String list = "";
+        for ( ArrayDesign ad : searchResults )
+            list += ad.getId() + ",";
+        
+        this.addMessage( request, "Used " + filter + " to filter out array designs.",  new Object[] {} );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ));
+    }
+
+    
      
     /*
      * (non-Javadoc)
@@ -276,6 +325,20 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
             }
         };
+    }
+
+    /**
+     * @return the searchService
+     */
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
 }

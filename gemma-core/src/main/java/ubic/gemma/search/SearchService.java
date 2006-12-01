@@ -41,6 +41,7 @@ import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.spring.web.mvc.CompassSearchResults;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -49,14 +50,14 @@ import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * This a service class used for preforming searches.  there are two kinds of searches available, 
- * percise db searchs looking for specific exact mathces in the db and the compass/lucene style searches 
- *
+ * This a service class used for preforming searches. there are two kinds of searches available, percise db searchs
+ * looking for specific exact mathces in the db and the compass/lucene style searches
  * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
+ * <p>
+ * Copyright (c) 2006 UBC Pavlab
+ * 
  * @author klc
  * @version $Id$
- * 
  * @spring.bean id="searchService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneProductService" ref="geneProductService"
@@ -64,15 +65,13 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="geneBean" ref="compassGene"
  * @spring.property name="eeBean" ref="compassExpression"
+ * @spring.property name="arrayBean" ref="compassArray"
  */
-
 
 public class SearchService {
 
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
-    
-    
     private GeneService geneService;
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
@@ -81,12 +80,10 @@ public class SearchService {
     private Compass eeBean;
     private Compass arrayBean;
 
-    
-    
     /**
-     *  searchs the DB for genes that exactly match the given search string
-     *  searches geneProducts, gene and bioSequence tables
-     *  
+     * searchs the DB for genes that exactly match the given search string searches geneProducts, gene and bioSequence
+     * tables
+     * 
      * @param searchString
      * @return
      * @throws Exception
@@ -121,16 +118,17 @@ public class SearchService {
         return geneList;
 
     }
-    
+
     /**
-     * 
-     *An inner class used for the ordering of genes
+     * An inner class used for the ordering of genes
      * <hr>
-     * <p>Copyright (c) 2006 UBC Pavlab
+     * <p>
+     * Copyright (c) 2006 UBC Pavlab
+     * 
      * @author klc
      * @version $Id$
      */
-    
+
     class GeneComparator implements Comparator<Gene> {
 
         public int compare( Gene arg0, Gene arg1 ) {
@@ -141,85 +139,118 @@ public class SearchService {
         }
     }
 
-    
     /**
      * @param query
      * @return
      */
-    public List<Gene> compassGeneSearch(final String query){
-        
+    public List<Gene> compassGeneSearch( final String query ) {
+
         CompassSearchResults searchResults;
-        
-        CompassTemplate template = new CompassTemplate(geneBean);
-        
+
+        CompassTemplate template = new CompassTemplate( geneBean );
+
         searchResults = ( CompassSearchResults ) template.execute(
                 CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
                     public Object doInCompass( CompassSession session ) throws CompassException {
                         return performSearch( query, session );
                     }
                 } );
-        
-        return convert2GeneList(searchResults.getHits());
+
+        return convert2GeneList( searchResults.getHits() );
     }
-    
-    //fixme:  there should be a static method in the java package to do this.  Just need to find it. :)
+
+    // fixme: there should be a static method in the java package to do this. Just need to find it. :)
     protected List<Gene> convert2GeneList( CompassHit[] anArray ) {
 
         ArrayList<Gene> converted = new ArrayList<Gene>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
-            converted.add( (Gene) anArray[i].getData() );
-            
+            converted.add( ( Gene ) anArray[i].getData() );
 
         return converted;
 
     }
-    
+
     protected List<ExpressionExperiment> convert2ExpressionList( CompassHit[] anArray ) {
 
         ArrayList<ExpressionExperiment> converted = new ArrayList<ExpressionExperiment>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
-            converted.add( (ExpressionExperiment) anArray[i].getData() );
-            
+            converted.add( ( ExpressionExperiment ) anArray[i].getData() );
 
         return converted;
 
     }
-    
-  public List<ExpressionExperiment> compassExpressionSearch(final String query){
-        
+
+    /**
+     * does a compass style search on expressionExperiments
+     * 
+     * @param query
+     * @return
+     */
+    public List<ExpressionExperiment> compassExpressionSearch( final String query ) {
+
         CompassSearchResults searchResults;
-        
-        CompassTemplate template = new CompassTemplate(eeBean);
-        
+
+        CompassTemplate template = new CompassTemplate( eeBean );
+
         searchResults = ( CompassSearchResults ) template.execute(
                 CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
                     public Object doInCompass( CompassSession session ) throws CompassException {
                         return performSearch( query, session );
                     }
                 } );
-        
-        return convert2ExpressionList(searchResults.getHits());
+
+        return convert2ExpressionList( searchResults.getHits() );
     }
 
-    
+    /**
+     * Does a compass style search on ArrayDesigns
+     * 
+     * @param query
+     * @return
+     */
+    public List<ArrayDesign> compassArrayDesignSearch( final String query ) {
+
+        CompassSearchResults searchResults;
+
+        CompassTemplate template = new CompassTemplate( arrayBean );
+
+        searchResults = ( CompassSearchResults ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( query, session );
+                    }
+                } );
+
+        return convert2ArrayDesignList( searchResults.getHits() );
+    }
+
+    protected List<ArrayDesign> convert2ArrayDesignList( CompassHit[] anArray ) {
+
+        ArrayList<ArrayDesign> converted = new ArrayList<ArrayDesign>( anArray.length );
+
+        for ( int i = 0; i < anArray.length; i++ )
+            converted.add( ( ArrayDesign ) anArray[i].getData() );
+
+        return converted;
+
+    }
+
     protected CompassSearchResults performSearch( String query, CompassSession session ) {
         long time = System.currentTimeMillis();
-        
-        assert StringUtils.isBlank( query );       
+
+        assert StringUtils.isBlank( query );
         CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
-        
+
         CompassHits hits = compassQuery.hits();
-        CompassDetachedHits detachedHits = hits.detach();    
+        CompassDetachedHits detachedHits = hits.detach();
         time = System.currentTimeMillis() - time;
         CompassSearchResults searchResults = new CompassSearchResults( detachedHits.getHits(), time );
 
         return searchResults;
     }
-    
-    
-    
+
     /**
      * @return the bioSequenceService
      */
@@ -290,14 +321,12 @@ public class SearchService {
         this.geneBean = geneBean;
     }
 
-
     /**
      * @return the eeBean
      */
     public Compass getEeBean() {
         return eeBean;
     }
-
 
     /**
      * @param eeBean the eeBean to set
@@ -319,5 +348,5 @@ public class SearchService {
     public void setArrayBean( Compass arrayBean ) {
         this.arrayBean = arrayBean;
     }
-    
+
 }

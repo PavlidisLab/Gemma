@@ -5,13 +5,17 @@
 		<title><fmt:message key="expressionExperiments.title" /></title>
 	</head>
 	<body>
+	<form name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
+			<input type="text" name="filter" />
+			<input type="submit" value="filter">
+		</form>
 		<h2>
 			<fmt:message key="search.results" />
 		</h2>
 		<h3>
 			<c:out value="${numExpressionExperiments }" />
 			Expression Experiments found.
-		</h3>
+		</h3>		
 		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
 		<display:table pagesize="50" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
