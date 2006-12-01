@@ -294,7 +294,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
                 + " and coCompositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
                 + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
-                + " and coGene.products.id=coBs2gp.geneProduct.id " + " and gene.id = :id ";
+                + " and coGene.products.id=coBs2gp.geneProduct.id " 
+                + " and gene.id = :id and coGene.taxon.id = :taxonId";
 
         String queryStringSecondVector =
             // return values
@@ -310,7 +311,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
                 + " and coCompositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
                 + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
-                + " and coGene.products.id=coBs2gp.geneProduct.id " + " and gene.id = :id ";
+                + " and coGene.products.id=coBs2gp.geneProduct.id " 
+                + " and gene.id = :id and coGene.taxon.id = :taxonId";
                 
         // OPTIONAL joins
         // if there are expressionExperiment arguments
@@ -324,19 +326,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeIds.add( e.getId() );                
             }   
         }
-        
-        // group by clause
-//        queryStringFirstVector += " group by coGene ";
-//        queryStringSecondVector += " group by coGene ";
-        
-        // having clause, if the stringency is given
-//        queryStringFirstVector += " having count(distinct p2pc.firstVector.expressionExperiment) >= :stringency ";
-//        queryStringSecondVector += " having count(distinct p2pc.secondVector.expressionExperiment) >= :stringency ";
-        
+             
         try {
             // do query joining coexpressed genes through the firstVector to the secondVector
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
             queryObject.setLong( "id", id );
+            // this is to make the query faster by narrowing down the gene join
+            queryObject.setLong( "taxonId", gene.getTaxon().getId() );
             if (ees.size() > 0) {
                 queryObject.setParameterList( "ees", eeIds );
             }
@@ -369,10 +365,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             // do query joining coexpressed genes through the secondVector to the firstVector
             queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
             queryObject.setLong( "id", id );
+            // this is to make the query faster by narrowing down the gene join
+            queryObject.setLong( "taxonId", gene.getTaxon().getId() );
             if (ees.size() > 0) {
                 queryObject.setParameterList( "ees", eeIds );
             }
-//            queryObject.setInteger( "stringency", stringency );
             
             // put genes in the geneSet
             scroll = queryObject.scroll(ScrollMode.FORWARD_ONLY);
