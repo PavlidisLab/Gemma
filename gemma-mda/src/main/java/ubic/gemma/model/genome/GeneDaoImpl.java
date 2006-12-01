@@ -282,7 +282,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         
         String queryStringFirstVector =
             // return values
-            "select coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.shortName " 
+            "select coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.shortName, p2pc.firstVector.expressionExperiment.name" 
                 // source tables
                 + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
@@ -298,7 +298,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String queryStringSecondVector =
             // return values
-            "select coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.shortName " 
+            "select coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.shortName, p2pc.secondVector.expressionExperiment.name " 
                 // source tables
                 + "from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
@@ -362,6 +362,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
                 eeVo.setId( scroll.getLong( 3 ).toString() );
                 eeVo.setShortName( scroll.getString( 4 ) );
+                eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
             }
             
@@ -393,6 +394,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
                 eeVo.setId( scroll.getLong( 3 ).toString() );
                 eeVo.setShortName( scroll.getString( 4 ) );
+                eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
             }
             

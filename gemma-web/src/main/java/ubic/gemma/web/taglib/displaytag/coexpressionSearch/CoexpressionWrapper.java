@@ -87,7 +87,11 @@ public class CoexpressionWrapper extends TableDecorator {
         Collection<ExpressionExperimentValueObject> ees = object.getExpressionExperimentValueObjects();
         Collection<String> dsLinks = new ArrayList<String>();
         for ( ExpressionExperimentValueObject ee : ees ) {
-            String link = "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
+            String link = "<a " +
+                    "title=\"" +
+                    ee.getName() +
+                    "\" " +
+                    "href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
                     ee.getId() + 
                     "\">" + 
                     ee.getShortName() + 
