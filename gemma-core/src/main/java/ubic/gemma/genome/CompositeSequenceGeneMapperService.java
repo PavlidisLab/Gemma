@@ -89,8 +89,8 @@ public class CompositeSequenceGeneMapperService {
             Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
             if ( genes == null || genes.isEmpty() ) {
                 log
-                        .warn( "Discarding genes with official symbol " + officialSymbol
-                                + " do not exist.  Discarding ... " );
+                        .warn( "Gene with official symbol " + officialSymbol
+                                + " does not exist.  Discarding ... " );
                 continue;
             }
             geneMap.put( officialSymbol, genes );
