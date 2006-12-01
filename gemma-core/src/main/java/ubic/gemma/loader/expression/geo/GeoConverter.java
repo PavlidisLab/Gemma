@@ -1460,10 +1460,11 @@ public class GeoConverter implements Converter {
 
         if ( object instanceof GeoSeries ) {
             GeoSeries series = ( GeoSeries ) object;
-            if ( !StringUtils.isEmpty( series.getSupplementaryFile() ) ) {
+            String file = series.getSupplementaryFile();
+            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
                 try {
                     remoteFile = LocalFile.Factory.newInstance();
-                    remoteFileUrl = new URL( series.getSupplementaryFile() );
+                    remoteFileUrl = new URL( file );
                 } catch ( MalformedURLException e ) {
                     reportUrlError( remoteFileUrl, e );
                 }
@@ -1472,10 +1473,11 @@ public class GeoConverter implements Converter {
 
         else if ( object instanceof GeoSample ) {
             GeoSample sample = ( GeoSample ) object;
-            if ( !StringUtils.isEmpty( sample.getSupplementaryFile() ) ) {
+            String file = sample.getSupplementaryFile();
+            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
                 try {
                     remoteFile = LocalFile.Factory.newInstance();
-                    remoteFileUrl = new URL( sample.getSupplementaryFile() );
+                    remoteFileUrl = new URL( file );
                 } catch ( MalformedURLException e ) {
                     reportUrlError( remoteFileUrl, e );
                 }
@@ -1484,10 +1486,11 @@ public class GeoConverter implements Converter {
 
         else if ( object instanceof GeoPlatform ) {
             GeoPlatform platform = ( GeoPlatform ) object;
-            if ( !StringUtils.isEmpty( platform.getSupplementaryFile() ) ) {
+            String file = platform.getSupplementaryFile();
+            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
                 try {
                     remoteFile = LocalFile.Factory.newInstance();
-                    remoteFileUrl = new URL( platform.getSupplementaryFile() );
+                    remoteFileUrl = new URL( file );
                 } catch ( MalformedURLException e ) {
                     reportUrlError( remoteFileUrl, e );
                 }
