@@ -20,7 +20,7 @@
 			<Item name="Experiments" title="menu.experiments"
 				page="/expressionExperiment/showAllExpressionExperiments.html" />
 			<Item name="Array Designs" title="menu.arrays" page="/arrays/showAllArrayDesigns.html" />
-			<Item name="Help" title="menu.help" page="/static/about.jsp" />
+			<Item name="Help" title="menu.help" page="/static/about.html" />
 		</Menu>
 		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" roles="admin,user" />
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
