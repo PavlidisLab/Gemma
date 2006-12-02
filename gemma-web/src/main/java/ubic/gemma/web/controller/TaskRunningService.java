@@ -27,7 +27,7 @@ import ubic.gemma.util.progress.ProgressManager;
 public class TaskRunningService {
 
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
-    
+
     private static final int KEY_LENGTH = 16;
 
     ProgressManager progressManager;
@@ -178,11 +178,11 @@ public class TaskRunningService {
                                     + " Treating it as cancelled (assuming it was already handled)" );
                         }
                     } else {
-                        log.info( "Error thrown for " + taskId );
+                        log.error( "Error thrown for " + taskId, e );
                         handleFailed( taskId, e );
                     }
                 } catch ( Exception e ) {
-                    log.info( "Error thrown for " + taskId );
+                    log.error( "Error thrown for " + taskId, e );
                     handleFailed( taskId, e );
                 }
                 return null;
@@ -223,7 +223,7 @@ public class TaskRunningService {
         submittedTasks.remove( taskId );
         ProgressManager.signalDone( taskId );
     }
-    
+
     /**
      * @return
      */
