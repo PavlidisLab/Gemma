@@ -65,7 +65,7 @@ public class GeoSample extends GeoData implements Comparable {
     private boolean isGenePix = false;
 
     /**
-     * These are ignored by the Gemma system so don't need to be parsed.
+     * These are ignored by the Gemma system so don't need to be parsed (saves memory during import)
      */
     private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
 
@@ -90,19 +90,17 @@ public class GeoSample extends GeoData implements Comparable {
         skippableQuantitationTypes.add( "CH1D_MEDIAN" );
         skippableQuantitationTypes.add( "CH2D_MEDIAN" );
 
-        // All the raw 'mean' items are skippable.
-        skippableQuantitationTypes.add( "CH1I_MEAN" );
-        skippableQuantitationTypes.add( "CH2I_MEAN" );
-        skippableQuantitationTypes.add( "CH1B_MEAN" );
-        skippableQuantitationTypes.add( "CH2B_MEAN" );
+        // some raw items are skippable.(assumes we use median)
+        // skippableQuantitationTypes.add( "CH1I_MEAN" );
+        // skippableQuantitationTypes.add( "CH2I_MEAN" );
+        // skippableQuantitationTypes.add( "CH1B_MEAN" );
+        // skippableQuantitationTypes.add( "CH2B_MEAN" );
         skippableQuantitationTypes.add( "SUM_MEAN" );
         skippableQuantitationTypes.add( "RAT1_MEAN" );
         skippableQuantitationTypes.add( "RAT2_MEAN" );
         skippableQuantitationTypes.add( "PIX_RAT2_MEAN" );
-        skippableQuantitationTypes.add( "CH1IN_MEAN" );
-        skippableQuantitationTypes.add( "CH2IN_MEAN" );
-        skippableQuantitationTypes.add( "UNF_VALUE" );
-        skippableQuantitationTypes.add( "VALUE" );
+        // skippableQuantitationTypes.add( "CH1IN_MEAN" );
+        // skippableQuantitationTypes.add( "CH2IN_MEAN" );
 
         // otherwise deemed skippable.
         skippableQuantitationTypes.add( "PERGTBCH1I_1SD" );
@@ -215,7 +213,10 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public String getNthQuantitationType( int n ) {
         if ( n < 0 || n > getColumnNames().size() - 1 ) {
-            throw new IllegalArgumentException( "Only " + getColumnNames().size() + " columns, requested index " + n );
+            // throw new IllegalArgumentException( "Only " + getColumnNames().size() + " columns, requested index " + n
+            // );
+            return null; // This can happen if not every sample has the same quantitation types (happens in rare
+            // cases)
         }
         return getColumnNames().get( n );
     }
@@ -240,6 +241,7 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public Object getDatum( String designElement, int columnNumber ) {
         String quantitationType = getNthQuantitationType( columnNumber );
+        if ( quantitationType == null ) return null;
         return this.getDatum( designElement, quantitationType );
     }
 

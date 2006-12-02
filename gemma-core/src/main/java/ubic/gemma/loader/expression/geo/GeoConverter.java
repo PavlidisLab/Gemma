@@ -1542,6 +1542,9 @@ public class GeoConverter implements Converter {
         ExpressionExperimentSubSet subSet = getExistingOrNewSubSet( expExp, geoSubSet );
         for ( GeoSample sample : geoSubSet.getSamples() ) {
             boolean found = addMatchingBioAssayToSubSet( subSet, sample.getGeoAccession(), expExp );
+            /*
+             * This happens if there were really two series.
+             */
             assert found : "No matching bioassay found for " + sample.getGeoAccession() + " in subset. "
                     + " Make sure the ExpressionExperiment was initialized "
                     + "properly by converting the samples before converting the subsets.";
@@ -2090,7 +2093,7 @@ public class GeoConverter implements Converter {
 
                 /*
                  * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
-                 * quantitation type that was filtered out during parsing.
+                 * quantitation type that was filtered out during parsing, or absent from some samples.
                  */
                 dataVectors.get( designElementName ).add( datum );
             }
