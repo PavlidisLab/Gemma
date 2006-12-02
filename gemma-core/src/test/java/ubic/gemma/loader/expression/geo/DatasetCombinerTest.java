@@ -102,8 +102,6 @@ public class DatasetCombinerTest extends TestCase {
 
         gds = parseResult.getDatasets().values();
 
-        fillInDatasetPlatformAndOrganism();
-
         assertEquals( 2, gds.size() );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -124,19 +122,6 @@ public class DatasetCombinerTest extends TestCase {
         }
         assertTrue( result.getCorrespondingSamples( "GSM10354" ).contains( "GSM10374" ) );
         assertTrue( result.getCorrespondingSamples( "GSM10374" ).contains( "GSM10354" ) );
-    }
-
-    private void fillInDatasetPlatformAndOrganism() {
-        if ( gds == null ) return;
-        for ( GeoDataset geods : gds ) {
-            GeoPlatform platform = geods.getPlatform();
-            platform.getOrganisms().add( geods.getOrganism() );
-            for ( GeoSubset subset : geods.getSubsets() ) {
-                for ( GeoSample sample : subset.getSamples() ) {
-                    sample.getPlatforms().add( platform );
-                }
-            }
-        }
     }
 
     /*
@@ -189,36 +174,35 @@ public class DatasetCombinerTest extends TestCase {
 
         /**
          * <pre>
-         *                                                  GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
-         *                                                  GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
-         *                                                  GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
-         *                                                  GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
-         *                                                  GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
-         *                                                  GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
-         *                                                  GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
-         *                                                  GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
-         *                                                  GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
-         *                                                  GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
-         *                                                  GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
-         *                                                  GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
-         *                                                  GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
-         *                                                  GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
-         *                                                  GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
-         *                                                  GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
-         *                                                  GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
-         *                                                  GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
-         *                                                  GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
-         *                                                  GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
-         *                                                  GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
-         *                                                  GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
-         *                                                  GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
-         *                                                  GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
+         *                                                         GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
+         *                                                         GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
+         *                                                         GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
+         *                                                         GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
+         *                                                         GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
+         *                                                         GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
+         *                                                         GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
+         *                                                         GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
+         *                                                         GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
+         *                                                         GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
+         *                                                         GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
+         *                                                         GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
+         *                                                         GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
+         *                                                         GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
+         *                                                         GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
+         *                                                         GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
+         *                                                         GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
+         *                                                         GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
+         *                                                         GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
+         *                                                         GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
+         *                                                         GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
+         *                                                         GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
+         *                                                         GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
+         *                                                         GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
          * </pre>
          */
 
         assertEquals( 3, gds.size() );
 
-        fillInDatasetPlatformAndOrganism();
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
         log.info( result );
@@ -269,7 +253,7 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 3, gds.size() );
-        fillInDatasetPlatformAndOrganism();
+
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
@@ -314,7 +298,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 2, gds.size() );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -332,6 +315,9 @@ public class DatasetCombinerTest extends TestCase {
 
     }
 
+    /**
+     * @throws Exception
+     */
     public void testFindGSE91() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -356,7 +342,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 2, gds.size() );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -377,6 +362,9 @@ public class DatasetCombinerTest extends TestCase {
 
     }
 
+    /**
+     * @throws Exception
+     */
     public void testFindGSE13() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -401,7 +389,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 2, gds.size() );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -415,12 +402,16 @@ public class DatasetCombinerTest extends TestCase {
             assertTrue( c.size() == 1 || c.size() == 2 );
             numBioMaterials++;
         }
-        assertEquals( 28, numBioMaterials );
+
         assertTrue( result.getCorrespondingSamples( "GSM623" ).contains( "GSM650" ) );
         assertTrue( result.getCorrespondingSamples( "GSM612" ).contains( "GSM638" ) );
         assertEquals( 1, result.getCorrespondingSamples( "GSM618" ).size() );
+        assertEquals( 28, numBioMaterials );
     }
 
+    /**
+     * @throws Exception
+     */
     public void testFindGSE469() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -445,7 +436,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 2, gds.size() );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -517,7 +507,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 6, gds.size() );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -560,7 +549,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
         assertEquals( 2, gds.size() );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -601,7 +589,6 @@ public class DatasetCombinerTest extends TestCase {
         gd.getSeries().add( gse );
         gds = new HashSet<GeoDataset>();
         gds.add( gd );
-        fillInDatasetPlatformAndOrganism();
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -645,12 +632,53 @@ public class DatasetCombinerTest extends TestCase {
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
         while ( it.hasNext() ) {
-            Collection c = it.next();
+            it.next();
             // assertTrue( c.size() == 1 );
             numBioMaterials++;
         }
         assertEquals( 60, numBioMaterials ); // note, i'm not at all sure these are right!
+    }
 
+    /**
+     * This has just a single data set but results in a "no platform assigned" error.
+     * 
+     * @throws Exception
+     */
+    public void testGDS186() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE106Short/GDS186.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE106Short/GSE106.soft.gz" ) );
+        parser.parse( is );
+        assert is != null;
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        GeoDataset gd = parseResult.getDatasets().values().iterator().next();
+        GeoSeries gse = parseResult.getSeries().values().iterator().next();
+        gd.getSeries().add( gse );
+        gds = new HashSet<GeoDataset>();
+        gds.add( gd );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.info( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection c = it.next();
+            assertTrue( c.size() == 1 );
+            numBioMaterials++;
+        }
+        assertEquals( 11, numBioMaterials );
     }
 
 }

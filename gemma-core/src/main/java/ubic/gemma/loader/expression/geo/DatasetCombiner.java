@@ -761,17 +761,23 @@ public class DatasetCombiner {
      * @param dataSets
      */
     private void fillAccessionMaps( Collection<GeoDataset> dataSets ) {
+
         for ( GeoDataset dataset : dataSets ) {
+            GeoPlatform platform = dataset.getPlatform();
+            assert platform != null;
+            platform.getOrganisms().add( dataset.getOrganism() );
             if ( dataset.getSubsets().size() == 0 ) {
                 assert dataset.getSeries().size() > 0;
                 for ( GeoSeries series : dataset.getSeries() ) {
                     for ( GeoSample sample : series.getSamples() ) {
+                        sample.getPlatforms().add( platform );
                         fillAccessionMap( sample, dataset );
                     }
                 }
             } else {
                 for ( GeoSubset subset : dataset.getSubsets() ) {
                     for ( GeoSample sample : subset.getSamples() ) {
+                        sample.getPlatforms().add( platform );
                         fillAccessionMap( sample, dataset );
                     }
                 }
