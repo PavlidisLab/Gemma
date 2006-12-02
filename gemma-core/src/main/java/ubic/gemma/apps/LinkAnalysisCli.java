@@ -6,19 +6,27 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Vector;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
+import cern.colt.list.IntArrayList;
+
+import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.NamedMatrix;
 import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
 import ubic.basecode.datafilter.Filter;
 import ubic.basecode.datafilter.RowLevelFilter;
 import ubic.basecode.datafilter.RowMissingFilter;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
+import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
@@ -32,8 +40,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum;
+import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Chromosome;
@@ -221,7 +232,75 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		}
 		return qtf;
 	}
-    private DoubleMatrixNamed filter(DoubleMatrixNamed dataMatrix, ExpressionExperiment ee) {
+	public NamedMatrix missingValueFilter( NamedMatrix data, ExpressionDataDoubleMatrix eeDoubleMatrix, ExpressionExperiment ee ) {
+	        List MTemp = new Vector();
+	        List rowNames = new Vector();
+	        int numRows = data.rows();
+	        int numCols = data.columns();
+	        IntArrayList present = new IntArrayList( numRows );
+	        int minPresentCount = 0;
+	        int kept = 0;
+
+	        if ( minPresentFractionIsSet ) {
+	            minPresentCount =  ( int ) Math.ceil( minPresentFraction * numCols ) ;
+	        }
+	        else 
+	        	return data;
+	        
+			QuantitationType qtf = null;
+			Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes(ee);
+			for (QuantitationType qt : eeQT) {
+				StandardQuantitationType tmpQT = qt.getType();
+				if (tmpQT == StandardQuantitationType.PRESENTABSENT)
+					qtf = qt;
+			}
+			if(qtf == null){
+				log.info("Expression Experiment " + ee.getShortName() + " doesn't have a PRESENTABSENT QUANTITATION TYPE");
+				return null;
+			}
+			
+			ExpressionDataBooleanMatrix maskMatrix = new ExpressionDataBooleanMatrix(ee, qtf);
+			if(maskMatrix == null){
+				log.info("Can't get the boolean matrix");
+				return null;
+			}
+	        
+	        /* first pass - determine how many missing values there are per row */
+	        for ( int i = 0; i < numRows; i++ ) {
+	            int missingCount = 0;
+	            for ( int j = 0; j < numCols; j++ ) {
+	            	BioAssay bioAssay = eeDoubleMatrix.getBioAssayForColumn(((Integer)data.getColName(j)).intValue());
+	                if ( !maskMatrix.get((DesignElement)data.getRowName(i), bioAssay).booleanValue()|| Double.isNaN(((DoubleMatrixNamed)data).get( i, j ) )) {
+	                    missingCount++;
+	                    data.set(i,j,Double.NaN);
+	                }
+	            }
+	            present.add( missingCount );
+	            if ( missingCount <= minPresentCount ) {
+	                kept++;
+	                MTemp.add( data.getRowObj( i ) );
+	                rowNames.add(data.getRowName( i ));
+	            }
+	        }
+
+	        NamedMatrix returnval = DoubleMatrix2DNamedFactory.fastrow( MTemp.size(), numCols );
+
+	        // Finally fill in the return value.
+	        for ( int i = 0; i < MTemp.size(); i++ ) {
+	            for ( int j = 0; j < numCols; j++ ) {
+	                returnval.set( i, j, ( ( Object[] ) MTemp.get( i ) )[j] );
+	            }
+	        }
+	        returnval.setColumnNames( data.getColNames() );
+	        returnval.setRowNames( rowNames );
+
+	        log.info( "There are " + kept + " rows after removing rows which have missed more than " + minPresentCount
+	                + " values " );
+
+	        return ( returnval );
+
+	    }
+    private DoubleMatrixNamed filter(DoubleMatrixNamed dataMatrix, ExpressionDataDoubleMatrix eeDoubleMatrix, ExpressionExperiment ee) {
     	/********Check the array design technology to choose the filter****/
     	DoubleMatrixNamed r = dataMatrix;
     	if(r == null) return r;
@@ -229,16 +308,16 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     	ArrayDesign arrayDesign = (ArrayDesign)this.eeService.getArrayDesignsUsed(ee).iterator().next();
     	TechnologyType techType = arrayDesign.getTechnologyType();
         
-    	if(techType.equals(TechnologyTypeEnum.TWOCOLOR)){
+    	if(techType.equals(TechnologyTypeEnum.TWOCOLOR)|| techType.equals(TechnologyType.DUALMODE) ){
     		/***Apply for two color missing value filtered*/
         	if ( minPresentFractionIsSet ) {
-
+        		
         		/*
                 log.info( "Filtering out genes that are missing too many values" );
                 RowMissingFilter x = new RowMissingFilter();
                 x.setMinPresentFraction( minPresentFraction );
-                r = ( DoubleMatrixNamed ) x.filter( r );
                 */
+                r = ( DoubleMatrixNamed ) missingValueFilter( dataMatrix,eeDoubleMatrix, ee);
             }
     	}
     	if(techType.equals(TechnologyTypeEnum.ONECOLOR)){
@@ -285,37 +364,33 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		p2plinks = ppService.findCoexpressionRelationships(gene,ees,qtf);
 		log.info("Got links "+ p2plinks.size());
 	}
-	private boolean analysis(ExpressionExperiment ee) {
+	private String analysis(ExpressionExperiment ee) {
 		eeService.thaw(ee);
 		QuantitationType qt = this.getQuantitationType(ee);
-		if (qt == null) {
-			log.info("No Quantitation Type in " + ee.getShortName());
-			return false;
-		}
+		if (qt == null) 
+			return("No Quantitation Type in " + ee.getShortName());
 
 		log.info("Load Data for  " + ee.getShortName());
 
-		DoubleMatrixNamed dataMatrix = this.expressionDataMatrixService.getDoubleNamedMatrix(ee, qt);
-		dataMatrix = this.filter(dataMatrix, ee);
-			
-		if (dataMatrix == null) {
-			log.info("No data matrix " + ee.getShortName());
-			return false;
-		}
-		if (dataMatrix.rows() < 100){
-			log.info("Most Probes are filtered out " + ee.getShortName());
-			return false;
-		}
-		if (dataMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE){
-			log.info("No enough samples " + ee.getShortName());
-			return false;
-		}
+
+		ExpressionDataDoubleMatrix eeDoubleMatrix = (ExpressionDataDoubleMatrix)this.expressionDataMatrixService.getMatrix(ee, qt);
+		DoubleMatrixNamed dataMatrix = eeDoubleMatrix.getNamedMatrix();
+		dataMatrix = this.filter(dataMatrix,eeDoubleMatrix, ee);
+		
+		if (dataMatrix == null) 
+			return("No data matrix " + ee.getShortName());
+
+		if (dataMatrix.rows() < 100)
+			return("Most Probes are filtered out " + ee.getShortName());
+
+		if (dataMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE)
+			return("No enough samples " + ee.getShortName());
+
 		this.linkAnalysis.setDataMatrix(dataMatrix);
 		Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix(ee, qt);
-		if (dataVectors == null) {
-			log.info("No data vector " + ee.getShortName());
-			return false;
-		}
+		if (dataVectors == null) 
+			return("No data vector " + ee.getShortName());
+
 		this.linkAnalysis.setDataVector(dataVectors);
 		this.linkAnalysis.setTaxon(eeService.getTaxon(ee.getId()));
 
@@ -330,7 +405,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 			log.info("Successful Generating Raw Links for "	+ ee.getShortName());
 		}
 		
-		return true;
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -341,55 +416,76 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 		if (err != null) {
 			return err;
 		}
-		try {
-			this.eeService = (ExpressionExperimentService) this
-					.getBean("expressionExperimentService");
+		this.eeService = (ExpressionExperimentService) this.getBean("expressionExperimentService");
 
-			this.expressionDataMatrixService = (ExpressionDataMatrixService) this
-					.getBean("expressionDataMatrixService");
+		this.expressionDataMatrixService = (ExpressionDataMatrixService) this.getBean("expressionDataMatrixService");
 
-			this.vectorService = (DesignElementDataVectorService) this
-					.getBean("designElementDataVectorService");
+		this.vectorService = (DesignElementDataVectorService) this.getBean("designElementDataVectorService");
 
-			ExpressionExperiment expressionExperiment = null;
-			this.linkAnalysis.setDEService(vectorService);
-			this.linkAnalysis.setPPService((Probe2ProbeCoexpressionService) this.getBean("probe2ProbeCoexpressionService"));
+		ExpressionExperiment expressionExperiment = null;
+		this.linkAnalysis.setDEService(vectorService);
+		this.linkAnalysis.setPPService((Probe2ProbeCoexpressionService) this.getBean("probe2ProbeCoexpressionService"));
 
-			if (this.geneExpressionFile == null) {
-				if (this.geneExpressionList == null) {
-					Collection<ExpressionExperiment> all = eeService.loadAll();
-					log.info("Total ExpressionExperiment: " + all.size());
-					for (ExpressionExperiment ee : all)
-						this.analysis(ee);
-				} else {
-					InputStream is = new FileInputStream(
-							this.geneExpressionList);
-					BufferedReader br = new BufferedReader(
-							new InputStreamReader(is));
+		if (this.geneExpressionFile == null) {
+			Collection<String> errorObjects = new HashSet<String>();
+			Collection<String> persistedObjects = new HashSet<String>();
+			if (this.geneExpressionList == null) {
+				Collection<ExpressionExperiment> all = eeService.loadAll();
+				log.info("Total ExpressionExperiment: " + all.size());
+				for (ExpressionExperiment ee : all){
+					try {
+						String info = this.analysis(ee); 
+						if(info == null){
+							persistedObjects.add( ee.toString() );
+						}else{
+							errorObjects.add( ee.getShortName() + " contains errors: " + info );
+						}
+					} catch (Exception e) {
+						errorObjects.add( ee + ": " + e.getMessage() );
+						log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+					}
+				}
+			} else {
+				try{
+					InputStream is = new FileInputStream(this.geneExpressionList);
+					BufferedReader br = new BufferedReader(	new InputStreamReader(is));
 					String accession = null;
 					while ((accession = br.readLine()) != null) {
 						if (StringUtils.isBlank(accession))
 							continue;
 						expressionExperiment = eeService.findByShortName(accession);
 						if (expressionExperiment == null) {
-							log.info(accession+ " is not loaded yet!");
+							errorObjects.add( accession + " is not loaded yet! " );
 							continue;
 						}
-
-						this.analysis(expressionExperiment);
+						try{
+							String info = this.analysis(expressionExperiment);
+							if(info == null){
+								persistedObjects.add( expressionExperiment.toString() );
+							}
+							else{
+								errorObjects.add( expressionExperiment.getShortName() + " contains errors: " + info );
+							}
+						} catch (Exception e) {
+							errorObjects.add( expressionExperiment + ": " + e.getMessage() );
+							log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage() + " ********" );
+						}
 					}
+				}catch(Exception e){
+					return e;
 				}
-			} else {
-				expressionExperiment = eeService.findByShortName(this.geneExpressionFile);
-				if (expressionExperiment == null) {
-					log.info(this.geneExpressionFile + " is not loaded yet!");
-					return null;
-				}
-				this.analysis(expressionExperiment);
 			}
-		} catch (Exception e) {
-			log.error(e);
-			return e;
+			summarizeProcessing( errorObjects, persistedObjects );
+		}else {
+			expressionExperiment = eeService.findByShortName(this.geneExpressionFile);
+			if (expressionExperiment == null) {
+				log.info(this.geneExpressionFile + " is not loaded yet!");
+				return null;
+			}
+			String info = this.analysis(expressionExperiment);
+			if(info != null){
+				log.info( expressionExperiment + " contains errors: " + info );
+			}
 		}
 		return null;
 	}

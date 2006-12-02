@@ -405,6 +405,7 @@ public class LinkAnalysis {
         }
         this.outputOptions();
         this.calculateDistribution();
+/*       
         HistogramWriter aa = new HistogramWriter();
         try{
         	IHistogram1D h = this.metricMatrix.getHistogram();
@@ -418,6 +419,7 @@ public class LinkAnalysis {
         	e.printStackTrace();
         	return false;
         }
+*/        
         this.getLinks();
         this.saveLinks();
         return true;

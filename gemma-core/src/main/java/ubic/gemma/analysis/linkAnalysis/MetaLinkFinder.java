@@ -136,17 +136,47 @@ public class MetaLinkFinder {
     	ExpressionExperiment ee = this.eeService.findById((Long)eeId);
     	return ee;
     }
-
+    public void output(Gene gene, int num){
+    	int row = this.linkCount.getRowIndexByName(gene.getId());
+    	if(row < 0 || row>= this.linkCount.rows()){
+    		log.info("No this Gene");
+    		return;
+    	}
+    	for(int col = 0; col < this.linkCount.columns(); col++)
+			if(this.linkCount.bitCount(row,col) >= num){
+				System.err.println(this.getRowGene(row).getName() + "  " + this.getColGene(col).getName() + " " + this.linkCount.bitCount(row,col));
+    	}
+    }
     public void output(int num){
     	int count = 0;
     	for(int i = 0; i < this.linkCount.rows(); i++)
     		for(int j = 0; j < this.linkCount.columns(); j++){
     			if(this.linkCount.bitCount(i,j) >= num){
-    				System.err.println(this.getRowGene(i).getName() + "  " + this.getColGene(j).getName());
+    				System.err.println(this.getRowGene(i).getName() + "  " + this.getColGene(j).getName() + " " + this.linkCount.bitCount(i,j));
     				count++;
     			}
     		}
     	System.err.println("Total Links " + count);
+    }
+    public void outputStat(){
+    	int maxNum = 50;
+    	Vector count = new Vector(50);
+    	for(int i = 0; i < 50; i++)
+    		count.add(0);
+    	for(int i = 0; i < this.linkCount.rows(); i++)
+    		for(int j = i; j < this.linkCount.columns(); j++){
+    			int num = this.linkCount.bitCount(i,j);
+    			if(num > maxNum){
+    				for(;maxNum < num; maxNum++)
+    					count.add(0);
+   				Integer tmpno = (Integer)count.elementAt(num-1);
+				tmpno = tmpno+1;
+    			}
+    		}
+    	for(int i = 0; i <count.size(); i++){
+    		System.err.print(i+"["+count.elementAt(i)+"] ");
+    		if(i%10 == 0) System.err.println("");
+    	}
     }
     private void count(Gene rowGene, Collection<DesignElementDataVector> p2plinks){
     	int rowIndex = -1, colIndex = -1, eeIndex = -1;

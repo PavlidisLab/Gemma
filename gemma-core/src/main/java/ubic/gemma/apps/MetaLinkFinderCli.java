@@ -3,6 +3,9 @@
  */
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +18,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -86,6 +90,14 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 		genes.add(gene);
 		return genes;
 	}
+	
+	private Gene getGene(GeneService geneService, String geneName, Taxon taxon){
+		Gene gene = Gene.Factory.newInstance();
+		gene.setOfficialSymbol(geneName.trim());
+		gene.setTaxon(taxon);
+		gene = geneService.find(gene);
+		return gene;
+	}
 	private Taxon getTaxon(String name){
 		Taxon taxon = Taxon.Factory.newInstance();
 		taxon.setCommonName(name);
@@ -137,12 +149,13 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
 			
 			MetaLinkFinder linkFinder = new MetaLinkFinder(p2pService, deService, eeService, geneService);
 			
+			Taxon taxon = this.getTaxon("human");
+			
 //            test();
 //            linkFinder.fromFile( "test.File", "test.map");
 //            linkFinder.toFile( "test1.File", "test1.map");
 //            if(true)return null;
 			if(this.operWrite){
-			    Taxon taxon = this.getTaxon("human");
 			    /*
 			    Collection<ExpressionExperiment> ees = null;
 			    if(taxon != null)
@@ -171,8 +184,34 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                     return null;
                 }
             }
-			    
-			linkFinder.output(5);
+		    BufferedReader bfr = new BufferedReader(new InputStreamReader(System.in)); 
+		    String geneName;
+		    linkFinder.outputStat();
+		    int count = 0;
+		    try {
+		         // Hit CTRL-Z on PC's to send EOF, CTRL-D on Unix 
+		    	while ( true ) {
+		           // Read a character from keyboard
+		    		System.out.println("The Gene ID: (Press CTRL-Z or CTRL-D to Stop)");
+		    		System.out.print(">");
+		            geneName = bfr.readLine();
+		            if(geneName == null) break;
+		            System.out.print("The Stringency:");
+		            String tmp = bfr.readLine();
+		            if(tmp == null) break;
+		            count = Integer.valueOf(tmp.trim()).intValue();
+		            //Gene gene = geneService.load(Long.valueOf(geneName).longValue());
+		            Gene gene = this.getGene(geneService, geneName, taxon);
+		            if(gene != null){
+		            	System.out.println("Got "+ geneName + " " + count);
+		            	linkFinder.output(gene, count);
+		    		}
+		            else
+		            	System.out.println("Gene doesn't exist");
+		         }
+		       } catch (IOException ioe) {
+		           System.out.println( "IO error:" + ioe );
+		       } 
 		} catch (Exception e) {
 			log.error(e);
 			return e;
