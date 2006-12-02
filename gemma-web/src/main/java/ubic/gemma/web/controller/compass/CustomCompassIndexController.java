@@ -24,6 +24,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.compass.spring.web.mvc.CompassIndexCommand;
 import org.compass.spring.web.mvc.CompassIndexResults;
@@ -53,6 +55,9 @@ import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
  * The results of the index operation will be saved under the <code>indexResultsName</code>, which defaults to
  * "indexResults".
  * 
+ * todo:  I don't like the way this controller works at all.  Plan to make this genaric like all of our other controllers
+ * use spring injection to get the different compassGps beans and just make it simpler.  No need to use compass's index controller classes.
+ * 
  * @author kimchy
  * @author keshav
  * @version $Id$
@@ -66,7 +71,7 @@ import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
 
 public class CustomCompassIndexController extends BackgroundProcessingCompassIndexController {
 
-    // private Log log = LogFactory.getLog( CustomCompassIndexController.class );
+    private Log log = LogFactory.getLog( CustomCompassIndexController.class );
 
     private String indexView;
 
@@ -107,23 +112,31 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
 
         CompassIndexCommand indexCommand = ( CompassIndexCommand ) command;
         
-        
-        if ( !StringUtils.hasText( indexCommand.getDoIndex() ) || !indexCommand.getDoIndex().equalsIgnoreCase( "true" ) ) {
+        if ( !StringUtils.hasText( indexCommand.getDoIndex() )) {
             return new ModelAndView( getIndexView(), getCommandName(), indexCommand );
         }
 
         
         IndexJob index;
         
-        if (StringUtils.hasText( request.getParameter( "geneIndex")) ) {
+        if (indexCommand.getDoIndex().equalsIgnoreCase( "genes" )) {
             index = new IndexJob( request,
                     ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
                             "geneGps" ) );         
         }
-        else {
+        else if  (indexCommand.getDoIndex().equalsIgnoreCase( "ee" ) ) {
          index = new IndexJob( request,
                 ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
                         "expressionGps" ) );
+        }
+        else if  (indexCommand.getDoIndex().equalsIgnoreCase( "ad" ) ) {
+            index = new IndexJob( request,
+                   ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
+                           "arrayGps" ) );
+        }
+        else {
+            log.warn( "Indexcontroller had a button pressed but no appropirate value was found in the request." );
+            return new ModelAndView( getIndexView(), getCommandName(), indexCommand );        
         }
         
         String taskId = startJob( request, index );

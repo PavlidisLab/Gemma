@@ -10,12 +10,25 @@ defined in the Compass::Gps configuration context.
 <p>
 <form method="post" action="<c:url value="/indexer.html"/>">
 	<spring:bind path="command.doIndex">
-		<input type="hidden" name="doIndex" value="true" />
+		<input type="hidden" name="doIndex" value="genes" />
 	</spring:bind>
-    <input type="submit" name="eeIndex" value="eeIndex"/>
-    <input type="submit" name="geneIndex" value="geneIndex"/>
-    
+    <input type="submit" value="Index Genes"/>        
 </form>
+
+<form method="post" action="<c:url value="/indexer.html"/>">
+	<spring:bind path="command.doIndex">
+		<input type="hidden" name="doIndex" value="ee" />
+	</spring:bind>
+    <input type="submit" value="Index EEs"/>        
+</form>
+
+<form method="post" action="<c:url value="/indexer.html"/>">
+	<spring:bind path="command.doIndex">
+		<input type="hidden" name="doIndex" value="ad" />
+	</spring:bind>
+    <input type="submit" value="Index Ads"/>        
+</form>
+
 
 <c:if test="${! empty indexResults}">
 	<p>Indexing took: <c:out value="${indexResults.indexTime}" />ms.
