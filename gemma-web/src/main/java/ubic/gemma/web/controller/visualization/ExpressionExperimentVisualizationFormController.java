@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,6 +55,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
+import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
@@ -83,13 +85,14 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
+    private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
+    private final int MAX_ELEMENTS_TO_VISUALIZE = 70;
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private DesignElementDataVectorService designElementDataVectorService;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
     private ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = null;
-    private final int MAX_ELEMENTS_TO_VISUALIZE = 70;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -112,7 +115,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Id was not valid Long integer", e );
         }
-        log.debug( id );
 
         ExpressionExperiment ee = null;
         ExpressionExperimentVisualizationCommand eesc = new ExpressionExperimentVisualizationCommand();
@@ -125,9 +127,47 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         eesc.setExpressionExperimentId( ee.getId() );
         eesc.setName( ee.getName() );
-        eesc.setSearchString( "probeset_0,probeset_1,probeset_2,probeset_3,probeset_4,probeset_5" );
+
+        if ( StringUtils.isBlank( request.getParameter( "searchString" ) ) ) {
+            loadCookie( request, eesc );
+        }
+
         return eesc;
 
+    }
+
+    /**
+     * A cookie to store the user preferences.
+     * 
+     * @param request
+     * @param eesc
+     */
+    private void loadCookie( HttpServletRequest request, ExpressionExperimentVisualizationCommand eesc ) {
+
+        /* if we don't have any cookies, show nothing. */
+        if ( request == null || request.getCookies() == null ) return;
+
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    eesc.setSearchString( cookie.getString( "searchString" ) );
+                    eesc.setSearchCriteria( cookie.getString( "searchCriteria" ) );
+                    eesc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
+
+                    /* determine which quantitation type was previously selected */
+                    String qtName = cookie.getString( "quantitationTypeName" );
+                    for ( QuantitationType qt : getQuantitationTypes( request ) ) {
+                        if ( StringUtils.equals( qtName, qt.getName() ) ) {
+                            eesc.setQuantitationType( qt );
+                        }
+                    }
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
     }
 
     /**
@@ -142,12 +182,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
+     * Populates drop downs.
+     * 
      * @param request
      * @return Map
      */
     @Override
     protected Map referenceData( HttpServletRequest request ) {
-        log.debug( "entering referenceData" );
 
         Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
         List<String> searchCategories = new ArrayList<String>();
@@ -210,8 +251,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             BindException errors ) throws Exception {
 
         Map<String, Object> model = new HashMap<String, Object>();
+
         ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        String searchCriteria = eesc.getSearchCriteria();
+
+        /* store user choices from command object in a cookie. */
+        Cookie cookie = new ExpressionExperimentVisualizationCookie( eesc );
+        response.addCookie( cookie );
+
         Long id = eesc.getExpressionExperimentId();
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
@@ -443,5 +489,28 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public void setExpressionDataMatrixVisualizationService(
             ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService ) {
         this.expressionDataMatrixVisualizationService = expressionDataMatrixVisualizationService;
+    }
+
+    /**
+     * @author keshav
+     */
+    class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
+
+        public ExpressionExperimentVisualizationCookie( ExpressionExperimentVisualizationCommand command ) {
+
+            super( COOKIE_NAME );
+
+            log.debug( "creating cookie" );
+
+            this.setProperty( "searchString", command.getSearchString() );
+            this.setProperty( "viewSampling", command.isViewSampling() );
+            this.setProperty( "searchCriteria", command.getSearchCriteria() );
+            this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
+
+            /* set cookie to expire after 2 days. */
+            this.setMaxAge( 172800 );
+            this.setComment( "User selections for visualization form" );
+        }
+
     }
 }
