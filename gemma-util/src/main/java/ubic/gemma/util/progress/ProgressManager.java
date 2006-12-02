@@ -157,7 +157,7 @@ public class ProgressManager {
             log.debug( "Already have job with key " + userId );
         }
 
-        usersJobs = progressJobs.get(userId  );
+        usersJobs = progressJobs.get( userId );
 
         // No job currently assciated with this thread or the job assciated with the thread is no longer valid
         if ( ( currentJob.get() == null ) || ( progressJobsById.get( currentJob.get() ) == null ) ) {
@@ -166,22 +166,20 @@ public class ProgressManager {
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
             newJob = new ProgressJobImpl( createdJobI, description );
-            
-            //if no user is set then the userName should be a sessionId
-            
-            if (createdJobI.getUser() == null)
-                newJob.setTrackingId( userId );
-            
+
+            // if no user is set then the userName should be a sessionId
+
+            if ( createdJobI.getUser() == null ) newJob.setTrackingId( userId );
+
             currentJob.set( createdJobI.getId() );
-            
+
             newJob.setPhase( 0 );
 
             // keep track of these jobs
             usersJobs.add( newJob ); // adds to the progressJobs collection
             progressJobsById.put( createdJobI.getId(), newJob );
-            if (taskId != null)
-                progressJobsByTaskId.put( taskId, newJob );
-            
+            if ( taskId != null ) progressJobsByTaskId.put( taskId, newJob );
+
         } else {
             Long oldId = currentJob.get();
             newJob = progressJobsById.get( oldId );
@@ -190,7 +188,7 @@ public class ProgressManager {
             newJob.setPhase( newJob.getPhase() + 1 );
             newJob.setDescription( description );
         }
-        
+
         ProgressManager.dump();
 
         return newJob;
@@ -202,7 +200,7 @@ public class ProgressManager {
      * @return
      */
     private static JobInfo createnewJobInfo( String taskId, String userName, String description ) {
-        
+
         Calendar cal = new GregorianCalendar();
         JobInfo jobI = JobInfo.Factory.newInstance();
         jobI.setRunningStatus( true );
@@ -211,18 +209,19 @@ public class ProgressManager {
         jobI.setTaskId( taskId );
 
         User aUser = userService.findByUserName( userName );
-        
-        //Try to use the userName asscciated with the security context
-        if (aUser == null)
+
+        // Try to use the userName asscciated with the security context
+        if ( aUser == null )
             aUser = userService.findByUserName( SecurityContextHolder.getContext().getAuthentication().getName() );
-            
+
         if ( aUser != null )
             jobI.setUser( aUser );
         else {
             jobI.setUser( null );
-            log.debug( "No user assciated with job. Client side observer will have no way to receive progress messages.  Use sesison ID for anonymous users." );
+            log
+                    .debug( "No user assciated with job. Client side observer will have no way to receive progress messages.  Use sesison ID for anonymous users." );
         }
-        
+
         return jobI;
     }
 
@@ -269,8 +268,9 @@ public class ProgressManager {
         Long id = currentJob.get();
         threadsJob = progressJobsById.get( id );
 
-        if (threadsJob == null) {
-            log.debug( "Current threads job id not found in active job list. Current threads job id is invalid. id =: " + id );
+        if ( threadsJob == null ) {
+            log.debug( "Current threads job id not found in active job list. Current threads job id is invalid. id =: "
+                    + id );
             return false;
         }
         if ( pData == null )
@@ -352,31 +352,32 @@ public class ProgressManager {
         log.debug( "Destroying " + progressJob );
 
         String toForwardTo = FORWARD_DEFAULT;
-        
-        //not sure if this forwarding scheme is correct.  Could it be the case we wan't  to forward to someplace else?
-        if ((progressJob.getForwardingURL() != null) && (progressJob.getForwardingURL().length() != 0))
+
+        // not sure if this forwarding scheme is correct. Could it be the case we wan't to forward to someplace else?
+        if ( ( progressJob.getForwardingURL() != null ) && ( progressJob.getForwardingURL().length() != 0 ) )
             toForwardTo = progressJob.getForwardingURL();
-        
+
         progressJob.updateProgress( new ProgressData( 100, "Task stage completed ...", true, toForwardTo ) );
         progressJob.done();
 
-        //sorted by user?
-        if ((progressJob.getUser() != null) && (progressJobs.containsKey( progressJob.getUser() ))) {
+        // sorted by user?
+        if ( ( progressJob.getUser() != null ) && ( progressJobs.containsKey( progressJob.getUser() ) ) ) {
             Collection jobs = progressJobs.get( progressJob.getUser() );
             jobs.remove( progressJob );
             if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getUser() );
         }
-        
-        //sorted by sessionID?
-        if  ((progressJob.getTrackingId() != null) && ( progressJobs.containsKey( progressJob.getTrackingId() ) ) ){
+
+        // sorted by sessionID?
+        if ( ( progressJob.getTrackingId() != null ) && ( progressJobs.containsKey( progressJob.getTrackingId() ) ) ) {
             Collection jobs = progressJobs.get( progressJob.getTrackingId() );
             jobs.remove( progressJob );
             if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getTrackingId() );
         }
-        
+
         if ( progressJobsById.containsKey( progressJob.getId() ) ) progressJobsById.remove( progressJob.getId() );
 
-        if (( progressJob.getJobInfo().getTaskId() != null) && (progressJobsByTaskId.containsKey( progressJob.getJobInfo().getTaskId() ) ))
+        if ( ( progressJob.getJobInfo().getTaskId() != null )
+                && ( progressJobsByTaskId.containsKey( progressJob.getJobInfo().getTaskId() ) ) )
             progressJobsByTaskId.remove( progressJob.getJobInfo().getTaskId() );
 
         currentJob.set( null );
@@ -410,7 +411,7 @@ public class ProgressManager {
         log.debug( key + " Cancelled" );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
-        job.getJobInfo().setFailedMessage( "Cancelation was singnaled by user" );
+        job.getJobInfo().setFailedMessage( "Cancellation was signalled by user" );
         destroyProgressJob( job );
     }
 
@@ -419,12 +420,12 @@ public class ProgressManager {
      * @param cause
      */
     public static synchronized void signalFailed( Object key, Throwable cause ) {
-        log.debug( key + " Failed: " + cause.getMessage() );
+        log.error( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
         job.getJobInfo().setFailedMessage( cause.toString() );
         destroyProgressJob( job );
-      
+
     }
 
 }
