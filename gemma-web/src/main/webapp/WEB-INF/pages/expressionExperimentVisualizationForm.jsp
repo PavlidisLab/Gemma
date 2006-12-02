@@ -119,8 +119,8 @@
 				<spring:bind
 					path="expressionExperimentVisualizationCommand.viewSampling">
 					<input type="hidden" name="_${status.expression}" />
-					<input type="checkbox" name="${status.expression}" value="true" />
-					<c:if test="${status.value}">checked="checked"</c:if>
+					<input type="checkbox" name="${status.expression}" value="true"
+						<c:if test="${status.value}">checked="checked"</c:if>/>
 					<span class="fieldError">${status.errorMessage}</span>
 				</spring:bind>
 			</td>
