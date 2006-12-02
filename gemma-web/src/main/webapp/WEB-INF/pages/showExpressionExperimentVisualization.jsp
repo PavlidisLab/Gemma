@@ -7,25 +7,23 @@
         <h2>
             <fmt:message key="expression.visualization.results" />
         </h2>
-        Expression Experiment : <br />
-        <ul>
-        <li><c:out value="${expressionExperiment.name}" /> </li>
-        </ul>
-        Quantitation Type : <br />
-        <ul>
-        <li><c:out value="${quantitationType}" /> </li>
-        </ul>
-        
+        <li>
+        Expression Experiment:  <i><c:out value="${expressionExperiment.name}" /></i>
+        </li>
+        <br/>
+        <li>
+        Quantitation Type:  <i><c:out value="${quantitationType}" /></i> 
+        </li>
+        <br/>
+        <li>
         <c:if test="${!viewSampling}">
-        	Search Criteria : <br />
-       		<ul>
-       		<li><c:out value="${searchCriteria}" /> (<c:out value="${searchCriteriaValue}" />)</li>
-       		</ul>
+        	Search Criteria :  <i><c:out value="${searchCriteria}" /> (<c:out value="${searchCriteriaValue}" />)</i>
        	</c:if>
-       	
        	<c:if test="${viewSampling}">
-       	       (Viewing a sampling of the data) <br />
+       	       <i>(Viewing a sampling of the data)</i>
        	</c:if>
+       	</li>
+       	<br/>
        	
 		<div id="logo">
             <a> 
