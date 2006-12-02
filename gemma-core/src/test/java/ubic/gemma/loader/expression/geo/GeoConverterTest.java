@@ -195,6 +195,19 @@ public class GeoConverterTest extends TestCase {
         assertNotNull( result );
     }
 
+    public void testConvertGSE360() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE360Short/GSE360_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE360" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+    }
+
     /**
      * Case where the same sample can be in multiple series, we had problems with it.
      * 
@@ -212,7 +225,7 @@ public class GeoConverterTest extends TestCase {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment ee = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
-   //     assertEquals( 85, ee.getBioAssays().size() );
+        // assertEquals( 85, ee.getBioAssays().size() );
         Map<ArrayDesign, Integer> ads = new HashMap<ArrayDesign, Integer>();
         for ( BioAssay b : ee.getBioAssays() ) {
             if ( ads.containsKey( b.getArrayDesignUsed() ) ) {
