@@ -227,7 +227,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // public void testFetchASeries() throws Exception {
     // endTransaction();
     // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GDS84" );// replace accession.
+    // geoService.fetchAndLoad( "GSE360" );// replace accession.
     // }
 
     /**
@@ -406,12 +406,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         qtf.setRepresentation( PrimitiveType.DOUBLE );
         qtf.setGeneralType( GeneralType.QUANTITATIVE );
         qtf.setType( StandardQuantitationType.DERIVEDSIGNAL );
-        qtf.setScale( ScaleType.UNSCALED );
+        qtf.setScale( ScaleType.LINEAR );
         QuantitationType qt = qts.find( qtf );
 
-        assertTrue( qt != null );
-        assertTrue( ee != null );
-        assertTrue( newee.equals( ee ) );
+        assertNotNull( qt );
+        assertNotNull( ee );
+        assertEquals( newee, ee );
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertTrue( matrix != null );
@@ -488,7 +488,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // Affymetrix platform.
         qtf.setName( "VALUE" );
-        qtf.setScale( ScaleType.UNSCALED );
+        qtf.setScale( ScaleType.LINEAR );
         qtf.setRepresentation( PrimitiveType.DOUBLE );
         qtf.setGeneralType( GeneralType.QUANTITATIVE );
         qtf.setType( StandardQuantitationType.DERIVEDSIGNAL );
