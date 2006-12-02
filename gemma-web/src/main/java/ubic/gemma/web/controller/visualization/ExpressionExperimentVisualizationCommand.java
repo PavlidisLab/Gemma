@@ -43,26 +43,10 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
 
     private boolean viewSampling;
 
-    private String filename = null;
-
     private QuantitationType quantitationType = null;
 
     public ExpressionExperimentVisualizationCommand() {
         this.quantitationType = QuantitationType.Factory.newInstance();
-    }
-
-    /**
-     * @return Returns the filename.
-     */
-    public String getFilename() {
-        return filename;
-    }
-
-    /**
-     * @param filename The filename to set.
-     */
-    public void setFilename( String filename ) {
-        this.filename = filename;
     }
 
     /**
