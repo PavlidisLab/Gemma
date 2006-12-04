@@ -16,7 +16,20 @@
 	</c:if>
 </spring:bind>
 
+<c:if test="${numCoexpressedGenes == null}">
+	<title>Coexpression Search</title> 
+</c:if>
+
 <c:if test="${numCoexpressedGenes != null}">
+<title>Coexpression search for <c:out value="${sourceGene.officialSymbol}" /> (<c:out value="${sourceGene.officialName}" />)</title>
+<h2>
+Results for 
+	<a href="/Gemma/gene/showGene.html?id=<c:out value="${sourceGene.id}" />">
+		<c:out value="${sourceGene.officialSymbol}" /> 
+	</a>
+
+	(<c:out value="${sourceGene.officialName}" />)
+</h2>
 <table class="datasummary">
 	<tr>
 		<td colspan=2 align=center>
@@ -120,7 +133,7 @@
 
 				<spring:bind path="coexpressionSearchCommand.exactSearch">
 					<input type="checkbox" name="${status.expression}" 
-					<c:if test="${status.value}">checked="checked"</c:if> 
+					<c:if test="${status.value == 'on'}">checked="checked"</c:if> 
 					/>
 					<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				</spring:bind>
@@ -205,13 +218,6 @@
 	<input type="submit" class="button" name="submit"
 		value="<fmt:message key="button.submit"/>" />
 	<br />
-	
-	
-<c:if test="${numCoexpressedGenes != null}">
-	Searched for 
-	<c:out value="${sourceGene.officialName}" /> 
-	<br />
-</c:if>
 
 <display:table name="coexpressedGenes"
 	class="list" sort="list" requestURI="" id="foundGenes" 

@@ -42,7 +42,7 @@ public class CoexpressionSearchCommand implements Serializable {
     
     private Taxon taxon;
     
-    private boolean exactSearch = true;
+    private String exactSearch = "on";
     
     public CoexpressionSearchCommand() {
         this.setTaxon( Taxon.Factory.newInstance() );
@@ -91,20 +91,6 @@ public class CoexpressionSearchCommand implements Serializable {
     }
 
     /**
-     * @return the exactSearch
-     */
-    public boolean isExactSearch() {
-        return exactSearch;
-    }
-
-    /**
-     * @param exactSearch the exactSearch to set
-     */
-    public void setExactSearch( boolean exactSearch ) {
-        this.exactSearch = exactSearch;
-    }
-
-    /**
      * @return the eeSearchString
      */
     public String getEeSearchString() {
@@ -130,5 +116,19 @@ public class CoexpressionSearchCommand implements Serializable {
      */
     public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
+    }
+
+    /**
+     * @return the exactSearch
+     */
+    public String getExactSearch() {
+        return exactSearch;
+    }
+
+    /**
+     * @param exactSearch the exactSearch to set
+     */
+    public void setExactSearch( String exactSearch ) {
+        this.exactSearch = exactSearch;
     }
 }

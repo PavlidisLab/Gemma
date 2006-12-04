@@ -144,14 +144,23 @@ public class CoexpressionSearchController extends BaseFormController {
         Collection<Gene> genesFound;
         Integer numExpressionExperiments;
         // find the genes specified by the search
-        if (csc.isExactSearch()) {
+        // if there is no exact search specified, do an inexact search
+        // if exact search is on, find only by official symbol
+        // if exact search is auto (usually from the front page), check if there is an exact search match. If there is none, do inexact search.
+        if (csc.getExactSearch() == null) {
+            genesFound = searchService.geneDbSearch( csc.getSearchString() );
+            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) ); 
+        }
+        else if (csc.getExactSearch().equalsIgnoreCase( "on" )) {
             genesFound = geneService.findByOfficialSymbol( csc.getSearchString( ) );
         }
         else {
-            genesFound = searchService.geneDbSearch( csc.getSearchString() );
-            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
+            genesFound = geneService.findByOfficialSymbol( csc.getSearchString( ) );
+            if (genesFound.size() == 0) {
+                genesFound = searchService.geneDbSearch( csc.getSearchString() );
+                genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );    
+            }
         }
-        
         // filter genes by Taxon
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
         for ( Gene gene : genesFound ) {
@@ -190,7 +199,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
             
             // set to exact search
-            csc.setExactSearch( true );
+            csc.setExactSearch( "on" );
             ModelAndView mav = super.showForm( request, errors, getFormView() );
             mav.addObject( "genes", genesFound );
             return mav;

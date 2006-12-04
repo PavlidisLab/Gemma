@@ -87,12 +87,8 @@
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 				<spring:bind path="coexpressionSearchCommand.exactSearch">
-					<input type="checkbox" name="${status.expression}" 
-					<c:if test="${status.value}">checked="checked"</c:if> 
-					/>
-					<input type="hidden" name="_<c:out value="${status.expression}"/>">
+					<input type="hidden" name="${status.expression}" value="auto" />
 				</spring:bind>
-				Exact
 			</td>
 			<td>
 				<a class="helpLink" href="?" onclick="showHelpTip(event, 
