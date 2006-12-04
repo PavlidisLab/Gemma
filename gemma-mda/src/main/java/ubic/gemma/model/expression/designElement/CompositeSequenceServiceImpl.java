@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Vector;
 
@@ -146,9 +147,8 @@ public class CompositeSequenceServiceImpl extends
     }
 
     /*
-     * Checks to see if the CompositeSequence exists in any of the array designs. If so, it is internally stored int the
+     * Checks to see if the CompositeSequence exists in any of the array designs. If so, it is internally stored in the
      * collection of composite sequences as a {@link LinkedHashSet), preserving order based on insertion.   
-     * 
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetMatchingCompositeSequences(java.lang.String[],
@@ -157,7 +157,7 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected Collection handleFindByNamesInArrayDesigns( Collection compositeSequenceNames, Collection arrayDesigns )
             throws Exception {
-        LinkedHashSet<CompositeSequence> compositeSequences = new LinkedHashSet<CompositeSequence>();
+        LinkedHashMap<String, CompositeSequence> compositeSequencesMap = new LinkedHashMap<String, CompositeSequence>();
 
         Iterator iter = arrayDesigns.iterator();
 
@@ -165,17 +165,21 @@ public class CompositeSequenceServiceImpl extends
             ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
 
             for ( Object obj : compositeSequenceNames ) {
-                String officialSymbol = ( String ) obj;
-                officialSymbol = StringUtils.trim( officialSymbol );
-                log.debug( "entered: " + officialSymbol );
-                CompositeSequence cs = this.findByName( arrayDesign, officialSymbol );
-                if ( cs != null ) {
-                    compositeSequences.add( cs );
+                String name = ( String ) obj;
+                name = StringUtils.trim( name );
+                log.debug( "entered: " + name );
+                CompositeSequence cs = this.findByName( arrayDesign, name );
+                if ( cs != null && !compositeSequencesMap.containsKey( cs.getName() ) ) {
+                    compositeSequencesMap.put( cs.getName(), cs );
+                } else {
+                    log.warn( "Composite sequence " + name + " does not exist." );
                 }
             }
         }
 
-        return compositeSequences;
+        if ( compositeSequencesMap.isEmpty() ) return null;
+
+        return compositeSequencesMap.values();
     }
 
 }

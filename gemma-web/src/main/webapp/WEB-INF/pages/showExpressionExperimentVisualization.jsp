@@ -12,12 +12,12 @@
         </li>
         <br/>
         <li>
-        Quantitation Type:  <i><c:out value="${quantitationType}" /></i> 
+        Quantitation Type:  <i><c:out value="${quantitationType.name}" /></i> 
         </li>
         <br/>
         <li>
         <c:if test="${!viewSampling}">
-        	Search Criteria :  <i><c:out value="${searchCriteria}" /> (<c:out value="${searchCriteriaValue}" />)</i>
+        	Search Criteria :  <i><c:out value="${searchCriteria}" /> (<c:out value="${searchString}" />)</i>
        	</c:if>
        	<c:if test="${viewSampling}">
        	       <i>(Viewing a sampling of the data)</i>
