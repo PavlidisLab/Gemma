@@ -159,6 +159,25 @@
 	-moz-border-radius: 0px 0px 0px 0px;
 }
 
+/* custom layout for search tables */
+.searchTable {
+	border-width: 1px 1px 1px 1px;
+	border-spacing: 2px;
+	border-style: outset outset outset outset;
+	border-color: blue blue blue blue;
+	border-collapse: separate;
+	background-color: white;
+}
+
+.searchTable td {
+	border-width: 1px 1px 1px 1px;
+	padding: 2px 2px 2px 2px;
+	border-style: none none none none;
+	border-color: gray gray gray gray;
+	background-color: white;
+	-moz-border-radius: 0px 0px 0px 0px;
+}
+
 /* styles for pure CSS tooltips */
 a.info{
     position:relative; 

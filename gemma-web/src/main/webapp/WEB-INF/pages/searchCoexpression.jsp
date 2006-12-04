@@ -30,11 +30,23 @@ Results for
 
 	(<c:out value="${sourceGene.officialName}" />)
 </h2>
+	<h4>
+
+			<a href="/Gemma/searchCoexpression.html?
+			searchString=${coexpressionSearchCommand.searchString}&
+			stringency=${ coexpressionSearchCommand.stringency}&
+			taxon=${coexpressionSearchCommand.taxon.scientificName}&
+			eeSearchString=${coexpressionSearchCommand.eeSearchString}&
+			exactSearch=on">
+				(Bookmarkable link)
+			</a>
+
+	</h4>
 <table class="datasummary">
 	<tr>
 		<td colspan=2 align=center>
 			<b>
-				<c:out value="${sourceGene.officialSymbol}" /> 
+				Search Summary
 			</b>
 		</td>
 	</tr>
@@ -81,29 +93,21 @@ Results for
 			<c:out value="${numCoexpressedGenes}" />
 		</td>
 	</tr>
-	<tr>
-		<td colspan=2>
-			<a href="/Gemma/searchCoexpression.html?
-			searchString=${coexpressionSearchCommand.searchString}&
-			stringency=${ coexpressionSearchCommand.stringency}&
-			taxon=${coexpressionSearchCommand.taxon.scientificName}&
-			eeSearchString=${coexpressionSearchCommand.eeSearchString}&
-			exactSearch=on">
-				(Bookmark this search)
-			</a>
-		</td>
-	</tr>
 
 </table>
 </c:if>
 
 
+
 <form method="post" name="coexpressionSearch"
 	action="<c:url value="/searchCoexpression.html"/>">
 
-	<table>
+	<table class='searchTable'>
 		<tr>
-			<td valign="top">
+			<td colspan=3 align="center"> <b>Search for Coexpression </b></td>
+		</tr>
+		<tr>
+			<td class='label' valign="top">
 				<b> Gene Name </b>
 			</td>
 			<td>
@@ -148,7 +152,7 @@ Results for
 		</tr>
 		
 		<tr>
-			<td valign="top">
+			<td  class='label'  valign="top">
 				<b> Experiment keywords </b>
 			</td>
 			<td>
@@ -167,7 +171,7 @@ Results for
 		</tr>
 		
 		<tr>
-			<td valign="top">
+			<td  class='label'  valign="top">
 				<b> <fmt:message key="label.species" /> </b>
 			</td>
 			
@@ -195,7 +199,7 @@ Results for
 		</tr>
 
 		<tr>
-			<td valign="top">
+			<td  class='label'  valign="top">
 				<b> <fmt:message key="label.stringency" /> </b>
 			</td>
 			<td>
@@ -212,11 +216,18 @@ Results for
 				</a>
 			</td>
 		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<input type="submit" class="button" name="submit"
+			value="<fmt:message key="button.search"/>" />
+			</td>
+			<td>&nbsp;</td>
+		</tr>
 		
 	</table>
 
-	<input type="submit" class="button" name="submit"
-		value="<fmt:message key="button.submit"/>" />
+
 	<br />
 
 <display:table name="coexpressedGenes"
