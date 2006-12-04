@@ -155,7 +155,7 @@ public class CoexpressionSearchController extends BaseFormController {
         // filter genes by Taxon
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
         for ( Gene gene : genesFound ) {
-            if ( gene.getTaxon().getId() != csc.getTaxon().getId() ) {
+            if ( gene.getTaxon().getId().longValue() != csc.getTaxon().getId().longValue() ) {
                 genesToRemove.add( gene );
             }
         }
