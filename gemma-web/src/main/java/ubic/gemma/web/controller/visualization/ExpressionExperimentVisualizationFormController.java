@@ -401,7 +401,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             }
 
             if ( compositeSequences == null || compositeSequences.size() == 0 ) {
-                String message = "Some (or all) of the probes/genes could not be found.";
+                String message = "Genes/Probes could not be found.";
                 log.error( message );
                 errors.addError( new ObjectError( command.toString(), null, null, message ) );
                 return null;

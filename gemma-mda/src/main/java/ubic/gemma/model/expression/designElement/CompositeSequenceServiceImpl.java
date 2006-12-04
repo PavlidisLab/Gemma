@@ -23,7 +23,6 @@ package ubic.gemma.model.expression.designElement;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
@@ -172,7 +171,7 @@ public class CompositeSequenceServiceImpl extends
                 if ( cs != null && !compositeSequencesMap.containsKey( cs.getName() ) ) {
                     compositeSequencesMap.put( cs.getName(), cs );
                 } else {
-                    log.warn( "Composite sequence " + name + " does not exist." );
+                    log.warn( "Composite sequence " + name + " does not exist.  Discarding ... " );
                 }
             }
         }
