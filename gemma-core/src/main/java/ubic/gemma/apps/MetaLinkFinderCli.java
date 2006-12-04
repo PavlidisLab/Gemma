@@ -19,6 +19,7 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -184,9 +185,12 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                     return null;
                 }
             }
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder(linkFinder.getCountMatrix(), 5);
+            freFinder.find();
+            System.err.println("Output some stats");
+            linkFinder.outputStat();
 		    BufferedReader bfr = new BufferedReader(new InputStreamReader(System.in)); 
 		    String geneName;
-		    linkFinder.outputStat();
 		    int count = 0;
 		    try {
 		         // Hit CTRL-Z on PC's to send EOF, CTRL-D on Unix 

@@ -338,4 +338,7 @@ public class MetaLinkFinder {
         }
         return true;
     }
+    public CompressedNamedBitMatrix getCountMatrix(){
+        return this.linkCount;
+    }
 }
