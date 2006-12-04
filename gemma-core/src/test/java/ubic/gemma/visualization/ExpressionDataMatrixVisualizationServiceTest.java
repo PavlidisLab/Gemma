@@ -127,10 +127,12 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
 
         DesignElement de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
+        vector1.setDesignElement( de1 );
         de1.setDesignElementDataVectors( vectors1 );
 
         DesignElement de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
+        vector2.setDesignElement( de2 );
         de2.setDesignElementDataVectors( vectors2 );
 
         designElements.add( de1 );
@@ -150,17 +152,14 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
      */
     public void testCreateHeatMap() {
 
-        // TODO - fix test.
-        // String title = "A test Heat Map";
-        //
-        // ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = (
-        // ExpressionDataMatrixVisualizationService ) this
-        // .getBean( "expressionDataMatrixVisualizationService" );
-        //
-        // JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( title, expressionDataMatrix
-        // );
-        //
-        // assertNotNull( display );
+        String title = "A test Heat Map";
+
+        ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
+                .getBean( "expressionDataMatrixVisualizationService" );
+
+        JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( title, expressionDataMatrix );
+
+        assertNotNull( display );
 
     }
 
