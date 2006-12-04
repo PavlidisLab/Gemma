@@ -165,11 +165,12 @@
 						<c:forEach items="${taxa}" var="taxon">
 							<spring:transform value="${taxon}" var="scientificName" />
 							<option value="${scientificName}"
-								<c:if test="${status.value == taxon}">selected </c:if>>
+								<c:if test="${status.value == scientificName}">selected </c:if>>
 								${scientificName}
 							</option>
 						</c:forEach>
 					</select>
+					
 				</spring:bind>
 			</td>
 			<td>
@@ -200,6 +201,7 @@
 		</tr>
 		
 	</table>
+
 	<input type="submit" class="button" name="submit"
 		value="<fmt:message key="button.submit"/>" />
 	<br />
