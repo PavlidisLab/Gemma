@@ -116,16 +116,18 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                     Collection associatedGenes = compositeSequenceGeneMapperService
                             .getGenesForCompositeSequence( ( CompositeSequence ) cs );
-                    Iterator iter = associatedGenes.iterator();
-                    // FIXME only adding the first gene
-                    if ( iter.hasNext() ) {
-                        Gene gene = ( Gene ) iter.next();
-                        String name = gene.getName();
-                        if ( !StringUtils.isEmpty( name ) ) {
-                            buf.append( "&nbsp;&nbsp;&nbsp;" );
-                            buf
-                                    .append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
-                                            + name + "\">" + name + "</a>" );
+                    if ( associatedGenes != null ) {
+                        Iterator iter = associatedGenes.iterator();
+                        // TODO only adding the first gene ... add others as well?
+                        if ( iter.hasNext() ) {
+                            Gene gene = ( Gene ) iter.next();
+                            String name = gene.getName();
+                            if ( !StringUtils.isEmpty( name ) ) {
+                                buf.append( "&nbsp;&nbsp;&nbsp;" );
+                                buf
+                                        .append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
+                                                + name + "\">" + name + "</a>" );
+                            }
                         }
                     }
 
