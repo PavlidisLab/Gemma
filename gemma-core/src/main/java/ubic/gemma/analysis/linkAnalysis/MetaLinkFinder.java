@@ -163,16 +163,20 @@ public class MetaLinkFinder {
     	Vector count = new Vector(50);
     	for(int i = 0; i < 50; i++)
     		count.add(0);
-    	for(int i = 0; i < this.linkCount.rows(); i++)
+    	for(int i = 0; i < this.linkCount.rows(); i++){
+	//		System.err.println(i);
     		for(int j = i; j < this.linkCount.columns(); j++){
     			int num = this.linkCount.bitCount(i,j);
+    			if(num == 0)continue;
     			if(num > maxNum){
     				for(;maxNum < num; maxNum++)
     					count.add(0);
-   				Integer tmpno = (Integer)count.elementAt(num-1);
-				tmpno = tmpno+1;
     			}
+   				Integer tmpno = (Integer)count.elementAt(num-1);
+   				tmpno = tmpno + 1;
+   				count.setElementAt(tmpno, num-1);
     		}
+    	}
     	for(int i = 0; i <count.size(); i++){
     		System.err.print(i+"["+count.elementAt(i)+"] ");
     		if(i%10 == 0) System.err.println("");
