@@ -77,11 +77,13 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
         bioAssayDimension.setName( "GSM15697, GSM15744" );
 
+        /* set up the bioassays */
         Collection<BioAssay> assays = new LinkedHashSet<BioAssay>();
 
         BioAssay assay1 = BioAssay.Factory.newInstance();
         assay1.setName( "Current Smoker 73" );
 
+        /* set up the biomaterials */
         Collection<BioMaterial> samplesUsed1 = new LinkedHashSet<BioMaterial>();
         BioMaterial sample1 = BioMaterial.Factory.newInstance();
         sample1.setName( "GSM15697" );
@@ -105,6 +107,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
 
         bioAssayDimension.setBioAssays( assays );
 
+        /* set up the design element data vectors */
         Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<DesignElementDataVector>();
         DesignElementDataVector vector1 = DesignElementDataVector.Factory.newInstance();
         double[] ddata1 = { 74.9, 101.7 };
@@ -123,16 +126,17 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         vector2.setBioAssayDimension( bioAssayDimension );
         vectors2.add( vector2 );
 
+        /* set up the design elements */
         Collection<DesignElement> designElements = new LinkedHashSet<DesignElement>();
 
         DesignElement de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
-        vector1.setDesignElement( de1 );
+        vector1.setDesignElement( de1 ); // set this de on the vector
         de1.setDesignElementDataVectors( vectors1 );
 
         DesignElement de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
-        vector2.setDesignElement( de2 );
+        vector2.setDesignElement( de2 ); // set this de on the vector
         de2.setDesignElementDataVectors( vectors2 );
 
         designElements.add( de1 );
@@ -142,30 +146,14 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 
+        /* set the vectors on the expression experiment */
         ee.setDesignElementDataVectors( eeVectors );
 
         expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, designElements, qt );
     }
 
     /**
-     * Tests creating the heatmap
-     */
-    public void testCreateHeatMap() {
-
-        String title = "A test Heat Map";
-
-        ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
-                .getBean( "expressionDataMatrixVisualizationService" );
-
-        JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( title, expressionDataMatrix );
-
-        assertNotNull( display );
-
-    }
-
-    /**
-     * 
-     *
+     * Tests normalization of the matrix.
      */
     public void testNormalizeExpressionDataDoubleMatrixByRowMean() {
 
@@ -179,4 +167,19 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
 
     }
 
+    /**
+     * Tests creating the heatmap.
+     */
+    public void testCreateHeatMap() {
+
+        String title = "A test Heat Map";
+
+        ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
+                .getBean( "expressionDataMatrixVisualizationService" );
+
+        JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( title, expressionDataMatrix );
+
+        assertNotNull( display );
+
+    }
 }
