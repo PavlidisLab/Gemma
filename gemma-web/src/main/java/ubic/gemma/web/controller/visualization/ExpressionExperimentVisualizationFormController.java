@@ -117,7 +117,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         ExpressionExperiment ee = null;
-        ExpressionExperimentVisualizationCommand eesc = new ExpressionExperimentVisualizationCommand();
+        ExpressionExperimentVisualizationCommand eevc = new ExpressionExperimentVisualizationCommand();
 
         if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
             ee = expressionExperimentService.findById( id );
@@ -125,14 +125,14 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             ee = ExpressionExperiment.Factory.newInstance();
         }
 
-        eesc.setExpressionExperimentId( ee.getId() );
-        eesc.setName( ee.getName() );
+        eevc.setExpressionExperimentId( ee.getId() );
+        eevc.setName( ee.getName() );
 
         if ( StringUtils.isBlank( request.getParameter( "searchString" ) ) ) {
-            loadCookie( request, eesc );
+            eevc = loadCookie( request, eevc );
         }
 
-        return eesc;
+        return eevc;
 
     }
 
@@ -140,26 +140,36 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * A cookie to store the user preferences.
      * 
      * @param request
-     * @param eesc
+     * @param eevc
+     * @return ExpressionExperimentVisualizationCommand
      */
-    private void loadCookie( HttpServletRequest request, ExpressionExperimentVisualizationCommand eesc ) {
+    private ExpressionExperimentVisualizationCommand loadCookie( HttpServletRequest request,
+            ExpressionExperimentVisualizationCommand eevc ) {
 
-        /* if we don't have any cookies, show nothing. */
-        if ( request == null || request.getCookies() == null ) return;
+        Collection<QuantitationType> quantitationTypes = getQuantitationTypes( request );
+
+        /*
+         * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
+         * one cookie (the one with the JSESSION ID).
+         */
+        if ( request == null || request.getCookies() == null ) {
+            return null;
+        }
 
         for ( Cookie cook : request.getCookies() ) {
             if ( cook.getName().equals( COOKIE_NAME ) ) {
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    eesc.setSearchString( cookie.getString( "searchString" ) );
-                    eesc.setSearchCriteria( cookie.getString( "searchCriteria" ) );
-                    eesc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
+                    eevc.setSearchString( cookie.getString( "searchString" ) );
+                    eevc.setSearchCriteria( cookie.getString( "searchCriteria" ) );
+                    eevc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
 
                     /* determine which quantitation type was previously selected */
                     String qtName = cookie.getString( "quantitationTypeName" );
-                    for ( QuantitationType qt : getQuantitationTypes( request ) ) {
+                    for ( QuantitationType qt : quantitationTypes ) {
                         if ( StringUtils.equals( qtName, qt.getName() ) ) {
-                            eesc.setQuantitationType( qt );
+                            eevc.setQuantitationType( qt );
+                            return eevc;
                         }
                     }
                 } catch ( Exception e ) {
@@ -168,6 +178,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 }
             }
         }
+
+        /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
+        QuantitationType qt = ( QuantitationType ) quantitationTypes.iterator().next();
+        eevc.setQuantitationType( qt );
+        eevc.setViewSampling( true );
+        return eevc;
     }
 
     /**
@@ -218,8 +234,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
-        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        Long id = eesc.getExpressionExperimentId();
+        ExpressionExperimentVisualizationCommand eevc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        Long id = eevc.getExpressionExperimentId();
 
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Cancelled" );
@@ -250,15 +266,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        Map<String, Object> model = new HashMap<String, Object>();
-
-        ExpressionExperimentVisualizationCommand eesc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        ExpressionExperimentVisualizationCommand eevc = ( ( ExpressionExperimentVisualizationCommand ) command );
 
         /* store user choices from command object in a cookie. */
-        Cookie cookie = new ExpressionExperimentVisualizationCookie( eesc );
+        Cookie cookie = new ExpressionExperimentVisualizationCookie( eevc );
         response.addCookie( cookie );
 
-        Long id = eesc.getExpressionExperimentId();
+        Long id = eevc.getExpressionExperimentId();
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
         if ( expressionExperiment == null ) {
@@ -266,12 +280,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     + " found" );
         }
 
-        QuantitationType quantitationType = eesc.getQuantitationType();
+        QuantitationType quantitationType = eevc.getQuantitationType();
         if ( quantitationType == null ) {
             return processErrors( request, response, command, errors, "Quantitation type must be provided" );
         }
 
-        Collection<DesignElementDataVector> dataVectors = getVectors( command, errors, eesc, expressionExperiment,
+        Collection<DesignElementDataVector> dataVectors = getVectors( command, errors, eevc, expressionExperiment,
                 quantitationType );
 
         if ( errors.hasErrors() ) {
@@ -292,15 +306,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         expressionDataMatrix = expressionDataMatrixVisualizationService
                 .normalizeExpressionDataDoubleMatrixByRowMean( expressionDataMatrix );
 
-        ExpressionExperimentVisualizationCommand eevc = ( ExpressionExperimentVisualizationCommand ) command;
-
+        /* return the model and view */
         ModelAndView mav = new ModelAndView( getSuccessView() );
         mav.addObject( "expressionDataMatrix", expressionDataMatrix );
-        // add in information about the query
         mav.addObject( "expressionExperiment", expressionExperiment );
-        mav.addObject( "quantitationType", eevc.getQuantitationType().getName() );
+        mav.addObject( "quantitationType", eevc.getQuantitationType() );
         mav.addObject( "searchCriteria", eevc.getSearchCriteria() );
-        mav.addObject( "searchCriteriaValue", eevc.getSearchString() );
+        mav.addObject( "searchString", eevc.getSearchString() );
         mav.addObject( "viewSampling", new Boolean( eevc.isViewSampling() ) );
         return mav;
     }
@@ -308,14 +320,14 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     /**
      * @param command
      * @param errors
-     * @param eesc
+     * @param eevc
      * @param expressionExperiment
      * @param quantitationType
      * @return Collection<DesignElementDataVector>
      */
     @SuppressWarnings("unchecked")
     private Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
-            ExpressionExperimentVisualizationCommand eesc, ExpressionExperiment expressionExperiment,
+            ExpressionExperimentVisualizationCommand eevc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
 
         Collection<DesignElementDataVector> vectors = null;
@@ -328,16 +340,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         /* check size if 'viewSampling' is set. */
         if ( viewSampling ) {
-            if ( quantitationType == null ) {
-                // expressionExperiment.
-            }
             vectors = expressionExperimentService.getSamplingOfVectors( expressionExperiment, quantitationType,
                     MAX_ELEMENTS_TO_VISUALIZE );
         }
 
         else {
 
-            String searchString = eesc.getSearchString();
+            String searchString = eevc.getSearchString();
 
             String[] searchIds = StringUtils.split( searchString, "," );
             if ( searchIds.length > MAX_ELEMENTS_TO_VISUALIZE ) {
@@ -350,7 +359,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             List searchIdsAsList = Arrays.asList( searchIds );
 
             /* handle search by design element */
-            if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
+            if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
 
                 if ( arrayDesigns.size() == 0 ) {
                     String message = "No array designs found for " + expressionExperiment;
@@ -364,7 +373,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             }
 
             /* handle search by gene */
-            else if ( eesc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
+            else if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
 
                 /* comment me out to add this gene search functionality. */
                 // errors.addError( new ObjectError( command.toString(), null, null,
@@ -392,7 +401,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             }
 
             if ( compositeSequences == null || compositeSequences.size() == 0 ) {
-                String message = "No probes or genes could be found matching the query.";
+                String message = "Some (or all) of the probes/genes could not be found.";
                 log.error( message );
                 errors.addError( new ObjectError( command.toString(), null, null, message ) );
                 return null;
