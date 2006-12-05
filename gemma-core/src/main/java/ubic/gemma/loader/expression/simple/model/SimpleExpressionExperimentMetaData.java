@@ -27,6 +27,7 @@ import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -62,7 +63,11 @@ public class SimpleExpressionExperimentMetaData {
 
     private DatabaseEntry externalReference;
 
+    private String sourceUrl;
+
     private boolean probeIdsAreImageClones;
+
+    private TechnologyType technologyType;
 
     /**
      * Publication reference.
@@ -251,6 +256,22 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setExperimentalDesignName( String experimentalDesignName ) {
         this.experimentalDesignName = experimentalDesignName;
+    }
+
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public void setSourceUrl( String sourceUrl ) {
+        this.sourceUrl = sourceUrl;
+    }
+
+    public TechnologyType getTechnologyType() {
+        return technologyType;
+    }
+
+    public void setTechnologyType( TechnologyType technologyType ) {
+        this.technologyType = technologyType;
     }
 
 }

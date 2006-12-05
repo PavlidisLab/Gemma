@@ -21,8 +21,11 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -76,6 +79,16 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+    }
+
+    protected void updateAudit( String note ) {
+        ArrayDesign ad = this.locateArrayDesign( arrayDesignName );
+        AuditEvent ae = AuditEvent.Factory.newInstance();
+        ae.setNote( note );
+        ae.setAction( AuditAction.UPDATE );
+        ae.setPerformer( UserDetailsServiceImpl.getCurrentUser() );
+        ad.getAuditTrail().addEvent( ae );
+        arrayDesignService.update( ad );
     }
 
 }

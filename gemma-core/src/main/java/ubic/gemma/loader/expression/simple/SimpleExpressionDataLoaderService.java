@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,10 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -99,8 +97,13 @@ public class SimpleExpressionDataLoaderService {
 
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
         experiment.setName( metaData.getName() );
+        experiment.setShortName( experiment.getName() );
         experiment.setDescription( metaData.getDescription() );
-        experiment.setSource( "Import via matrix flat file" );
+
+        experiment
+                .setSource( "Import via matrix flat file."
+                        + ( StringUtils.isBlank( metaData.getSourceUrl() ) ? "" : "Downloaded from "
+                                + metaData.getSourceUrl() ) );
 
         // ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         // ed.setName( metaData.getExperimentalDesignName() );
@@ -112,7 +115,7 @@ public class SimpleExpressionDataLoaderService {
         // fv.setValue( "default" );
         // ef.getFactorValues().add( fv );
         // ed.getExperimentalFactors().add( ef );
-        //        experiment.setExperimentalDesign( ed );
+        // experiment.setExperimentalDesign( ed );
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
@@ -355,7 +358,6 @@ public class SimpleExpressionDataLoaderService {
             assay.setName( columnName.toString() );
             assay.setArrayDesignUsed( arrayDesign );
             assay.setSamplesUsed( bioMaterials );
-
             bad.getBioAssays().add( assay );
         }
 

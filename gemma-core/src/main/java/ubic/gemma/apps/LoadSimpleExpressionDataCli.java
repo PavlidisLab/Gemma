@@ -30,7 +30,6 @@ import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
@@ -41,9 +40,11 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -58,6 +59,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     private String dirName = "./";
     private SimpleExpressionDataLoaderService eeLoaderService = null;
     private ArrayDesignService adService = null;
+    private TaxonService taxonService = null;
 
     final static String SPLITCHAR = "\t{1}";
     final static int NAMEI = 0;
@@ -69,8 +71,12 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     final static int QDESCRIPTIONI = QNAMEI + 1;
     final static int QTYPEI = QDESCRIPTIONI + 1;
     final static int QSCALEI = QTYPEI + 1;
-//    final static int IMAGECLONEI = QSCALEI + 1;
-    final static int TOTALFIELDS = QSCALEI + 1;
+    final static int PUBMEDI = QSCALEI + 1;
+    final static int SOURCEI = PUBMEDI + 1;
+    final static int ARRAYDESIGNNAMEI = SOURCEI + 1;
+    final static int TECHNOLOGYTYPEI = ARRAYDESIGNNAMEI + 1;
+    // final static int IMAGECLONEI = QSCALEI + 1;
+    final static int TOTALFIELDS = TECHNOLOGYTYPEI + 1;
 
     /*
      * (non-Javadoc)
@@ -102,65 +108,44 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         }
     }
 
-    private boolean loadExperiment( String conf ) throws Exception {
+    /**
+     * @param configurationLine
+     * @return
+     * @throws Exception
+     */
+    private void loadExperiment( String configurationLine ) throws Exception {
         int i = 0;
         // String oneLoad[] = StringUtils.split( conf,SPLITCHAR );
-        String oneLoad[] = conf.split( SPLITCHAR );
-        if ( oneLoad.length != TOTALFIELDS ) {
-            log.info( "Field Missing Got[" + oneLoad.length + "]: " + conf );
-            return false;
+        String fields[] = configurationLine.split( SPLITCHAR );
+        if ( fields.length != TOTALFIELDS ) {
+            throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
         }
-        for ( i = 0; i < oneLoad.length; i++ )
-            oneLoad[i] = StringUtils.trim( oneLoad[i] );
+        for ( i = 0; i < fields.length; i++ )
+            fields[i] = StringUtils.trim( fields[i] );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        metaData.setName( oneLoad[NAMEI] );
-        metaData.setDescription( oneLoad[DESCRIPTIONI] );
-        
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        if(oneLoad[ARRAYDESIGNI].trim().equals("IMAGE")){
-            ArrayDesign ad = ArrayDesign.Factory.newInstance();
-            ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
-            ads.add( ad );        	
-        	metaData.setProbeIdsAreImageClones( true );
-        }
-        else{
-        	String allADs[] = oneLoad[ARRAYDESIGNI].split("\\+");
-        	for(i = 0; i <allADs.length; i++){
-        		ArrayDesign ad = adService.findByShortName( allADs[i] );
-        		if ( ad == null ) {
-        			log.info( "Array Design " + allADs[i] + " is not loaded" );
-        			return false;
-        		}
-        		ads.add( ad );
-        	}
-        }
-    	metaData.setArrayDesigns( ads );
-    	 
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( oneLoad[SPECIESI] );
-        metaData.setTaxon( taxon );
+        metaData.setName( fields[NAMEI] );
+        metaData.setDescription( fields[DESCRIPTIONI] );
+
+        configureArrayDesigns( fields, metaData );
+
+        configureTaxon( fields, metaData );
 
         // InputStream data = this.getClass().getResourceAsStream( this.dirName + oneLoad[DATAFILEI] );
-        InputStream data = new FileInputStream( new File( this.dirName, oneLoad[DATAFILEI] ) );
+        InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );
         if ( data == null ) {
-            log.info( "Data File " + this.dirName + oneLoad[DATAFILEI] + " doesn't exist" );
-            return false;
+            throw new IllegalArgumentException( "Data File " + this.dirName + fields[DATAFILEI] + " doesn't exist" );
         }
 
-        metaData.setQuantitationTypeName( oneLoad[QNAMEI] );
-        metaData.setQuantitationTypeDescription( oneLoad[QDESCRIPTIONI] );
-        metaData.setGeneralType( GeneralType.QUANTITATIVE );
-//        if ( oneLoad.length >= IMAGECLONEI - 1 ) {
-//            metaData.setProbeIdsAreImageClones( Boolean.parseBoolean( oneLoad[IMAGECLONEI] ) );
-//        }
+        metaData.setSourceUrl( fields[SOURCEI] );
 
-        StandardQuantitationType sQType = StandardQuantitationType.fromString( oneLoad[QTYPEI] );
-        metaData.setType( sQType );
+        String pubMedId = fields[PUBMEDI];
+        if ( StringUtils.isNotBlank( pubMedId ) ) {
+            metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+        }
 
-        ScaleType sType = ScaleType.fromString( oneLoad[QSCALEI] );
-        metaData.setScale( sType );
+        configureQuantitationType( fields, metaData );
 
         ExpressionExperiment ee = eeLoaderService.load( metaData, data );
 
@@ -168,7 +153,99 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
                 .getBean( "expressionExperimentService" );
         eeService.thaw( ee );
 
-        return true;
+    }
+
+    /**
+     * @param fields
+     * @param metaData
+     */
+    private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setScientificName( fields[SPECIESI] );
+        Taxon existing = taxonService.find( taxon );
+        if ( existing == null ) {
+            throw new IllegalArgumentException( "There is no taxon with scientific name " + fields[SPECIESI]
+                    + " in the system; please add it first before loading data." );
+        }
+        metaData.setTaxon( taxon );
+    }
+
+    /**
+     * @param fields
+     * @param metaData
+     */
+    private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
+        int i;
+        TechnologyType techType = TechnologyType.fromString( fields[TECHNOLOGYTYPEI] );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        if ( StringUtils.isBlank( fields[ARRAYDESIGNI] ) ) {
+            // that's okay, so long as we get an array design name
+            ArrayDesign ad = getNewArrayDesignFromName( fields );
+            ad.setTechnologyType( techType );
+            ads.add( ad );
+        } else if ( fields[ARRAYDESIGNI].trim().equals( "IMAGE" ) ) {
+            ArrayDesign ad = getNewArrayDesignFromName( fields );
+            ad.setTechnologyType( techType );
+            ads.add( ad );
+            metaData.setProbeIdsAreImageClones( true );
+        } else {
+            String allADs[] = fields[ARRAYDESIGNI].split( "\\+" );
+
+            // allow for the case where there is an additional new array design to be added.
+            if ( StringUtils.isNotBlank( fields[ARRAYDESIGNNAMEI] ) ) {
+                ArrayDesign ad = getNewArrayDesignFromName( fields );
+                ad.setTechnologyType( techType );
+                ads.add( ad );
+            }
+
+            for ( i = 0; i < allADs.length; i++ ) {
+                ArrayDesign ad = adService.findByShortName( allADs[i] );
+                if ( ad == null ) {
+                    throw new IllegalStateException( "Array Design " + allADs[i]
+                            + " is not loaded into the system yet; load it and try again." );
+                }
+                ads.add( ad );
+            }
+        }
+        metaData.setArrayDesigns( ads );
+
+    }
+
+    /**
+     * @param fields
+     * @return
+     */
+    private ArrayDesign getNewArrayDesignFromName( String[] fields ) {
+        checkForArrayDesignName( fields );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( fields[ARRAYDESIGNNAMEI] );
+        ad.setShortName( ad.getName() );
+        return ad;
+    }
+
+    /**
+     * @param fields
+     */
+    private void checkForArrayDesignName( String[] fields ) {
+        if ( StringUtils.isBlank( fields[ARRAYDESIGNNAMEI] ) ) {
+            throw new IllegalArgumentException( "Array design must be given if array design is new." );
+        }
+    }
+
+    /**
+     * @param fields
+     * @param metaData
+     */
+    private void configureQuantitationType( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
+        metaData.setQuantitationTypeName( fields[QNAMEI] );
+        metaData.setQuantitationTypeDescription( fields[QDESCRIPTIONI] );
+        metaData.setGeneralType( GeneralType.QUANTITATIVE );
+
+        StandardQuantitationType sQType = StandardQuantitationType.fromString( fields[QTYPEI] );
+        metaData.setType( sQType );
+
+        ScaleType sType = ScaleType.fromString( fields[QSCALEI] );
+        metaData.setScale( sType );
     }
 
     /*
@@ -178,7 +255,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        // TODO Auto-generated method stub
         Exception err = processCommandLine( "Expression Data loader", args );
         if ( err != null ) {
             return err;
@@ -187,30 +263,36 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
             this.eeLoaderService = ( SimpleExpressionDataLoaderService ) this
                     .getBean( "simpleExpressionDataLoaderService" );
             this.adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+            this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
             if ( this.fileName != null ) {
                 log.info( "Loading experiments from " + this.fileName );
                 InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
                 BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
+                Collection<String> errorObjects = new HashSet<String>();
+                Collection<String> persistedObjects = new HashSet<String>();
                 String conf = null;
                 while ( ( conf = br.readLine() ) != null ) {
 
                     if ( StringUtils.isBlank( conf ) ) {
                         continue;
                     }
-                    /** *****Comments in the list file**** */
-                    if ( StringUtils.trim( conf ).charAt( 0 ) == '#' ) continue;
+
+                    /* Comments in the list file */
+                    if ( conf.startsWith( "#" ) ) continue;
+
+                    String expName = conf.split( SPLITCHAR )[0];
 
                     try {
-                        if ( this.loadExperiment( conf ) )
-                            log.info( "Successfully Load " + conf );
-                        else
-                            log.error( "No experiments loaded!" + conf );
+                        this.loadExperiment( conf );
+                        log.info( "Successfully Loaded " + expName );
+                        persistedObjects.add( expName );
                     } catch ( Exception e ) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        errorObjects.add( expName + ": " + e.getMessage() );
+                        log.error( "Failure loading " + expName );
                     }
                 }
+                summarizeProcessing( errorObjects, persistedObjects );
             }
         } catch ( IOException e ) {
             return e;
