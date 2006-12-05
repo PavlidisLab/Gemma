@@ -13,7 +13,9 @@
     </c:if>
 </spring:bind>
 <html>
-<head></head>
+<head>
+<title>Edit Bibligraphic Reference </title>
+  </head>
 <body>
 
 <c:set var="pageButtons">

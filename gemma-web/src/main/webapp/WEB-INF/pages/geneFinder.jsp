@@ -4,6 +4,7 @@
 <%@ page import="java.util.Iterator" %>
 <%@ page import="java.util.Collection" %>
 <html>
+<head> Search Gemme for Genes </head>
 <body>
 From here you can search the Gemma database for existing Genes.
 <BR />

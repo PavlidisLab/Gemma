@@ -1,10 +1,13 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<p>
+<html>
+	<head>
+<title> <fmt:message key="menu.compassSearcher" /> </title>
 <content tag="heading">
 <fmt:message key="menu.compassSearcher"/>
 </content>
-
+</head>
+<body>
 <form method="GET">
 	<spring:bind path="command.query">
 	 <input type="text" size="20" name="query" value="<c:out value="${status.value}"/>" />
@@ -70,5 +73,7 @@
 
 </c:if>
 
+</body>
 <p>
 <br>
+</html>

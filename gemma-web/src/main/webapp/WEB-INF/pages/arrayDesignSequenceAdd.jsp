@@ -10,6 +10,7 @@
 		src="<c:url value="/scripts/progressbar.js"/>"></script>
 	<link rel="stylesheet" type="text/css" media="all"
 		href="<c:url value='/styles/progressbar.css'/>" />
+		<title>Associate sequences with an array design</title>
 </head>
 <h1>
 	Associate sequences with an array design
