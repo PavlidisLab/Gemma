@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -180,7 +179,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
-        QuantitationType qt = ( QuantitationType ) quantitationTypes.iterator().next();
+        QuantitationType qt = quantitationTypes.iterator().next();
         eevc.setQuantitationType( qt );
         eevc.setViewSampling( true );
         return eevc;
@@ -241,12 +240,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             log.info( "Cancelled" );
 
             if ( id != null ) {
-                return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id="
+                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                         + id ) );
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" ) );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
 
         }
 
