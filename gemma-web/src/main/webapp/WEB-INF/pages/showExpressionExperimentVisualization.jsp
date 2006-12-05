@@ -3,7 +3,7 @@
 <jsp:useBean id="expressionDataMatrix" scope="request"
     class="ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix" />
 <html>
-<head>  <fmt:message key="expression.visualization.results" /> </head>
+<title>  <fmt:message key="expression.visualization.results" /> </title>
     <body>
         <h2>
             <fmt:message key="expression.visualization.results" />
