@@ -2,6 +2,8 @@
 <jsp:useBean id="arrayDesignSequenceCommand" scope="request"
 	class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignAddCommand" />
 
+<title> add array design </title>
+
 <spring:bind path="arrayDesignAddCommand.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
@@ -13,7 +15,6 @@
 		</div>
 	</c:if>
 </spring:bind>
-
 
 <form method="post" action="<c:url value="/arrayDesign/newArrayDesign.html"/>" enctype="multipart/form-data">
 

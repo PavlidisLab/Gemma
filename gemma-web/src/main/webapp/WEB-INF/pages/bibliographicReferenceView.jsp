@@ -5,9 +5,9 @@
 
 <jsp:useBean id="bibliographicReference" scope="request"
 	class="ubic.gemma.model.common.description.BibliographicReferenceImpl"></jsp:useBean>
-<head>
-	<title>pubMed.Search.results.view</title>
-</head>
+
+	<title>Bibliographic Reference Search Results</title>
+
 
 
 <table width="100%">

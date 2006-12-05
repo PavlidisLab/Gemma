@@ -1,10 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<html>
-	<head>
+
 		<title><fmt:message key="expressionExperiments.title" /></title>
-	</head>
-	<body>
+
 	<form name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
 			<h4> Enter search criteria for finding a specific expression experiment here </h4>
 			<input type="text" name="filter" size="78" />
@@ -38,6 +36,3 @@
 
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>
-
-	</body>
-</html>

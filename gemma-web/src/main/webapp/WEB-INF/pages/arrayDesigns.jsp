@@ -1,13 +1,11 @@
 <%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
-<html>
-	<head>
+
 		<content tag="heading">
 		Array designs
 		</content>
 		<title>Array designs</title>
-	</head>
-	<body>
+
 	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
 			<h4> Enter search criteria for finding a specific array design here </h4>
 			<input type="text" name="filter" size="66" />
@@ -33,8 +31,6 @@
 					<display:setProperty name="basic.empty.showtable" value="true" />
 				</display:table>
 
-	</body>
-</html>
 
 
 

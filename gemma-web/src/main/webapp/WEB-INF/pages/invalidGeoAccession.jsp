@@ -2,11 +2,8 @@
 <%@ page language="java" isErrorPage="true"%>
 <%-- $Id$ --%>
 
-<html>
-	<head>
 		<title>Invalid GEO accession</title>
 
-	</head>
 	<body>
 		<content tag="heading">
 		Invalid GEO accession
@@ -21,7 +18,4 @@
 			(GSE) on the GEO web site. Please check the
 			<a href="http://www.ncbi.nlm.nih.gov/geo/">GEO web site</a> to make sure you selected a valid accession.
 		</p>
-
-	</body>
-</html>
 

@@ -3,16 +3,13 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
+
 <title>Dataset details <%
 					if ( expressionExperiment.getName() != null ) {
 					%>: <jsp:getProperty name="expressionExperiment" property="name" />
 					<%
 					                } 
 					%></title>
-</head>
-	<body>
 		<h2>
 			<fmt:message key="expressionExperiment.details" />
 		</h2>
@@ -340,5 +337,3 @@
 		</table>
 		<script type="text/javascript"
 			src="<c:url value="/scripts/aa-init.js"/>"></script>
-	</body>
-</html>

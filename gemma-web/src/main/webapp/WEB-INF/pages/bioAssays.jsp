@@ -1,10 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-	<head>
+
 		<title><fmt:message key="bioAssays.title" /></title>
-	</head>
-	<body>
 
 		<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 		<h2>
@@ -27,7 +24,3 @@
 			</display:table>
 		</aa:zone>
 		<script type="text/javascript" src="<c:url value="/scripts/aa-init.js"/>"></script>
-
-	</body>
-
-</html>

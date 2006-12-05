@@ -5,10 +5,8 @@
 <jsp:useBean id="gene" scope="request"
     class="ubic.gemma.model.genome.GeneImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head> <fmt:message key="gene.details" /> </head>
+<title> <fmt:message key="gene.details" />  </title>
 
-    <body>
         <h2>
             <fmt:message key="gene.details" />
         </h2>
@@ -154,6 +152,3 @@
 		</b>
 		composite sequences associated with this gene.
 		<br />
-
-    </body>
-</html>

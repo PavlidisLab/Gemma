@@ -3,13 +3,10 @@
 <%@ page import="java.util.Collection"%>
 <%@ page import="ubic.gemma.model.genome.gene.CandidateGeneList"%>
 <%@ page import="ubic.gemma.model.genome.gene.CandidateGene"%>
-<html>
-	<head>
-		<title>Candidate Gene Lists</title>
+
+		<title> <fmt:message key="candidateGeneList.title" /> </title>
 		<meta http-equiv="Content-Type"
 			content="text/html; charset=iso-8859-1">
-	</head>
-	<body bgcolor="#ffffff">
 
 		<content tag="heading">
 		Candidate Gene Lists
@@ -52,8 +49,6 @@
 			&nbsp;
 			<input type="submit" value="Add" size="50">
 		</form>
-	</body>
-</html>
 
 
 

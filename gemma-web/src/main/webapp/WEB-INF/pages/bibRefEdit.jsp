@@ -12,11 +12,8 @@
         </c:forEach></div>
     </c:if>
 </spring:bind>
-<html>
-<head>
+
 <title>Edit Bibligraphic Reference </title>
-  </head>
-<body>
 
 <c:set var="pageButtons">
     <td></td>
@@ -138,6 +135,5 @@ function onFormSubmit(theForm) {
 
 <validate:javascript formName="bibliographicReferenceForm"
     staticJavascript="false" />
-</body>
-</html>
+
 

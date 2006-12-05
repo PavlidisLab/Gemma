@@ -2,8 +2,7 @@
 <jsp:useBean id="goldenPathSequenceLoadCommand" scope="request"
 	class="ubic.gemma.web.controller.genome.GoldenPathSequenceLoadCommand" />
 
-<html>
-	<head>
+
 		<title><fmt:message
 				key="Load Golden Path sequence data into Gemma" /></title>
 <content tag="heading">
@@ -21,8 +20,7 @@
 			#progressBarBoxContent { width: 0; height: 20px; border-right: 1px solid #444444; background: #9ACB34; } 
 
 </style>
-	</head>
-	<body>
+
 		<h1>
 			Load Golden Path sequence data into Gemma
 		</h1>
@@ -109,4 +107,3 @@
 		<script type="text/javascript">
 	createIndeterminateProgressBar();
 </script>
-	</body>

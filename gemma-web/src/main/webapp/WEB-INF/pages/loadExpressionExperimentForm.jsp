@@ -3,15 +3,11 @@
 	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
 
 
-<html>
-	<head>
 		<title><fmt:message key="expressionExperiment.load.title" /></title>
 		<content tag="heading">
 		<fmt:message key="expressionExperiment.load.title" />
 		</content>
 
-	</head>
-	<body>
 		<spring:bind path="command.*">
 			<c:if test="${not empty status.errorMessages}">
 				<div class="error">
@@ -67,10 +63,6 @@
 				</tr>
 			</table>
 		</form>
-
-
-	</body>
-</html>
 
 
 <validate:javascript formName="expressionExperimentLoadCommand" staticJavascript="false" />

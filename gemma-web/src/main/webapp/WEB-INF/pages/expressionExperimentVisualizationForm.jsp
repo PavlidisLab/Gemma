@@ -4,6 +4,8 @@
 	scope="request"
 	class="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand" />
 
+<title> <fmt:message key="expressionExperimentVisualization.title" /> </title>
+
 <spring:bind path="expressionExperimentVisualizationCommand.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
@@ -17,11 +19,12 @@
 	</c:if>
 </spring:bind>
 
+
 <form method="post"
 	action="<c:url value="/expressionExperiment/expressionExperimentVisualization.html"/>">
 
 	<h2>
-		<fmt:message key="expressionExperiment.title" />
+		<fmt:message key="expressionExperimentVisualization.title" />
 	</h2>
 
 	<table cellspacing="10">

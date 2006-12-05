@@ -3,9 +3,8 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Iterator" %>
 <%@ page import="java.util.Collection" %>
-<html>
-<head> Search Gemme for Genes </head>
-<body>
+<title> Search Gemme for Genes </title>
+
 From here you can search the Gemma database for existing Genes.
 <BR />
 The search will be by:
@@ -24,6 +23,3 @@ The search will be by:
 <input type="text" name="searchString" />
 <input type="submit" value="Search">
 </form>
-
-
-</body>

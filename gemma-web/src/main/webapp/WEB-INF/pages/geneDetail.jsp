@@ -9,13 +9,11 @@
 <%@ page import="java.util.Iterator"%>
 <%@ page import="java.util.Map"%>
 <!-- Deprecated -->
-<html>
-	<head>
+
 		<title>Gene Detail</title>
 		<meta http-equiv="Content-Type"
 			content="text/html; charset=iso-8859-1">
-	</head>
-	<body>
+
 		<content tag="heading">
 		Gene Detail
 		</content>
@@ -200,5 +198,3 @@
 		}
 		%>
 
-	</body>
-</html>

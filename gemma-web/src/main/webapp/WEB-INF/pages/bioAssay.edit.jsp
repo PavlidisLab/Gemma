@@ -13,6 +13,8 @@
 	</c:if>
 </spring:bind>
 
+<title> <fmt:message key="pubmedSearch.heading" /> </title>
+
 <form method="post" action="<c:url value="/bioAssay/editBioAssay.html"/>">
 
 <table cellspacing="10">

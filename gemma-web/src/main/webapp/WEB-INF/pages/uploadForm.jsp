@@ -1,8 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="fileUpload" scope="request"
     class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload" />
-<html>
-    <head>
+
         <title><fmt:message key="upload.title" /></title>
         <content tag="heading">
         <fmt:message key="upload.heading" />
@@ -18,8 +17,6 @@
 			#progressBarBoxContent { width: 0; height: 20px; border-right: 1px solid #444444; background: #9ACB34; } 
 
 </style>
-    </head>
-    <body>
         <spring:bind path="fileUpload.*">
             <c:if test="${not empty status.errorMessages}">
                 <div class="error">
@@ -89,6 +86,4 @@ highlightFormElements();
 </script>
         <validate:javascript formName="fileUpload" staticJavascript="false" />
         <script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
-    </body>
-</html>
 

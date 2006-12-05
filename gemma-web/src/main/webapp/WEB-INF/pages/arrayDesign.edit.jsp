@@ -1,5 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
+<title> Edit Array Design </title>
+
 <spring:bind path="arrayDesign.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">

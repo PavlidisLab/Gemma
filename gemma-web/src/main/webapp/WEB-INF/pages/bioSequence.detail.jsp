@@ -2,9 +2,8 @@
 <jsp:useBean id="bioSequence" scope="request"
     class="ubic.gemma.model.genome.biosequence.BioSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>  <fmt:message key="bioSequence.details" /></head>
-    <body>
+  <title> <fmt:message key="bioSequence.details" /> </title>
+  
         <h2>
             <fmt:message key="bioSequence.details" />
         </h2>

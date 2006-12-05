@@ -5,13 +5,11 @@
 <%@ page import="java.util.Iterator"%>
 <%@ page import="ubic.gemma.model.genome.gene.CandidateGeneList"%>
 <%@ page import="ubic.gemma.model.genome.gene.CandidateGene"%>
-<html>
-	<head>
+
 		<title>Candidate Gene Lists</title>
 		<meta http-equiv="Content-Type"
 			content="text/html; charset=iso-8859-1">
-	</head>
-	<body bgcolor="#ffffff">
+
 		<content tag="heading">
 		Candidate Gene List Detail View
 		</content>
@@ -177,8 +175,7 @@
 
 
 		</form>
-	</body>
-</html>
+
 
 
 

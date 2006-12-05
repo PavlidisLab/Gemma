@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="arrayDesignSequenceAddCommand" scope="request"
 	class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddCommand" />
-<head>
+
 	<script type='text/javascript'
 		src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
@@ -11,7 +11,6 @@
 	<link rel="stylesheet" type="text/css" media="all"
 		href="<c:url value='/styles/progressbar.css'/>" />
 		<title>Associate sequences with an array design</title>
-</head>
 <h1>
 	Associate sequences with an array design
 </h1>

@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<html>
-	<head>
+
 		<title><fmt:message key="testdata.title" /></title>
 		
 		<content tag="heading">
@@ -15,8 +14,6 @@
 <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </style>
 
-	</head>
-	<body>
 
 		<p>
 			<fmt:message key="testdata.instructions" />
@@ -28,5 +25,3 @@
 
 		<script type="text/javascript">createIndeterminateProgressBar();</script>
 
-	</body>
-</html>

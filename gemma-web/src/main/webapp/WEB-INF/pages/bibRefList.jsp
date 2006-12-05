@@ -1,11 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<HEAD>
+
 <title> Bibligraphic Reference List</title>
-</HEAD>
-<BODY>
+
 <%-- I know this is webflow related, but it is needed here so when clicking "New Search" 
      we return to the pubMed.Search flow, which is a webflow.
 --%>
@@ -52,5 +50,4 @@
     value="New Search"></DIV>
 
 </DIV>
-</BODY>
-</HTML>
+

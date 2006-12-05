@@ -1,11 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<head>
+
 	<title><fmt:message key="pubmedSearch.title" /></title>
 	<content tag="heading">
 	<fmt:message key="pubmedSearch.heading" />
 	</content>
-</head>
 
 <h2>
 	Search for a reference

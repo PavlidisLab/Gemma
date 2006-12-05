@@ -2,9 +2,9 @@
 <jsp:useBean id="experimentalDesign" scope="request"
     class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>   <fmt:message key="experimentalDesign.details" /> </head>
-    <body>
+
+<title>  <fmt:message key="experimentalDesign.details" />  </title>
+
         <h2>
             <fmt:message key="experimentalDesign.details" />
         </h2>
@@ -121,5 +121,3 @@
         </authz:acl>
     </tr>
     </table>
-    </body>
-</html>

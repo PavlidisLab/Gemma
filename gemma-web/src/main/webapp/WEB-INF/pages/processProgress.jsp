@@ -1,18 +1,16 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<html>
-	<head>
-		<title>Wait...</title>
+
+		<title> <fmt:message key="processProgress.title" /> </title>
+		
 		<script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'> </script>
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 		<script type='text/javascript' src='/Gemma/scripts/progressbar.js'></script>
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
-	</head>
-	<body>
 
 		<h1>
-			Please wait...
+			<fmt:message key="processProgress.title" />
 		</h1>
 		<script type="text/javascript">
 			createIndeterminateProgressBar();
@@ -24,10 +22,6 @@
 			<input type="submit" value="cancel" />
 		</form>
 
-
-
-	</body>
-</html>
 
 
 

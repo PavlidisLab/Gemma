@@ -2,8 +2,8 @@
 <jsp:useBean id="experimentalFactor" scope="request"
     class="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-    <body>
+
+<title> <fmt:message key="experimentalFactor.details" /> </title>
         <h2>
             <fmt:message key="experimentalFactor.details" />
         </h2>
@@ -74,5 +74,3 @@
         </authz:acl>
     </TR>
     </table>
-    </body>
-</html>

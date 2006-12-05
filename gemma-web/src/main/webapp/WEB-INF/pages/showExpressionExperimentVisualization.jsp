@@ -2,9 +2,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <jsp:useBean id="expressionDataMatrix" scope="request"
     class="ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix" />
-<html>
+
 <title>  <fmt:message key="expression.visualization.results" /> </title>
-    <body>
+
         <h2>
             <fmt:message key="expression.visualization.results" />
         </h2>
@@ -31,5 +31,3 @@
                 <Gemma:expressionDataMatrix expressionDataMatrix="<%=expressionDataMatrix%>"/>
             </a>
         </div>
-    </body>
-</html>

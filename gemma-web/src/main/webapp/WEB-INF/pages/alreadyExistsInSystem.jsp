@@ -2,12 +2,8 @@
 <%@ page language="java" isErrorPage="true"%>
 <%-- $Id$ --%>
 
-<html>
-	<head>
 		<title>Data already exists in Gemma</title>
 
-	</head>
-	<body>
 		<content tag="heading">
 		Data already exists in Gemma
 		</content>
@@ -20,7 +16,4 @@
 			It looks like you tried to load data that Gemma thinks are already in the system. Please make sure your data are
 			unique, or flag the existing data for replacement.
 		</p>
-
-	</body>
-</html>
 

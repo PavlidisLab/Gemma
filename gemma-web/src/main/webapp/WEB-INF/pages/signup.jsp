@@ -4,7 +4,7 @@
 <content tag="heading">
 <fmt:message key="signup.heading" />
 </content>
-<body id="signup" />
+
 	<spring:bind path="user.*">
 		<c:if test="${not empty status.errorMessages}">
 			<div class="error">

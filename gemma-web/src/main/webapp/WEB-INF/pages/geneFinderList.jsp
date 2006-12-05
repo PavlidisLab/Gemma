@@ -1,12 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-    <head>
+
         <title>
             <fmt:message key="genes.title" />
         </title>
-    </head>
-    <body>
+
         <h2>
             Gene search for <b>${searchParameter}</b>
         </h2>
@@ -34,6 +32,3 @@
             <display:setProperty name="basic.empty.showtable" value="true" />      
         </display:table>
 
-
-    </body>
-</html>

@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<head>
 	<title><fmt:message key="userProfile.title" />
 	</title>
 	<content tag="heading">
@@ -8,8 +7,7 @@
 	</content>
 	<meta name="menu" content="UserMenu" />
 	<script type="text/javascript" src="<c:url value='/scripts/selectbox.js'/>"></script>
-</head>
-<body>
+
 	<spring:bind path="user.*">
 		<c:if test="${not empty status.errorMessages}">
 			<div class="error">
@@ -215,7 +213,7 @@
 		</ul>
 
 	</form>
-</body>
+
 <script type="text/javascript">
       Form.focusFirstElement($('userForm'));
     highlightFormElements();
@@ -238,4 +236,3 @@ function onFormSubmit(theForm) {
 
 <validate:javascript formName="user" staticJavascript="false" />
 <script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
-

@@ -16,6 +16,7 @@
 	</c:if>
 </spring:bind>
 
+<title> <fmt:message key="expressionExperiment.title" /> </title>
 <form method="post" action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
 
 

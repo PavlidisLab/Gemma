@@ -4,10 +4,8 @@
 <jsp:useBean id="arrayDesign" scope="request" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
 <!DOCTYPE html PUBLIC "-//W3C//Dtd html 4.01 transitional//EN">
-<html>
+<title>Array Design Details</title><content tag="heading">Array Design Details</content>
 
-	<head><title>Array Design Details</title><content tag="heading">Array Design Details</content></head>
-	<body>
 <!--  Summary of array design associations -->
 <table class='datasummary'>
 <caption>
@@ -163,5 +161,3 @@
 				</authz:acl>
 			</tr>
 		</table>
-	</body>
-</html>
