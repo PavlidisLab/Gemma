@@ -107,12 +107,12 @@ public class SimpleExpressionDataLoaderService {
         // ed.setDescription( metaData.getExperimentalDesignDescription() );
         // ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         // ef.setName( "Placeholder" );
-        // ef.setDescription( "This is a placeholder, awaiting curation" );
+        // ef.setDescription( "Awaiting curation" );
         // FactorValue fv = FactorValue.Factory.newInstance( ef );
         // fv.setValue( "default" );
         // ef.getFactorValues().add( fv );
         // ed.getExperimentalFactors().add( ef );
-        // experiment.setExperimentalDesign( ed );
+        //        experiment.setExperimentalDesign( ed );
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
