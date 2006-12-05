@@ -37,6 +37,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.PolarPlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.MatrixSeries;
@@ -44,6 +45,8 @@ import org.jfree.data.xy.MatrixSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.gemma.loader.util.converter.SimpleExpressionExperimentConverter;
@@ -139,40 +142,40 @@ public class VisualizeDataSetApp {
         frame.setVisible( true );
     }
 
-    // /**
-    // * @param title
-    // * @param dataCol
-    // * @param numProfiles
-    // */
-    // public void showProfilesPolarView( String title, Collection<double[]> dataCol, int numProfiles ) {
-    //
-    // if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
-    //
-    // JFreeChart chart = ChartFactory.createPolarChart( title, null, false, false, false );
-    //
-    // if ( dataCol.size() < numProfiles ) {
-    // log.info( "Collection smaller than number of elements. Will display " + DEFAULT_MAX_SIZE + " profiles." );
-    // numProfiles = DEFAULT_MAX_SIZE;
-    // }
-    //
-    // Iterator iter = dataCol.iterator();
-    // for ( int j = 0; j < numProfiles; j++ ) {
-    // double[] data = ( double[] ) iter.next();
-    // XYSeries series = new XYSeries( "" );
-    // for ( int i = 0; i < data.length; i++ ) {
-    // series.add( i, data[i] );
-    // }
-    // PolarPlot plot = ( PolarPlot ) chart.getPlot();
-    // plot.setDataset( new XYSeriesCollection( series ) );
-    // }
-    //
-    // ChartFrame frame = new ChartFrame( title, chart, true );
-    //
-    // // Display the window.
-    // frame.setLocationRelativeTo( null );
-    // frame.pack();
-    // frame.setVisible( true );
-    // }
+    /**
+     * @param title
+     * @param dataCol
+     * @param numProfiles
+     */
+    public void showProfilesPolarView( String title, Collection<double[]> dataCol, int numProfiles ) {
+
+        if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
+
+        JFreeChart chart = ChartFactory.createPolarChart( title, null, false, false, false );
+
+        if ( dataCol.size() < numProfiles ) {
+            log.info( "Collection smaller than number of elements. Will display " + DEFAULT_MAX_SIZE + " profiles." );
+            numProfiles = DEFAULT_MAX_SIZE;
+        }
+
+        Iterator iter = dataCol.iterator();
+        for ( int j = 0; j < numProfiles; j++ ) {
+            double[] data = ( double[] ) iter.next();
+            XYSeries series = new XYSeries( "" );
+            for ( int i = 0; i < data.length; i++ ) {
+                series.add( i, data[i] );
+            }
+            PolarPlot plot = ( PolarPlot ) chart.getPlot();
+            plot.setDataset( new XYSeriesCollection( series ) );
+        }
+
+        ChartFrame frame = new ChartFrame( title, chart, true );
+
+        // Display the window.
+        frame.setLocationRelativeTo( null );
+        frame.pack();
+        frame.setVisible( true );
+    }
 
     /**
      * @param title
@@ -257,33 +260,34 @@ public class VisualizeDataSetApp {
      */
     public static void main( String[] args ) {
 
-        // VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
-        //
-        // double[][] rawData = visualizeDataSet.parsePrepareAndConvertRawData();
-        //
-        // TODO - not using this visualizer anymore.
-        // ExpressionDataMatrixVisualizationService visualizationService = new
-        // ExpressionDataMatrixVisualizationService();
-        //
-        // ColorMatrix colorMatrix = visualizationService.createColorMatrix( rawData, Arrays
-        // .asList( visualizeDataSet.converter.getRowNames() ), Arrays.asList( visualizeDataSet.converter
-        // .getHeader() ) );
-        //
-        // visualizeDataSet.showDataMatrix( "aov.results-2-monocyte-data-bytime.bypat.data.sort", new JMatrixDisplay(
-        // colorMatrix ) );
-        //
-        // List<double[]> data = new ArrayList<double[]>();
-        //
-        // data.add( rawData[4] );
-        // data.add( rawData[13] );
-        // data.add( rawData[22] );
-        // data.add( rawData[26] );
-        // data.add( rawData[36] );
-        // visualizeDataSet.showProfilesLineChartView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
-        //
-        // visualizeDataSet
-        // .showProfilesPolarView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
+        VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
+
+        double[][] rawData = visualizeDataSet.parsePrepareAndConvertRawData();
+
+        ExpressionDataMatrixVisualizationService visualizationService = new ExpressionDataMatrixVisualizationService();
+
+        DoubleMatrixNamed m = new FastRowAccessDoubleMatrix2DNamed( rawData );
+        m.setRowNames( Arrays.asList( visualizeDataSet.converter.getRowNames() ) );
+        m.setColumnNames( Arrays.asList( visualizeDataSet.converter.getHeader() ) );
+        ColorMatrix colorMatrix = new ColorMatrix( m );
+        // ColorMatrix colorMatrix = visualizationService.createColorMatrix( rawData, new LinkedHashSet( Arrays
+        // .asList( visualizeDataSet.converter.getRowNames() ) ), new LinkedHashSet( Arrays
+        // .asList( visualizeDataSet.converter.getHeader() ) ) );
+
+        visualizeDataSet.showDataMatrix( "aov.results-2-monocyte-data-bytime.bypat.data.sort", new JMatrixDisplay(
+                colorMatrix ) );
+
+        List<double[]> data = new ArrayList<double[]>();
+
+        data.add( rawData[4] );
+        data.add( rawData[13] );
+        data.add( rawData[22] );
+        data.add( rawData[26] );
+        data.add( rawData[36] );
+
+        visualizeDataSet.showProfilesLineChartView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
+
+        visualizeDataSet.showProfilesPolarView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
 
     }
-
 }
