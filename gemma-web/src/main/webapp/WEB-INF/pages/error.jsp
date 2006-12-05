@@ -15,8 +15,6 @@
 			<fmt:message key="errorPage.heading" />
 		</h1>
 
-		<a href="mainMenu.html" title="Go back" name="back" onclick="history.back();return false">&#171; Back</a>
-
 		<%@ include file="/common/messages.jsp"%>
 
 		<%

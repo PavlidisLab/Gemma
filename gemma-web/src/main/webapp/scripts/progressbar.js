@@ -34,7 +34,7 @@ function updateIndeterminateProgress(data){
    if (previousMessage != data.description) {
 		previousMessage = data.description
 		
-		document.getElementById("progressTextArea").value += data.description + "\n";	
+		document.getElementById("progressTextArea").innerHTML += data.description + "\n";	
    	document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 	}
 	
@@ -62,7 +62,7 @@ function startProgress() {
 }
 function createIndeterminateProgressBar() {
 	determinate = 0;
-	var barId = createIndeterminateBarDetails(390,20,'white',1,'black','#FF9933',85,7,3,"");
+	var barId = createIndeterminateBarDetails(500,20,'white',1,'black','#FF9933',85,7,3,"");
 	
 }
 
@@ -71,24 +71,6 @@ function createDeterminateProgressBar(){
 	var barHtml = '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>';
 	document.write(barHtml);
 	
-}
-
-//Deprecated stuff that doesn't look pretty
-function moveProgress(count) {
-	document.getElementById("progressBarBoxContent").style.width = parseInt(count * 35) + "px";
-}
-function progressMotion() {
-
-   //move forward
-	for (i = 0; i < 10; i++) {
-		window.setTimeout("moveProgress(" + i + ")", 50 * i);
-	}
-	
-	//move backwards
-	for (j = 10; j > -1; j--) {
-		window.setTimeout("moveProgress(" + j + ")", (50 * (10 - j)) + 500);
-	}
-	window.setTimeout("progressMotion()", 1000);
 }
 
 
@@ -110,7 +92,7 @@ t+=(ie)?'filter:alpha(opacity='+(100-i*(100/blocks))+')':'-Moz-opacity:'+((100-i
 t+='"></span>';
 }
 t+='</span></div>';
-var ipbHeader = '<div id="progressBar"> <div id="theMeter">	<div id="progressBarText"><textarea id="progressTextArea" name="" rows=5 cols=60 readonly> </textarea>	</div>';
+var ipbHeader = '<div id="progressBar"> <div id="theMeter">	<div id="progressBarText"> <div class="clob" id="progressTextArea"> </div>	</div>';
 var ipbFooter = '</div>	</div>	<form> <input type="hidden" name="taskId\" />		</form> ';
 document.write(ipbHeader + t + ipbFooter);
 var bA=(ie)?document.all['blocks'+N]:document.getElementById('blocks'+N);
