@@ -216,7 +216,7 @@ Results for
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
 <!-- Toggles for the expand/hide datasetList table -->
-<span  valign="center" name="datasetList" onclick="return toggleVisibility('datasetList')">
+<span name="datasetList" onclick="return toggleVisibility('datasetList')">
 	<img src="/Gemma/images/chart_organisation_add.png" />
 </span>
 <span name="datasetList" style="display:none" onclick="return toggleVisibility('datasetList')">
@@ -234,7 +234,7 @@ Results for
 <br />
 <div name="datasetList" style="display:none">
 	
-	<display:table pagesize="50" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
+	<display:table pagesize=100" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
