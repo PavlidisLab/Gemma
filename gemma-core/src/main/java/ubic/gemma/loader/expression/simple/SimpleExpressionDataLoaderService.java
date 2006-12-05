@@ -47,7 +47,10 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -98,6 +101,18 @@ public class SimpleExpressionDataLoaderService {
         experiment.setName( metaData.getName() );
         experiment.setDescription( metaData.getDescription() );
         experiment.setSource( "Import via matrix flat file" );
+
+        // ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        // ed.setName( metaData.getExperimentalDesignName() );
+        // ed.setDescription( metaData.getExperimentalDesignDescription() );
+        // ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        // ef.setName( "Placeholder" );
+        // ef.setDescription( "This is a placeholder, awaiting curation" );
+        // FactorValue fv = FactorValue.Factory.newInstance( ef );
+        // fv.setValue( "default" );
+        // ef.getFactorValues().add( fv );
+        // ed.getExperimentalFactors().add( ef );
+        // experiment.setExperimentalDesign( ed );
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
@@ -301,6 +316,9 @@ public class SimpleExpressionDataLoaderService {
         result.setGeneralType( GeneralType.QUANTITATIVE );
         result.setType( metaData.getType() );
         result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
+        result.setIsPreferred( Boolean.TRUE );
+        result.setIsNormalized( Boolean.TRUE );
+        result.setIsBackgroundSubtracted( Boolean.TRUE );
         result.setScale( metaData.getScale() );
         result.setIsBackground( false );
         return result;
@@ -320,12 +338,16 @@ public class SimpleExpressionDataLoaderService {
         bad.setName( "For " + ee.getName() );
         bad.setDescription( "Generated from flat file" );
 
+        // FactorValue factorValue = ee.getExperimentalDesign().getExperimentalFactors().iterator().next()
+        // .getFactorValues().iterator().next();
+
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Object columnName = matrix.getColName( i );
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             bioMaterial.setName( columnName.toString() );
             bioMaterial.setSourceTaxon( taxon );
+            // bioMaterial.getFactorValues().add( factorValue );
             Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
             bioMaterials.add( bioMaterial );
 

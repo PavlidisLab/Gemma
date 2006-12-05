@@ -50,6 +50,10 @@ public class SimpleExpressionExperimentMetaData {
 
     private String quantitationTypeDescription;
 
+    private String experimentalDesignName = "Unknown";
+
+    private String experimentalDesignDescription = "No information available";
+
     private ScaleType scale;
 
     private GeneralType generalType;
@@ -231,6 +235,22 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setProbeIdsAreImageClones( boolean probeIdsAreImageClones ) {
         this.probeIdsAreImageClones = probeIdsAreImageClones;
+    }
+
+    public String getExperimentalDesignDescription() {
+        return experimentalDesignDescription;
+    }
+
+    public void setExperimentalDesignDescription( String experimentalDesignDescription ) {
+        this.experimentalDesignDescription = experimentalDesignDescription;
+    }
+
+    public String getExperimentalDesignName() {
+        return experimentalDesignName;
+    }
+
+    public void setExperimentalDesignName( String experimentalDesignName ) {
+        this.experimentalDesignName = experimentalDesignName;
     }
 
 }
