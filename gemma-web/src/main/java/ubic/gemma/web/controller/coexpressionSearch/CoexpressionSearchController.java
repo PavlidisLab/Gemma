@@ -252,8 +252,18 @@ public class CoexpressionSearchController extends BaseFormController {
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedGenes, new CoexpressionComparator()  );
         
-        ArrayList<ExpressionExperimentValueObject> eeVos = new ArrayList<ExpressionExperimentValueObject>(); 
-        eeVos.addAll( coexpressions.getExpressionExperiments() );
+        // load expression experiment value objects
+        Collection<Long> eeIds = new ArrayList<Long>();
+        Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
+        for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
+            eeIds.add( Long.parseLong( eeVo.getId() ) );
+        }
+        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
+        // load in array design value objects for each expression experiment
+        for ( ExpressionExperimentValueObject object : eeVos ) {
+            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+            ee.setId( Long.parseLong( object.getId()) );
+        }
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
         
         // no genes are coexpressed

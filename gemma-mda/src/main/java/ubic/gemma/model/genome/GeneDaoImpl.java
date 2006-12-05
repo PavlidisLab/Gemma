@@ -361,7 +361,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeVo.setShortName( scroll.getString( 4 ) );
                 eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
-                eeMap.put( Long.parseLong( eeVo.getId()), eeVo );
             }
             
             // do query joining coexpressed genes through the secondVector to the firstVector
@@ -395,12 +394,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeVo.setShortName( scroll.getString( 4 ) );
                 eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
-                eeMap.put( Long.parseLong( eeVo.getId()), eeVo );
             }
             
-            // add the distinct set of expression experiments involved
-            // in the query to coexpression data
-            coexpressions.setExpressionExperiments( eeMap.values() );
             // add count of original matches to coexpression data
             coexpressions.setLinkCount( geneMap.size() );
             // parse out stringency failures
@@ -408,12 +403,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             for ( Object object : keys ) {
                 Long key = (Long) object;
                 if (geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency) {
+                    // add in coexpressions that match stringency
                     coexpressions.getCoexpressionData().add( geneMap.get( key ) );
+                    // add in expression experiments that match stringency
+                    Collection eeVos = geneMap.get( key ).getExpressionExperimentValueObjects();
+                    for ( Object o : eeVos ) {
+                        ExpressionExperimentValueObject ee = (ExpressionExperimentValueObject) o;
+                        eeMap.put( Long.parseLong(ee.getId()), ee );
+                    }
                 }
             }
             // add count of pruned matches to coexpression data
             coexpressions.setStringencyLinkCount( coexpressions.getCoexpressionData().size() );
-
+            // add the distinct set of expression experiments involved
+            // in the query to coexpression data
+            coexpressions.setExpressionExperiments( eeMap.values() );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

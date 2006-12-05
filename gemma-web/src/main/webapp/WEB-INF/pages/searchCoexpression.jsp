@@ -18,6 +18,9 @@
 
 <c:if test="${numCoexpressedGenes == null}">
 	<title>Coexpression Search</title> 
+	<h2>
+		Search for coexpressed genes:
+	</h2>
 </c:if>
 
 <c:if test="${numCoexpressedGenes != null}">
@@ -59,27 +62,13 @@ Results for
 		</td>
 	</tr>
 	<tr>
-		<td>
-			Datasets involved
-		</td>
-		<td>
-			<c:if test="${numLinkedExpressionExperiments != 0}">
-			<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=
-				<c:forEach items="${expressionExperiments}" var="expressionExperiment">
-					${expressionExperiment.id},
-				</c:forEach>
-				">
-			<c:out value="${numLinkedExpressionExperiments}" />
-			</a>
-			</c:if>
-			<c:if test="${numLinkedExpressionExperiments == 0}">
-				<c:out value="${numLinkedExpressionExperiments}" />
-			</c:if>
+		<td colspan=2>
+			Links
 		</td>
 	</tr>
 	<tr>
 		<td>
-			Unique links
+			&nbsp;&nbsp;Found
 		</td>
 		<td>
 			<c:out value="${numMatchedLinks}" />
@@ -87,7 +76,7 @@ Results for
 	</tr>
 	<tr>
 		<td>
-			Links that met stringency
+			&nbsp;&nbsp;Met stringency
 		</td>
 		<td>
 			<c:out value="${numCoexpressedGenes}" />
@@ -97,15 +86,10 @@ Results for
 </table>
 </c:if>
 
-
-
 <form method="post" name="coexpressionSearch"
 	action="<c:url value="/searchCoexpression.html"/>">
 
 	<table class='searchTable'>
-		<tr>
-			<td colspan=3 align="center"> <b>Search for Coexpression </b></td>
-		</tr>
 		<tr>
 			<td class='label' valign="top">
 				<b> Gene Name </b>
@@ -227,8 +211,52 @@ Results for
 		
 	</table>
 
+<c:if test="${numCoexpressedGenes != null}">
+<c:if test="${numLinkedExpressionExperiments != 0}">
+<script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
-	<br />
+<!-- Toggles for the expand/hide datasetList table -->
+<span  valign="center" name="datasetList" onclick="return toggleVisibility('datasetList')">
+	<img src="/Gemma/images/chart_organisation_add.png" />
+</span>
+<span name="datasetList" style="display:none" onclick="return toggleVisibility('datasetList')">
+	<img src="/Gemma/images/chart_organisation_delete.png" />
+</span>
+</c:if>
+<b> 
+<c:out value="${numLinkedExpressionExperiments}" /> datasets found in search 
+<c:if test="${numLinkedExpressionExperiments != 0}">
+<a href="#" onclick="return toggleVisibility('datasetList')" >(details)</a> 
+</c:if>
+</b>
+
+
+<br />
+<div name="datasetList" style="display:none">
+	
+	<display:table pagesize="50" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
+		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+
+			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+
+			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+
+			<authz:authorize ifAnyGranted="admin">
+	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+			</authz:authorize>
+		
+
+ 			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>
+</div>
+</c:if>
+
+
+<br />
+	
+	
 
 <display:table name="coexpressedGenes"
 	class="list" sort="list" requestURI="" id="foundGenes" 
