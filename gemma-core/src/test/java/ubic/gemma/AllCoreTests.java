@@ -44,7 +44,7 @@ import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.TaxonUtilityTest;
 import ubic.gemma.util.progress.ProgressAppenderTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizerTest;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizationServiceTest;
 
 /**
  * Tests for gemma-core
@@ -59,7 +59,7 @@ public class AllCoreTests {
         TestSuite suite = new TestSuite( "Tests for gemma-core" );
 
         suite.addTestSuite( ProgressIntegrationTest.class );
-        
+
         suite.addTest( AllPubMedTests.suite() );
         suite.addTest( AllGeoTests.suite() );
         suite.addTest( AllMageTests.suite() );
@@ -85,13 +85,15 @@ public class AllCoreTests {
         suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
+        suite.addTestSuite( ExpressionDataMatrixVisualizationServiceTest.class );
+
         suite.addTestSuite( ProgressAppenderTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );
         suite.addTestSuite( GenomePersisterTest.class );
 
         suite.addTestSuite( ExpressionExperimentDeleteTest.class );
-        
+
         suite.addTestSuite( TaxonUtilityTest.class );
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
