@@ -189,11 +189,25 @@ public class ExpressionDataMatrixVisualizationService {
      * More information on z-scores can be found at http://en.wikipedia.org/wiki/Z_score.
      * </p>
      * 
-     * @param expressionDataDoubleMatrix
+     * @param expressionDataMatrix
      * @return ExpressionDataMatrix
      */
-    public ExpressionDataMatrix normalizeExpressionDataDoubleMatrixByRowMean( ExpressionDataMatrix expressionDataMatrix ) {
-        // TODO move me?
+    public ExpressionDataMatrix normalizeExpressionDataDoubleMatrixByRowMean(
+            ExpressionDataDoubleMatrix expressionDataMatrix ) {
+        return this.standardizeExpressionDataDoubleMatrix( expressionDataMatrix, null );
+    }
+
+    /**
+     * Normalize (centered on the mean) and clip the data. If the threshold is null, the data will not be clipped. See
+     * {@link normalizeExpressionDataDoubleMatrixByRowMean}.
+     * 
+     * @param expressionDataDoubleMatrix
+     * @param threshold The threhold at which the data will be clipped (ie 2 clips the data at -2 and +2).
+     * @return ExpressionDataMatrix
+     */
+    public ExpressionDataMatrix standardizeExpressionDataDoubleMatrix( ExpressionDataMatrix expressionDataMatrix,
+            Double threshold ) {
+
         ExpressionDataMatrix normalizedExpressionDataMatrix = expressionDataMatrix;
 
         Object[][] matrix = normalizedExpressionDataMatrix.getMatrix();
@@ -219,10 +233,38 @@ public class ExpressionDataMatrixVisualizationService {
                 ndata[j] = ( ddata[j] - mean ) / variance;
             }
 
+            if ( threshold != null ) ndata = clipData( ndata, threshold );
+
             ( ( ExpressionDataDoubleMatrix ) normalizedExpressionDataMatrix ).setRow( i, ndata );
         }
 
         return normalizedExpressionDataMatrix;
 
+    }
+
+    /**
+     * Clips the data at the positive and negative values of the threshold.
+     * 
+     * @param data
+     * @param threshold
+     * @return Double[]
+     */
+    private Double[] clipData( Double[] data, double threshold ) {
+
+        threshold = Math.abs( threshold );
+
+        double upperLimit = threshold;
+
+        double lowerLimit = -1 * threshold;
+
+        for ( int i = 0; i < data.length; i++ ) {
+
+            if ( data[i] > upperLimit ) {
+                data[i] = upperLimit;
+            } else if ( data[i] < lowerLimit ) {
+                data[i] = lowerLimit;
+            }
+        }
+        return data;
     }
 }

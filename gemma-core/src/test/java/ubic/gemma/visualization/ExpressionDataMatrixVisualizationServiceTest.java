@@ -161,7 +161,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
                 .getBean( "expressionDataMatrixVisualizationService" );
 
         ExpressionDataMatrix normalizedExpressonDataMatrix = expressionDataMatrixVisualizationService
-                .normalizeExpressionDataDoubleMatrixByRowMean( expressionDataMatrix );
+                .standardizeExpressionDataDoubleMatrix( expressionDataMatrix, null );
 
         assertEquals( normalizedExpressonDataMatrix.columns(), expressionDataMatrix.columns() );
 
