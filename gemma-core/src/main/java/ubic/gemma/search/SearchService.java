@@ -81,6 +81,35 @@ public class SearchService {
     private Compass arrayBean;
 
     /**
+     * combines the compass style search and the db style search and returns 1 combined list with no duplicates.
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    public List<Gene> geneSearch( String searchString ) throws Exception {
+
+        List<Gene> geneDbList = geneDbSearch( searchString );
+        List<Gene> geneCompassList = compassGeneSearch( searchString );
+
+        // If either search has no results return the other list
+        if ( geneDbList.isEmpty() ) return geneCompassList;
+
+        if ( geneCompassList.isEmpty() ) return geneDbList;
+
+        // Both searchs aren't empty at this point. so just check for duplicates
+        List<Gene> combinedGeneList = new ArrayList<Gene>();
+        combinedGeneList.addAll( geneDbList );
+
+        for ( Gene gene : geneCompassList ) {
+            if ( !geneDbList.contains( gene ) ) combinedGeneList.add( gene );
+        }
+
+        //returned combined list
+        return combinedGeneList;
+    }
+
+    /**
      * searchs the DB for genes that exactly match the given search string searches geneProducts, gene and bioSequence
      * tables
      * 
@@ -159,7 +188,6 @@ public class SearchService {
         return convert2GeneList( searchResults.getHits() );
     }
 
-    // fixme: there should be a static method in the java package to do this. Just need to find it. :)
     protected List<Gene> convert2GeneList( CompassHit[] anArray ) {
 
         ArrayList<Gene> converted = new ArrayList<Gene>( anArray.length );

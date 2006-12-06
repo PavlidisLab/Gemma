@@ -40,7 +40,6 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="searchService" ref="searchService"
- 
  */
 public class GeneFinderController extends BaseFormController {
     
@@ -86,11 +85,9 @@ public class GeneFinderController extends BaseFormController {
         
               
         ModelAndView mav = new ModelAndView("geneFinderList");
-        log.info( "Attempting exact DB query" );
-        mav.addObject( "genes", searchService.geneDbSearch( searchString ) );
-        log.info( "Attempting loose compass query" );
-        mav.addObject( "compassGenes", searchService.compassGeneSearch( searchString ) );
-                
+        log.info( "Attempting gene search" );
+        mav.addObject( "genes", searchService.geneSearch( searchString ) );
+                        
         return mav;
     }
 
