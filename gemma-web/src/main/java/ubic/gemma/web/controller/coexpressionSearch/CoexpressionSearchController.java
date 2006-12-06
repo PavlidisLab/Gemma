@@ -23,28 +23,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List; 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -258,7 +254,10 @@ public class CoexpressionSearchController extends BaseFormController {
         for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
             eeIds.add( Long.parseLong( eeVo.getId() ) );
         }
-        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
+        Collection<ExpressionExperimentValueObject> eeVos = new ArrayList<ExpressionExperimentValueObject>();
+        if (eeIds.size() > 0) {
+            eeVos = expressionExperimentService.loadValueObjects( eeIds );
+        }
         // load in array design value objects for each expression experiment
         for ( ExpressionExperimentValueObject object : eeVos ) {
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
