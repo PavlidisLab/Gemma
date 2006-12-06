@@ -509,21 +509,24 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( list.next() ) {
-                ArrayDesignValueObject v = new ArrayDesignValueObject();
-                v.setId( list.getLong( 0 ) );
-                v.setName( list.getString( 1 ) );
-                v.setShortName( list.getString( 2 ) );
-                TechnologyType color = (TechnologyType) list.get( 3 );
-                v.setColor( color.getValue() );
-                //v.setTaxon( list.getString( 3 ) );
-                
-                
-                
-                //v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
-                v.setExpressionExperimentCount( (Long) eeCounts.get( v.getId() ) );
+            
+            if (list != null) {
+                while ( list.next() ) {
+                    ArrayDesignValueObject v = new ArrayDesignValueObject();
+                    v.setId( list.getLong( 0 ) );
+                    v.setName( list.getString( 1 ) );
+                    v.setShortName( list.getString( 2 ) );
+                    TechnologyType color = (TechnologyType) list.get( 3 );
+                    v.setColor( color.getValue() );
+                    //v.setTaxon( list.getString( 3 ) );
 
-                vo.add( v );
+
+
+                    //v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
+                    v.setExpressionExperimentCount( (Long) eeCounts.get( v.getId() ) );
+
+                    vo.add( v );
+                }
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
