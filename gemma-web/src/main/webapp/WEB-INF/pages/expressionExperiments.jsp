@@ -4,13 +4,13 @@
 		<title><fmt:message key="expressionExperiments.title" /></title>
 
 	<form name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
-			<h4> Enter search criteria for finding a specific expression experiment here </h4>
+			<h4> Enter search criteria for finding a specific dataset here </h4>
 			<input type="text" name="filter" size="78" />
 			<input type="submit" value="Find"/>			
 		</form>
 	
 		<h3>
-			Displaying <c:out value="${numExpressionExperiments}" /> Expression Experiments		
+			Displaying  <b> <c:out value="${numExpressionExperiments}" /> </b> Datasets		
 		</h3>		
 		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 

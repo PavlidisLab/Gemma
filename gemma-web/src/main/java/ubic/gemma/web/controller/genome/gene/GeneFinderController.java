@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.genome.gene;
 
 import java.util.Comparator;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -81,12 +82,15 @@ public class GeneFinderController extends BaseFormController {
 //        }
         
 
-        
+        List<Gene> geneResults = searchService.geneSearch( searchString );
         
               
         ModelAndView mav = new ModelAndView("geneFinderList");
+        mav.addObject( "searchParameter", searchString );
+        mav.addObject( "numGeans", geneResults.size() );
         log.info( "Attempting gene search" );
-        mav.addObject( "genes", searchService.geneSearch( searchString ) );
+        mav.addObject( "genes", geneResults );
+        
                         
         return mav;
     }

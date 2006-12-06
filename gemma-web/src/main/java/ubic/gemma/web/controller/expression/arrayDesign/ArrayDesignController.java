@@ -169,7 +169,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Array Designs" );
+            this.saveMessage( request, "Displaying all Arrays" );
             arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
         }
 
@@ -223,8 +223,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         if ( assays.size() != 0 ) {
             // String eeName = ( ( BioAssay ) assays.iterator().next() )
             // todo tell user what EE depends on this array design
-            addMessage( request, "Array Design " + arrayDesign.getName()
-                    + " can't be Deleted. ExpressionExperiments depend on it.", new Object[] { messageName,
+            addMessage( request, "Array  " + arrayDesign.getName()
+                    + " can't be deleted. Dataset has a dependency on this Array.", new Object[] { messageName,
                     arrayDesign.getName() } );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
@@ -314,11 +314,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      
                 ArrayDesign ad = (ArrayDesign) command;
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Deleting Array Design: "
+                        .getAuthentication().getName(), "Deleting Array: "
                         + ad.getShortName());
                             
                 arrayDesignService.remove( ad );
-                saveMessage( "Array Design "+ad.getShortName()  +" removed from Database." );                
+                saveMessage( "Array "+ad.getShortName()  +" removed from Database." );                
                 ad = null;
 
 

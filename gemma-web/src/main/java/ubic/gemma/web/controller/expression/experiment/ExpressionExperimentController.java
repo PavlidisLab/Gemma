@@ -63,7 +63,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
     private SearchService searchService;
 
-    private final String messagePrefix = "Expression experiment with id";
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
     /**
@@ -102,7 +101,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             list += ee.getId() + ",";
         
         this.saveMessage( request, "Search Criteria: " + filter );
-        this.saveMessage( request, searchResults.size() + " Expression Experiments matched your search." );
+        this.saveMessage( request, searchResults.size() + " Datasets matched your search." );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ));
     }
 
@@ -250,7 +249,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Expression Experiments" );
+            this.saveMessage( request, "Displaying all Datasets" );
             expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
         }
 
@@ -324,10 +323,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 ExpressionExperiment ee = ( ExpressionExperiment ) command;
                 expressionExperimentService.thawLite( ee );
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Deleting expression experiment: " + ee.getId() );
+                        .getAuthentication().getName(), "Deleting dataset: " + ee.getId() );
 
                 expressionExperimentService.delete( ee );
-                saveMessage( "Expression Experiment " + ee.getShortName() + " removed from Database" );
+                saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
                 ee = null;
 
                 ProgressManager.destroyProgressJob( job );

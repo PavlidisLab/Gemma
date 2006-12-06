@@ -5,15 +5,22 @@
             <fmt:message key="genes.title" />
         </title>
 
-        <h2>
-            Gene search for <b>${searchParameter}</b>
-        </h2>
+<form name="geneSearch" action="geneFinder.html" method="POST">
+Search again:
+<input type="text" name="searchString" size=80/>
+<input type="submit" value="Search">
+</form>
+<br/> <br/>
 
+        <h2>
+            Your gene search for <b>${searchParameter}</b> yielded <b>${numGeans}</b> results
+        </h2>
+<br/>
 	    <display:table name="genes" class="list" 
 	    	requestURI="" 
 	    	id="genesList"
             decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper" 
-            pagesize="20">	
+            pagesize="40">	
 			<display:column property="nameLink" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
 			<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />			
