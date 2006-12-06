@@ -85,7 +85,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
-    private final int MAX_ELEMENTS_TO_VISUALIZE = 70;
+    private static final int MAX_ELEMENTS_TO_VISUALIZE = 70;
+    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 2 );
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
@@ -240,8 +241,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             log.info( "Cancelled" );
 
             if ( id != null ) {
-                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                        + id ) );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
@@ -301,9 +302,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             return processErrors( request, response, command, errors, message );
         }
 
-        /* normalize the expression data matrix */
-        expressionDataMatrix = expressionDataMatrixVisualizationService
-                .normalizeExpressionDataDoubleMatrixByRowMean( expressionDataMatrix );
+        /* normalize and standardize the expression data matrix */
+        expressionDataMatrix = expressionDataMatrixVisualizationService.standardizeExpressionDataDoubleMatrix(
+                expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
 
         /* return the model and view */
         ModelAndView mav = new ModelAndView( getSuccessView() );
