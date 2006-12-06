@@ -594,6 +594,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
         Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
+        // sanity check
+        if (ids == null || ids.size() == 0) {
+            return vo;
+        }
         final String queryString = "select ee.id as id, "
                 + "ee.name as name, "
                 + "ee.accession.externalDatabase.name as externalDatabaseName, "

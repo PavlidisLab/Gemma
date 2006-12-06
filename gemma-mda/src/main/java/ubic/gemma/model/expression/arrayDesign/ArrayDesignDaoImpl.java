@@ -442,11 +442,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+        Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
+        // sanity check
+        if (ids == null || ids.size() == 0) {
+            return vo;
+        }
+        
         // get the expression experiment counts
         Map eeCounts = this.getExpressionExperimentCountMap();
         // get the composite sequence counts
         //Map csCounts = this.getCompositeSequenceCountMap();
-        Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
+
         // removed join from taxon as it is slowing down the system
         final String queryString = "select ad.id as id, " +
                 " ad.name as name, " +
