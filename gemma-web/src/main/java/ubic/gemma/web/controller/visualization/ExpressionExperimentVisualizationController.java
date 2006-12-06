@@ -49,6 +49,12 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
 
     private String type = null;
 
+    private static final String DEFAULT_CONTENT_TYPE = "image/png";
+
+    private static final String HEAT_MAP_IMAGE_TYPE = "heatmap";
+
+    // private static final String EXPRESSION_PROFILE_IMAGE_TYPE = "profile";
+
     /**
      * @param request
      * @param response
@@ -60,30 +66,17 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
 
         init( request, response );
 
-        String title = null;
         OutputStream out = null;
         try {
             out = response.getOutputStream();
-            if ( type.equalsIgnoreCase( "matrix" ) ) {
-                title = "Heat Map of Expression Values";
-                // JMatrixDisplay display = createHeatMap( title, expressionDataMatrix );
+            if ( type.equalsIgnoreCase( HEAT_MAP_IMAGE_TYPE ) ) {
                 ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = new ExpressionDataMatrixVisualizationService();
-                JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( title,
-                        expressionDataMatrix );
+                JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
-                    response.setContentType( "image/png" );
+                    response.setContentType( DEFAULT_CONTENT_TYPE );
                     display.writeOutAsPNG( out, true, true );
                 }
             }
-            // else if ( type.equalsIgnoreCase( "profile" ) ) {
-            // title = "Expression Profiles";
-            // JFreeChart chart = createXYLineChart( title, httpExpressionDataMatrixVisualizer
-            // .getRowData( expressionDataMatrix ), DEFAULT_MAX_SIZE );
-            // if ( chart != null ) {
-            // response.setContentType( "image/png" );
-            // ChartUtilities.writeChartAsPNG( out, chart, 400, 300 );
-            // }
-            // }
         } catch ( Exception e ) {
             log.error( "Error is: " );
             e.printStackTrace();

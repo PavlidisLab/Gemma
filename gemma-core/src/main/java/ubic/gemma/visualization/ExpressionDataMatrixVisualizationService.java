@@ -63,11 +63,10 @@ public class ExpressionDataMatrixVisualizationService {
     /**
      * Generates a color mosaic (also known as a heat map).
      * 
-     * @param title
      * @param expressionDataMatrix
      * @return JMatrixDisplay
      */
-    public JMatrixDisplay createHeatMap( String title, ExpressionDataMatrix expressionDataMatrix ) {
+    public JMatrixDisplay createHeatMap( ExpressionDataMatrix expressionDataMatrix ) {
 
         if ( expressionDataMatrix == null )
             throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrix" );

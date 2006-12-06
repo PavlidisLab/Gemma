@@ -172,12 +172,10 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
      */
     public void testCreateHeatMap() {
 
-        String title = "A test Heat Map";
-
         ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
                 .getBean( "expressionDataMatrixVisualizationService" );
 
-        JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( title, expressionDataMatrix );
+        JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
 
         assertNotNull( display );
 

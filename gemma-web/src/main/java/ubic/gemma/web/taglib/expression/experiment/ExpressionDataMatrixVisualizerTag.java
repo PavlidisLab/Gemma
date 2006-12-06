@@ -84,7 +84,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             StringBuilder buf = new StringBuilder();
 
             // TODO read these in
-            String type = "matrix";
+            String type = "heatmap";
             HttpSession session = this.pageContext.getSession();
             session.setAttribute( "type", type );
             session.setAttribute( "expressionDataMatrix", expressionDataMatrix );
