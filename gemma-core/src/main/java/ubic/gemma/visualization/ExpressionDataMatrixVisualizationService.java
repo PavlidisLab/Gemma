@@ -250,7 +250,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @return Double[]
      */
     private Double[] clipData( Double[] data, double threshold ) {
-
+        // FIXME how are we handling NAN?
         threshold = Math.abs( threshold );
 
         double upperLimit = threshold;
@@ -259,9 +259,9 @@ public class ExpressionDataMatrixVisualizationService {
 
         for ( int i = 0; i < data.length; i++ ) {
 
-            if ( data[i] > upperLimit ) {
+            if ( !Double.isNaN( data[i] ) && data[i] > upperLimit ) {
                 data[i] = upperLimit;
-            } else if ( data[i] < lowerLimit ) {
+            } else if ( !Double.isNaN( data[i] ) && data[i] < lowerLimit ) {
                 data[i] = lowerLimit;
             }
         }
