@@ -22,6 +22,8 @@ package ubic.gemma.model.expression.bioAssay;
 
 import java.util.Collection;
 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+
 /**
  * @author pavlidis
  * @author keshav
@@ -96,6 +98,24 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     protected Collection handleFindBioAssayDimensions( BioAssay bioAssay ) throws Exception {
         if ( bioAssay.getId() == null ) throw new IllegalArgumentException( "BioAssay must be persistent" );
         return this.getBioAssayDao().findBioAssayDimensions( bioAssay );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleAssociateBioMaterial(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    protected boolean handleAssociateBioMaterial( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleRemoveBioMaterial(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    protected boolean handleRemoveBioMaterial( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }
