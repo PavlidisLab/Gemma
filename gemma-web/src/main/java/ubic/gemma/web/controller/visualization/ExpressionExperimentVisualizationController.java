@@ -45,10 +45,6 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    private ExpressionDataMatrix expressionDataMatrix = null;
-
-    private String type = null;
-
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
 
     private static final String HEAT_MAP_IMAGE_TYPE = "heatmap";
@@ -64,7 +60,11 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
-        init( request, response );
+        String type = ( String ) request.getParameter( "type" );
+
+        String id = ( String ) request.getParameter( "id" );
+        ExpressionDataMatrix expressionDataMatrix = ( ExpressionDataMatrix ) request.getSession().getAttribute( id );
+        log.debug( "attribute \"" + id + "\" from tag: " + expressionDataMatrix );
 
         OutputStream out = null;
         try {
@@ -84,6 +84,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             if ( out != null ) {
                 try {
                     out.close();
+                    request.getSession().removeAttribute( id );
                 } catch ( IOException e ) {
                     log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
                 }
@@ -91,19 +92,5 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         }
 
         return null; // nothing to return;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return OutputStream
-     */
-    private void init( HttpServletRequest request, HttpServletResponse response ) {
-
-        type = ( String ) request.getSession().getAttribute( "type" );
-        log.debug( "attribute \"type\" from tag: " + type );
-
-        expressionDataMatrix = ( ExpressionDataMatrix ) request.getSession().getAttribute( "expressionDataMatrix" );
-        log.debug( "attribute \"expressionDataMatrix\" from tag: " + expressionDataMatrix );
     }
 }
