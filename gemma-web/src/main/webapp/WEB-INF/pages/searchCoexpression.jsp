@@ -234,7 +234,7 @@ Results for
 <br />
 <div name="datasetList" style="display:none">
 	
-	<display:table pagesize=100" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
+	<display:table pagesize="100" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
