@@ -320,7 +320,15 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 r = ( DoubleMatrixNamed ) missingValueFilter( dataMatrix,eeDoubleMatrix, ee);
             }
     	}
+    	
     	if(techType.equals(TechnologyTypeEnum.ONECOLOR)){
+        	if ( minPresentFractionIsSet ) {
+                log.info( "Filtering out genes that are missing too many values" );
+                RowMissingFilter x = new RowMissingFilter();
+                x.setMinPresentFraction( minPresentFraction );
+                r = (DoubleMatrixNamed)x.filter(r);
+            }
+
     		if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do this
     			// as well as affy filtering.
     			log.info( "Filtering out genes with low expression for " + ee.getShortName() );
@@ -330,6 +338,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     			x.setRemoveAllNegative( true ); // todo: fix
     			x.setUseAsFraction( true );
     			r = ( DoubleMatrixNamed ) x.filter( r );
+    			
     		}
     		if(arrayDesign.getName().toUpperCase().contains("AFFYMETRIX")){
     			log.info( "Filtering by Affymetrix probe name for " + ee.getShortName());
@@ -442,6 +451,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 						}
 					} catch (Exception e) {
 						errorObjects.add( ee + ": " + e.getMessage() );
+						e.printStackTrace();
 						log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
 					}
 				}
@@ -453,7 +463,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 					while ((accession = br.readLine()) != null) {
 						if (StringUtils.isBlank(accession))
 							continue;
-						expressionExperiment = eeService.findByShortName(accession);
+						if(accession.trim().startsWith("GSE"))
+							expressionExperiment = eeService.findByShortName(accession);
+						else
+							expressionExperiment = eeService.findById(new Long(accession.trim()));
 						if (expressionExperiment == null) {
 							errorObjects.add( accession + " is not loaded yet! " );
 							continue;
@@ -468,6 +481,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 							}
 						} catch (Exception e) {
 							errorObjects.add( expressionExperiment + ": " + e.getMessage() );
+							e.printStackTrace();
 							log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage() + " ********" );
 						}
 					}
