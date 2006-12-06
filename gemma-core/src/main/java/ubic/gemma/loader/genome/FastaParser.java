@@ -130,9 +130,9 @@ public class FastaParser extends RecordParser {
 
     /**
      * <pre>
-     *    Affymetrix targets or collapsed sequence     target:array:probeset;
-     *    Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
-     *    Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     *       Affymetrix targets or collapsed sequence     target:array:probeset;
+     *       Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
+     *       Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
      * 
      * @param bioSequence
@@ -181,20 +181,21 @@ public class FastaParser extends RecordParser {
 
     /**
      * <pre>
-     *    GenBank                           gi|gi-number|gb|accession|locus
-     *    EMBL Data Library                 gi|gi-number|emb|accession|locus
-     *    DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
-     *    NBRF PIR                          pir||entry
-     *    Protein Research Foundation       prf||name
-     *    SWISS-PROT                        sp|accession|name
-     *    Brookhaven Protein Data Bank (1)  pdb|entry|chain
-     *    Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
-     *    Patents                           pat|country|number 
-     *    GenInfo Backbone Id               bbs|number 
-     *    General database identifier       gnl|database|identifier
-     *    NCBI Reference Sequence           ref|accession|locus
-     *    Local Sequence identifier         lcl|identifier
-     *    NIA 15k and 7k sets               H[0-9A-Z]{1-9}-\d | alternate  (example: &gt;H4002F12-5 )
+     *       GenBank                           gi|gi-number|gb|accession|locus
+     *       EMBL Data Library                 gi|gi-number|emb|accession|locus
+     *       DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
+     *       NBRF PIR                          pir||entry
+     *       Protein Research Foundation       prf||name
+     *       SWISS-PROT                        sp|accession|name
+     *       Brookhaven Protein Data Bank (1)  pdb|entry|chain
+     *       Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
+     *       Patents                           pat|country|number 
+     *       GenInfo Backbone Id               bbs|number 
+     *       General database identifier       gnl|database|identifier
+     *       NCBI Reference Sequence           ref|accession|locus
+     *       Local Sequence identifier         lcl|identifier
+     *       NIA 15k and 7k sets               H[0-9A-Z]{1-9}-\d | alternate  (example: &gt;H4002F12-5 )
+     *       Generic                           probeid
      * </pre>
      * 
      * @param bioSequence
@@ -239,8 +240,9 @@ public class FastaParser extends RecordParser {
         } else if ( firstTag.matches( NIA_HEADER_REGEX ) ) {
             return parseNIA( bioSequence, header );
         } else {
-            log.warn( "Defline-style FASTA header in unrecognized format, started with " + firstTag );
-            return false;
+            bioSequence.setName( split[0] );
+            // log.warn( "Defline-style FASTA header in unrecognized format, started with " + firstTag );
+            // return false;
         }
         return true;
     }

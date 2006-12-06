@@ -505,9 +505,40 @@ public class ArrayDesignSequenceProcessingService {
      * @throws IOException
      * @see ubic.gemma.loader.genome.FastaParser
      */
-    @SuppressWarnings("unchecked")
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType ) throws IOException {
+        return this.processArrayDesign( arrayDesign, sequenceFile, sequenceType, null );
+    }
+
+    /**
+     * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on
+     * the array.
+     * <p>
+     * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
+     * format. Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element;
+     * there is further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The
+     * FASTA file must use a standard defline format (as described at
+     * {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
+     * <p>
+     * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
+     * one passes:
+     * <ol>
+     * <li>The format line contains an explicit reference to the name of the CompositeSequence (probe id).</li>
+     * <li>The BioSequence for the CompositeSequences are already filled in, and there is a matching external database
+     * identifier (e.g., Genbank accession). This will only work if Genbank accessions do not re-occur in the FASTA
+     * file.</li>
+     * </ol>
+     * 
+     * @param arrayDesign
+     * @param sequenceFile FASTA format
+     * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
+     * @param taxon - if null, attempt to determine it from the array design.
+     * @throws IOException
+     * @see ubic.gemma.loader.genome.FastaParser
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
+            SequenceType sequenceType, Taxon taxon ) throws IOException {
 
         if ( sequenceType == SequenceType.AFFY_PROBE ) {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile );
@@ -533,7 +564,12 @@ public class ArrayDesignSequenceProcessingService {
         int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
         int done = 0;
         int percent = 0;
-        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        if ( taxon == null ) {
+            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        }
+        if ( taxon == null ) {
+            throw new IllegalStateException( "No taxon available for " + arrayDesign );
+        }
         for ( BioSequence sequence : bioSequences ) {
 
             sequence.setType( sequenceType );

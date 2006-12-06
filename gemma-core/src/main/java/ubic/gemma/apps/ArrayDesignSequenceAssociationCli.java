@@ -27,6 +27,8 @@ import org.apache.commons.lang.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
@@ -41,6 +43,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     private String sequenceType;
     private String sequenceFile;
     private boolean force = false;
+    private TaxonService taxonService;
+
+    private String taxonName = null;
 
     public static void main( String[] args ) {
         ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
@@ -85,6 +90,12 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         addOption( forceOption );
 
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
+                "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" ).create(
+                't' );
+
+        addOption( taxonOption );
+
     }
 
     @Override
@@ -92,13 +103,17 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         super.processOptions();
         arrayDesignSequenceProcessingService = ( ArrayDesignSequenceProcessingService ) this
                 .getBean( "arrayDesignSequenceProcessingService" );
-
+        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
         if ( this.hasOption( 'y' ) ) {
             sequenceType = this.getOptionValue( 'y' );
         }
 
         if ( this.hasOption( 'f' ) ) {
             this.sequenceFile = this.getOptionValue( 'f' );
+        }
+
+        if ( this.hasOption( 't' ) ) {
+            this.taxonName = this.getOptionValue( 't' );
         }
 
         if ( this.hasOption( "force" ) ) {
@@ -137,8 +152,19 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                     bail( ErrorCode.INVALID_OPTION );
                 }
 
+                Taxon taxon = null;
+                if ( this.hasOption( 't' ) ) {
+                    taxon = taxonService.findByCommonName( this.taxonName );
+                    if ( taxon == null ) {
+                        throw new IllegalArgumentException( "No taxon named " + taxonName );
+                    }
+                }
+
                 log.info( "Processing ArrayDesign..." );
-                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn );
+
+                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn,
+                        taxon );
+
                 sequenceFileIs.close();
             } else {
                 log.info( "Retrieving sequences from BLAST databases" );
