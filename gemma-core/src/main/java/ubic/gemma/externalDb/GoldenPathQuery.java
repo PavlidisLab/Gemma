@@ -105,8 +105,8 @@ public class GoldenPathQuery extends GoldenPath {
         result.setNs( rs.getInt( "nCount" ) );
         result.setQueryGapCount( rs.getInt( "qNumInsert" ) );
         result.setQueryGapBases( rs.getInt( "qBaseInsert" ) );
-        result.setTargetGapBases( rs.getInt( "tNumInsert" ) );
-        result.setTargetGapCount( rs.getInt( "tBaseInsert" ) );
+        result.setTargetGapCount( rs.getInt( "tNumInsert" ) );
+        result.setTargetGapBases( rs.getInt( "tBaseInsert" ) );
         result.setStrand( rs.getString( "strand" ) );
         result.setTargetChromosome( Chromosome.Factory.newInstance() );
         result.setQueryStart( rs.getInt( "qStart" ) );
