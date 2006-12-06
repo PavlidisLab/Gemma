@@ -26,6 +26,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -83,11 +84,12 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             StringBuilder buf = new StringBuilder();
 
-            // TODO read these in
+            // TODO read this in
             String type = "heatmap";
-            HttpSession session = this.pageContext.getSession();
-            session.setAttribute( "type", type );
-            session.setAttribute( "expressionDataMatrix", expressionDataMatrix );
+
+            /* random identifier for ExpressionDataMatrix */
+            String id = "id_" + Math.abs( RandomUtils.nextInt() );
+            this.pageContext.getSession().setAttribute( id, expressionDataMatrix );
 
             if ( expressionDataMatrix == null || m.length == 0 ) {
                 buf.append( "No data to display" );
@@ -105,7 +107,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
                 // buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1 width=300
                 // height=300/>");
-                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "\"border=1/>" );
+                buf.append( "<img src=\"visualizeDataMatrix.html?type=" + type + "&id=" + id + "\"border=1/>" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( DesignElement cs : compositeSequences ) {
