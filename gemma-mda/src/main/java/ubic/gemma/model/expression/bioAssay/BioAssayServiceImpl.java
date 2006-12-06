@@ -104,18 +104,44 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
      * @see ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleAssociateBioMaterial(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    protected boolean handleAssociateBioMaterial( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
-        // TODO Auto-generated method stub
-        return false;
+    protected void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
+        // add bioMaterial to bioAssay
+        Collection<BioMaterial> currentBioMaterials = bioAssay.getSamplesUsed();
+        currentBioMaterials.add( bioMaterial );        
+        bioAssay.setSamplesUsed( currentBioMaterials );
+        
+        // add bioAssay to bioMaterial
+        Collection<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
+        currentBioAssays.add( bioAssay );
+        bioMaterial.setBioAssaysUsedIn( currentBioAssays );
+        
+        // TODO make this transactional
+        // update bioAssay
+        this.update( bioAssay );
+        // update bioMaterial
+        this.getBioMaterialService().update( bioMaterial );
     }
 
     /* (non-Javadoc)
      * @see ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleRemoveBioMaterial(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    protected boolean handleRemoveBioMaterial( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
-        // TODO Auto-generated method stub
-        return false;
+    protected void handleRemoveBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
+        // remove bioMaterial from bioAssay
+        Collection<BioMaterial> currentBioMaterials = bioAssay.getSamplesUsed();
+        currentBioMaterials.remove( bioMaterial );
+        bioAssay.setSamplesUsed( currentBioMaterials );
+        
+        // remove bioAssay from bioMaterial
+        Collection<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
+        currentBioAssays.remove( bioAssay );
+        bioMaterial.setBioAssaysUsedIn( currentBioAssays ); 
+        
+        // TODO make this transactional
+        // update bioAssay
+        this.update( bioAssay );
+        // update bioMaterial
+        this.getBioMaterialService().update( bioMaterial );
     }
 
 }
