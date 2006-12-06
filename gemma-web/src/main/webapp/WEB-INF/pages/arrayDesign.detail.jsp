@@ -17,10 +17,10 @@
 </td>
 </tr>
 <tr>
-<!-- Admin only for sequence and blat associations -->
+<%-- Admin only for sequence and blat associations --%>
 <authz:authorize ifAnyGranted="admin">
 <td>
-	Sequence associations
+	Probes with sequences
 </td>
 <td>
 	<c:out value="${numCsBioSequences}" />
@@ -28,7 +28,7 @@
 </tr>
 <tr>
 <td>
-	BLAT associations
+	Probes with genome alignments
 </td>
 <td>
 	<c:out value="${numCsBlatResults}" />
@@ -38,7 +38,7 @@
 <!--  End admin only -->
 <tr>
 <td>
-	Gene associations
+	Probes mapping to gene(s)
 </td>
 <td>
 	<c:out value="${numCsGenes}" />
@@ -46,7 +46,7 @@
 </tr>
 <tr>
 <td>
-	Genes
+	Unique genes represented
 </td>
 <td>
 	<c:out value="${numGenes}" />
