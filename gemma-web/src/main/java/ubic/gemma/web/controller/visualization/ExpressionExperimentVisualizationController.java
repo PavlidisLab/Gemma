@@ -46,7 +46,7 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 1.5 );
+    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 2 );
 
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
 
