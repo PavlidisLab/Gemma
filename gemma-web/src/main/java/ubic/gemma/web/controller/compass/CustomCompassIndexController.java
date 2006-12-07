@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
-import org.compass.spring.web.mvc.CompassIndexCommand;
 import org.compass.spring.web.mvc.CompassIndexResults;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
@@ -38,7 +37,7 @@ import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
+import ubic.gemma.web.controller.MultiBackgroundProcessingController;
 
 /**
  * A general Spring's MVC Controller that perform the index operation of <code>CompassGps</code>. The indexing here
@@ -55,94 +54,101 @@ import ubic.gemma.web.controller.BackgroundProcessingCompassIndexController;
  * The results of the index operation will be saved under the <code>indexResultsName</code>, which defaults to
  * "indexResults".
  * 
- * todo:  I don't like the way this controller works at all.  Plan to make this genaric like all of our other controllers
- * use spring injection to get the different compassGps beans and just make it simpler.  No need to use compass's index controller classes.
- * 
- * @author kimchy
  * @author keshav
  * @version $Id$
  * @spring.bean id="indexController"
- * @spring.property name = "compassGps" ref="expressionGps"
- * @spring.property name = "indexView" value="indexer"
- * @spring.property name = "indexResultsView" value="indexer"
- * @spring.property name = "taskRunningService" ref="taskRunningService"
- * @spring.property name = "messageUtil" ref="messageUtil"
+ * @spring.property name="taskRunningService" ref="taskRunningService"
+ * @spring.property name="arrayGps" ref="arrayGps"
+ * @spring.property name="expressionGps" ref="expressionGps"
+ * @spring.property name="geneGps" ref="geneGps"
+ * @spring.property name="formView" value="indexer"
+ * @spring.property name="successView" value="indexer"
  */
 
-public class CustomCompassIndexController extends BackgroundProcessingCompassIndexController {
+public class CustomCompassIndexController extends MultiBackgroundProcessingController {
 
     private Log log = LogFactory.getLog( CustomCompassIndexController.class );
 
-    private String indexView;
+    private CompassGpsInterfaceDevice expressionGps;
+    private CompassGpsInterfaceDevice arrayGps;
+    private CompassGpsInterfaceDevice geneGps;
 
-    private String indexResultsView;
-
-    private String indexResultsName = "indexResults";
-
-    public CustomCompassIndexController() {
-        setCommandClass( CompassIndexCommand.class );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+    
+    
+    /* (non-Javadoc)
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        super.afterPropertiesSet();
-        if ( indexView == null ) {
-            throw new IllegalArgumentException( "Must set the indexView property" );
-        }
-        if ( indexResultsView == null ) {
-            throw new IllegalArgumentException( "Must set hte indexResultsView property" );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractCommandController#handle(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
-     */
-    @Override
-    @SuppressWarnings("unused")
-    protected ModelAndView handle( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        CompassIndexCommand indexCommand = ( CompassIndexCommand ) command;
-        
-        if ( !StringUtils.hasText( indexCommand.getDoIndex() )) {
-            return new ModelAndView( getIndexView(), getCommandName(), indexCommand );
-        }
-
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,   BindException errors)
+            throws Exception {
         
         IndexJob index;
-        
-        if (indexCommand.getDoIndex().equalsIgnoreCase( "genes" )) {
-            index = new IndexJob( request,
-                    ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
-                            "geneGps" ) );         
-        }
-        else if  (indexCommand.getDoIndex().equalsIgnoreCase( "ee" ) ) {
-         index = new IndexJob( request,
-                ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
-                        "expressionGps" ) );
-        }
-        else if  (indexCommand.getDoIndex().equalsIgnoreCase( "ad" ) ) {
-            index = new IndexJob( request,
-                   ( CompassIndexCommand ) command, ( CompassGpsInterfaceDevice ) getWebApplicationContext().getBean(
-                           "arrayGps" ) );
-        }
-        else {
-            log.warn( "Indexcontroller had a button pressed but no appropirate value was found in the request." );
-            return new ModelAndView( getIndexView(), getCommandName(), indexCommand );        
-        }
-        
+
+        if ( StringUtils.hasText( request.getParameter( "geneIndex" ) ) ) {
+            index = new IndexJob( request, geneGps, "Gene Index" );            
+        } else if ( StringUtils.hasText( request.getParameter( "eeIndex" ) ) ) {
+            index = new IndexJob( request, expressionGps, "Dataset Index" );
+        } else if ( StringUtils.hasText( request.getParameter( "arrayIndex" ) ) )
+            index = new IndexJob( request, arrayGps, "Array Index" );
+        else
+            return new ModelAndView( this.getFormView() );
+
         String taskId = startJob( request, index );
 
         return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
     }
+
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            this.saveMessage( request, "Cancelled Index" );
+            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     */
+    @Override
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
+            throws Exception {
+        if ( request.getParameter( "geneIndex" ) != null )  {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
+        if ( request.getParameter( "eeIndex" ) != null )  {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
+        if ( request.getParameter( "arrayIndex" ) != null )  {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
+ 
+        
+
+        return super.showForm( request, response, errors );
+    }
+
+
+
+   
+
+    
+    /**
+     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
+     * 
+     * @param request
+     * @return Object
+     * @throws Exception
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        return request;
+    }
+
 
     /**
      * <hr>
@@ -154,15 +160,14 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
      *          for creating a seperate thread that will delete the compass ee index
      */
     class IndexJob extends BackgroundControllerJob<ModelAndView> {
-
-        private CompassIndexCommand indexCommand;
+     
         private CompassGpsInterfaceDevice gpsDevice;
-
-        public IndexJob( HttpServletRequest request, CompassIndexCommand indexCommand,
-                CompassGpsInterfaceDevice gpsDevice ) {
-            super( request );
-            this.indexCommand = indexCommand;
+        private String description;
+        
+        public IndexJob( HttpServletRequest request, CompassGpsInterfaceDevice gpsDevice, String description ) {
+            super( request );           
             this.gpsDevice = gpsDevice;
+            this.description = description;
         }
 
         @SuppressWarnings("unchecked")
@@ -175,116 +180,67 @@ public class CustomCompassIndexController extends BackgroundProcessingCompassInd
 
             long time = System.currentTimeMillis();
 
-            log.info( "Rebuilding compass index." );
-            //CompassUtils.rebuildCompassIndex( gpsDevice );
-            gpsDevice.index();
-            time = System.currentTimeMillis() - time;
-            CompassIndexResults indexResults = new CompassIndexResults( time );
-            Map<Object, Object> data = new HashMap<Object, Object>();
-            data.put( getCommandName(), indexCommand );
-            data.put( getIndexResultsName(), indexResults );
-
-            ProgressManager.destroyProgressJob( job );
-
-            return new ModelAndView( getIndexResultsView(), data );
-
-        }
-    }
-
-    /**
-     * <hr>
-     * <p>
-     * Copyright (c) 2006 UBC Pavlab
-     * 
-     * @author klc
-     * @version $Id$ Used for creating a
-     *          seperate thread in rebuilding the Gene's index
-     */
-
-    class IndexGenesJob extends BackgroundControllerJob<ModelAndView> {
-
-        private CompassIndexCommand indexCommand;
-        private CompassGpsInterfaceDevice gpsDevice;
-
-        public IndexGenesJob( HttpServletRequest request, CompassIndexCommand indexCommand,
-                CompassGpsInterfaceDevice gpsDevice ) {
-            super( request );
-            this.indexCommand = indexCommand;
-            this.gpsDevice = gpsDevice;
-        }
-
-        @SuppressWarnings("unchecked")
-        public ModelAndView call() throws Exception {
-
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Attempting to index Genes in Database" );
-
-            long time = System.currentTimeMillis();
-
-            log.info( "Rebuilding gene index." );
+            job.updateProgress( "Preparing to rebuild " + this.description );
+            log.info( "Preparing to rebuild " + this.description );
+            
             CompassUtils.rebuildCompassIndex( gpsDevice );
-
             time = System.currentTimeMillis() - time;
             CompassIndexResults indexResults = new CompassIndexResults( time );
             Map<Object, Object> data = new HashMap<Object, Object>();
-            data.put( getCommandName(), indexCommand );
-            data.put( getIndexResultsName(), indexResults );
+            data.put( "indexResults", indexResults );
 
             ProgressManager.destroyProgressJob( job );
 
-            return new ModelAndView( getIndexResultsView(), data );
+            ModelAndView mv = new ModelAndView("indexer");
+            mv.addObject( "time", time );
+            mv.addObject("description", this.description );
+            
+            return mv;
+            
 
         }
     }
 
     /**
-     * Returns the view that holds the screen which the user will initiate the index operation.
+     * @return the arrayGps
      */
-    public String getIndexView() {
-        return indexView;
+    public CompassGpsInterfaceDevice getArrayGps() {
+        return arrayGps;
     }
 
     /**
-     * Sets the view that holds the screen which the user will initiate the index operation.
+     * @param arrayGps the arrayGps to set
      */
-    public void setIndexView( String indexView ) {
-        this.indexView = indexView;
+    public void setArrayGps( CompassGpsInterfaceDevice arrayGps ) {
+        this.arrayGps = arrayGps;
     }
 
     /**
-     * Returns the name of the results that the {@link CompassIndexResults} will be saved under. Defaults to
-     * "indexResults".
+     * @return the expressionGps
      */
-    public String getIndexResultsName() {
-        return indexResultsName;
+    public CompassGpsInterfaceDevice getExpressionGps() {
+        return expressionGps;
     }
 
     /**
-     * Sets the name of the results that the {@link CompassIndexResults} will be saved under. Defaults to
-     * "indexResults".
-     * 
-     * @param indexResultsName
+     * @param expressionGps the expressionGps to set
      */
-    public void setIndexResultsName( String indexResultsName ) {
-        this.indexResultsName = indexResultsName;
+    public void setExpressionGps( CompassGpsInterfaceDevice expressionGps ) {
+        this.expressionGps = expressionGps;
     }
 
     /**
-     * Returns the view which will show the results of the index operation.
+     * @return the geneGps
      */
-    public String getIndexResultsView() {
-        return indexResultsView;
+    public CompassGpsInterfaceDevice getGeneGps() {
+        return geneGps;
     }
 
     /**
-     * Sets the view which will show the results of the index operation.
-     * 
-     * @param indexResultsView
+     * @param geneGps the geneGps to set
      */
-    public void setIndexResultsView( String indexResultsView ) {
-        this.indexResultsView = indexResultsView;
+    public void setGeneGps( CompassGpsInterfaceDevice geneGps ) {
+        this.geneGps = geneGps;
     }
 
 }

@@ -1,41 +1,26 @@
 <%@ include file="/common/taglibs.jsp"%>
+
 <p>
-<content tag="heading">
-<fmt:message key="menu.compassIndexer"/>
-</content>
-<p>
-Use the Index button to index the database using Compass::Gps. This will
+Use the different index buttons to index the database. This will
 delete the current index and reindex the database based on the mappings and devices
-defined in the Compass::Gps configuration context.
-<p>
-<form method="post" action="<c:url value="/indexer.html"/>">
-	<spring:bind path="command.doIndex">
-		<input type="hidden" name="doIndex" value="genes" />
-	</spring:bind>
-    <input type="submit" value="Index Genes"/>        
-</form>
+defined in the compass configuration context.
+</p>
 
-<form method="post" action="<c:url value="/indexer.html"/>">
-	<spring:bind path="command.doIndex">
-		<input type="hidden" name="doIndex" value="ee" />
-	</spring:bind>
-    <input type="submit" value="Index EEs"/>        
-</form>
+<br/>
 
-<form method="post" action="<c:url value="/indexer.html"/>">
-	<spring:bind path="command.doIndex">
-		<input type="hidden" name="doIndex" value="ad" />
-	</spring:bind>
-    <input type="submit" value="Index Ads"/>        
-</form>
-
-
-<c:if test="${! empty indexResults}">
-	<p>Indexing took: <c:out value="${indexResults.indexTime}" />ms.
-	<p>
-	<a href="<c:url value="/searcher.html"/>">
-    	<fmt:message key="menu.compassSearcher"/>
-    </a>
+<c:if test="${time != null}">
+	It took <c:out value="${time}"/> to index the <c:out value="${description}"/>
+	<br/> <br/>	
 </c:if>
+
+<form method="post" action="<c:url value="/indexer.html"/>">
+
+    <input type="submit" name="eeIndex" value="eeIndex"/>
+    <input type="submit" name="geneIndex" value="geneIndex"/>
+    <input type="submit" name="arrayIndex" value="arrayIndex"/>
+    
+</form>
+
+
 <p>
 <br>
