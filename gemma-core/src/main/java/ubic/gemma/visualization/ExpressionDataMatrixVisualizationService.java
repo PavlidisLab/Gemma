@@ -230,7 +230,12 @@ public class ExpressionDataMatrixVisualizationService {
             /* normalize the data */
             Double[] ndata = new Double[ddata.length];
             for ( int j = 0; j < ddata.length; j++ ) {
-                ndata[j] = ( ddata[j] - mean ) / variance;
+                ndata[j] = ddata[j];
+
+                if ( Double.isNaN( ddata[j] ) ) {
+                    continue;
+                }
+                ndata[j] = ( ndata[j] - mean ) / variance;
             }
 
             if ( threshold != null ) ndata = clipData( ndata, threshold );
@@ -250,7 +255,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @return Double[]
      */
     private Double[] clipData( Double[] data, double threshold ) {
-        // FIXME how are we handling NAN?
+
         threshold = Math.abs( threshold );
 
         double upperLimit = threshold;
@@ -259,9 +264,11 @@ public class ExpressionDataMatrixVisualizationService {
 
         for ( int i = 0; i < data.length; i++ ) {
 
-            if ( !Double.isNaN( data[i] ) && data[i] > upperLimit ) {
+            if ( Double.isNaN( data[i] ) ) continue;
+
+            if ( data[i] > upperLimit ) {
                 data[i] = upperLimit;
-            } else if ( !Double.isNaN( data[i] ) && data[i] < lowerLimit ) {
+            } else if ( data[i] < lowerLimit ) {
                 data[i] = lowerLimit;
             }
         }
