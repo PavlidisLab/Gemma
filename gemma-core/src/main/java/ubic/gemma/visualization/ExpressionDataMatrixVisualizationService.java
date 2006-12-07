@@ -232,7 +232,7 @@ public class ExpressionDataMatrixVisualizationService {
             for ( int j = 0; j < ddata.length; j++ ) {
                 ndata[j] = ddata[j];
 
-                if ( Double.isNaN( ddata[j] ) ) {
+                if ( Double.isNaN( ndata[j] ) ) {
                     continue;
                 }
                 ndata[j] = ( ndata[j] - mean ) / variance;
