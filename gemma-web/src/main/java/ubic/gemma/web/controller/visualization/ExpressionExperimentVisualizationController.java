@@ -39,17 +39,20 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * 
  * @spring.bean id="expressionExperimentVisualizationController"
  * @spring.property name="methodNameResolver" ref="expressionExperimentVisualizationActions"
+ * @spring.property name = "expressionDataMatrixVisualizationService" ref="expressionDataMatrixVisualizationService"
  * @author keshav
  * @version $Id$
  */
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 2 );
+    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 1.5 );
 
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
 
     private static final String HEAT_MAP_IMAGE_TYPE = "heatmap";
+
+    private ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = null;
 
     // private static final String EXPRESSION_PROFILE_IMAGE_TYPE = "profile";
 
@@ -72,7 +75,6 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         try {
             out = response.getOutputStream();
             if ( type.equalsIgnoreCase( HEAT_MAP_IMAGE_TYPE ) ) {
-                ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = new ExpressionDataMatrixVisualizationService();
                 /* normalize and clip the expression data matrix */
                 expressionDataMatrix = expressionDataMatrixVisualizationService.standardizeExpressionDataDoubleMatrix(
                         expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
@@ -97,5 +99,13 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         }
 
         return null; // nothing to return;
+    }
+
+    /**
+     * @param expressionDataMatrixVisualizationService The expressionDataMatrixVisualizationService to set.
+     */
+    public void setExpressionDataMatrixVisualizationService(
+            ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService ) {
+        this.expressionDataMatrixVisualizationService = expressionDataMatrixVisualizationService;
     }
 }

@@ -75,7 +75,6 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name = "compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
- * @spring.property name = "expressionDataMatrixVisualizationService" ref="expressionDataMatrixVisualizationService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
