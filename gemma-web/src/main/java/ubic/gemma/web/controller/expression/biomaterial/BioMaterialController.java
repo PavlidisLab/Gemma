@@ -76,8 +76,8 @@ public class BioMaterialController extends BaseMultiActionController {
         if ( bioMaterial == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
+        
+        this.saveMessage( request, "biomaterial with id " + id + " found" );
         request.setAttribute( "id", id );
         return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
     }
