@@ -302,7 +302,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             return processErrors( request, response, command, errors, message );
         }
 
-        /* normalize and standardize the expression data matrix */
+        /* normalize and clip the expression data matrix */
         expressionDataMatrix = expressionDataMatrixVisualizationService.standardizeExpressionDataDoubleMatrix(
                 expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
 
