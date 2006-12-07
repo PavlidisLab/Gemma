@@ -99,38 +99,4 @@ public class ProcessDeleteController extends BaseFormController {
         return this.processFormSubmission( request, response, null, null );
     }
 
-    // todo: some code that i wrote that this controller isn't using anymore.
-    // i just can't bring myself to delete unused but usefull code......
-
-    // Get the root thread
-    @SuppressWarnings("unused")
-    private ThreadGroup getRoot() {
-        ThreadGroup root = Thread.currentThread().getThreadGroup().getParent();
-        while ( root.getParent() != null ) {
-            root = root.getParent();
-        }
-
-        return root;
-    }
-
-    // //checks the given thread group to see if the given thread id is inside.
-    // returns that thread if found or null if nothing
-
-    @SuppressWarnings("unused")
-    private Thread findThread( ThreadGroup group, long threadId ) {
-
-        int numThreads = group.activeCount();
-        Thread[] threads = new Thread[numThreads * 2];
-        numThreads = group.enumerate( threads, true );
-
-        // Enumerate each thread in `group'
-        for ( int i = 0; i < numThreads; i++ ) {
-            Thread thread = threads[i];
-            if ( thread.getId() == threadId ) return thread;
-        }
-
-        return null;
-
-    }
-
 }

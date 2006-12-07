@@ -83,7 +83,7 @@ public class CompassUtils {
     public static synchronized void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();
 
-        log.debug( "CompassGps was running? " + wasRunningBefore );
+        log.info( "CompassGps was running? " + wasRunningBefore );
 
         /* Check state of device. If not running and you try to index, you will get a device exception. */
         if ( !wasRunningBefore ) {
@@ -92,9 +92,9 @@ public class CompassUtils {
 
         /* We don't need to check if index already exists. If it doesn't, it won't be deleted. */
         gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
+        log.info("Deleting old index");
         gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
-
-        log.debug( "indexing now ... " );
+        log.info( "indexing now ... " );
         gps.index();
 
         /* Return state of device */

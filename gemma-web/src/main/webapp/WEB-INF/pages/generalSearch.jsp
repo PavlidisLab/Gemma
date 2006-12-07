@@ -7,19 +7,22 @@
 
         <h2>
             General search tool for searching Gemma
+            <br/> <br/>
         </h2>
 
 	<form name="generalSearch" action="searcher.html" method="POST">
-			<h4> Enter search criteria for searching Gemma database here </h4>
-			<input type="text" name="searchString" size="78" />
+			<h4> Enter search criteria for searching the Gemma database here </h4>
+			<input type="text" name="searchString" size="76" />
 			<input type="submit" value="search"/>			
 		</form>
 		
 		<br/>
+	<c:if test="${numGenes != null}">
+		<h3>
+			Your search for  <b> <c:out value="${SearchString}"/> </b> found  <b> <c:out value="${numGenes}" /> </b> Genes. 
+		</h3>	<br/> 
+	</c:if>
 
-<h3>
-			Your search for  <b> <c:out value="${SearchString}"/> </b> found  <b> <c:out value="${numGenes}" /> </b> Genes.
-		</h3>
 
 	    <display:table name="geneList" class="list" 
 	    	requestURI="" 
@@ -31,10 +34,13 @@
 			<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />			
             <display:setProperty name="basic.empty.showtable" value="false" />      
         </display:table>
+        
+   <c:if test="${numEEs != null}"> 
 		<h3>
 			Your search for <b> <c:out value="${SearchString}"/> </b> found   <b> <c:out value="${numEEs}" /> </b> Datasets
-		</h3>
-
+		</h3> <br/>
+   </c:if>
+   
 		<display:table pagesize="20" name="expressionList" sort="list" class="list" requestURI="" id="expressionExperimentList"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
@@ -46,9 +52,12 @@
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
+		
+	<c:if test="${numADs != null}"> 
 		<h3>
 			Your search for <b> <c:out value="${SearchString}"/>  </b> found   <b> <c:out value="${numADs}" /> </b> Arrays
-		</h3>
+		</h3> <br/>
+   </c:if>
 
 				<display:table name="arrayList" sort="list" class="list" requestURI="" id="arrayDesignList"
 				pagesize="20" decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">

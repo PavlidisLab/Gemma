@@ -82,7 +82,7 @@
 			<td>
 
 				<spring:bind path="coexpressionSearchCommand.searchString">
-					<input type="text" size=15
+					<input type="text" size=19
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
@@ -125,18 +125,14 @@
 				</a>
 			</td>
 		</tr>
-
-	</table>
-	<br />
-	
-	<table>
-		<tr>
+	<tr> <td>&nbsp; </td>
 			<td>
 				<input type="submit" class="button" name="submit"
-					value="<fmt:message key="button.submit"/>" />
+					value="<fmt:message key="button.search"/>" />
 			</td>
 		</tr>
 	</table>
+
 </form>
 
 

@@ -58,15 +58,13 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * success view returns either a visual representation of the result set or a downloadable data file.
  * <p>
  * {@link stringency} sets the number of data sets the link must be seen in before it is listed in the results, and
- * {@link species} sets the type of species to search. 
- * {@link keywords} restrict the search.
+ * {@link species} sets the type of species to search. {@link keywords} restrict the search.
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="coexpressionSearchController"  
+ * @spring.bean id="coexpressionSearchController"
  * @spring.property name = "commandName" value="coexpressionSearchCommand"
- * @spring.property name = "commandClass"
- *                  value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
+ * @spring.property name = "commandClass" value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
  * @spring.property name = "formView" value="searchCoexpression"
  * @spring.property name = "successView" value="searchCoexpression"
  * @spring.property name = "geneService" ref="geneService"
@@ -77,18 +75,16 @@ import ubic.gemma.web.util.ConfigurationCookie;
  */
 public class CoexpressionSearchController extends BaseFormController {
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
-    
+
     private int MAX_GENES_TO_RETURN = 50;
     private int DEFAULT_STRINGENCY = 3;
-    
+
     private static final String COOKIE_NAME = "coexpressionSearchCookie";
-    
 
     private GeneService geneService = null;
     private TaxonService taxonService = null;
     private SearchService searchService = null;
     private ExpressionExperimentService expressionExperimentService = null;
-
 
     public CoexpressionSearchController() {
         /*
@@ -107,19 +103,18 @@ public class CoexpressionSearchController extends BaseFormController {
 
         CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
 
-        if (request.getParameter( "searchString" ) != null) {
+        if ( request.getParameter( "searchString" ) != null ) {
             loadGETParameters( request, csc );
-        }
-        else {
+        } else {
             loadCookie( request, csc );
         }
         return csc;
 
     }
 
-
     /**
      * Mock function - do not use.
+     * 
      * @param request
      * @param response
      * @param command
@@ -127,34 +122,33 @@ public class CoexpressionSearchController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings( { "unused", "unchecked" })
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        
+
         CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
 
         Cookie cookie = new CoexpressionSearchCookie( csc );
         response.addCookie( cookie );
-        
+
         Collection<Gene> genesFound;
         Integer numExpressionExperiments;
         // find the genes specified by the search
         // if there is no exact search specified, do an inexact search
         // if exact search is on, find only by official symbol
-        // if exact search is auto (usually from the front page), check if there is an exact search match. If there is none, do inexact search.
-        if (csc.getExactSearch() == null) {
+        // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
+        // none, do inexact search.
+        if ( csc.getExactSearch() == null ) {
             genesFound = searchService.geneDbSearch( csc.getSearchString() );
-            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) ); 
-        }
-        else if (csc.getExactSearch().equalsIgnoreCase( "on" )) {
-            genesFound = geneService.findByOfficialSymbol( csc.getSearchString( ) );
-        }
-        else {
-            genesFound = geneService.findByOfficialSymbol( csc.getSearchString( ) );
-            if (genesFound.size() == 0) {
+            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
+        } else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
+            genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
+        } else {
+            genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
+            if ( genesFound.size() == 0 ) {
                 genesFound = searchService.geneDbSearch( csc.getSearchString() );
-                genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );    
+                genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
             }
         }
         // filter genes by Taxon
@@ -167,87 +161,88 @@ public class CoexpressionSearchController extends BaseFormController {
         genesFound.removeAll( genesToRemove );
 
         // if no genes found
-        // return error 
-        if (genesFound.size() == 0) {
+        // return error
+        if ( genesFound.size() == 0 ) {
             saveMessage( request, "No genes found based on criteria." );
             return super.showForm( request, response, errors );
         }
-        
+
         // check if more than 1 gene found
         // if yes, then query user for gene to be used
-        if (genesFound.size() > 1) {
+        if ( genesFound.size() > 1 ) {
             // check if more than 50 genes have been found.
             // if there are more, then warn the user and truncate list
-            if (genesFound.size() > MAX_GENES_TO_RETURN) {  
+            if ( genesFound.size() > MAX_GENES_TO_RETURN ) {
                 genesToRemove = new ArrayList<Gene>();
                 int count = 0;
-                for (Gene gene : genesFound) {
-                    if (count >= MAX_GENES_TO_RETURN) {
+                for ( Gene gene : genesFound ) {
+                    if ( count >= MAX_GENES_TO_RETURN ) {
                         genesToRemove.add( gene );
                     }
-                    count++;                    
+                    count++;
                 }
                 genesFound.removeAll( genesToRemove );
-                saveMessage( request, "Found " + count + " genes. Truncating list to first "+ MAX_GENES_TO_RETURN + "." );  
+                saveMessage( request, "Found " + count + " genes. Truncating list to first " + MAX_GENES_TO_RETURN
+                        + "." );
             }
 
-            saveMessage( request, "Multiple genes matched. Choose which gene to use." );        
+            saveMessage( request, "Multiple genes matched. Choose which gene to use." );
 
-            
             // set to exact search
             csc.setExactSearch( "on" );
             ModelAndView mav = super.showForm( request, errors, getFormView() );
             mav.addObject( "genes", genesFound );
             return mav;
-        } 
+        }
 
         // At this point, only one gene has been found, find coexpressed genes
-        
+
         // find expressionExperiments via lucene if the query is eestring-constrained
         Collection<ExpressionExperiment> ees;
-        if (StringUtils.isNotBlank( csc.getEeSearchString() ) ) {
+        if ( StringUtils.isNotBlank( csc.getEeSearchString() ) ) {
             ees = searchService.compassExpressionSearch( csc.getEeSearchString() );
-            if (ees.size() == 0) {
-                saveMessage(request, "No datasets matched - defaulting to all datasets");
+            if ( ees.size() == 0 ) {
+                saveMessage( request, "No datasets matched - defaulting to all datasets" );
             }
-        }
-        else {
+        } else {
             ees = new ArrayList<ExpressionExperiment>();
         }
-        
-        Gene sourceGene = (Gene) (genesFound.toArray())[0];
-        // if there is no expressionExperiment criteria or 
+
+        Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
+        // if there is no expressionExperiment criteria or
         // there are no matches, search all expression experiments
-        if (ees.size() > 0) {
+        if ( ees.size() > 0 ) {
             numExpressionExperiments = ees.size();
-        }
-        else {
+        } else {
             Map taxonCount = expressionExperimentService.getPerTaxonCount();
-            numExpressionExperiments = ((Long)taxonCount.get( sourceGene.getTaxon().getScientificName() )).intValue();
-            
+
+            if ( taxonCount.get( sourceGene.getTaxon().getScientificName() ) == null )
+                numExpressionExperiments = 0;
+            else
+                numExpressionExperiments = ( ( Long ) taxonCount.get( sourceGene.getTaxon().getScientificName() ) )
+                        .intValue();
+
         }
-        
 
         // stringency. Cannot be less than 1; set to one if it is
         Integer stringency = csc.getStringency();
-        if (stringency == null) {
+        if ( stringency == null ) {
             stringency = DEFAULT_STRINGENCY;
-        }
-        else if (stringency < 1) {
+        } else if ( stringency < 1 ) {
             stringency = 1;
         }
         csc.setStringency( stringency );
-        
 
-        CoexpressionCollectionValueObject coexpressions = (CoexpressionCollectionValueObject) geneService.getCoexpressedGenes( sourceGene, ees, stringency );
+        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
+                .getCoexpressedGenes( sourceGene, ees, stringency );
 
         // get all the coexpressed genes and sort them by dataset count
-        ArrayList<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();            
-        coexpressedGenes.addAll(coexpressions.getCoexpressionData());
-        
+        ArrayList<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
+        coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
+
         // sort coexpressed genes by dataset count
-        Collections.sort( coexpressedGenes, new CoexpressionComparator()  );
-        
+        Collections.sort( coexpressedGenes, new CoexpressionComparator() );
+
         // load expression experiment value objects
         Collection<Long> eeIds = new ArrayList<Long>();
         Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
@@ -255,34 +250,33 @@ public class CoexpressionSearchController extends BaseFormController {
             eeIds.add( Long.parseLong( eeVo.getId() ) );
         }
         Collection<ExpressionExperimentValueObject> eeVos = new ArrayList<ExpressionExperimentValueObject>();
-        if (eeIds.size() > 0) {
+        if ( eeIds.size() > 0 ) {
             eeVos = expressionExperimentService.loadValueObjects( eeIds );
         }
         // load in array design value objects for each expression experiment
         for ( ExpressionExperimentValueObject object : eeVos ) {
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-            ee.setId( Long.parseLong( object.getId()) );
+            ee.setId( Long.parseLong( object.getId() ) );
         }
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
-        
+
         // no genes are coexpressed
-        // return error 
-        if (coexpressedGenes.size() == 0) {
-           saveMessage( request, "No genes are coexpressed with the given stringency." );
+        // return error
+        if ( coexpressedGenes.size() == 0 ) {
+            saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
 
-        Long numCoexpressedGenes = new Long(coexpressions.getStringencyLinkCount());
+        Long numCoexpressedGenes = new Long( coexpressions.getStringencyLinkCount() );
         Integer numMatchedLinks = coexpressions.getLinkCount();
-        
+
         mav.addObject( "coexpressedGenes", coexpressedGenes );
-        mav.addObject( "numCoexpressedGenes", numCoexpressedGenes);
+        mav.addObject( "numCoexpressedGenes", numCoexpressedGenes );
         mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
         mav.addObject( "numMatchedLinks", numMatchedLinks );
         mav.addObject( "sourceGene", sourceGene );
         mav.addObject( "expressionExperiments", eeVos );
         mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
-        
-        
+
         return mav;
     }
 
@@ -293,16 +287,14 @@ public class CoexpressionSearchController extends BaseFormController {
     @SuppressWarnings("unused")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
-        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();       
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
 
-        
         // add species
-        populateTaxonReferenceData( mapping );      
-        
+        populateTaxonReferenceData( mapping );
+
         return mapping;
     }
-    
-    
+
     /**
      * @param mapping
      */
@@ -322,13 +314,13 @@ public class CoexpressionSearchController extends BaseFormController {
         } );
         mapping.put( "taxa", taxa );
     }
-    
+
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( request, binder );
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
-    
+
     /**
      * @param request
      * @param csc
@@ -345,7 +337,7 @@ public class CoexpressionSearchController extends BaseFormController {
                     csc.setEeSearchString( cookie.getString( "eeSearchString" ) );
                     csc.setSearchString( cookie.getString( "searchString" ) );
                     csc.setStringency( cookie.getInt( "stringency" ) );
-                    Taxon taxon = taxonService.findByScientificName(cookie.getString( "taxonScientificName" ));
+                    Taxon taxon = taxonService.findByScientificName( cookie.getString( "taxonScientificName" ) );
                     csc.setTaxon( taxon );
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
@@ -354,47 +346,52 @@ public class CoexpressionSearchController extends BaseFormController {
             }
         }
     }
-    
+
     /**
      * Fills in the command object in the case that GET parameters are passed in
+     * 
      * @param request
      * @param csc
      */
     private void loadGETParameters( HttpServletRequest request, CoexpressionSearchCommand csc ) {
-        if ( request == null || (request.getParameter( "searchString" ) == null) ) return;
+        if ( request == null || ( request.getParameter( "searchString" ) == null ) ) return;
 
         Map params = request.getParameterMap();
-        
+
         if ( params.get( "eeSearchString" ) != null ) {
-            csc.setEeSearchString( ((String[]) params.get( "eeSearchString" ))[0] );
+            csc.setEeSearchString( ( ( String[] ) params.get( "eeSearchString" ) )[0] );
         }
-        if (params.get( "searchString" ) != null) {
-            csc.setSearchString( ((String[]) params.get( "searchString" ))[0] );
+        if ( params.get( "searchString" ) != null ) {
+            csc.setSearchString( ( ( String[] ) params.get( "searchString" ) )[0] );
         }
-        if (params.get( "stringency" ) != null) {
-            String[] stringency =  (String[]) params.get( "stringency" );
-            Integer num = Integer.parseInt(stringency[0]);
-            csc.setStringency(num  );
+        if ( params.get( "stringency" ) != null ) {
+            String[] stringency = ( String[] ) params.get( "stringency" );
+            Integer num = Integer.parseInt( stringency[0] );
+            csc.setStringency( num );
         }
-        if (params.get( "taxon" ) != null) {
-            Taxon taxon = taxonService.findByScientificName( ((String[]) params.get( "taxon" ))[0]);
+        if ( params.get( "taxon" ) != null ) {
+            Taxon taxon = taxonService.findByScientificName( ( ( String[] ) params.get( "taxon" ) )[0] );
             csc.setTaxon( taxon );
         }
     }
-    
-    /* (non-Javadoc)
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
     @Override
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) throws Exception {
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
+            throws Exception {
         // if there are GET parameters, process them into the formBackingObject
-        if (request.getParameter( "searchString" ) != null) {
+        if ( request.getParameter( "searchString" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
-        
+
         return super.showForm( request, response, errors );
     }
-    
+
     /**
      * @param geneService
      */
@@ -408,21 +405,21 @@ public class CoexpressionSearchController extends BaseFormController {
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }
-    
+
     /**
      * @param searchService the searchService to set
      */
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
     }
-    
+
     /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
-    
+
     class CoexpressionSearchCookie extends ConfigurationCookie {
 
         public CoexpressionSearchCookie( CoexpressionSearchCommand command ) {
@@ -432,17 +429,15 @@ public class CoexpressionSearchController extends BaseFormController {
             this.setProperty( "searchString", command.getSearchString() );
             this.setProperty( "stringency", command.getStringency() );
             this.setProperty( "taxonScientificName", command.getTaxon().getScientificName() );
-            
+
             this.setMaxAge( 100000 );
             this.setComment( "Information for coexpression search form" );
         }
 
     }
-    
+
     /**
-     * 
      * @author jsantos
-     *
      */
     class CoexpressionComparator implements Comparator {
 
@@ -451,15 +446,13 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         public int compare( Object o1, Object o2 ) {
-            int o1Size =  ((CoexpressionValueObject)o1).getExpressionExperimentValueObjects().size();
-            int o2Size = ((CoexpressionValueObject)o2).getExpressionExperimentValueObjects().size();
-            if ( o1Size > o2Size) {
-               return -1; 
-            }
-            else if (o1Size < o2Size) {
+            int o1Size = ( ( CoexpressionValueObject ) o1 ).getExpressionExperimentValueObjects().size();
+            int o2Size = ( ( CoexpressionValueObject ) o2 ).getExpressionExperimentValueObjects().size();
+            if ( o1Size > o2Size ) {
+                return -1;
+            } else if ( o1Size < o2Size ) {
                 return 1;
-            }
-            else {
+            } else {
                 return 0;
             }
         }
