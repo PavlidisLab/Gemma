@@ -45,6 +45,8 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
+    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 2 );
+
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
 
     private static final String HEAT_MAP_IMAGE_TYPE = "heatmap";
@@ -71,6 +73,9 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             out = response.getOutputStream();
             if ( type.equalsIgnoreCase( HEAT_MAP_IMAGE_TYPE ) ) {
                 ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = new ExpressionDataMatrixVisualizationService();
+                /* normalize and clip the expression data matrix */
+                expressionDataMatrix = expressionDataMatrixVisualizationService.standardizeExpressionDataDoubleMatrix(
+                        expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
                 JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( DEFAULT_CONTENT_TYPE );

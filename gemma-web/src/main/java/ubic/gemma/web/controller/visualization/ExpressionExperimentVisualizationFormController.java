@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,7 +52,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizationService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -86,13 +86,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public static final String SEARCH_BY_GENE = "gene symbol";
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
     private static final int MAX_ELEMENTS_TO_VISUALIZE = 70;
-    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 2 );
 
     private ExpressionExperimentService expressionExperimentService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private DesignElementDataVectorService designElementDataVectorService;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
-    private ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = null;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -302,10 +300,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             return processErrors( request, response, command, errors, message );
         }
 
-        /* normalize and clip the expression data matrix */
-        expressionDataMatrix = expressionDataMatrixVisualizationService.standardizeExpressionDataDoubleMatrix(
-                expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
-
         /* return the model and view */
         ModelAndView mav = new ModelAndView( getSuccessView() );
         mav.addObject( "expressionDataMatrix", expressionDataMatrix );
@@ -490,14 +484,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public void setCompositeSequenceGeneMapperService(
             CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
         this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
-    }
-
-    /**
-     * @param expressionDataMatrixVisualizationService The expressionDataMatrixVisualizationService to set.
-     */
-    public void setExpressionDataMatrixVisualizationService(
-            ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService ) {
-        this.expressionDataMatrixVisualizationService = expressionDataMatrixVisualizationService;
     }
 
     /**
