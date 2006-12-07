@@ -1,19 +1,29 @@
 <%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
 
-		<content tag="heading">
-		Array designs
-		</content>
-		<title>Array designs</title>
+<!--  Summary of array design associations -->
+<%-- Admin only --%>
+<c:if test="${summaryString != null }" >
+${summaryString}
+</c:if>
+
+
+		<h1>
+		Platforms
+		</h1>
+		<title>Platforms</title>
+
 
 	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
 			<h4> Enter search criteria for finding a specific array design here </h4>
 			<input type="text" name="filter" size="66" />
 			<input type="submit" value="Find"/>			
 	</form>
-	
+
+
+
 		<h3>
-			Displaying <c:out value="${numArrayDesigns}" /> Array Designs.
+			Displaying <c:out value="${numArrayDesigns}" /> Platforms
 		</h3>
 
 				<display:table name="arrayDesigns" sort="list" class="list" requestURI="" id="arrayDesignList"

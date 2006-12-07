@@ -116,6 +116,31 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     /**
+     * @param queryString
+     * @return
+     */
+    private Integer queryReturnInteger( final String queryString ) {
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of 'Integer" + "' was found when executing query --> '"
+                                    + queryString + "'" );
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+
+            return ( Integer ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+    
+    /**
      * @param id
      * @param queryString
      * @return
@@ -124,6 +149,33 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "id", id );
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of 'Integer" + "' was found when executing query --> '"
+                                    + queryString + "'" );
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+
+            return ( Integer ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+    
+    /**
+     * @param ids
+     * @param queryString
+     * @return
+     */
+    private Integer queryByIdsReturnInteger( Collection<Long> ids, final String queryString ) {
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -369,6 +421,112 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return queryByIdReturnCollection( id, queryString );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences()
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBioSequences() throws Exception {
+        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic where "
+                + "cs.biologicalCharacteristic.sequence IS NOT NULL";
+        return queryReturnInteger( queryString ).longValue();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults()
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBlatResults() throws Exception {
+        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic, BlatResultImpl as blat "
+                + "where blat.querySequence=cs.biologicalCharacteristic";
+        return queryReturnInteger( queryString ).longValue();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes()
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithGenes() throws Exception {
+        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic, BioSequence2GeneProductImpl bs2gp, GeneImpl gene "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct.id=gene.products.id";
+        return queryReturnInteger(  queryString ).longValue();
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes()
+     */
+    @Override
+    protected long handleNumAllGenes() throws Exception {
+        final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic, BioSequence2GeneProductImpl bs2gp, GeneImpl gene "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct.id=gene.products.id";
+        return queryReturnInteger( queryString );
+    }
+
+    
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBioSequences( Collection ids ) throws Exception {
+        if ( ids == null || ids.size() == 0 ) {
+            throw new IllegalArgumentException();
+        }
+        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic where ar.id in (:ids) and "
+                + "cs.biologicalCharacteristic.sequence IS NOT NULL";
+        return queryByIdsReturnInteger( ids, queryString );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBlatResults( Collection ids ) throws Exception {
+        if ( ids== null || ids.size() == 0 ) {
+            throw new IllegalArgumentException();
+        }
+        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic, BlatResultImpl as blat "
+                + "where blat.querySequence=cs.biologicalCharacteristic and ar.id in (:ids)";
+        return queryByIdsReturnInteger( ids, queryString );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithGenes( Collection ids ) throws Exception {
+        if ( ids == null || ids.size() == 0 ) {
+            throw new IllegalArgumentException();
+        }
+        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic, BioSequence2GeneProductImpl bs2gp, GeneImpl gene "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct.id=gene.products.id and ar.id in (:id)";
+        return queryByIdsReturnInteger( ids, queryString );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllGenes( Collection ids ) throws Exception {
+        if ( ids == null || ids.size() == 0 ) {
+            throw new IllegalArgumentException();
+        }
+        final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + "inner join cs.biologicalCharacteristic, BioSequence2GeneProductImpl bs2gp, GeneImpl gene "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct.id=gene.products.id and ar.id in (:ids)";
+        return queryByIdsReturnInteger( ids, queryString );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -582,6 +740,4 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         Long id = arrayDesignValueObject.getId();
         return (ArrayDesign) this.load( id );
     }
-
-
 }

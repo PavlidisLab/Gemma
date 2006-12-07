@@ -156,6 +156,11 @@
 					key="menu.compassIndexer" /> </a>
 		</li>
 		<li>
+			<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>">
+				Regenerate Platform/Array Summary
+			</a>
+		</li>
+		<li>
 			<a href="<c:url value="/loadExpressionExperiment.html"/>"> <fmt:message
 					key="menu.loadExpressionExperiment" /> </a>
 		</li>

@@ -272,4 +272,68 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().loadValueObjects( ids );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences()
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBioSequences() throws Exception {
+        return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults()
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBlatResults() throws Exception {
+        return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes()
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithGenes() throws Exception {
+        return this.getArrayDesignDao().numAllCompositeSequenceWithGenes();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBioSequences( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences( ids );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithBlatResults( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults( ids );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllCompositeSequenceWithGenes( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().numAllCompositeSequenceWithGenes( ids );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes()
+     */
+    @Override
+    protected long handleNumAllGenes() throws Exception {
+        return this.getArrayDesignDao().numAllGenes();
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes(java.util.Collection)
+     */
+    @Override
+    protected long handleNumAllGenes( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().numAllGenes( ids );
+    }
+
 }

@@ -144,7 +144,8 @@
 			<prop key="/arrays/deleteArrayDesign.html">delete</prop>
 			<prop key="/arrays/showArrayDesign.html">show</prop>
 			<prop key="/arrays/showExpressionExperimentsFromArrayDesign.html">showExpressionExperiments</prop>
-			<prop key="/arrays/filterArrayDesigns.html">filter</prop>			
+			<prop key="/arrays/filterArrayDesigns.html">filter</prop>	
+			<prop key="/arrays/generateArrayDesignSummary.html">generateSummary</prop>			
 		</props>
 	</property>
 </bean>

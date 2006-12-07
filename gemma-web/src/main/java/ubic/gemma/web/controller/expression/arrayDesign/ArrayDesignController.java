@@ -25,6 +25,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
@@ -34,6 +35,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,6 +54,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.bean id="arrayDesignController" name="arrayDesignController"
  * @springproperty name="validator" ref="arrayDesignValidator"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
+ * @spring.property name = "arrayDesignReportService" ref="arrayDesignReportService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  * @spring.property name="searchService" ref="searchService"
  */
@@ -61,9 +64,17 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     private SearchService searchService;
     private ArrayDesignService arrayDesignService = null;
+    private ArrayDesignReportService arrayDesignReportService = null;
     private final String messageName = "Array design with name";
     private final String messageId = "Array design with id";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
+
+    /**
+     * @param arrayDesignReportService the arrayDesignReportService to set
+     */
+    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
+        this.arrayDesignReportService = arrayDesignReportService;
+    }
 
     /**
      * @param arrayDesignService The arrayDesignService to set.
@@ -156,7 +167,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Disabled for now
      * 
      * @param request
      * @param response
@@ -167,10 +177,21 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         
         String sId = request.getParameter( "id" );
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
-        // if no IDs are specified, then load all expressionExperiments
+        String summary = null;
+
+        GrantedAuthority[] auth = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+        boolean isAdmin = false;
+        for ( GrantedAuthority authority : auth ) {
+            String a = authority.getAuthority();
+            if (a.equalsIgnoreCase( "admin" )) {
+                isAdmin = true;
+            }
+        }
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Arrays" );
             arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
+            summary = arrayDesignReportService.getArrayDesignReport(); 
         }
 
         // if ids are specified, then display only those arrayDesigns
@@ -188,7 +209,32 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", arrayDesigns );
         mav.addObject("numArrayDesigns", numArrayDesigns);
+        mav.addObject( "summaryString", summary);
+
         return mav;
+    }
+    /**
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
+  //  @SuppressWarnings({ "unused", "unchecked" })
+    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
+        
+        String sId = request.getParameter( "id" );
+
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        if ( sId == null ) {
+            this.saveMessage( request, "Generated summary for all platforms" );
+            arrayDesignReportService.generateArrayDesignReport();
+        }
+        // if ids are specified, then display only those arrayDesigns
+        else {
+            this.saveMessage( request, "Disabled summary caching for lists of platforms" );
+        }
+       
+        return this.showAll( request, response );
     }
 
     /**
