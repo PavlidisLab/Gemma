@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -85,7 +86,7 @@ public class ArrayDesignReportService
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setId( id );
         
-        log.info( "Generating report for array design " + id );
+        log.info( "Generating report for array design " + id + "\n" );
         
         long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
         long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
@@ -110,7 +111,7 @@ public class ArrayDesignReportService
 
     public void generateAllArrayDesignReport()
     {
-        log.info( "Generating report for all array designs" );
+        log.info( "Generating report for all array designs\n" );
         
         long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences(  );
         long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults(  );
@@ -191,6 +192,14 @@ public class ArrayDesignReportService
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR );
+        File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR);
+        Collection<File> files = new ArrayList<File>();
+        File[] fileArray = f.listFiles();
+        for ( File file : fileArray ) {
+            files.add( file );
+        }
+        // clear out all files
+        FileTools.deleteFiles( files );
     }
     
     private String generateReportString(long numCsBioSequences, long numCsBlatResults, long numCsGenes, long numGenes) {
