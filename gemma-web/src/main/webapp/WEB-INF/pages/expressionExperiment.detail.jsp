@@ -191,6 +191,9 @@
 		</table>
 
 		<authz:authorize ifAnyGranted="admin">
+			<%
+			if ( expressionExperiment.getExperimentalDesign() != null ) {
+			%>
 			<h3>
 				<fmt:message key="experimentalDesign.title" />
 				:
@@ -215,6 +218,14 @@
 				%>
 				experimental factors.
 			</p>
+			<%
+			}
+			else {
+			%>
+			No experimental design information for this experiment.
+			<%
+			}
+			%>
 
 			<%
 			if ( expressionExperiment.getAnalyses().size() > 0 ) {
