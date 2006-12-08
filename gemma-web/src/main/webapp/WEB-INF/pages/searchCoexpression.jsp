@@ -129,7 +129,7 @@ Results for
 			</td>
 			<td>
 				<a class="helpLink" href="?" onclick="showHelpTip(event, 
-				'Official symbol of a gene'); return false">
+				'Term(s) to identify a gene; check 'exact search' if you know the official symbol for the gene.'); return false">
 				<img src="/Gemma/images/help.png" />
 				</a>
 			</td>
@@ -224,7 +224,7 @@ Results for
 </span>
 </c:if>
 <b> 
-<c:out value="${numLinkedExpressionExperiments}" /> datasets found in search 
+<c:out value="${numLinkedExpressionExperiments}" /> datasets appear in search results 
 <c:if test="${numLinkedExpressionExperiments != 0}">
 <a href="#" onclick="return toggleVisibility('datasetList')" >(details)</a> 
 </c:if>
