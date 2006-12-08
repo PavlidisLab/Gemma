@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,7 +73,16 @@ public class GeneOntologyLoader {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> load( Collection<OntologyEntry> oeCol ) {
-        return ( Collection<OntologyEntry> ) persisterHelper.persist( oeCol );
+        Set<String> seen = new HashSet<String>();
+        Collection<OntologyEntry> result = new HashSet<OntologyEntry>();
+        for ( OntologyEntry entry : oeCol ) {
+            if ( seen.contains( entry.getAccession() ) ) {
+                continue;
+            }
+            seen.add( entry.getAccession() );
+            result.add( ( OntologyEntry ) persisterHelper.persist( entry ) );
+        }
+        return result;
     }
 
     /**
