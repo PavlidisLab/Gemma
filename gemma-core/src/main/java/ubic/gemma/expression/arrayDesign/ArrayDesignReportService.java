@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.Date;
 
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -75,6 +77,9 @@ public class ArrayDesignReportService
         long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes(  );
         long numGenes = arrayDesignService.numAllGenes(  );
         
+        // obtain time information (for timestamping)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd hh:mm" );
         // write into table format
         StringBuffer s = new StringBuffer();
         s.append("<table class='datasummary'>" +
@@ -102,6 +107,9 @@ public class ArrayDesignReportService
                 "</td><td>" +
                 numGenes + 
                 "</td></tr>" +
+                "<tr><td colspan=2 align='center'>" +
+                "(as of " + timestamp + ")" +
+                "</td></tr>" + 
                 "</table>");
         // write into file
         File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY);
