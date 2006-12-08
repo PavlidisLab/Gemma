@@ -18,9 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +37,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -143,8 +147,18 @@ public class ExpressionExperimentFormController extends BaseFormController {
             ed = externalDatabaseDao.findOrCreate( ed );
             ( ( ExpressionExperiment ) command ).getAccession().setExternalDatabase( ed );
         }
+        
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        
+        ModelAndView mav = super.processFormSubmission( request, response, command, errors );
+        
+        Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
+        mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById( id ).entrySet() );
 
-        return super.processFormSubmission( request, response, command, errors );
+        // add count of designElementDataVectors
+        mav.addObject( "designElementDataVectorCount", new Long( expressionExperimentService
+                .getDesignElementDataVectorCountById( id ) ) );
+        return mav;
     }
 
     /**

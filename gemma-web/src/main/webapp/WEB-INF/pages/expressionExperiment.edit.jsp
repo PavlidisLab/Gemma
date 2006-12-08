@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-
+<jsp:directive.page import="org.apache.commons.lang.StringUtils" />
 <jsp:useBean id="expressionExperiment" scope="request"
     class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -166,76 +166,134 @@
 	               
 </table>
 
-        <br />
+		<authz:authorize ifAnyGranted="admin">
+			<h3>
+				<fmt:message key="experimentalDesign.title" />
+				:
+				<a
+					href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+					<%
+					out.print( expressionExperiment.getExperimentalDesign().getName() );
+					%> </a>
+			</h3>
+			<p>
+				<b>Description:</b>
+				<%
+				                        out
+				                        .print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(),
+				                                100 ) );
+				%>
+				<BR />
+				<BR />
+				This experimental design has
+				<%
+				out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+				%>
+				experimental factors.
+			</p>
 
-        <h3>
-            <fmt:message key="bioAssays.title" />
-        </h3>
-        There are 
-        <a href = "/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%> ">
-        <% out.print(expressionExperiment.getBioAssays().size()); %> 
-        </a>
-        bioAssays for this expression experiment.
-        <br/>
+			<%
+			if ( expressionExperiment.getAnalyses().size() > 0 ) {
+			%>
+			<h3>
+				<fmt:message key="analyses.title" />
+			</h3>
+			<display:table name="expressionExperiment.analyses" class="list"
+				requestURI="" id="analysisList" pagesize="10"
+				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+				<display:column property="name" sortable="true" maxWords="20"
+					href="/Gemma/experimentalDesign/showExperimentalDesign.html"
+					paramId="name" paramProperty="name" />
+				<display:column property="description" sortable="true"
+					maxWords="100" />
+				<display:setProperty name="basic.empty.showtable" value="false" />
+			</display:table>
+			<%
+			}
+			%>
+			<%
+			if ( expressionExperiment.getSubsets().size() > 0 ) {
+			%>
+			<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
+			<h3>
+				<fmt:message key="expressionExperimentSubsets.title" />
+			</h3>
+			<aazone tableId="subsetList" zone="subsetTable" />
+			<aa:zone name="subsetTable">
+				<display:table name="expressionExperiment.subsets" class="list"
+					requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
+					id="subsetList" pagesize="10"
+					decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
+					<display:column property="nameLink" sortable="true" maxWords="20"
+						titleKey="expressionExperimentSubsets.name" />
+					<display:column property="description" sortable="true"
+						maxWords="100" />
+					<display:setProperty name="basic.empty.showtable" value="false" />
+				</display:table>
+			</aa:zone>
+			<%
+			}
+			%>
+		</authz:authorize>
 
-        <h3>
-            <fmt:message key="experimentalDesign.title" />
-        </h3>
-        <a 
-        	href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
-        <%out.print(expressionExperiment.getExperimentalDesign().getName());%>
-        </a>
-        <br />
-        <br />
-        <%out.print(expressionExperiment.getExperimentalDesign().getDescription());%>
-        <br />
-        <br />
-        This experimental design has 
-        <%out.print(expressionExperiment.getExperimentalDesign().getExperimentalFactors().size()); %>
-        experimental factors.
-        <br />
-        
-        <h3>
-            <fmt:message key="investigators.title" />
-        </h3>
-        <display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList"
-            pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
-            <display:column property="phone" sortable="true" maxWords="100"  />
-            <display:column property="fax" sortable="true" maxWords="100"  />
-            <display:column property="email" sortable="true" maxWords="100"  />
-            <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>
-        
-        <h3>
-            <fmt:message key="analyses.title" />
-        </h3>
-        <display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList"
-            pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
-            <display:column property="description" sortable="true" maxWords="100"  />
-            <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>
-        
-        <h3>
-            <fmt:message key="expressionExperimentSubsets.title" />
-        </h3>
-        <display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
-            pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
-            <display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name"/>
-            <display:column property="description" sortable="true" maxWords="100" />
-            <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>
- 
-<!--    
-        <h3>
-            <fmt:message key="designElementDataVectors.title" />
-        </h3>
-        There are 
-        <b><% out.print(expressionExperiment.getDesignElementDataVectors().size()); %> </b>
-        design elements for this expression experiment. (Not displayed)
--->  
-        <br />
+		<h3>
+			<fmt:message key="designElementDataVectors.title" />
+		</h3>
+		<p>
+			There are
+			<b> <c:out value="${designElementDataVectorCount}" /> </b>
+			expression profiles for this experiment.
+			<BR />
+			<BR />
+			<b>Details by quantitation type:</b>
+		</p>
+		<aazone tableId="dataVectorList" zone="dataVectorTable" />
+		<aa:zone name="dataVectorTable">
+			<display:table name="qtCountSet" class="list"
+				requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
+				id="dataVectorList" pagesize="10"
+				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+				<display:column property="qtName" sortable="true" maxWords="20"
+					titleKey="quantitationType.name" />
+				<display:column property="qtValue" sortable="true" maxWords="20"
+					titleKey="quantitationType.countVectors" />
+				<display:setProperty name="basic.empty.showtable" value="false" />
+			</display:table>
+		</aa:zone>
+		
+		<ul>
+		<li id="foo" class="dragItem"> foo </li>
+		<li id="bar" class="dragItem"> bar </li>
+		<li id="foo2" class="dragItem"> foo2 </li>
+		<li id="bar1" class="dragItem"> bar1 </li>
+		</ul>
+		
+		<script language="JavaScript" type="text/javascript">
+        var windowIdArray = new Array('foo','bar','foo2','bar1');
+        for(i=0;i<windowIdArray.length;i++)
+    {
+        var windowId = windowIdArray[i];
+        //set to be draggable
+        new Draggable(windowId,{revert:true});
+        //set to be droppable
+        Droppables.add(windowId, {overlap: 'vertical', accept: 'dragItem',hoverclass: 'drophover',onDrop: function(element, droppableElement)
+            {
+                var content1 = element.innerHTML;
+                var content2 = droppableElement.innerHTML;          
+                droppableElement.innerHTML = content1;
+                element.innerHTML = content2;
+            }
+            });
+    }
+		</script>
+
+		<authz:authorize ifAnyGranted="admin">
+			<h3>
+				Biomaterials and Assays
+			</h3>
+			<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
+		</authz:authorize>
+
 		
 			
 		<table>
@@ -253,3 +311,5 @@
 <validate:javascript formName="expressionExperiment" staticJavascript="false"/>
 <script type="text/javascript"
       src="<c:url value="/scripts/validator.jsp"/>"></script>
+<script type="text/javascript"
+			src="<c:url value="/scripts/aa-init.js"/>"></script>
