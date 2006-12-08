@@ -145,7 +145,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         mav.addObject( "arrayDesigns", arrayDesigns );
-        long num = expressionExperimentService.getDesignElementDataVectorCountById( id );
         // add count of designElementDataVectors
         mav.addObject( "designElementDataVectorCount", new Long( expressionExperimentService
                 .getDesignElementDataVectorCountById( id ) ) );
