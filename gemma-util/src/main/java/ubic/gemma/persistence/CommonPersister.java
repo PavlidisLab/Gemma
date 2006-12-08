@@ -136,7 +136,7 @@ abstract public class CommonPersister extends AbstractPersister {
         } else if ( entity instanceof ExternalDatabase ) {
             return persistExternalDatabase( ( ExternalDatabase ) entity );
         } else if ( entity instanceof OntologyEntry ) {
-            return persistOntologyEntry( ( OntologyEntry ) entity );
+            return persistOntologyEntry( ( OntologyEntry ) entity ); // important: check before DatabasEntry
         } else if ( entity instanceof DatabaseEntry ) {
             return persistDatabaseEntry( ( DatabaseEntry ) entity );
         } else if ( entity instanceof LocalFile ) {
@@ -512,8 +512,8 @@ abstract public class CommonPersister extends AbstractPersister {
          */
         for ( OntologyEntry oe : ontologyEntry.getAssociations() ) {
             oe = persistOntologyEntry( oe );
+            this.getHibernateTemplate().flush();
         }
-
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
         this.getHibernateTemplate().flush();
         return ontologyEntry;
@@ -609,11 +609,10 @@ abstract public class CommonPersister extends AbstractPersister {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    
     /**
      * For clearing the cache.
      */
     protected void clearCommonCache() {
-        this.quantitationTypeCache.clear();        
+        this.quantitationTypeCache.clear();
     }
 }

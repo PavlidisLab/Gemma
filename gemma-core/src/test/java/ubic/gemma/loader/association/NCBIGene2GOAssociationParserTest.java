@@ -19,13 +19,11 @@
 package ubic.gemma.loader.association;
 
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -49,15 +47,15 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
 
-        GZIPInputStream gZipIs = new GZIPInputStream( is );
+        InputStream gZipIs = new GZIPInputStream( is );
 
-        gene2GOAssParser.parse( gZipIs );
+        gene2GOAssLoader.load( gZipIs );
 
-        Collection<Collection<Gene2GOAssociation>> results = gene2GOAssParser.getResults();
+        gZipIs.close();
+        is.close();
+        int count = gene2GOAssLoader.getCount();
 
-        Collection<Gene2GOAssociation> finalResults = gene2GOAssLoader.load( results );
-
-        assertEquals( 21, finalResults.size() );
+        assertEquals( 21, count );
 
     }
 

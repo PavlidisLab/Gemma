@@ -433,7 +433,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             query = query + " order by r.txStart ";
         }
         return findGenesByQuery( start, end, searchChrom, strand, query );
-
     }
 
     /**
@@ -598,6 +597,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<BlatAssociation> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
             String starts, String sizes, String strand, ThreePrimeDistanceMethod method ) {
+
+        if ( log.isDebugEnabled() )
+            log.debug( "Seeking gene overlaps with: chrom=" + chromosome + " start=" + queryStart + " end=" + queryEnd
+                    + " strand=" + strand );
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 

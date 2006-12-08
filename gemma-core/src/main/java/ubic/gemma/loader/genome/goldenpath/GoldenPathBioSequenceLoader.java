@@ -122,7 +122,7 @@ public class GoldenPathBioSequenceLoader {
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
                 log.info( "Starting loading" );
-                SecurityContextHolder.setContext( context ); // don't know why this is needed, but it works.
+                SecurityContextHolder.setContext( context );
                 load( queue );
             }
         } );

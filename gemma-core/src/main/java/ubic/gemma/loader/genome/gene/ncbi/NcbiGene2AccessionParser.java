@@ -28,7 +28,6 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.util.QueuingParser;
@@ -79,7 +78,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {
-        String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
             throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length
@@ -149,7 +148,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
             // RNA
             String rnaAccession = newGene.getRnaNucleotideAccession();
             if ( StringUtils.isNotBlank( rnaAccession ) ) {
-                String[] tokens = StringUtil.splitPreserveAllTokens( rnaAccession, '.' );
+                String[] tokens = StringUtils.splitPreserveAllTokens( rnaAccession, '.' );
                 if ( tokens.length == 1 ) {
                     newGene.setRnaNucleotideAccession( tokens[0] );
                     newGene.setRnaNucleotideAccessionVersion( null );
@@ -167,7 +166,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
             // protein
             String proteinAccession = newGene.getProteinAccession();
             if ( StringUtils.isNotBlank( proteinAccession ) ) {
-                String[] tokens = StringUtil.splitPreserveAllTokens( proteinAccession, '.' );
+                String[] tokens = StringUtils.splitPreserveAllTokens( proteinAccession, '.' );
                 if ( tokens.length == 1 ) {
                     newGene.setProteinAccession( tokens[0] );
                     newGene.setProteinAccessionVersion( null );
@@ -185,7 +184,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
             // Genome (chromosome information)
             String genomicAccession = newGene.getGenomicNucleotideAccession();
             if ( StringUtils.isNotBlank( genomicAccession ) ) {
-                String[] tokens = StringUtil.splitPreserveAllTokens( genomicAccession, '.' );
+                String[] tokens = StringUtils.splitPreserveAllTokens( genomicAccession, '.' );
                 if ( tokens.length == 1 ) {
                     newGene.setGenomicNucleotideAccession( tokens[0] );
                     newGene.setGenomicNucleotideAccessionVersion( null );

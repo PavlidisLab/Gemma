@@ -18,11 +18,9 @@
  */
 package ubic.gemma.loader.association;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
-import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -68,29 +66,18 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
             return e;
         }
 
-        try {
-            NCBIGene2GOAssociationParser gene2GOAssParser = new NCBIGene2GOAssociationParser();
-            NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-            gene2GOAssLoader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+        NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
+        gene2GOAssLoader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
 
-            HttpFetcher fetcher = new HttpFetcher();
+        HttpFetcher fetcher = new HttpFetcher();
 
-            Collection<LocalFile> files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
+        Collection<LocalFile> files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
 
-            assert files.size() == 1;
+        assert files.size() == 1;
 
-            LocalFile gene2Gofile = files.iterator().next();
+        LocalFile gene2Gofile = files.iterator().next();
 
-            gene2GOAssParser.parse( gene2Gofile.asFile() );
-
-            Collection<Gene2GOAssociation> results = gene2GOAssLoader.load( gene2GOAssParser.getResults() );
-
-            log.info( results.size() + " GO associations loaded" );
-
-        } catch ( IOException e1 ) {
-            log.error( e );
-            return e1;
-        }
+        gene2GOAssLoader.load( gene2Gofile );
 
         return null;
     }

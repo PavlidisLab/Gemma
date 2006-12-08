@@ -18,17 +18,18 @@
  */
 package ubic.gemma.loader.association;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
-import ubic.gemma.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.loader.util.QueuingParser;
+import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -42,34 +43,34 @@ import ubic.gemma.util.ConfigUtils;
  * This parses GO annotations from NCBI. See {@ink ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
  * 
  * <pre>
- *                     tax_id:
- *                     the unique identifier provided by NCBI Taxonomy
- *                     for the species or strain/isolate
- *                    
- *                     GeneID:
- *                     the unique identifier for a gene
- *                     --note:  for genomes previously available from LocusLink,
- *                     the identifiers are equivalent
- *                    
- *                     GO ID:
- *                     the GO ID, formatted as GO:0000000
- *                    
- *                     Evidence:
- *                     the evidence code in the gene_association file
- *                    
- *                     Qualifier: 
- *                     a qualifier for the relationship between the gene
- *                     and the GO term
- *                    
- *                     GO term:
- *                     the term indicated by the GO ID
- *                    
- *                     PubMed:
- *                     pipe-delimited set of PubMed uids reported as evidence
- *                     for the association
- *                    
- *                     Category:
- *                     the GO category (Function, Process, or Component)
+ *                                   tax_id:
+ *                                   the unique identifier provided by NCBI Taxonomy
+ *                                   for the species or strain/isolate
+ *                                  
+ *                                   GeneID:
+ *                                   the unique identifier for a gene
+ *                                   --note:  for genomes previously available from LocusLink,
+ *                                   the identifiers are equivalent
+ *                                  
+ *                                   GO ID:
+ *                                   the GO ID, formatted as GO:0000000
+ *                                  
+ *                                   Evidence:
+ *                                   the evidence code in the gene_association file
+ *                                  
+ *                                   Qualifier: 
+ *                                   a qualifier for the relationship between the gene
+ *                                   and the GO term
+ *                                  
+ *                                   GO term:
+ *                                   the term indicated by the GO ID
+ *                                  
+ *                                   PubMed:
+ *                                   pipe-delimited set of PubMed uids reported as evidence
+ *                                   for the association
+ *                                  
+ *                                   Category:
+ *                                   the GO category (Function, Process, or Component)
  * </pre>
  * 
  * @author keshav
@@ -77,7 +78,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.bean id="gene2GOAssociationParser"
  * @version $Id$
  */
-public class NCBIGene2GOAssociationParser extends BasicLineMapParser {
+public class NCBIGene2GOAssociationParser extends BasicLineParser implements QueuingParser {
 
     protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationParser.class );
 
@@ -91,8 +92,9 @@ public class NCBIGene2GOAssociationParser extends BasicLineMapParser {
 
     private final int GO_CATEGORY = ConfigUtils.getInt( "gene2go.go_category" );
 
-    private Map<String, Collection<Gene2GOAssociation>> results = new HashMap<String, Collection<Gene2GOAssociation>>();
+    BlockingQueue<Gene2GOAssociation> queue;
 
+    private int count = 0;
     ExternalDatabase goDb;
 
     int i = 0;
@@ -111,31 +113,11 @@ public class NCBIGene2GOAssociationParser extends BasicLineMapParser {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.util.parser.BasicLineMapParser#containsKey(java.lang.Object)
-     */
-    @Override
-    public boolean containsKey( Object key ) {
-        return results.containsKey( key );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.parser.BasicLineMapParser#get(java.lang.Object)
-     */
-    @Override
-    public Collection<Gene2GOAssociation> get( Object key ) {
-        return results.get( key );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.parser.BasicLineMapParser#getResults()
      */
     @Override
-    public Collection<Collection<Gene2GOAssociation>> getResults() {
-        return results.values();
+    public Collection<Gene2GOAssociation> getResults() {
+        return null;
     }
 
     /**
@@ -176,37 +158,36 @@ public class NCBIGene2GOAssociationParser extends BasicLineMapParser {
         g2GOAss.setOntologyEntry( oe );
         g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( values[EVIDENCE_CODE] ) );
 
+        try {
+            queue.put( g2GOAss );
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
+        }
+
         return g2GOAss;
     }
 
-    @Override
     public Gene2GOAssociation parseOneLine( String line ) {
         return this.mapFromGene2GO( line );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.parser.BasicLineMapParser#getKey(java.lang.Object)
-     */
-    @Override
-    protected Object getKey( Object newItem ) {
-        return ( ( Gene2GOAssociation ) newItem ).getGene().getNcbiId();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.parser.BasicLineMapParser#put(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    protected void put( Object key, Object value ) {
-        if ( !this.results.containsKey( key ) ) {
-            this.results.put( ( String ) key, new ArrayList<Gene2GOAssociation>() );
-        }
-
-        this.results.get( key ).add( ( Gene2GOAssociation ) value );
+    @SuppressWarnings("unchecked")
+    public void parse( InputStream inputStream, BlockingQueue aqueue ) throws IOException {
+        if ( inputStream == null ) throw new IllegalArgumentException( "InputStream was null" );
+        this.queue = aqueue;
+        super.parse( inputStream );
 
     }
 
+    @Override
+    protected void addResult( Object obj ) {
+        count++;
+    }
+
+    /**
+     * @return
+     */
+    public int getCount() {
+        return count;
+    }
 }

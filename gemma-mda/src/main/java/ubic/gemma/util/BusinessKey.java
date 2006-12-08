@@ -219,9 +219,8 @@ public class BusinessKey {
         if ( StringUtils.isNotBlank( ontologyEntry.getAccession() ) && ontologyEntry.getExternalDatabase() != null ) {
             queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
                     "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
-        }
-
-        if ( StringUtils.isNotBlank( ontologyEntry.getCategory() ) && StringUtils.isNotBlank( ontologyEntry.getValue() ) ) {
+        } else if ( StringUtils.isNotBlank( ontologyEntry.getCategory() )
+                && StringUtils.isNotBlank( ontologyEntry.getValue() ) ) {
             queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
                     Restrictions.ilike( "value", ontologyEntry.getValue() ) );
         }
@@ -389,7 +388,8 @@ public class BusinessKey {
         if ( ( StringUtils.isBlank( ontologyEntry.getAccession() ) || ontologyEntry.getExternalDatabase() == null )
                 && ( StringUtils.isBlank( ontologyEntry.getCategory() ) || StringUtils.isBlank( ontologyEntry
                         .getValue() ) ) ) {
-            throw new IllegalArgumentException( "Either accession, or category+value must be filled in." );
+            throw new IllegalArgumentException(
+                    "Either accession+externalDatabase, or category+value must be filled in." );
         }
     }
 
@@ -602,6 +602,7 @@ public class BusinessKey {
      */
     public static Criteria createQueryObject( Session session, OntologyEntry ontologyEntry ) {
         Criteria queryObject = session.createCriteria( OntologyEntry.class );
+        checkKey( ontologyEntry );
         addRestrictions( queryObject, ontologyEntry );
         return queryObject;
     }

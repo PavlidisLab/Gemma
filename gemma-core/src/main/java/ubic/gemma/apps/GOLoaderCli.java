@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import ubic.gemma.loader.description.GeneOntologyFetcher;
 import ubic.gemma.loader.description.GeneOntologyLoader;
+import ubic.gemma.model.common.description.DatabaseEntryService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -34,6 +35,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @version $Id$
  */
 public class GOLoaderCli extends AbstractSpringAwareCLI {
+
+    DatabaseEntryService databaseEntryService;
 
     public static void main( String[] args ) {
         GOLoaderCli p = new GOLoaderCli();
@@ -68,9 +71,11 @@ public class GOLoaderCli extends AbstractSpringAwareCLI {
         if ( err != null ) return err;
 
         try {
+            this.databaseEntryService = ( DatabaseEntryService ) getBean( "databaseEntryService" );
             GeneOntologyFetcher fetcher = new GeneOntologyFetcher();
             Collection<LocalFile> files = fetcher.fetch( "GO" );
             LocalFile f = files.iterator().next();
+            // databaseEntryService.removeAllForDatabase( "GO" );
             GeneOntologyLoader loader = new GeneOntologyLoader();
             loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
             loader.load( f.asFile() );
