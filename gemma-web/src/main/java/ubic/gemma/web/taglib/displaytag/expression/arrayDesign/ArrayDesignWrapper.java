@@ -18,14 +18,11 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.arrayDesign;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * Used to generate hyperlinks in displaytag tables.

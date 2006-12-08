@@ -20,7 +20,9 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -44,6 +46,7 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
+import ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignValueObjectSummary;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -116,6 +119,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( arrayDesign );
         Long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( arrayDesign );
         Long numGenes = arrayDesignService.numGenes( arrayDesign );
+        
         Long numCompositeSequences = new Long(arrayDesignService.getCompositeSequenceCount( arrayDesign ));
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
         Long numExpressionExperiments = new Long(ee.size());
@@ -177,14 +181,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
         String summary = null;
 
-        GrantedAuthority[] auth = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
-        boolean isAdmin = false;
-        for ( GrantedAuthority authority : auth ) {
-            String a = authority.getAuthority();
-            if (a.equalsIgnoreCase( "admin" )) {
-                isAdmin = true;
-            }
-        }
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Arrays" );
@@ -208,6 +204,51 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "arrayDesigns", arrayDesigns );
         mav.addObject("numArrayDesigns", numArrayDesigns);
         mav.addObject( "summaryString", summary);
+
+        return mav;
+    }
+    
+    /**
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
+  //  @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings("unchecked")
+    public ModelAndView showAllStats( HttpServletRequest request, HttpServletResponse response ) {
+        
+        String sId = request.getParameter( "id" );
+        Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
+        Collection<ArrayDesignValueObjectSummary> summaries = new ArrayList<ArrayDesignValueObjectSummary>();
+
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Arrays" );
+            arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
+        }
+
+        // if ids are specified, then display only those arrayDesigns
+        else {
+            Collection ids = new ArrayList<Long>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                ids.add( new Long( idList[i] ) );
+            }
+            arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) );
+        }
+        
+        for ( ArrayDesignValueObject ad : arrayDesigns ) {
+            String summary = arrayDesignReportService.getArrayDesignReport( ad.getId() );
+            ArrayDesignValueObjectSummary adSummary = new ArrayDesignValueObjectSummary(ad, summary);
+            summaries.add( adSummary );
+        }
+        
+        Long numArrayDesigns = new Long(arrayDesigns.size());
+        ModelAndView mav = new ModelAndView( "arrayDesignStatistics" );
+        mav.addObject( "arrayDesigns", summaries );
+        mav.addObject("numArrayDesigns", numArrayDesigns);
 
         return mav;
     }

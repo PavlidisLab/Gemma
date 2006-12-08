@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -33,7 +34,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.util.ConfigUtils;
 
 
@@ -65,59 +68,39 @@ public class ArrayDesignReportService
         this.arrayDesignService = arrayDesignService;
     }
     
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignReportService#generateArrayDesignReport()
-     */
+    @SuppressWarnings("unchecked")
     public void generateArrayDesignReport()
     {
         initDirectories();
+        generateAllArrayDesignReport();
+        Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
+        for ( ArrayDesignValueObject ad : ads ) {
+            generateArrayDesignReport(ad.getId());
+        }
+    }
+    
+    public void generateArrayDesignReport(long id)
+    {
+
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setId( id );
         
-        long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences(  );
-        long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults(  );
-        long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes(  );
-        long numGenes = arrayDesignService.numAllGenes(  );
+        log.info( "Generating report for array design " + id );
         
-        // obtain time information (for timestamping)
-        Date d = new Date( System.currentTimeMillis() );
-        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd hh:mm" );
-        // write into table format
-        StringBuffer s = new StringBuffer();
-        s.append("<table class='datasummary'>" +
-                "<tr>" +
-                "<td colspan=2 align=center>" +
-                "<b>Summary</b>" +
-                "</td></tr>" +
-                "<tr><td>" +
-                "Probes with sequences" +
-                "</td><td>" +
-                numCsBioSequences + 
-                "</td></tr>" +
-                "<tr><td>" +
-                "Probes with genome alignments" +
-                "</td>" +
-                "<td>" + numCsBlatResults + 
-                "</td></tr>" +
-                "<tr><td>" +
-                "Probes mapping to gene(s)" +
-                "</td><td>" +
-                numCsGenes +
-                "</td></tr>" +
-                "<tr><td>" +
-                "Unique genes represented" +
-                "</td><td>" +
-                numGenes + 
-                "</td></tr>" +
-                "<tr><td colspan=2 align='center' class='small'>" +
-                "(as of " + timestamp + ")" +
-                "</td></tr>" + 
-                "</table>");
+        long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
+        long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
+        long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
+        long numGenes = arrayDesignService.numGenes( ad );
+        
+        String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes );
+
         // write into file
-        File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY);
+        File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id);
         f.delete();
         try {
             f.createNewFile();
             Writer writer = new FileWriter(f);
-            writer.write( s.toString() );
+            writer.write( report );
             writer.flush();
         } catch ( IOException e ) {
             // cannot write to file. Just fail gracefully.
@@ -125,6 +108,56 @@ public class ArrayDesignReportService
         }
     }
 
+    public void generateAllArrayDesignReport()
+    {
+        log.info( "Generating report for all array designs" );
+        
+        long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences(  );
+        long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults(  );
+        long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes(  );
+        long numGenes = arrayDesignService.numAllGenes(  );
+        
+        String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes );
+        // write into file
+        File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY);
+        f.delete();
+        try {
+            f.createNewFile();
+            Writer writer = new FileWriter(f);
+            writer.write( report.toString() );
+            writer.flush();
+        } catch ( IOException e ) {
+            // cannot write to file. Just fail gracefully.
+            log.error( "Cannot write to file." );
+        }
+    }
+
+
+    public java.lang.String getArrayDesignReport(Long id)
+    {
+         // read file into return string
+        
+        InputStream istr = null;
+        try {
+            istr = FileTools.getInputStreamFromPlainOrCompressedFile(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id);
+        } 
+        catch (Exception e) {
+            return "No summary available";
+        }
+        
+        BufferedReader reader = new BufferedReader(new InputStreamReader(istr) );
+        StringBuffer report = new StringBuffer();
+        String str;
+        try {
+            while ((str = reader.readLine()) != null) {
+                report.append( str );
+            }
+        } catch ( IOException e ) {
+            return "";
+        }
+        return report.toString();
+    }
+    
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignReportService#getArrayDesignReport()
      */
@@ -158,6 +191,43 @@ public class ArrayDesignReportService
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR );
+    }
+    
+    private String generateReportString(long numCsBioSequences, long numCsBlatResults, long numCsGenes, long numGenes) {
+        // obtain time information (for timestamping)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd hh:mm" );
+        // write into table format
+        StringBuffer s = new StringBuffer();
+        s.append("<table class='datasummary'>" +
+                "<tr>" +
+                "<td colspan=2 align=center>" +
+                "</td></tr>" +
+                "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" +
+                "Probes with sequences" +
+                "</td><td>" +
+                numCsBioSequences + 
+                "</td></tr>" +
+                "<tr><td>" +
+                "Probes with genome alignments" +
+                "</td>" +
+                "<td>" + numCsBlatResults + 
+                "</td></tr></authz:authorize>" +
+                "<tr><td>" +
+                "Probes mapping to gene(s)" +
+                "</td><td>" +
+                numCsGenes +
+                "</td></tr>" +
+                "<tr><td>" +
+                "Unique genes represented" +
+                "</td><td>" +
+                numGenes + 
+                "</td></tr>" +
+                "<tr><td colspan=2 align='center' class='small'>" +
+                "(as of " + timestamp + ")" +
+                "</td></tr>" + 
+                "</table>");
+        return s.toString();
     }
 
 
