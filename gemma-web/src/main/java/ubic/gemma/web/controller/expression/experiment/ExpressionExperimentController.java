@@ -27,8 +27,6 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -46,7 +44,6 @@ import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.util.MessageUtil;
 
 /**
  * @author keshav
@@ -298,43 +295,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }
 
-        String taskId = startJob( expressionExperiment, request );
-        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        // return doDelete( request, response, expressionExperiment );
+       return startJob( request, new RemoveExpressionExperimentJob(request, expressionExperiment, expressionExperimentService) );
+      
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseBackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
-
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
-
-            @SuppressWarnings("unchecked")
-            public ModelAndView call() throws Exception {
-
-                SecurityContextHolder.setContext( securityContext );
-
-                ExpressionExperiment ee = ( ExpressionExperiment ) command;
-                expressionExperimentService.thawLite( ee );
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Deleting dataset: " + ee.getId() );
-
-                expressionExperimentService.delete( ee );
-                saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
-                ee = null;
-
-                ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
-            }
-        };
-    }
 
     /**
      * @return the searchService
@@ -349,5 +313,39 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
     }
+    
+    
+   class RemoveExpressionExperimentJob extends BackgroundControllerJob<ModelAndView> {
+        
+       ExpressionExperimentService expressionExperimentService;
+       ExpressionExperiment ee;
+       
+        public RemoveExpressionExperimentJob( HttpServletRequest request,ExpressionExperiment ee, ExpressionExperimentService expressionExperimentService ) {
+            super( request, getMessageUtil() );       
+            this.expressionExperimentService = expressionExperimentService;
+            this.ee = ee;
+        }
+
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            expressionExperimentService.thawLite( ee );
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                    .getAuthentication().getName(), "Deleting dataset: " + ee.getId() );
+
+            expressionExperimentService.delete( ee );
+            saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
+            ee = null;
+
+            ProgressManager.destroyProgressJob( job );
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+
+
+        }
+    }
+    
 
 }

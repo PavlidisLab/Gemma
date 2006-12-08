@@ -22,9 +22,8 @@ import java.util.concurrent.FutureTask;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.web.util.MessageUtil;
 
@@ -42,7 +41,13 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      * 
      */
 
+    /**
+     * Use this to access the task id in the request.
+     */
+    public final static String JOB_ATTRIBUTE = "taskId";
+
     TaskRunningService taskRunningService;
+    private MessageUtil messageUtil;
 
     /**
      * @param taskRunningService the taskRunningService to set
@@ -52,35 +57,25 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
     }
 
     /**
-     * @param command
+     * @param BackgroundControllerJob<ModelAndView> job
      * @param request
-     * @return task id
+     * @return task id This allows the background controller job to be created outside and passed in effectively
+     *         allowing one controller to create more than 1 job
      */
-    protected synchronized String startJob( Object command, HttpServletRequest request ) {
+    protected synchronized ModelAndView startJob( HttpServletRequest request, BackgroundControllerJob<ModelAndView> job ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
-        SecurityContext context = SecurityContextHolder.getContext();
 
         String taskId = TaskRunningService.generateTaskId();
 
-        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
-
-        request.getSession().setAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE, taskId );
+        assert taskId != null;
+        request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
+        job.setTaskId( taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
-        return taskId;
+        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
     }
-
-    /**
-     * You have to implement this in your subclass.
-     * 
-     * @param securityContext
-     * @param command from form
-     * @return
-     */
-    protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger );
 
 }

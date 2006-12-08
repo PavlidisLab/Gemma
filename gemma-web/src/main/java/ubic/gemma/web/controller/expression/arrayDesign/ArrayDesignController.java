@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -34,8 +33,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,7 +45,6 @@ import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.util.MessageUtil;
 
 /**
  * @author keshav
@@ -226,13 +224,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            this.saveMessage( request, "Generated summary for all platforms" );
-            arrayDesignReportService.generateArrayDesignReport();
+            return  startJob(request, new GenerateSummary(request, arrayDesignReportService) );
         }
-        // if ids are specified, then display only those arrayDesigns
-        else {
-            this.saveMessage( request, "Disabled summary caching for lists of platforms" );
-        }
+        
+        // if ids are specified, then display only those arrayDesigns    
+        this.saveMessage( request, "Disabled summary caching for lists of platforms" );
        
         return this.showAll( request, response );
     }
@@ -274,10 +270,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                     arrayDesign.getName() } );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
-
-        String taskId = startJob( arrayDesign, request );
-        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-       
+        
+        return  startJob(request, new RemoveArrayJob(request, arrayDesign, arrayDesignService) );
+        
 
     }
     
@@ -339,40 +334,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ));
     }
 
-    
-     
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseBackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
-
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
-
-            @SuppressWarnings("unchecked")
-            public ModelAndView call() throws Exception {
-
-                SecurityContextHolder.setContext( securityContext );
-     
-                ArrayDesign ad = (ArrayDesign) command;
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Deleting Array: "
-                        + ad.getShortName());
-                            
-                arrayDesignService.remove( ad );
-                saveMessage( "Array "+ad.getShortName()  +" removed from Database." );                
-                ad = null;
-
-
-                ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
-            }
-        };
-    }
 
     /**
      * @return the searchService
@@ -387,5 +348,82 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
     }
+    
+    /**
+     * 
+     *Inner class used for deleting array designs
+     * <hr>
+     * <p>Copyright (c) 2006 UBC Pavlab
+     * @author klc
+     * @version $Id$
+     */
+    class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
+        
+        private ArrayDesignService arrayDesignService;
+        private ArrayDesign ad;
+        
+        public RemoveArrayJob( HttpServletRequest request, ArrayDesign ad, ArrayDesignService arrayDesignService ) {
+            super( request, getMessageUtil() );   
+            this.arrayDesignService = arrayDesignService;
+            this.ad = ad;
+        }
 
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            init();
+        
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                    .getAuthentication().getName(), "Deleting Array: "
+                    + ad.getShortName());
+                        
+            arrayDesignService.remove( ad );
+            saveMessage( "Array "+ad.getShortName()  +" removed from Database." );                
+            ad = null;
+
+
+            ProgressManager.destroyProgressJob( job );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
+
+
+        }
+    }
+
+    
+    
+    /**
+     * 
+     *Inner class used for deleting array designs
+     * <hr>
+     * <p>Copyright (c) 2006 UBC Pavlab
+     * @author klc
+     * @version $Id$
+     */
+    class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
+        
+        private ArrayDesignReportService arrayDesignReportService;
+        
+        public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
+            super( request, getMessageUtil() );   
+            this.arrayDesignReportService = arrayDesignReportService;
+        }
+
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            init();
+        
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                    .getAuthentication().getName(), "Generating ArrayDesign Report summary");
+            
+            saveMessage("Generated summary for all platforms" );
+            job.updateProgress( "Generated summary for all platforms" );
+            arrayDesignReportService.generateArrayDesignReport();
+            
+            ProgressManager.destroyProgressJob( job );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
+            
+
+        }
+    }
 }

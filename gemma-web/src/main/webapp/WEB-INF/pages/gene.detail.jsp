@@ -66,9 +66,12 @@
                     </b>
                 </td>
                 <td>
+                
                 	<%if (gene.getDescription() != null){%>
-                    <textarea name="" rows=5 cols=80 readonly><jsp:getProperty name="gene" property="description" /></textarea>
-                    <%}else{
+		                <div class="clob">
+		                    <jsp:getProperty name="gene" property="description" /> 
+		                </div>
+		            <%}else{
                     	out.print("Description unavailable");
                     }%>
                 </td>

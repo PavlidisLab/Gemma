@@ -37,6 +37,8 @@ import ubic.gemma.web.util.MessageUtil;
      * @author klc
      * 
      * @version $Id$
+     * 
+     * @spring.property name="taskRunningService" ref="taskRunningService"
      */
     public abstract class MultiBackgroundProcessingController extends BaseFormController {
 

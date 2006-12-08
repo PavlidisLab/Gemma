@@ -27,7 +27,6 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.web.util.MessageUtil;
 
@@ -82,18 +81,18 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      */
     public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
             Object commandObj, MessageUtil messenger ) {
-        this(request);
+        this(request, messenger);
         this.taskId = taskId;      
         this.command = commandObj;
         
-        this.messageUtil = messenger;
     }
     
-    public BackgroundControllerJob(HttpServletRequest request) {
+    public BackgroundControllerJob(HttpServletRequest request, MessageUtil msgUtil) {
         super();
         this.securityContext = SecurityContextHolder.getContext();
         this.request = request;
         this.session = request.getSession();
+        this.messageUtil = msgUtil;
     }
 
     /**

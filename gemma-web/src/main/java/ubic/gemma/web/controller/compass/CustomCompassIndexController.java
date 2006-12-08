@@ -57,7 +57,6 @@ import ubic.gemma.web.controller.MultiBackgroundProcessingController;
  * @author keshav
  * @version $Id$
  * @spring.bean id="indexController"
- * @spring.property name="taskRunningService" ref="taskRunningService"
  * @spring.property name="arrayGps" ref="arrayGps"
  * @spring.property name="expressionGps" ref="expressionGps"
  * @spring.property name="geneGps" ref="geneGps"
@@ -165,7 +164,7 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         private String description;
         
         public IndexJob( HttpServletRequest request, CompassGpsInterfaceDevice gpsDevice, String description ) {
-            super( request );           
+            super( request, getMessageUtil() );           
             this.gpsDevice = gpsDevice;
             this.description = description;
         }
