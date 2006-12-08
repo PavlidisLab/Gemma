@@ -181,7 +181,12 @@ public class AssayViewTag extends TagSupport {
         }
         buf.append( "</table>" );
         
-
+        buf.append( "<ul style=\"margin-bottom: 4px; \" id=\"testsort\">");
+        for ( String string : assayList ) {
+            buf.append( "<li style='border:2px solid #000000;'>" + string + "</li>" );
+        }
+        buf.append( "</ul>" );
+        
         buf.append( "</div>" );
 
         try {

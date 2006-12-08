@@ -107,7 +107,7 @@ public class ArrayDesignReportService
                 "</td><td>" +
                 numGenes + 
                 "</td></tr>" +
-                "<tr><td colspan=2 align='center'>" +
+                "<tr><td colspan=2 align='center' class='small'>" +
                 "(as of " + timestamp + ")" +
                 "</td></tr>" + 
                 "</table>");

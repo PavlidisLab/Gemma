@@ -178,6 +178,11 @@
 	-moz-border-radius: 0px 0px 0px 0px;
 }
 
+/* reduced font size elements */
+.small {
+	font-size: smaller;	
+}
+
 /* styles for pure CSS tooltips */
 a.info{
     position:relative; 
