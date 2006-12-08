@@ -133,6 +133,7 @@ public class AssayViewTag extends TagSupport {
         }
         Comparator<BioMaterial> comparator = new BioMaterialComparator();
         Collections.sort( materials, comparator );
+        Collection<String> assayList = new ArrayList<String>();
         for ( BioMaterial material : materials ) {
             if ( count % 2 == 0 ) {
                 buf.append( "<tr class='even' align=justify>" );
@@ -156,24 +157,31 @@ public class AssayViewTag extends TagSupport {
                         String link = "<a title='" + StringUtils.join(tooltips.toArray(),"\n") + "' href='/Gemma/bioAssay/showAllBioAssays.html?id="
                                 + StringUtils.join( ids.toArray(), "," ) + "'> (list) </a>";
                         buf.append( "<td>" + assayMap.get( design ).size() + link + "</td>" );
+                        assayList.add(StringUtils.join( ids.toArray(), "," ));
                     } else {
                         BioAssay assay = ( ( ArrayList<BioAssay> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60);
                         String link = "<a title='" + shortDesc + "' href='/Gemma/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>"
                                 + assay.getName() + "</a>";
                         buf.append( "<td>" + link + "</td>" );
+                        assayList.add( assay.getName() );
                     }
                 }
                 else {
                     // put empty space in table if the bioMaterial does not
                     // use this array design
                     buf.append( "<td>&nbsp;</td>" );
+                    assayList.add("empty");
                 }
             }
+            
+            
             buf.append( "</tr>" );
             count++;
         }
         buf.append( "</table>" );
+        
+
         buf.append( "</div>" );
 
         try {
