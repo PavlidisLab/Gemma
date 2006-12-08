@@ -18,10 +18,8 @@
  */
 package ubic.gemma.scheduler;
 
-import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.TriggerUtils;
@@ -35,8 +33,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class QuartzJobTest extends BaseSpringContextTest {
-
-    Job job = new ExpressionExperimentIndexerJob();
 
     /**
      * Tests executing the job ExpressionExperimentIndexerJob
