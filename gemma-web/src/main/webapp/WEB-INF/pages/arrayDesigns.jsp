@@ -3,10 +3,11 @@
 
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
+<authz:authorize ifAnyGranted="admin">
 <c:if test="${summaryString != null }" >
 ${summaryString}
 </c:if>
-
+</authz:authorize>
 
 		<h1>
 		Platforms
