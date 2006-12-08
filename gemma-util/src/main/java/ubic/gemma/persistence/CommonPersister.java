@@ -506,16 +506,20 @@ abstract public class CommonPersister extends AbstractPersister {
 
         ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
 
+        OntologyEntry existingOntologyEntry = ontologyEntryService.find( ontologyEntry );
+
+        if ( existingOntologyEntry != null ) {
+            return existingOntologyEntry;
+        }
+
         /*
          * Note: we do this instead of persistCollectionElements because with the latter we get
          * NonUniqueObjectException.
          */
         for ( OntologyEntry oe : ontologyEntry.getAssociations() ) {
             oe = persistOntologyEntry( oe );
-            this.getHibernateTemplate().flush();
         }
-        ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
-        this.getHibernateTemplate().flush();
+        ontologyEntry = ontologyEntryService.create( ontologyEntry );
         return ontologyEntry;
     }
 
