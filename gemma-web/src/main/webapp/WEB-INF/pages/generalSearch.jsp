@@ -18,7 +18,16 @@
 		
 		<br/>
 	<c:if test="${numGenes != null}">
-		<h3>
+
+	<h4>
+
+			<a href="/Gemma/searcher.html?searchString=<c:out value="${SearchString}"/> ">		
+				(Bookmarkable link)
+			</a>
+
+	</h4>
+
+		<h3>		
 			Your search for  <b> <c:out value="${SearchString}"/> </b> found  <b> <c:out value="${numGenes}" /> </b> Genes. 
 		</h3>	<br/> 
 	</c:if>

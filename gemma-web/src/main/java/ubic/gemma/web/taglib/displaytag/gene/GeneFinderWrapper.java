@@ -60,20 +60,21 @@ public class GeneFinderWrapper extends TableDecorator {
     public String getNcbiLink() {
         Gene object = ( Gene ) getCurrentRowObject();
         String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" +
-                object.getNcbiId() + "'>(ncbi)</a>";
+                object.getNcbiId() + "'>  <img hight='10' width='10%' src=\"/Gemma/images/logo/ncbi.gif\" /></a>";
         return ncbiLink;
     }
     
     public String getGemmaLink() {
         Gene object = ( Gene ) getCurrentRowObject();
         String gemmaLink = "<a href='/Gemma/gene/showGene.html?id=" +
-                object.getId() + "'>(gemma)</a>";
+                object.getId() + "'><img src=\"/Gemma/images/logo/gemmaTiny.gif\" /> </a>";
         return gemmaLink;
     }
     
     public String getNameLink() {
         Gene object = ( Gene ) getCurrentRowObject();
-        String nameLink = object.getName() + getGemmaLink() + getNcbiLink();
+        String nameLink = "<a href='/Gemma/gene/showGene.html?id=" +
+        object.getId() + "'>" + object.getName() + "</a> &nbsp; &nbsp;" + getNcbiLink();
         return nameLink;
     }
     
