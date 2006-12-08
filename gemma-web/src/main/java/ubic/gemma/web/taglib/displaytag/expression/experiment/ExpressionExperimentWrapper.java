@@ -93,7 +93,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         long count = object.getBioAssayCount();
 
-        return count + " <a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
+        return count + " <a href=\"/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
                 + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
     }
 
@@ -148,7 +148,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return "<a title=\"" + object.getName() + "\" href=\"showExpressionExperiment.html?id=" + object.getId()
+            return "<a title=\"" + object.getName() + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
                     + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
         }
         return "No design";
