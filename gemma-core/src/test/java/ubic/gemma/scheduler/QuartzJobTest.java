@@ -62,7 +62,7 @@ public class QuartzJobTest extends BaseSpringContextTest {
 
             sched.scheduleJob( jobDetail, trigger );
 
-        } catch ( SchedulerException e ) {
+        } catch ( Exception e ) {
             fail = true;
             e.printStackTrace();
         } finally {

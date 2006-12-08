@@ -20,19 +20,26 @@ package ubic.gemma.scheduler;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import ubic.gemma.util.CompassUtils;
 
 /**
  * Executes the "job" of indexing expression experiments.
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="expressionExperimentIndexerJob"
+ * @spring.property name="expressionGps" ref="expressionGps"
  */
 public class ExpressionExperimentIndexerJob implements Job {
 
     private Log log = LogFactory.getLog( this.getClass() );
+
+    private CompassGpsInterfaceDevice expressionGps = null;
 
     /*
      * (non-Javadoc)
@@ -41,6 +48,14 @@ public class ExpressionExperimentIndexerJob implements Job {
      */
     public void execute( JobExecutionContext arg0 ) throws JobExecutionException {
         log.warn( "executing job " + this.getClass().getName() );
+
+        // CompassUtils.rebuildCompassIndex( expressionGps );
     }
 
+    /**
+     * @param expressionGps
+     */
+    public void setExpressionGps( CompassGpsInterfaceDevice expressionGps ) {
+        this.expressionGps = expressionGps;
+    }
 }
