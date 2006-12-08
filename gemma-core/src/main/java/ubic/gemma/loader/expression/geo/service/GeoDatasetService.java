@@ -133,7 +133,10 @@ public class GeoDatasetService extends AbstractGeoService {
                 }
 
                 for ( BioAssay ba : bioAssays ) {
-                    String existingAcc = ba.getAccession().getAccession();
+                    DatabaseEntry acc = ba.getAccession();
+                    if ( acc == null ) continue;
+
+                    String existingAcc = acc.getAccession();
                     if ( existingAcc.equals( sampleId )
                             && ba.getAccession().getExternalDatabase().getName().equals( GEO_DB_NAME ) ) {
                         log.info( sampleId + " appears in an expression experiment already in the system, skipping" );
