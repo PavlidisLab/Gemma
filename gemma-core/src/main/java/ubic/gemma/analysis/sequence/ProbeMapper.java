@@ -57,6 +57,118 @@ public class ProbeMapper {
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
     /**
+     * @return the blatScoreThreshold
+     */
+    public double getBlatScoreThreshold() {
+        return this.blatScoreThreshold;
+    }
+
+    /**
+     * @param goldenPathDb
+     * @param blatResults
+     * @return
+     */
+    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
+            Collection<BlatResult> blatResults ) {
+        return this.processBlatResults( goldenPathDb, blatResults, false );
+    }
+
+    /**
+     * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
+     * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
+     * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
+     * 
+     * @param goldenPathDb
+     * @param blatResults
+     * @param ignoreStrand ignore the strand when scoring alignments.
+     * @return
+     * @throws IOException
+     */
+    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
+            Collection<BlatResult> blatResults, boolean ignoreStrand ) {
+
+        if ( log.isDebugEnabled() ) {
+            log.debug( blatResults.size() + " Blat results to map " );
+        }
+
+        assert goldenPathDb != null;
+        Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
+        int count = 0;
+        int skipped = 0;
+
+        // group results together by BioSequence
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
+
+        for ( BlatResult blatResult : blatResults ) {
+            if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
+                biosequenceToBlatResults.put( blatResult.getQuerySequence(), new HashSet<BlatResult>() );
+            }
+            biosequenceToBlatResults.get( blatResult.getQuerySequence() ).add( blatResult );
+        }
+
+        // Do them one sequence at a time.
+        for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
+            Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
+            if ( log.isDebugEnabled() ) {
+                log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
+            }
+
+            Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
+
+            for ( BlatResult blatResult : blatResultsForSequence ) {
+                assert blatResult.score() >= 0 : "Score was " + blatResult.score();
+                assert blatResult.identity() >= 0 : "Identity was " + blatResult.identity();
+                if ( blatResult.score() < scoreThreshold || blatResult.identity() < identityThreshold ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score()
+                                + " identity=" + blatResult.identity() );
+                    skipped++;
+                    continue;
+                }
+
+                // here's the key line!
+                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
+                        ignoreStrand );
+
+                if ( resultsForOneBlatResult != null ) blatAssociationsForSequence.addAll( resultsForOneBlatResult );
+
+                if ( ++count % 100 == 0 && log.isInfoEnabled() )
+                    log.info( "Annotations computed for " + count + " blat results" );
+
+            } // end of iteration over results for this sequence.
+
+            if ( log.isDebugEnabled() ) {
+                log.debug( blatAssociationsForSequence.size() + " associations for " + sequence );
+            }
+
+            if ( blatAssociationsForSequence.size() == 0 ) continue;
+
+            // Another important step: fill in the specificity, remove duplicates
+            scoreResults( blatAssociationsForSequence );
+
+            if ( log.isDebugEnabled() ) {
+                log.debug( blatAssociationsForSequence.size() + " associations for " + sequence
+                        + " after redundancy reduction" );
+            }
+
+            String queryName = sequence.getName();
+            assert StringUtils.isNotBlank( queryName );
+            if ( !allRes.containsKey( queryName ) ) {
+                allRes.put( queryName, new HashSet<BlatAssociation>() );
+            }
+
+            allRes.get( queryName ).addAll( blatAssociationsForSequence );
+
+        } // end of iteration over sequence
+
+        // if ( log.isInfoEnabled() && skipped > 0 )
+        // log.info( "Skipped " + skipped + "/" + blatResults.size()
+        // + " individual blat results that didn't meet criteria" );
+
+        return allRes;
+    }
+
+    /**
      * @param writer
      * @param goldenPathDb
      * @param genbankId
@@ -75,6 +187,91 @@ public class ProbeMapper {
 
         return processBlatResults( goldenPathDb, blatResults );
 
+    }
+
+    /**
+     * @param writer
+     * @param goldenPathDb
+     * @param genbankIds
+     * @return
+     */
+    public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPathSequenceAnalysis goldenPathDb,
+            Collection<String[]> genbankIds ) {
+        Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
+        int count = 0;
+        int skipped = 0;
+        for ( String[] genbankIdAr : genbankIds ) {
+
+            if ( genbankIdAr == null || genbankIdAr.length == 0 ) {
+                continue;
+            }
+
+            if ( genbankIdAr.length > 1 ) {
+                throw new IllegalArgumentException( "Input file must have just one genbank identifier per line" );
+            }
+
+            String genbankId = genbankIdAr[0];
+
+            Map<String, Collection<BlatAssociation>> res = processGbId( goldenPathDb, genbankId );
+            allRes.putAll( res );
+
+            count++;
+            if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
+        }
+        log.info( "Annotations computed for " + count + " genbank identifiers" );
+        if ( log.isInfoEnabled() && skipped > 0 )
+            log.info( "Skipped " + skipped + " results that didn't meet criteria" );
+        return allRes;
+    }
+
+    /**
+     * Get BlatAssociation results for a single sequence. If you have multiple sequences to run it is always better to
+     * use processSequences();
+     * 
+     * @param goldenPath
+     * @param sequence
+     * @return
+     * @see processSequences
+     */
+    public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
+
+        Blat b = new Blat();
+        b.setBlatScoreThreshold( blatScoreThreshold );
+        Collection<BlatResult> results;
+        try {
+            results = b.blatQuery( sequence, goldenPath.getTaxon() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Error running blat", e );
+        }
+        Map<String, Collection<BlatAssociation>> allRes = processBlatResults( goldenPath, results );
+        assert allRes.keySet().size() == 1;
+        return allRes.values().iterator().next();
+    }
+
+    /**
+     * Given a collection of sequences, blat them against the selected genome.
+     * 
+     * @param output
+     * @param goldenpath for the genome to be used.
+     * @param sequences
+     * @return
+     */
+    public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
+            Collection<BioSequence> sequences ) {
+        Blat b = new Blat();
+        b.setBlatScoreThreshold( blatScoreThreshold );
+
+        try {
+            Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
+            Collection<BlatResult> blatres = new HashSet<BlatResult>();
+            for ( Collection<BlatResult> coll : results.values() ) {
+                blatres.addAll( coll );
+            }
+            Map<String, Collection<BlatAssociation>> allRes = processBlatResults( goldenpath, blatres );
+            return allRes;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -119,6 +316,46 @@ public class ProbeMapper {
             }
         }
         return globalBest;
+    }
+
+    /**
+     * @param blatScoreThreshold the blatScoreThreshold to set
+     */
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
+    }
+
+    /**
+     * @param identityThreshold
+     */
+    public void setIdentityThreshold( double identityThreshold ) {
+        this.identityThreshold = identityThreshold;
+
+    }
+
+    /**
+     * @param scoreThreshold
+     */
+    public void setScoreThreshold( double scoreThreshold ) {
+        this.scoreThreshold = scoreThreshold;
+
+    }
+
+    /**
+     * @param blatAssociation
+     * @return
+     */
+    private double computeScore( BlatAssociation blatAssociation ) {
+        BlatResult br = blatAssociation.getBlatResult();
+
+        assert br != null;
+
+        double blatScore = br.score();
+        double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
+        double score = computeScore( blatScore, overlap );
+
+        blatAssociation.setScore( score );
+        return score;
     }
 
     /**
@@ -193,6 +430,63 @@ public class ProbeMapper {
     }
 
     /**
+     * @param blatAssociations
+     * @param geneProducts
+     * @return
+     */
+    private Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProduct(
+            Collection<BlatAssociation> blatAssociations ) {
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
+        Collection<BioSequence> sequences = new HashSet<BioSequence>();
+        for ( BlatAssociation blatAssociation : blatAssociations ) {
+            assert blatAssociation.getBioSequence() != null;
+            computeScore( blatAssociation );
+            sequences.add( blatAssociation.getBioSequence() );
+
+            if ( sequences.size() > 1 ) {
+                throw new IllegalArgumentException( "Blat associations must all be for the same query sequence" );
+            }
+
+            assert blatAssociation.getGeneProduct() != null;
+            GeneProduct geneProduct = blatAssociation.getGeneProduct();
+            if ( !geneProducts.containsKey( geneProduct ) ) {
+                geneProducts.put( geneProduct, new HashSet<BlatAssociation>() );
+            }
+            geneProducts.get( geneProduct ).add( blatAssociation );
+
+            blatAssociation.setSpecificity( 1.0 );
+        }
+
+        return geneProducts;
+    }
+
+    /**
+     * Process a single BlatResult.
+     * 
+     * @param goldenPathDb
+     * @param blatResult
+     * @param ignoreStrand If true, the strand is not used to evalute alignments.
+     * @return
+     */
+    private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
+            BlatResult blatResult, boolean ignoreStrand ) {
+        assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
+        String strand = ignoreStrand == true ? null : blatResult.getStrand();
+        Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
+                .getTargetChromosome().getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult
+                .getTargetStarts(), blatResult.getBlockSizes(), strand, threeprimeMethod );
+
+        if ( blatAssociations == null ) return null;
+
+        for ( BlatAssociation association : blatAssociations ) {
+            association.setBlatResult( blatResult );
+            association.setBioSequence( blatResult.getQuerySequence() );
+        }
+
+        return blatAssociations;
+    }
+
+    /**
      * Now go over and compute scores and find the best one, for each gene product, removing all other hits (so there is
      * just one per gene product
      */
@@ -207,7 +501,7 @@ public class ProbeMapper {
             double maxScore = 0.0;
             BlatAssociation best = null;
 
-            // Find the best one. If there are ties it's arbitrary which oneo we pick.
+            // Find the best one. If there are ties it's arbitrary which one we pick.
             for ( BlatAssociation blatAssociation : geneProductBlatAssociations ) {
                 double score = blatAssociation.getScore();
                 if ( score >= maxScore ) {
@@ -243,37 +537,6 @@ public class ProbeMapper {
     }
 
     /**
-     * @param blatAssociations
-     * @param geneProducts
-     * @return
-     */
-    private Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProduct(
-            Collection<BlatAssociation> blatAssociations ) {
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
-        Collection<BioSequence> sequences = new HashSet<BioSequence>();
-        for ( BlatAssociation blatAssociation : blatAssociations ) {
-            assert blatAssociation.getBioSequence() != null;
-            computeScore( blatAssociation );
-            sequences.add( blatAssociation.getBioSequence() );
-
-            if ( sequences.size() > 1 ) {
-                throw new IllegalArgumentException( "Blat associations must all be for the same query sequence" );
-            }
-
-            assert blatAssociation.getGeneProduct() != null;
-            GeneProduct geneProduct = blatAssociation.getGeneProduct();
-            if ( !geneProducts.containsKey( geneProduct ) ) {
-                geneProducts.put( geneProduct, new HashSet<BlatAssociation>() );
-            }
-            geneProducts.get( geneProduct ).add( blatAssociation );
-
-            blatAssociation.setSpecificity( 1.0 );
-        }
-
-        return geneProducts;
-    }
-
-    /**
      * @param geneList
      */
     private void sortGenes( List<Gene> geneList ) {
@@ -286,20 +549,16 @@ public class ProbeMapper {
     }
 
     /**
-     * @param blatAssociation
+     * Compute a score we use to quantify the quality of a hit to a GeneProduct.
+     * <p>
+     * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
+     * 
+     * @param blatScore A value from 0-1 indicating alignment quality.
+     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
      * @return
      */
-    private double computeScore( BlatAssociation blatAssociation ) {
-        BlatResult br = blatAssociation.getBlatResult();
-
-        assert br != null;
-
-        double blatScore = br.score();
-        double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
-        double score = computeScore( blatScore, overlap );
-
-        blatAssociation.setScore( score );
-        return score;
+    protected int computeScore( double blatScore, double overlap ) {
+        return ( int ) ( 1000 * blatScore * overlap );
     }
 
     /**
@@ -348,248 +607,5 @@ public class ProbeMapper {
 
         return ( score - nextBest ) / score;
 
-    }
-
-    /**
-     * Compute a score we use to quantify the quality of a hit to a GeneProduct.
-     * <p>
-     * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
-     * 
-     * @param blatScore A value from 0-1 indicating alignment quality.
-     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
-     * @return
-     */
-    protected int computeScore( double blatScore, double overlap ) {
-        return ( int ) ( 1000 * blatScore * overlap );
-    }
-
-    /**
-     * Given a collection of sequences, blat them against the selected genome.
-     * 
-     * @param output
-     * @param goldenpath for the genome to be used.
-     * @param sequences
-     * @return
-     */
-    public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
-            Collection<BioSequence> sequences ) {
-        Blat b = new Blat();
-        b.setBlatScoreThreshold( blatScoreThreshold );
-
-        try {
-            Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
-            Collection<BlatResult> blatres = new HashSet<BlatResult>();
-            for ( Collection<BlatResult> coll : results.values() ) {
-                blatres.addAll( coll );
-            }
-            Map<String, Collection<BlatAssociation>> allRes = processBlatResults( goldenpath, blatres );
-            return allRes;
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Get BlatAssociation results for a single sequence. If you have multiple sequences to run it is always better to
-     * use processSequences();
-     * 
-     * @param goldenPath
-     * @param sequence
-     * @return
-     * @see processSequences
-     */
-    public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
-
-        Blat b = new Blat();
-        b.setBlatScoreThreshold( blatScoreThreshold );
-        Collection<BlatResult> results;
-        try {
-            results = b.blatQuery( sequence, goldenPath.getTaxon() );
-        } catch ( IOException e ) {
-            throw new RuntimeException( "Error running blat", e );
-        }
-        Map<String, Collection<BlatAssociation>> allRes = processBlatResults( goldenPath, results );
-        assert allRes.keySet().size() == 1;
-        return allRes.values().iterator().next();
-    }
-
-    /**
-     * @param writer
-     * @param goldenPathDb
-     * @param genbankIds
-     * @return
-     */
-    public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPathSequenceAnalysis goldenPathDb,
-            Collection<String[]> genbankIds ) {
-        Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
-        int count = 0;
-        int skipped = 0;
-        for ( String[] genbankIdAr : genbankIds ) {
-
-            if ( genbankIdAr == null || genbankIdAr.length == 0 ) {
-                continue;
-            }
-
-            if ( genbankIdAr.length > 1 ) {
-                throw new IllegalArgumentException( "Input file must have just one genbank identifier per line" );
-            }
-
-            String genbankId = genbankIdAr[0];
-
-            Map<String, Collection<BlatAssociation>> res = processGbId( goldenPathDb, genbankId );
-            allRes.putAll( res );
-
-            count++;
-            if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
-        }
-        log.info( "Annotations computed for " + count + " genbank identifiers" );
-        if ( log.isInfoEnabled() && skipped > 0 )
-            log.info( "Skipped " + skipped + " results that didn't meet criteria" );
-        return allRes;
-    }
-
-    /**
-     * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
-     * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
-     * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
-     * 
-     * @param goldenPathDb
-     * @param blatResults
-     * @return
-     * @throws IOException
-     */
-    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
-            Collection<BlatResult> blatResults ) {
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( blatResults.size() + " Blat results to map " );
-        }
-
-        assert goldenPathDb != null;
-        Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
-        int count = 0;
-        int skipped = 0;
-
-        // group results together by BioSequence
-        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
-
-        for ( BlatResult blatResult : blatResults ) {
-            if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
-                biosequenceToBlatResults.put( blatResult.getQuerySequence(), new HashSet<BlatResult>() );
-            }
-            biosequenceToBlatResults.get( blatResult.getQuerySequence() ).add( blatResult );
-        }
-
-        // Do them one sequence at a time.
-        for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
-            Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
-            if ( log.isDebugEnabled() ) {
-                log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
-            }
-
-            Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
-
-            for ( BlatResult blatResult : blatResultsForSequence ) {
-                if ( blatResult.score() < scoreThreshold || blatResult.identity() < identityThreshold ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score()
-                                + " identity=" + blatResult.identity() );
-                    skipped++;
-                    continue;
-                }
-
-                // here's the key line!
-                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult );
-
-                if ( resultsForOneBlatResult != null ) blatAssociationsForSequence.addAll( resultsForOneBlatResult );
-
-                if ( ++count % 100 == 0 && log.isInfoEnabled() )
-                    log.info( "Annotations computed for " + count + " blat results" );
-
-            } // end of iteration over results for this sequence.
-
-            if ( log.isDebugEnabled() ) {
-                log.debug( blatAssociationsForSequence.size() + " associations for " + sequence );
-            }
-
-            if ( blatAssociationsForSequence.size() == 0 ) continue;
-
-            // Another important step: fill in the specificity, remove duplicates
-            scoreResults( blatAssociationsForSequence );
-
-            if ( log.isDebugEnabled() ) {
-                log.debug( blatAssociationsForSequence.size() + " associations for " + sequence
-                        + " after redundancy reduction" );
-            }
-
-            String queryName = sequence.getName();
-            assert StringUtils.isNotBlank( queryName );
-            if ( !allRes.containsKey( queryName ) ) {
-                allRes.put( queryName, new HashSet<BlatAssociation>() );
-            }
-
-            allRes.get( queryName ).addAll( blatAssociationsForSequence );
-
-        } // end of iteration over sequence
-
-        // if ( log.isInfoEnabled() && skipped > 0 )
-        // log.info( "Skipped " + skipped + "/" + blatResults.size()
-        // + " individual blat results that didn't meet criteria" );
-
-        return allRes;
-    }
-
-    /**
-     * Process a single BlatResult.
-     * 
-     * @param goldenPathDb
-     * @param blatResult
-     * @return
-     */
-    private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
-            BlatResult blatResult ) {
-        assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
-        Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
-                .getTargetChromosome().getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult
-                .getTargetStarts(), blatResult.getBlockSizes(), blatResult.getStrand(), threeprimeMethod );
-
-        if ( blatAssociations == null ) return null;
-
-        for ( BlatAssociation association : blatAssociations ) {
-            association.setBlatResult( blatResult );
-            association.setBioSequence( blatResult.getQuerySequence() );
-        }
-
-        return blatAssociations;
-    }
-
-    /**
-     * @param scoreThreshold
-     */
-    public void setScoreThreshold( double scoreThreshold ) {
-        this.scoreThreshold = scoreThreshold;
-
-    }
-
-    /**
-     * @param identityThreshold
-     */
-    public void setIdentityThreshold( double identityThreshold ) {
-        this.identityThreshold = identityThreshold;
-
-    }
-
-    /**
-     * @return the blatScoreThreshold
-     */
-    public double getBlatScoreThreshold() {
-        return this.blatScoreThreshold;
-    }
-
-    /**
-     * @param blatScoreThreshold the blatScoreThreshold to set
-     */
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
     }
 }

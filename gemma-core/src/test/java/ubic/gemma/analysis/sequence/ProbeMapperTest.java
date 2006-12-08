@@ -126,6 +126,22 @@ public class ProbeMapperTest extends TestCase {
         GeneProduct gprod = products.iterator().next();
         assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() );
     }
+    
+    
+    /**
+     * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the strand works.
+     */
+    public void testLocateGeneOnWrongStrand() throws Exception {
+        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
+                databasePassword );
+
+        Collection<GeneProduct> products = gp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long( 32918445 ),
+               null );
+        assertEquals( 2, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "PSMB8", gprod.getGene().getOfficialSymbol() );
+    }
+    
 
     public void testComputeSpecificityA() throws Exception {
         ProbeMapper pm = new ProbeMapper();

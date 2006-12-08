@@ -35,8 +35,7 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
     private static final long serialVersionUID = -8157023595754885730L;
 
     /**
-     * Based on the JKSrc method in psl.c. However, we do not double-penalize for mismatches (they are not subtracted
-     * from the matches). The gap penalties are implemented as in psl.c.
+     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches.
      * 
      * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
      * @see ubic.gemma.model.sequence.sequenceAnalysis.BlatResult#score()
@@ -59,8 +58,15 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         }
 
         assert length > 0;
-        return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
-                / length;
+        /*
+         * return sizeMul * (psl->match + ( psl->repMatch>>1)) - sizeMul * psl->misMatch - psl->qNumInsert -
+         * psl->tNumInsert; Note that: "Currently the program does not distinguish between matches and repMatches.
+         * repMatches is always zero." (http://genome.ucsc.edu/goldenPath/help/blatSpec.html)
+         */
+        double score = ( double ) ( this.getMatches() - this.getQueryGapCount() - this.getTargetGapCount() )
+                / ( double ) length;
+        assert score >= 0.0 && score <= 1.0 : "Score was " + score;
+        return score;
     }
 
     /**
@@ -83,8 +89,8 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
             sizeDif = 0; // here assuming "isMrna" is true. ("The parameter isMrna should be set to TRUE, regardless
             // of whether the input sequence is mRNA or protein")
         }
-        int insertFactor = this.getQueryGapCount() + this.getTargetGapCount(); // assuming isMRNA is true.
-        int total = ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
+        int insertFactor = this.getQueryGapCount(); // assumes isMrna is true.
+        int total = ( sizeMul * ( this.getMatches() + this.getMismatches() ) );
         int milliBad = 0;
         if ( total != 0 ) {
             milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3.0 * Math

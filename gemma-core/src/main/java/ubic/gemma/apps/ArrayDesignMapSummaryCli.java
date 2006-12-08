@@ -34,6 +34,14 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
 
     ArrayDesignMapResultService arrayDesignMapResultService;
 
+    
+    
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        // FIXME: add HTML output option.
+    }
+
     /*
      * (non-Javadoc)
      * 

@@ -1,5 +1,8 @@
 package ubic.gemma.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -24,6 +27,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignProbeMapperService arrayDesignProbeMapperService;
 
+    private Boolean ignoreStrand = false;
+
     /*
      * (non-Javadoc)
      * 
@@ -33,6 +38,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected void buildOptions() {
         super.buildOptions();
+        Option ignoreStrandOption = OptionBuilder.withArgName( "Ignore alignment strand" ).withDescription(
+                "Ignore the strand alignments are on (e.g., for cDNA arrays)" ).withLongOpt( "ignorestrand" ).create(
+                'i' );
+
+        addOption( ignoreStrandOption );
     }
 
     public static void main( String[] args ) {
@@ -61,7 +71,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         unlazifyArrayDesign( arrayDesign );
 
-        arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
+        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, ignoreStrand );
 
         return null;
     }
@@ -71,6 +81,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         super.processOptions();
         arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
+        this.ignoreStrand = this.hasOption( 'i' );
     }
 
 }
