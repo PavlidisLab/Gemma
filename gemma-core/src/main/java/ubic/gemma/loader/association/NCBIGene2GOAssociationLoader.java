@@ -160,7 +160,7 @@ public class NCBIGene2GOAssociationLoader {
         // finish up.
         persisterHelper.persist( itemsToPersist );
 
-        log.info( "Loaded total of " + count + " sequences" );
+        log.info( "Loaded total of " + count + " GO association" );
         consumerDone.set( true );
 
     }
