@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
@@ -168,6 +169,9 @@ public class ExpressionDataMatrixVisualizationService {
         }
 
         for ( BioAssay ba : colElements ) {
+            if ( colLabels.contains( ba.getName() ) ) {
+                ba.setName( ba.getName() + " _" + RandomUtils.nextInt() );
+            }
             colLabels.add( ba.getName() );
         }
 
