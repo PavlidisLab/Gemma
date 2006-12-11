@@ -157,7 +157,7 @@
 	
 	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
   		<property name="jobDetail">
-			<ref bean="expressionExperimentIndexJobDetail"/>
+			<ref bean="indexJobDetail"/>
   		</property>
   		<property name="startDelay">
 			<value>43200000</value>
@@ -167,7 +167,7 @@
   		</property>
 	</bean>
 	
-	<bean id="expressionExperimentIndexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject"><ref bean="indexService"/></property>
 		<property name="targetMethod"><value>indexAll</value></property>
 	</bean>
