@@ -112,7 +112,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
-        log.debug( sb.toString() );
+        log.info( sb.toString() );
     }
 
     /*
