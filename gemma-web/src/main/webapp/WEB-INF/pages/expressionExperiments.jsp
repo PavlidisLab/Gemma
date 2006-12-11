@@ -17,16 +17,20 @@
 		<display:table pagesize="50" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" 
+				comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
+			/>
 
 			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 
 			<authz:authorize ifAnyGranted="admin">
-	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" 
+	 				comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"/>
 			</authz:authorize>
 		
 
- 			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+ 			<display:column property="assaysLink" sortable="true" sortProperty="bioAssayCount" titleKey="bioAssays.title" 
+ 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"/>
 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
