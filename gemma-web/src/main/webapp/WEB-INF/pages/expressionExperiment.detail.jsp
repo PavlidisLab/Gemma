@@ -119,7 +119,7 @@
 					                if ( expressionExperiment.getAccession() != null ) {
 					                if ( expressionExperiment.getAccession().getExternalDatabase().getName().equalsIgnoreCase( "GEO" ) ) {
 					                    out.print( expressionExperiment.getAccession().getAccession()
-					                            + "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
+					                            + "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
 					                            + expressionExperiment.getAccession().getAccession() + "'>(GEO)</a>" );
 					                } else {
 					                    out.print( expressionExperiment.getAccession().getAccession() );

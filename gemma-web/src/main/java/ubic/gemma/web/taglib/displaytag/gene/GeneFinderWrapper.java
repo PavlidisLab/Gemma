@@ -59,7 +59,7 @@ public class GeneFinderWrapper extends TableDecorator {
     
     public String getNcbiLink() {
         Gene object = ( Gene ) getCurrentRowObject();
-        String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" +
+        String ncbiLink = "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" +
                 object.getNcbiId() + "'>  <img hight='10' width='10%' src=\"/Gemma/images/logo/ncbi.gif\" /></a>";
         return ncbiLink;
     }
