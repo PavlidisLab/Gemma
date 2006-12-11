@@ -146,6 +146,32 @@
 	   </property>
 	 </bean>
 
+<!-- Quartz Indexing Configuration -->
+<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+  		<property name="triggers">
+			<list>
+	  			<ref local="expressionExperimentIndexTrigger"/>
+			</list>
+  		</property>
+	</bean>
+	
+	<bean id="expressionExperimentIndexTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+  		<property name="jobDetail">
+			<ref bean="expressionExperimentIndexJobDetail"/>
+  		</property>
+  		<property name="startDelay">
+			<value>43200000</value>
+  		</property>
+  		<property name="repeatInterval">
+			<value>86400000</value>
+  		</property>
+	</bean>
+	
+	<bean id="expressionExperimentIndexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject"><ref bean="indexService"/></property>
+		<property name="targetMethod"><value>indexAll</value></property>
+	</bean>
+
 <!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 <bean id="conversion.service"
