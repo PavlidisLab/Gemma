@@ -29,6 +29,8 @@ import org.quartz.impl.StdScheduler;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * Indexing has been scheduled to run declaratively by Quartz. This class tests the declarative configuration.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -36,10 +38,9 @@ public class SchedulerFactoryBeanTest extends BaseSpringContextTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * 
-     *
+     * Tests the indexAll method.
      */
-    public void testTriggerExecuteExpressionExperimentIndexer() {
+    public void testIndexAll() {
         log.info( "Running test" + this.getClass() );
         StdScheduler scheduler = ( StdScheduler ) this.getBean( "schedulerFactoryBean" );
 
