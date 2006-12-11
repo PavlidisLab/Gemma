@@ -150,12 +150,12 @@
 <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
   		<property name="triggers">
 			<list>
-	  			<ref local="expressionExperimentIndexTrigger"/>
+	  			<ref local="indexTrigger"/>
 			</list>
   		</property>
 	</bean>
 	
-	<bean id="expressionExperimentIndexTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
   		<property name="jobDetail">
 			<ref bean="expressionExperimentIndexJobDetail"/>
   		</property>
