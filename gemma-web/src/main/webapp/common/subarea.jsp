@@ -16,11 +16,10 @@
 	<strong>To use Gemma</strong>, enter a term to locate a gene of
 	interest; Gemma will tell you what genes are coexpressed (have
 	correlated expression profiles) with your selected genes. Gemma
-	contains data from dozens (soon to be hundreds) of public microarray
-	data sets.
+	contains data from hundreds of public microarray data sets.
 </p>
 <p class="line">
-	<strong>We're in an alpha-release stage</strong>, so use the site at
+	<strong>We're in an beta-release stage</strong>, so use the site at
 	your own risk. We're very interested in your
 	<a href="mailto:gemma@ubic.ca">feedback</a>. More information about the
 	project is available
