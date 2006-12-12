@@ -31,7 +31,7 @@ import java.util.zip.GZIPInputStream;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.apps.LoadExpressionDataCli;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -46,7 +46,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -57,7 +57,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author keshav
  * @version $Id$
  */
-public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSpringContextTest {
+public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractGeoServiceTest {
 
     CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
 
@@ -76,8 +76,6 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
     String csName = "218120_s_at";
 
     String geneOfficialSymbol = "HMOX2";
-
-    ArrayDesign ad = null;
 
     Blat blat = new Blat();
 
@@ -98,13 +96,16 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
         geneService = ( GeneService ) this.getBean( "geneService" );
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        ad = arrayDesignService.findByShortName( arrayAccession );
+        ArrayDesign ad = arrayDesignService.findByShortName( arrayAccession );
 
         if ( ad == null ) {
 
             // first load small two-color
             AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            String path = getTestFileBasePath();
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                    + "gpl96Short" ) );
+            // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             geoService.setLoadPlatformOnly( true );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession );
             ad = ads.iterator().next();
@@ -143,6 +144,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
         // needed to fill in the sequence information for blat scoring.
         InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        ArrayDesign ad = arrayDesignService.findByShortName( arrayAccession );
         app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
 
         // fill in the blat results. Note that each time you run this test you
@@ -279,6 +281,12 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends BaseSprin
         for ( CompositeSequence cs : compositeSequences ) {
             log.info( "CompositeSequence: " + cs.getName() );
         }
+
+    }
+
+    @Override
+    protected void init() {
+        // TODO Auto-generated method stub
 
     }
 }
