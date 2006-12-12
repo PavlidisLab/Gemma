@@ -45,6 +45,7 @@
                 <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
                 <prop key="compass.transaction.lockTimeout">20</prop>
                 <prop key="compass.engine.analyzer.default.type">Snowball</prop> 
+				    <prop key="compass.engine.analyzer.default.stopwords"> +gene </prop>
                 <prop key="compass.engine.analyzer.default.name">English</prop>
                 <prop key="compass.engine.optimizer.schedule">false</prop>
                 <prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
