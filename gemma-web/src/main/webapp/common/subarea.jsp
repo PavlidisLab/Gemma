@@ -23,6 +23,8 @@
 	your own risk. We're very interested in your
 	<a href="mailto:gemma@ubic.ca">feedback</a>. More information about the
 	project is available
-	<a href="<c:url value="/static/about.html"/>">here</a>.
+	<a href="<c:url value="/static/about.html"/>">here</a>, or help with
+	analysis is
+	<a href="<c:url value="/static/help.html"/>">here</a>.
 
 </p>
