@@ -165,7 +165,7 @@ public class MetaLinkFinder {
     		count.add(0);
     	for(int i = 0; i < this.linkCount.rows(); i++){
 	//		System.err.println(i);
-    		for(int j = i; j < this.linkCount.columns(); j++){
+    		for(int j = i+1; j < this.linkCount.columns(); j++){
     			int num = this.linkCount.bitCount(i,j);
     			if(num == 0)continue;
     			if(num > maxNum){
@@ -315,6 +315,7 @@ public class MetaLinkFinder {
         try{
             BufferedReader in = new BufferedReader(new FileReader(new File(eeMapFile)));
             this.eeMap = new HashMap<Long, Integer>();
+            int vectorSize = 0;
             String row = null;
             while ( ( row = in.readLine() ) != null ) {
                 row = row.trim();
@@ -329,6 +330,16 @@ public class MetaLinkFinder {
                     return false;
                 }
                 this.eeMap.put( new Long( subItems[0].trim() ), new Integer( subItems[1].trim() ) );
+                if(Integer.valueOf(subItems[1].trim()).intValue() > vectorSize)
+                	vectorSize =Integer.valueOf(subItems[1].trim()).intValue(); 
+            }
+            this.allEE = new Vector(vectorSize+1);
+            for(int i = 0; i < vectorSize+1; i++)
+            	this.allEE.addElement(new Long(i));
+            
+            for(Long iter:this.eeMap.keySet()){
+            	int index = this.eeMap.get(iter).intValue();
+            	this.allEE.setElementAt(iter, index);
             }
             log.info( "Got " + this.eeMap.size() + " in EE MAP" );
             in.close();
@@ -340,5 +351,8 @@ public class MetaLinkFinder {
     }
     public CompressedNamedBitMatrix getCountMatrix(){
         return this.linkCount;
+    }
+    public Vector getEEIndex(){
+    	return this.allEE;
     }
 }
