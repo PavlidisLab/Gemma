@@ -19,12 +19,12 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import java.io.File;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.zip.GZIPInputStream;
+import java.util.List;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.apps.LoadExpressionDataCli;
@@ -40,9 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
@@ -66,6 +64,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     ArrayDesignService arrayDesignService = null;
 
     ExpressionExperimentService expressionExperimentService = null;
+
+    AbstractGeoService geoService = null;
 
     ArrayDesign ad = null;
 
@@ -98,13 +98,15 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
 
+        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+
+        String path = getTestFileBasePath();
+
         ad = arrayDesignService.findByShortName( arrayAccession );
 
         if ( ad == null ) {
 
             // first load small two-color
-            AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-            String path = getTestFileBasePath();
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "platform" ) );
             geoService.setLoadPlatformOnly( true );
@@ -112,6 +114,15 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
             ad = ads.iterator().next();
         }
         arrayDesignService.thaw( ad );
+
+        Collection<Gene> foundGenes = geneService.findByOfficialSymbol( geneOfficialSymbol );
+        if ( foundGenes == null || foundGenes.isEmpty() ) {
+            processArrayDesignWithData();
+        }
+
+        if ( expressionExperimentService.findByShortName( eeShortName ) == null ) {
+            // createExpressionExperiment(); //TODO add this in after creating a stripped down version of GSE994.
+        }
     }
 
     /**
@@ -141,36 +152,40 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
         loader.load( geneInfoFile, gene2AccFile, true );
 
+        // TODO need hg18 for this - check to see if connection exists. If not, don't add sequence information.
         // needed to fill in the sequence information for blat scoring.
-        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
-        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-
-        app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
-
-        // fill in the blat results. Note that each time you run this test you
-        // get the results loaded again (so they
-        // pile up)
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
-
-        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
-
-        Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
-
-        aligner.processArrayDesign( ad, results );
-
-        // real stuff.
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
-        arrayDesignProbeMapperService.processArrayDesign( ad );
-
-        // possibly assert no unexpected new genes or gene products were added.
-
-        // expect to see added (not in NCBI) as of 10/28
-        /*
-         * CR749610 (gene and gene product) (HYOU1) NM_001008411 (product of TDG) This product is in NCBI gene Another
-         * anonymous product of TDG. CR541839 (HMOX2) CR456760 (HMOX2)
-         */
+        // InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta"
+        // );
+        // ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean(
+        // "arrayDesignSequenceProcessingService" );
+        //
+        // app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
+        //
+        // // fill in the blat results. Note that each time you run this test you
+        // // get the results loaded again (so they
+        // // pile up)
+        // ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean(
+        // "arrayDesignSequenceAlignmentService" );
+        //
+        // InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
+        // "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
+        //
+        // Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
+        //
+        // aligner.processArrayDesign( ad, results );
+        //
+        // // real stuff.
+        // ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
+        // .getBean( "arrayDesignProbeMapperService" );
+        // arrayDesignProbeMapperService.processArrayDesign( ad );
+        //
+        // // possibly assert no unexpected new genes or gene products were added.
+        //
+        // // expect to see added (not in NCBI) as of 10/28
+        // /*
+        // * CR749610 (gene and gene product) (HYOU1) NM_001008411 (product of TDG) This product is in NCBI gene Another
+        // * anonymous product of TDG. CR541839 (HMOX2) CR456760 (HMOX2)
+        // */
 
     }
 
@@ -178,7 +193,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      * Loads GSE994. The corresponding ArrayDesign information is loaded in {@link createArrayDesign()}
      */
     private void createExpressionExperiment() {
-
+        // FIXME don't use this. GSE994 will be too large. Instead make a stripped down version like
+        // you have for GPL96.
         String[] args = { "-u", "administrator", "-p", "testing", "-a", eeShortName };
 
         LoadExpressionDataCli.main( args );
@@ -186,8 +202,10 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
     /**
      * Tests finding genes given official symbols.
+     * 
+     * @throws Exception
      */
-    public void testFindGenesByOfficialSymbols() {
+    public void testFindGenesByOfficialSymbols() throws Exception {
 
         Collection<String> geneSymbols = new HashSet<String>();
         geneSymbols.add( geneOfficialSymbol );
@@ -200,65 +218,52 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
             log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
         }
         assertNotNull( genesMap );
+        assertEquals( keyset.size(), 1 );
 
     }
 
-    // /**
-    // * Tests finding all genes for a given composite sequence.
-    // */
-    // public void testGetGenesForCompositeSequence() {
-    // // TODO add cs with name 218120_s_at to the stripped down gpl version
-    // CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
-    // assertNotNull( cs );
-    //
-    // Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( cs );
-    //
-    // assertNotNull( genes );
-    //
-    // }
+    /**
+     * Tests finding all genes for a given composite sequence.
+     * 
+     * @throws Exception
+     */
+    public void testGetGenesForCompositeSequence() throws Exception {
 
-    // /**
-    // * Tests finding composite sequences for a given collection of composite sequence names in a specific array
-    // * design.
-    // * This test on hg18 being installed.
-    // *
-    // * @throws Exception
-    // */
-    // public void testfindByNamesInArrayDesigns() {
-    // //TODO first check if connection to hg18 exists. if not, do not run.
-    // if ( expressionExperimentService.findByShortName( eeShortName ) == null ) {
-    //
-    // boolean fail = false;
-    // try {
-    // processArrayDesignWithData();
-    // } catch ( Exception e ) {
-    // fail = true;
-    // e.printStackTrace();
-    // } finally {
-    // assertFalse( fail );
-    // }
-    //
-    // createExpressionExperiment();
-    // }
-    //
-    // /* test getting the matching composite sequences */
-    // List<String> compositeSequenceNames = new ArrayList<String>();
-    // compositeSequenceNames.add( csName );
-    //
-    // Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-    // ads.add( ad );
-    // arrayDesignService.thaw( ad );
-    // Collection<CompositeSequence> compositeSequences = compositeSequenceService.findByNamesInArrayDesigns(
-    // compositeSequenceNames, ads );
-    //
-    // assertNotNull( compositeSequences );
-    //
-    // }
+        CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
+        if ( cs == null ) return;
+
+        Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( cs );
+
+        assertNotNull( genes );
+
+    }
+
+    /**
+     * Tests finding composite sequences for a given collection of composite sequence names in a specific array design.
+     * 
+     * @throws Exception
+     */
+    public void testfindByNamesInArrayDesigns() {
+        /* test getting the matching composite sequences */
+        List<String> compositeSequenceNames = new ArrayList<String>();
+        compositeSequenceNames.add( csName );
+
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+        arrayDesignService.thaw( ad );
+        Collection<CompositeSequence> compositeSequences = compositeSequenceService.findByNamesInArrayDesigns(
+                compositeSequenceNames, ads );
+
+        assertNotNull( compositeSequences );
+
+    }
 
     /**
      * Tests finding the composite sequences for a given gene id.
+     * 
+     * @throws Exception
      */
-    public void testGetCompositeSequencesByGeneId() {
+    public void testGetCompositeSequencesByGeneId() throws Exception {
 
         Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );
 
