@@ -247,14 +247,14 @@ public class GeoConverter implements Converter {
         if ( !StringUtils.isBlank( channel.getGrowthProtocol() ) ) {
             Treatment treatment = Treatment.Factory.newInstance();
             treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " treatment" );
-            treatment.setDescription( channel.getTreatmentProtocol() );
+            treatment.setDescription( channel.getGrowthProtocol() );
             bioMaterial.getTreatments().add( treatment );
         }
 
         if ( !StringUtils.isBlank( channel.getTreatmentProtocol() ) ) {
             Treatment treatment = Treatment.Factory.newInstance();
             treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " growth" );
-            treatment.setDescription( channel.getGrowthProtocol() );
+            treatment.setDescription( channel.getTreatmentProtocol() );
             bioMaterial.getTreatments().add( treatment );
         }
 
@@ -1360,13 +1360,10 @@ public class GeoConverter implements Converter {
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
-                        bioMaterialName = addToBioMaterialName( bioMaterialName, sample );
-                        if ( log.isDebugEnabled() ) log.debug( "Adding " + ba );
                         expExp.getBioAssays().add( ba );
                         found = true;
                         break;
                     }
-
                 }
                 if ( !found ) {
                     if ( log.isDebugEnabled() )
@@ -1511,16 +1508,6 @@ public class GeoConverter implements Converter {
         log.error( "Problems with url: " + remoteFileUrl
                 + ".  Will not store the url of the raw data file.  Full error is: " );
         e.printStackTrace();
-    }
-
-    /**
-     * @param bioMaterialName
-     * @param sample
-     * @return
-     */
-    private String addToBioMaterialName( String bioMaterialName, GeoSample sample ) {
-        bioMaterialName = bioMaterialName + "|" + sample;
-        return bioMaterialName;
     }
 
     /**
