@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.zip.GZIPInputStream;
 
@@ -33,6 +34,7 @@ import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -47,15 +49,13 @@ import ubic.gemma.util.ConfigUtils;
 
 /**
  * This integration test makes use of both the {@link ArrayDesignProbeMapperService} and the
- * {@link LoadExpressionDataCli}. These tools add both array data, gene data, and expression data to the database to be
- * used for testing.
+ * {@link LoadExpressionDataCli}. These tests add array data, gene data, and expression data to the database to be used
+ * for testing. Specifically, the tests use GSE994 and the corresponding platform GPL96.
  * 
  * @author keshav
  * @version $Id$
  */
 public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractGeoServiceTest {
-
-    ArrayDesign ad = null;
 
     CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
 
@@ -66,6 +66,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     ArrayDesignService arrayDesignService = null;
 
     ExpressionExperimentService expressionExperimentService = null;
+
+    ArrayDesign ad = null;
 
     String arrayAccession = "GPL96";
 
@@ -118,7 +120,6 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     @Override
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
-        // TODO: delete blat results that were loaded.
     }
 
     /**
@@ -215,7 +216,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     // assertNotNull( genes );
     //
     // }
-    //
+
     // /**
     // * Tests finding composite sequences for a given collection of composite sequence names in a specific array
     // * design.
@@ -224,7 +225,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     // * @throws Exception
     // */
     // public void testfindByNamesInArrayDesigns() {
-    // //TODO test connection, if it does not exist, do not run.
+    // //TODO first check if connection to hg18 exists. if not, do not run.
     // if ( expressionExperimentService.findByShortName( eeShortName ) == null ) {
     //
     // boolean fail = false;
@@ -262,20 +263,18 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );
 
         assertNotNull( genes );
-        assertEquals( genes.size(), 0 );// TODO change to 1 after you put 218120_s_at in gpl
+        assertEquals( genes.size(), 1 );
 
-        // TODO - add back in after you put 218120_s_at in gpl
-        // Iterator iter = genes.iterator();
-        // Gene g = ( Gene ) iter.next();
-        //
-        // Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
-        // .getCompositeSequencesByGeneId( g.getId() );
-        //
-        // log.info( compositeSequences.size() + " composite sequences for gene " + g.getOfficialSymbol()
-        // + " .These are: " );
-        // for ( CompositeSequence cs : compositeSequences ) {
-        // log.info( "CompositeSequence: " + cs.getName() );
-        // }
+        Iterator iter = genes.iterator();
+        Gene g = ( Gene ) iter.next();
+
+        Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
+                .getCompositeSequencesByGeneId( g.getId() );
+
+        log.info( compositeSequences.size() + " composite sequences for gene " + g.getOfficialSymbol() + " ... " );
+        for ( CompositeSequence cs : compositeSequences ) {
+            log.info( "CompositeSequence: " + cs.getName() );
+        }
     }
 
     @Override
