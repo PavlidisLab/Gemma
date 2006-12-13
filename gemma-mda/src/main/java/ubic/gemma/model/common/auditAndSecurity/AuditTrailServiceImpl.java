@@ -66,4 +66,13 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         return this.getAuditTrailDao().create( auditTrail );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleThaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    @Override
+    protected void handleThaw( AuditTrail auditTrail ) throws Exception {
+        this.getAuditTrailDao().thaw(auditTrail);
+        
+    }
+
 }

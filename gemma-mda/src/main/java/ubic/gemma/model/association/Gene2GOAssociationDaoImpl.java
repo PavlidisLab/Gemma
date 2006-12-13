@@ -22,8 +22,11 @@
  */
 package ubic.gemma.model.association;
 
+import java.util.Collection;
+
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -32,6 +35,15 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  */
 public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene2GOAssociationDaoBase {
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindByGene( Gene gene ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     /*
      * (non-Javadoc)

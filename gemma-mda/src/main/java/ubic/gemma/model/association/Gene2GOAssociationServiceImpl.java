@@ -22,10 +22,23 @@
  */
 package ubic.gemma.model.association;
 
+import java.util.Collection;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociationService
  */
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindByGene( Gene gene ) throws Exception {
+      return this.getGene2GOAssociationDao().findByGene(gene);
+        
+    }
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#find(ubic.gemma.model.association.Gene2GOAssociation)
@@ -54,15 +67,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         return this.getGene2GOAssociationDao().findOrCreate( gene2GOAssociation );
     }
 
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGene(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    protected java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
-        // @todo implement protected java.util.Collection handleFindByGene(ubic.gemma.model.genome.Gene gene)
-        return null;
-    }
-
+ 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(ubic.gemma.model.common.description.OntologyEntry)
      */

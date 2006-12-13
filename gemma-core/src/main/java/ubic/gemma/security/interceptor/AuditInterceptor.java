@@ -213,6 +213,8 @@ public class AuditInterceptor implements MethodInterceptor {
     private void addLoadAuditEvent( Auditable auditable ) {
         assert auditable != null;
         AuditTrail at = auditable.getAuditTrail();
+        this.auditTrailDao.thaw( at );
+        
         if ( at == null ) {
             log.warn( "No audit trail for update method call" );
             addCreateAuditEvent( auditable );
@@ -251,6 +253,8 @@ public class AuditInterceptor implements MethodInterceptor {
     private void addUpdateAuditEvent( Auditable d ) {
         assert d != null;
         AuditTrail at = d.getAuditTrail();
+        this.auditTrailDao.thaw( at );
+        
         if ( at == null || at.getEvents().size() == 0 ) {
             log.warn( "No audit trail for update method call, performing 'create'" );
             addCreateAuditEvent( d );
