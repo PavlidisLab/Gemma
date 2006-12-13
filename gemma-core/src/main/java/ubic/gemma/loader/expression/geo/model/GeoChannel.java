@@ -59,14 +59,14 @@ public class GeoChannel {
         }
     }
 
-    String sourceName = null;
+    String sourceName = "";
     Collection<String> characteristics = new HashSet<String>();;
-    String bioMaterialProvider = null;
-    String growthProtocol = null;
-    String treatmentProtocol = null;
-    String extractProtocol = null;
-    String label = null;
-    String labelProtocol = null;
+    String bioMaterialProvider = "";
+    String growthProtocol = "";
+    String treatmentProtocol = "";
+    String extractProtocol = "";
+    String label = "";
+    String labelProtocol = "";
 
     public void addToExtractProtocol( String s ) {
         this.extractProtocol = this.extractProtocol + " " + s;
