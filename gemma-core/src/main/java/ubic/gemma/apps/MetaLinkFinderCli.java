@@ -185,8 +185,17 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                     return null;
                 }
             }
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder(linkFinder.getCountMatrix(), 5);
-            freFinder.find();
+			System.err.println("Finish Loading!");
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder(linkFinder.getCountMatrix(),7,7 );
+            freFinder.setGeneService(geneService);
+            freFinder.setEEService(eeService);
+            freFinder.setEEIndex(linkFinder.getEEIndex());
+            try{
+            	freFinder.find();
+            }catch(Exception e){
+            	e.printStackTrace();
+            	System.err.println("Generated "+ FrequentLinkSetFinder.nodeNum + " nodes");
+            }
             System.err.println("Output some stats");
             linkFinder.outputStat();
 		    BufferedReader bfr = new BufferedReader(new InputStreamReader(System.in)); 
