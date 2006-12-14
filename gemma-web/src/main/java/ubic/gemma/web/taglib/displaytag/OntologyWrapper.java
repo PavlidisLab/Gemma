@@ -35,10 +35,19 @@ public class OntologyWrapper extends TableDecorator {
         Map.Entry oe = ( Map.Entry ) getCurrentRowObject();
         return ( ( OntologyEntry ) oe.getKey() ).getCategory();
     }
+    
+    public String getAccession() {
+        OntologyEntry oe = (OntologyEntry ) (( Map.Entry ) getCurrentRowObject()).getKey();
+  
+        return  "<a href=" + oe.getUri()  + ">" + oe.getAccession() + "</a>";
+  
+    }
+
 
     public String getParents() {
         Map.Entry oe = ( Map.Entry ) getCurrentRowObject();
         return ( String ) oe.getValue();
     }
+    
 
 }

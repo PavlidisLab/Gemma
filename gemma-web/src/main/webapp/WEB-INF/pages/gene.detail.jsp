@@ -5,6 +5,8 @@
 <jsp:useBean id="gene" scope="request"
 	class="ubic.gemma.model.genome.GeneImpl" />
 
+	
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <title><fmt:message key="gene.details" /></title>
 
@@ -123,16 +125,19 @@
 			%>
 		</td>
 	</tr>
+</table>
 
-<c:if test="${numOntologyEntries} > 0">
+<c:if test="${numOntologyEntries > 0 }">
 <h3>
 	<fmt:message key="gene.ontology" />
+	
 </h3>
 </c:if>
 
 <display:table name="ontologyEntries" class="list" requestURI=""
 	id="ontologyEntriesList" pagesize="10"
 	decorator="ubic.gemma.web.taglib.displaytag.OntologyWrapper">
+	<display:column property="accession" sortable="true" maxWords="20" />
 	<display:column property="value" sortable="true" maxWords="20" />
 	<display:column property="category" sortable="true" maxWords="20" />
 	<display:column property="description" sortable="true" maxWords="20" />
@@ -141,7 +146,7 @@
 </display:table>
 
 
-</table>
+
 
 
 <%

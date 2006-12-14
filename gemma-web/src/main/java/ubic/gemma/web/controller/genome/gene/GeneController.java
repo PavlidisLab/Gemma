@@ -164,9 +164,10 @@ public class GeneController extends BaseMultiActionController {
         for ( OntologyEntry entry : oes ) {
             String parents = "";
             for ( Object parent : ontologyEntryService.getParents( entry ) )
-                parents += " <b> " + ( ( OntologyEntry ) parent ).getValue() + " </b> &nbsp;";
-
-            if (!StringUtils.isBlank( entry.getValue()))
+                parents += ( ( OntologyEntry ) parent ).getValue() + " &nbsp;";
+            
+//      Some of the ontology entries are blank.  Will display them for now            
+//            if (!StringUtils.isBlank( entry.getValue()))
                 ontoMap.put( entry, parents );
         }
 
