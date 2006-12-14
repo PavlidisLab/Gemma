@@ -164,9 +164,11 @@ public class GeoDatasetService extends AbstractGeoService {
         log.info( "Series now contains " + series.getSamples().size() + " (removed " + toSkip.size() + ")" );
 
         // update the description, so we keep some kind of record.
-        series.setSummaries( series.getSummaries() + "\nNote: " + toSkip
-                + " samples from this series, which appear in other Expression Experiments in Gemma, "
-                + "were not imported from the GEO source. The following samples were removed: " + buf.toString() );
+        if ( toSkip.size() > 0 ) {
+            series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
+                    + " samples from this series, which appear in other Expression Experiments in Gemma, "
+                    + "were not imported from the GEO source. The following samples were removed: " + buf.toString() );
+        }
 
         if ( series.getSamples().size() == 0 ) {
             throw new AlreadyExistsInSystemException( "All the samples in " + series
