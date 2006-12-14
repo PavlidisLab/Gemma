@@ -261,41 +261,84 @@
 			</display:table>
 		</aa:zone>
 		
-		<ul>
-		<li id="foo" class="dragItem"> foo </li>
-		<li id="bar" class="dragItem"> bar </li>
-		<li id="foo2" class="dragItem"> foo2 </li>
-		<li id="bar1" class="dragItem"> bar1 </li>
-		</ul>
-		
-		<script language="JavaScript" type="text/javascript">
-        var windowIdArray = new Array('foo','bar','foo2','bar1');
-        for(i=0;i<windowIdArray.length;i++)
-    {
-        var windowId = windowIdArray[i];
-        //set to be draggable
-        new Draggable(windowId,{revert:true});
-        //set to be droppable
-        Droppables.add(windowId, {overlap: 'vertical', accept: 'dragItem',hoverclass: 'drophover',onDrop: function(element, droppableElement)
-            {
-                var content1 = element.innerHTML;
-                var content2 = droppableElement.innerHTML;          
-                droppableElement.innerHTML = content1;
-                element.innerHTML = content2;
-            }
-            });
-    }
-		</script>
-
 		<authz:authorize ifAnyGranted="admin">
 			<h3>
 				Biomaterials and Assays
 			</h3>
-			<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
+			<Gemma:assayView expressionExperiment="${expressionExperiment}" edit="true"></Gemma:assayView>
 		</authz:authorize>
+		<script type="text/javascript"
+			src="<c:url value="/scripts/json.js"/>"></script>
+		<script language="JavaScript" type="text/javascript">
+		var dragItems = document.getElementsByClassName('dragItem');
+		var windowIdArray = new Array(dragItems.length);
+		for (j=0;j<dragItems.length;j++) {
+			windowIdArray[j] = dragItems[j].id;
+		}
+        for(i=0;i<windowIdArray.length;i++)
+    	{
+        	var windowId = windowIdArray[i];
+        	//set to be draggable
+        	new Draggable(windowId,{revert:true, ghosting:true});
+        	//set to be droppable
+        	Droppables.add(windowId, {overlap: 'vertical', accept: 'dragItem',hoverclass: 'drophover',
+        	onDrop: function(element, droppableElement)
+            {
+            	// error check
+            	// if between columns (ArrayDesigns), do not allow
+            	if (element.getAttribute('arrayDesign') == droppableElement.getAttribute('arrayDesign')) {
+             	// initialize variables
+				var removeFromElement = element.getAttribute('material');
+				var removeFromDroppable = droppableElement.getAttribute('material');
+            	// swap the assays
+            	var temp = element.getAttribute('assay');
+            	element.setAttribute('assay', droppableElement.getAttribute('assay'));
+				droppableElement.setAttribute('assay', temp);
 
-		
-			
+				// retrieve the JSON object and parse it
+				var materialString = document.getElementById('assayToMaterialMap').value;
+				var materialMap = materialString.parseJSON();
+
+				// write the new values into the materialMap
+                materialMap[element.getAttribute('assay')].push(element.getAttribute('material'));
+                materialMap[droppableElement.getAttribute('assay')].push(droppableElement.getAttribute('material'));       
+				
+				// remove the old values from the materialMap
+				var elementToRemove;
+				for (k=0;k<materialMap[element.getAttribute('assay')].length;k++) {
+					if (materialMap[element.getAttribute('assay')][k] = removeFromElement) {
+						elementToRemove = k;
+						break;
+					}
+				}
+
+				materialMap[element.getAttribute('assay')].splice(k, 1);
+				for (k=0;k<materialMap[droppableElement.getAttribute('assay')].length;k++) {
+					if (materialMap[droppableElement.getAttribute('assay')][k] = removeFromDroppable) {
+						elementToRemove = k;
+						break;
+					}
+				}
+				materialMap[droppableElement.getAttribute('assay')].splice(k, 1);
+				
+                // serialize the JSON object
+                document.getElementById('assayToMaterialMap').value = materialMap.toJSONString();
+
+                // swap inner HTML
+                var content1 = element.innerHTML;
+                var content2 = droppableElement.innerHTML;          
+                droppableElement.innerHTML = content1;
+                element.innerHTML = content2;
+                }
+                else {
+					new Effect.Highlight(droppableElement.id,{delay:0, duration: 0.25, startcolor: '#ff0000', endcolor: '#ff0000' });
+					new Effect.Highlight(droppableElement.id,{delay:0.5, duration: 0.25, startcolor: '#ff0000', endcolor: '#ff0000' });
+                }
+            }
+            });
+    	}
+		</script>
+
 		<table>
 		<tr>
         <td>
@@ -304,7 +347,6 @@
        	</td>
        	</tr>
        	</table>
-       
    
 </form>
 
@@ -313,3 +355,4 @@
       src="<c:url value="/scripts/validator.jsp"/>"></script>
 <script type="text/javascript"
 			src="<c:url value="/scripts/aa-init.js"/>"></script>
+

@@ -300,7 +300,7 @@
 			<h3>
 				Biomaterials and Assays
 			</h3>
-			<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
+			<Gemma:assayView expressionExperiment="${expressionExperiment}" ></Gemma:assayView>
 		</authz:authorize>
 
 

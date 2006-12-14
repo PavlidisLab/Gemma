@@ -40,6 +40,10 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import com.sdicons.json.mapper.JSONMapper;
+import com.sdicons.json.mapper.MapperException;
+import com.sdicons.json.mapper.helper.impl.CollectionMapper;
+
 /**
  * @jsp.tag name="assayView" body-content="empty"
  * @author joseph
@@ -54,6 +58,7 @@ public class AssayViewTag extends TagSupport {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private ExpressionExperiment expressionExperiment;
+    private boolean edit = false;
 
     /**
      * @param expressionExperiment
@@ -61,6 +66,19 @@ public class AssayViewTag extends TagSupport {
      */
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+    
+    /**
+     * @param edit
+     * @jsp.attribute required="false" rtexprvalue="true"
+     */
+    public void setEdit( String edit ) {
+        if (edit.equalsIgnoreCase( "true" )) {
+            this.edit = true;
+        }
+        else {
+            this.edit = false;    
+        }
     }
 
     /*
@@ -82,6 +100,7 @@ public class AssayViewTag extends TagSupport {
     @Override
     public int doStartTag() throws JspException {
         log.debug( "in Start Tag" );
+        
         StringBuilder buf = new StringBuilder();
 
         buf.append( "<div>" );
@@ -90,6 +109,8 @@ public class AssayViewTag extends TagSupport {
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Map<BioMaterial, Map<ArrayDesign, Collection<BioAssay>>> bioAssayMap = new HashMap<BioMaterial, Map<ArrayDesign, Collection<BioAssay>>>();
         Set<ArrayDesign> designs = new HashSet<ArrayDesign>();
+        // package all of this information into JSON for javascript dynamic retrieval
+        Map<String,Collection<String>> assayToMaterial = new HashMap<String,Collection<String>>();
         for ( BioAssay assay : bioAssays ) {
             // map for bioassays linked to a specific arraydesign
             // map for the bioassays linked to a specific biomaterial
@@ -133,7 +154,7 @@ public class AssayViewTag extends TagSupport {
         }
         Comparator<BioMaterial> comparator = new BioMaterialComparator();
         Collections.sort( materials, comparator );
-        Collection<String> assayList = new ArrayList<String>();
+        int elementCount = 1;
         for ( BioMaterial material : materials ) {
             if ( count % 2 == 0 ) {
                 buf.append( "<tr class='even' align=justify>" );
@@ -143,7 +164,8 @@ public class AssayViewTag extends TagSupport {
             buf.append( "<td>" + material.getName() + "</td>" );
 
             Map<ArrayDesign, Collection<BioAssay>> assayMap = bioAssayMap.get( material );
-
+            int emptyCount = 0;
+            String image = "<img height=10 width=10 src='/Gemma/images/arrow_out.png' />";
             for ( ArrayDesign design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
                     Collection<BioAssay> assays = assayMap.get( design );
@@ -152,49 +174,91 @@ public class AssayViewTag extends TagSupport {
                     for ( BioAssay assay : assays ) {
                         ids.add( assay.getId() );
                         tooltips.add( StringUtils.abbreviate( assay.getName() + assay.getDescription(),60) );
+                        this.addMaterial( assayToMaterial, assay.getId(), material.getId() );
                     }
                     if ( assayMap.get( design ).size() > 1 ) {
                         String link = "<a title='" + StringUtils.join(tooltips.toArray(),"\n") + "' href='/Gemma/bioAssay/showAllBioAssays.html?id="
                                 + StringUtils.join( ids.toArray(), "," ) + "'> (list) </a>";
-                        buf.append( "<td>" + assayMap.get( design ).size() + link + "</td>" );
-                        assayList.add(StringUtils.join( ids.toArray(), "," ));
+                        buf.append( "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
+                    
                     } else {
                         BioAssay assay = ( ( ArrayList<BioAssay> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60);
                         String link = "<a title='" + shortDesc + "' href='/Gemma/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>"
                                 + assay.getName() + "</a>";
-                        buf.append( "<td>" + link + "</td>" );
-                        assayList.add( assay.getName() );
+                        String editAttributes  = " align='left' class='dragItem' id='bioassay." + assay.getId() + "' material='" + material.getId()+ "' assay='" + assay.getId()+ "' arrayDesign='" + design.getId() + "'";
+                        if (edit) {
+                            buf.append( "\n<td><div " + editAttributes + ">"  + link + image);
+                        }
+                        else {
+                            buf.append( "\n<td ><div>" + link + "&nbsp;" );
+                        }
+                        buf.append( "</div></td>\n" );
                     }
+                    
                 }
                 else {
                     // put empty space in table if the bioMaterial does not
                     // use this array design
-                    buf.append( "<td>&nbsp;</td>" );
-                    assayList.add("empty");
+                    emptyCount++;
+                    String editAttributes = "class='dragItem' id='bioassay.empty." + emptyCount + "' material='" + material.getId()+ "' assay='nullElement' arrayDesign='" + design.getId() + "'";
+
+                    if (edit) {
+                        buf.append( "\n<td><div " + editAttributes +  ">" + image);
+                    }
+                    else {
+                        buf.append( "\n<td><div>&nbsp;");    
+                    }
+                    this.addMaterial( assayToMaterial, null, material.getId() );
+                    buf.append( "</div></td>\n" );
                 }
             }
             
-            
-            buf.append( "</tr>" );
+            buf.append( "</tr>" ); 
             count++;
+            elementCount++;
         }
         buf.append( "</table>" );
-        
-        buf.append( "<ul style=\"margin-bottom: 4px; \" id=\"testsort\">");
-        for ( String string : assayList ) {
-            buf.append( "<li style='border:2px solid #000000;'>" + string + "</li>" );
-        }
-        buf.append( "</ul>" );
-        
-        buf.append( "</div>" );
 
+        if ( edit ) {
+            // append JSON serialization
+            String jsonSerialization = "";
+            try {
+                jsonSerialization = JSONMapper.toJSON( assayToMaterial ).render( false );
+            } catch ( MapperException e ) {
+                // cannot serialize
+                log.error( "cannot serialize materialMap object!" );
+            }
+            buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
+                    + jsonSerialization + "'/>" );
+        }
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
             throw new JspException( "assayViewTag: " + ex.getMessage() );
         }
         return SKIP_BODY;
+    }
+    
+    private void addMaterial(Map<String,Collection<String>> assayToMaterial, Long bioAssayId, Long bioMaterialId) {
+        String bioAssayStr = "";
+        if (bioAssayId == null) {
+            bioAssayStr = "nullElement";
+        }
+        else {
+            bioAssayStr = bioAssayId.toString();
+        }
+        // if bioAssayId is not in the map, create it and initialize the bioMaterial collection
+        // if bioAssayId is in the map, add to the bioMaterial collection
+        if (assayToMaterial.containsKey( bioAssayStr )) {
+            Collection<String> bioMaterials =  assayToMaterial.get( bioAssayStr );
+            bioMaterials.add( bioMaterialId.toString() );
+        }
+        else {
+            Collection<String> bioMaterials = new ArrayList<String>();
+            bioMaterials.add( bioMaterialId.toString() );
+            assayToMaterial.put( bioAssayStr, bioMaterials );
+        }
     }
 
     class BioMaterialComparator implements Comparator<BioMaterial> {

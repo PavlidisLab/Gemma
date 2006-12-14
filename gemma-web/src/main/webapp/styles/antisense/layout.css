@@ -183,6 +183,15 @@
 	font-size: smaller;	
 }
 
+/* css for scriptaculous hovering */
+.drophover {
+	background-color:#ff0;
+}
+
+.dragItem {
+	cursor: move;	
+}
+
 /* styles for pure CSS tooltips */
 a.info{
     position:relative; 

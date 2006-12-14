@@ -21,6 +21,11 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -31,7 +36,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * @see ubic.gemma.model.expression.bioAssay.BioAssayService
  */
 public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.BioAssayServiceBase {
-
+    private static Log log = LogFactory.getLog( BioAssayServiceImpl.class.getName() );
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
      */
@@ -115,6 +120,20 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         currentBioAssays.add( bioAssay );
         bioMaterial.setBioAssaysUsedIn( currentBioAssays );
         
+        // update bioMaterial name - remove text after pipes
+        // this should not be necessary going forward
+        
+        // build regular expression - match only text before the first pipe
+        Pattern pattern = Pattern.compile( "^(\\w+)|" );
+        String bmName = bioMaterial.getName();
+        Matcher matcher = pattern.matcher( bmName );
+        if (matcher.find()) {
+            String shortName = matcher.group();
+            bioMaterial.setName( shortName );
+        }
+        
+
+        
         // TODO make this transactional
         // update bioAssay
         this.update( bioAssay );
@@ -138,10 +157,21 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         bioMaterial.setBioAssaysUsedIn( currentBioAssays ); 
         
         // TODO make this transactional
+        
         // update bioAssay
         this.update( bioAssay );
-        // update bioMaterial
-        this.getBioMaterialService().update( bioMaterial );
+        
+        // check to see if the bioMaterial is now orphaned. 
+        // if it is, delete it
+        // if not, update it
+        if (currentBioAssays.size() == 0) {
+            this.getBioMaterialService().remove( bioMaterial );
+        }
+        else {
+            // update bioMaterial
+            this.getBioMaterialService().update( bioMaterial );   
+        }
+
     }
 
 }
