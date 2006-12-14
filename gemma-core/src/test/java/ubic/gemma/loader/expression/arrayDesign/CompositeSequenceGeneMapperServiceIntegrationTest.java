@@ -166,7 +166,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      * @throws IOException
      */
     private void loadSequenceData() throws IOException {
-        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
+        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl96_short.sequences.fasta" );
         ArrayDesignSequenceProcessingService sequenceProcessingService = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST );
@@ -195,33 +195,33 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         arrayDesignProbeMapperService.processArrayDesign( ad );
     }
 
-    /**
+     /**
      * Tests finding genes given official symbols.
-     * 
+     *
      * @throws Exception
      */
-    public void testFindGenesByOfficialSymbols() throws Exception {
-
-        Collection<String> geneSymbols = new HashSet<String>();
-        geneSymbols.add( geneOfficialSymbol );
-
-        LinkedHashMap<String, Collection<Gene>> genesMap = compositeSequenceGeneMapperService
-                .findGenesByOfficialSymbols( geneSymbols );
-
-        Collection<String> keyset = genesMap.keySet();
-        for ( String key : keyset ) {
-            log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
-        }
-        assertNotNull( genesMap );
-        // assertEquals( keyset.size(), 1 );
-
-    }
-
-    /**
-     * Tests finding all genes for a given composite sequence.
-     * 
-     * @throws Exception
-     */
+     public void testFindGenesByOfficialSymbols() throws Exception {
+    
+         Collection<String> geneSymbols = new HashSet<String>();
+         geneSymbols.add( geneOfficialSymbol );
+            
+         LinkedHashMap<String, Collection<Gene>> genesMap = compositeSequenceGeneMapperService
+         .findGenesByOfficialSymbols( geneSymbols );
+            
+         Collection<String> keyset = genesMap.keySet();
+         for ( String key : keyset ) {
+         log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
+         }
+             assertNotNull( genesMap );
+             // assertEquals( keyset.size(), 1 );
+    
+     }
+    
+     /**
+         * Tests finding all genes for a given composite sequence.
+         * 
+         * @throws Exception
+         */
     public void testGetGenesForCompositeSequence() throws Exception {
 
         CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
