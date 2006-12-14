@@ -182,6 +182,46 @@ public class DesignElementDataVectorDaoImpl extends
     }
 
     /**
+     * @param genes
+     * @param ees
+     * @param qt
+     * @return
+     * @throws Exception
+     * 
+     * todo:  still untested
+     */
+    protected Collection handleGetGeneCoexpressionPattern(Collection genes, Collection ees, QuantitationType qt ) throws Exception {
+        Collection<DesignElementDataVector> vectors = null;
+        final String queryString = "select distinct compositeSequence.designElementDataVectors from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence " 
+                + " and gene.id in (:collectionOfGenes)"
+                + " and compositeSequence.designElementDataVectors.expressionExperiment.id in (:collectionOfEE)"
+                + " and compositeSequence.designElementDataVectors.quantitationType.id = :givenQtId";
+
+        //Need to turn given collections into collections of IDs
+        Collection<Long> eeIds= new ArrayList<Long>();
+        for ( Object e : ees )  
+            eeIds.add( ((ExpressionExperiment)e).getId() );  
+        
+        Collection<Long> geneIds = new ArrayList<Long>();
+        for ( Object gene : genes ) 
+            geneIds.add( ((Gene)gene).getId() );
+        
+        
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "collectionOfEE", eeIds);
+            queryObject.setParameterList( "collectionOfGenes", geneIds);
+            queryObject.setLong( "givenQtId", qt.getId() );            
+            vectors = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return vectors;
+    }
+    
+    /**
      * Places objects in the collection in a list surrounded by parenthesis and separated by commas. Useful for placing
      * this String representation of the list in a sql "in" statement. ie. "... in stringReturnedFromThisMethod" will
      * look like "... in (a,b,c)"

@@ -109,5 +109,14 @@ public class Probe2ProbeCoexpressionDaoImpl
             return dedvs;
         }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
+
 
 }

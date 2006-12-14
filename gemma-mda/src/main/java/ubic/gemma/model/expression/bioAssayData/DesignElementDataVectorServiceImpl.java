@@ -35,6 +35,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class DesignElementDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase {
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGeneCoexpressionPattern(java.util.Collection, java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    @Override
+    protected Collection handleGetGeneCoexpressionPattern( Collection ees, Collection genes, QuantitationType qt ) throws Exception {
+        return this.getDesignElementDataVectorDao().getGeneCoexpressionPattern(ees,genes,qt);
+    }
+
     @Override
     protected DesignElementDataVector handleFindOrCreate( DesignElementDataVector designElementDataVector )
             throws Exception {
