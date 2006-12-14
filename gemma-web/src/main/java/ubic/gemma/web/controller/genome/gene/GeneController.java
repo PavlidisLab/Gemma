@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +30,10 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
+import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -43,12 +48,16 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
+ * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="methodNameResolver" ref="geneActions"
+ * @spring.property name="ontologyEntryService" ref="ontologyEntryService"
  */
 public class GeneController extends BaseMultiActionController {
     private GeneService geneService = null;
     private BibliographicReferenceService bibliographicReferenceService = null;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
+    private Gene2GOAssociationService gene2GOAssociationService = null;
+    private OntologyEntryService ontologyEntryService = null;
 
     /**
      * @return Returns the geneService.
@@ -148,8 +157,24 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
+        // Now get the ontolgy terms
+        Collection<OntologyEntry> oes = gene2GOAssociationService.findByGene( gene );
+        Map<OntologyEntry, String> ontoMap = new HashMap<OntologyEntry, String>();
+
+        for ( OntologyEntry entry : oes ) {
+            String parents = "";
+            for ( Object parent : ontologyEntryService.getParents( entry ) )
+                parents += " <b> " + ( ( OntologyEntry ) parent ).getValue() + " </b> &nbsp;";
+
+            if (!StringUtils.isBlank( entry.getValue()))
+                ontoMap.put( entry, parents );
+        }
+
         ModelAndView mav = new ModelAndView( "gene.detail" );
         mav.addObject( "gene", gene );
+        mav.addObject( "ontologyEntries", ontoMap.entrySet() );
+        mav.addObject( "numOntologyEntries", oes.size() );
+
         Long compositeSequenceCount = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         return mav;
@@ -183,6 +208,20 @@ public class GeneController extends BaseMultiActionController {
     public void setCompositeSequenceGeneMapperService(
             CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
         this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    /**
+     * @param ontologyEntryService the ontologyEntryService to set
+     */
+    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
+        this.ontologyEntryService = ontologyEntryService;
     }
 
 }

@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 
@@ -41,8 +42,18 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      */
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        Collection<OntologyEntry> ontos = null;
+        final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "gene", gene );
+            ontos = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return ontos;
     }
 
     /*
