@@ -129,19 +129,44 @@
                 </td>
             </tr>       
             <tr>
-                <td valign="top">
-                    <b>
-                        <fmt:message key="pubMed.publication" />
-                    </b>
-                </td>
-                <td>
-                	<%if (expressionExperiment.getPrimaryPublication() != null){%>
-                    	<jsp:getProperty name="expressionExperiment" property="primaryPublication" />
-                    <%}else{
-                    	out.print("Primary publication unavailable");
-                    }%>
-                </td>
-            </tr>   
+				<td class="label">
+					<fmt:message key="investigators.title" />
+				</td>
+				<td>
+					<%
+					                    if ( ( expressionExperiment.getInvestigators() ) != null
+					                    && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
+					%>
+					<c:forEach end="0" var="investigator"
+						items="${ expressionExperiment.investigators }">
+						<c:out value="${ investigator.name}" />
+					</c:forEach>
+					<%
+					                    if ( expressionExperiment.getInvestigators().size() > 1 ) {
+					                    out.print( ", et al. " );
+					                }
+					            } else {
+					                out.print( "No investigators known" );
+					            }
+					%>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<fmt:message key="pubMed.publication" />
+				</td>
+				<td>
+					<%
+					            if ( expressionExperiment.getPrimaryPublication() != null ) {
+					%>	
+					<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
+					<% 
+					            } else {
+					                out.print( "Primary publication unavailable" );
+					            }
+					%>
+				</td>
+			</tr>  
             
             <tr>
                 <td valign="top">
