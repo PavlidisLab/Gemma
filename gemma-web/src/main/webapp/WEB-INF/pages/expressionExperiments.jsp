@@ -34,7 +34,9 @@
 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
+				
 			<authz:authorize ifAnyGranted="admin">
+				<display:column property="edit" sortable="false" title="Edit" />
 				<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
 			</authz:authorize>
 

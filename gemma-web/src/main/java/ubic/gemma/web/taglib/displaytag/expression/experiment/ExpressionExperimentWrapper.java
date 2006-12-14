@@ -203,4 +203,20 @@ public class ExpressionExperimentWrapper extends TableDecorator {
                 + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
 
     }
+    
+    public String getEdit() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+
+        if ( object == null ) {
+            return "Expression Experiment unavailable";
+        }
+
+
+        return "<input type='button' " +
+               " onclick=\"location.href='editExpressionExperiment.html?id=" + object.getId() + "'\"" + 
+               " value='Edit'>";
+        
+        
+
+    }
 }
