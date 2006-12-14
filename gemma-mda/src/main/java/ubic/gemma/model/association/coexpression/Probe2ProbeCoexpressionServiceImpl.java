@@ -63,10 +63,9 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     @Override
     protected java.util.Collection handleCreate( java.util.Collection p2pExpressions ) throws java.lang.Exception {
 
-      if (!this.validCollection( p2pExpressions ))
-          return null;
+        if ( !this.validCollection( p2pExpressions ) ) return null;
 
-      Object check = p2pExpressions.iterator().next();
+        Object check = p2pExpressions.iterator().next();
         if ( check instanceof RatProbeCoExpression )
             return this.getRatProbeCoExpressionDao().create( p2pExpressions );
         else if ( check instanceof MouseProbeCoExpression )
@@ -80,97 +79,91 @@ public class Probe2ProbeCoexpressionServiceImpl extends
                     + " no service method for persisting." );
 
     }
-    
-    
-    
+
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)}
      */
-   protected void handleDelete(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete)
-       throws java.lang.Exception{
-      
-       if ( toDelete instanceof RatProbeCoExpression )
+    protected void handleDelete( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete )
+            throws java.lang.Exception {
+
+        if ( toDelete instanceof RatProbeCoExpression )
             this.getRatProbeCoExpressionDao().remove( toDelete );
-       else if ( toDelete instanceof MouseProbeCoExpression )
+        else if ( toDelete instanceof MouseProbeCoExpression )
             this.getMouseProbeCoExpressionDao().remove( toDelete );
-       else if ( toDelete instanceof HumanProbeCoExpression )
+        else if ( toDelete instanceof HumanProbeCoExpression )
             this.getHumanProbeCoExpressionDao().remove( toDelete );
-       else if ( toDelete instanceof OtherProbeCoExpression )
+        else if ( toDelete instanceof OtherProbeCoExpression )
             this.getOtherProbeCoExpressionDao().remove( toDelete );
-       else
-           throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + toDelete.getClass()
-                   + " no service method for persisting." );
-       
-       return;
+        else
+            throw new IllegalArgumentException( "Collection contains objects that it can't persist:"
+                    + toDelete.getClass() + " no service method for persisting." );
 
-   }
+        return;
 
-   
-   /**
-    * Performs the core logic for {@link #delete(java.util.Collection)}
-    */
-  protected void handleDelete(java.util.Collection deletes)
-      throws java.lang.Exception{
-      
-      if (!this.validCollection( deletes ))
-          return;
-      
-      Object check = deletes.iterator().next();
-      
-      if ( check instanceof RatProbeCoExpression )
-          this.getRatProbeCoExpressionDao().remove( deletes );
-     else if ( check instanceof MouseProbeCoExpression )
-          this.getMouseProbeCoExpressionDao().remove( deletes );
-     else if ( check instanceof HumanProbeCoExpression )
-          this.getHumanProbeCoExpressionDao().remove( deletes );
-     else if ( check instanceof OtherProbeCoExpression )
-          this.getOtherProbeCoExpressionDao().remove( deletes );
-     else
-         throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + check.getClass()
-                 + " no service method for persisting." );
-     
-     return;
-      
-      
-  }
-  
-  private Boolean validCollection(java.util.Collection p2pExpressions) throws IllegalArgumentException
-  {
-      // sanity check.
-      if ( ( p2pExpressions == null ) || ( p2pExpressions.size() == 0 ) ) return false;
+    }
 
-      // Make sure that the collections passed in is all of the same Class
+    /**
+     * Performs the core logic for {@link #delete(java.util.Collection)}
+     */
+    protected void handleDelete( java.util.Collection deletes ) throws java.lang.Exception {
 
-      Object last = p2pExpressions.iterator().next();
+        if ( !this.validCollection( deletes ) ) return;
 
-      for ( Object next : p2pExpressions ) {
+        Object check = deletes.iterator().next();
 
-          if ( last.getClass() != next.getClass() ) {
-              throw new IllegalArgumentException(
-                      "Given collection doesn't contain objects of uniform type. Contains an object of type "
-                              + last.getClass() + " and another of type " + next.getClass() );
-          }
+        if ( check instanceof RatProbeCoExpression )
+            this.getRatProbeCoExpressionDao().remove( deletes );
+        else if ( check instanceof MouseProbeCoExpression )
+            this.getMouseProbeCoExpressionDao().remove( deletes );
+        else if ( check instanceof HumanProbeCoExpression )
+            this.getHumanProbeCoExpressionDao().remove( deletes );
+        else if ( check instanceof OtherProbeCoExpression )
+            this.getOtherProbeCoExpressionDao().remove( deletes );
+        else
+            throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + check.getClass()
+                    + " no service method for persisting." );
 
-          last = next;
-      }
-      
-      return true;
-  }
+        return;
 
-@Override
-protected Collection handleFindCoexpressionRelationships( Gene givenG, Collection ees, QuantitationType qt ) throws Exception {
-   return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( givenG, ees, qt );
-}
+    }
 
-/* (non-Javadoc)
- * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
- */
-@Override
-protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
-    // TODO Auto-generated method stub
-    
-}
-  
+    private Boolean validCollection( java.util.Collection p2pExpressions ) throws IllegalArgumentException {
+        // sanity check.
+        if ( ( p2pExpressions == null ) || ( p2pExpressions.size() == 0 ) ) return false;
 
+        // Make sure that the collections passed in is all of the same Class
+
+        Object last = p2pExpressions.iterator().next();
+
+        for ( Object next : p2pExpressions ) {
+
+            if ( last.getClass() != next.getClass() ) {
+                throw new IllegalArgumentException(
+                        "Given collection doesn't contain objects of uniform type. Contains an object of type "
+                                + last.getClass() + " and another of type " + next.getClass() );
+            }
+
+            last = next;
+        }
+
+        return true;
+    }
+
+    @Override
+    protected Collection handleFindCoexpressionRelationships( Gene givenG, Collection ees, QuantitationType qt )
+            throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( givenG, ees, qt );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
+        this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
+
+    }
 
 }
