@@ -97,11 +97,10 @@
 					<c:forEach end="0" var="investigator"
 						items="${ expressionExperiment.investigators }">
 						<c:out value="${ investigator.name}" />
-						<br />
 					</c:forEach>
 					<%
 					                    if ( expressionExperiment.getInvestigators().size() > 1 ) {
-					                    out.print( " et al. " );
+					                    out.print( ", et al. " );
 					                }
 					            } else {
 					                out.print( "No investigators known" );
@@ -136,8 +135,10 @@
 				</td>
 				<td>
 					<%
-					                if ( expressionExperiment.getPrimaryPublication() != null ) {
-					                out.print( expressionExperiment.getPrimaryPublication().getCitation() );
+					            if ( expressionExperiment.getPrimaryPublication() != null ) {
+					%>	
+					<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
+					<% 
 					            } else {
 					                out.print( "Primary publication unavailable" );
 					            }
