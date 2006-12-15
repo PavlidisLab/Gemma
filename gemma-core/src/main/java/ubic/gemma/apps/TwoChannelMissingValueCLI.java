@@ -33,6 +33,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
 
@@ -113,6 +114,11 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                         continue;
                     }
 
+                    if ( arrayDesignsUsed.size() > 1 ) {
+                        throw new UnsupportedOperationException(
+                                "Experiment uses more than one array design, this is not supported yet" );
+                    }
+
                     log.info( ee + " uses a two-color array design, processing..." );
 
                     processExperiment( ee );
@@ -145,19 +151,24 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Collection<QuantitationType> types = this.getExpressionExperimentService().getQuantitationTypes( ee );
 
-        if ( !force ) {
-            boolean hasMissingValues = false;
-            for ( QuantitationType qType : types ) {
-                if ( qType.getType() == StandardQuantitationType.PRESENTABSENT ) {
-                    hasMissingValues = true;
-                }
+        QuantitationType previousMissingValueQt = null;
+        for ( QuantitationType qType : types ) {
+            if ( qType.getType() == StandardQuantitationType.PRESENTABSENT ) {
+                previousMissingValueQt = qType;
             }
+        }
 
-            if ( hasMissingValues ) {
-                log.warn( ee + " already has missing value vectors" );
-                return;
-            }
-        } // FIXME: delete old values if force.
+        if ( previousMissingValueQt != null && !force ) {
+            log.warn( ee + " already has missing value vectors, skipping" );
+            return;
+        }
+
+        if ( force && previousMissingValueQt != null ) {
+            log.info( "Removing old present/absent data" );
+            DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
+                    .getBean( "designElementDataVectorService" );
+            dedvs.removeDataForQuantitationType( ee, previousMissingValueQt );
+        }
 
         log.info( "Got " + ee + ", thawing..." );
         this.getExpressionExperimentService().thaw( ee );
