@@ -114,19 +114,8 @@
 					<fmt:message key="databaseEntry.title" />
 				</td>
 				<td>
-					<%
-					                if ( expressionExperiment.getAccession() != null ) {
-					                if ( expressionExperiment.getAccession().getExternalDatabase().getName().equalsIgnoreCase( "GEO" ) ) {
-					                    out.print( expressionExperiment.getAccession().getAccession()
-					                            + "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
-					                            + expressionExperiment.getAccession().getAccession() + "'>(GEO)</a>" );
-					                } else {
-					                    out.print( expressionExperiment.getAccession().getAccession() );
-					                }
-					            } else {
-					                out.print( "Accession unavailable" );
-					            }
-					%>
+					<Gemma:databaseEntry
+            			databaseEntry="${expressionExperiment.accession}" />
 				</td>
 			</tr>
 			<tr>

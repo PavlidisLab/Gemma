@@ -80,7 +80,18 @@ public class DatabaseEntryTag extends TagSupport {
         if ( this.databaseEntry == null ) {
             buf.append( "No accession" );
         } else {
-            buf.append( databaseEntry.getExternalDatabase().getName() + ":" + databaseEntry.getAccession() );
+            if (databaseEntry.getExternalDatabase() != null) {
+                if (databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "GEO" )) {
+                    String name = databaseEntry.getAccession();
+                    buf.append(name + "&nbsp;<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + databaseEntry.getAccession() + "'<img src='/Gemma/images/logo/ncbi.gif' /></a>");
+                }
+                else {
+                    buf.append( databaseEntry.getAccession() + "(" + databaseEntry.getExternalDatabase().getName() + ":" +  ")" );   
+                }
+            }
+            else {
+                buf.append( databaseEntry.getAccession() ); 
+            }
         }
 
         try {

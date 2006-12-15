@@ -23,6 +23,15 @@
                     }%>
                 </td>
             </tr>
+            <tr>
+				<td class="label">
+					<fmt:message key="databaseEntry.title" />
+				</td>
+				<td>
+					<Gemma:databaseEntry
+            			databaseEntry="${bioAssay.accession}" />
+				</td>
+			</tr>
         
             <tr>
                 <td valign="top">
@@ -32,7 +41,8 @@
                 </td>
                 <td>
                 	<%if (bioAssay.getDescription() != null){%>
-                    	<jsp:getProperty name="bioAssay" property="description" />
+                	<div class="clob"><jsp:getProperty name="bioAssay"
+							property="description" /></div>
                     <%}else{
                     	out.print("Description unavailable");
                     }%>
@@ -57,12 +67,7 @@
             <display:column property="description" maxWords="100" />
             <display:column property="advertisedNumberOfDesignElements" maxWords="100" />
         </display:table>
-		
-		<h3>
-            <fmt:message key="databaseEntry.title" />
-        </h3>
-        <Gemma:databaseEntry
-            databaseEntry="<%=bioAssay.getAccession()%>" />
+        
         <br/>
         
         <br />
