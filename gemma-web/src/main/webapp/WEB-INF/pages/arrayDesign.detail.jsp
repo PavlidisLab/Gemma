@@ -109,19 +109,16 @@
 					%>
 					<c:forEach var="accession"
 						items="${ arrayDesign.externalReferences }">
-						<c:if test='${accession != null && accession.accession != ""}'>
-
-							<c:if test='${fn:startsWith(accession.accession, "GPL")}'>
-								${accession.accession }
-								<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${accession.accession }'>
-									<img src='/Gemma/images/logo/ncbi.gif' />
-								</a>
-							</c:if>
-							<c:if test='${!fn:startsWith(accession.accession, "GPL")}'>
-								${accession.accession }
-							</c:if>
-							<br />
+						<c:if test='${accession != null && accession.externalDatabase != null && accession.externalDatabase.name == "GEO"}'>
+							${accession.accession }
+							<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${accession.accession }'>
+								<img src='/Gemma/images/logo/ncbi.gif' />
+							</a>
 						</c:if>
+						<c:if test='${!(accession != null && accession.externalDatabase != null && accession.externalDatabase.name == "GEO")}'>
+							${accession.accession }
+						</c:if>
+						<br />
 					</c:forEach>
 					<%
 					  }
