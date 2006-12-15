@@ -100,11 +100,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ArrayDesign arrayDesign = null;
         if ( idStr != null ) {
             arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
-            this.addMessage( request, "object.found", new Object[] { messageId, idStr } );
             request.setAttribute( "id", idStr );
         } else if ( name != null ) {
             arrayDesign = arrayDesignService.findArrayDesignByName( name );
-            this.addMessage( request, "object.found", new Object[] { messageName, name } );
             request.setAttribute( "name", name );
         }
 
@@ -112,11 +110,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             throw new EntityNotFoundException( name + " not found" );
         }
         long id = arrayDesign.getId();
-        
-        Long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( arrayDesign );
-        Long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( arrayDesign );
-        Long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( arrayDesign );
-        Long numGenes = arrayDesignService.numGenes( arrayDesign );
         
         Long numCompositeSequences = new Long(arrayDesignService.getCompositeSequenceCount( arrayDesign ));
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
@@ -144,6 +137,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             colorString = "No color";
         }
         
+        String summary = arrayDesignReportService.getArrayDesignReport( id );
+        
         String[] eeIdList = new String[ee.size()];
         int i = 0;
         for (ExpressionExperiment e : ee) {
@@ -155,14 +150,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
-        mav.addObject( "numCsBioSequences", numCsBioSequences );
-        mav.addObject( "numCsBlatResults",numCsBlatResults);
-        mav.addObject( "numCsGenes", numCsGenes );
-        mav.addObject( "numGenes", numGenes );
         mav.addObject( "numCompositeSequences",  numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         mav.addObject( "expressionExperimentIds", eeIds );      
         mav.addObject( "technologyType", colorString );
+        mav.addObject( "summary", summary);
         return mav;
     }
 

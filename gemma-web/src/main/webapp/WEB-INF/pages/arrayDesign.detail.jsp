@@ -7,53 +7,18 @@
 <title>Array Design Details</title><content tag="heading">Array Design Details</content>
 
 <!--  Summary of array design associations -->
-<table class='datasummary'>
+<c:if test="${ summary != ''}" >
+<table class='datasummaryarea'>
 <caption>
 	<jsp:getProperty name="arrayDesign" property="name" />
 </caption>
 <tr>
-<td colspan=2 align=center>
-<b>Summary</b>
-</td>
-</tr>
-<tr>
-<%-- Admin only for sequence and blat associations --%>
-<authz:authorize ifAnyGranted="admin">
 <td>
-	Probes with sequences
-</td>
-<td>
-	<c:out value="${numCsBioSequences}" />
-</td> 
-</tr>
-<tr>
-<td>
-	Probes with genome alignments
-</td>
-<td>
-	<c:out value="${numCsBlatResults}" />
-</td>
-</tr>
-</authz:authorize>
-<!--  End admin only -->
-<tr>
-<td>
-	Probes mapping to gene(s)
-</td>
-<td>
-	<c:out value="${numCsGenes}" />
-</td>
-</tr>
-<tr>
-<td>
-	Unique genes represented
-</td>
-<td>
-	<c:out value="${numGenes}" />
+${ summary }
 </td>
 </tr>
 </table>
-
+</c:if>
 		 
 		<table>
 			<tr>

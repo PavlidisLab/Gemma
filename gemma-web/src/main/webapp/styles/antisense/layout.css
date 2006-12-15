@@ -131,6 +131,10 @@
 
 /* custom layout for data summary */
 
+.datasummaryarea {
+	float: right;		
+}
+ 
 .datasummary {
 	border-width: 1px 1px 1px 1px;
 	border-spacing: 2px;

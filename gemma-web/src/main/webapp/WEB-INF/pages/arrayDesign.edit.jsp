@@ -20,9 +20,9 @@
 	<table>
 
 		<tr>
-			<th>
+			<td class="label">
 				<Gemma:label key="arrayDesign.name" />
-			</th>
+			</td>
 			<td>
 				<spring:bind path="arrayDesign.name">
 					<c:choose>
@@ -40,9 +40,9 @@
 		</tr>
 
 		<tr>
-			<th>
+			<td class="label">
 				<Gemma:label key="arrayDesign.manufacturer" />
-			</th>
+			</td>
 			<td>
 				<c:choose>
 					<c:when test="${empty arrayDesign.designProvider.name}">
@@ -59,9 +59,9 @@
 
 
 		<tr>
-			<th>
+			<td class="label">
 				<Gemma:label key="arrayDesign.description" />
-			</th>
+			</td>
 			<td>
 				<spring:bind path="arrayDesign.description">
 					<textarea name="description" id="description" rows=8 cols=30><c:out value="${status.value}" /></textarea>
@@ -70,17 +70,6 @@
 			</td>
 		</tr>
 
-		<tr>
-			<th>
-				<Gemma:label key="arrayDesign.advertisedNumberOfDesignElements" />
-			</th>
-			<td>
-				<spring:bind path="arrayDesign.advertisedNumberOfDesignElements">
-					<input type="text" name="${status.expression}" value="${status.value}" />
-					<span class="fieldError">${status.errorMessage}</span>
-				</spring:bind>
-			</td>
-		</tr>
 
 		<tr>
 			<td></td>
