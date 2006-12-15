@@ -20,15 +20,11 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,6 +57,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 public class ArrayDesignController extends BackgroundProcessingMultiActionController {
 
+    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
 
     private SearchService searchService;
@@ -91,6 +88,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
    // @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings("unchecked")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
@@ -153,7 +151,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             i++;
         }
         String eeIds = StringUtils.join( eeIdList,",");
-
+        
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
@@ -175,6 +173,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
   //  @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings("unchecked")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         
         String sId = request.getParameter( "id" );
