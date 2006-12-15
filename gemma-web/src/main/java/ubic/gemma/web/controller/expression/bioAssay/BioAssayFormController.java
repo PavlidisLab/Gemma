@@ -89,9 +89,6 @@ public class BioAssayFormController extends BaseFormController {
         else
             ba = BioAssay.Factory.newInstance();
 
-        if ( ba != null )
-            saveMessage( request, "object.editing", new Object[] { ba.getClass().getSimpleName(), ba.getId() },
-                    "Editing" );
 
         return ba;
     }

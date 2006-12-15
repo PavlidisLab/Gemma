@@ -5,27 +5,25 @@
 
 <title>  <fmt:message key="experimentalDesign.details" />  </title>
 
-        <h2>
-            <fmt:message key="experimentalDesign.details" />
-        </h2>
-        <table width="100%" cellspacing="10">
-            <tr>
-                <td valign="top">
-                    <b>
-                        <fmt:message key="experimentalDesign.name" />
-                    </b>
-                </td>
-                <td>
-                	<%if (experimentalDesign.getName() != null){%>
-                    	<jsp:getProperty name="experimentalDesign" property="name" />
-                    <%}else{
-                    	out.print("Name unavailable");
-                    }%>
-                </td>
-            </tr>
+<h2>
+	<fmt:message key="experimentalDesign.details" />
+</h2>
+<table cellspacing="10">
+	<tr>
+    	<td class="label">
+        	<b><fmt:message key="experimentalDesign.name" /></b>
+        </td>
+		<td>
+        <%if (experimentalDesign.getName() != null){%>
+        	<jsp:getProperty name="experimentalDesign" property="name" />
+        <%}else{
+        	out.print("Name unavailable");
+        }%>
+    	</td>
+    </tr>
         
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="experimentalDesign.description" />
                     </b>
@@ -40,7 +38,7 @@
             </tr>
          
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="experimentalDesign.replicateDescription" />
                     </b>
@@ -55,7 +53,7 @@
             </tr>    
       
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="experimentalDesign.qualityControlDescription" />
                     </b>
@@ -70,7 +68,7 @@
             </tr>
             
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="experimentalDesign.normalizationDescription" />
                     </b>
@@ -83,24 +81,34 @@
                     }%>
                 </td>
             </tr>
-
+			<authz:authorize ifAllGranted="admin">
+				<tr>
+					<td class="label">
+						<fmt:message key="auditTrail.date" />
+					</td>
+					<td>
+						<%
+						                    if ( experimentalDesign.getAuditTrail() != null ) {
+						                    out.print( experimentalDesign.getAuditTrail().getCreationEvent().getDate() );
+						                } else {
+						                    out.print( "Create date unavailable" );
+						                }
+						%>
+					</td>
+				</tr>
+			</authz:authorize>
         </table>
 
         <h3>
             <fmt:message key="experimentalFactors.title" />
         </h3>
-        <display:table name="experimentalDesign.experimentalFactors" class="list" requestURI="" id="experimentalFactorList"
+        <display:table name="experimentalDesign.experimentalFactors" sort="list" class="list" requestURI="" id="experimentalFactorList"
          pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExperimentalDesignWrapper">
             <display:column property="name" sortable="true" href="/Gemma/experimentalFactor/showExperimentalFactor.html" paramId="id" paramProperty="id" maxWords="20" />
             <display:column property="description" maxWords="100" />
             <display:column property="factorValuesLink" sortable="true" maxWords="100" titleKey="experimentalDesign.factorValues"  />
         </display:table>
 
-        <h3>
-            <fmt:message key="auditTrail.title" />
-        </h3>
-        <Gemma:auditTrail
-            auditTrail="<%=experimentalDesign.getAuditTrail()%>" />
         <br />
         <hr />
         <hr />

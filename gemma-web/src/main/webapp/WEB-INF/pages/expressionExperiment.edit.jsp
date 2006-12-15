@@ -26,7 +26,7 @@
 	
 <table cellspacing="10">
     <tr>
-       <td valign="top">
+       <td class="label">
         	<b>
         	<fmt:message key="expressionExperiment.name" />
             </b>
@@ -39,7 +39,7 @@
     </tr>
     
     <tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         		<fmt:message key="expressionExperiment.description" />
             </b>
@@ -53,7 +53,7 @@
 	</tr>
 	
 	<tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         	<fmt:message key="expressionExperiment.source" />
             </b>
@@ -64,8 +64,8 @@
 	        </spring:bind>
 	    </td>
 	</tr>	
-                <tr>
-       <td valign="top">
+    <tr>
+       <td class="label">
         	<b>
         	<fmt:message key="databaseEntry.title" />
             </b>
@@ -85,8 +85,8 @@
 	    </td>
     </tr>  
     
-        <tr>
-       <td valign="top">
+    <tr>
+       <td class="label">
         	<b>
         	<fmt:message key="externalDatabase.title" />
             </b>
@@ -114,8 +114,8 @@
        	
     
        
-    	            <tr>
-                <td valign="top">
+    	 <tr>
+                <td class="label">
                     <b>
                         <fmt:message key="expressionExperiment.owner" />
                     </b>
@@ -169,7 +169,7 @@
 			</tr>  
             
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="auditTrail.date" />
                     </b>

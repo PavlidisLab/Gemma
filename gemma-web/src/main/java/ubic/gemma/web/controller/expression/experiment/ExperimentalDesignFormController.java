@@ -117,6 +117,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
         ExperimentalDesign ed = ( ExperimentalDesign ) command;
 
         experimentalDesignService.update( ed );
+
         saveMessage( request, "object.saved", new Object[] { ed.getClass().getSimpleName(), ed.getId() }, "Saved" );
         return new ModelAndView( getSuccessView() ).addObject( "experimentalDesign", ed );
     }

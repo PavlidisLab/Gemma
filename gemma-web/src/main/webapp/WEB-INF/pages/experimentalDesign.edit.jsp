@@ -27,7 +27,7 @@
 	
 <table cellspacing="10">
     <tr>
-       <td valign="top">
+       <td class="label">
         	<b>
         	<fmt:message key="experimentalDesign.name" />
             </b>
@@ -40,7 +40,7 @@
     </tr>
     
     <tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         		<fmt:message key="experimentalDesign.description" />
             </b>
@@ -54,7 +54,7 @@
 	</tr>
 	
 	<tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         	<fmt:message key="experimentalDesign.replicateDescription" />
             </b>
@@ -67,7 +67,7 @@
 	</tr>
 	
 	<tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         	<fmt:message key="experimentalDesign.qualityControlDescription" />
             </b>
@@ -80,7 +80,7 @@
 	</tr>
 	
 	<tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         	<fmt:message key="experimentalDesign.normalizationDescription" />
             </b>
@@ -90,7 +90,24 @@
 	        <input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
 	        </spring:bind>
 	    </td>
-	</tr>		
+	</tr>	
+	
+	<authz:authorize ifAllGranted="admin">
+		<tr>
+			<td class="label">
+				<fmt:message key="auditTrail.date" />
+			</td>
+			<td>
+			<%
+			if ( experimentalDesign.getAuditTrail() != null ) {
+				out.print( experimentalDesign.getAuditTrail().getCreationEvent().getDate() );
+			} else {
+				out.print( "Create date unavailable" );
+			}
+			%>
+			</td>
+		</tr>
+	</authz:authorize>	
 		
 </table>
 		<h3>
@@ -98,19 +115,12 @@
         </h3>
         <display:table name="experimentalDesign.experimentalFactors" class="list" requestURI="" id="experimentalFactorList"
          pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExperimentalDesignWrapper">
-        	<display:column property="id" sortable="true" href="/Gemma/experimentalFactor/showExperimentalFactor.html" paramId="id" paramProperty="id"/>
-            <display:column property="name" maxWords="20" />
+            <display:column property="name" sortable="true" href="/Gemma/experimentalFactor/showExperimentalFactor.html" paramId="id" paramProperty="id" maxWords="20" />
             <display:column property="description" maxWords="100" />
             <display:column property="factorValuesLink" sortable="true" maxWords="100" titleKey="experimentalDesign.factorValues"  />
         </display:table>
 		
-        <h3>
-            <fmt:message key="auditTrail.title" />
-        </h3>
-        <Gemma:auditTrail
-            auditTrail="<%=experimentalDesign.getAuditTrail()%>" />
-            
-        <br />
+	    <br />
 			
 		<table>
 		<tr>

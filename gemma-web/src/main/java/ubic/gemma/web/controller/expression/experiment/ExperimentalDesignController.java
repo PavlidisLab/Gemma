@@ -69,7 +69,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( id + " not found" );
         }
 
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
         request.setAttribute( "id", id );
         return new ModelAndView( "experimentalDesign.detail" ).addObject( "experimentalDesign", experimentalDesign );
     }

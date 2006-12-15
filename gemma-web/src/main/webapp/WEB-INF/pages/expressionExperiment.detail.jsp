@@ -191,7 +191,7 @@
 					href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
 					<%
 					out.print( expressionExperiment.getExperimentalDesign().getName() );
-					%> </a>
+					%> (view) </a>
 			</h3>
 			<p>
 				<b>Description:</b>

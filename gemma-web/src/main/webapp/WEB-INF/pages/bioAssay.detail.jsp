@@ -10,7 +10,7 @@
         </h2>
         <table width="100%" cellspacing="10">
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="bioAssay.name" />
                     </b>
@@ -34,7 +34,7 @@
 			</tr>
         
             <tr>
-                <td valign="top">
+                <td class="label">
                     <b>
                         <fmt:message key="bioAssay.description" />
                     </b>
@@ -65,7 +65,6 @@
          pagesize="10" >
             <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrays/showArrayDesign.html" paramId="id" paramProperty="id"/>
             <display:column property="description" maxWords="100" />
-            <display:column property="advertisedNumberOfDesignElements" maxWords="100" />
         </display:table>
         
         <br/>

@@ -13,7 +13,7 @@
 	</c:if>
 </spring:bind>
 
-<title> <fmt:message key="pubmedSearch.heading" /> </title>
+<title> Editing <fmt:message key="bioAssay.details" /> </title>
 
 <form method="post" action="<c:url value="/bioAssay/editBioAssay.html"/>">
 
@@ -26,7 +26,7 @@
         </td>
 	</tr>
 	<tr>
-		<td valign="top">
+		<td class="label">
         	<b>
         		<fmt:message key="bioAssay.name" />
             </b>
@@ -38,7 +38,7 @@
 	    </td>
 	</tr>
 	<tr>    
-	    <td valign="top">
+	    <td class="label">
         	<b>
         		<fmt:message key="bioAssay.description" />
             </b>
@@ -49,36 +49,14 @@
 	        </spring:bind>
 	    </td>
 	</tr>
-	</table>
-	
-		<h3>
-    		<fmt:message key="bioAssay.bioMaterials" />
-    	</h3>
-        <display:table name="bioAssayImpl.samplesUsed" class="list" requestURI="" id="bioMaterialList"
-         pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
-            <display:column property="name" maxWords="20" />
-            <display:column property="description" maxWords="100" />
-            <display:column property="id" sortable="true" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
-        </display:table>
-        
-        <h3>
-            <fmt:message key="bioAssay.arrayDesigns" />
-        </h3>
-        <display:table name="bioAssayImpl.arrayDesignUsed" class="list" requestURI="" id="arrayDesignList"
-         pagesize="10" >
-            <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrayDesign/showArrayDesign.html" paramId="name" paramProperty="name"/>
-            <display:column property="description" maxWords="100" />
-            <display:column property="advertisedNumberOfDesignElements" maxWords="100" />
-        </display:table>
-            
-	    <h3>
+    <tr>
+       <td class="label">
+        	<b>
         	<fmt:message key="databaseEntry.title" />
-        </h3>
-        
-        <h5>
-        	<fmt:message key="databaseEntry.accession.title" />
-        </h5>
-        	<spring:bind path="bioAssayImpl.accession">
+            </b>
+        </td>
+        <td>
+            <spring:bind path="bioAssayImpl.accession">
         	<c:choose>
             <c:when test="${bioAssayImpl.accession == null}">
                 <input type="text" name="bioAssayImpl.accession.accession" value="<c:out value="Accession unavailable"/>"/>
@@ -88,11 +66,17 @@
             </c:otherwise>
         	</c:choose>      
 	        </spring:bind>
-	        
-        <h5>
+	      
+	    </td>
+    </tr>  
+	<tr>
+       <td class="label">
+        	<b>
         	<fmt:message key="externalDatabase.title" />
-        </h5>
-        <c:if test="${bioAssayImpl.accession != null}">
+            </b>
+        </td>
+        <td>
+            <c:if test="${bioAssayImpl.accession != null}">
        		<spring:bind path="bioAssayImpl.accession.externalDatabase.name">
        			<select name="${status.expression}">
           			<c:forEach items="${externalDatabases}" var="externalDatabase">
@@ -104,15 +88,29 @@
         	<span class="fieldError">${status.errorMessage}</span>
        		</spring:bind>
        	</c:if>
-       	<%-- 
-        <td>
-        	<spring:bind path="bioAssayImpl.accession.accession">
-	        <input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
-	        </spring:bind>
 	    </td>
-        --%>
+    </tr>
+	</table>
+	
+		<h3>
+    		<fmt:message key="bioMaterials.title" />
+    	</h3>
+        <display:table name="bioAssayImpl.samplesUsed" class="list" requestURI="" id="bioMaterialList"
+         pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
+            <display:column property="name" maxWords="20" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
+            <display:column property="description" maxWords="100" />
+        </display:table>
         
-       	<br/><br />
+        <h3>
+            <fmt:message key="bioAssay.arrayDesigns" />
+        </h3>
+        <display:table name="bioAssayImpl.arrayDesignUsed" class="list" requestURI="" id="arrayDesignList"
+         pagesize="10" >
+            <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrayDesign/showArrayDesign.html" paramId="name" paramProperty="name"/>
+            <display:column property="description" maxWords="100" />
+        </display:table>
+            
+	  <br />
        	
 	<table>
 	<tr>
