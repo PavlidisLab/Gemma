@@ -17,7 +17,6 @@ a.errorLink:hover {
 a.helpLink {
 	color: Green;
 	text-decoration: none;
-	border-bottom: 1px dashed Green;
 	cursor: help;
 }
 
