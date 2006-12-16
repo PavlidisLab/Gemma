@@ -1,5 +1,6 @@
 package ubic.gemma.web.taglib.displaytag;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -46,7 +47,12 @@ public class OntologyWrapper extends TableDecorator {
 
     public String getParents() {
         Map.Entry oe = ( Map.Entry ) getCurrentRowObject();
-        return ( String ) oe.getValue();
+        
+        String parents = "";
+        for ( Object obj : (Collection) oe.getValue() )             
+              parents += ( ( OntologyEntry ) obj ).getValue() + " &nbsp;";        
+        
+        return parents;
     }
     
 

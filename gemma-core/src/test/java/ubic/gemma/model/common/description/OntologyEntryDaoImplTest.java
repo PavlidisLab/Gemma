@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -95,6 +98,19 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
         assertEquals( middle.getAccession(), actualValue.getAccession() );
     }
 
+    public final void testGetParentsMap() {
+        
+        List<OntologyEntry> ontoList = new ArrayList<OntologyEntry>();
+        ontoList.add( child );
+        ontoList.add( middle );
+        
+        Map resultMap = oed.getParents( ontoList );   
+        assertEquals(2, resultMap.size());
+        
+        Collection parents = (Collection) resultMap.get(child);
+        assertEquals( true, parents.contains( middle ));
+        
+    }
     /**
      * Test method for {@link ubic.gemma.model.common.description.OntologyEntryImpl#getChildren()}.
      */

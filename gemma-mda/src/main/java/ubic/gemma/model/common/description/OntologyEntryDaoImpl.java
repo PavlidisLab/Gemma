@@ -18,9 +18,12 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -149,6 +152,36 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "oe", ontologyEntry );
             return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map handleGetParents( Collection oes ) {
+        if ( oes.size() == 0 ) {
+            throw new IllegalArgumentException( "Cannot be run on an empty collection" );
+        }
+        String queryString = "select child,parent from OntologyEntryImpl parent, OntologyEntryImpl child where child in elements(parent.associations) and child in (:oes)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "oes", oes );
+            List<Object[]> entries = queryObject.list();
+
+            Map<Object, Collection> ontoParents = new HashMap<Object, Collection>();
+
+            // the query only returns OntologyEntries that had parents.
+            // inilize the map to include the ontology entries that didn't have parents
+            for ( Object obj : oes ) {
+                if (!ontoParents.containsKey( obj ))    //defensive coding to defend against duplicates
+                    ontoParents.put( obj, new ArrayList() );
+            }
+            // add parents to the map
+            for ( Object[] object : entries )
+                ontoParents.get( object[0] ).add( object[1] );
+
+            return ontoParents;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

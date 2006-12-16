@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +31,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
-import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -157,25 +155,21 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        // Now get the ontolgy terms
-        Collection<OntologyEntry> oes = gene2GOAssociationService.findByGene( gene );
-        Map<OntologyEntry, String> ontoMap = new HashMap<OntologyEntry, String>();
-
-        for ( OntologyEntry entry : oes ) {
-            String parents = "";
-            for ( Object parent : ontologyEntryService.getParents( entry ) )
-                parents += ( ( OntologyEntry ) parent ).getValue() + " &nbsp;";
-            
-//      Some of the ontology entries are blank.  Will display them for now            
-//            if (!StringUtils.isBlank( entry.getValue()))
-                ontoMap.put( entry, parents );
-        }
 
         ModelAndView mav = new ModelAndView( "gene.detail" );
-        mav.addObject( "gene", gene );
-        mav.addObject( "ontologyEntries", ontoMap.entrySet() );
-        mav.addObject( "numOntologyEntries", oes.size() );
 
+        Collection ontos = gene2GOAssociationService.findByGene( gene );
+        mav.addObject( "gene", gene );
+
+        // get the ontolgy terms and their parents
+        if ( ontos.size() != 0 ) {
+            Map ontoMap = ontologyEntryService.getParents( ontos );
+            mav.addObject( "ontologyEntries", ontoMap.entrySet() );
+        }
+
+        mav.addObject( "numOntologyEntries", ontos.size() );
+
+        // Get the composite sequences
         Long compositeSequenceCount = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         return mav;
