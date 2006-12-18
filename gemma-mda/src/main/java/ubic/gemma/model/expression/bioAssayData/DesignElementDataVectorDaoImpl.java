@@ -193,8 +193,8 @@ public class DesignElementDataVectorDaoImpl extends
         Collection<DesignElementDataVector> vectors = null;
 
         final String queryString =
-            "select distinct compositeSequence.designElementDataVectors from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
-            + " where compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+            "select distinct dedv from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
+            + " where gene.products.id=bs2gp.geneProduct.id and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
             + " and compositeSequence.designElementDataVectors.id=dedv.id and dedv.expressionExperiment.id in (:collectionOfEE) "
             + " and dedv.quantitationType.id = :givenQtId "
             + " and gene.id in (:collectionOfGenes)";
