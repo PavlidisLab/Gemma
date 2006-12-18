@@ -346,8 +346,8 @@ public class ArrayDesignSequenceProcessingService {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile )
-            throws IOException {
+    public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
+            Taxon taxon ) throws IOException {
 
         log.info( "Processing Affymetrix design" );
         arrayDesignService.thaw( arrayDesign );
@@ -363,7 +363,14 @@ public class ArrayDesignSequenceProcessingService {
         Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
 
         int total = compositeSequencesFromProbes.size();
-        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+
+        if ( taxon == null ) {
+            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+            if ( taxon == null ) throw new IllegalStateException( "No taxon found for " + arrayDesign );
+        }
+
+        assert taxon != null;
+
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
         Collection<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
         Collection<CompositeSequence> csBuffer = new ArrayList<CompositeSequence>();
@@ -460,7 +467,7 @@ public class ArrayDesignSequenceProcessingService {
 
         result = ( ArrayDesign ) persisterHelper.persist( result );
 
-        this.processAffymetrixDesign( result, probeSequenceFile );
+        this.processAffymetrixDesign( result, probeSequenceFile, taxon );
 
         return result;
     }
@@ -541,7 +548,7 @@ public class ArrayDesignSequenceProcessingService {
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
         if ( sequenceType == SequenceType.AFFY_PROBE ) {
-            return this.processAffymetrixDesign( arrayDesign, sequenceFile );
+            return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
         }
 
         log.info( "Processing non-Affymetrix design" );
