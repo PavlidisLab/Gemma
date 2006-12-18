@@ -600,8 +600,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         final String queryString = "select ee.id as id, "
                 + "ee.name as name, "
-                + "ee.accession.externalDatabase.name as externalDatabaseName, "
-                + "ee.accession.externalDatabase.webUri as externalDatabaseUri, "
+                + "ED.name as externalDatabaseName, "
+                + "ED.webUri as externalDatabaseUri, "
                 + "ee.source as source, "
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
@@ -612,7 +612,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon"
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
                 + " where ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
