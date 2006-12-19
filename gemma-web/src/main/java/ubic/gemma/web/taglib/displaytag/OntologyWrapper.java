@@ -40,7 +40,7 @@ public class OntologyWrapper extends TableDecorator {
     public String getAccession() {
         OntologyEntry oe = (OntologyEntry ) (( Map.Entry ) getCurrentRowObject()).getKey();
   
-        return  "<a href=" + oe.getUri()  + ">" + oe.getAccession() + "</a>";
+        return  "<a target='_blank' href='http://www.godatabase.org/cgi-bin/amigo/go.cgi?view=details&query=" + oe.getAccession()  + "'>" + oe.getAccession() + "</a>";
   
     }
 
