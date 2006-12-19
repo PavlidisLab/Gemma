@@ -176,6 +176,9 @@ if ( gene.getProducts().size() > 0 ) {
 }
 %>
 
+<table>
+<tr>
+<td>
 <display:table name="gene.products" class="list" requestURI=""
 	id="productsList" pagesize="10"
 	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
@@ -183,7 +186,9 @@ if ( gene.getProducts().size() > 0 ) {
 	<display:column property="description" sortable="true" maxWords="20" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
-
+</td>
+</tr>
+</table>
 <br />
 There are
 <b> <a
