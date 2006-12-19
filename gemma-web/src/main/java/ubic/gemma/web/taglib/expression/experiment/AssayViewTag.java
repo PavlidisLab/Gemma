@@ -136,7 +136,7 @@ public class AssayViewTag extends TagSupport {
                 }
             }
         }
-        buf.append( "<table><tr>" );
+        buf.append( "<table class='list'><tr>" );
         buf.append( "<th>BioMaterial</th>" );
         // display arraydesigns
         for ( ArrayDesign design : designs ) {
