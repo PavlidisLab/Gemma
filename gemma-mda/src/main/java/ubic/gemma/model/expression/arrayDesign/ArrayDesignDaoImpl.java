@@ -750,8 +750,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException();
+        }
+        final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+            + " left join cs.biologicalCharacteristic where ar.id = :id and "
+            + " cs.biologicalCharacteristic.sequence IS NULL";
+        return queryByIdReturnCollection( arrayDesign.getId(),queryString );
     }
 
     /* (non-Javadoc)
@@ -759,8 +764,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException();
+        }
+        long id = arrayDesign.getId();
+        final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + " left join cs.biologicalCharacteristic left join BlatResultImpl as blat on blat.querySequence=cs.biologicalCharacteristic "
+                + " where ar.id = :id";
+        return queryByIdReturnCollection( id, queryString );
     }
 
     /* (non-Javadoc)
@@ -768,7 +779,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException();
+        }
+        long id = arrayDesign.getId();
+        final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + " left join cs.biologicalCharacteristic left join BioSequence2GeneProductImpl bs2gp on bs2gp.bioSequence=cs.biologicalCharacteristic " 
+                +   " left join GeneImpl gene on bs2gp.geneProduct.id=gene.products.id "
+                + " where ar.id = :id";
+        return queryByIdReturnCollection( id, queryString );
     }
 }
