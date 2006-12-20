@@ -25,6 +25,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -125,15 +127,21 @@ public class SearchService {
         Set<Gene> aliasMatch = new HashSet<Gene>();
         Set<Gene> geneProductMatch = new HashSet<Gene>();
         Set<Gene> bioSequenceMatch = new HashSet<Gene>();
+        
+        // replace * with % for inexact symbol search
+        String inexactString = searchString;
+        Pattern pattern = Pattern.compile( "\\*" );
+        Matcher match = pattern.matcher( inexactString );
+        inexactString = match.replaceAll( "%" );
+        
+        geneMatch.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+        aliasMatch.addAll( geneService.getByGeneAlias( inexactString ) );
 
-        geneMatch.addAll( geneService.findByOfficialSymbolInexact( searchString ) );
-        aliasMatch.addAll( geneService.getByGeneAlias( searchString ) );
+        geneProductMatch.addAll( geneProductService.getGenesByName( inexactString ) );
+        geneProductMatch.addAll( geneProductService.getGenesByNcbiId( inexactString ) );
 
-        geneProductMatch.addAll( geneProductService.getGenesByName( searchString ) );
-        geneProductMatch.addAll( geneProductService.getGenesByNcbiId( searchString ) );
-
-        bioSequenceMatch.addAll( bioSequenceService.getGenesByAccession( searchString ) );
-        bioSequenceMatch.addAll( bioSequenceService.getGenesByName( searchString ) );
+        bioSequenceMatch.addAll( bioSequenceService.getGenesByAccession(inexactString  ) );
+        bioSequenceMatch.addAll( bioSequenceService.getGenesByName( inexactString ) );
 
         geneSet.addAll( geneMatch );
         geneSet.addAll( aliasMatch );
