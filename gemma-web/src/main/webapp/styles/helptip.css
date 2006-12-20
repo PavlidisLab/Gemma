@@ -23,7 +23,6 @@ a.helpLink {
 a.helpLink:hover {
 	color: Red;
 	text-decoration: none;
-	border-bottom: 1px dashed Red;
 }
 
 .helpTooltip {
