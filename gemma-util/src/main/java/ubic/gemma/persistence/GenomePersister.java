@@ -200,7 +200,7 @@ abstract public class GenomePersister extends CommonPersister {
         if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
         bioSequence.setId( existingBioSequence.getId() );
         persistBioSequenceAssociations( bioSequence );
-        if ( this.getSessionFactory().getCurrentSession().contains( existingBioSequence ) ) {
+        if ( this.getSession( true ).contains( existingBioSequence ) ) {
             this.getHibernateTemplate().evict( existingBioSequence );
         }
         bioSequenceService.update( bioSequence );
