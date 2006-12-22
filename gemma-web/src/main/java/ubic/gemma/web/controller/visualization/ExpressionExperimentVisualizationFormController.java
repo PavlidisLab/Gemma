@@ -178,6 +178,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
         QuantitationType qt = quantitationTypes.iterator().next();
+        eevc.setSearchString( "gene symbol 1, gene symbol 2" );
         eevc.setQuantitationType( qt );
         eevc.setViewSampling( true );
         return eevc;
