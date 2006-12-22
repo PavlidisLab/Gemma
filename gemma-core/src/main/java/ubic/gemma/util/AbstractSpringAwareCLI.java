@@ -21,6 +21,7 @@ package ubic.gemma.util;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
+import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.persistence.PersisterHelper;
@@ -105,7 +106,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /** check if using test or production context */
     void createSpringContext() {
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false );
-        CompassUtils.deleteCompassLocks();     
+        CompassUtils.deleteCompassLocks();
+        QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
     }
 
     public void setCtx( BeanFactory ctx ) {
