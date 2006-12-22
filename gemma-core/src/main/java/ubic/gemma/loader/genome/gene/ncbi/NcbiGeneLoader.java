@@ -133,6 +133,14 @@ public class NcbiGeneLoader {
 
         }, "Loading" );
         loadThread.start();
+
+        while ( !generatorDone.get() || !converterDone.get() || !loaderDone.get() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
