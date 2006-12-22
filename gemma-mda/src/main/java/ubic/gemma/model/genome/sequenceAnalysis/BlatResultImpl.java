@@ -65,7 +65,10 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
          */
         double score = ( double ) ( this.getMatches() - this.getQueryGapCount() - this.getTargetGapCount() )
                 / ( double ) length;
-        assert score >= 0.0 && score <= 1.0 : "Score was " + score;
+        assert score >= 0.0 && score <= 1.0 : "Score was " + score + "; matches=" + this.getMatches() + " queryGaps="
+                + this.getQueryGapCount() + " targetGaps=" + this.getTargetGapCount() + " length=" + length
+                + " sequence=" + this.getQuerySequence() + " id=" + this.getId();
+
         return score;
     }
 
@@ -99,5 +102,16 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         }
         assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad;
         return 100.0 - milliBad * 0.1;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append( this.getClass().getSimpleName() );
+        buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
+        buf.append( "query=" + this.getQuerySequence().getName() + " " );
+        buf.append( "target=" + this.getTargetChromosome().getName() + ":" + this.getTargetStart() + "-"
+                + this.getTargetEnd() );
+        return buf.toString();
     }
 }
