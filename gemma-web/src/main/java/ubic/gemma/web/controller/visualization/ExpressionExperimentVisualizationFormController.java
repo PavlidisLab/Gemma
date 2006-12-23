@@ -43,6 +43,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -143,7 +144,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private ExpressionExperimentVisualizationCommand loadCookie( HttpServletRequest request,
             ExpressionExperimentVisualizationCommand eevc ) {
 
-        Collection<QuantitationType> quantitationTypes = getQuantitationTypes( request );
+        Collection<QuantitationType> quantitationTypes = getContinuousQuantitationTypes( request );
 
         /*
          * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
@@ -192,7 +193,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         super.initBinder( request, binder );
         binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
-                getQuantitationTypes( request ) ) );
+                getContinuousQuantitationTypes( request ) ) );
     }
 
     /**
@@ -210,7 +211,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         searchCategories.add( SEARCH_BY_PROBE );
         searchByMap.put( "searchCategories", searchCategories );
 
-        Collection<QuantitationType> types = getQuantitationTypes( request );
+        Collection<QuantitationType> types = getContinuousQuantitationTypes( request );
         List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
         listedTypes.addAll( types );
 
@@ -415,7 +416,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @return Collection<QuantitationType>
      */
     @SuppressWarnings("unchecked")
-    private Collection<QuantitationType> getQuantitationTypes( HttpServletRequest request ) {
+    private Collection<QuantitationType> getContinuousQuantitationTypes( HttpServletRequest request ) {
         Long id = null;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
@@ -427,7 +428,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Iterator iter = types.iterator();
         while ( iter.hasNext() ) {
             QuantitationType type = ( QuantitationType ) iter.next();
-            if ( !type.getIsPreferred() ) {
+
+            if ( !StringUtils.equalsIgnoreCase( type.getGeneralType().getValue(), GeneralType.QUANTITATIVE.getValue() ) ) {
                 iter.remove();
             }
         }
