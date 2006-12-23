@@ -18,15 +18,13 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import hep.aida.IHistogram1D;
+
 import java.util.Map;
 
-import hep.aida.IHistogram1D;
-import ubic.basecode.bio.geneset.GeneAnnotations;
-import cern.colt.list.ObjectArrayList;
-import cern.colt.list.DoubleArrayList;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.genome.gene.GeneService;
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
 
 /**
  * @author Paul Pavlidis

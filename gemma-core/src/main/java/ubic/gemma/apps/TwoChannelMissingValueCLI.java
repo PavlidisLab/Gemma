@@ -91,38 +91,15 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         Exception err = processCommandLine( "Two-channel missing values", args );
         if ( err != null ) return err;
 
+        Collection<String> errorObjects = new HashSet<String>();
+        Collection<String> persistedObjects = new HashSet<String>();
         if ( doAll ) {
-
-            Collection<String> errorObjects = new HashSet<String>();
-            Collection<String> persistedObjects = new HashSet<String>();
 
             Collection<ExpressionExperiment> ees = this.getExpressionExperimentService().loadAll();
             for ( ExpressionExperiment ee : ees ) {
                 try {
-                    boolean hasTwoColor = false;
-                    Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService()
-                            .getArrayDesignsUsed( ee );
-                    for ( ArrayDesign design : arrayDesignsUsed ) {
-                        TechnologyType tt = design.getTechnologyType();
-                        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-                            hasTwoColor = true;
-                            break;
-                        }
-                    }
+                    processExperiment( persistedObjects, ee );
 
-                    if ( !hasTwoColor ) {
-                        continue;
-                    }
-
-                    if ( arrayDesignsUsed.size() > 1 ) {
-                        throw new UnsupportedOperationException(
-                                "Experiment uses more than one array design, this is not supported yet" );
-                    }
-
-                    log.info( ee + " uses a two-color array design, processing..." );
-
-                    processExperiment( ee );
-                    persistedObjects.add( ee.toString() );
                 } catch ( Exception e ) {
                     errorObjects.add( ee + ": " + e.getMessage() );
                     log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
@@ -139,7 +116,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            processExperiment( ee );
+            processExperiment( persistedObjects, ee );
 
         }
 
@@ -147,7 +124,25 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     @SuppressWarnings("unchecked")
-    private void processExperiment( ExpressionExperiment ee ) {
+    private void processExperiment( Collection<String> persistedObjects, ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService().getArrayDesignsUsed( ee );
+
+        for ( ArrayDesign design : arrayDesignsUsed ) {
+            TechnologyType tt = design.getTechnologyType();
+            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+                log.info( ee + " uses a two-color array design, processing..." );
+                if ( arrayDesignsUsed.size() == 1 ) {
+                    processExperiment( ee, null ); // save the slower query.
+                } else {
+                    processExperiment( ee, design );
+                }
+                persistedObjects.add( ee.toString() );
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<QuantitationType> types = this.getExpressionExperimentService().getQuantitationTypes( ee );
 
@@ -174,9 +169,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         this.getExpressionExperimentService().thaw( ee );
         TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
-        log.info( "Checking for existing missing value data.." );
+        log.info( "Computing missing value data.." );
 
-        Collection<DesignElementDataVector> vectors = tcmv.computeMissingValues( ee, s2n );
+        Collection<DesignElementDataVector> vectors = tcmv.computeMissingValues( ee, ad, s2n );
 
         PersisterHelper persisterHelper = this.getPersisterHelper();
 

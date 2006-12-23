@@ -73,6 +73,7 @@ public class GeoSample extends GeoData implements Comparable {
 
         // These are from GenePix files. In Stanford files they are named differently than described here:
         // http://www.moleculardevices.com/pages/software/gn_genepix_file_formats.html
+
         // these are location and spot size information.
         skippableQuantitationTypes.add( "X_COORD" );
         skippableQuantitationTypes.add( "Y_COORD" );

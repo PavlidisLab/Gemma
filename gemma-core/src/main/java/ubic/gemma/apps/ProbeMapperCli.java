@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.AbstractCLI;
+import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
@@ -53,9 +53,9 @@ import ubic.gemma.util.AbstractCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class ProbeMapperCli extends AbstractCLI {
+public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
-    ProbeMapper probeMapper = new ProbeMapper();
+    ProbeMapper probeMapper;
 
     private static final String DEFAULT_DATABASE = "hg18";
 
@@ -265,6 +265,9 @@ public class ProbeMapperCli extends AbstractCLI {
 
     @Override
     protected void processOptions() {
+
+        probeMapper = ( ProbeMapper ) this.getBean( "probeMapper" );
+
         if ( hasOption( 's' ) ) {
             probeMapper.setScoreThreshold( getDoubleOptionValue( 's' ) );
         }
@@ -316,6 +319,7 @@ public class ProbeMapperCli extends AbstractCLI {
         } else {
             throw new RuntimeException( "Query name was not in understood format" );
         }
+
         GeneProduct product = association.getGeneProduct();
 
         Gene g = product.getGene();
@@ -369,12 +373,10 @@ public class ProbeMapperCli extends AbstractCLI {
      */
     private void printBlatAssociations( Writer output, Map<String, Collection<BlatAssociation>> allRes )
             throws IOException {
-        for ( Collection<BlatAssociation> associtions : allRes.values() ) {
-            for ( BlatAssociation blatAssociation : associtions ) {
-
-                if ( output != null ) {
-                    this.writeDesignElementBlatAssociation( output, blatAssociation );
-                }
+        if ( output == null ) return;
+        for ( Collection<BlatAssociation> associations : allRes.values() ) {
+            for ( BlatAssociation blatAssociation : associations ) {
+                this.writeDesignElementBlatAssociation( output, blatAssociation );
             }
         }
     }

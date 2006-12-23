@@ -62,6 +62,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     public Gene find( Gene gene ) {
+
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Gene.class );
 
@@ -264,27 +265,29 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
         Gene givenG = gene;
         long id = givenG.getId();
-        
+
         String p2pClassName;
-        if (TaxonUtility.isHuman(givenG.getTaxon()))
+        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
             p2pClassName = "HumanProbeCoExpressionImpl";
-        else if (TaxonUtility.isMouse(givenG.getTaxon()))
-            p2pClassName = "MouseProbeCoExpressionImpl";       
-        else if (TaxonUtility.isRat(givenG.getTaxon()))
-            p2pClassName = "RatProbeCoExpressionImpl";        
-        else //must be other
+        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
+            p2pClassName = "MouseProbeCoExpressionImpl";
+        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
+            p2pClassName = "RatProbeCoExpressionImpl";
+        else
+            // must be other
             p2pClassName = "OtherProbeCoExpressionImpl";
-        
-        Map<Long,CoexpressionValueObject> geneMap = new HashMap<Long,CoexpressionValueObject>();
-        Map<Long,ExpressionExperimentValueObject> eeMap = new HashMap<Long,ExpressionExperimentValueObject>();
-        
+
+        Map<Long, CoexpressionValueObject> geneMap = new HashMap<Long, CoexpressionValueObject>();
+        Map<Long, ExpressionExperimentValueObject> eeMap = new HashMap<Long, ExpressionExperimentValueObject>();
+
         String queryStringFirstVector =
-            // return values
-            "select coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.shortName, p2pc.firstVector.expressionExperiment.name" 
+        // return values
+        "select coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.shortName, p2pc.firstVector.expressionExperiment.name"
                 // source tables
                 + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
-                + p2pClassName + " as p2pc,"
+                + p2pClassName
+                + " as p2pc,"
                 // target tables
                 + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
                 + " where gene.products.id=bs2gp.geneProduct.id "
@@ -292,16 +295,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
                 + " and coCompositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
                 + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
-                + " and coGene.products.id=coBs2gp.geneProduct.id " 
+                + " and coGene.products.id=coBs2gp.geneProduct.id "
                 + " and gene.id = :id and coGene.taxon.id = :taxonId";
 
         String queryStringSecondVector =
-            // return values
-            "select coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.shortName, p2pc.secondVector.expressionExperiment.name " 
+        // return values
+        "select coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.shortName, p2pc.secondVector.expressionExperiment.name "
                 // source tables
                 + "from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
-                + p2pClassName + " as p2pc,"
+                + p2pClassName
+                + " as p2pc,"
                 // target tables
                 + "GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
                 + " where gene.products.id=bs2gp.geneProduct.id "
@@ -309,48 +313,47 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
                 + " and coCompositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
                 + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
-                + " and coGene.products.id=coBs2gp.geneProduct.id " 
+                + " and coGene.products.id=coBs2gp.geneProduct.id "
                 + " and gene.id = :id and coGene.taxon.id = :taxonId";
-                
+
         // OPTIONAL joins
         // if there are expressionExperiment arguments
         Collection<Long> eeIds = new ArrayList<Long>();
         CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
-        if (ees.size() > 0) {
+        if ( ees.size() > 0 ) {
             queryStringFirstVector += " and p2pc.firstVector.expressionExperiment.id in (:ees) ";
             queryStringSecondVector += " and p2pc.secondVector.expressionExperiment.id in (:ees) ";
             for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
                 ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
-                eeIds.add( e.getId() );                
-            }   
+                eeIds.add( e.getId() );
+            }
         }
-             
+
         try {
             // do query joining coexpressed genes through the firstVector to the secondVector
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
             queryObject.setLong( "id", id );
             // this is to make the query faster by narrowing down the gene join
             queryObject.setLong( "taxonId", gene.getTaxon().getId() );
-            if (ees.size() > 0) {
+            if ( ees.size() > 0 ) {
                 queryObject.setParameterList( "ees", eeIds );
             }
-//            queryObject.setInteger( "stringency", stringency );
-            
+            // queryObject.setInteger( "stringency", stringency );
+
             // put genes in the geneSet
-            ScrollableResults scroll = queryObject.scroll(ScrollMode.FORWARD_ONLY);
-            while (scroll.next()) {
+            ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( scroll.next() ) {
                 CoexpressionValueObject vo;
                 Long geneId = scroll.getLong( 0 );
                 // check to see if geneId is already in the geneMap
-                if (geneMap.containsKey( geneId )) {
+                if ( geneMap.containsKey( geneId ) ) {
                     vo = geneMap.get( geneId );
-                }
-                else {
+                } else {
                     vo = new CoexpressionValueObject();
                     vo.setGeneId( geneId );
                     vo.setGeneName( scroll.getString( 1 ) );
                     vo.setGeneOfficialName( scroll.getString( 2 ) );
-                    geneMap.put(geneId,vo);
+                    geneMap.put( geneId, vo );
                 }
                 // add the expression experiment
                 ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
@@ -359,31 +362,30 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
             }
-            
+
             // do query joining coexpressed genes through the secondVector to the firstVector
             queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
             queryObject.setLong( "id", id );
             // this is to make the query faster by narrowing down the gene join
             queryObject.setLong( "taxonId", gene.getTaxon().getId() );
-            if (ees.size() > 0) {
+            if ( ees.size() > 0 ) {
                 queryObject.setParameterList( "ees", eeIds );
             }
-            
+
             // put genes in the geneSet
-            scroll = queryObject.scroll(ScrollMode.FORWARD_ONLY);
-            while (scroll.next()) {
+            scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( scroll.next() ) {
                 CoexpressionValueObject vo;
                 Long geneId = scroll.getLong( 0 );
                 // check to see if geneId is already in the geneMap
-                if (geneMap.containsKey( geneId )) {
+                if ( geneMap.containsKey( geneId ) ) {
                     vo = geneMap.get( geneId );
-                }
-                else {
+                } else {
                     vo = new CoexpressionValueObject();
                     vo.setGeneId( geneId );
                     vo.setGeneName( scroll.getString( 1 ) );
                     vo.setGeneOfficialName( scroll.getString( 2 ) );
-                    geneMap.put(geneId,vo);
+                    geneMap.put( geneId, vo );
                 }
                 // add the expression experiment
                 ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
@@ -392,21 +394,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eeVo.setName( scroll.getString( 5 ) );
                 vo.addExpressionExperimentValueObject( eeVo );
             }
-            
+
             // add count of original matches to coexpression data
             coexpressions.setLinkCount( geneMap.size() );
             // parse out stringency failures
             Set keys = geneMap.keySet();
             for ( Object object : keys ) {
-                Long key = (Long) object;
-                if (geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency) {
+                Long key = ( Long ) object;
+                if ( geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency ) {
                     // add in coexpressions that match stringency
                     coexpressions.getCoexpressionData().add( geneMap.get( key ) );
                     // add in expression experiments that match stringency
                     Collection eeVos = geneMap.get( key ).getExpressionExperimentValueObjects();
                     for ( Object o : eeVos ) {
-                        ExpressionExperimentValueObject ee = (ExpressionExperimentValueObject) o;
-                        eeMap.put( Long.parseLong(ee.getId()), ee );
+                        ExpressionExperimentValueObject ee = ( ExpressionExperimentValueObject ) o;
+                        eeMap.put( Long.parseLong( ee.getId() ), ee );
                     }
                 }
             }
@@ -419,7 +421,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         return coexpressions;
-    } 
+    }
 
     /**
      * Gets all the DesignElementDataVectors that are related to the given gene.
@@ -437,7 +439,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
         Collection<Gene> genes = null;
         final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
-    
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "taxon", taxon );
@@ -447,7 +449,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         return genes;
-        
+
     }
 
 }

@@ -605,12 +605,9 @@ public class GeoConverter implements Converter {
             if ( log.isDebugEnabled() ) {
                 log.debug( count + " Data vectors added for '" + quantitationType + "'" );
             }
-
             quantitationTypeIndex++;
         }
-
         log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors so far..." );
-
     }
 
     /**

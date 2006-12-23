@@ -7,6 +7,7 @@ import ubic.basecode.dataStructure.matrix.StringMatrix2DNamed;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -119,6 +120,11 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
     public int rows() {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    public Object get( DesignElement designElement, BioMaterial bioMaterial ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

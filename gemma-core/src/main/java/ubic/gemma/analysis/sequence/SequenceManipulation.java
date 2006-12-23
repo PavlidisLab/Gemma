@@ -171,25 +171,31 @@ public class SequenceManipulation {
     /**
      * Compute the overlap of a physical location with a transcript (gene product).
      * 
-     * @param starts of the locations we are testing.
+     * @param starts of the locations we are testing (in the target, so on the same coordinates as the geneProduct
+     *        location is scored)
      * @param sizes of the locations we are testing.
      * @param strand the strand to look on. If null, strand is ignored.
      * @param geneProduct GeneProduct we are testing. If strand of PhysicalLocation is null, we ignore strand.
      * @return Total number of bases which overlap with exons of the transcript. A value of zero indicates that the
-     *         location is entirely within an intron.
+     *         location is entirely within an intron, or the strand is wrong.
      */
     public static int getGeneProductExonOverlap( String starts, String sizes, String strand, GeneProduct geneProduct ) {
 
         if ( starts == null || sizes == null || geneProduct == null )
             throw new IllegalArgumentException( "Null data" );
 
-        // If strand is null we don't bother looking at it.
-        if ( strand != null && geneProduct.getPhysicalLocation().getStrand() != null
+        // If strand is null we don't bother looking at it; if the strands don't match we return 0
+        if ( strand != null && geneProduct.getPhysicalLocation() != null
+                && geneProduct.getPhysicalLocation().getStrand() != null
                 && geneProduct.getPhysicalLocation().getStrand() != strand ) {
             return 0;
         }
 
         Collection<PhysicalLocation> exons = geneProduct.getExons();
+
+        if ( exons == null ) {
+            throw new IllegalArgumentException( "No exon information for " + geneProduct.toString() );
+        }
 
         int[] startArray = blatLocationsToIntArray( starts );
         int[] sizesArray = blatLocationsToIntArray( sizes );
@@ -276,9 +282,9 @@ public class SequenceManipulation {
         if ( starta > enda ) throw new IllegalArgumentException( "Start " + starta + " must be before end " + enda );
         if ( startb > endb ) throw new IllegalArgumentException( "Start " + startb + " must be before end " + endb );
 
-        if ( log.isTraceEnabled()) {
-//            log.trace( "Comparing query length " + ( enda - starta ) + ", location: " + starta + "-->" + enda
-//                    + " to target length " + ( endb - startb ) + ", location: " + startb + "--->" + endb );
+        if ( log.isTraceEnabled() ) {
+            // log.trace( "Comparing query length " + ( enda - starta ) + ", location: " + starta + "-->" + enda
+            // + " to target length " + ( endb - startb ) + ", location: " + startb + "--->" + endb );
         }
 
         long overlap = 0;
@@ -298,7 +304,7 @@ public class SequenceManipulation {
 
         assert overlap >= 0 : "Negative overlap";
         assert ( double ) overlap / ( double ) ( enda - starta ) <= 1.0 : "Overlap longer than sequence";
-        //if ( log.isTraceEnabled() ) log.trace( "Overlap=" + overlap );
+        // if ( log.isTraceEnabled() ) log.trace( "Overlap=" + overlap );
         return ( int ) overlap;
     }
 

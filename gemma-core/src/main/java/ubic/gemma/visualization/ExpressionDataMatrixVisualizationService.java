@@ -140,10 +140,8 @@ public class ExpressionDataMatrixVisualizationService {
         }
 
         for ( int j = 0; j < data[0].length; j++ ) {
-            BioAssay ba = expressionDataMatrix.getBioAssayForColumn( j );
-
-            colElements.add( ba );
-
+            Collection<BioAssay> bas = expressionDataMatrix.getBioAssaysForColumn( j );
+            colElements.add( bas.iterator().next() );// this is temporary.
         }
 
         return createColorMatrix( data, rowElements, colElements );

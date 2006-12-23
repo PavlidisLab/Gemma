@@ -130,9 +130,9 @@ public class FastaParser extends RecordParser {
 
     /**
      * <pre>
-     *       Affymetrix targets or collapsed sequence     target:array:probeset;
-     *       Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
-     *       Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     *        Affymetrix targets or collapsed sequence     target:array:probeset;
+     *        Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
+     *        Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
      * 
      * @param bioSequence
@@ -180,23 +180,24 @@ public class FastaParser extends RecordParser {
     }
 
     /**
-     * <pre>
-     *       GenBank                           gi|gi-number|gb|accession|locus
-     *       EMBL Data Library                 gi|gi-number|emb|accession|locus
-     *       DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
-     *       NBRF PIR                          pir||entry
-     *       Protein Research Foundation       prf||name
-     *       SWISS-PROT                        sp|accession|name
-     *       Brookhaven Protein Data Bank (1)  pdb|entry|chain
-     *       Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
-     *       Patents                           pat|country|number 
-     *       GenInfo Backbone Id               bbs|number 
-     *       General database identifier       gnl|database|identifier
-     *       NCBI Reference Sequence           ref|accession|locus
-     *       Local Sequence identifier         lcl|identifier
-     *       NIA 15k and 7k sets               H[0-9A-Z]{1-9}-\d | alternate  (example: &gt;H4002F12-5 )
-     *       Generic                           probeid
-     * </pre>
+     * The following formats are supported
+     * <ul>
+     * <li>GenBank: gi|gi-number|gb|accession|locus
+     * <li>EMBL Data Library : gi|gi-number|emb|accession|locus
+     * <li>DDBJ, DNA Database of Japan : gi|gi-number|dbj|accession|locus
+     * <li>NBRF PIR : pir||entry
+     * <li>Protein Research Foundation : prf||name
+     * <li>SWISS-PROT : sp|accession|name
+     * <li>Brookhaven Protein Data Bank (1) : pdb|entry|chain
+     * <li>Brookhaven Protein Data Bank (2) : entry:chain|PDBID|CHAIN|SEQUENCE
+     * <li>Patents : pat|country|number
+     * <li>GenInfo Backbone Id bbs|number
+     * <li>General database identifier : gnl|database|identifier
+     * <li>NCBI Reference Sequence : ref|accession|locus
+     * <li>Local Sequence identifier : lcl|identifier
+     * <li>NIA 15k and 7k sets : H[0-9A-Z]{1-9}-\d | alternate (example: &gt;H4002F12-5 )
+     * <li>Generic : probeid
+     * </ul>
      * 
      * @param bioSequence
      * @param header

@@ -60,6 +60,15 @@ public interface ExpressionDataMatrix<T> {
     public T get( DesignElement designElement, BioAssay bioAssay );
 
     /**
+     * Access a single value of the matrix.
+     * 
+     * @param designElement
+     * @param bioMaterial
+     * @return T[][]
+     */
+    public T get( DesignElement designElement, BioMaterial bioMaterial );
+
+    /**
      * Access a submatrix
      * 
      * @param designElements
@@ -100,7 +109,7 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * @param index
-     * @return BioMaterial
+     * @return BioMaterial FIXME technically this can still be a collection. See bug 629
      */
     public BioMaterial getBioMaterialForColumn( int index );
 
@@ -108,7 +117,7 @@ public interface ExpressionDataMatrix<T> {
      * @param index
      * @return BioAssay
      */
-    public BioAssay getBioAssayForColumn( int index );
+    public Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
      * @return int

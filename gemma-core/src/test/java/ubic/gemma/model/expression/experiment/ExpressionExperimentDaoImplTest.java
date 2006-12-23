@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
@@ -138,16 +139,23 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         Collection<QuantitationType> types = expressionExperimentDao.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );
     }
-    
+
+    @SuppressWarnings("unchecked")
+    public final void testGetQuantitationTypesForArrayDesign() throws Exception {
+        ArrayDesign ad = ee.getDesignElementDataVectors().iterator().next().getDesignElement().getArrayDesign();
+        Collection<QuantitationType> types = expressionExperimentDao.getQuantitationTypes( ee, ad );
+        assertEquals( 2, types.size() );
+    }
+
     @SuppressWarnings("unchecked")
     public final void testGetPerTaxonCount() throws Exception {
-        Map<String,Long> counts = expressionExperimentDao.getPerTaxonCount();
-        assertNotNull(counts);
+        Map<String, Long> counts = expressionExperimentDao.getPerTaxonCount();
+        assertNotNull( counts );
     }
-    
+
     public final void testLoadAllValueObjects() throws Exception {
         Collection list = expressionExperimentDao.loadAllValueObjects();
-        assertNotNull(list);
+        assertNotNull( list );
     }
 
     /**
@@ -157,15 +165,17 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         this.expressionExperimentDao = expressionExperimentDao;
     }
 
+    @SuppressWarnings("unchecked")
     public void testGetByTaxon() throws Exception {
-        TaxonService taxonService = (TaxonService) this.getBean( "taxonService" );  
-        ExpressionExperimentService eeService = (ExpressionExperimentService) this.getBean( "expressionExperimentService");
-        
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+
         Taxon taxon = taxonService.findByCommonName( "mouse" );
-        Collection<ExpressionExperiment> list = expressionExperimentDao.getByTaxon(taxon);
-        assertNotNull(list);   
+        Collection<ExpressionExperiment> list = expressionExperimentDao.getByTaxon( taxon );
+        assertNotNull( list );
         Taxon checkTaxon = eeService.getTaxon( list.iterator().next().getId() );
         assertEquals( taxon, checkTaxon );
-        
+
     }
 }

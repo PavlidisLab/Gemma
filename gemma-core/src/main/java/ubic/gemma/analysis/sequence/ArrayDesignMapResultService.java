@@ -83,10 +83,13 @@ public class ArrayDesignMapResultService {
 
             BioSequence bioSequence = cs.getBiologicalCharacteristic();
 
-            if ( bioSequence != null ) {
-                Collection<BlatResult> blats = blatResultService.findByBioSequence( bioSequence );
-                summary.setBlatResults( blats );
+            if ( bioSequence == null ) {
+                result.add( summary );
+                continue;
             }
+
+            Collection<BlatResult> blats = blatResultService.findByBioSequence( bioSequence );
+            summary.setBlatResults( blats );
 
             Collection<BlatAssociation> maps = blatAssociationService.find( bioSequence );
             blatAssociationService.thaw( maps );

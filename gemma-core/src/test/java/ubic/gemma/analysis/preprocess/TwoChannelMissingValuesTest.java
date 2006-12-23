@@ -63,7 +63,7 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
         TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0 );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         assertEquals( 20, calls.size() );
     }
@@ -83,7 +83,7 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
         TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0 );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         assertEquals( 20, calls.size() );
     }
@@ -103,13 +103,28 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
         TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0 );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         assertEquals( 500, calls.size() );
 
         ByteArrayConverter bac = new ByteArrayConverter();
 
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
+
+        System.err.print( "\n" );
+        for ( BioAssay bas : dim.getBioAssays() ) {
+            System.err.print( "\t" + bas );
+        }
+        System.err.print( "\n" );
+        for ( DesignElementDataVector vector : calls ) {
+            System.err.print( vector.getDesignElement() );
+            byte[] dat = vector.getData();
+            boolean[] row = bac.byteArrayToBooleans( dat );
+            for ( boolean b : row ) {
+                System.err.print( "\t" + b );
+            }
+            System.err.print( "\n" );
+        }
 
         /*
          * Spot check the results. For sample ME-TMZ, ID #27 should be 'true' and 26 should be false.
@@ -142,20 +157,6 @@ public class TwoChannelMissingValuesTest extends TestCase {
                 }
             }
         }
-
-        // System.err.print( "\n" );
-        // for ( BioAssay bas : dim.getBioAssays() ) {
-        // System.err.print( "\t" + bas );
-        // }
-        // for ( DesignElementDataVector vector : calls ) {
-        // System.err.print( vector.getDesignElement() );
-        // byte[] dat = vector.getData();
-        // boolean[] row = bac.byteArrayToBooleans( dat );
-        // for ( boolean b : row ) {
-        // System.err.print( "\t" + b );
-        // }
-        // System.err.print( "\n" );
-        // }
 
         assertTrue( foundA && foundB );
 

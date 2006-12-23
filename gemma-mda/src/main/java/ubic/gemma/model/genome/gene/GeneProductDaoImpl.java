@@ -53,6 +53,8 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
             BusinessKey.createQueryObject( queryObject, geneProduct );
 
+            log.debug( queryObject );
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -113,6 +115,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                     result = results.iterator().next();
                 }
             }
+            log.debug( "Found: " + result );
             return ( GeneProduct ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

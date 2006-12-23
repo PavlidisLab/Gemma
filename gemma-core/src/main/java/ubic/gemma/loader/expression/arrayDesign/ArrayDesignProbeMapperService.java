@@ -49,6 +49,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="blatAssociationService" ref="blatAssociationService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="probeMapper" ref="probeMapper"
  */
 public class ArrayDesignProbeMapperService {
 
@@ -61,6 +62,8 @@ public class ArrayDesignProbeMapperService {
     PersisterHelper persisterHelper;
 
     ArrayDesignService arrayDesignService;
+
+    ProbeMapper probeMapper;
 
     private double identityThreshold = ProbeMapper.DEFAULT_IDENTITY_THRESHOLD;
     private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
@@ -84,7 +87,7 @@ public class ArrayDesignProbeMapperService {
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
-        ProbeMapper probeMapper = new ProbeMapper();
+
         probeMapper.setIdentityThreshold( identityThreshold );
         probeMapper.setScoreThreshold( scoreThreshold );
         probeMapper.setBlatScoreThreshold( blatScoreThreshold );
@@ -173,6 +176,10 @@ public class ArrayDesignProbeMapperService {
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setProbeMapper( ProbeMapper probeMapper ) {
+        this.probeMapper = probeMapper;
     }
 
 }

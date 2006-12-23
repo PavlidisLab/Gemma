@@ -28,6 +28,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -82,7 +83,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
             }
         }
         for ( int j = 0; j < matrix.columns(); j++ ) {
-        	matrix.addColumnName(j);
+            matrix.addColumnName( j );
         }
 
         ByteArrayConverter bac = new ByteArrayConverter();
@@ -115,6 +116,17 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     public Boolean get( DesignElement designElement, BioAssay bioAssay ) {
         return ( Boolean ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
                 .getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public Boolean get( DesignElement designElement, BioMaterial bioMaterial ) {
+        return ( Boolean ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
+                .getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
     }
 
     /*
@@ -163,10 +175,10 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
      */
     public Boolean[] getRow( DesignElement designElement ) {
-    	Object[] objects = this.matrix.getRow( matrix.getRowIndexByName( designElement )) ;
-    	Boolean[] returnArray = new Boolean[objects.length];
-    	for(int i = 0; i < objects.length; i++)
-    		returnArray[i] = (Boolean)objects[i];
+        Object[] objects = this.matrix.getRow( matrix.getRowIndexByName( designElement ) );
+        Boolean[] returnArray = new Boolean[objects.length];
+        for ( int i = 0; i < objects.length; i++ )
+            returnArray[i] = ( Boolean ) objects[i];
         return returnArray;
     }
 

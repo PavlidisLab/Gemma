@@ -35,8 +35,12 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
+import ubic.gemma.model.genome.ProbeAlignedRegionService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
@@ -44,6 +48,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 /**
  * Provides methods for mapping sequences to genes and gene products.
  * 
+ * @spring.bean name="probeMapper"
+ * @spring.property name="probeAlignedRegionService" ref="probeAlignedRegionService"
  * @author pavlidis
  * @version $Id$
  */
@@ -55,6 +61,8 @@ public class ProbeMapper {
     private double scoreThreshold = DEFAULT_SCORE_THRESHOLD;
     private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
+
+    private ProbeAlignedRegionService probeAlignedRegionService;
 
     /**
      * @return the blatScoreThreshold
@@ -77,11 +85,13 @@ public class ProbeMapper {
      * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
      * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
      * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
+     * <p>
+     * This is a major entrypoint for this API.
      * 
      * @param goldenPathDb
      * @param blatResults
      * @param ignoreStrand ignore the strand when scoring alignments.
-     * @return
+     * @return A map of sequence names to collections of blat associations for each sequence.
      * @throws IOException
      */
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
@@ -130,7 +140,15 @@ public class ProbeMapper {
                 Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
                         ignoreStrand );
 
-                if ( resultsForOneBlatResult != null ) blatAssociationsForSequence.addAll( resultsForOneBlatResult );
+                if ( resultsForOneBlatResult != null && resultsForOneBlatResult.size() > 0 ) {
+                    blatAssociationsForSequence.addAll( resultsForOneBlatResult );
+                } else {
+                    // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
+                    ProbeAlignedRegion par = makePar( blatResult );
+                    BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
+                    blatAssociationsForSequence.add( parAssociation );
+                    log.info( "Adding PAR for " + sequence + " with alignment " + blatResult );
+                }
 
                 if ( ++count % 100 == 0 && log.isInfoEnabled() )
                     log.info( "Annotations computed for " + count + " blat results" );
@@ -166,6 +184,56 @@ public class ProbeMapper {
         // + " individual blat results that didn't meet criteria" );
 
         return allRes;
+    }
+
+    /**
+     * @param blatResult
+     * @param par
+     * @return
+     */
+    private BlatAssociation makeBlatAssociationWithPar( BlatResult blatResult, ProbeAlignedRegion par ) {
+        BlatAssociation parAssociation = BlatAssociation.Factory.newInstance();
+        parAssociation.setGeneProduct( par.getProducts().iterator().next() );
+        parAssociation.setBlatResult( blatResult );
+        parAssociation.setBioSequence( blatResult.getQuerySequence() );
+        parAssociation.setOverlap( blatResult.getQuerySequence().getLength().intValue() ); // by definition, because
+        // this is for a new PAR
+        assert parAssociation.getBioSequence() != null;
+        return parAssociation;
+    }
+
+    /**
+     * @param blatResult
+     * @return
+     */
+    private ProbeAlignedRegion makePar( BlatResult blatResult ) {
+        ProbeAlignedRegion par = ProbeAlignedRegion.Factory.newInstance();
+        PhysicalLocation pl = blatResultToPhysicalLocation( blatResult );
+        par.setPhysicalLocation( pl );
+
+        /*
+         * We form a hopefully unique name of the PAR using the query sequence and the coordinates of the blat result
+         */
+        par.setName( blatResult.getQuerySequence().getName() + ".par." + blatResult.getTargetChromosome().getName()
+                + "." + blatResult.getTargetStart() + "." + blatResult.getTargetEnd() );
+
+        /*
+         * The official name isn't really what we have, as we made it up...but it will do
+         */
+        par.setOfficialSymbol( par.getName() );
+
+        par.setDescription( "Based only on BLAT alignment to genome, symbol is assigned by system" );
+        par.setTaxon( blatResult.getQuerySequence().getTaxon() );
+
+        GeneProduct pargp = GeneProduct.Factory.newInstance();
+        pargp.setName( par.getName() );
+        pargp.setDescription( "Hypothetical RNA product based on alignment of probe to genome sequence" );
+        pargp.setType( GeneProductType.RNA );
+        pargp.setGene( par );
+        pargp.setPhysicalLocation( pl );
+
+        par.getProducts().add( pargp );
+        return par;
     }
 
     /**
@@ -293,25 +361,25 @@ public class ProbeMapper {
          * Break results down by gene product, and throw out duplicates (only allow one result per gene product)
          */
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = organizeBlatAssociationsByGeneProduct( blatAssociations );
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProduct( blatAssociations );
 
-        BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts );
+        BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
-        Map<Gene, Collection<BlatAssociation>> genes = organizeBlatAssociationsByGene( blatAssociations );
+        Map<Gene, Collection<BlatAssociation>> genes2Associations = organizeBlatAssociationsByGene( blatAssociations );
 
         /*
          * At this point there should be just one blatAssociation per gene product. However, all of these really might
          * be for the same gene. It is only in the case of truly multiple genes that we flag a lower specificity.
          */
-        if ( genes.size() == 1 ) {
+        if ( genes2Associations.size() == 1 ) {
             return globalBest;
         }
 
-        Collection<Gene> distinctGenes = getDistinctGenes( genes );
+        Collection<Gene> distinctGenes = getDistinctGenes( genes2Associations );
 
         // TODO: adjust this to account for differences between scores.
         for ( Gene gene : distinctGenes ) {
-            for ( BlatAssociation blatAssociation : genes.get( gene ) ) {
+            for ( BlatAssociation blatAssociation : genes2Associations.get( gene ) ) {
                 blatAssociation.setSpecificity( 1.0 / distinctGenes.size() );
             }
         }
@@ -361,12 +429,12 @@ public class ProbeMapper {
     /**
      * Are the genes really different?
      */
-    private Collection<Gene> getDistinctGenes( Map<Gene, Collection<BlatAssociation>> genes ) {
+    private Collection<Gene> getDistinctGenes( Map<Gene, Collection<BlatAssociation>> associations ) {
 
         // sort them so we detect multiple genes easily.
         List<Gene> geneList = new ArrayList<Gene>();
-        geneList.addAll( genes.keySet() );
-        if ( genes.size() > 2 ) {
+        geneList.addAll( associations.keySet() );
+        if ( associations.size() > 2 ) {
             sortGenes( geneList );
         }
 
@@ -374,6 +442,7 @@ public class ProbeMapper {
         Gene lastGene = null;
         distinctGenes.add( geneList.get( 0 ) );
         for ( Gene gene : geneList ) {
+            assert gene != null;
             if ( lastGene != null ) {
 
                 // int overlap = SequenceManipulation.computeOverlap( gene.getPhysicalLocation(), lastGene
@@ -421,6 +490,7 @@ public class ProbeMapper {
         Map<Gene, Collection<BlatAssociation>> genes = new HashMap<Gene, Collection<BlatAssociation>>();
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             Gene gene = blatAssociation.getGeneProduct().getGene();
+            assert gene != null;
             if ( !genes.containsKey( gene ) ) {
                 genes.put( gene, new HashSet<BlatAssociation>() );
             }
@@ -468,22 +538,87 @@ public class ProbeMapper {
      * @param ignoreStrand If true, the strand is not used to evalute alignments.
      * @return
      */
+    @SuppressWarnings("unchecked")
     private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
             BlatResult blatResult, boolean ignoreStrand ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
+
         String strand = ignoreStrand == true ? null : blatResult.getStrand();
-        Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
-                .getTargetChromosome().getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult
-                .getTargetStarts(), blatResult.getBlockSizes(), strand, threeprimeMethod );
 
-        if ( blatAssociations == null ) return null;
+        Collection<BlatAssociation> blatAssociations = goldenPathDb.findAssociations( blatResult.getTargetChromosome()
+                .getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult.getTargetStarts(),
+                blatResult.getBlockSizes(), strand, threeprimeMethod );
 
-        for ( BlatAssociation association : blatAssociations ) {
-            association.setBlatResult( blatResult );
-            association.setBioSequence( blatResult.getQuerySequence() );
+        if ( blatAssociations != null && blatAssociations.size() > 0 ) {
+            for ( BlatAssociation association : blatAssociations ) {
+                association.setBlatResult( blatResult );
+                association.setBioSequence( blatResult.getQuerySequence() );
+            }
+            return blatAssociations;
         }
 
-        return blatAssociations;
+        // no genes, have to look for pre-existing probealignedregions that overlap.
+        return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
+
+    }
+
+    /**
+     * Identify ProbeAlignedRegions that overlap with the given blat result. A ProbeAlignedRegion is a region in which
+     * there are no known or predicted genes, but a designElement aligned to.
+     * 
+     * @param blatResult
+     * @param ignoreStrand
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<BlatAssociation> findProbeAlignedRegionAssociations( BlatResult blatResult, boolean ignoreStrand ) {
+
+        PhysicalLocation pl = makePhysicalLocation( blatResult, ignoreStrand );
+
+        Collection<ProbeAlignedRegion> pars = probeAlignedRegionService.findAssociations( pl );
+        if ( pars.size() > 0 ) log.info( "Found " + pars.size() + " PARS for " + blatResult );
+        Collection<BlatAssociation> results = new HashSet<BlatAssociation>();
+        for ( ProbeAlignedRegion region : pars ) {
+            BlatAssociation ba = BlatAssociation.Factory.newInstance();
+            GeneProduct product = region.getProducts().iterator().next();
+            assert product.getId() != null;
+            ba.setGeneProduct( product );
+            ba.setBlatResult( blatResult );
+            ba.setBioSequence( blatResult.getQuerySequence() );
+            ba.setOverlap( SequenceManipulation.getGeneProductExonOverlap( blatResult.getTargetStarts(), blatResult
+                    .getBlockSizes(), pl.getStrand(), product ) );
+            results.add( ba );
+
+        }
+        return results;
+    }
+
+    /**
+     * Turn the blat result into a physical location
+     * 
+     * @param blatResult
+     * @param ignoreStrand
+     * @return
+     */
+    private PhysicalLocation makePhysicalLocation( BlatResult blatResult, boolean ignoreStrand ) {
+        PhysicalLocation pl = blatResultToPhysicalLocation( blatResult );
+        if ( ignoreStrand ) {
+            pl.setStrand( null );
+        }
+        return pl;
+    }
+
+    /**
+     * @param blatResult
+     * @return
+     */
+    private PhysicalLocation blatResultToPhysicalLocation( BlatResult blatResult ) {
+        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+        pl.setChromosome( blatResult.getTargetChromosome() );
+        pl.setNucleotide( blatResult.getTargetStart() );
+        pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - blatResult.getTargetStart() ) ).intValue() );
+        pl.setStrand( blatResult.getStrand() );
+        return pl;
     }
 
     /**
@@ -607,5 +742,9 @@ public class ProbeMapper {
 
         return ( score - nextBest ) / score;
 
+    }
+
+    public void setProbeAlignedRegionService( ProbeAlignedRegionService probeAlignedRegionService ) {
+        this.probeAlignedRegionService = probeAlignedRegionService;
     }
 }

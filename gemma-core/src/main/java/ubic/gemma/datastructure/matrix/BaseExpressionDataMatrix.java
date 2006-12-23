@@ -49,15 +49,16 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<BioAssayDimension> bioAssayDimensions;
     protected Map<BioAssay, Integer> columnAssayMap;
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
-    protected Map<Integer, BioAssay> columnBioAssayMapByInteger;
+    protected Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
+    protected Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
 
     protected void init() {
         rowElements = new LinkedHashSet<DesignElement>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
-        columnBioAssayMapByInteger = new LinkedHashMap<Integer, BioAssay>();
-
+        columnBioMaterialMapByInteger = new LinkedHashMap<Integer, BioMaterial>();
+        columnBioAssayMapByInteger = new LinkedHashMap<Integer, Collection<BioAssay>>();
     }
 
     /*
@@ -65,7 +66,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayForColumn(int)
      */
-    public BioAssay getBioAssayForColumn( int index ) {
+    public Collection<BioAssay> getBioAssaysForColumn( int index ) {
         return this.columnBioAssayMapByInteger.get( index );
     }
 
@@ -75,8 +76,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialForColumn(int)
      */
     public BioMaterial getBioMaterialForColumn( int index ) {
-
-        throw new RuntimeException( "Method not yet implemented." );
+        return this.columnBioMaterialMapByInteger.get( index );
     }
 
     /*
@@ -148,6 +148,28 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     /**
+     * @param quantitationType
+     * @param bioAssayDimension
+     * @param vectors
+     * @return
+     */
+    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        for ( DesignElementDataVector vector : vectors ) {
+            QuantitationType vectorQuantitationType = vector.getQuantitationType();
+            BioAssayDimension cand = vector.getBioAssayDimension();
+            if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
+                vectorsOfInterest.add( vector );
+                rowElements.add( vector.getDesignElement() );
+                bioAssayDimensions.add( vector.getBioAssayDimension() );
+            }
+        }
+        return vectorsOfInterest;
+    }
+
+    /**
      * Deals with the fact that the bioassay dimensions can vary in size, and don't even need to overlap in the
      * biomaterials used. In the case where there is a single bioassaydimension this reduces to simply associating each
      * column with a bioassay (though we are forced to use an integer under the hood).
@@ -157,10 +179,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *              ----------------
-     *              ******              -- only a few samples run on this platform
-     *                **********        -- ditto
-     *                          ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *                              ----------------
+     *                              ******              -- only a few samples run on this platform
+     *                                **********        -- ditto
+     *                                          ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -168,10 +190,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *              ----------------
-     *              ****************
-     *              ************
-     *              ********
+     *                              ----------------
+     *                              ****************
+     *                              ************
+     *                              ********
      * </pre>
      * 
      * <p>
@@ -179,8 +201,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *              -----------------
-     *              *****************
+     *                              -----------------
+     *                              *****************
      * </pre>
      * 
      * <p>
@@ -188,9 +210,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *              -----------------
-     *              *****************
-     *              *****************
+     *                              -----------------
+     *                              *****************
+     *                              *****************
      * </pre>
      * 
      * <p>
@@ -204,9 +226,12 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         log.debug( "Setting up column elements" );
         assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0;
 
-        // build a map of biomaterials to bioassays.
-        Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new HashMap<BioMaterial, Collection<BioAssay>>();
-        Collection<Collection<BioMaterial>> bioMaterialGroups = new HashSet<Collection<BioMaterial>>();
+        /*
+         * build a map of biomaterials to bioassays. Because there can be more than one biomaterial used per bioassay,
+         * we group them together. Each bioMaterialGroup corresponds to a single column in the matrix.
+         */
+        Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
+        Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
             for ( BioAssay ba : dimension.getBioAssays() ) {
                 Collection<BioMaterial> bms = ba.getSamplesUsed();
@@ -229,17 +254,26 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                         this.columnAssayMap.put( assay, columnIndex );
                         log.debug( assay + " --> column " + columnIndex );
 
-                        columnBioAssayMapByInteger.put( columnIndex, assay );
+                        if ( columnBioAssayMapByInteger.get( columnIndex ) == null ) {
+                            columnBioAssayMapByInteger.put( columnIndex, new HashSet<BioAssay>() );
+                        }
+                        columnBioAssayMapByInteger.get( columnIndex ).add( assay );
                     } else {
                         log.debug( bioMaterial + " --> column " + column );
                         log.debug( assay + " --> column " + column );
                         this.columnBioMaterialMap.put( bioMaterial, column );
                         this.columnAssayMap.put( assay, column );
-                        columnBioAssayMapByInteger.put( column, assay );
+                        if ( columnBioAssayMapByInteger.get( column ) == null ) {
+                            columnBioAssayMapByInteger.put( column, new HashSet<BioAssay>() );
+                        }
+                        columnBioMaterialMapByInteger.put( column, bioMaterial ); // FIXME This should be a
+                        // collection. See bug 629.
+                        columnBioAssayMapByInteger.get( column ).add( assay );
                     }
                 }
-                column++;
+
             }
+            column++;
         }
 
         return bioMaterialGroups.size();

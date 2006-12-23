@@ -85,7 +85,13 @@ public class CompositeSequenceMapSummary {
         StringBuilder buf = new StringBuilder();
 
         buf.append( compositeSequence.getName() + "\t" );
-        buf.append( compositeSequence.getBiologicalCharacteristic().getName() + "\t" );
+
+        if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+            buf.append( compositeSequence.getBiologicalCharacteristic().getName() + "\t" );
+        } else {
+            buf.append( "\t" );
+        }
+
         buf.append( blatResults.size() + "\t" );
 
         for ( GeneProduct gp : geneProducts ) {

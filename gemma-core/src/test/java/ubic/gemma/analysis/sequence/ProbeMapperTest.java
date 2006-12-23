@@ -24,16 +24,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
-import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.loader.genome.BlatResultParser; 
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis
@@ -97,8 +98,8 @@ public class ProbeMapperTest extends TestCase {
             // This test will fail if the database changes :)
             assertTrue( "No results", res.values().size() > 0 );
             assertTrue( "No results", res.values().iterator().next().size() > 0 );
-            assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
-                    .getOfficialSymbol() );
+            assertEquals( "Col8a1", ( ( BlatAssociation ) res.values().iterator().next().iterator().next() )
+                    .getGeneProduct().getGene().getOfficialSymbol() );
         } catch ( java.sql.SQLException e ) {
             if ( e.getMessage().contains( "Unknown database" ) ) {
                 log.warn( "Test skipped due to missing mm8 database" );
@@ -126,22 +127,59 @@ public class ProbeMapperTest extends TestCase {
         GeneProduct gprod = products.iterator().next();
         assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() );
     }
-    
-    
+
     /**
-     * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the strand works.
+     * @throws Exception
+     */
+    public void testLocateMiRNA() throws Exception {
+        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
+                databasePassword );
+
+        Collection<GeneProduct> products = gp.findMicroRNAGenesByLocation( "X", new Long( 133131074 ), new Long(
+                133131148 ), "-" );
+        assertEquals( 1, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() );
+    }
+
+    public void testLocateAcembly() throws Exception {
+        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
+                databasePassword );
+
+        Collection<GeneProduct> products = gp.findAcemblyGenesByLocation( "7", new Long( 80145000 ),
+                new Long( 80146000 ), "+" );
+        assertEquals( 1, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "CD36.cAug05", gprod.getGene().getOfficialSymbol() );
+        assertEquals( "Predicted gene imported from Golden Path. Acembly gene, class=main", gprod.getGene()
+                .getDescription() );
+    }
+
+    public void testLocateNscan() throws Exception {
+        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
+                databasePassword );
+
+        Collection<GeneProduct> products = gp.findNscanGenesByLocation( "3", new Long( 181237455 ),
+                new Long( 181318731 ), "+" );
+        assertEquals( 1, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "chr3.182.002.a", gprod.getGene().getOfficialSymbol() );
+    }
+
+    /**
+     * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
+     * strand works.
      */
     public void testLocateGeneOnWrongStrand() throws Exception {
         GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
                 databasePassword );
 
         Collection<GeneProduct> products = gp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long( 32918445 ),
-               null );
+                null );
         assertEquals( 2, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "PSMB8", gprod.getGene().getOfficialSymbol() );
     }
-    
 
     public void testComputeSpecificityA() throws Exception {
         ProbeMapper pm = new ProbeMapper();

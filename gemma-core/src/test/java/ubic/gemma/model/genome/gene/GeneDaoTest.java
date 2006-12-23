@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -102,6 +103,9 @@ public class GeneDaoTest extends BaseSpringContextTest {
         Gene gene = Gene.Factory.newInstance();
         gene.setId( (long) 1 );
         gene.setName( "test_genedao" );
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName("human");
+        gene.setTaxon( taxon );
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
         CoexpressionCollectionValueObject genes = (CoexpressionCollectionValueObject) geneDao.getCoexpressedGenes( gene, ees, 1 );
         assertNotNull(genes);

@@ -554,7 +554,6 @@ public class BusinessKey {
             queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
 
             if ( geneProduct.getAccessions() != null && geneProduct.getAccessions().size() > 0 ) {
-
                 Criteria subCriteria = queryObject.createCriteria( "accessions" );
                 Disjunction disjunction = Restrictions.disjunction();
                 for ( DatabaseEntry databaseEntry : geneProduct.getAccessions() ) {

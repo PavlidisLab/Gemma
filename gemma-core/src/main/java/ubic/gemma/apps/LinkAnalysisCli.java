@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
@@ -31,9 +49,9 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -145,9 +163,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         for ( int i = 0; i < numRows; i++ ) {
             int missingCount = 0;
             for ( int j = 0; j < numCols; j++ ) {
-                BioAssay bioAssay = eeDoubleMatrix.getBioAssayForColumn( ( ( Integer ) data.getColName( j ) )
+                BioMaterial bioMaterial = eeDoubleMatrix.getBioMaterialForColumn( ( ( Integer ) data.getColName( j ) )
                         .intValue() );
-                if ( !maskMatrix.get( ( DesignElement ) data.getRowName( i ), bioAssay ).booleanValue()
+                if ( !maskMatrix.get( ( DesignElement ) data.getRowName( i ), bioMaterial ).booleanValue()
                         || Double.isNaN( ( ( DoubleMatrixNamed ) data ).get( i, j ) ) ) {
                     missingCount++;
                     data.set( i, j, Double.NaN );

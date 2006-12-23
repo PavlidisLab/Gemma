@@ -46,6 +46,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -126,7 +127,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public Map handleGetQuantitationTypeCountById( Long Id ) {
         HashMap<QuantitationType, Integer> qtCounts = new HashMap<QuantitationType, Integer>();
 
-        final String queryString = "select quantType,count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id GROUP BY quantType.name";
+        final String queryString = "select quantType,count(*) as count "
+                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.designElementDataVectors as vectors "
+                + "inner join  vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -144,11 +148,37 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     @Override
     public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
-        final String queryString = "select distinct quantType from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id ";
+        final String queryString = "select distinct quantType "
+                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.designElementDataVectors as vector "
+                + "inner join vector.quantitationType as quantType " + "where ee  = :ee ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "id", expressionExperiment.getId() );
+            queryObject.setParameter( "ee", expressionExperiment );
+            List results = queryObject.list();
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @Override
+    public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment, ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            return handleGetQuantitationTypes( expressionExperiment );
+        }
+
+        final String queryString = "select distinct quantType "
+                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.designElementDataVectors as vector "
+                + "inner join vector.quantitationType as quantType " + "inner join vector.bioAssayDimension bad "
+                + "inner join bad.bioAssays ba inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "ee", expressionExperiment );
+            queryObject.setParameter( "ad", arrayDesign );
             List results = queryObject.list();
             return results;
         } catch ( org.hibernate.HibernateException ex ) {
@@ -165,7 +195,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public long handleGetDesignElementDataVectorCountById( long Id ) {
         long count = 0;
 
-        final String queryString = "select count(*) from EXPRESSION_EXPERIMENT ee inner join DESIGN_ELEMENT_DATA_VECTOR dedv on dedv.EXPRESSION_EXPERIMENT_FK=ee.ID where ee.ID = :id";
+        final String queryString = "select count(*) from EXPRESSION_EXPERIMENT ee "
+                + "inner join DESIGN_ELEMENT_DATA_VECTOR dedv on dedv.EXPRESSION_EXPERIMENT_FK=ee.ID where ee.ID = :id";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
@@ -193,7 +224,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public long handleGetBioAssayCountById( long Id ) {
         long count = 0;
 
-        final String queryString = "select count(*) from EXPRESSION_EXPERIMENT ee inner join BIO_ASSAY ba on ba.EXPRESSION_EXPERIMENT_FK=ee.ID where ee.ID = :id";
+        final String queryString = "select count(*) from EXPRESSION_EXPERIMENT ee "
+                + "inner join BIO_ASSAY ba on ba.EXPRESSION_EXPERIMENT_FK=ee.ID where ee.ID = :id";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
@@ -348,7 +380,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     public String getTaxon( ExpressionExperiment object ) {
 
-        final String queryString = "select sample.sourceTaxon from ExpressionExperimentImpl ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample inner join sample.sourceTaxon where ee.id = :id";
+        final String queryString = "select sample.sourceTaxon from ExpressionExperimentImpl ee "
+                + "inner join ee.bioAssays as ba inner join ba.samplesUsed as sample "
+                + "inner join sample.sourceTaxon where ee.id = :id";
 
         Taxon taxon = ( Taxon ) queryByIdReturnObject( object.getId(), queryString );
 
@@ -426,7 +460,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
-        final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon where EE.id = :id";
+        final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
+                + "inner join EE.bioAssays as BA "
+                + "inner join BA.samplesUsed as SU inner join SU.sourceTaxon where EE.id = :id";
 
         return ( Taxon ) queryByIdReturnObject( id, queryString );
 
@@ -466,7 +502,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleGetSamplingOfVectors( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, Integer limit ) throws Exception {
-        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dev inner join dev.quantitationType as qt where ee.id = :id and qt.id = :qtid";
+        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.designElementDataVectors as dev "
+                + "inner join dev.quantitationType as qt where ee.id = :id and qt.id = :qtid";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setMaxResults( limit );
@@ -488,7 +526,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         assert quantitationType.getId() != null && expressionExperiment.getId() != null;
 
         // FIXME: this would be much faster done as a batch query (with "in") instead of once per design element.
-        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dev inner join dev.designElement as de inner join dev.quantitationType as qt where ee.id = :id and de.id = :deid and qt.id = :qtid";
+        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.designElementDataVectors as dev inner join dev.designElement as de "
+                + "inner join dev.quantitationType as qt where ee.id = :id and de.id = :deid and qt.id = :qtid";
 
         Collection<DesignElementDataVector> vectors = new LinkedHashSet<DesignElementDataVector>();
         for ( DesignElement designElement : ( Collection<DesignElement> ) designElements ) {
@@ -521,7 +561,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Map handleGetPerTaxonCount() throws Exception {
-        final String queryString = "select SU.sourceTaxon.scientificName, count(distinct EE.id) from ExpressionExperimentImpl as EE inner join EE.bioAssays as BA inner join BA.samplesUsed as SU inner join SU.sourceTaxon group by SU.sourceTaxon.scientificName";
+        final String queryString = "select SU.sourceTaxon.scientificName, count(distinct EE.id) from ExpressionExperimentImpl as EE "
+                + "inner join EE.bioAssays as BA inner join BA.samplesUsed as SU "
+                + "inner join SU.sourceTaxon group by SU.sourceTaxon.scientificName";
         Map<String, Long> taxonCount = new HashMap<String, Long>();
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -557,8 +599,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
-                + " " + " group by ee order by ee.name";
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA "
+                + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
+                + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED " + " "
+                + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -595,7 +639,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
         Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
         // sanity check
-        if (ids == null || ids.size() == 0) {
+        if ( ids == null || ids.size() == 0 ) {
             return vo;
         }
         final String queryString = "select ee.id as id, "
@@ -612,7 +656,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA "
+                + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
+                + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
                 + " where ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
@@ -647,11 +693,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
 
         Collection<ExpressionExperiment> ee = null;
-        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );

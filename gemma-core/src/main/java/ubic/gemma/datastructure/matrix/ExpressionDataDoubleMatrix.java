@@ -33,6 +33,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -66,6 +67,19 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             QuantitationType quantitationType ) {
         init();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( quantitationType, dataVectors );
+        vectorsToMatrix( selectedVectors );
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param bioAssayDimension
+     * @param quantitationType
+     */
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension,
+            QuantitationType quantitationType ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationType,
+                bioAssayDimension );
         vectorsToMatrix( selectedVectors );
     }
 
@@ -115,7 +129,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             }
         }
         for ( int j = 0; j < matrix.columns(); j++ ) {
-            matrix.addColumnName(j);
+            matrix.addColumnName( j );
         }
         log.info( "Creating a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
 
@@ -183,6 +197,23 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             result[i] = rawResult[i];
         }
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public Double get( DesignElement designElement, BioMaterial bioMaterial ) {
+        if ( bioMaterial == null ) {
+            throw new IllegalArgumentException( "Biomaterial cannot be null" );
+        }
+        Integer i = this.columnBioMaterialMap.get( bioMaterial );
+        if ( i == null ) {
+            throw new IllegalArgumentException( "No such biomaterial " + bioMaterial );
+        }
+        return ( Double ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix.getColIndexByName( i ) );
     }
 
     /*
@@ -308,7 +339,27 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      */
     @Override
     public String toString() {
-        return matrix.toString();
+        int columns = this.columns();
+        StringBuffer buf = new StringBuffer();
+        int stop = 0;
+        buf.append( "Row\\Col" );
+        for ( int i = 0; i < columns; i++ ) {
+            buf.append( "\t" + this.getBioAssaysForColumn( i ).iterator().next() );
+        }
+        buf.append( "\n" );
+        for ( DesignElement de : getRowElements() ) {
+            buf.append( de );
+            for ( int i = 0; i < columns; i++ ) {
+                buf.append( "\t" + this.get( de, this.getBioMaterialForColumn( i ) ) );
+            }
+            buf.append( "\n" );
+            if ( stop > 1000 ) {
+                buf.append( "...\n" );
+                break;
+            }
+            stop++;
+        }
+        return buf.toString();
     }
 
     /**

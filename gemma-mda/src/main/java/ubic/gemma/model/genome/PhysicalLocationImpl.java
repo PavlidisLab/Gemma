@@ -161,6 +161,7 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
             return hashCode;
         }
 
+        assert this.getChromosome() != null; 
         hashCode += this.getChromosome().hashCode();
 
         if ( this.getNucleotide() != null ) hashCode += this.getNucleotide().hashCode();

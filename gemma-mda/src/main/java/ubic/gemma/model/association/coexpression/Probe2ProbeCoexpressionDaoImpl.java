@@ -162,6 +162,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                                 session.delete( o );
                                 if ( ++i % 10000 == 0 ) {
                                     log.info( "Delete Progress: " + i + " ..." );
+                                    session.flush();
+                                    session.clear();
                                     try {
                                         Thread.sleep( 100 );
                                     } catch ( InterruptedException e ) {

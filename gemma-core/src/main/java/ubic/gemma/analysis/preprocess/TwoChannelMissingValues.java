@@ -31,6 +31,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -69,21 +70,25 @@ public class TwoChannelMissingValues {
 
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
-     *        you want more control use computeMissingValues(signalDataA, signalDataB, bkgDataA,
-     *        bkgDataB,signalToNoiseThreshold)
+     *        you want more control use other computeMissingValues methods.
+     * @param ad The array design to consider; this can be null, but should be included if the expression experiment
+     *        uses more than one array design.
      * @param signalToNoiseThreshold A value such as 1.5 or 2.0; only spots for which at least ONE of the channel signal
      *        is more than signalToNoiseThreshold*background (and the preferred data are not missing) will be considered
      *        present.
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
-    public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp,
+    public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp, ArrayDesign ad,
             double signalToNoiseThreshold ) {
         Collection<DesignElementDataVector> allVectors = expExp.getDesignElementDataVectors();
         Collection<DesignElementDataVector> finalResults = new HashSet<DesignElementDataVector>();
 
         Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : allVectors ) {
-            dimensions.add( vector.getBioAssayDimension() );
+            ArrayDesign adUsed = vector.getBioAssayDimension().getBioAssays().iterator().next().getArrayDesignUsed();
+            if ( ad == null || adUsed.equals( ad ) ) {
+                dimensions.add( vector.getBioAssayDimension() );
+            }
         }
 
         QuantitationType signalChannelA = null;
@@ -97,8 +102,10 @@ public class TwoChannelMissingValues {
         for ( DesignElementDataVector vector : allVectors ) {
             QuantitationType qType = vector.getQuantitationType();
             String name = qType.getName();
-
             if ( qType.getIsPreferred() ) {
+                if ( preferred != null && !qType.equals( preferred ) )
+                    throw new IllegalStateException( "More than one preferred quantitation type found for " + expExp
+                            + " (already had " + preferred + ", just got " + qType + ")" );
                 preferred = qType;
             } else if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
                     || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
@@ -122,7 +129,7 @@ public class TwoChannelMissingValues {
                 bkgSubChannelA = qType; // specific for SGD data bug
             }
             if ( signalChannelA != null && signalChannelB != null && backgroundChannelA != null
-                    && backgroundChannelB != null ) {
+                    && backgroundChannelB != null && preferred != null ) {
                 break; // no need to go through them all.
             }
         }
@@ -154,16 +161,17 @@ public class TwoChannelMissingValues {
 
         for ( BioAssayDimension bioAssayDimension : dimensions ) {
 
-            ExpressionDataDoubleMatrix preferredDAta = new ExpressionDataDoubleMatrix( expExp, preferred );
+            ExpressionDataDoubleMatrix preferredDAta = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension,
+                    preferred );
 
             ExpressionDataDoubleMatrix bkgDataA = null;
             if ( backgroundChannelA != null ) {
-                bkgDataA = new ExpressionDataDoubleMatrix( expExp, backgroundChannelA );
+                bkgDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, backgroundChannelA );
             }
 
             ExpressionDataDoubleMatrix bkgDataB = null;
             if ( backgroundChannelB != null ) {
-                bkgDataB = new ExpressionDataDoubleMatrix( expExp, backgroundChannelB );
+                bkgDataB = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, backgroundChannelB );
             }
 
             ExpressionDataDoubleMatrix signalDataA = null;
@@ -171,12 +179,13 @@ public class TwoChannelMissingValues {
                 // use background-subtracted data and add bkg back on later.
                 assert bkgDataA != null;
                 assert bkgSubChannelA != null;
-                signalDataA = new ExpressionDataDoubleMatrix( expExp, bkgSubChannelA );
+                signalDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, bkgSubChannelA );
             } else {
-                signalDataA = new ExpressionDataDoubleMatrix( expExp, signalChannelA );
+                signalDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, signalChannelA );
             }
 
-            ExpressionDataDoubleMatrix signalDataB = new ExpressionDataDoubleMatrix( expExp, signalChannelB );
+            ExpressionDataDoubleMatrix signalDataB = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension,
+                    signalChannelB );
 
             Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
                     preferredDAta, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
@@ -208,7 +217,7 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
             double signalToNoiseThreshold, boolean channelANeedsReconstruction ) {
 
-        validate( signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
+        validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
 
         ByteArrayConverter converter = new ByteArrayConverter();
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
@@ -222,7 +231,7 @@ public class TwoChannelMissingValues {
             vect.setDesignElement( designElement );
             vect.setBioAssayDimension( bioAssayDimension );
 
-            boolean[] detectionCalls = new boolean[signalChannelB.columns()];
+            boolean[] detectionCalls = new boolean[preferred.columns()];
             Double[] prefRow = preferred.getRow( designElement );
             Double[] signalA = signalChannelA.getRow( designElement );
             Double[] signalB = signalChannelB.getRow( designElement );
@@ -235,6 +244,7 @@ public class TwoChannelMissingValues {
 
             for ( int col = 0; col < signalA.length; col++ ) {
 
+                // If the "preferred" value is already missing, we retain that.
                 Double pref = prefRow[col];
                 if ( pref == null || pref.isNaN() ) {
                     detectionCalls[col] = false;
@@ -297,17 +307,19 @@ public class TwoChannelMissingValues {
     }
 
     /**
+     * @param preferred
      * @param signalChannelA
      * @param signalChannelB
      * @param bkgChannelA
      * @param bkgChannelB
      * @param signalToNoiseThreshold
      */
-    private void validate( ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
-            ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
-            double signalToNoiseThreshold ) {
+    private void validate( ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
+            ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
+            ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
+        // not exhaustive...
         if ( signalChannelA == null || signalChannelA.rows() == 0 || signalChannelB == null
-                || signalChannelB.rows() == 0 ) {
+                || signalChannelB.rows() == 0 || preferred == null ) {
             throw new IllegalArgumentException( "Collections must not be empty" );
         }
 
@@ -316,6 +328,10 @@ public class TwoChannelMissingValues {
         }
 
         if ( !( signalChannelA.rows() == signalChannelB.rows() ) ) {
+            throw new IllegalArgumentException( "Collection sizes must match" );
+        }
+
+        if ( !( signalChannelA.rows() == preferred.rows() ) ) {
             throw new IllegalArgumentException( "Collection sizes must match" );
         }
 
@@ -329,7 +345,7 @@ public class TwoChannelMissingValues {
         int numSamplesA = signalChannelA.columns();
         int numSamplesB = signalChannelB.columns();
 
-        if ( numSamplesA != numSamplesB ) {
+        if ( numSamplesA != numSamplesB || numSamplesB != preferred.columns() ) {
             throw new IllegalArgumentException( "Number of samples doesn't match!" );
         }
 

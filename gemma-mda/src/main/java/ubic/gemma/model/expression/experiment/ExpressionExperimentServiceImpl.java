@@ -38,15 +38,19 @@ import ubic.gemma.model.genome.Taxon;
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
     protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
-       return this.getExpressionExperimentDao().getByTaxon( taxon );
+        return this.getExpressionExperimentDao().getByTaxon( taxon );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
      */
     @Override
@@ -214,7 +218,7 @@ public class ExpressionExperimentServiceImpl extends
     protected void handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().thaw( expressionExperiment );
     }
-    
+
     @Override
     protected void handleThawLite( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
@@ -247,8 +251,10 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, designElements,
                 quantitationType );
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPerTaxonCount()
      */
     @Override
@@ -256,12 +262,20 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getPerTaxonCount();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
         return this.getExpressionExperimentDao().loadValueObjects( ids );
+    }
+
+    @Override
+    protected Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment, ArrayDesign arrayDesign )
+            throws Exception {
+        return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
 }

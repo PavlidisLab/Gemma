@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.ChromosomeService;
@@ -157,21 +156,26 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( gene.getCytogenicLocation() );
         fillChromosomeLocationAssociations( gene.getGeneticLocation() );
 
+        Gene newGene = geneService.create( gene );
+
         for ( GeneProduct product : tempGeneProduct ) {
-            product.setGene( gene );
-            for ( DatabaseEntry databaseEntry : product.getAccessions() ) {
-                databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
-            }
-            if ( product.getPhysicalLocation() != null ) {
-                fillChromosomeLocationAssociations( product.getPhysicalLocation() );
-            }
+            product.setGene( newGene );
+            // for ( DatabaseEntry databaseEntry : product.getAccessions() ) {
+            // databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
+            // }
+            // if ( product.getPhysicalLocation() != null ) {
+            // fillChromosomeLocationAssociations( product.getPhysicalLocation() );
+            // }
         }
+
         gene.setProducts( tempGeneProduct );
+        persistCollectionElements( gene.getProducts() );
 
         for ( GeneAlias alias : gene.getAliases() ) {
             alias.setGene( gene );
         }
-        return geneService.create( gene );
+
+        return newGene;
     }
 
     /**
@@ -263,8 +267,6 @@ abstract public class GenomePersister extends CommonPersister {
     protected BioSequence2GeneProduct persistBioSequence2GeneProduct( BioSequence2GeneProduct bioSequence2GeneProduct ) {
         if ( bioSequence2GeneProduct == null ) return null;
         if ( !isTransient( bioSequence2GeneProduct ) ) return bioSequence2GeneProduct;
-
-        bioSequence2GeneProduct.setGeneProduct( persistGeneProduct( bioSequence2GeneProduct.getGeneProduct() ) );
 
         if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
             return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
@@ -365,7 +367,6 @@ abstract public class GenomePersister extends CommonPersister {
         }
         association.setGeneProduct( persistGeneProduct( association.getGeneProduct() ) );
         association.setBioSequence( persistBioSequence( association.getBioSequence() ) );
-
         return blatAssociationService.create( association );
     }
 
@@ -407,10 +408,18 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         if ( isTransient( geneProduct.getGene() ) ) {
+            // this results in the persistenct of the geneproducts, but only if the gene is transient.
             geneProduct.setGene( persistGene( geneProduct.getGene() ) );
+        } else {
+            geneProduct = geneProductService.create( geneProduct );
         }
 
-        return geneProductService.create( geneProduct );
+        if ( geneProduct.getId() == null ) {
+            return geneProductService.create( geneProduct );
+        }
+
+        return geneProduct;
+        // ;
     }
 
     /**

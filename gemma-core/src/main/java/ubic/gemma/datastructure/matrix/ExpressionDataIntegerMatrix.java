@@ -7,6 +7,7 @@ import ubic.basecode.dataStructure.matrix.IntegerMatrix2DNamed;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -16,7 +17,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix { 
+public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
 
     private IntegerMatrix2DNamed matrix;
 
@@ -32,6 +33,17 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public Integer get( DesignElement designElement, BioMaterial bioMaterial ) {
+        return ( Integer ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
+                .getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
     }
 
     /*
@@ -118,7 +130,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
     @Override
     protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
         // TODO Auto-generated method stub
-        
+
     }
 
     public int columns() {
