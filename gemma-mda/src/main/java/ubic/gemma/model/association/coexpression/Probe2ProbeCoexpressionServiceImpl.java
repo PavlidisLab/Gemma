@@ -166,4 +166,9 @@ public class Probe2ProbeCoexpressionServiceImpl extends
 
     }
 
+    @Override
+    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
+    }
+
 }
