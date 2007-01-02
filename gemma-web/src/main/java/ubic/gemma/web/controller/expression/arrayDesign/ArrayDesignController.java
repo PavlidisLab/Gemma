@@ -258,11 +258,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         if ( sId == null ) {
             return  startJob(request, new GenerateSummary(request, arrayDesignReportService) );
         }
-        
-        // if ids are specified, then display only those arrayDesigns    
-        this.saveMessage( request, "Disabled summary caching for lists of platforms" );
-       
-        return this.showAll( request, response );
+        else {
+            Long id = Long.parseLong( sId );
+            return  startJob(request, new GenerateSummary(request, arrayDesignReportService, id) );  
+        }
     }
 
     /**
@@ -434,10 +433,18 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
         
         private ArrayDesignReportService arrayDesignReportService;
+        private Long id;
         
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
             super( request, getMessageUtil() );   
             this.arrayDesignReportService = arrayDesignReportService;
+            id = null;
+        }
+        
+        public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService, Long id ) {
+            super( request, getMessageUtil() );   
+            this.arrayDesignReportService = arrayDesignReportService;
+            this.id = id;
         }
 
         @SuppressWarnings("unchecked")
@@ -448,12 +455,20 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
                     .getAuthentication().getName(), "Generating ArrayDesign Report summary");
             
-            saveMessage("Generated summary for all platforms" );
-            job.updateProgress( "Generated summary for all platforms" );
-            arrayDesignReportService.generateArrayDesignReport();
-            
+
+
+            if (id == null ) {
+                saveMessage("Generated summary for all platforms" );
+                job.updateProgress( "Generated summary for all platforms" );
+                arrayDesignReportService.generateArrayDesignReport();
+            }
+            else {
+                saveMessage("Generating summary for platform " + id );
+                job.updateProgress( "Generating summary for specified platform" );
+                arrayDesignReportService.generateArrayDesignReport(id);                
+            }
             ProgressManager.destroyProgressJob( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + id) );
             
 
         }
