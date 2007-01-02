@@ -35,6 +35,7 @@ import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchService;
@@ -147,11 +148,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
         String eeIds = StringUtils.join( eeIdList,",");
         
+
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
+        
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numCompositeSequences",  numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+
         mav.addObject( "expressionExperimentIds", eeIds );      
         mav.addObject( "technologyType", colorString );
         mav.addObject( "summary", summary);

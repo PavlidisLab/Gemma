@@ -94,6 +94,24 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         assertNotNull(num);
     }
     
+    public void testCompositeSequenceWithoutBioSequences() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection cs = arrayDesignDao.compositeSequenceWithoutBioSequences( ad );
+        assertNotNull(cs);  
+    }
+    
+    public void testCompositeSequenceWithoutBlatResults() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection cs = arrayDesignDao.compositeSequenceWithoutBlatResults( ad );
+        assertNotNull(cs);  
+    }
+    
+    public void testCompositeSequenceWithoutGenes() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection cs = arrayDesignDao.compositeSequenceWithoutGenes( ad );
+        assertNotNull(cs);  
+    }
+    
     public void testCascadeCreateCompositeSequences() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         flushSession(); // fails without this.

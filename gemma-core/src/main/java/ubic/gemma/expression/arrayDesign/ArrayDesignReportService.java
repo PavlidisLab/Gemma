@@ -91,9 +91,12 @@ public class ArrayDesignReportService
         long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
         long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
         long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
+        long numCsPredictedGenes = arrayDesignService.numCompositeSequenceWithPredictedGenes( ad );
+        long numCsProbeAlignedRegions = arrayDesignService.numCompositeSequenceWithProbeAlignedRegion( ad );
+        long numCsPureGenes = numCsGenes - numCsPredictedGenes  - numCsProbeAlignedRegions;
         long numGenes = arrayDesignService.numGenes( ad );
         
-        String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes );
+        String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes, numCsPredictedGenes, numCsProbeAlignedRegions, numCsPureGenes );
 
         // write into file
         File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id);
@@ -227,6 +230,62 @@ public class ArrayDesignReportService
                 "</td><td>" +
                 numCsGenes +
                 "</td></tr>" +
+                "<tr><td>" +
+                "Unique genes represented" +
+                "</td><td>" +
+                numGenes + 
+                "</td></tr>" +
+                "<tr><td colspan=2 align='center' class='small'>" +
+                "(as of " + timestamp + ")" +
+                "</td></tr>" + 
+                "</table>");
+        return s.toString();
+    }
+    
+    private String generateReportString(long numCsBioSequences, long numCsBlatResults, long numCsGenes, long numGenes, long numCsPredictedGenes, long numCsProbeAlignedRegions, long numCsPureGenes) {
+        // obtain time information (for timestamping)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd hh:mm" );
+        // write into table format
+        StringBuffer s = new StringBuffer();
+        s.append("<table class='datasummary'>" +
+                "<tr>" +
+                "<td colspan=2 align=center>" +
+                "</td></tr>" +
+                "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" +
+                "Probes with sequences" +
+                "</td><td>" +
+                numCsBioSequences + 
+                "</td></tr>" +
+                "<tr><td>" +
+                "Probes with genome alignments" +
+                "</td>" +
+                "<td>" + numCsBlatResults + 
+                "</td></tr></authz:authorize>" +
+                "<tr><td>" +
+                "Probes mapping to gene(s)" +
+                "</td><td>" +
+                numCsGenes +
+                "</td></tr>" +
+                
+                "<tr><td>" +
+                "&nbsp;&nbsp;Probes mapping to probe-aligned region(s)" +
+                "</td><td>" +
+                numCsProbeAlignedRegions +
+                "</td></tr>" +
+                
+                "<tr><td>" +
+                "&nbsp;&nbsp;Probes mapping to predicted genes" +
+                "</td><td>" +
+                numCsPredictedGenes +
+                "</td></tr>" +
+                
+                "<tr><td>" +
+                "&nbsp;&nbsp;Probes mapping to known genes" +
+                "</td><td>" +
+                numCsPureGenes +
+                "</td></tr>" +
+                
                 "<tr><td>" +
                 "Unique genes represented" +
                 "</td><td>" +
