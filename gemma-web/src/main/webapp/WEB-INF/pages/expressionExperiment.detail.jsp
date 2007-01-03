@@ -178,6 +178,15 @@
 
 				</td>
 			</tr>
+			<authz:authorize ifAllGranted="admin">
+			<tr>
+				<td class="label">
+					Coexpression Links
+				<td>
+					${eeCoexpressionLinks}
+				</td>
+			</tr>
+			</authz:authorize>
 		</table>
 
 		<authz:authorize ifAnyGranted="admin">

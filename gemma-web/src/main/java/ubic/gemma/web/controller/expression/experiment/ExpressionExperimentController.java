@@ -31,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -51,6 +52,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.bean id="expressionExperimentController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
+ * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
  */
@@ -58,9 +60,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
+    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
     private SearchService searchService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
+
+    /**
+     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
+     */
+    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
+        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
+    }
 
     /**
      * @param expressionExperimentService
@@ -130,7 +140,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         request.setAttribute( "id", id );
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
-
+       
         Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
         mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById( id ).entrySet() );
 
@@ -149,6 +159,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Long designElementDataVectorCount = new Long( expressionExperimentService
                 .getDesignElementDataVectorCountById( id ) );
         mav.addObject( "designElementDataVectorCount", designElementDataVectorCount);
+        
+        Integer eeLinks = probe2ProbeCoexpressionService.countLinks( expressionExperiment );
+        mav.addObject( "eeCoexpressionLinks", eeLinks );
         return mav;
     }
 

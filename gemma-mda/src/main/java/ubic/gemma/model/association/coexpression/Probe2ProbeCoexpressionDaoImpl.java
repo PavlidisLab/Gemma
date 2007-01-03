@@ -191,10 +191,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
+        
         // FIXME figure out the taxon instead of this iteration.
         String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
                 "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
 
+        Integer result = 0;
         for ( String p2pClassName : p2pClassNames ) {
 
             /*
@@ -207,21 +209,20 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "ee", expressionExperiment );
             java.util.List results = queryObject.list();
-            Object result = null;
+
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of 'Integer" + "' was found when executing query --> '"
                                     + queryString + "'" );
                 } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
+                    result += (Integer) results.iterator().next();
                 }
-                return ( Integer ) result;
+
             }
 
         }
-
-        return 0;
+        return ( Integer ) result;
 
     }
 
