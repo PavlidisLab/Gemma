@@ -14,7 +14,7 @@
 </caption>
 <tr>
 <td>
-${ summary }
+${ summary } <br>
 </td>
 </tr>
 </table>
@@ -154,3 +154,4 @@ ${ summary }
 				</authz:acl>
 			</tr>
 		</table>
+		<a class="helpLink" href="/Gemma/static/arrayDesignReportHelp.html">Report Help</a>
