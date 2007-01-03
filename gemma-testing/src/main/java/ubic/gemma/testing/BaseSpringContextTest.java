@@ -379,7 +379,27 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
         hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
         CompassUtils.deleteCompassLocks();
-       SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
+        SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
+        this.testHelper = new TestPersistentObjectHelper();
+
+        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
+        persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" ); // beans not injected yet, have to do
+        // explicitly?
+        testHelper.setPersisterHelper( persisterHelper );
+        testHelper.setExternalDatabaseService( externalDatabaseService );
+        testHelper.setTaxonService( ( TaxonService ) getBean( "taxonService" ) );
+    }
+
+    /**
+     * The test user does not have admin privileges
+     * 
+     * @throws Exception
+     */
+    protected void onSetUpInTransactionGrantingUserAuthority() throws Exception {
+        super.onSetUpInTransaction();
+        hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
+        CompassUtils.deleteCompassLocks();
+        SpringTestUtil.grantUserAuthority( this.getContext( this.getConfigLocations() ) );
         this.testHelper = new TestPersistentObjectHelper();
 
         ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );

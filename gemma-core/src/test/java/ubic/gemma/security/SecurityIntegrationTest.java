@@ -21,6 +21,7 @@ package ubic.gemma.security;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.acegisecurity.AccessDeniedException;
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -84,16 +85,18 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    // FIXME - the superclass onSetUpInTransaction grants admin rights to the user.
-    // public void testRemoveArrayDesignNotAuthorized() throws Exception {
-    //
-    // try {
-    // arrayDesignService.remove( notYourArrayDesign );
-    // fail( "Should have gotten an AccessDeniedException" );
-    // } catch ( AccessDeniedException okay ) {
-    // //
-    // }
-    // }
+    public void testRemoveArrayDesignNotAuthorized() throws Exception {
+
+        this.onSetUpInTransactionGrantingUserAuthority();
+
+        try {
+            arrayDesignService.remove( notYourArrayDesign );
+            fail( "Should have gotten an AccessDeniedException" );
+        } catch ( AccessDeniedException okay ) {
+            log.info( "Access successfully denied." );
+        }
+    }
+
     /**
      * Save an array design.
      * 
