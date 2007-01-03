@@ -41,7 +41,7 @@ public class CoexpressionWrapper extends TableDecorator {
         link.append( "<a href=\"/Gemma/gene/showGene.html?id=" );
         link.append( object.getGeneId() );
         link.append( "\">" );
-        link.append( object.getGeneName() );
+        link.append( StringUtils.abbreviate( object.getGeneName(), 20) );
         link.append( "</a>" );
 
         // build the GET parameters

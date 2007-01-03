@@ -262,7 +262,7 @@ Results for
 	class="list" sort="list" requestURI="" id="foundGenes" 
 	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
 	pagesize="200">
-	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" maxLength="20"/>
+	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
 	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
 	<display:column property="dataSetCount" sortable="true" title="#DS" />	
 	<display:column property="dataSets" title="Data Sets" />	
