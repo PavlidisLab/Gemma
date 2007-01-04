@@ -174,6 +174,21 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
         return (( QuantitationType ) entry.getKey()).getName();
     }
+    
+    /**
+     * @return View for key of the quantitation type counts.
+     */
+    public String getQtPreferredStatus() {
+        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        if ( (( QuantitationType ) entry.getKey()).getIsPreferred()) {
+            return "<input type=checkbox checked disabled></input>";
+        }
+        else {
+            return "<input type=checkbox disabled></input>";
+        }
+    }
+    
+    
 
     /**
      * @return View for value of the quantitation type counts.

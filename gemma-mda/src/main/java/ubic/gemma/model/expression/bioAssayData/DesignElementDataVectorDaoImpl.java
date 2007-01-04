@@ -188,7 +188,7 @@ public class DesignElementDataVectorDaoImpl extends
      * @return
      * @throws Exception todo: still untested
      */
-    protected Collection handleGetGeneCoexpressionPattern( Collection ees, Collection genes, QuantitationType qt )
+    protected Map handleGetGeneCoexpressionPattern( Collection ees, Collection genes )
             throws Exception {
         Collection<DesignElementDataVector> vectors = null;
 
@@ -196,7 +196,6 @@ public class DesignElementDataVectorDaoImpl extends
             "select distinct dedv from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
             + " where gene.products.id=bs2gp.geneProduct.id and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
             + " and compositeSequence.designElementDataVectors.id=dedv.id and dedv.expressionExperiment.id in (:collectionOfEE) "
-            + " and dedv.quantitationType.id = :givenQtId "
             + " and gene.id in (:collectionOfGenes)";
         
         // Need to turn given collections into collections of IDs
@@ -212,13 +211,12 @@ public class DesignElementDataVectorDaoImpl extends
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "collectionOfEE", eeIds );
             queryObject.setParameterList( "collectionOfGenes", geneIds );
-            queryObject.setLong( "givenQtId", qt.getId() );
             vectors = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return vectors;
+        return new HashMap();
     }
 
     /**

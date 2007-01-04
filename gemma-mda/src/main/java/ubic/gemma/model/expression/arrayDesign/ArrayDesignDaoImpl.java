@@ -836,16 +836,31 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
-        //final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-        //        + " left join cs.biologicalCharacteristic left join BioSequence2GeneProductImpl bs2gp on bs2gp.bioSequence=cs.biologicalCharacteristic "
-        //        + " left join GeneImpl gene on bs2gp.geneProduct.id=gene.products.id where ar.id = :id";
+
+
         final String nativeQueryString = "SELECT distinct cs.id from " +
-                "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
-                "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
-                "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
-                "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id" ;
+        "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
+        "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
+        "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
+        "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id" ;
         return nativeQueryByIdReturnCollection( id, nativeQueryString);
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetRawCompositeSequenceSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Collection handleGetRawCompositeSequenceSummary( ArrayDesign arrayDesign ) throws Exception {
+        // TODO Auto-generated method stub
+        final String nativeQueryString = "SELECT distinct cs.id, bs2gp.BIO_SEQUENCE_FK,bs2gp.BLAT_RESULT_FK,bs2gp.GENE_PRODUCT_FK,gene.ID from " +
+        "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
+        "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
+        "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
+        "WHERE ARRAY_DESIGN_FK = :id" ;
+        return null;
+    }
+    
+    
 
 
 }
