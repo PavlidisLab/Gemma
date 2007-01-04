@@ -22,12 +22,14 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.acegisecurity.AccessDeniedException;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -41,7 +43,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     private ArrayDesignService arrayDesignService;
 
-    ArrayDesign notYourArrayDesign;
+    ArrayDesign arrayDesign;
     User testUser;
 
     /*
@@ -54,15 +56,31 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
         super.onSetUpInTransaction(); // so we have authority to add a user.
 
-        notYourArrayDesign = ArrayDesign.Factory.newInstance();
-        notYourArrayDesign.setName( "deleteme" );
-        notYourArrayDesign = ( ArrayDesign ) persisterHelper.persist( notYourArrayDesign );
+        arrayDesign = ArrayDesign.Factory.newInstance();
+        arrayDesign.setName( "Array Design Foo" );
+        arrayDesign.setDescription( "A test ArrayDesign from " + this.getClass().getName() );
 
-        // // log in as a user who has limited permissions.
-        // testUser = getTestPersistentUser( "foobly", "doobly" );
-        // if ( this. ) {
-        // throw new RuntimeException( "Failed to authenticate" );
-        // }
+        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
+        cs1.setName( "Design Element Bar1" );
+
+        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
+        cs2.setName( "Design Element Bar2" );
+
+        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
+        col.add( cs1 );
+        col.add( cs2 );
+
+        /*
+         * Note this sequence. Remember, inverse="true" if using this. If you do not make an explicit call to
+         * cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
+         */
+        cs1.setArrayDesign( arrayDesign );
+        cs2.setArrayDesign( arrayDesign );
+        arrayDesign.setCompositeSequences( col );
+
+        // arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
+        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
+
     }
 
     /**
@@ -87,10 +105,13 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      */
     public void testRemoveArrayDesignNotAuthorized() throws Exception {
 
-        this.onSetUpInTransactionGrantingUserAuthority();
+        this.onSetUpInTransactionGrantingUserAuthority();// use a non-admin user
+
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info( "user is " + obj.toString() );
 
         try {
-            arrayDesignService.remove( notYourArrayDesign );
+            arrayDesignService.remove( arrayDesign );
             fail( "Should have gotten an AccessDeniedException" );
         } catch ( AccessDeniedException okay ) {
             log.info( "Access successfully denied." );
@@ -105,39 +126,19 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     public void testSaveArrayDesign() throws Exception {
 
-        this.setFlushModeCommit();
+        this.onSetUpInTransactionGrantingUserAuthority();// use a non-admin user
 
-        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( "AD Foo1" );
-        arrayDesign.setDescription( "a test ArrayDesign" );
-
-        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs1.setName( "DE Bar10" );
-
-        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs2.setName( "DE Bar20" );
-
-        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
-        col.add( cs1 );
-        col.add( cs2 );
-
-        /*
-         * Note this sequence. Remember, inverse="true" if using this. If you do not make an explicit call to
-         * cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
-         */
-        cs1.setArrayDesign( arrayDesign );
-        cs2.setArrayDesign( arrayDesign );
-        arrayDesign.setCompositeSequences( col );
-
-        arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info( "user is: " + obj.toString() );
 
         assertNotNull( arrayDesign.getId() );
 
-        //  
-        // col = compositeSequenceService.getAllCompositeSequences();
-        // if ( col.size() == 0 ) {
-        // fail( "User not authorized for to access at least one of the objects in the graph" );
-        // }
+        CompositeSequenceService compositeSequenceService = ( CompositeSequenceService ) this
+                .getBean( "compositeSequenceService" );
+        Collection col = compositeSequenceService.findByName( "Design Element Bar1" );
+        if ( col.size() == 0 ) {
+            fail( "User not authorized for to access at least one of the objects in the graph" );
+        }
     }
 
     /**
