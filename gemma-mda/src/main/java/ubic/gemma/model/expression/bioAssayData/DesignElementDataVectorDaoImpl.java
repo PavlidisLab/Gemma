@@ -191,12 +191,13 @@ public class DesignElementDataVectorDaoImpl extends
     protected Map handleGetGeneCoexpressionPattern( Collection ees, Collection genes )
             throws Exception {
         Collection<DesignElementDataVector> vectors = null;
-
+        Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        
         final String queryString =
-            "select distinct dedv from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
+            "select distinct dedv, gene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
             + " where gene.products.id=bs2gp.geneProduct.id and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
             + " and compositeSequence.designElementDataVectors.id=dedv.id and dedv.expressionExperiment.id in (:collectionOfEE) "
-            + " and gene.id in (:collectionOfGenes)";
+            + " and dedv.quantitationType.isPreferred = true and gene.id in (:collectionOfGenes)";
         
         // Need to turn given collections into collections of IDs
         Collection<Long> eeIds = new ArrayList<Long>();
@@ -211,12 +212,29 @@ public class DesignElementDataVectorDaoImpl extends
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "collectionOfEE", eeIds );
             queryObject.setParameterList( "collectionOfGenes", geneIds );
-            vectors = queryObject.list();
-
+        
+            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( results.next() ) {
+                DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
+                Gene g = ( Gene ) results.get( 1 );
+                // if the key exists, push into collection
+                // if the key does not exist, create and put hashset into the map
+                if ( geneMap.containsKey( dedv ) ) {
+                    if ( !( ( Collection<Gene> ) geneMap.get( dedv ) ).add( g ) ) {
+                        log.debug( "Failed to add " + g.getName() + ";Duplicate" );
+                    }
+                } else {
+                    Collection<Gene> geneSet = new HashSet<Gene>();
+                    geneSet.add( g );
+                    geneMap.put( dedv, geneSet );
+                }
+            }
+            results.close();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return new HashMap();
+        
+        return geneMap;
     }
 
     /**
