@@ -124,7 +124,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
      * @param data
      * @param eeDoubleMatrix
      * @param ee
-     * @return
+     * @return Filtered matrix
      */
     @SuppressWarnings("unchecked")
     public NamedMatrix missingValueFilter( NamedMatrix data, ExpressionDataDoubleMatrix eeDoubleMatrix,
@@ -148,15 +148,18 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             StandardQuantitationType tmpQT = qt.getType();
             if ( tmpQT == StandardQuantitationType.PRESENTABSENT ) qtf = qt;
         }
-        if ( qtf == null ) {
-            log.info( "Expression Experiment " + ee.getShortName() + " doesn't have a PRESENTABSENT QUANTITATION TYPE" );
-            return null;
-        }
 
-        ExpressionDataBooleanMatrix maskMatrix = new ExpressionDataBooleanMatrix( ee, qtf );
-        if ( maskMatrix == null ) {
-            log.info( "Can't get the boolean matrix" );
-            return null;
+        // if there is no PRESENTABSENT, that's okay, we just look for missing data in the preferred QT.
+        ExpressionDataBooleanMatrix maskMatrix = null;
+        if ( qtf == null ) {
+            log.warn( "Expression Experiment " + ee.getShortName()
+                    + " doesn't have a PRESENTABSENT quantitation type, will only be able to use NANs for filtering" );
+        } else {
+            maskMatrix = new ExpressionDataBooleanMatrix( ee, qtf );
+            if ( maskMatrix == null ) {
+                log.error( "Error in getting boolean matrix for " + qtf );
+                return null;
+            }
         }
 
         /* first pass - determine how many missing values there are per row */
@@ -165,8 +168,11 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             for ( int j = 0; j < numCols; j++ ) {
                 BioMaterial bioMaterial = eeDoubleMatrix.getBioMaterialForColumn( ( ( Integer ) data.getColName( j ) )
                         .intValue() );
-                if ( !maskMatrix.get( ( DesignElement ) data.getRowName( i ), bioMaterial ).booleanValue()
-                        || Double.isNaN( ( ( DoubleMatrixNamed ) data ).get( i, j ) ) ) {
+
+                boolean isPresent = maskMatrix == null
+                        || maskMatrix.get( ( DesignElement ) data.getRowName( i ), bioMaterial ).booleanValue();
+
+                if ( !isPresent || Double.isNaN( ( ( DoubleMatrixNamed ) data ).get( i, j ) ) ) {
                     missingCount++;
                     data.set( i, j, Double.NaN );
                 }
@@ -260,51 +266,49 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private DoubleMatrixNamed filter( DoubleMatrixNamed dataMatrix, ExpressionDataDoubleMatrix eeDoubleMatrix,
             ExpressionExperiment ee ) {
         /* ******Check the array design technology to choose the filter*** */
-        DoubleMatrixNamed r = dataMatrix;
-        if ( r == null ) return r;
-        log.info( "Data set has " + r.rows() + " rows and " + r.columns() + " columns." );
+        DoubleMatrixNamed filteredMatrix = dataMatrix;
+        if ( filteredMatrix == null ) return filteredMatrix;
+        log.info( "Data set has " + filteredMatrix.rows() + " rows and " + filteredMatrix.columns() + " columns." );
         ArrayDesign arrayDesign = ( ArrayDesign ) this.eeService.getArrayDesignsUsed( ee ).iterator().next();
         TechnologyType techType = arrayDesign.getTechnologyType();
 
-        if ( techType.equals( TechnologyTypeEnum.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE ) ) {
-            /** *Apply for two color missing value filtered */
-            if ( minPresentFractionIsSet ) {
-
-                /*
-                 * log.info( "Filtering out genes that are missing too many values" ); RowMissingFilter x = new
-                 * RowMissingFilter(); x.setMinPresentFraction( minPresentFraction );
-                 */
-                r = ( DoubleMatrixNamed ) missingValueFilter( dataMatrix, eeDoubleMatrix, ee );
-            }
+        if ( minPresentFractionIsSet && techType.equals( TechnologyTypeEnum.TWOCOLOR )
+                || techType.equals( TechnologyType.DUALMODE ) ) {
+            /* Apply for two color missing value filtered */
+            /*
+             * log.info( "Filtering out genes that are missing too many values" ); RowMissingFilter x = new
+             * RowMissingFilter(); x.setMinPresentFraction( minPresentFraction );
+             */
+            filteredMatrix = ( DoubleMatrixNamed ) missingValueFilter( dataMatrix, eeDoubleMatrix, ee );
         }
 
         if ( techType.equals( TechnologyTypeEnum.ONECOLOR ) ) {
             if ( minPresentFractionIsSet ) {
                 log.info( "Filtering out genes that are missing too many values" );
-                RowMissingFilter x = new RowMissingFilter();
-                x.setMinPresentFraction( minPresentFraction );
-                r = ( DoubleMatrixNamed ) x.filter( r );
+                RowMissingFilter rowMissingFilter = new RowMissingFilter();
+                rowMissingFilter.setMinPresentFraction( minPresentFraction );
+                filteredMatrix = ( DoubleMatrixNamed ) rowMissingFilter.filter( filteredMatrix );
             }
 
             if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do
                 // this
                 // as well as affy filtering.
                 log.info( "Filtering out genes with low expression for " + ee.getShortName() );
-                RowLevelFilter x = new RowLevelFilter();
-                x.setLowCut( this.lowExpressionCut );
-                x.setHighCut( this.highExpressionCut );
-                x.setRemoveAllNegative( true ); // todo: fix
-                x.setUseAsFraction( true );
-                r = ( DoubleMatrixNamed ) x.filter( r );
+                RowLevelFilter rowLevelFilter = new RowLevelFilter();
+                rowLevelFilter.setLowCut( this.lowExpressionCut );
+                rowLevelFilter.setHighCut( this.highExpressionCut );
+                rowLevelFilter.setRemoveAllNegative( true ); // todo: fix
+                rowLevelFilter.setUseAsFraction( true );
+                filteredMatrix = ( DoubleMatrixNamed ) rowLevelFilter.filter( filteredMatrix );
 
             }
-            if ( arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) {
+            if ( arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) { // FIXME, use Manufacturer instead
                 log.info( "Filtering by Affymetrix probe name for " + ee.getShortName() );
-                Filter x = new AffymetrixProbeNameFilter( new int[] { 2 } );
-                r = ( DoubleMatrixNamed ) x.filter( r );
+                Filter affyProbeNameFilter = new AffymetrixProbeNameFilter( new int[] { 2 } );
+                filteredMatrix = ( DoubleMatrixNamed ) affyProbeNameFilter.filter( filteredMatrix );
             }
         }
-        return r;
+        return filteredMatrix;
     }
 
     /**

@@ -221,12 +221,15 @@ public class LinkAnalysis {
 
             /* Initialize the map between probe and designElementDataVector */
             Collection<Gene> geneSet = probeToGeneAssociation.get( vector );
+
             if ( geneSet.size() >= 7 ) {
-                System.err.println( " Probe: " + vector.getDesignElement().getName() + "["
-                        + vector.getDesignElement().getId() + "] " );
+                log.info( " Probe: " + vector.getDesignElement().getName() + "[" + vector.getDesignElement().getId()
+                        + "] " );
+                StringBuilder buf = new StringBuilder();
                 for ( Gene gene : geneSet ) {
-                    System.err.print( gene.getName() + "[" + gene.getId() + "] " );
+                    buf.append( gene.getName() + "[" + gene.getId() + "] " );
                 }
+                log.info( buf );
             }
 
             if ( geneSet != null && !geneSet.isEmpty() ) {
