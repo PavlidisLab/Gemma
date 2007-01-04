@@ -626,12 +626,12 @@ public class ProbeMapper {
      * just one per gene product
      */
     private BlatAssociation removeExtraHitsPerGeneProduct( Collection<BlatAssociation> blatAssociations,
-            Map<GeneProduct, Collection<BlatAssociation>> geneProducts ) {
+            Map<GeneProduct, Collection<BlatAssociation>> geneProduct2BlatAssociations ) {
 
         double globalMaxScore = 0.0;
         BlatAssociation globalBest = null;
-        for ( GeneProduct geneProduct : geneProducts.keySet() ) {
-            Collection<BlatAssociation> geneProductBlatAssociations = geneProducts.get( geneProduct );
+        for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
+            Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
             double maxScore = 0.0;
             BlatAssociation best = null;
