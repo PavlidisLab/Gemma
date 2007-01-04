@@ -48,6 +48,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * <li>F635.Median / F532.Median (genepix as rendered in some data sets)</li>
  * <li>CH1_SMTM (found in GPL230)</li>
  * <li>Caltech (GPL260)</li>
+ * <li>Agilent (Ch2BkgMedian etc or CH2_SIG_MEAN etc)</li>
+ * <li>GSE3251 (ch1.Background etc)
  * </ul>
  * <p>
  * The missing values are computed with the following considerations with respect to available data
@@ -58,7 +60,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * <li>If the signal values already contain missing data, these are still considered missing.</li>
  * <li>If there are no background values, all values will be considered 'present' unless the signal values are both
  * zero or missing.
- * <li>If the preferred quantitation type data is missing, then the data are considered missing (for consistency)
+ * <li>If the preferred quantitation type data is a missing value, then the data are considered missing (for
+ * consistency).
  * </ol>
  * 
  * @author pavlidis
@@ -109,21 +112,25 @@ public class TwoChannelMissingValues {
                 preferred = qType;
             } else if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
                     || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
-                    || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" ) ) {
+                    || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
+                    || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" ) ) {
                 backgroundChannelA = qType;
             } else if ( name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" )
                     || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
-                    || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" ) ) {
+                    || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
+                    || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" ) ) {
                 backgroundChannelB = qType;
             } else if ( name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
                     || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" )
                     || name.equals( "SIGNAL_CHANNEL 1MEDIAN" ) || name.toLowerCase().matches( "ch1_smtm" )
-                    || name.equals( "G_MEAN" ) ) {
+                    || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" ) || name.equals( "ch1.Intensity" )
+                    || name.equals( "CH1_SIG_MEAN" ) ) {
                 signalChannelA = qType;
             } else if ( name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" )
                     || name.equals( "RAW_CONTROL" ) || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" )
                     || name.equals( "SIGNAL_CHANNEL 2MEDIAN" ) || name.toLowerCase().matches( "ch2_smtm" )
-                    || name.equals( "R_MEAN" ) ) {
+                    || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" ) || name.equals( "ch2.Intensity" )
+                    || name.equals( "CH2_SIG_MEAN" ) ) {
                 signalChannelB = qType;
             } else if ( name.matches( "CH1D_MEAN" ) ) {
                 bkgSubChannelA = qType; // specific for SGD data bug
@@ -139,7 +146,7 @@ public class TwoChannelMissingValues {
 
             /*
              * Okay, this can happen for some Stanford data sets where the CH1 data was not submitted. But we can
-             * reconstruct the values from the background
+             * sometimes reconstruct the values from the background
              */
 
             if ( signalChannelB != null && bkgSubChannelA != null && backgroundChannelA != null ) {
@@ -180,12 +187,14 @@ public class TwoChannelMissingValues {
                 assert bkgDataA != null;
                 assert bkgSubChannelA != null;
                 signalDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, bkgSubChannelA );
-            } else {
+            } else if ( signalChannelA != null ) {
                 signalDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, signalChannelA );
             }
 
-            ExpressionDataDoubleMatrix signalDataB = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension,
-                    signalChannelB );
+            ExpressionDataDoubleMatrix signalDataB = null;
+            if ( signalChannelB != null ) {
+                signalDataB = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, signalChannelB );
+            }
 
             Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
                     preferredDAta, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
@@ -233,8 +242,8 @@ public class TwoChannelMissingValues {
 
             boolean[] detectionCalls = new boolean[preferred.columns()];
             Double[] prefRow = preferred.getRow( designElement );
-            Double[] signalA = signalChannelA.getRow( designElement );
-            Double[] signalB = signalChannelB.getRow( designElement );
+            Double[] signalA = signalChannelA != null ? signalChannelA.getRow( designElement ) : null;
+            Double[] signalB = signalChannelB != null ? signalChannelB.getRow( designElement ) : null;
             Double[] bkgA = null;
             Double[] bkgB = null;
 
@@ -242,7 +251,7 @@ public class TwoChannelMissingValues {
 
             if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
 
-            for ( int col = 0; col < signalA.length; col++ ) {
+            for ( int col = 0; col < prefRow.length; col++ ) {
 
                 // If the "preferred" value is already missing, we retain that.
                 Double pref = prefRow[col];
@@ -318,9 +327,8 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
         // not exhaustive...
-        if ( signalChannelA == null || signalChannelA.rows() == 0 || signalChannelB == null
-                || signalChannelB.rows() == 0 || preferred == null ) {
-            throw new IllegalArgumentException( "Collections must not be empty" );
+        if ( preferred == null || signalChannelA == null || signalChannelB == null ) {
+            throw new IllegalArgumentException( "Must have data matrices" );
         }
 
         if ( ( bkgChannelA != null && bkgChannelA.rows() == 0 ) || ( bkgChannelB != null && bkgChannelB.rows() == 0 ) ) {
