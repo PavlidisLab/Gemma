@@ -359,7 +359,6 @@ public class GeoFamilyParser implements Parser {
 
             while ( ( line = dis.readLine() ) != null ) {
                 if ( StringUtils.isBlank( line ) ) {
-                    log.error( "Empty or null line" );
                     continue;
                 }
 
