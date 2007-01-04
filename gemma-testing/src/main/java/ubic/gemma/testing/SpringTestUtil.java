@@ -46,8 +46,8 @@ public class SpringTestUtil {
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
         // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "test", new GrantedAuthority[] {
-                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "testing",
+                new GrantedAuthority[] { new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );
 
         token.setAuthenticated( true );
 
@@ -64,7 +64,7 @@ public class SpringTestUtil {
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
         // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "test",
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "testing",
                 new GrantedAuthority[] { new GrantedAuthorityImpl( "user" ) } );
 
         token.setAuthenticated( true );
