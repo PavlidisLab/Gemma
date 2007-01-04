@@ -289,6 +289,14 @@
 				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 				<display:column property="qtName" sortable="true" maxWords="20"
 					titleKey="quantitationType.name" />
+				<display:column property="qtPreferredStatus" sortable="true" maxWords="20"
+					titleKey="quantitationType.preferred" />
+				<display:column property="qtBackground" sortable="true" maxWords="20"
+					titleKey="quantitationType.background" />
+				<display:column property="qtBackgroundSubtracted" sortable="true" maxWords="20"
+					titleKey="quantitationType.backgroundSubtracted" />
+				<display:column property="qtNormalized" sortable="true" maxWords="20"
+					titleKey="quantitationType.normalized" />
 				<display:column property="qtValue" sortable="true" maxWords="20"
 					titleKey="quantitationType.countVectors" />
 				<display:setProperty name="basic.empty.showtable" value="false" />
