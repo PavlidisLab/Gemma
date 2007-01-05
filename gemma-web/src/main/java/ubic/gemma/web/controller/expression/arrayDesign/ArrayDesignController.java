@@ -148,10 +148,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
         String eeIds = StringUtils.join( eeIdList,",");
         
-        Collection test = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
+       // Collection test = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
         
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
-        mav.addObject( "test",test );
+        //mav.addObject( "test",test );
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numCompositeSequences",  numCompositeSequences );
