@@ -185,26 +185,14 @@ public class ExpressionDataMatrixVisualizationService {
     }
 
     /**
-     * Normalize the data centered on the mean. This is similar to the z-score calculation, although we are dividing by
-     * the variance as opposed to the square root of the variance.
+     * Normalize (centered on the mean) and clip the data. That is, a z-score is calculated for each data point. If the
+     * threshold is null, the data will not be clipped.
      * <p>
      * More information on z-scores can be found at http://en.wikipedia.org/wiki/Z_score.
      * </p>
      * 
-     * @param expressionDataMatrix
-     * @return ExpressionDataMatrix
-     */
-    public ExpressionDataMatrix normalizeExpressionDataDoubleMatrixByRowMean(
-            ExpressionDataDoubleMatrix expressionDataMatrix ) {
-        return this.standardizeExpressionDataDoubleMatrix( expressionDataMatrix, null );
-    }
-
-    /**
-     * Normalize (centered on the mean) and clip the data. If the threshold is null, the data will not be clipped. See
-     * {@link normalizeExpressionDataDoubleMatrixByRowMean}.
-     * 
      * @param expressionDataDoubleMatrix
-     * @param threshold The threhold at which the data will be clipped (ie 2 clips the data at -2 and +2).
+     * @param threshold The threhold at which the data will be clipped (ie. 2 clips the data at -2 and +2).
      * @return ExpressionDataMatrix
      */
     public ExpressionDataMatrix standardizeExpressionDataDoubleMatrix( ExpressionDataMatrix expressionDataMatrix,
@@ -237,7 +225,7 @@ public class ExpressionDataMatrixVisualizationService {
                 if ( Double.isNaN( ndata[j] ) ) {
                     continue;
                 }
-                ndata[j] = ( ndata[j] - mean ) / variance;
+                ndata[j] = ( ndata[j] - mean ) / Math.sqrt( variance );
             }
 
             if ( threshold != null ) ndata = clipData( ndata, threshold );
