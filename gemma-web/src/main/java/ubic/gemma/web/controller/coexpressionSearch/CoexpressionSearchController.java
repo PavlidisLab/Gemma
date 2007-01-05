@@ -212,6 +212,18 @@ public class CoexpressionSearchController extends BaseFormController {
         // if there is no expressionExperiment criteria or
         // there are no matches, search all expression experiments
         if ( ees.size() > 0 ) {
+            // if there are matches, fihter the expression experiments first by taxon
+            
+            Collection<ExpressionExperiment> eeToRemove = new ArrayList<ExpressionExperiment>();
+            for ( ExpressionExperiment ee : ees ) {
+                Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+                if ( t.getId().longValue() != csc.getTaxon().getId().longValue() ) {
+                    eeToRemove.add( ee );
+                }
+            }
+            ees.removeAll( eeToRemove );
+            
+            
             numExpressionExperiments = ees.size();
         } else {
             Map taxonCount = expressionExperimentService.getPerTaxonCount();
