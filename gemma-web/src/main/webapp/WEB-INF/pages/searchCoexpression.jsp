@@ -129,7 +129,7 @@ Results for
 			</td>
 			<td>
 				<a class="helpLink" href="?" onclick="showHelpTip(event, 
-				'Term(s) to identify a gene; check 'exact search' if you know the official symbol for the gene.'); return false">
+				'Term(s) to identify a gene; check \'exact search\' if you know the official symbol for the gene.'); return false">
 				<img src="/Gemma/images/help.png" />
 				</a>
 			</td>
