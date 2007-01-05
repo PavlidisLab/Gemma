@@ -161,10 +161,22 @@
 			</a>
 		</li>
 		<li>
+			<a href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>">
+				Regenerate Expression Experiment Link Summaries
+			</a>
+		</li>
+		<li>
 			<a href="<c:url value="/arrays/showAllArrayDesignStatistics.html"/>">
 				Show Platform/Array Summaries
 			</a>
 		</li>
+		<li>
+			<a href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"/>">
+				Show Expression Experiment Link Summaries
+
+			</a>
+		</li>
+
 		<li>
 			<a href="<c:url value="/loadExpressionExperiment.html"/>"> <fmt:message
 					key="menu.loadExpressionExperiment" /> </a>

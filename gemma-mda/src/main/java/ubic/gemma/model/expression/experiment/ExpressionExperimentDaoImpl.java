@@ -714,4 +714,55 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetBioMaterialCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
+        
+        long count = 0;
+        final String queryString = "select count(distinct sample) from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where ee.id = :eeId ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "eeId", expressionExperiment.getId() );
+            
+            queryObject.setMaxResults( 1 );
+
+            count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
+           
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return count;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment ) throws Exception {
+        long count = 0;
+        final String queryString = "select count(distinct dedv) from ExpressionExperimentImpl as ee "
+                + "inner join ee.designElementDataVectors as dedv "
+                + "inner join dedv.quantitationType as qType where qType.isPreferred = true and ee.id = :eeId ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "eeId", expressionExperiment.getId() );
+            
+            queryObject.setMaxResults( 1 );
+
+            count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
+           
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return count;
+    }
+
 }

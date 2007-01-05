@@ -43,6 +43,20 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    
+    /**
+     * @return String
+     */
+    public String getDateCachedNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if (object.getDateCached() == null) {
+            return "";
+        }
+        else {
+            return object.getDateCached().substring( 0, 10 );
+        }
+    } 
+    
     /**
      * @return String
      */

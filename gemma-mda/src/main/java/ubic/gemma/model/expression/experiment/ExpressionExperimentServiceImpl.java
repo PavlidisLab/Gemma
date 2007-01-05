@@ -278,4 +278,20 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetBioMaterialCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().getBioMaterialCount( expressionExperiment );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().getPreferredDesignElementDataVectorCount( expressionExperiment );
+    }
+
 }

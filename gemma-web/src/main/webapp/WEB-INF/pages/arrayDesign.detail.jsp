@@ -154,4 +154,11 @@ ${ summary } <br>
 				</authz:acl>
 			</tr>
 		</table>
+			
+			<display:table name="test" class="list"
+				requestURI="" id="trow" pagesize="100">
+				<display:column title="cs"><c:out value="${trow[0]}" /></display:column>
+				<display:setProperty name="basic.empty.showtable" value="false" />
+			</display:table>
+		
 		<a class="helpLink" href="/Gemma/static/arrayDesignReportHelp.html">Report Help</a>

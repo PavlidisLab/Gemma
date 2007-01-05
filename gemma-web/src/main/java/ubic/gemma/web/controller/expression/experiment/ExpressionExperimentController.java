@@ -31,6 +31,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
+import ubic.gemma.expression.experiment.ExpressionExperimentReportService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -53,6 +55,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
  * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
+ * @spring.property name = "expressionExperimentReportService" ref="expressionExperimentReportService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
  */
@@ -61,6 +64,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
+    private ExpressionExperimentReportService expressionExperimentReportService = null;
     private SearchService searchService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
@@ -282,6 +286,47 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return mav;
 
     }
+    
+    /**
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+        
+        // if no IDs are specified, then load all expressionExperiments
+        if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Datasets" );
+            expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
+        }
+
+        // if ids are specified, then display only those expressionExperiments
+        else {
+            Collection ids = new ArrayList<Long>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                if (StringUtils.isNotBlank( idList[i] ) ){
+                    ids.add( new Long( idList[i] ) );
+                }
+            }
+            expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
+        }
+        
+        // load cached data
+        expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments ) ;
+       
+        Long numExpressionExperiments = new Long( expressionExperiments.size() );
+        ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
+        mav.addObject( "expressionExperiments", expressionExperiments );
+        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        return mav;
+
+    }
 
     /**
      * @param request
@@ -310,6 +355,38 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
        return startJob( request, new RemoveExpressionExperimentJob(request, expressionExperiment, expressionExperimentService) );
       
+    }
+    
+    /**
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
+    @SuppressWarnings({ "unused", "unchecked" })
+    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
+        
+        String sId = request.getParameter( "id" );
+
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        if ( sId == null ) {
+            return  startJob(request, new GenerateSummary(request, expressionExperimentReportService) );
+        }
+        else {
+            Collection ids = new ArrayList<Long>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                if (StringUtils.isNotBlank( idList[i] ) ){
+                    ids.add( new Long( idList[i] ) );
+                }
+            }
+            expressionExperimentReportService.generateSummaryObjects( ids ); 
+            String idStr = StringUtils.join( ids.toArray(), ",");
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr) );
+        }
+        
+
     }
 
 
@@ -359,6 +436,59 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         }
     }
+   
+   class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
+       
+       private ExpressionExperimentReportService expressionExperimentReportService;
+       private Collection ids;
+       
+       public GenerateSummary( HttpServletRequest request, ExpressionExperimentReportService expressionExperimentReportService ) {
+           super( request, getMessageUtil() );   
+           this.expressionExperimentReportService = expressionExperimentReportService;
+           ids = null;
+       }
+       
+       public GenerateSummary( HttpServletRequest request, ExpressionExperimentReportService expressionExperimentReportService, Collection id ) {
+           super( request, getMessageUtil() );   
+           this.expressionExperimentReportService = expressionExperimentReportService;
+           this.ids = id;
+       }
+
+       @SuppressWarnings("unchecked")
+       public ModelAndView call() throws Exception {
+
+           init();
+       
+           ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                   .getAuthentication().getName(), "Generating ArrayDesign Report summary");
+           
+
+
+           if (ids == null ) {
+               saveMessage("Generated summary for all experiments" );
+               job.updateProgress( "Generated summary for all experiments" );
+               expressionExperimentReportService.generateSummaryObjects();
+           }
+           else {
+               saveMessage("Generating summary for experiment" );
+               job.updateProgress( "Generating summary for specified experiment" );
+               expressionExperimentReportService.generateSummaryObjects( ids );      
+           }
+           ProgressManager.destroyProgressJob( job );
+           String idStr = StringUtils.join( ids.toArray(), ",");
+           return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr) );
+           
+
+       }
+   }
+
+
+/**
+ * @param expressionExperimentReportService the expressionExperimentReportService to set
+ */
+public void setExpressionExperimentReportService( ExpressionExperimentReportService expressionExperimentReportService ) {
+    this.expressionExperimentReportService = expressionExperimentReportService;
+}
     
 
 }

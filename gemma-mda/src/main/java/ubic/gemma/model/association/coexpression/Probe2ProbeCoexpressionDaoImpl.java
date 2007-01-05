@@ -204,10 +204,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
              * datavectors for this ee.
              */
             final String queryString = "select count(pp) from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee=:ee";
+                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee.id=:eeId";
 
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "ee", expressionExperiment );
+            queryObject.setLong( "eeId", expressionExperiment.getId() );
             java.util.List results = queryObject.list();
 
             if ( results != null ) {

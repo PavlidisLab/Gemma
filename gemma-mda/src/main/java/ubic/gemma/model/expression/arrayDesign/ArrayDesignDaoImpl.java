@@ -851,13 +851,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleGetRawCompositeSequenceSummary( ArrayDesign arrayDesign ) throws Exception {
-        // TODO Auto-generated method stub
-        final String nativeQueryString = "SELECT distinct cs.id, bs2gp.BIO_SEQUENCE_FK,bs2gp.BLAT_RESULT_FK,bs2gp.GENE_PRODUCT_FK,gene.ID from " +
+        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException();
+        }
+        long id = arrayDesign.getId();
+        
+        final String nativeQueryString = "SELECT cs.id, bs2gp.BIO_SEQUENCE_FK,bs2gp.BLAT_RESULT_FK,bs2gp.GENE_PRODUCT_FK,gene.ID from " +
         "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
         "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
         "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
         "WHERE ARRAY_DESIGN_FK = :id" ;
-        return null;
+        return nativeQueryByIdReturnCollection( id, nativeQueryString);
     }
     
     
