@@ -100,32 +100,59 @@ Results for
 			 -->
 			 	<c:if test="${genes != null}">
 					<spring:bind path="coexpressionSearchCommand.searchString">
-						<select name="${status.expression}">
+						<select id="searchStringPullDown" name="${status.expression}" 
+						onchange="var popup = document.getElementById('searchStringPullDown');
+						if (popup.value == 'Refine Search') {
+							popup.style.display='none';
+							popup.disabled='true';
+							var text = document.getElementById('searchStringTextInput');
+							text.style.display='inline';
+							text.disabled='';
+							var checkbox = document.getElementById('exactSearchCheckbox');
+							checkbox.checked='';
+							checkbox.style.display='inline';
+							document.getElementById('exactSearchLabel').style.display='inline';
+						}
+						">
+							<option value="">[Select a gene or refine the search]</option>
+							<option value="Refine Search">[Refine Search]</option>
 							<c:forEach items="${genes}" var="gene">
 								<option value="${gene.officialSymbol}">
 									${gene.officialSymbol} : ${gene.officialName }
 								</option>
 							</c:forEach>
-						</select>
-					
-					</spring:bind>					
+						</select>		
+						<input id="searchStringTextInput" disabled style="display:none" type="text" size=15
+							name="<c:out value="${status.expression}"/>"
+							value="${status.value}" />
+					</spring:bind>		
+					<spring:bind path="coexpressionSearchCommand.exactSearch">
+						<input style="display:none" id="exactSearchCheckbox" type="checkbox" name="${status.expression}" 
+						<c:if test="${status.value == 'on'}">checked="checked"</c:if> 
+						/>
+						<input type="hidden" name="_<c:out value="${status.expression}"/>">
+					</spring:bind>
+					<span id="exactSearchLabel" style="display:none">
+					Exact search			
+					</span>
 				</c:if>
-				<c:if test="${genes == null}">
+				
+				
+				
+			 	<c:if test="${genes == null}">
 					<spring:bind path="coexpressionSearchCommand.searchString">
 						<input type="text" size=15
 							name="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
 					</spring:bind>
+					<spring:bind path="coexpressionSearchCommand.exactSearch">
+						<input id="exactSearchCheckbox" type="checkbox" name="${status.expression}" 
+						<c:if test="${status.value == 'on'}">checked="checked"</c:if> 
+						/>
+						<input type="hidden" name="_<c:out value="${status.expression}"/>">
+					</spring:bind>
+					Exact search
 				</c:if>
-				
-
-				<spring:bind path="coexpressionSearchCommand.exactSearch">
-					<input type="checkbox" name="${status.expression}" 
-					<c:if test="${status.value == 'on'}">checked="checked"</c:if> 
-					/>
-					<input type="hidden" name="_<c:out value="${status.expression}"/>">
-				</spring:bind>
-				Exact search
 			</td>
 			<td>
 				<a class="helpLink" href="?" onclick="showHelpTip(event, 
@@ -204,7 +231,7 @@ Results for
 			<td>&nbsp;</td>
 			<td>
 				<input type="submit" class="button" name="submit"
-			value="<fmt:message key="button.search"/>" />
+				value="<fmt:message key="button.search"/>" />
 			</td>
 			<td>&nbsp;</td>
 		</tr>
