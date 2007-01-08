@@ -59,12 +59,12 @@ public class SpringTestUtil {
      * tests will be authorized to do anything a user would be able to do, but lacks administrative privileges.
      */
     @SuppressWarnings("unchecked")
-    public static void grantUserAuthority( ConfigurableApplicationContext ctx ) {
+    public static void grantUserAuthority( ConfigurableApplicationContext ctx, String username ) {
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
         // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "testing",
+        TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing",
                 new GrantedAuthority[] { new GrantedAuthorityImpl( "user" ) } );
 
         token.setAuthenticated( true );

@@ -23,7 +23,6 @@ import java.util.ResourceBundle;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -395,11 +394,11 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      * 
      * @throws Exception
      */
-    protected void onSetUpInTransactionGrantingUserAuthority() throws Exception {
+    protected void onSetUpInTransactionGrantingUserAuthority(String username) throws Exception {
         super.onSetUpInTransaction();
         hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
         CompassUtils.deleteCompassLocks();
-        SpringTestUtil.grantUserAuthority( this.getContext( this.getConfigLocations() ) );
+        SpringTestUtil.grantUserAuthority( this.getContext( this.getConfigLocations() ), username );
         this.testHelper = new TestPersistentObjectHelper();
 
         ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
