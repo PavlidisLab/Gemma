@@ -44,7 +44,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     ArrayDesign arrayDesign;
     String username = "test";
-    String aDifferentUser = "aDifferentUsername";
+    String aDifferentUsername = "aDifferentTestUser";
 
     /*
      * (non-Javadoc)
@@ -106,7 +106,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      */
     public void testRemoveArrayDesignNotAuthorized() throws Exception {
 
-        this.onSetUpInTransactionGrantingUserAuthority( aDifferentUser );// use a non-admin user
+        this.onSetUpInTransactionGrantingUserAuthority( aDifferentUsername );// use a non-admin user
 
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         log.info( "user is " + obj.toString() );
@@ -148,7 +148,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     public void testGetCompositeSequencesForArrayDesignWithoutAuthorization() throws Exception {
 
-        this.onSetUpInTransactionGrantingUserAuthority( aDifferentUser );// a different user
+        this.onSetUpInTransactionGrantingUserAuthority( aDifferentUsername );// a different user
 
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         log.info( "user is: " + obj.toString() );
