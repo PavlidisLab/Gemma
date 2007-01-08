@@ -25,7 +25,6 @@ import org.acegisecurity.AccessDeniedException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
 
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -44,7 +43,8 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     private ArrayDesignService arrayDesignService;
 
     ArrayDesign arrayDesign;
-    User testUser;
+    String username = "test";
+    String aDifferentUser = "aDifferentUsername";
 
     /*
      * (non-Javadoc)
@@ -54,7 +54,8 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
 
-        super.onSetUpInTransaction(); // so we have authority to add a user.
+        // super.onSetUpInTransaction(); //admin
+        super.onSetUpInTransactionGrantingUserAuthority( username ); // user
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "Array Design Foo" );
@@ -105,7 +106,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      */
     public void testRemoveArrayDesignNotAuthorized() throws Exception {
 
-        this.onSetUpInTransactionGrantingUserAuthority();// use a non-admin user
+        this.onSetUpInTransactionGrantingUserAuthority( aDifferentUser );// use a non-admin user
 
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         log.info( "user is " + obj.toString() );
@@ -119,14 +120,12 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     }
 
     /**
-     * Save an array design.
+     * Tests getting composite sequences (target objects) with correct privileges on domain object (array design).
      * 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testSaveArrayDesign() throws Exception {
-
-        this.onSetUpInTransactionGrantingUserAuthority();// use a non-admin user
+    public void testGetCompositeSequencesForArrayDesign() throws Exception {
 
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         log.info( "user is: " + obj.toString() );
@@ -137,8 +136,37 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
                 .getBean( "compositeSequenceService" );
         Collection col = compositeSequenceService.findByName( "Design Element Bar1" );
         if ( col.size() == 0 ) {
-            fail( "User not authorized for to access at least one of the objects in the graph" );
+            fail( "User not authorized to access at least one of the objects in the graph" );
         }
+    }
+
+    /**
+     * Tests getting composite sequences (target objects) without correct privileges on domain object (array design).
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testGetCompositeSequencesForArrayDesignWithoutAuthorization() throws Exception {
+
+        this.onSetUpInTransactionGrantingUserAuthority( aDifferentUser );// a different user
+
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info( "user is: " + obj.toString() );
+
+        assertNotNull( arrayDesign.getId() );
+
+        CompositeSequenceService compositeSequenceService = ( CompositeSequenceService ) this
+                .getBean( "compositeSequenceService" );
+        Collection col = compositeSequenceService.findByName( "Design Element Bar1" );
+
+        /*
+         * expection is to not have access to the composite sequences for this array design when authenticated as
+         * 'aDifferentUser'
+         */
+        assertTrue(
+                "User should not be authorized to access target objects (composite sequences) in the graph for this domain object (array design).",
+                col.isEmpty() );
+
     }
 
     /**
