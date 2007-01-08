@@ -92,22 +92,25 @@ public class GeoSample extends GeoData implements Comparable {
         skippableQuantitationTypes.add( "CH2D_MEDIAN" );
 
         // some raw items are skippable.(assumes we use median)
-        // skippableQuantitationTypes.add( "CH1I_MEAN" );
-        // skippableQuantitationTypes.add( "CH2I_MEAN" );
-        // skippableQuantitationTypes.add( "CH1B_MEAN" );
-        // skippableQuantitationTypes.add( "CH2B_MEAN" );
         skippableQuantitationTypes.add( "SUM_MEAN" );
         skippableQuantitationTypes.add( "RAT1_MEAN" );
         skippableQuantitationTypes.add( "RAT2_MEAN" );
         skippableQuantitationTypes.add( "PIX_RAT2_MEAN" );
-        // skippableQuantitationTypes.add( "CH1IN_MEAN" );
-        // skippableQuantitationTypes.add( "CH2IN_MEAN" );
+        skippableQuantitationTypes.add( "PIX_RAT2_MEDIAN" );
 
         // otherwise deemed skippable.
         skippableQuantitationTypes.add( "PERGTBCH1I_1SD" );
         skippableQuantitationTypes.add( "PERGTBCH2I_1SD" );
         skippableQuantitationTypes.add( "PERGTBCH1I_2SD" );
         skippableQuantitationTypes.add( "PERGTBCH2I_2SD" );
+
+        // these removed just in the interest of saving memory!
+        skippableQuantitationTypes.add( "SUM_MEAN" );
+        skippableQuantitationTypes.add( "SUM_MEDIAN" );
+        skippableQuantitationTypes.add( "REGR" );
+        skippableQuantitationTypes.add( "CORR" );
+        skippableQuantitationTypes.add( "UNF_VALUE" ); // this is the same as 'value' but with the flagged points still
+        // in.
 
     }
 
@@ -151,8 +154,8 @@ public class GeoSample extends GeoData implements Comparable {
          * Make sure we aren't getting duplicate data. This happens in some corrupt files?
          */
         if ( data.get( quantitationType ).containsKey( designElement ) ) {
-            throw new IllegalStateException( "There is already a datum for " + designElement + " in "
-                    + quantitationType );
+            throw new IllegalStateException( "There is already a " + quantitationType + " datum for " + designElement
+                    + " in " + geoAccession );
         }
         data.get( quantitationType ).put( designElement, convertedValue );
     }
