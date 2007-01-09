@@ -18,6 +18,7 @@
  */
 package ubic.gemma.security;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,9 +45,9 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * 
-     *
+     * 
      */
     public void testCreateUserGroup() {
 
@@ -56,7 +57,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
         UserGroupService userGroupService = ( UserGroupService ) this.getBean( "userGroupService" );
 
-        userGroupService.create( owner, "TestGroup", "A test group created from " + this.getClass().getName() );
+        userGroupService.create( owner, RandomStringUtils.randomAlphabetic( 6 ), "A test group created from "
+                + this.getClass().getName() );
     }
 
     /**
@@ -66,7 +68,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     public void testUpdateUserGroup() {
 
         User owner = this.getTestPersistentUser();
-        log.info( "user is " + owner.getUserName() );
+        log.info( "User is " + owner.getUserName() );
 
         UserGroupService userGroupService = ( UserGroupService ) this.getBean( "userGroupService" );
     }
