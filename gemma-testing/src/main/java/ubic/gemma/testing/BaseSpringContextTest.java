@@ -390,11 +390,12 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
     }
 
     /**
-     * The test user does not have admin privileges
+     * The test user does not have admin privileges.
      * 
+     * @param username - Allows you to create different users, each with user (not admin privileges).
      * @throws Exception
      */
-    protected void onSetUpInTransactionGrantingUserAuthority(String username) throws Exception {
+    protected void onSetUpInTransactionGrantingUserAuthority( String username ) throws Exception {
         super.onSetUpInTransaction();
         hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
         CompassUtils.deleteCompassLocks();
