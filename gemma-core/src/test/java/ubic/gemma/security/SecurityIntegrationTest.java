@@ -46,6 +46,9 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     String username = "test";
     String aDifferentUsername = "aDifferentTestUser";
 
+    String compositeSequenceName1 = "Design Element Bar1";
+    String compositeSequenceName2 = "Design Element Bar2";
+
     /*
      * (non-Javadoc)
      * 
@@ -62,10 +65,10 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
         arrayDesign.setDescription( "A test ArrayDesign from " + this.getClass().getName() );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs1.setName( "Design Element Bar1" );
+        cs1.setName( compositeSequenceName1 );
 
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs2.setName( "Design Element Bar2" );
+        cs2.setName( compositeSequenceName2 );
 
         Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
         col.add( cs1 );
@@ -79,8 +82,8 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
         cs2.setArrayDesign( arrayDesign );
         arrayDesign.setCompositeSequences( col );
 
-        // arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
-        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
+        arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
+        // arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
 
     }
 
@@ -157,7 +160,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
         CompositeSequenceService compositeSequenceService = ( CompositeSequenceService ) this
                 .getBean( "compositeSequenceService" );
-        Collection col = compositeSequenceService.findByName( "Design Element Bar1" );
+        Collection col = compositeSequenceService.findByName( compositeSequenceName1 );
 
         /*
          * expection is to not have access to the composite sequences for this array design when authenticated as
