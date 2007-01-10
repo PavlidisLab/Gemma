@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -191,5 +192,43 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         }
 
         return genes;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<GeneProduct> geneProducts = null;
+        final String queryString = "select distinct geneProduct from GeneProductImpl geneProduct where geneProduct.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            geneProducts = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return geneProducts;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductDao#geneProductValueObjectToEntity(ubic.gemma.model.genome.gene.GeneProductValueObject)
+     */
+    public GeneProduct geneProductValueObjectToEntity( GeneProductValueObject geneProductValueObject ) {
+        final String queryString = "select distinct geneProduct from GeneProductImpl geneProduct where geneProduct.id = :id";
+        
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", geneProductValueObject.getId() );
+            java.util.List results = queryObject.list();
+
+            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
+
+            return (GeneProduct) results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 }

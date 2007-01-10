@@ -223,4 +223,12 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
         return this.getGeneDao().getGenesByTaxon( taxon );
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        return this.getGeneDao().load( ids );
+    }
 }

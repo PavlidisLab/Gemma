@@ -211,4 +211,22 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         }
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<BioSequence> bioSequences = null;
+        final String queryString = "select distinct bioSequence from BioSequenceImpl bioSequence where bioSequence.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            bioSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return bioSequences;
+    }
+
 }

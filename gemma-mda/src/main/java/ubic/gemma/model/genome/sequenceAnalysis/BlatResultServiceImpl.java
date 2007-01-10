@@ -77,4 +77,12 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
         return this.getBlatResultDao().findByBioSequence( bioSequence );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        return this.getBlatResultDao().load( ids );
+    }
+
 }

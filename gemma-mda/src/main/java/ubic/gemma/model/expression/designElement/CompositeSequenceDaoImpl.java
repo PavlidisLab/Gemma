@@ -19,10 +19,14 @@
 
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis
@@ -102,6 +106,24 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<CompositeSequence> compositeSequences = null;
+        final String queryString = "select distinct compositeSequence from CompositeSequenceImpl compositeSequence where compositeSequence.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            compositeSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compositeSequences;
     }
 
 }

@@ -154,4 +154,12 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     protected BioSequence handleFindByAccession( DatabaseEntry accession ) throws Exception {
         return this.getBioSequenceDao().findByAccession( accession );
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        return this.getBioSequenceDao().load( ids );
+    }
 }

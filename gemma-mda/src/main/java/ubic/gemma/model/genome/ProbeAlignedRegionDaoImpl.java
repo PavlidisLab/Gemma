@@ -24,6 +24,7 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
@@ -86,6 +87,26 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
             throw super.convertHibernateAccessException( ex );
         }
         return result;
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
+     */
+    public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
+        final String queryString = "select distinct gene from ProbeAlignedRegionImpl gene where gene.id = :id";
+        
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", geneValueObject.getId() );
+            java.util.List results = queryObject.list();
+
+            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
+
+            return (ProbeAlignedRegion) results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

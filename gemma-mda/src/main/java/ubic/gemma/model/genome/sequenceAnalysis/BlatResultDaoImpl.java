@@ -83,4 +83,22 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
         return result;
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<BlatResult> blatResults = null;
+        final String queryString = "select distinct blatResult from BlatResultImpl blatResult where blatResult.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            blatResults = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return blatResults;
+    }
+
 }

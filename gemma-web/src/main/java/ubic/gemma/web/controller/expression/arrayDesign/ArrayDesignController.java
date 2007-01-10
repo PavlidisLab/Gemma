@@ -81,6 +81,23 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
+    
+    public ModelAndView showCompositeSequences(HttpServletRequest request, HttpServletResponse response) {
+        
+        String idStr = request.getParameter( "id" );
+        
+        if (  idStr == null  ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+        }
+        
+        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
+        
+        ModelAndView mav = new ModelAndView();
+        Collection compositeSequenceSummary = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
+        mav.addObject( "sequenceData", compositeSequenceSummary );
+        return mav;
+    }
 
     /**
      * @param request
@@ -147,11 +164,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             i++;
         }
         String eeIds = StringUtils.join( eeIdList,",");
-        
-       // Collection test = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
+        Collection compositeSequenceSummary = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
+
         
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
-        //mav.addObject( "test",test );
+        mav.addObject( "sequenceData", compositeSequenceSummary );
+        
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numCompositeSequences",  numCompositeSequences );

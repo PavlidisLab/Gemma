@@ -42,6 +42,8 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.TaxonUtility;
 
@@ -450,6 +452,44 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         return genes;
 
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
+     */
+    public Gene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
+        final String queryString = "select distinct gene from GeneImpl gene where gene.id = :id";
+        
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", geneValueObject.getId() );
+            java.util.List results = queryObject.list();
+
+            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
+
+            return (Gene) results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

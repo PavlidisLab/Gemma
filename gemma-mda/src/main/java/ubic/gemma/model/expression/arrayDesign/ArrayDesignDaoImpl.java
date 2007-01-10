@@ -856,12 +856,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         long id = arrayDesign.getId();
         
-        final String nativeQueryString = "SELECT cs.id, bs2gp.BIO_SEQUENCE_FK,bs2gp.BLAT_RESULT_FK,bs2gp.GENE_PRODUCT_FK,gene.ID from " +
-        "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProduct.ID,geneProduct.name,geneProduct.NCBI_ID,gene.ID from " +
+        "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID " + 
+        "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
+        "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID " +
+        "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID " + 
         "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
         "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
         "WHERE ARRAY_DESIGN_FK = :id" ;
-        return nativeQueryByIdReturnCollection( id, nativeQueryString);
+        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString);
+        return retVal;
     }
     
     
