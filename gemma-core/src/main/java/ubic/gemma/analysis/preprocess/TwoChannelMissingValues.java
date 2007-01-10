@@ -113,24 +113,26 @@ public class TwoChannelMissingValues {
             } else if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
                     || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                     || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
-                    || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" ) ) {
+                    || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
+                    || name.equals( "CH1_BKD_ Median" ) ) {
                 backgroundChannelA = qType;
             } else if ( name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" )
                     || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
                     || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
-                    || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" ) ) {
+                    || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
+                    || name.equals( "CH2_BKD_ Median" ) ) {
                 backgroundChannelB = qType;
             } else if ( name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
                     || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" )
                     || name.equals( "SIGNAL_CHANNEL 1MEDIAN" ) || name.toLowerCase().matches( "ch1_smtm" )
                     || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" ) || name.equals( "ch1.Intensity" )
-                    || name.equals( "CH1_SIG_MEAN" ) ) {
+                    || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" ) ) {
                 signalChannelA = qType;
             } else if ( name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" )
                     || name.equals( "RAW_CONTROL" ) || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" )
                     || name.equals( "SIGNAL_CHANNEL 2MEDIAN" ) || name.toLowerCase().matches( "ch2_smtm" )
                     || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" ) || name.equals( "ch2.Intensity" )
-                    || name.equals( "CH2_SIG_MEAN" ) ) {
+                    || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" ) ) {
                 signalChannelB = qType;
             } else if ( name.matches( "CH1D_MEAN" ) ) {
                 bkgSubChannelA = qType; // specific for SGD data bug
