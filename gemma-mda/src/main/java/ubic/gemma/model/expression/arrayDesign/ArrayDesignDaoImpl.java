@@ -31,8 +31,12 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.BusinessKey;
@@ -226,7 +230,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
+
     /**
      * @param id
      * @param queryString
@@ -304,14 +308,35 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 arrayDesign.getLocalFiles().size();
                 arrayDesign.getExternalReferences().size();
                 arrayDesign.getAuditTrail().getEvents().size();
+
                 int numToDo = arrayDesign.getCompositeSequences().size();
+
                 int i = 0;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    if ( cs.getBiologicalCharacteristic() != null ) cs.getBiologicalCharacteristic().getTaxon();
+                    BioSequence bs = cs.getBiologicalCharacteristic();
+                    if ( bs != null ) {
+                        Taxon tax = bs.getTaxon();
+
+                        if ( bs.getBioSequence2GeneProduct() != null ) {
+                            for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                                if ( bs2gp != null ) {
+                                    GeneProduct geneProduct = bs2gp.getGeneProduct();
+                                    if ( geneProduct != null ) {
+                                        if ( geneProduct.getGene() != null ) {
+                                            Gene g = geneProduct.getGene();
+                                            g.getAliases().size();
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+
+                    }
                     if ( ++i % 2000 == 0 ) {
                         log.info( "Progress: " + i + "/" + numToDo + "..." );
                         try {
-                            Thread.sleep( 100 );
+                            Thread.sleep( 10 );
                         } catch ( InterruptedException e ) {
                             //
                         }
@@ -609,7 +634,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "bs2gp.geneProduct.id=gene.products.id and ar.id = :id";
         return queryByIdReturnInteger( id, queryString );
     }
-    
+
     @Override
     protected long handleNumCompositeSequenceWithPredictedGene( ArrayDesign arrayDesign ) throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
@@ -814,13 +839,15 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
-        //final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-        //        + " left join cs.biologicalCharacteristic left join BlatResultImpl as blat on blat.querySequence=cs.biologicalCharacteristic "
-        //        + " where ar.id = :id";
-        final String nativeQueryString = "SELECT distinct cs.id from " +
-                "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
-                "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult on bs2gp.BLAT_RESULT_FK=ssResult.ID " +
-                "WHERE ssResult.ID is NULL AND ARRAY_DESIGN_FK = :id ";
+        // final String queryString = "select distinct cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as
+        // ar "
+        // + " left join cs.biologicalCharacteristic left join BlatResultImpl as blat on
+        // blat.querySequence=cs.biologicalCharacteristic "
+        // + " where ar.id = :id";
+        final String nativeQueryString = "SELECT distinct cs.id from "
+                + "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult on bs2gp.BLAT_RESULT_FK=ssResult.ID "
+                + "WHERE ssResult.ID is NULL AND ARRAY_DESIGN_FK = :id ";
 
         return nativeQueryByIdReturnCollection( id, nativeQueryString );
     }
@@ -837,16 +864,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         long id = arrayDesign.getId();
 
-
-        final String nativeQueryString = "SELECT distinct cs.id from " +
-        "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
-        "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
-        "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
-        "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id" ;
-        return nativeQueryByIdReturnCollection( id, nativeQueryString);
+        final String nativeQueryString = "SELECT distinct cs.id from "
+                + "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
+                + "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) "
+                + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
+        return nativeQueryByIdReturnCollection( id, nativeQueryString );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetRawCompositeSequenceSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -855,20 +883,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
-        
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProduct.ID,geneProduct.name,geneProduct.NCBI_ID,gene.ID from " +
-        "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID " + 
-        "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
-        "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID " +
-        "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID " + 
-        "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
-        "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
-        "WHERE ARRAY_DESIGN_FK = :id" ;
-        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString);
+
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProduct.ID,geneProduct.name,geneProduct.NCBI_ID,gene.ID from "
+                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
+                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID "
+                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                + "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
+                + "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) "
+                + "WHERE ARRAY_DESIGN_FK = :id";
+        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
-    
-    
-
 
 }
