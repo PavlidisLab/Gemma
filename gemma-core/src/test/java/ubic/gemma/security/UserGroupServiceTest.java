@@ -62,7 +62,6 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
      *
      */
     public void testCreateUserGroup() {
-
         Securable persistentUserGroup = userGroupService.create( groupName, description );
         assertNotNull( persistentUserGroup );
     }
@@ -72,6 +71,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
      *
      */
     public void testUpdateUserGroup() {
+        // FIXME test passes, but user_group is not updated in the database.
 
         userGroupService.create( groupName, description );
 
