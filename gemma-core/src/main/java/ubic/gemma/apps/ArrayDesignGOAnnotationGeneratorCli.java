@@ -17,8 +17,8 @@ import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGeneImpl;
-import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file
@@ -113,38 +113,44 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
             Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( sequence );
 
-            if ( ( genes != null ) && !( genes.isEmpty() ) ) {
-                String geneNames = "";
-                String geneDescriptions = "";
-                Collection<OntologyEntry> goTerms = new ArrayList<OntologyEntry>();
+            if ( ( genes == null ) || ( genes.isEmpty() ) ) continue;
 
-                // Might be mulitple genes for a given cs. Need to hash it into one.
-                for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
+            String geneNames = "";
+            String geneDescriptions = "";
+            Collection<OntologyEntry> goTerms = new ArrayList<OntologyEntry>();
 
-                    Object g = iter.next();
+            // Might be mulitple genes for a given cs. Need to hash it into one.
+            for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
 
-                    // Don't add gemmaGene info to annotation file
-                    if ( ( g == null ) || ( g instanceof ProbeAlignedRegionImpl ) || ( g instanceof PredictedGeneImpl ) ) {
-                        log.info( "Gene:  " + g
-                                + "  not included in annotations. Either null, probeAligedRegion or predictedGene" );
-                        continue;
-                    }
+                Object g = iter.next();
 
-                    Gene gene = ( Gene ) g;
-                    goTerms.addAll( gene2GoAssociationService.findByGene( gene ) );
-
-                    if ( gene.getOfficialSymbol() != null ) geneNames += gene.getOfficialSymbol();
-                    if ( gene.getOfficialName() != null ) geneDescriptions += gene.getOfficialName();
-
-                    if ( iter.hasNext() ) {
-                        if ( gene.getOfficialSymbol() != null ) geneNames += "|";
-                        if ( gene.getOfficialName() != null ) geneDescriptions += "|";
-                    }
-
+                // Don't add gemmaGene info to annotation file
+                if ( ( g == null ) || ( g instanceof ProbeAlignedRegion ) || ( g instanceof PredictedGene ) ) {
+                    log.info( "Gene:  " + g
+                            + "  not included in annotations. Either null, probeAligedRegion or predictedGene" );
+                    continue;
                 }
 
-                generateAnnotationFileLine( sequence.getName(), geneNames, geneDescriptions, goTerms );
+                Gene gene = ( Gene ) g;
+                goTerms.addAll( gene2GoAssociationService.findByGene( gene ) );
+                log.info( "Gene:  "  + g.getClass() ); 
+                
+                if ( gene.getOfficialSymbol() != null )
+                    geneNames += gene.getOfficialSymbol();                
+                else
+                    log.info( "GeneOfficialSymbol is null" );
+
+                if ( gene.getOfficialName() != null ) geneDescriptions += gene.getOfficialName();
+
+                if ( iter.hasNext() ) {
+                    if ( gene.getOfficialSymbol() != null ) geneNames += "|";
+                    if ( gene.getOfficialName() != null ) geneDescriptions += "|";
+                }
+
             }
+
+            generateAnnotationFileLine( sequence.getName(), geneNames, geneDescriptions, goTerms );
+
         }
     }
 
