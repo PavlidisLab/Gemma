@@ -25,6 +25,10 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.common.Securable;
 
 /**
@@ -33,25 +37,30 @@ import ubic.gemma.model.common.Securable;
  * @version $Id$
  */
 public class UserGroupServiceImpl extends ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase {
+    private Log log = LogFactory.getLog( this.getClass() );
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase#handleCreate(ubic.gemma.model.common.auditAndSecurity.User,
-     *      java.lang.String, java.lang.String)
+     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase#handleCreate(java.lang.String,
+     *      java.lang.String)
      */
     @Override
-    protected Securable handleCreate( User owner, String name, String description ) throws Exception {
+    protected Securable handleCreate( String name, String description ) throws Exception {
 
-        // TODO don't pass in owner. You have access to the principal from the SecurityContextHolder.
-        // Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // String ownerUsername = obj.toString();
+        // if user is logged in, then you can get the principal from the authentication object
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String ownerUserName = obj.toString();
+        log.debug( ownerUserName );
+
+        User user = this.getUserDao().findByUserName( ownerUserName );
+
         UserGroup userGroup = UserGroup.Factory.newInstance();
         userGroup.setName( name );
         userGroup.setDescription( description );
 
         Collection<User> groupMembers = new HashSet<User>();
-        groupMembers.add( owner );
+        groupMembers.add( user );
 
         userGroup.setGroupMembers( groupMembers );
 
@@ -61,11 +70,20 @@ public class UserGroupServiceImpl extends ubic.gemma.model.common.auditAndSecuri
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase#handleUpdate(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase#handleUpdate(java.lang.String,
+     *      ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
-    protected UserGroup handleUpdate( String groupName, User groupMember ) throws Exception {
-        // TODO add finder methods so you can find persistet group by groupMember name
-        return null;
+    protected void handleUpdate( String groupName, User groupMember ) throws Exception {
+
+        UserGroup userGroup = this.getUserGroupDao().findByUserGroupName( groupName );
+        if ( userGroup == null ) {
+            throw new RuntimeException( "Cannot update group " + groupName + ".  Group does not exist." );
+        }
+
+        Collection<User> groupMembers = userGroup.getGroupMembers();
+        groupMembers.add( groupMember );
+
+        this.getUserGroupDao().update( userGroup );
     }
 }

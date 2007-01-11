@@ -22,6 +22,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroupService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -34,6 +35,11 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
+    private UserGroupService userGroupService = null;
+
+    private String groupName = null;
+    private String description = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -41,24 +47,24 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+        super.onSetUpInTransactionGrantingUserAuthority( "test" );
+
+        groupName = RandomStringUtils.randomAlphabetic( 6 );
+
+        description = "A test group created from " + this.getClass().getName();
+
+        userGroupService = ( UserGroupService ) this.getBean( "userGroupService" );
 
     }
 
-    /*
+    /**
      * 
-     * 
+     *
      */
     public void testCreateUserGroup() {
 
-        /* owner of the group */
-        User owner = this.getTestPersistentUser();
-        log.info( "user is " + owner.getUserName() );
-
-        UserGroupService userGroupService = ( UserGroupService ) this.getBean( "userGroupService" );
-
-        userGroupService.create( owner, RandomStringUtils.randomAlphabetic( 6 ), "A test group created from "
-                + this.getClass().getName() );
+        Securable persistentUserGroup = userGroupService.create( groupName, description );
+        assertNotNull( persistentUserGroup );
     }
 
     /**
@@ -67,10 +73,13 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
      */
     public void testUpdateUserGroup() {
 
-        User owner = this.getTestPersistentUser();
-        log.info( "User is " + owner.getUserName() );
+        userGroupService.create( groupName, description );
 
-        UserGroupService userGroupService = ( UserGroupService ) this.getBean( "userGroupService" );
+        User groupMember = User.Factory.newInstance();
+        String username = RandomStringUtils.randomAlphabetic( 6 );
+        groupMember.setName( username );
+        groupMember.setDescription( "A new user " + username + " to add to group " + groupName );
+
+        userGroupService.update( groupName, groupMember );
     }
-
 }

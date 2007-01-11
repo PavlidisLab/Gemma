@@ -363,6 +363,8 @@
                 ubic.gemma.model.common.auditAndSecurity.UserService.addRole=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.common.auditAndSecurity.UserService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserService.update=user,admin
+                ubic.gemma.model.common.auditAndSecurity.UserGroupService.create=user,admin
+                ubic.gemma.model.common.auditAndSecurity.UserGroupService.update=user,admin
                 ubic.gemma.model.common.auditAndSecurity.ContactService.findOrCreate=user,admin
                 ubic.gemma.model.common.auditAndSecurity.ContactService.find=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.common.auditAndSecurity.ContactService.remove=user,admin
