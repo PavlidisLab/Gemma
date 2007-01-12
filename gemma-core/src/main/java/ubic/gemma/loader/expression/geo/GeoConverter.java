@@ -45,6 +45,7 @@ import ubic.gemma.loader.expression.geo.model.GeoReplication;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.loader.expression.geo.model.GeoValues;
 import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.expression.geo.model.GeoDataset.ExperimentType;
 import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
@@ -390,8 +391,10 @@ public class GeoConverter implements Converter {
 
         List<Object> toConvert = new ArrayList<Object>();
         PrimitiveType pt = qt.getRepresentation();
+        int numMissing = 0;
         for ( Object rawValue : vector ) {
             if ( rawValue == null ) {
+                numMissing++;
                 handleMissing( toConvert, pt );
             } else if ( rawValue instanceof String ) { // needs to be coverted.
                 try {
@@ -408,14 +411,21 @@ public class GeoConverter implements Converter {
                         throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
                     }
                 } catch ( NumberFormatException e ) {
+                    numMissing++;
                     handleMissing( toConvert, pt );
                 } catch ( NullPointerException e ) {
+                    numMissing++;
                     handleMissing( toConvert, pt );
                 }
             } else { // use as is.
                 toConvert.add( rawValue );
             }
         }
+
+        if ( numMissing == vector.size() ) {
+            return null;
+        }
+
         return byteArrayConverter.toBytes( toConvert.toArray() );
     }
 
@@ -483,7 +493,7 @@ public class GeoConverter implements Converter {
             ad.setLocalFiles( arrayDesignLocalFiles );
         }
 
-        convertDataSetDataVectors( geoDataset, expExp );
+        convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
 
         convertSubsetAssociations( expExp, geoDataset );
         return expExp;
@@ -504,7 +514,8 @@ public class GeoConverter implements Converter {
         Map<GeoPlatform, List<GeoSample>> platformSamples = datasetCombiner.getPlatformSampleMap( geoSeries );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
-            convertSampleOnPlatformVectors( expExp, platformSamples.get( platform ), platform );
+            convertSampleOnPlatformVectors( geoSeries.getValues(), expExp, platformSamples.get( platform ), platform );
+            geoSeries.getValues().clear( platform );
         }
 
     }
@@ -515,11 +526,13 @@ public class GeoConverter implements Converter {
      * @param geoDataset Source of the data
      * @param expExp ExpressionExperiment to fill in.
      */
-    private void convertDataSetDataVectors( GeoDataset geoDataset, ExpressionExperiment expExp ) {
+    private void convertDataSetDataVectors( GeoValues values, GeoDataset geoDataset, ExpressionExperiment expExp ) {
         List<GeoSample> datasetSamples = new ArrayList<GeoSample>( getDatasetSamples( geoDataset ) );
         GeoPlatform geoPlatform = geoDataset.getPlatform();
 
-        convertSampleOnPlatformVectors( expExp, datasetSamples, geoPlatform );
+        convertSampleOnPlatformVectors( values, expExp, datasetSamples, geoPlatform );
+
+        values.clear( geoPlatform );
     }
 
     /**
@@ -527,8 +540,8 @@ public class GeoConverter implements Converter {
      * @param datasetSamples
      * @param geoPlatform
      */
-    private void convertSampleOnPlatformVectors( ExpressionExperiment expExp, List<GeoSample> datasetSamples,
-            GeoPlatform geoPlatform ) {
+    private void convertSampleOnPlatformVectors( GeoValues values, ExpressionExperiment expExp,
+            List<GeoSample> datasetSamples, GeoPlatform geoPlatform ) {
         assert datasetSamples.size() > 0 : "No samples in dataset";
 
         log.info( "Converting vectors for " + geoPlatform.getGeoAccession() + ", " + datasetSamples.size()
@@ -560,18 +573,14 @@ public class GeoConverter implements Converter {
                 continue;
             }
 
-            /*
-             * We get the data by index, not quantitation type name, because the column names often do not match up
-             * among the samples. The first quantitation type is in column 0 (the zeroth column is the ID_REF)
-             */
-            Map<String, List<Object>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex );
+            Map<String, List<Object>> dataVectors = makeDataVectors( values, datasetSamples, quantitationType );
 
             if ( dataVectors == null ) {
                 log.debug( "No data for " + quantitationType );
                 quantitationTypeIndex++;
                 continue;
             } else {
-                log.debug( "Got " + dataVectors.size() + " data vectors for " + quantitationType );
+                log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType );
             }
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
@@ -583,7 +592,8 @@ public class GeoConverter implements Converter {
             int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
                 List<Object> dataVector = dataVectors.get( designElementName );
-                assert dataVector != null && dataVector.size() != 0;
+                if ( dataVector == null || dataVector.size() == 0 ) continue;
+
                 DesignElementDataVector vector = convertDesignElementDataVector( geoPlatform, expExp,
                         bioAssayDimension, designElementName, dataVector, qt );
 
@@ -637,14 +647,17 @@ public class GeoConverter implements Converter {
      * @param expExp
      * @param bioAssayDimension
      * @param designElementName
-     * @param dataVector
-     * @return
+     * @param dataVector to convert.
+     * @return vector, or null if the dataVector was null or empty.
      */
     private DesignElementDataVector convertDesignElementDataVector( GeoPlatform geoPlatform,
             ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName,
             List<Object> dataVector, QuantitationType qt ) {
+
+        if ( dataVector == null || dataVector.size() == 0 ) return null;
+
         byte[] blob = convertData( dataVector, qt );
-        if ( blob == null ) {
+        if ( blob == null ) { // all missing etc.
             return null;
         }
         if ( log.isDebugEnabled() ) {
@@ -1196,6 +1209,7 @@ public class GeoConverter implements Converter {
         speciesSpecific.setSummaries( series.getSummaries() );
         speciesSpecific.setTitle( series.getTitle() + " - " + organism );
         speciesSpecific.setWebLinks( series.getWebLinks() );
+        speciesSpecific.setValues( series.getValues() );
 
         converted.add( convertSeries( speciesSpecific, null ) );
     }
@@ -1311,7 +1325,6 @@ public class GeoConverter implements Converter {
 
         // spits out a big summary of the correspondence.
         if ( log.isDebugEnabled() ) log.debug( series.getSampleCorrespondence() );
-
         int numBioMaterials = 0;
 
         /*
@@ -2045,48 +2058,50 @@ public class GeoConverter implements Converter {
     /**
      * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
      * 
-     * @param datasetSamples The samples we want to get data for.
-     * @param quantitationTypeIndex The index of the quantitation type we want to examine. We used to do this by
-     *        quantitationType name but too often these don't match up between samples. The value entered should be zero
-     *        to access the first quantitation type column.
+     * @param datasetSamples The samples we want to get data for. These should all have been run on the same platform.
+     * @param quantitationTypeName
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
     @SuppressWarnings("unchecked")
-    private Map<String, List<Object>> makeDataVectors( List<GeoSample> datasetSamples, int quantitationTypeIndex ) {
-        if ( quantitationTypeIndex < 0 ) {
-            throw new IllegalArgumentException();
-        }
+    private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples,
+            String quantitationTypeName ) {
         Map<String, List<Object>> dataVectors = new HashMap<String, List<Object>>( INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
-        for ( GeoSample sample : datasetSamples ) {
-            Collection<GeoPlatform> platforms = sample.getPlatforms();
-            assert platforms.size() != 0;
-            if ( platforms.size() > 1 ) {
-                throw new UnsupportedOperationException(
-                        "Can't handle GEO sample ids associated with multiple platforms just yet" );
-            }
-            GeoPlatform platform = platforms.iterator().next();
-            String identifier = determinePlatformIdentifier( platform );
-            List<String> designElements = platform.getColumnData( identifier );
-            for ( String designElementName : designElements ) {
-                if ( !dataVectors.containsKey( designElementName ) ) {
-                    dataVectors.put( designElementName, new ArrayList<Object>() );
-                }
-                Object datum = sample.getDatum( designElementName, quantitationTypeIndex );
+        GeoPlatform platform = getPlatformForSamples( datasetSamples );
 
-                /*
-                 * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
-                 * quantitation type that was filtered out during parsing, or absent from some samples.
-                 */
-                dataVectors.get( designElementName ).add( datum );
-            }
+        // the locations of the data we need in the target vectors (mostly reordering)
+        int[] indices = values.getIndices( platform, datasetSamples, quantitationTypeName );
+
+        if ( indices == null ) return null; // can happen if quantitation type was filtered out.
+
+        assert indices.length == datasetSamples.size();
+
+        String identifier = determinePlatformIdentifier( platform );
+        List<String> designElements = platform.getColumnData( identifier );
+        for ( String designElementName : designElements ) {
+            /*
+             * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
+             * quantitation type that was filtered out during parsing, or absent from some samples.
+             */
+            List ob = values.getValues( platform, quantitationTypeName, designElementName, indices );
+            if ( ob == null || ob.size() == 0 ) continue;
+            assert ob.size() == datasetSamples.size();
+            dataVectors.put( designElementName, ob );
         }
 
-        /*
-         * Check to see if we got any data. If not, we should return null. This can happen if the quantitation type was
-         * filtered during parsing.
-         */
+        boolean filledIn = isPopulated( dataVectors );
+
+        if ( !filledIn ) return null;
+
+        return dataVectors;
+    }
+
+    /**
+     * Check to see if we got any data. If not, we should return null. This can happen if the quantitation type was
+     * filtered during parsing.
+     */
+    private boolean isPopulated( Map<String, List<Object>> dataVectors ) {
         boolean filledIn = false;
         for ( List<Object> vector : dataVectors.values() ) {
             for ( Object object : vector ) {
@@ -2099,10 +2114,31 @@ public class GeoConverter implements Converter {
                 break;
             }
         }
+        return filledIn;
+    }
 
-        if ( !filledIn ) return null;
-
-        return dataVectors;
+    /**
+     * Assumes that all samples have the same platform. If not, throws an exception.
+     * 
+     * @param datasetSamples
+     * @return
+     */
+    private GeoPlatform getPlatformForSamples( List<GeoSample> datasetSamples ) {
+        GeoPlatform platform = null;
+        for ( GeoSample sample : datasetSamples ) {
+            Collection<GeoPlatform> platforms = sample.getPlatforms();
+            assert platforms.size() != 0;
+            if ( platforms.size() > 1 ) {
+                throw new UnsupportedOperationException(
+                        "Can't handle GEO sample ids associated with multiple platforms just yet" );
+            }
+            GeoPlatform nextPlatform = platforms.iterator().next();
+            if ( platform == null )
+                platform = nextPlatform;
+            else if ( !platform.equals( nextPlatform ) )
+                throw new IllegalArgumentException( "All samples here must use the same platform" );
+        }
+        return platform;
     }
 
     /**

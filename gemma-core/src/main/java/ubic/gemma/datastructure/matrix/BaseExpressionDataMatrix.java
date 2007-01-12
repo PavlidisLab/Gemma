@@ -19,7 +19,6 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -179,10 +178,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *                              ----------------
-     *                              ******              -- only a few samples run on this platform
-     *                                **********        -- ditto
-     *                                          ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *                                                             ----------------
+     *                                                             ******              -- only a few samples run on this platform
+     *                                                               **********        -- ditto
+     *                                                                         ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -190,10 +189,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                              ----------------
-     *                              ****************
-     *                              ************
-     *                              ********
+     *                                                             ----------------
+     *                                                             ****************
+     *                                                             ************
+     *                                                             ********
      * </pre>
      * 
      * <p>
@@ -201,8 +200,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                              -----------------
-     *                              *****************
+     *                                                             -----------------
+     *                                                             *****************
      * </pre>
      * 
      * <p>
@@ -210,9 +209,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                              -----------------
-     *                              *****************
-     *                              *****************
+     *                                                             -----------------
+     *                                                             *****************
+     *                                                             *****************
      * </pre>
      * 
      * <p>
@@ -233,10 +232,19 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
         Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
+            log.debug( "Processing: " + dimension );
             for ( BioAssay ba : dimension.getBioAssays() ) {
-                Collection<BioMaterial> bms = ba.getSamplesUsed();
-                bioMaterialGroups.add( bms );
-                for ( BioMaterial material : bms ) {
+                log.debug( " Processing " + ba );
+                Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
+
+                log.debug( " .... " + bioMaterials );
+                if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
+                    log.debug( "New group " + bioMaterials );
+                    bioMaterialGroups.add( bioMaterials );
+                }
+
+                for ( BioMaterial material : bioMaterials ) {
+                    log.debug( "  Processing " + material );
                     if ( !bioMaterialMap.containsKey( material ) ) {
                         bioMaterialMap.put( material, new HashSet<BioAssay>() );
                     }
@@ -266,8 +274,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                         if ( columnBioAssayMapByInteger.get( column ) == null ) {
                             columnBioAssayMapByInteger.put( column, new HashSet<BioAssay>() );
                         }
-                        columnBioMaterialMapByInteger.put( column, bioMaterial ); // FIXME This should be a
-                        // collection. See bug 629.
+
+                        // FIXME This should be a collection of biomaterials. See bug 629.
+                        columnBioMaterialMapByInteger.put( column, bioMaterial );
                         columnBioAssayMapByInteger.get( column ).add( assay );
                     }
                 }
@@ -276,7 +285,43 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             column++;
         }
 
-        return bioMaterialGroups.size();
+        assert bioMaterialGroups.size() == columnBioMaterialMapByInteger.keySet().size();
+        return columnBioMaterialMapByInteger.keySet().size();
+    }
+
+    /**
+     * Determine if the bioMaterial group has already been seen; this is necessary because it is possible to have
+     * multiple bioassays use the same biomaterials.
+     * <p>
+     * FIXME this does not work.
+     * 
+     * @param bioMaterialGroups
+     * @param candidateGroup
+     * @return
+     */
+    private boolean alreadySeenGroup( Collection<Collection<BioMaterial>> bioMaterialGroups,
+            Collection<BioMaterial> candidateGroup ) {
+        assert candidateGroup.size() > 0;
+        for ( Collection<BioMaterial> existingGroup : bioMaterialGroups ) {
+            boolean alreadyIn = true;
+            for ( BioMaterial candidateMember : candidateGroup ) {
+                boolean contained = false;
+                for ( BioMaterial existing : existingGroup ) {
+                    if ( existing.equals( candidateMember ) ) {
+                        contained = true;
+                        break;
+                    }
+                }
+                if ( !contained ) {
+                    // if ( !existingGroup.contains( candidateMember ) ) { // for some reason this does not work.
+                    // log.debug( existingGroup + " does not contain " + candidateMember );
+                    alreadyIn = false; // try the next group.
+                    break;
+                }
+            }
+            if ( alreadyIn ) return true;
+        }
+        return false;
     }
 
     protected abstract void vectorsToMatrix( Collection<DesignElementDataVector> vectors );

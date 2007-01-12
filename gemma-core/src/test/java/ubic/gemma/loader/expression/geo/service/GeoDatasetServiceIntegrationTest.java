@@ -28,12 +28,8 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -388,7 +384,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // get the data back out.
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-        QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
         ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
 
@@ -400,14 +395,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             if ( s.getName().equals( "20-29 years" ) ) assertEquals( 14, s.getBioAssays().size() );
         }
 
-        QuantitationType qtf = QuantitationType.Factory.newInstance();
-        qtf.setIsBackground( false );
-        qtf.setName( "VALUE" );
-        qtf.setRepresentation( PrimitiveType.DOUBLE );
-        qtf.setGeneralType( GeneralType.QUANTITATIVE );
-        qtf.setType( StandardQuantitationType.DERIVEDSIGNAL );
-        qtf.setScale( ScaleType.LINEAR );
-        QuantitationType qt = qts.find( qtf );
+        Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );
+
+        QuantitationType qt = null;
+        for ( QuantitationType c : qTypes ) {
+            if ( c.getIsPreferred() && c.getScale().equals( ScaleType.LINEAR ) ) {
+                qt = c;
+                break;
+            }
+        }
 
         assertNotNull( qt );
         assertNotNull( ee );
@@ -455,7 +451,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     /**
      * This test uses 4 data sets, 4 platforms, and samples that aren't run on all platforms. Insane! And has messed up
-     * values in double and string conversion.
+     * values in double and string conversion. (GSE1299)
      * 
      * @throws Exception
      */
@@ -474,9 +470,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment newee = results.iterator().next();
         expressionExperimentService.thaw( newee );
 
-        // get the data back out.
-        QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
-
         ExpressionDataMatrixService edms = new ExpressionDataMatrixService();
 
         edms
@@ -484,15 +477,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
 
-        QuantitationType qtf = QuantitationType.Factory.newInstance();
+        Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );
 
-        // Affymetrix platform.
-        qtf.setName( "VALUE" );
-        qtf.setScale( ScaleType.LINEAR );
-        qtf.setRepresentation( PrimitiveType.DOUBLE );
-        qtf.setGeneralType( GeneralType.QUANTITATIVE );
-        qtf.setType( StandardQuantitationType.DERIVEDSIGNAL );
-        QuantitationType qt = qts.find( qtf );
+        QuantitationType qt = null;
+        for ( QuantitationType c : qTypes ) {
+            if ( c.getIsPreferred() && c.getScale().equals( ScaleType.LINEAR ) ) {
+                qt = c;
+                break;
+            }
+        }
 
         assertTrue( qt != null );
         assertTrue( ee != null );
@@ -501,12 +494,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertTrue( matrix != null );
         if ( log.isDebugEnabled() ) {
-            log.debug( matrix.toString() );
+            log.debug( matrix );
         }
-
         assertEquals( 116, matrix.rows() );
 
-        assertEquals( 6, matrix.columns() );
+        // these are all the affymetrix samples.
+        assertEquals( 9, matrix.columns() ); // we don't line the samples up very well.
 
         testMatrixValue( newee, matrix, "224501_at", "GSM21252", 7.63 );
 
@@ -514,13 +507,13 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // ///////////////////////////////////
         // / now for the other platform // For the agilent array
-        qtf.setName( "VALUE" );
-        qtf.setScale( ScaleType.LOG2 );
-        qtf.setRepresentation( PrimitiveType.DOUBLE );
-        qtf.setGeneralType( GeneralType.QUANTITATIVE );
-        qtf.setType( StandardQuantitationType.RATIO );
-        qt = qts.find( qtf );
-
+        qt = null;
+        for ( QuantitationType c : qTypes ) {
+            if ( c.getIsPreferred() && c.getScale().equals( ScaleType.LOG2 ) ) {
+                qt = c;
+                break;
+            }
+        }
         assertTrue( qt != null );
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
@@ -528,7 +521,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertTrue( matrix != null );
         if ( log.isDebugEnabled() ) {
-            log.debug( matrix.toString() );
+            log.debug( matrix );
         }
 
         assertTrue( matrix != null );

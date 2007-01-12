@@ -344,7 +344,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         int stop = 0;
         buf.append( "Row\\Col" );
         for ( int i = 0; i < columns; i++ ) {
-            buf.append( "\t" + this.getBioAssaysForColumn( i ).iterator().next() );
+            buf.append( "\t" + this.getBioMaterialForColumn( i ) + ":" );
+            for ( BioAssay ba : this.getBioAssaysForColumn( i ) ) {
+                buf.append( ba + "," );
+            }
         }
         buf.append( "\n" );
         for ( DesignElement de : getRowElements() ) {

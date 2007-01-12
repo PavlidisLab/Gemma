@@ -38,6 +38,7 @@ public class GeoSeries extends GeoData {
     String overallDesign = "";
     Collection<String> keyWords;
     Collection<String> pubmedIds;
+    GeoValues values;
     Collection<String> webLinks;
     Collection<GeoContact> contributers;
     Map<Integer, GeoVariable> variables;
@@ -57,6 +58,7 @@ public class GeoSeries extends GeoData {
         contributers = new HashSet<GeoContact>();
         samples = new HashSet<GeoSample>();
         dataSets = new HashSet<GeoDataset>();
+        values = new GeoValues();
     }
 
     public void addSample( GeoSample sample ) {
@@ -276,6 +278,14 @@ public class GeoSeries extends GeoData {
      */
     public void setLastUpdateDate( String lastUpdateDate ) {
         this.lastUpdateDate = lastUpdateDate;
+    }
+
+    public GeoValues getValues() {
+        return values;
+    }
+
+    public void setValues( GeoValues values ) {
+        this.values = values;
     }
 
 }
