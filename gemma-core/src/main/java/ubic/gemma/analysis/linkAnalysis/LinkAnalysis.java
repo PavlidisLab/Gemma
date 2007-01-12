@@ -433,7 +433,7 @@ public class LinkAnalysis {
 
             Set<Long> geneIdSet = new HashSet();
             if ( geneSet != null && !geneSet.isEmpty() ) {
-                /** *add into the map between probe and designElementDataVector** */
+                /* add into the map between probe and designElementDataVector** */
                 p2v.put( vector.getDesignElement(), vector );
 
                 for ( Gene gene : geneSet ) {
@@ -451,7 +451,7 @@ public class LinkAnalysis {
 
             this.probeToGeneMap.put( probeId, geneIdSet );
 
-            /** *Initialize the map between gene and probeSet 1-n mapping** */
+            /* Initialize the map between gene and probeSet 1-n mapping */
             for ( Long geneId : geneIdSet ) {
                 Set probeSet = ( Set ) this.geneToProbeMap.get( geneId );
                 if ( probeSet == null ) {
@@ -460,7 +460,7 @@ public class LinkAnalysis {
                 }
                 probeSet.add( probeId );
             }
-            if ( i % 1000 == 0 ) log.debug( " " + i );
+            if ( i > 0 && i % 1000 == 0 ) log.debug( " " + i );
         }
         this.uniqueItems = this.geneToProbeMap.keySet().size();
         watch.stop();
@@ -528,7 +528,7 @@ public class LinkAnalysis {
                     p2plinks.clear();
                 }
 
-                if ( i % 20000 == 0 ) {
+                if ( i > 0 && i % 20000 == 0 ) {
                     log.info( i + " links loaded" );
                 }
 
