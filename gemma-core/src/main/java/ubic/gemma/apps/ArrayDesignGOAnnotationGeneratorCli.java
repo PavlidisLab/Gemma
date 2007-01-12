@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.commons.cli.Option;
@@ -19,6 +20,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
+import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file
@@ -30,6 +32,8 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     Gene2GOAssociationService gene2GoAssociationService;
     CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
+    GeneService geneService;
+
     Writer writer;
     String fileName;
 
@@ -112,8 +116,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         for ( CompositeSequence sequence : cs ) {
 
             Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( sequence );
-
             if ( ( genes == null ) || ( genes.isEmpty() ) ) continue;
+
+            // actually the collection gotten back is a collection of proxies which causes issues. Need to reload the
+            // genes from the db.
+            Collection<Long> geneIds = new HashSet<Long>();
+            for ( Gene g : genes )
+                geneIds.add( g.getId() );
+
+            genes = geneService.load( geneIds );
 
             String geneNames = "";
             String geneDescriptions = "";
@@ -122,23 +133,20 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             // Might be mulitple genes for a given cs. Need to hash it into one.
             for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
 
-                Object g = iter.next();
+                Gene gene = ( Gene ) iter.next();
+                
+                if ( gene == null ) continue;
 
                 // Don't add gemmaGene info to annotation file
-                if ( ( g == null ) || ( g instanceof ProbeAlignedRegion ) || ( g instanceof PredictedGene ) ) {
-                    log.info( "Gene:  " + g
-                            + "  not included in annotations. Either null, probeAligedRegion or predictedGene" );
+                if ( ( gene instanceof ProbeAlignedRegion ) || ( gene instanceof PredictedGene ) ) {
+                    log.info( "Gene:  " + gene.getOfficialSymbol()
+                            + "  not included in annotations because it is a probeAligedRegion or predictedGene" );
                     continue;
                 }
 
-                Gene gene = ( Gene ) g;
                 goTerms.addAll( gene2GoAssociationService.findByGene( gene ) );
-                log.info( "Gene:  "  + g.getClass() ); 
-                
-                if ( gene.getOfficialSymbol() != null )
-                    geneNames += gene.getOfficialSymbol();                
-                else
-                    log.info( "GeneOfficialSymbol is null" );
+
+                if ( gene.getOfficialSymbol() != null ) geneNames += gene.getOfficialSymbol();
 
                 if ( gene.getOfficialName() != null ) geneDescriptions += gene.getOfficialName();
 
@@ -184,6 +192,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
                 .getBean( "compositeSequenceGeneMapperService" );
+        geneService = ( GeneService ) this.getBean( "geneService" );
 
     }
 
