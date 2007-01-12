@@ -123,5 +123,13 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     protected Collection handleGetChildren( OntologyEntry ontologyEntry ) throws Exception {
         return ontologyEntry.getAssociations();
     }
+    
+    protected ubic.gemma.model.common.description.OntologyEntry handleFindByAccession(java.lang.String accession)
+    throws java.lang.Exception{
+        
+        return this.getOntologyEntryDao().findByAccession( accession );
+        
+    }
+
 
 }

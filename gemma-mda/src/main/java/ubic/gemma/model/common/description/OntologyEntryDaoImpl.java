@@ -52,6 +52,22 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
     }
 
     @Override
+    public OntologyEntry handleFindByAccession(String accession){
+        if ( accession == null ) {
+            throw new IllegalArgumentException( "Accession number is null" );
+        }
+        String queryString = "from OntologyEntryImpl as oe where oe.accession= :accession";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "accession", accession );
+            return (OntologyEntry) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        
+    }
+    
+    @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
 
         BusinessKey.checkKey( ontologyEntry );
