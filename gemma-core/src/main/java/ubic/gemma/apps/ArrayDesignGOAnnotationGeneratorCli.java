@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -15,6 +16,7 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -30,12 +32,22 @@ import ubic.gemma.model.genome.gene.GeneService;
  */
 public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
 
+    final String SHORT = "short";
+    final String LONG = "long";
+    final String BIOPROCESS = "biologicalprocess";
+    final String BIOPROCESS_ACCESSION = "GO:0008150";
+
     Gene2GOAssociationService gene2GoAssociationService;
     CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
     GeneService geneService;
+    OntologyEntryService oeService;
 
     Writer writer;
     String fileName;
+
+    boolean shortAnnotations;
+    boolean longAnnotations;
+    boolean biologicalProcessAnnotations;
 
     /*
      * (non-Javadoc)
@@ -51,7 +63,12 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 .withDescription( "The name of the Annotation file to be generated" ).withLongOpt( "annotation" )
                 .create( 'f' );
 
+        Option annotationType = OptionBuilder.hasArg().isRequired().withArgName( "Type of annotation file" )
+                .withDescription( "Which go terms to add to the annotation file:  short, long, biologicalprocess" )
+                .withLongOpt( "type" ).create( 't' );
+
         addOption( annotationFileOption );
+        addOption( annotationType );
 
     }
 
@@ -134,7 +151,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
 
                 Gene gene = ( Gene ) iter.next();
-                
+
                 if ( gene == null ) continue;
 
                 // Don't add gemmaGene info to annotation file
@@ -144,7 +161,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                     continue;
                 }
 
-                goTerms.addAll( gene2GoAssociationService.findByGene( gene ) );
+                goTerms.addAll( getGoTerms( gene ) );
 
                 if ( gene.getOfficialSymbol() != null ) geneNames += gene.getOfficialSymbol();
 
@@ -180,12 +197,66 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         writer.flush();
     }
 
+    protected Collection<OntologyEntry> getGoTerms( Gene gene ) {
+
+        Collection<OntologyEntry> ontos = gene2GoAssociationService.findByGene( gene );
+
+        if ( ontos.size() == 0 ) return ontos;
+
+        if ( this.shortAnnotations ) return ontos;
+
+        Map<OntologyEntry, Collection> ontoMap = oeService.getParents( ontos );
+
+        if ( this.longAnnotations ) {
+            for ( Collection<OntologyEntry> oes : ontoMap.values() )
+                ontos.addAll( oes );
+
+            return ontos;
+        }
+
+        if ( this.biologicalProcessAnnotations ) {
+            
+            OntologyEntry bioprocess = oeService.findByAccession( BIOPROCESS_ACCESSION );
+        
+            ontos = new ArrayList <OntologyEntry>();
+            
+            for ( OntologyEntry key : ontoMap.keySet() ){
+                if (! ontoMap.get( key ).contains( bioprocess ) ) continue;
+
+                ontoMap.get( key ).remove( bioprocess );  //we don't want the root term in all the go terms
+                ontos.addAll( ontoMap.get( key ) );
+                ontos.add( key );
+            }
+            return ontos;
+
+        }
+
+        return null;
+
+    }
+
     @Override
     protected void processOptions() {
         super.processOptions();
 
+        shortAnnotations = false;
+        longAnnotations = false;
+        biologicalProcessAnnotations = false;
+
         if ( this.hasOption( 'f' ) ) {
             this.fileName = this.getOptionValue( 'f' );
+        }
+
+        if ( this.hasOption( 't' ) ) {
+            String type = this.getOptionValue( 't' );
+            if ( type.equalsIgnoreCase( LONG ) )
+                longAnnotations = true;
+            else if ( type.equalsIgnoreCase( BIOPROCESS ) )
+                biologicalProcessAnnotations = true;
+            else
+                // ( type.equalsIgnoreCase( SHORT ) )
+                shortAnnotations = true;
+
         }
 
         gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
@@ -193,6 +264,8 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
                 .getBean( "compositeSequenceGeneMapperService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
+
+        oeService = ( OntologyEntryService ) this.getBean( "ontologyEntryService" );
 
     }
 
