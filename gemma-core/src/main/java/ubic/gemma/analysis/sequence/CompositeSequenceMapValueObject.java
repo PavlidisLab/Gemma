@@ -4,6 +4,7 @@
 package ubic.gemma.analysis.sequence;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -25,8 +26,8 @@ public class CompositeSequenceMapValueObject {
     private String bioSequenceNcbiId = null;
     private Long numBlatHits = null;
 
-    private Set<GeneProductValueObject> geneProducts = new HashSet<GeneProductValueObject>();;
-    private Set<GeneValueObject> genes = new HashSet<GeneValueObject>();
+    private Map<String,GeneProductValueObject> geneProducts = new HashMap<String,GeneProductValueObject>();;
+    private Map<String, GeneValueObject> genes = new HashMap<String,GeneValueObject>();
     
     /**
      * @return the bioSequenceId
@@ -104,27 +105,28 @@ public class CompositeSequenceMapValueObject {
     /**
      * @return the geneProducts
      */
-    public Set<GeneProductValueObject> getGeneProducts() {
+    public Map<String, GeneProductValueObject> getGeneProducts() {
         return geneProducts;
     }
     /**
      * @param geneProducts the geneProducts to set
      */
-    public void setGeneProducts( Set<GeneProductValueObject> geneProducts ) {
+    public void setGeneProducts( Map<String, GeneProductValueObject> geneProducts ) {
         this.geneProducts = geneProducts;
     }
     /**
      * @return the genes
      */
-    public Set<GeneValueObject> getGenes() {
+    public Map<String, GeneValueObject> getGenes() {
         return genes;
     }
     /**
      * @param genes the genes to set
      */
-    public void setGenes( Set<GeneValueObject> genes ) {
+    public void setGenes( Map<String, GeneValueObject> genes ) {
         this.genes = genes;
     }
+
     
 
 }

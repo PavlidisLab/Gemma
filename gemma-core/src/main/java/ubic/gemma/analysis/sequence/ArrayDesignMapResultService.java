@@ -18,10 +18,12 @@
  */
 package ubic.gemma.analysis.sequence;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -38,6 +40,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -160,22 +163,27 @@ public class ArrayDesignMapResultService {
         HashMap<Long,CompositeSequenceMapValueObject> summary = new HashMap<Long,CompositeSequenceMapValueObject>();
         
         for ( Object o : sequenceData ) {
-            String[] row = (String[]) o;
-            Long csId = Long.parseLong( row[0] );
-            String csName = row[1];
-            String bioSequenceName = row[2];
-            String bioSequenceNcbiId = row[3];
-            String blatId = row[4];
-            String geneProductId = row[5];
-            String geneProductName = row[6];
-            String geneProductAccession = row[7];
-
-
-            Long geneId = null;
-            if (row[5] != null) {
-                Long.parseLong(row[5]);
-            }
+            Object[] row = (Object[]) o;
+            Long csId = ((BigInteger) row[0]).longValue();
+            String csName = (String)row[1];
+            String bioSequenceName = (String)row[2];
+            String bioSequenceNcbiId = (String) row[3];
+           
+            Object blatId = row[4];
             
+            Object geneProductId = row[5];
+            
+            String geneProductName = (String) row[6];
+            String geneProductAccession = (String) row[7];
+            Object geneProductGeneId = row[8];
+            String geneProductType = (String) row[9];
+            
+            Object geneId = row[10];
+            
+            String geneName = (String)row[11];
+            String geneAccession = (String)row[12];
+
+          
             CompositeSequenceMapValueObject vo;
             if (summary.containsKey( csId )) {
                 vo = summary.get( csId );
@@ -184,6 +192,9 @@ public class ArrayDesignMapResultService {
                 vo = new CompositeSequenceMapValueObject();
                 summary.put( csId, vo );
             }
+            
+            vo.setCompositeSequenceId( csId.toString() );
+            vo.setCompositeSequenceName( csName );
             
             // fill in value object
             if (bioSequenceName != null && vo.getBioSequenceName() == null) {
@@ -209,17 +220,39 @@ public class ArrayDesignMapResultService {
             
             // fill in value object for geneProducts
             if (geneProductId != null) {
-                Set<GeneProductValueObject> geneProductSet =  vo.getGeneProducts();
-                
-
-                
+                Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
+                // if the geneProduct is already in the map, do not do anything.
+                // if it isn't there, put it in the map
+                if (!geneProductSet.containsKey( geneProductId )) {
+                    GeneProductValueObject gpVo = new GeneProductValueObject();
+                    gpVo.setId(  ((BigInteger)geneProductId).longValue() );
+                    gpVo.setName( geneProductName );
+                    gpVo.setNcbiId( geneProductAccession );
+                    if (geneProductGeneId != null) {
+                        gpVo.setGeneId( ((BigInteger) geneProductGeneId).longValue() );
+                    }
+                    gpVo.setType( geneProductType );
+                    geneProductSet.put( ((BigInteger)geneProductId).toString(), gpVo );
+                }
+            }
+            
+            // fill in value object for genes
+            if (geneId != null) {
+                Map<String, GeneValueObject> geneSet = vo.getGenes();
+                if (!geneSet.containsKey( geneId )) {
+                    GeneValueObject gVo= new GeneValueObject();
+                    gVo.setId( ((BigInteger) geneId ).longValue());
+                    gVo.setOfficialSymbol( geneName );
+                    gVo.setNcbiId( geneAccession);
+                    geneSet.put( ((BigInteger) geneId).toString(), gVo );
+                }
             }
 
         }
         
              
         
-        return null;
+        return summary.values();
     }
     
     /**

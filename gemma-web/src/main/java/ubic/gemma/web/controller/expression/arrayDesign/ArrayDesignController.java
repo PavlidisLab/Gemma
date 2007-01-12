@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -53,6 +54,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @springproperty name="validator" ref="arrayDesignValidator"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name = "arrayDesignReportService" ref="arrayDesignReportService"
+ * @spring.property name = "arrayDesignMapResultService" ref="arrayDesignMapResultService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  * @spring.property name="searchService" ref="searchService"
  */
@@ -64,6 +66,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private SearchService searchService;
     private ArrayDesignService arrayDesignService = null;
     private ArrayDesignReportService arrayDesignReportService = null;
+    private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private final String messageName = "Array design with name";
     private final String messageId = "Array design with id";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
@@ -93,8 +96,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
         
-        ModelAndView mav = new ModelAndView();
-        Collection compositeSequenceSummary = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
+        ModelAndView mav = new ModelAndView("arrayDesign.compositeSequences");
+        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign ); 
+        mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "sequenceData", compositeSequenceSummary );
         return mav;
     }
@@ -164,17 +168,19 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             i++;
         }
         String eeIds = StringUtils.join( eeIdList,",");
-        Collection compositeSequenceSummary = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign); 
+
 
         
         ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
-        mav.addObject( "sequenceData", compositeSequenceSummary );
+
         
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numCompositeSequences",  numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
 
+
+        
         mav.addObject( "expressionExperimentIds", eeIds );      
         mav.addObject( "technologyType", colorString );
         mav.addObject( "summary", summary);
@@ -495,5 +501,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             
 
         }
+    }
+
+
+
+    /**
+     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     */
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
     }
 }

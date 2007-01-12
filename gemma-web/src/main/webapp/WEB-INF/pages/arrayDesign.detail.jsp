@@ -178,25 +178,18 @@ ${ summary } <br>
 					%>
 				</td>
 			</tr>
-				
-				
-				
-				<display:table name="sequenceData" sort="list" class="list" requestURI="" id="arrayDesignSequenceList"
-				pagesize="200" decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
-					<display:column sortable="true" title="Name"><c:out value="${arrayDesignSequenceList[0]}" /></display:column>
-					<display:column sortable="true" title="Biosequence">
-						<a href="/Gemma/genome/bioSequence/showBioSequence.html?id=<c:out value="${arrayDesignSequenceList[1]}" />" >
-							<c:out value="${arrayDesignSequenceList[2]}" />
-						</a>
-					</display:column>
-					<display:column sortable="true" title="blatResult"><c:out value="${arrayDesignSequenceList[3]}" /></display:column>
-					<display:column sortable="true" title="geneProduct"><c:out value="${arrayDesignSequenceList[4]}" /></display:column>
-					<display:column sortable="true" title="gene"><c:out value="${arrayDesignSequenceList[5]}" /></display:column>
-					<display:setProperty name="basic.empty.showtable" value="true" />
-				</display:table>
-				
+			
+			<tr>
+				<td class="label">
+					Composite Sequences
+				</td>
+				<td>
+					<a href="/Gemma/arrays/showCompositeSequenceSummary.html?id=<jsp:getProperty name="arrayDesign" property="id" />">(list)</a>
 
-			<%-- FIXME - show some of the design elements --%>	
+				</td>
+			</tr>
+			
+
 			<table>
 			<tr>
 				<td colspan="2">
