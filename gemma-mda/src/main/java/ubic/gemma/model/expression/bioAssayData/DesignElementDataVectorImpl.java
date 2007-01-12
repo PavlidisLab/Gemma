@@ -105,7 +105,7 @@ public class DesignElementDataVectorImpl extends ubic.gemma.model.expression.bio
                 + ( this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() )
                 + ( this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() )
                 + ( this.getExpressionExperiment() == null ? "" : " EE=" + this.getExpressionExperiment().getName()
-                        + ", " + this.getData().length + " values" );
+                        + ", " + this.getData().length + " bytes" );
 
     }
 }
