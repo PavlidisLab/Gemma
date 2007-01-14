@@ -82,6 +82,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
         cs2.setArrayDesign( arrayDesign );
         arrayDesign.setCompositeSequences( col );
 
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
         // arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
 
@@ -170,13 +171,6 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
                 "User should not be authorized to access target objects (composite sequences) in the graph for this domain object (array design).",
                 col.isEmpty() );
 
-    }
-
-    /**
-     * @param arrayDesignService The arrayDesignService to set.
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
 }
