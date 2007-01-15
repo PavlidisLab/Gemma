@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.acegisecurity.AccessDeniedException;
+import org.acegisecurity.acl.AclManager;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -42,10 +43,11 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     private ArrayDesignService arrayDesignService;
 
-    ArrayDesign arrayDesign;
     String username = "test";
     String aDifferentUsername = "aDifferentTestUser";
 
+    ArrayDesign arrayDesign;
+    String arrayDesignName = "Array Design Foo";
     String compositeSequenceName1 = "Design Element Bar1";
     String compositeSequenceName2 = "Design Element Bar2";
 
@@ -57,11 +59,13 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
 
+        log.info( "Turn up the logging levels to DEBUG on the acegi and gemma security packages" );
+
         // super.onSetUpInTransaction(); //admin
         super.onSetUpInTransactionGrantingUserAuthority( username ); // user
 
         arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( "Array Design Foo" );
+        arrayDesign.setName( arrayDesignName );
         arrayDesign.setDescription( "A test ArrayDesign from " + this.getClass().getName() );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
@@ -89,6 +93,18 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     }
 
     /**
+     * Tests accessing array designs after permission has been changed from 6 (READ_WRITE) to 1 (ADMINISTRATION).
+     * Expecting an AccessDeniedException
+     */
+    public void testMakePrivate() {
+        ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
+        SecurityService securityService = new SecurityService();
+
+        securityService.setAclManager( ( AclManager ) this.getBean( "aclManager" ) );
+        securityService.makePrivate( ad );
+    }
+
+    /**
      * Test removing an arrayDesign with the correct authorization privileges. The security interceptor should be called
      * on this method, as should the AddOrRemoveFromACLInterceptor.
      * 
@@ -98,7 +114,8 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     public void testRemoveArrayDesign() throws Exception {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 10 ) + "_array" );
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = arrayDesignService.findOrCreate( arrayDesign );
+        // ad = ( ArrayDesign ) persisterHelper.persist( ad );
         arrayDesignService.remove( ad );
     }
 
