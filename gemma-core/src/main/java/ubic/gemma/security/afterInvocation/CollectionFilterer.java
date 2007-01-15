@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 public class CollectionFilterer implements Filterer {
     // ~ Static fields/initializers =============================================
 
-    protected static final Log logger = LogFactory.getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
+    protected static final Log logger = LogFactory.getLog( CollectionFilterer.class );
 
     // ~ Instance fields ========================================================
 

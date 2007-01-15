@@ -48,7 +48,7 @@ import ubic.gemma.model.association.Relationship;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDataVector;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -109,7 +109,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * are not interccepted anyway.
      */
     static {
-        unsecuredClasses.add( BioAssayDataVector.class );
+        unsecuredClasses.add( DataVector.class );
         unsecuredClasses.add( DatabaseEntry.class );
         unsecuredClasses.add( BioSequence.class );
         unsecuredClasses.add( Relationship.class );

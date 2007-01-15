@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 class ArrayFilterer implements Filterer {
     // ~ Static fields/initializers =============================================
 
-    protected static final Log logger = LogFactory.getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
+    protected static final Log logger = LogFactory.getLog( ArrayFilterer.class );
 
     // ~ Instance fields ========================================================
 
