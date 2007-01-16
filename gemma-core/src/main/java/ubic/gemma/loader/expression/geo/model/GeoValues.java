@@ -33,6 +33,16 @@ import org.apache.commons.logging.LogFactory;
  * Class to store the expression data prior to conversion. The data are read from series files sample by sample, and
  * within each sample designElement by designElement, and within each designElement, quantitationType by
  * quantitationType. Values are stored in vectors, roughly equivalent to DesignElementDataVectors.
+ * <p>
+ * This is an important class as it encompasses how we convert GEO sample data into vectors. There are a couple of
+ * assumption that this is predicated on. First, we assume that all samples are presented with their quantitation types
+ * in the same order. Second, we assume that all samples have the same quantitation type, OR at worst, some are missing
+ * off the 'end' for some samples. We do not assume that all samples have quantitation types with the same names
+ * (quantitation types correspond to column names in the GEO files).
+ * <p>
+ * There are two counterexamples we have found that push or violate these assumptions: GSE360 and GSE4345 (which is
+ * really broken). Loading GSE4345 results in a cast exception because the quantitation types are 'mixed up' across the
+ * samples..
  * 
  * @author pavlidis
  * @version $Id$
@@ -44,12 +54,12 @@ public class GeoValues {
     /*
      * This plays the role of the BioAssayDimension; map of platform --> quantitationType --> samples
      */
-    Map<GeoPlatform, Map<String, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<GeoPlatform, Map<String, LinkedHashSet<GeoSample>>>();
+    Map<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>>();
 
     /*
      * Map of platform --> quantitationtype -> designElement -> values; values in same order as sampleVector.
      */
-    Map<GeoPlatform, Map<String, Map<String, List<Object>>>> data = new HashMap<GeoPlatform, Map<String, Map<String, List<Object>>>>();
+    Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<GeoPlatform, Map<Object, Map<String, List<Object>>>>();
 
     private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
 
@@ -102,51 +112,60 @@ public class GeoValues {
      * Store a value. It is assumed that quantitationTypes and designElements have unique names.
      * 
      * @param sample
-     * @param quantitationType
+     * @param quantitationTypeIndex The column number for the quantitation type, needed because the names of the
+     *        quantitation types don't always match across samples (but hopefully the columns do). Even though the first
+     *        column contains the design element name (ID_REF), the first quantitation type should be numbered 0. This
+     *        is almost always a good way to match values across samples, there is a single (pathological?) case where
+     *        the order isn't the same for two samples.
+     * @param quantitationTypeName The name of the quantitationType. This cannot be reliably used to identify
+     *        quantitation types because the names vary from sample to sample (sometimes).
      * @param designElement
      * @param value
      */
-    public void addValue( GeoSample sample, String quantitationType, String designElement, Object value ) {
+    public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
 
-        if ( skippableQuantitationTypes.contains( quantitationType ) ) return;
+        if ( skippableQuantitationTypes.contains( quantitationTypeIndex ) ) return;
 
         GeoPlatform platform = sample.getPlatforms().iterator().next();
         if ( !sampleDimensions.containsKey( platform ) ) {
-            sampleDimensions.put( platform, new HashMap<String, LinkedHashSet<GeoSample>>() );
+            sampleDimensions.put( platform, new HashMap<Object, LinkedHashSet<GeoSample>>() );
         }
 
-        Map<String, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-        if ( !samplePlatformMap.containsKey( quantitationType ) ) {
-            samplePlatformMap.put( quantitationType, new LinkedHashSet<GeoSample>() );
+        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+        if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
+            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
         }
 
-        LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationType );
+        LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
         if ( !sampleQtMap.contains( sample ) ) {
             sampleQtMap.add( sample );
         }
 
         if ( !data.containsKey( platform ) ) {
-            data.put( platform, new HashMap<String, Map<String, List<Object>>>() );
+            data.put( platform, new HashMap<Object, Map<String, List<Object>>>() );
         }
 
-        Map<String, Map<String, List<Object>>> platformMap = data.get( platform );
-        if ( !platformMap.containsKey( quantitationType ) ) {
-            platformMap.put( quantitationType, new HashMap<String, List<Object>>() );
+        Map<Object, Map<String, List<Object>>> platformMap = data.get( platform );
+        if ( !platformMap.containsKey( quantitationTypeIndex ) ) {
+            platformMap.put( quantitationTypeIndex, new HashMap<String, List<Object>>() );
         }
 
-        Map<String, List<Object>> qtMap = platformMap.get( quantitationType );
+        Map<String, List<Object>> qtMap = platformMap.get( quantitationTypeIndex );
         if ( !qtMap.containsKey( designElement ) ) {
             qtMap.put( designElement, new ArrayList<Object>() );
         }
 
         qtMap.get( designElement ).add( value );
         if ( log.isTraceEnabled() ) {
-            log.trace( "Adding value for " + sample + " qt=" + quantitationType + " de=" + designElement + " value="
-                    + value );
+            log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex
+                    + " de=" + designElement + " value=" + value );
         }
 
-        assert qtMap.get( designElement ).size() == sampleQtMap.size() : "Number of  samples " + sampleQtMap.size()
-                + " does not equal length of vector " + data.get( quantitationType ).get( designElement ).size();
+        assert qtMap.get( designElement ).size() == sampleQtMap.size() : "Duplicate quantitation type name in series? "
+                + "While processing data for " + sample + ": Number of samples " + sampleQtMap.size()
+                + " for designElement=" + designElement + " quantType=" + quantitationTypeIndex
+                + " does not equal length of vector "
+                + data.get( platform ).get( quantitationTypeIndex ).get( designElement ).size();
 
     }
 
@@ -171,39 +190,47 @@ public class GeoValues {
      * inefficient but shouldn't need to be called very often.
      * 
      * @param platform
-     * @param neededSamples, must be from the same platform.
+     * @param neededSamples, must be from the same platform. If we don't have data for a given sample, the index
+     *        returned will be null. This can happen when some samples don't have all the quantitation types (GSE360 for
+     *        example).
      * @return
      */
-    public int[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, String quantitationType ) {
+    public Integer[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, Integer quantitationType ) {
         assert sampleDimensions.get( platform ) != null;
         if ( sampleDimensions.get( platform ).get( quantitationType ) == null ) {
             return null; // filtered out?
         }
-        assert neededSamples.size() <= sampleDimensions.get( platform ).get( quantitationType ).size() : "Requested data for "
-                + neededSamples.size()
-                + " samples but only know about "
-                + sampleDimensions.get( quantitationType ).size();
+
+        // this assertion assumes that all the data
+        // assert neededSamples.size() <= sampleDimensions.get( platform ).get( quantitationType ).size() : "Requested
+        // data for "
+        // + neededSamples.size()
+        // + " samples quantType="
+        // + quantitationType
+        // + " platform="
+        // + platform
+        // + " but only know about "
+        // + sampleDimensions.get( platform ).get( quantitationType ).size()
+        // + " "
+        // + sampleDimensions.get( platform ).get( quantitationType );
 
         List<Integer> result = new ArrayList<Integer>();
         for ( GeoSample sample : neededSamples ) {
             int i = 0;
+            boolean found = false;
             for ( GeoSample sampleInVector : sampleDimensions.get( platform ).get( quantitationType ) ) {
                 if ( sample.equals( sampleInVector ) ) {
                     result.add( i );
+                    found = true;
                 }
                 i++;
             }
 
+            if ( !found ) result.add( null );
+
         }
 
-        // convert to an array.
-        int[] resultAr = new int[result.size()];
-        int j = 0;
-        for ( Integer i : result ) {
-            resultAr[j] = i;
-            j++;
-        }
-        return resultAr;
+        return result.toArray( new Integer[result.size()] );
 
     }
 
@@ -215,15 +242,20 @@ public class GeoValues {
      * @param indices
      * @return
      */
-    public List<Object> getValues( GeoPlatform platform, String quantitationType, String designElement, int[] indices ) {
+    public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement,
+            Integer[] indices ) {
         List<Object> result = new ArrayList<Object>();
         List<Object> rawvals = data.get( platform ).get( quantitationType ).get( designElement );
 
         // this can happen if the data doesn't contain that designElement.
         if ( rawvals == null ) return null;
-        for ( int i : indices ) {
-            assert rawvals.get( i ) != null : "No entry for index " + i;
-            result.add( rawvals.get( i ) );
+        for ( Integer i : indices ) {
+            if ( i == null ) {
+                result.add( null );
+            } else {
+                assert rawvals.get( i ) != null : "No entry for index " + i;
+                result.add( rawvals.get( i ) );
+            }
         }
         return result;
     }
@@ -238,8 +270,10 @@ public class GeoValues {
 
         for ( GeoPlatform platform : sampleDimensions.keySet() ) {
 
+            assert data.get( platform ) != null : platform;
+
             buf.append( "============== " + platform + " =================\n" );
-            for ( String qType : sampleDimensions.get( platform ).keySet() ) {
+            for ( Object qType : sampleDimensions.get( platform ).keySet() ) {
                 buf.append( "---------------- " + qType + " ------------------\n" );
                 buf.append( "DesignEl" );
 
@@ -247,6 +281,8 @@ public class GeoValues {
                     buf.append( "\t" + sam.getGeoAccession() );
                 }
                 buf.append( "\n" );
+
+                assert data.get( platform ).get( qType ) != null;
                 for ( String dEl : data.get( platform ).get( qType ).keySet() ) {
                     buf.append( dEl );
                     for ( Object val : data.get( platform ).get( qType ).get( dEl ) ) {

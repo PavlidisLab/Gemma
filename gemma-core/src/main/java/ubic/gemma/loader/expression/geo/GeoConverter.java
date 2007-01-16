@@ -569,23 +569,26 @@ public class GeoConverter implements Converter {
             // skip the first quantitationType, it's the ID or ID_REF.
             if ( first ) {
                 first = false;
-                quantitationTypeIndex++;
+                // quantitationTypeIndex++; // don't count the first column, don't increment.
                 continue;
             }
 
-            Map<String, List<Object>> dataVectors = makeDataVectors( values, datasetSamples, quantitationType );
+            log.info( "Processing " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
+
+            Map<String, List<Object>> dataVectors = makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
             if ( dataVectors == null ) {
-                log.debug( "No data for " + quantitationType );
+                log.info( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
                 quantitationTypeIndex++;
                 continue;
             } else {
-                log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType );
+                log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
+                        + quantitationTypeIndex + ")" );
             }
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
-            String description = quantitationTypeDescriptions.get( quantitationTypeIndex );
+            String description = quantitationTypeDescriptions.get( quantitationTypeIndex + 1 );
             qt.setDescription( description );
             QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description );
 
@@ -1151,7 +1154,7 @@ public class GeoConverter implements Converter {
 
         // figure out if there are multiple species involved here.
 
-        Map<String, Collection<GeoDataset>> organismDatasetMap = getOrganismDatasetMap( series );
+        Map<String, Collection<GeoData>> organismDatasetMap = getOrganismDatasetMap( series );
 
         if ( organismDatasetMap.size() > 1 ) {
             log.warn( "**** Multiple-species dataset! ****" );
@@ -1175,10 +1178,10 @@ public class GeoConverter implements Converter {
      * @param organism
      */
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted,
-            Map<String, Collection<GeoDataset>> organismDatasetMap, int i, String organism ) {
+            Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
         GeoSeries speciesSpecific = new GeoSeries();
 
-        Collection<GeoDataset> datasets = organismDatasetMap.get( organism );
+        Collection<GeoData> datasets = organismDatasetMap.get( organism );
         assert datasets.size() > 0;
 
         for ( GeoSample sample : series.getSamples() ) {
@@ -1190,9 +1193,11 @@ public class GeoConverter implements Converter {
 
         // strip out samples that aren't from this organism.
 
-        for ( GeoDataset dataset : datasets ) {
-            dataset.dissociateFromSeries( series );
-            speciesSpecific.addDataSet( dataset );
+        for ( GeoData dataset : datasets ) {
+            if ( dataset instanceof GeoDataset ) {
+                ( ( GeoDataset ) dataset ).dissociateFromSeries( series );
+                speciesSpecific.addDataSet( ( GeoDataset ) dataset );
+            }
         }
 
         /*
@@ -1216,17 +1221,28 @@ public class GeoConverter implements Converter {
 
     /**
      * @param series
-     * @return
+     * @return map of organisms to a collection of either datasets or platforms.
      */
-    private Map<String, Collection<GeoDataset>> getOrganismDatasetMap( GeoSeries series ) {
-        Map<String, Collection<GeoDataset>> organisms = new HashMap<String, Collection<GeoDataset>>();
+    private Map<String, Collection<GeoData>> getOrganismDatasetMap( GeoSeries series ) {
+        Map<String, Collection<GeoData>> organisms = new HashMap<String, Collection<GeoData>>();
 
-        for ( GeoDataset dataset : series.getDatasets() ) {
-            String organism = dataset.getOrganism();
-            if ( organisms.get( organism ) == null ) {
-                organisms.put( organism, new HashSet<GeoDataset>() );
+        if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
+            for ( GeoSample sample : series.getSamples() ) {
+                assert sample.getPlatforms().size() == 1;
+                String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
+                if ( organisms.get( organism ) == null ) {
+                    organisms.put( organism, new HashSet<GeoData>() );
+                }
+                organisms.get( organism ).add( sample.getPlatforms().iterator().next() );
             }
-            organisms.get( organism ).add( dataset );
+        } else {
+            for ( GeoDataset dataset : series.getDatasets() ) {
+                String organism = dataset.getOrganism();
+                if ( organisms.get( organism ) == null ) {
+                    organisms.put( organism, new HashSet<GeoData>() );
+                }
+                organisms.get( organism ).add( dataset );
+            }
         }
         return organisms;
     }
@@ -2059,21 +2075,23 @@ public class GeoConverter implements Converter {
      * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
      * 
      * @param datasetSamples The samples we want to get data for. These should all have been run on the same platform.
-     * @param quantitationTypeName
+     * @param quantitationTypeIndex - first index is 0
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
     @SuppressWarnings("unchecked")
     private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples,
-            String quantitationTypeName ) {
+            Integer quantitationTypeIndex ) {
         Map<String, List<Object>> dataVectors = new HashMap<String, List<Object>>( INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = getPlatformForSamples( datasetSamples );
 
-        // the locations of the data we need in the target vectors (mostly reordering)
-        int[] indices = values.getIndices( platform, datasetSamples, quantitationTypeName );
+        // log.info(values.toString());
 
-        if ( indices == null ) return null; // can happen if quantitation type was filtered out.
+        // the locations of the data we need in the target vectors (mostly reordering)
+        Integer[] indices = values.getIndices( platform, datasetSamples, quantitationTypeIndex );
+
+        if ( indices == null || indices.length == 0 ) return null; // can happen if quantitation type was filtered out.
 
         assert indices.length == datasetSamples.size();
 
@@ -2084,7 +2102,7 @@ public class GeoConverter implements Converter {
              * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
              * quantitation type that was filtered out during parsing, or absent from some samples.
              */
-            List ob = values.getValues( platform, quantitationTypeName, designElementName, indices );
+            List ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
             if ( ob == null || ob.size() == 0 ) continue;
             assert ob.size() == datasetSamples.size();
             dataVectors.put( designElementName, ob );

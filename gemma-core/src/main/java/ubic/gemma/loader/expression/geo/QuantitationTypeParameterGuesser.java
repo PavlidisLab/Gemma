@@ -55,13 +55,13 @@ public class QuantitationTypeParameterGuesser {
     private static Set<String> ratioStringDescPatterns = new HashSet<String>();
     private static Set<String> measuredSignalNamePatterns = new HashSet<String>();
     private static Set<String> derivedSignalNamePatterns = new HashSet<String>();
-    private static Set<String> ratioStringNamePatterns = new HashSet<String>();
+    // private static Set<String> ratioStringNamePatterns = new HashSet<String>();
 
     private static Set<String> isNormalizedPatterns = new HashSet<String>();
     private static Set<String> isBackgroundSubtractedNamePatterns = new HashSet<String>();
     private static Set<String> isBackgroundSubtractedDescPatterns = new HashSet<String>();
     private static Set<String> isPreferredNamePatterns = new HashSet<String>();
-    private static Set<String> isPreferredDescPatterns = new HashSet<String>();
+    // private static Set<String> isPreferredDescPatterns = new HashSet<String>();
 
     private static Map<ScaleType, Set<String>> scaleDescPatterns = new HashMap<ScaleType, Set<String>>();
     private static Map<StandardQuantitationType, Set<String>> typeDescPatterns = new HashMap<StandardQuantitationType, Set<String>>();
