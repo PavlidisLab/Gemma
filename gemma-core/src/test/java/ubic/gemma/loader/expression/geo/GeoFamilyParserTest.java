@@ -78,6 +78,28 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
+    /**
+     * Failed with a 'already a datum for CH1_BKG ... ' error. GSE1347 has same problem.
+     * 
+     * @throws Exception
+     */
+    public void testParseGse432() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse432Short/GSE432.soft.gz" ) );
+        parser.parse( is );
+    }
+
+    // /**
+    // * Failed assertio durin gstoring CH1_BKG_MEAN
+    // *
+    // * @throws Exception
+    // */
+    // public void testParseGse2776() throws Exception {
+    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/gse2776Short/GSE2776.soft.gz" ) );
+    // parser.parse( is );
+    // }
+
     public void testParseBigBPlatformOnly() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );

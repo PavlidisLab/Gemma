@@ -223,7 +223,13 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // public void testFetchASeries() throws Exception {
     // endTransaction();
     // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GSE360" );// replace accession.
+    // geoService.fetchAndLoad( "GSE4345" );// replace accession.
+    // geoService.fetchAndLoad( "GSE2776" );// replace accession.
+    // geoService.fetchAndLoad( "GSE432" );// replace accession.
+    // geoService.fetchAndLoad( "GSE2982" );
+    // geoService.fetchAndLoad( "GSE404" );
+    // geoService.fetchAndLoad( "GSE3791" );
+    // geoService.fetchAndLoad( "GDS75" );
     // }
 
     /**
@@ -243,7 +249,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertNotNull( ee );
         assertNotNull( ee.getBioAssays() );
         assertEquals( 4, ee.getBioAssays().size() );
-        assertEquals( 532, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
+        assertEquals( 526, ee.getDesignElementDataVectors().size() ); // 3 quantitation types 532?
         //
         // int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId()
         // );
@@ -326,7 +332,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                     .fetchAndLoad( "GDS994" );
             ee = results.iterator().next();
             assertEquals( 12, ee.getBioAssays().size() );
-            assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
+            assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
             ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
             ads.add( ad );
             int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) )
@@ -552,6 +558,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE3434" );
         ee = results.iterator().next();
 
+        // this has no fail condition, just check that we can delete...
     }
 
     private void testMatrixValue( ExpressionExperiment ee, ExpressionDataMatrix matrix, String probeToTest,

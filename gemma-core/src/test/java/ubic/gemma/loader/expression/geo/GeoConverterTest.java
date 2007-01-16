@@ -34,6 +34,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -195,6 +196,10 @@ public class GeoConverterTest extends TestCase {
         assertNotNull( result );
     }
 
+    /**
+     * Note: this series has some samples that don't have all the quantitation types.
+     * @throws Exception
+     */
     public void testConvertGSE360() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE360Short/GSE360_family.soft.gz" ) );
@@ -206,6 +211,116 @@ public class GeoConverterTest extends TestCase {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
+    }
+
+    /**
+     * Not all quantitation types are found in all samples, and not all in the same order. This is a broken GSE for us.
+     */
+    // public void testConvertGSE4345() throws Exception {
+    // InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/gse4345Short/GSE4345.soft.gz" ) );
+    // GeoFamilyParser parser = new GeoFamilyParser();
+    // parser.parse( is );
+    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE4345" );
+    // DatasetCombiner datasetCombiner = new DatasetCombiner();
+    // GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+    // series.setSampleCorrespondence( correspondence );
+    // Object result = this.gc.convert( series );
+    // assertNotNull( result );
+    // }
+    /**
+     * Has two species.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testConvertGSE3791() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse3791Short/GSE3791.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3791" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 2, ees.size() );
+    }
+
+    /**
+     * Was yielding a 'ArrayDesigns must be converted before datasets'.
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testConvertGSE60() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse60Short/GSE60.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+        "/data/loader/expression/geo/gse60Short/GDS75.soft.gz" ) );
+        parser.parse( is );
+        
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE60" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testConvertGSE2982() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse2982Short/GSE2982.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2982" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+    }
+
+    /**
+     * Gets no 'preferred' quantitation type. - it should find one.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testConvertGSE404() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse404Short/GSE404.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE404" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+
+        ExpressionExperiment ee = ees.iterator().next();
+        boolean ok = false;
+        for ( DesignElementDataVector dedv : ee.getDesignElementDataVectors() ) {
+            QuantitationType qt = dedv.getQuantitationType();
+            if ( qt.getIsPreferred() ) {
+                ok = true;
+                assertEquals( "VALUE", qt.getName() );
+            }
+        }
+
+        assertTrue( ok );
     }
 
     /**
