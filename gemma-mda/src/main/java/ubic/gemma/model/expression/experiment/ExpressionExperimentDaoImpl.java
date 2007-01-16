@@ -32,8 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
+import org.hibernate.HibernateException; 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -427,10 +426,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( expressionExperiment, LockMode.READ );
+                session.update( expressionExperiment );
                 expressionExperiment.getDesignElementDataVectors().size();
                 expressionExperiment.getBioAssays().size();
                 expressionExperiment.getSubsets().size();
+                session.update( expressionExperiment.getPrimaryPublication() );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
@@ -714,25 +714,25 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetBioMaterialCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
-        
+
         long count = 0;
         final String queryString = "select count(distinct sample) from ExpressionExperimentImpl as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where ee.id = :eeId ";
+                + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample where ee.id = :eeId ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "eeId", expressionExperiment.getId() );
-            
+
             queryObject.setMaxResults( 1 );
 
             count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
-           
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -740,11 +740,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return count;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment )
+            throws Exception {
         long count = 0;
         final String queryString = "select count(distinct dedv) from ExpressionExperimentImpl as ee "
                 + "inner join ee.designElementDataVectors as dedv "
@@ -753,11 +756,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "eeId", expressionExperiment.getId() );
-            
+
             queryObject.setMaxResults( 1 );
 
             count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
-           
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
