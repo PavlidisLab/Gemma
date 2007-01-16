@@ -21,7 +21,8 @@ package ubic.gemma.loader.association;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.basecode.util.StringUtil;
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.LiteratureAssociation;
 import ubic.gemma.model.association.LiteratureAssociationDao;
@@ -35,7 +36,7 @@ import ubic.gemma.model.genome.GeneDao;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *                  g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
+ *                   g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * </pre>
  * 
  * @author anshu
@@ -69,7 +70,7 @@ public class LitAssociationFileParser extends BasicLineParser {
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
         log.debug( line );
-        String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != LIT_ASSOCIATION_FIELDS_PER_ROW ) {
             throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length
