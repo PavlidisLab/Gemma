@@ -151,6 +151,8 @@
   	<property name="triggers">
 		<list>
 	  		<ref local="indexTrigger"/>
+	  		<ref local="arrayDesignTrigger"/>
+	  		<ref local="expressionExperimentTrigger"/>
 		</list>
   	</property>
 </bean>
@@ -164,9 +166,38 @@
   	</property>
 </bean>
 
+<bean id="arrayDesignTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+  	<property name="jobDetail">
+		<ref bean="arrayDesignJobDetail"/>
+  	</property>
+  	<property name="cronExpression">
+		<value>0 30 1 ? * *</value>
+  	</property>
+</bean>
+
+<bean id="expressionExperimentTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+  	<property name="jobDetail">
+		<ref bean="expressionExperimentJobDetail"/>
+  	</property>
+  	<property name="cronExpression">
+		<value>0 15 0 ? * *</value>
+  	</property>
+</bean>
+
+
 <bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	<property name="targetObject"><ref bean="indexService"/></property>
 	<property name="targetMethod"><value>indexAll</value></property>
+</bean>
+
+<bean id="arrayDesignJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<property name="targetObject"><ref bean="arrayDesignReportService"/></property>
+	<property name="targetMethod"><value>generateArrayDesignReport</value></property>
+</bean>
+
+<bean id="expressionExperimentJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<property name="targetObject"><ref bean="expressionExperimentReportService"/></property>
+	<property name="targetMethod"><value>generateSummaryObjects</value></property>
 </bean>
 
 <!--  ============================================== -->
