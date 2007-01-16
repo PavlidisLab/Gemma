@@ -314,25 +314,28 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 int i = 0;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                     BioSequence bs = cs.getBiologicalCharacteristic();
-                    if ( bs != null ) {
-                        Taxon tax = bs.getTaxon();
+                    if ( bs == null ) {
+                        continue;
+                    }
 
-                        if ( bs.getBioSequence2GeneProduct() != null ) {
-                            for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                                if ( bs2gp != null ) {
-                                    GeneProduct geneProduct = bs2gp.getGeneProduct();
-                                    if ( geneProduct != null ) {
-                                        if ( geneProduct.getGene() != null ) {
-                                            Gene g = geneProduct.getGene();
-                                            g.getAliases().size();
-                                        }
+                    session.update( bs );
+                    bs.getTaxon();
 
-                                    }
-                                }
-                            }
+                    if ( bs.getBioSequence2GeneProduct() == null ) {
+                        continue;
+                    }
+                    for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                        if ( bs2gp == null ) {
+                            continue;
+                        }
+                        GeneProduct geneProduct = bs2gp.getGeneProduct();
+                        if ( geneProduct != null && geneProduct.getGene() != null ) {
+                            Gene g = geneProduct.getGene();
+                            g.getAliases().size();
                         }
 
                     }
+
                     if ( ++i % 2000 == 0 ) {
                         log.info( "Progress: " + i + "/" + numToDo + "..." );
                         try {
@@ -341,6 +344,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                             //
                         }
                     }
+
+                    session.evict( bs );
                 }
                 return null;
             }
@@ -872,7 +877,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return nativeQueryByIdReturnCollection( id, nativeQueryString );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetRawCompositeSequenceSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -881,17 +888,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
-        
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "  +
-        " from " +
-        "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID " + 
-        "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
-        "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID " +
-        "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID " + 
-        "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) " +
-        "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) " +
-        "WHERE gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class='GeneProductImpl' AND cs.ARRAY_DESIGN_FK = :id" ;
-        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString);
+
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
+                + " from "
+                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
+                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID "
+                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
+                + "WHERE gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class='GeneProductImpl' AND cs.ARRAY_DESIGN_FK = :id";
+        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
 
