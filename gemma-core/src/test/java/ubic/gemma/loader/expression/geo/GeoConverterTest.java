@@ -32,6 +32,7 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -198,6 +199,7 @@ public class GeoConverterTest extends TestCase {
 
     /**
      * Note: this series has some samples that don't have all the quantitation types.
+     * 
      * @throws Exception
      */
     public void testConvertGSE360() throws Exception {
@@ -251,6 +253,7 @@ public class GeoConverterTest extends TestCase {
 
     /**
      * Was yielding a 'ArrayDesigns must be converted before datasets'.
+     * 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
@@ -259,11 +262,11 @@ public class GeoConverterTest extends TestCase {
                 "/data/loader/expression/geo/gse60Short/GSE60.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
-        
+
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
-        "/data/loader/expression/geo/gse60Short/GDS75.soft.gz" ) );
+                "/data/loader/expression/geo/gse60Short/GDS75.soft.gz" ) );
         parser.parse( is );
-        
+
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE60" );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
@@ -288,6 +291,17 @@ public class GeoConverterTest extends TestCase {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
+        ExpressionExperiment ee = ees.iterator().next();
+        boolean ok = false;
+        for ( DesignElementDataVector dedv : ee.getDesignElementDataVectors() ) {
+            QuantitationType qt = dedv.getQuantitationType();
+            if ( qt.getIsPreferred() ) {
+                ok = true;
+                assertEquals( "VALUE", qt.getName() );
+                assertEquals( StandardQuantitationType.RATIO, qt.getType() );
+            }
+        }
+        assertTrue( ok );
     }
 
     /**
