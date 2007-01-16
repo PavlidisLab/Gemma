@@ -541,7 +541,7 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
 
-        String key = entity.getName() + " " + entity.getDescription();
+        Object key = entity.getName().hashCode() + entity.getDescription().hashCode();
         if ( quantitationTypeCache.containsKey( key ) ) {
             return quantitationTypeCache.get( key );
         }
