@@ -182,7 +182,14 @@ public class ArrayDesignMapResultService {
             
             String geneName = (String)row[11];
             String geneAccession = (String)row[12];
-
+            
+            /*Object geneProductProteinId = row[13];
+            
+            String geneProductProteinName = (String) row[14];
+            String geneProductProteinAccession = (String) row[15];
+            Object geneProductProteinGeneId = row[16];
+            String geneProductProteinType = (String) row[17];
+*/
           
             CompositeSequenceMapValueObject vo;
             if (summary.containsKey( csId )) {
@@ -235,6 +242,22 @@ public class ArrayDesignMapResultService {
                     geneProductSet.put( ((BigInteger)geneProductId).toString(), gpVo );
                 }
             }
+            /*if (geneProductProteinId != null) {
+                Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
+                // if the geneProduct is already in the map, do not do anything.
+                // if it isn't there, put it in the map
+                if (!geneProductSet.containsKey( geneProductProteinId )) {
+                    GeneProductValueObject gpVo = new GeneProductValueObject();
+                    gpVo.setId(  ((BigInteger)geneProductProteinId).longValue() );
+                    gpVo.setName( geneProductProteinName );
+                    gpVo.setNcbiId( geneProductProteinAccession );
+                    if (geneProductProteinGeneId != null) {
+                        gpVo.setGeneId( ((BigInteger) geneProductProteinGeneId).longValue() );
+                    }
+                    gpVo.setType( geneProductProteinType );
+                    geneProductSet.put( ((BigInteger)geneProductProteinId).toString(), gpVo );
+                }
+            }*/
             
             // fill in value object for genes
             if (geneId != null) {

@@ -882,14 +882,15 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         long id = arrayDesign.getId();
         
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProduct.ID as gpId,geneProduct.NAME as gpName,geneProduct.NCBI_ID as gpNcbi, geneProduct.GENE_FK, geneProduct.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi from " +
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "  +
+        " from " +
         "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID " + 
         "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK " +
         "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID " +
         "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID " + 
-        "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') " +
-        "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) " +
-        "WHERE cs.ARRAY_DESIGN_FK = :id" ;
+        "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) " +
+        "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) " +
+        "WHERE gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class='GeneProductImpl' AND cs.ARRAY_DESIGN_FK = :id" ;
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString);
         return retVal;
     }

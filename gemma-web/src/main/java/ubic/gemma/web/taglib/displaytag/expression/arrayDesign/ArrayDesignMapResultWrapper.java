@@ -130,7 +130,7 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
             // grouped by gene and geneProductType
 
 
-
+/*
             int proteinCount = 0;
             StringBuffer proteinStrings = new StringBuffer();
             proteinStrings.append( "<span style='display:none' name=\""+ compositeSequenceId + fullName + "Protein\">" );
@@ -144,7 +144,7 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
             retVal.append( "Protein (" + proteinCount+ ")<BR>" );
             retVal.append( proteinStrings );
             retVal.append( "</span>" );
-
+*/
 
         }
         
