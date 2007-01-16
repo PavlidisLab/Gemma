@@ -643,6 +643,8 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
         queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
 
+        queryObject.add( Restrictions.eq( "description", quantitationType.getDescription() ) );
+
         queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
 
         queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
