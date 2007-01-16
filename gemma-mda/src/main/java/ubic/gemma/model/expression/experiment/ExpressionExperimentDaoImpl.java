@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.HibernateException; 
+import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -430,7 +430,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 expressionExperiment.getDesignElementDataVectors().size();
                 expressionExperiment.getBioAssays().size();
                 expressionExperiment.getSubsets().size();
-                session.update( expressionExperiment.getPrimaryPublication() );
+                if ( expressionExperiment.getPrimaryPublication() != null )
+                    session.update( expressionExperiment.getPrimaryPublication() );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
