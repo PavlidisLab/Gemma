@@ -259,7 +259,7 @@ public class GeoConverterTest extends TestCase {
     @SuppressWarnings("unchecked")
     public void testConvertGSE60() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse60Short/GSE60.soft.gz" ) );
+                "/data/loader/expression/geo/gse60Short/GSE60_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
 

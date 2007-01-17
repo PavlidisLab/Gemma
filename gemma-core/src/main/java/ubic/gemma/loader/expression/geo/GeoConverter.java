@@ -469,6 +469,16 @@ public class GeoConverter implements Converter {
      * @param expExp
      */
     private ExpressionExperiment convertDataset( GeoDataset geoDataset, ExpressionExperiment expExp ) {
+
+        /*
+         * First figure out of there are any samples for this data set. It could be that they were duplicates of ones
+         * found in other series, so were skipped. See GeoDatasetService
+         */
+        if ( this.getDatasetSamples( geoDataset ).size() == 0 ) {
+            log.info( "No samples remain for " + geoDataset + ", nothing to do" );
+            return expExp;
+        }
+
         log.info( "Converting dataset:" + geoDataset );
 
         convertDatasetDescriptions( geoDataset, expExp );
