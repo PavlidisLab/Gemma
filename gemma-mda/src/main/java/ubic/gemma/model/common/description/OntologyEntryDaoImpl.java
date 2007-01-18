@@ -60,7 +60,14 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "accession", accession );
-            return (OntologyEntry) queryObject.iterate().next();
+            
+            OntologyEntry oe = (OntologyEntry) queryObject.iterate().next();
+            
+            oe.getAccession();
+            oe.getId();
+            
+            return oe;
+           
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

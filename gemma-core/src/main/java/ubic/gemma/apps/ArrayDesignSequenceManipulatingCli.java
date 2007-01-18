@@ -39,19 +39,27 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
+    ArrayDesign cachedAD; 
 
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array design" ).withDescription(
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
                 "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
 
     }
 
-    protected void unlazifyArrayDesign( final ArrayDesign arrayDesign ) {
+    protected void unlazifyArrayDesign(  ArrayDesign arrayDesign ) {
+        
+        if ((cachedAD != null) && (arrayDesign.getId() == cachedAD.getId() )){
+            arrayDesign = cachedAD;
+            return;
+        }
+        
         arrayDesignService.thaw( arrayDesign );
+        cachedAD = arrayDesign;
     }
 
     /**
@@ -59,7 +67,13 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      * @return
      */
     protected ArrayDesign locateArrayDesign( String name ) {
-        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name );
+        
+        String trimedName = name.trim().toUpperCase();
+        
+        if ((cachedAD != null) && ((cachedAD.getName() == trimedName) || (cachedAD.getShortName() == trimedName)))
+            return cachedAD;
+        
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name.trim().toUpperCase() );
 
         if ( arrayDesign == null ) {
             arrayDesign = arrayDesignService.findByShortName( name );
