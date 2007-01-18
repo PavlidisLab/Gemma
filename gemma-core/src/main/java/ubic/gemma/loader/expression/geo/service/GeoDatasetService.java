@@ -19,10 +19,14 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.loader.expression.geo.DatasetCombiner;
+import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
@@ -97,7 +101,7 @@ public class GeoDatasetService extends AbstractGeoService {
         GeoSeries series = ( GeoSeries ) obj;
         String seriesAccession = series.getGeoAccession();
 
-        checkPlatformUniqueness( series );
+        confirmPlatformUniqueness( series );
 
         checkSamplesAreNew( series );
 
@@ -198,18 +202,83 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * Check if all the data sets are on different platforms. This is a rare case in GEO. The right thing to do would be
-     * to merge the data sets.
+     * Check if all the data sets are on different platforms. This is a rare case in GEO. When it happens we merge the
+     * datasets.
      */
-    private void checkPlatformUniqueness( GeoSeries series ) {
+    private void confirmPlatformUniqueness( GeoSeries series ) {
         Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
         for ( GeoDataset dataset : series.getDatasets() ) {
             platforms.add( dataset.getPlatform() );
         }
-        if ( platforms.size() != series.getDatasets().size() ) {
-            throw new UnsupportedOperationException(
-                    "Some of the data sets use the same platform, this is not currently supported." );
+        if ( platforms.size() == series.getDatasets().size() ) {
+            return;
         }
+        Collection<GeoDataset> collapsed = potentiallyCombineDatasets( series.getDatasets() );
+        series.setDataSets( collapsed );
+        DatasetCombiner combiner = new DatasetCombiner();
+        GeoSampleCorrespondence corr = combiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( corr );
+    }
+
+    /**
+     * Combine data sets that use the same platform into one.
+     * 
+     * @param datasets, some of which will be combined.
+     */
+    private Collection<GeoDataset> potentiallyCombineDatasets( Collection<GeoDataset> datasets ) {
+        if ( datasets.size() == 1 ) return datasets;
+        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<GeoPlatform, Collection<GeoDataset>>();
+        for ( GeoDataset dataset : datasets ) {
+            GeoPlatform platform = dataset.getPlatform();
+            if ( !seenPlatforms.containsKey( platform ) ) {
+                seenPlatforms.put( platform, new HashSet<GeoDataset>() );
+            }
+            seenPlatforms.get( platform ).add( dataset );
+        }
+
+        Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
+        for ( GeoPlatform platform : seenPlatforms.keySet() ) {
+            if ( seenPlatforms.get( platform ).size() > 1 ) {
+                GeoDataset combined = combineDatasets( seenPlatforms.get( platform ) );
+                finishedDatasets.add( combined );
+            }
+        }
+        return finishedDatasets;
+
+    }
+
+    /**
+     * @param datasets all of which must use the same platform.
+     * @return one data set, which contains all the samples and subsets.
+     */
+    private GeoDataset combineDatasets( Collection<GeoDataset> datasets ) {
+        if ( datasets.size() == 1 ) return datasets.iterator().next();
+
+        // defensive programming
+        GeoPlatform lastPlatform = null;
+        for ( GeoDataset dataset : datasets ) {
+            GeoPlatform platform = dataset.getPlatform();
+            if ( lastPlatform != null ) {
+                if ( !platform.equals( lastPlatform ) ) {
+                    throw new IllegalArgumentException( "All datasets to be collapsed must use the same platform" );
+                }
+            }
+        }
+
+        // arbitrarily use the first.
+        GeoDataset result = datasets.iterator().next();
+        for ( GeoDataset dataset : datasets ) {
+            if ( dataset.equals( result ) ) continue;
+            log.info( "Collapsing " + dataset + " into " + result );
+            result.setDescription( result.getDescription() + " Note: this dataset " + "includes the samples from "
+                    + dataset );
+            result.getSubsets().addAll( dataset.getSubsets() );
+            result.setNumSamples( result.getNumSamples() + dataset.getNumSamples() );
+            result.getColumnNames().addAll( dataset.getColumnNames() );
+            result.getColumnDescriptions().addAll( dataset.getColumnDescriptions() );
+        }
+
+        return result;
     }
 
     /**

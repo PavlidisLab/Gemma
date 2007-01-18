@@ -524,7 +524,9 @@ public class GeoConverter implements Converter {
         Map<GeoPlatform, List<GeoSample>> platformSamples = datasetCombiner.getPlatformSampleMap( geoSeries );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
-            convertSampleOnPlatformVectors( geoSeries.getValues(), expExp, platformSamples.get( platform ), platform );
+            List<GeoSample> samples = platformSamples.get( platform );
+            log.info( samples.size() + " samples on " + platform );
+            convertSampleOnPlatformVectors( geoSeries.getValues(), expExp, samples, platform );
             geoSeries.getValues().clear( platform );
         }
 
@@ -538,6 +540,7 @@ public class GeoConverter implements Converter {
      */
     private void convertDataSetDataVectors( GeoValues values, GeoDataset geoDataset, ExpressionExperiment expExp ) {
         List<GeoSample> datasetSamples = new ArrayList<GeoSample>( getDatasetSamples( geoDataset ) );
+        log.info( datasetSamples.size() + " samples in " + geoDataset );
         GeoPlatform geoPlatform = geoDataset.getPlatform();
 
         convertSampleOnPlatformVectors( values, expExp, datasetSamples, geoPlatform );
@@ -1568,9 +1571,10 @@ public class GeoConverter implements Converter {
             /*
              * This happens if there were really two series.
              */
-            assert found : "No matching bioassay found for " + sample.getGeoAccession() + " in subset. "
-                    + " Make sure the ExpressionExperiment was initialized "
-                    + "properly by converting the samples before converting the subsets.";
+            if ( !found )
+                throw new IllegalStateException( "No matching bioassay found for " + sample.getGeoAccession()
+                        + " in subset " + geoSubSet + " Make sure the ExpressionExperiment was initialized "
+                        + "properly by converting the samples before converting the subsets." );
         }
         return subSet;
     }
@@ -1690,7 +1694,7 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
         for ( GeoSubset subset : geoDataset.getSubsets() ) {
-            log.debug( "Converting subset: " + subset.getType() );
+            if ( log.isDebugEnabled() ) log.debug( "Converting subset: " + subset.getType() );
             ExpressionExperimentSubSet ees = convertSubset( result, subset );
             result.getSubsets().add( ees );
 
@@ -1972,7 +1976,7 @@ public class GeoConverter implements Converter {
     private Collection<GeoSample> getDatasetSamples( GeoDataset geoDataset ) {
         Collection<GeoSample> seriesSamples = getSeriesSamplesForDataset( geoDataset );
 
-        // get just the samples used in this series
+        // get just the samples used in this dataset
         Collection<GeoSample> datasetSamples = new ArrayList<GeoSample>();
 
         for ( GeoSample sample : seriesSamples ) {

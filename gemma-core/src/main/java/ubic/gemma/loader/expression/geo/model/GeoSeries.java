@@ -61,28 +61,6 @@ public class GeoSeries extends GeoData {
         values = new GeoValues();
     }
 
-    public void addSample( GeoSample sample ) {
-        this.samples.add( sample );
-    }
-
-    public Collection<GeoSample> getSamples() {
-        return this.samples;
-    }
-
-    /**
-     * @return Returns the contributers.
-     */
-    public Collection<GeoContact> getContributers() {
-        return this.contributers;
-    }
-
-    /**
-     * @param contributers The contributers to set.
-     */
-    public void setContributers( Collection<GeoContact> contributers ) {
-        this.contributers = contributers;
-    }
-
     /**
      * @param contributer
      */
@@ -91,73 +69,24 @@ public class GeoSeries extends GeoData {
     }
 
     /**
-     * @return Returns the overallDesign.
+     * @param dataset
      */
-    public String getOverallDesign() {
-        return this.overallDesign;
+    public void addDataSet( GeoDataset dataset ) {
+        dataset.addSeries( this );
+        this.dataSets.add( dataset );
+    }
+
+    public void addSample( GeoSample sample ) {
+        this.samples.add( sample );
     }
 
     /**
-     * @param overallDesign The overallDesign to set.
+     * Add a group of samples to this series.
+     * 
+     * @param samples
      */
-    public void setOverallDesign( String overallDesign ) {
-        this.overallDesign = overallDesign;
-    }
-
-    /**
-     * @return Returns the pubmedIds.
-     */
-    public Collection<String> getPubmedIds() {
-        return this.pubmedIds;
-    }
-
-    /**
-     * @param pubmedIds The pubmedIds to set.
-     */
-    public void setPubmedIds( Collection<String> pubmedIds ) {
-        this.pubmedIds = pubmedIds;
-    }
-
-    /**
-     * @return Returns the summaries.
-     */
-    public String getSummaries() {
-        return this.summary;
-    }
-
-    /**
-     * @param summaries The summaries to set.
-     */
-    public void setSummaries( String summary ) {
-        this.summary = summary;
-    }
-
-    /**
-     * @param text to add onto the summary. A space is added to the end of the previous summary first.
-     */
-    public void addToSummary( String text ) {
-        this.summary = this.summary + " " + text;
-    }
-
-    /**
-     * @return Returns the type.
-     */
-    public Collection<String> getKeyWords() {
-        return this.keyWords;
-    }
-
-    /**
-     * @param type The type to set.
-     */
-    public void setKeyWords( Collection<String> type ) {
-        this.keyWords = type;
-    }
-
-    /**
-     * @return Returns the variables.
-     */
-    public Map<Integer, GeoVariable> getVariables() {
-        return this.variables;
+    public void addSamples( Collection<GeoSample> samples ) {
+        this.samples.addAll( samples );
     }
 
     /**
@@ -171,60 +100,22 @@ public class GeoSeries extends GeoData {
         this.pubmedIds.add( id );
     }
 
+    /**
+     * @param text to add onto the summary. A space is added to the end of the previous summary first.
+     */
+    public void addToSummary( String text ) {
+        this.summary = this.summary + " " + text;
+    }
+
     public void addToVariables( Integer number, GeoVariable variable ) {
         this.variables.put( number, variable );
     }
 
     /**
-     * @return Returns the webLinks.
+     * @return Returns the contributers.
      */
-    public Collection<String> getWebLinks() {
-        return this.webLinks;
-    }
-
-    /**
-     * @param webLinks The webLinks to set.
-     */
-    public void setWebLinks( Collection<String> webLinks ) {
-        this.webLinks = webLinks;
-    }
-
-    /**
-     * @param contact The contact to set.
-     */
-    public void setContact( GeoContact contact ) {
-        this.contact = contact;
-    }
-
-    /**
-     * @return Returns the replicates.
-     */
-    public Map<Integer, GeoReplication> getReplicates() {
-        return this.replicates;
-    }
-
-    /**
-     * @param replicates The replicates to set.
-     */
-    public void setReplicates( Map<Integer, GeoReplication> replicates ) {
-        this.replicates = replicates;
-    }
-
-    /**
-     * Add a group of samples to this series.
-     * 
-     * @param samples
-     */
-    public void addSamples( Collection<GeoSample> samples ) {
-        this.samples.addAll( samples );
-    }
-
-    /**
-     * @param dataset
-     */
-    public void addDataSet( GeoDataset dataset ) {
-        dataset.addSeries( this );
-        this.dataSets.add( dataset );
+    public Collection<GeoContact> getContributers() {
+        return this.contributers;
     }
 
     /**
@@ -235,31 +126,10 @@ public class GeoSeries extends GeoData {
     }
 
     /**
-     * @return Returns the sampleCorrespondence.
+     * @return Returns the type.
      */
-    public GeoSampleCorrespondence getSampleCorrespondence() {
-        return this.sampleCorrespondence;
-    }
-
-    /**
-     * @param sampleCorrespondence The sampleCorrespondence to set.
-     */
-    public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
-        this.sampleCorrespondence = sampleCorrespondence;
-    }
-
-    /**
-     * @return String
-     */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
-    }
-
-    /**
-     * @param supplementaryFile
-     */
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
+    public Collection<String> getKeyWords() {
+        return this.keyWords;
     }
 
     /**
@@ -272,6 +142,95 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @return Returns the overallDesign.
+     */
+    public String getOverallDesign() {
+        return this.overallDesign;
+    }
+
+    /**
+     * @return Returns the pubmedIds.
+     */
+    public Collection<String> getPubmedIds() {
+        return this.pubmedIds;
+    }
+
+    /**
+     * @return Returns the replicates.
+     */
+    public Map<Integer, GeoReplication> getReplicates() {
+        return this.replicates;
+    }
+
+    /**
+     * @return Returns the sampleCorrespondence.
+     */
+    public GeoSampleCorrespondence getSampleCorrespondence() {
+        return this.sampleCorrespondence;
+    }
+
+    public Collection<GeoSample> getSamples() {
+        return this.samples;
+    }
+
+    /**
+     * @return Returns the summaries.
+     */
+    public String getSummaries() {
+        return this.summary;
+    }
+
+    /**
+     * @return String
+     */
+    public String getSupplementaryFile() {
+        return supplementaryFile;
+    }
+
+    public GeoValues getValues() {
+        return values;
+    }
+
+    /**
+     * @return Returns the variables.
+     */
+    public Map<Integer, GeoVariable> getVariables() {
+        return this.variables;
+    }
+
+    /**
+     * @return Returns the webLinks.
+     */
+    public Collection<String> getWebLinks() {
+        return this.webLinks;
+    }
+
+    /**
+     * @param contact The contact to set.
+     */
+    public void setContact( GeoContact contact ) {
+        this.contact = contact;
+    }
+
+    /**
+     * @param contributers The contributers to set.
+     */
+    public void setContributers( Collection<GeoContact> contributers ) {
+        this.contributers = contributers;
+    }
+
+    public void setDataSets( Collection<GeoDataset> dataSets ) {
+        this.dataSets = dataSets;
+    }
+
+    /**
+     * @param type The type to set.
+     */
+    public void setKeyWords( Collection<String> type ) {
+        this.keyWords = type;
+    }
+
+    /**
      * Sets the date the series was last updated.
      * 
      * @param lastUpdateDate
@@ -280,12 +239,57 @@ public class GeoSeries extends GeoData {
         this.lastUpdateDate = lastUpdateDate;
     }
 
-    public GeoValues getValues() {
-        return values;
+    /**
+     * @param overallDesign The overallDesign to set.
+     */
+    public void setOverallDesign( String overallDesign ) {
+        this.overallDesign = overallDesign;
+    }
+
+    /**
+     * @param pubmedIds The pubmedIds to set.
+     */
+    public void setPubmedIds( Collection<String> pubmedIds ) {
+        this.pubmedIds = pubmedIds;
+    }
+
+    /**
+     * @param replicates The replicates to set.
+     */
+    public void setReplicates( Map<Integer, GeoReplication> replicates ) {
+        this.replicates = replicates;
+    }
+
+    /**
+     * @param sampleCorrespondence The sampleCorrespondence to set.
+     */
+    public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
+        this.sampleCorrespondence = sampleCorrespondence;
+    }
+
+    /**
+     * @param summaries The summaries to set.
+     */
+    public void setSummaries( String summary ) {
+        this.summary = summary;
+    }
+
+    /**
+     * @param supplementaryFile
+     */
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
     }
 
     public void setValues( GeoValues values ) {
         this.values = values;
+    }
+
+    /**
+     * @param webLinks The webLinks to set.
+     */
+    public void setWebLinks( Collection<String> webLinks ) {
+        this.webLinks = webLinks;
     }
 
 }
