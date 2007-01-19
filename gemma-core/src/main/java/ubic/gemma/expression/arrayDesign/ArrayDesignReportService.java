@@ -106,6 +106,7 @@ public class ArrayDesignReportService
             Writer writer = new FileWriter(f);
             writer.write( report );
             writer.flush();
+            writer.close();
         } catch ( IOException e ) {
             // cannot write to file. Just fail gracefully.
             log.error( "Cannot write to file." );
@@ -130,6 +131,7 @@ public class ArrayDesignReportService
             Writer writer = new FileWriter(f);
             writer.write( report.toString() );
             writer.flush();
+            writer.close();
         } catch ( IOException e ) {
             // cannot write to file. Just fail gracefully.
             log.error( "Cannot write to file." );

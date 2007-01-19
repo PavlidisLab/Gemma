@@ -162,6 +162,7 @@ public class ExpressionExperimentReportService {
                         + "." + eeVo.getId() );
                 ObjectOutputStream oos = new ObjectOutputStream( fos );
                 oos.writeObject( eeVo );
+                oos.flush();
                 oos.close();
             } catch ( Throwable e ) {
                 return false;
@@ -207,6 +208,8 @@ public class ExpressionExperimentReportService {
                 FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + objectFile );
                 ObjectInputStream ois = new ObjectInputStream( fis );
                 eeValueObjects = ( Collection ) ois.readObject();
+                ois.close();
+                fis.close();
             } catch ( Throwable e ) {
                 return null;
             }
@@ -232,6 +235,8 @@ public class ExpressionExperimentReportService {
                         + id );
                 ObjectInputStream ois = new ObjectInputStream( fis );
                 eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject());
+                ois.close();
+                fis.close();
                 }
                 else {
                     continue;
@@ -249,23 +254,21 @@ public class ExpressionExperimentReportService {
      */
     private ExpressionExperimentValueObject retrieveValueObject(long id) {
 
-
-           try {
-                File f = new File(HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "."
-                        + id);
-                if (f.exists()) {
+        ExpressionExperimentValueObject eeVo = null;
+        try {
+            File f = new File( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "." + id );
+            if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "."
                         + id );
                 ObjectInputStream ois = new ObjectInputStream( fis );
-                return  ( ExpressionExperimentValueObject ) ois.readObject();
-                }
-                else {
-                    return null;
-                }
-            } catch ( Throwable e ) {
-                return null;
+                eeVo = ( ExpressionExperimentValueObject ) ois.readObject();
+                ois.close();
+                fis.close();
             }
-
+        } catch ( Throwable e ) {
+            return null;
+        }
+        return eeVo;
     }
     
     
