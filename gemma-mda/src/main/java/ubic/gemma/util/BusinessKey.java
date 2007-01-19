@@ -70,10 +70,6 @@ public class BusinessKey {
      * @param arrayDesign
      */
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
-        addNameRestriction( queryObject, arrayDesign );
-
-        if ( arrayDesign.getShortName() != null )
-            queryObject.add( Restrictions.eq( "shortName", arrayDesign.getShortName() ) );
 
         /*
          * Test whether ANY of the associated external references match any of the given external references.
@@ -86,7 +82,13 @@ public class BusinessKey {
                 // FIXME this should include the ExternalDatabase in the criteria.
             }
             externalRef.add( disjunction );
+            return;
         }
+
+        addNameRestriction( queryObject, arrayDesign );
+
+         if ( arrayDesign.getShortName() != null )
+            queryObject.add( Restrictions.eq( "shortName", arrayDesign.getShortName() ) );
 
         if ( arrayDesign.getDesignProvider() != null
                 && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
