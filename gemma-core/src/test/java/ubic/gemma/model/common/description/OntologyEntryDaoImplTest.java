@@ -119,5 +119,15 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
         Collection<OntologyEntry> actualValue = oed.getAllChildren( top );
         assertEquals( 3, actualValue.size() );
     }
+    
+    public final void testFindByAccession(){
+        //this should be a test that causes a lazy load exception but it doesn't seem to replicate the probem.
+        //I believe the test data needs to be persisted to the db and evicted from the session for it to reproduce the
+        //lazy loading problems. 
+       OntologyEntry oe = oed.findByAccession( "fred" );
+       assertEquals("fred", oe.getAccession());
+       
+    }
+    
 
 }
