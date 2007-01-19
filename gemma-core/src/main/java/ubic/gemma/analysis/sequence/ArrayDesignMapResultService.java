@@ -161,7 +161,7 @@ public class ArrayDesignMapResultService {
         Collection sequenceData = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign );
         
         HashMap<Long,CompositeSequenceMapValueObject> summary = new HashMap<Long,CompositeSequenceMapValueObject>();
-        
+        // TODO fix number of blatHits to check the ID per BlatResult so it does not overcount
         for ( Object o : sequenceData ) {
             Object[] row = (Object[]) o;
             Long csId = ((BigInteger) row[0]).longValue();

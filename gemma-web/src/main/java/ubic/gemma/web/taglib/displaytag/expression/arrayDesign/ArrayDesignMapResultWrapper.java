@@ -78,16 +78,19 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
         }
         
         StringBuffer retVal = new StringBuffer();
-        
+        String[] geneList = new String[gVos.size()];
+        int geneCount = 0;
         for ( Object o2 : gVos ) {
             GeneValueObject gVo = (GeneValueObject) o2;
             
             String fullName = gVo.getOfficialSymbol();
-            String shortName = StringUtils.abbreviate( fullName, 20 );
+            geneList[geneCount] = fullName;
+            geneCount++;
+/*            String shortName = StringUtils.abbreviate( fullName, 20 );
             
             if (gVo.getNcbiId() != null) {
                 retVal.append( "<span title='"+ fullName+"'>" + shortName + "</span><a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" + gVo.getNcbiId() + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a>" +
-                        "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gVo.getId().toString() + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><BR>");
+                        "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gVo.getId().toString() + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><br />");
             }
             else {
                 retVal.append( "<span title='"+ fullName+"'>" + shortName + "</span><BR>");
@@ -115,39 +118,13 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
             }
             retVal.append( "RNA (" + rnaCount+ ")<BR>" );
             retVal.append( rnaStrings );
-            retVal.append( "</span>" );
+            retVal.append( "</span>" );*/
             
-            
-            // add expansion code - Protein
-            retVal.append( "<span name=\"" + compositeSequenceId + fullName + "Protein\" onclick=\"return toggleVisibility('" + compositeSequenceId+ fullName + "Protein')\">" + 
-                    "<img src=\"/Gemma/images/chart_organisation_add.png\" />" + 
-                    "</span>" + 
-                    "<span name=\"" + compositeSequenceId + fullName + "Protein\" style=\"display:none\" onclick=\"return toggleVisibility('" + compositeSequenceId + fullName + "Protein')\">" + 
-                    "<img src=\"/Gemma/images/chart_organisation_delete.png\" />" + 
-                    "</span>");
-            
-            // append the list of geneProducts
-            // grouped by gene and geneProductType
-
-
-/*
-            int proteinCount = 0;
-            StringBuffer proteinStrings = new StringBuffer();
-            proteinStrings.append( "<span style='display:none' name=\""+ compositeSequenceId + fullName + "Protein\">" );
-            for ( Object gpVo : geneProductVos ) {
-                if (((GeneProductValueObject)gpVo).getType().equalsIgnoreCase( "Protein" )) {
-                    String gpStr = generateGeneProductLink( (GeneProductValueObject) gpVo );
-                    proteinStrings.append( (String)gpStr );
-                    proteinCount++;
-                }
-            }
-            retVal.append( "Protein (" + proteinCount+ ")<BR>" );
-            retVal.append( proteinStrings );
-            retVal.append( "</span>" );
-*/
-
         }
-        
+        String fullGeneList = StringUtils.join( geneList, "," );
+        String shortGeneList = StringUtils.abbreviate( fullGeneList, 20 );
+        retVal.append( shortGeneList );
+        retVal.append( "(" + geneList.length + ")" );
         return retVal.toString();
         
     }
@@ -175,33 +152,12 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
         return gpStr.toString();
     }
     
-    public String getGeneProductList() {
+   
+    public String getCompositeSequenceNameLink() {
         CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
-        Collection gpVos= object.getGeneProducts().values();
-        StringBuffer retVal = new StringBuffer();
-        for ( Object o2 : gpVos ) {
-            GeneProductValueObject gpVo = (GeneProductValueObject) o2;
-            String fullName = gpVo.getName();
-            String shortName = StringUtils.abbreviate( fullName, 20 );
-            
-            String ncbiLink = "";
-            if (gpVo.getType().equalsIgnoreCase( "RNA" ) ) {
-                ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=";
-            }
-            else {
-                // assume protein
-                ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&cmd=search&term=";
-                
-            }
-            if (gpVo.getNcbiId() != null) {
-                retVal.append( "<span title='"+ fullName+"'>" + shortName + "</span><a target='_blank' href='" +  ncbiLink + gpVo.getNcbiId() + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a><BR>");
-            }
-            else {
-                retVal.append( "<span title='"+ fullName+"'>" + shortName + "</span><BR>");
-            }
-        }
-        
-        return retVal.toString();
-        
+        String name = object.getCompositeSequenceName();
+        String id = object.getCompositeSequenceId();
+        String nameLink = "<a href='#' onclick=\"ajaxAnywhere.getAJAX('/Gemma/compositeSequence/showAjaxCompositeSequence.html?id="+ id + "');return false;\"> " + name + " </a>";
+        return nameLink;
     }
 }
