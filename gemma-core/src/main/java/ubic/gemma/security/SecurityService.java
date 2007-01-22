@@ -19,11 +19,11 @@
 package ubic.gemma.security;
 
 import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.acl.AclEntry;
-import org.acegisecurity.acl.AclManager;
+import org.acegisecurity.acl.basic.BasicAclExtendedDao;
+import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,45 +32,46 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 /**
  * @author keshav
  * @spring.bean name="securityService"
- * @spring.property name="aclManager" ref="aclManager"
+ * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  */
 public class SecurityService {
     private Log log = LogFactory.getLog( SecurityService.class );
 
-    private AclManager aclManager = null;
+    private BasicAclExtendedDao basicAclExtendedDao = null;
 
     /**
+     * Changes the acl_permission of the object to ADMINISTRATION (mask=1).
+     * 
      * @param object
      */
     public void makePrivate( Object object ) {
 
+        SecurityContext securityCtx = SecurityContextHolder.getContext();
+        Authentication authentication = securityCtx.getAuthentication();
+        Object recipient = authentication.getPrincipal();
+
+        int privateMask = 1;
+        String username = null;
         if ( object instanceof ArrayDesign ) {
-            ArrayDesign arrayDesign = ( ArrayDesign ) object;
-
-            SecurityContext securityCtx = SecurityContextHolder.getContext();
-
-            Authentication authentication = securityCtx.getAuthentication();
-            GrantedAuthority[] grantedAuthorities = authentication.getAuthorities();
-            for ( GrantedAuthority authority : grantedAuthorities ) {
-                log.debug( "Authority: " + authority.getAuthority() );
+            if ( recipient instanceof UserDetails ) {
+                username = ( ( UserDetails ) recipient ).getUsername();
+            } else {
+                username = recipient.toString();
             }
-
-            AclEntry[] acls = aclManager.getAcls( arrayDesign );
-            for ( AclEntry acl : acls ) {
-                log.debug( "acl entry: " + acl );
-                // I want to remove acl entries that are not administrator
+            try {
+                basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, privateMask );
+            } catch ( Exception e ) {
+                throw new RuntimeException( "Problems changing mask of " + object, e );
             }
-
-            // I need a setter to set the acls. AclManager does not have one.
         }
 
     }
 
     /**
-     * @param aclManager the aclManager to set
+     * @param aclDao the aclDao to set
      */
-    public void setAclManager( AclManager aclManager ) {
-        this.aclManager = aclManager;
+    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
+        this.basicAclExtendedDao = basicAclExtendedDao;
     }
 
 }
