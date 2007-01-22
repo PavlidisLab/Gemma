@@ -3,7 +3,11 @@
     class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
   <title> <fmt:message key="compositeSequence.title" /> </title>
-  <script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
+  <script type="text/javascript"
+	src="<c:url value="/scripts/scrolltable.js"/>"></script>
+<link rel="stylesheet" type="text/css" href="<c:url value='/styles/scrolltable.css'/>" />	
+
+
 
   		<aa:zone name="csTable">
   
@@ -11,9 +15,15 @@
   <tr>
   <td>
         <h2>
-            <fmt:message key="compositeSequence.title" /> Details
+            <fmt:message key="compositeSequence.title" /> Details 
+            (click on a composite sequence link to update this area)
+            
         </h2>
-        (click on a composite sequence link to update this area)
+
+
+        
+    	<a href="/Gemma/compositeSequence/showCompositeSequence.html?id=<jsp:getProperty name="compositeSequence" property="id" />">(bookmarkable link)</a>    
+
         <table width="100%">
             <tr>
                 <td valign="top">
@@ -121,21 +131,29 @@
  </tr>
  <tr>
  <td>
-		<display:table name="blatResults" class="list" requestURI="" id="blatResult" style="width:100%;"
-             pagesize="20"
+ <div id="tableContainer" class="tableContainer">
+ 		<script type="text/javascript">
+ 			initBodyTag();
+ 		</script>
+		<display:table name="blatResults"  requestURI="" id="blatResult" style="width:100%;"
+             pagesize="2000"
              decorator="ubic.gemma.web.taglib.displaytag.expression.designElement.CompositeSequenceWrapper"
+             class="scrollTable"
+             defaultsort="2"
+             defaultorder="descending"
              >		 
-			<display:column property="blatResult" sortable="true" title="Alignment" />
-			<display:column property="blatScore" sortable="true" title="S" />		
-			<display:column property="blatIdentity" sortable="true" title="I" />	
-			<display:column property="geneProducts" title="GeneProducts" />
-			<display:column property="genes" title="Genes" />	
+			<display:column property="blatResult" title="Alignment" headerClass="fixedHeader"/>
+			<display:column property="blatScore" title="S" headerClass="fixedHeader"/>		
+			<display:column property="blatIdentity" title="I" headerClass="fixedHeader"/>	
+			<display:column property="geneProducts" title="GeneProducts" headerClass="fixedHeader"/>
+			<display:column property="genes" title="Genes" headerClass="fixedHeader"/>	
             <display:setProperty name="basic.empty.showtable" value="true" />      
         </display:table>
+</div>
 </td>
 </tr>
 </table>		
 </aa:zone>
-<script type="text/javascript" src="<c:url value="/scripts/aa-init.js"/>"></script>
+
     </body>
 </html>

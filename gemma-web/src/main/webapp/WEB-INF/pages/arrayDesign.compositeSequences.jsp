@@ -25,7 +25,7 @@
 	<script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 <div id="tableContainer" class="tableContainer">
 	<display:table name="sequenceData" sort="list" class="scrollTable" requestURI="" id="arrayDesignSequenceList"
-		pagesize="200" 
+		pagesize="500" 
 		decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignMapResultWrapper">
 		<display:column property="compositeSequenceNameLink" sortable="true" title="Composite Sequence" sortProperty="compositeSequenceName" headerClass="fixedHeader"/>
 		<display:column property="bioSequenceName" sortable="true" title="BioSequence" headerClass="fixedHeader"/>

@@ -27,7 +27,20 @@ function stripedTable() {
 				for (var k = 0; k < trs.length; k += 2) {
 					removeClassName(trs[k], 'normalRow');
 					addCSSClass(trs[k], 'alternateRow');
-				}
+				}			
+			}
+		}
+		initBodyTag();
+	}
+}
+
+function initBodyTag() {
+	if (document.getElementById && document.getElementsByTagName) {  
+		var allTables = document.getElementsByTagName('table');
+		if (!allTables) { return; }
+
+		for (var i = 0; i < allTables.length; i++) {
+			if (allTables[i].className.match(/[\w\s ]*scrollTable[\w\s ]*/)) {
 				// set tbody to be scrollContent
 				var body = allTables[i].getElementsByTagName("tbody");
 				for (var m = 0; m < body.length; m++) {

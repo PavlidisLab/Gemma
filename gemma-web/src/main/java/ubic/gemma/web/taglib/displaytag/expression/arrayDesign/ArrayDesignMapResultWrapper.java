@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
@@ -44,6 +43,7 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
+
     public String getGeneList() {
         CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
         Collection gVos= object.getGenes().values();
@@ -51,13 +51,6 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
         
         // get unique ID - compositeSequenceId
         String compositeSequenceId = "cs" + object.getCompositeSequenceId();
-        
-/*        <span name="datasetList" onclick="return toggleVisibility('datasetList')">
-        <img src="/Gemma/images/chart_organisation_add.png" />
-    </span>
-    <span name="datasetList" style="display:none" onclick="return toggleVisibility('datasetList')">
-        <img src="/Gemma/images/chart_organisation_delete.png" />
-    </span>*/
         
         // associate genes with geneProducts
         HashMap<Long,Collection> geneProducts = new HashMap<Long,Collection>();
@@ -86,39 +79,6 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
             String fullName = gVo.getOfficialSymbol();
             geneList[geneCount] = fullName;
             geneCount++;
-/*            String shortName = StringUtils.abbreviate( fullName, 20 );
-            
-            if (gVo.getNcbiId() != null) {
-                retVal.append( "<span title='"+ fullName+"'>" + shortName + "</span><a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" + gVo.getNcbiId() + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a>" +
-                        "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gVo.getId().toString() + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><br />");
-            }
-            else {
-                retVal.append( "<span title='"+ fullName+"'>" + shortName + "</span><BR>");
-            }
-
-            // add expansion code - RNA
-            
-            retVal.append( "<span name=\"" + compositeSequenceId + fullName + "RNA\" onclick=\"return toggleVisibility('" + compositeSequenceId+ fullName + "RNA')\">" + 
-                "<img src=\"/Gemma/images/chart_organisation_add.png\" />" + 
-                "</span>" + 
-                "<span name=\"" + compositeSequenceId + fullName + "RNA\" style=\"display:none\" onclick=\"return toggleVisibility('" + compositeSequenceId + fullName + "RNA')\">" + 
-                "<img src=\"/Gemma/images/chart_organisation_delete.png\" />" + 
-                "</span>");
-
-            Collection geneProductVos = geneProducts.get( gVo.getId() );
-            int rnaCount = 0;
-            StringBuffer rnaStrings = new StringBuffer();
-            rnaStrings.append( "<span style='display:none' name=\""+ compositeSequenceId + fullName + "RNA\">" );
-            for ( Object gpVo : geneProductVos ) {
-                if (((GeneProductValueObject)gpVo).getType().equalsIgnoreCase( "RNA" )) {
-                    String gpStr = generateGeneProductLink( (GeneProductValueObject) gpVo );
-                    rnaStrings.append( (String)gpStr );
-                    rnaCount++;
-                }
-            }
-            retVal.append( "RNA (" + rnaCount+ ")<BR>" );
-            retVal.append( rnaStrings );
-            retVal.append( "</span>" );*/
             
         }
         String fullGeneList = StringUtils.join( geneList, "," );
@@ -157,6 +117,7 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
         CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
         String name = object.getCompositeSequenceName();
         String id = object.getCompositeSequenceId();
+        // call ajax, then call onload function to initialize scrolltable
         String nameLink = "<a href='#' onclick=\"ajaxAnywhere.getAJAX('/Gemma/compositeSequence/showAjaxCompositeSequence.html?id="+ id + "');return false;\"> " + name + " </a>";
         return nameLink;
     }

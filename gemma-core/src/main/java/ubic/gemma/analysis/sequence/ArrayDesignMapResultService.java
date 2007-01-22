@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,6 +89,7 @@ public class ArrayDesignMapResultService {
 
     }
     
+    @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapSummary> getSummaryMapResults(ArrayDesign arrayDesign) {
         Collection<CompositeSequenceMapSummary> compositeSequenceSummaries = null;
         
@@ -162,6 +162,7 @@ public class ArrayDesignMapResultService {
         
         HashMap<Long,CompositeSequenceMapValueObject> summary = new HashMap<Long,CompositeSequenceMapValueObject>();
         // TODO fix number of blatHits to check the ID per BlatResult so it does not overcount
+        HashMap<Long,HashSet<Long>> blatResultCount = new HashMap<Long,HashSet<Long>>();
         for ( Object o : sequenceData ) {
             Object[] row = (Object[]) o;
             Long csId = ((BigInteger) row[0]).longValue();
@@ -182,14 +183,6 @@ public class ArrayDesignMapResultService {
             
             String geneName = (String)row[11];
             String geneAccession = (String)row[12];
-            
-            /*Object geneProductProteinId = row[13];
-            
-            String geneProductProteinName = (String) row[14];
-            String geneProductProteinAccession = (String) row[15];
-            Object geneProductProteinGeneId = row[16];
-            String geneProductProteinType = (String) row[17];
-*/
           
             CompositeSequenceMapValueObject vo;
             if (summary.containsKey( csId )) {
@@ -215,13 +208,21 @@ public class ArrayDesignMapResultService {
             
             // count the number of blat hits
             if (blatId != null) {
+                Long blatIdObj = ((BigInteger) geneProductGeneId).longValue();
+                if (blatResultCount.containsKey( csId )) {
+                    blatResultCount.get( csId ).add( blatIdObj );
+                }
+                else {
+                    HashSet<Long> blatResultHash = new HashSet<Long>();
+                    blatResultHash.add( blatIdObj );
+                    blatResultCount.put( csId, blatResultHash );
+                }
+                
                 if (vo.getNumBlatHits() == null) {
                     vo.setNumBlatHits( new Long(1) );
                 }   
                 else {
-                    Long blatHits = vo.getNumBlatHits();
-                    blatHits++;
-                    vo.setNumBlatHits( blatHits );
+                    vo.setNumBlatHits( blatResultCount.get( csId ).size() );
                 }
             }
             
@@ -242,22 +243,6 @@ public class ArrayDesignMapResultService {
                     geneProductSet.put( ((BigInteger)geneProductId).toString(), gpVo );
                 }
             }
-            /*if (geneProductProteinId != null) {
-                Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
-                // if the geneProduct is already in the map, do not do anything.
-                // if it isn't there, put it in the map
-                if (!geneProductSet.containsKey( geneProductProteinId )) {
-                    GeneProductValueObject gpVo = new GeneProductValueObject();
-                    gpVo.setId(  ((BigInteger)geneProductProteinId).longValue() );
-                    gpVo.setName( geneProductProteinName );
-                    gpVo.setNcbiId( geneProductProteinAccession );
-                    if (geneProductProteinGeneId != null) {
-                        gpVo.setGeneId( ((BigInteger) geneProductProteinGeneId).longValue() );
-                    }
-                    gpVo.setType( geneProductProteinType );
-                    geneProductSet.put( ((BigInteger)geneProductProteinId).toString(), gpVo );
-                }
-            }*/
             
             // fill in value object for genes
             if (geneId != null) {

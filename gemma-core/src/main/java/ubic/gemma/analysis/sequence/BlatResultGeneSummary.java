@@ -3,9 +3,9 @@
  */
 package ubic.gemma.analysis.sequence;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -66,7 +66,7 @@ public class BlatResultGeneSummary {
             geneProductMap.get( geneProduct ).add( gene );
         }
         else {
-            Collection<Gene> genes = new ArrayList<Gene>();
+            Collection<Gene> genes = new HashSet<Gene>();
             genes.add( gene );
             geneProductMap.put( geneProduct, genes );
         }
