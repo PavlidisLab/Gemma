@@ -65,6 +65,10 @@ public class SecurityService {
             }
         }
 
+        else {
+            throw new RuntimeException( "Cannot change permissions for this type of object." );
+        }
+
     }
 
     /**
