@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.acegisecurity.AccessDeniedException;
-import org.acegisecurity.acl.AclManager;
+import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -58,7 +58,10 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
-
+        /*
+         * Note: You will not see the acl_permission and acl_object_identity in the database unless you add the method
+         * invocaction to setComplete() at the end of this onSetUpInTransaction.
+         */
         log.info( "Turn up the logging levels to DEBUG on the acegi and gemma security packages" );
 
         // super.onSetUpInTransaction(); //admin
@@ -88,20 +91,23 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
-        // arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
-
     }
 
     /**
-     * Tests accessing array designs after permission has been changed from 6 (READ_WRITE) to 1 (ADMINISTRATION).
-     * Expecting an AccessDeniedException
+     * Tests changing the permission of the ArrayDesign from 6 (READ_WRITE) to 1 (ADMINISTRATION).
+     * 
+     * @throws Exception
      */
-    public void testMakePrivate() {
+    public void testMakePrivate() throws Exception {
         ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
 
-        securityService.setAclManager( ( AclManager ) this.getBean( "aclManager" ) );
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.makePrivate( ad );
+        /*
+         * uncomment so you can see the acl permission has been changed in the database.
+         */
+        this.setComplete();
     }
 
     /**
