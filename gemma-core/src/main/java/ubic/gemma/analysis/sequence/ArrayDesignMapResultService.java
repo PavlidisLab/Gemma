@@ -208,7 +208,7 @@ public class ArrayDesignMapResultService {
             
             // count the number of blat hits
             if (blatId != null) {
-                Long blatIdObj = ((BigInteger) geneProductGeneId).longValue();
+                Long blatIdObj = ((BigInteger) blatId).longValue();
                 if (blatResultCount.containsKey( csId )) {
                     blatResultCount.get( csId ).add( blatIdObj );
                 }

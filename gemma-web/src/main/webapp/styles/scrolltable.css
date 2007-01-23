@@ -7,7 +7,7 @@
 div.tableContainer {
 	clear: both;
 	border: 1px solid blue;
-	height: 285px;
+	height: 285px; 
 	overflow: auto;
 	width: 756px;
 }
@@ -55,7 +55,7 @@ html>body div.tableContainer table {
 /* define width of table. Add 16px to width for scrollbar.           */
 /* All other non-IE browsers. Filter out Opera 5.x/6.x and MacIE 5.x */
 head:first-child+body div[class].tableContainer table {
-	width: 756px
+	width: 756px;
 }
 
 /* set table header to a fixed position. WinIE 6.x only                                       */
@@ -110,7 +110,8 @@ thead.fixedHeader a:hover {
 /* Filter out Opera 5.x/6.x and MacIE 5.x                                                 */
 head:first-child+body tbody[class].scrollContent {
 //	display: block;
-	height: 262px;
+//	height: 262px;
+	height: 230px;
 	overflow: auto;
 	width: 100% 
 }

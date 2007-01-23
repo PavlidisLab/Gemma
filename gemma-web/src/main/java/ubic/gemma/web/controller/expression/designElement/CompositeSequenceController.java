@@ -175,7 +175,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
                 }
             }
         }
-        
+
         if (AAUtils.isAjaxRequest(request)){
             AAUtils.addZonesToRefresh(request, "csTable");
         }
