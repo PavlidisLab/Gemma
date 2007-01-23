@@ -80,7 +80,21 @@
                     	out.print("No name available");
                     }%>
                 </td>
-            </tr>      
+            </tr>   
+            <tr>
+                <td valign="top">
+                    <b>
+                        Biosequence accession
+                    </b>
+                </td>
+                <td>
+                	<%if (compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null){%>
+                		${compositeSequence.biologicalCharacteristic.sequenceDatabaseEntry.accession }
+                    <%}else{
+                    	out.print("No accession available");
+                    }%>
+                </td>
+            </tr>       
             <tr>
                 <td valign="top">
                     <b>
