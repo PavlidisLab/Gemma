@@ -167,7 +167,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         if ( ontologyEntry.getId() == null ) {
             throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
         }
-        String queryString = "from OntologyEntryImpl parent where :oe in elements(parent.associations)";
+        String queryString = "select from OntologyEntryImpl parent where :oe in elements(parent.associations)";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "oe", ontologyEntry );

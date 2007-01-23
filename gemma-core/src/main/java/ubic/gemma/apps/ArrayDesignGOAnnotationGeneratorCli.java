@@ -303,7 +303,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             Collection<OntologyEntry> goTerms ) throws IOException {
 
         linesWritten++;
-        log.debug( "Generating line for annotation file  \n" );
+        log.info( "Generating line for annotation file  \n" );
 
         writer.write( probeId + "\t" + gene + "\t" + description + "\t" );
 
@@ -404,7 +404,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         // Make sublist of nonchaced children whose parents need retrieving.
         for ( OntologyEntry child : children ) {
             
-            log.debug( "Checking cache for ontology entries" );
+            log.info( "Checking cache for ontology entries" );
             
             if ( ontologyTreeCache.containsKey( child ) )
                 allParents.put( child, ontologyTreeCache.get( child ) );
@@ -421,16 +421,18 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         // Retrive the 1st level of the non-cached childrens parents.
         Map<OntologyEntry, Collection> parents = oeService.getParents( notCached );
-        Map<OntologyEntry, Collection> foundParents = new HashMap<OntologyEntry, Collection>();
+        
 
         log.info( "Retrieved parents from DB" );
         // Now for each non-cached child, we have all the parents. Use recurison to get all the parents parents and so
         // on.Then flatten out the returned results and add to allParents.
         for ( OntologyEntry child : notCached ) {
 
-            log.debug( "Making recursive call" );
+            Map<OntologyEntry, Collection> foundParents = new HashMap<OntologyEntry, Collection>();
+            
+            log.info( "Making recursive call" );
             Map<OntologyEntry, Collection> grandParents = getAllParents( parents.get( child ) );
-            log.debug( "returned with grandparents." );
+            log.info( "returned with grandparents." );
             
             if ( ( grandParents == null ) || grandParents.isEmpty() ) continue;
 
@@ -440,14 +442,12 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 flatParents.addAll( grandParents.get( parent ) );
 
             foundParents.put( child, flatParents );
-
+            cache(foundParents);
+            log.info("Caching parent entries" );
+            allParents.putAll( foundParents );
+            
         }
-        
-       
-        cache( foundParents );
-        log.debug("Caching parent entries" );
-        allParents.putAll( foundParents );
-
+               
         return allParents;
     }
 
