@@ -595,14 +595,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "taxon.commonName as taxonCommonName,"
                 + "count(distinct BA) as bioAssayCount, "
                 + "count(distinct AD) as arrayDesignCount, "
-                + "ee.shortName as shortName "
+                + "ee.shortName as shortName, "
+                + "eventCreated.date as createdDate "
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA "
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
-                + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED " + " "
+                + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED " 
+                + "WHERE eventCreated.action='C'"
                 + " group by ee order by ee.name";
 
         try {
@@ -620,6 +622,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
                 v.setShortName( list.getString( 9 ) );
+                v.setDateCreated( list.getDate( 10 ).toString() );
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 10 ) );
                 // v.setBioMaterialCount( list.getInteger( 11 ) );
@@ -652,15 +655,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "taxon.commonName as taxonCommonName,"
                 + "count(distinct BA) as bioAssayCount, "
                 + "count(distinct AD) as arrayDesignCount, "
-                + "ee.shortName as shortName "
+                + "ee.shortName as shortName, "
+                + "eventCreated.date as createdDate "
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA "
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
-                + " where ee.id in (:ids) " + " group by ee order by ee.name";
+                + " where eventCreated.action='CREATE' and ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -678,6 +682,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
                 v.setShortName( list.getString( 9 ) );
+                v.setDateCreated( list.getDate( 10 ).toString()  );
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
                 // v.setBioMaterialCount( list.getInteger( 9 ) );

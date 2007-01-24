@@ -18,8 +18,10 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +48,7 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
+import ubic.gemma.web.taglib.displaytag.StringComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -136,15 +139,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             // should be a validator error on submit
             return redirectToList( request );
         }
-
+        
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
         if ( expressionExperiment == null ) {
             return redirectToList( request );
         }
         request.setAttribute( "id", id );
+        
+
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
-       
+      
         //Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
         //mav.addObject( "qtCountSet", s );
         Collection quantitationTypes = expressionExperimentService.getQuantitationTypes( expressionExperiment );
@@ -282,8 +287,22 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             }
             expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
+        // sort expression experiments by name first
+        Collections.sort( (List<ExpressionExperimentValueObject> ) expressionExperiments, 
+                new StringComparator() {
+                    public int compare( Object o1, Object o2 ) {
+                        String s1 = ((ExpressionExperimentValueObject) o1).getName();
+                        String s2 = ((ExpressionExperimentValueObject) o2).getName();
+                        int comparison = s1.compareToIgnoreCase( s2 );
+                        return comparison;
+                    }    
+            }
+        );
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
+
+
+
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;
@@ -322,7 +341,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         
         // load cached data
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments ) ;
-       
+        // sort expression experiments by name first
+        Collections.sort( (List<ExpressionExperimentValueObject> ) expressionExperiments, 
+                new StringComparator() {
+                    public int compare( Object o1, Object o2 ) {
+                        String s1 = ((ExpressionExperimentValueObject) o1).getName();
+                        String s2 = ((ExpressionExperimentValueObject) o2).getName();
+                        int comparison = s1.compareToIgnoreCase( s2 );
+                        return comparison;
+                    }    
+            }
+        );
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
         mav.addObject( "expressionExperiments", expressionExperiments );

@@ -36,6 +36,7 @@
 
 				
 			<authz:authorize ifAnyGranted="admin">
+				<display:column property="dateCreatedNoTime" sortable="true" title="Created" />		
 				<display:column property="edit" sortable="false" title="Edit" />
 				<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
 			</authz:authorize>
