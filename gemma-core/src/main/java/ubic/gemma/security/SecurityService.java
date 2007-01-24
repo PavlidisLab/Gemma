@@ -61,7 +61,8 @@ public class SecurityService {
         }
 
         else {
-            throw new RuntimeException( "Cannot change permissions for this type of object." );
+            throw new RuntimeException( "Object not Securable.  Cannot change permissions for object of type " + object
+                    + "." );
         }
 
     }
