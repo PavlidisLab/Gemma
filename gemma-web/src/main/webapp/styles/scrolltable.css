@@ -111,10 +111,18 @@ thead.fixedHeader a:hover {
 head:first-child+body tbody[class].scrollContent {
 //	display: block;
 //	height: 262px;
-	height: 230px;
+	height: 228px;
 	overflow: auto;
 	width: 100% 
 }
+
+/*head:first-child+body tbody[class].scrollContentInTable {
+//	display: block;
+	height: 248px;
+//	height: 230px;
+	overflow: auto;
+	width: 100% 
+}*/
 
 
 

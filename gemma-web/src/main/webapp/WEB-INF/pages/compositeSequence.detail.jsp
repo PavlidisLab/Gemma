@@ -52,7 +52,7 @@
                     	out.print("No taxon information available");
                     }%>
                 </td>
-            </tr>       
+            </tr>  
             <tr>
                 <td valign="top">
                     <b>
@@ -66,7 +66,38 @@
                     	out.print("No name available");
                     }%>
                 </td>
-            </tr>      
+            </tr>        
+            <tr>
+                <td valign="top">
+                    <b>
+                        Biosequence accession
+                    </b>
+                </td>
+                <td>
+                	<%if (compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null){
+                        String organism = compositeSequence.getBiologicalCharacteristic().getTaxon().getCommonName();
+                        String database = "hg18";
+                        if (organism.equalsIgnoreCase( "Human" )) {
+                            database = "hg18";
+                        }
+                        else if (organism.equalsIgnoreCase( "Rat" )) {
+                            database = "rn4";
+                        }
+                        else if (organism.equalsIgnoreCase( "Mouse" )){
+                            database = "mm8";
+                        }
+                        // build position if the biosequence has an accession
+                        // otherwise point to location
+                        String position = compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry().getAccession();
+                        String link = position + " <a href='http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=" + organism + "&db=" + database + "&position=+" + position + "&pix=620'>(Search UCSC Genome Browser)</a>";                	
+                		
+                        out.print(link);
+                	
+                    }else{
+                    	out.print("No accession available");
+                    }%>
+                </td>
+            </tr>       
             <tr>
                 <td valign="top">
                     <b>
@@ -111,12 +142,13 @@
                     	out.print("No sequence available");
                     }%>
                 </td>
-            </tr>    
+            </tr>      
         </table>
  </td>
  </tr>
  <tr>
  <td>
+  		<div>&nbsp;</div>
 		<display:table name="blatResults"  requestURI="" id="blatResult" style="width:100%;"
              pagesize="200"
              decorator="ubic.gemma.web.taglib.displaytag.expression.designElement.CompositeSequenceWrapper"

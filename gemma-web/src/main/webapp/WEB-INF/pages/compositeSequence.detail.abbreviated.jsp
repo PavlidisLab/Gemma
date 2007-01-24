@@ -166,6 +166,8 @@
  		<script type="text/javascript">
  			initBodyTag();
  		</script>
+ 		<div>&nbsp;</div>
+ 		<br />
 		<display:table name="blatResults"  requestURI="" id="blatResult" style="width:100%;"
              pagesize="2000"
              decorator="ubic.gemma.web.taglib.displaytag.expression.designElement.CompositeSequenceWrapper"
