@@ -23,11 +23,10 @@ import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.common.Securable;
 
 /**
  * @author keshav
@@ -45,19 +44,15 @@ public class SecurityService {
      * @param object
      */
     public void makePrivate( Object object ) {
+        log.debug( "Changing acl of object " + object + "." );
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
         Authentication authentication = securityCtx.getAuthentication();
         Object recipient = authentication.getPrincipal();
 
         int privateMask = 1;
-        String username = null;
-        if ( object instanceof ArrayDesign ) {
-            if ( recipient instanceof UserDetails ) {
-                username = ( ( UserDetails ) recipient ).getUsername();
-            } else {
-                username = recipient.toString();
-            }
+        if ( object instanceof Securable ) {
+
             try {
                 basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, privateMask );
             } catch ( Exception e ) {
