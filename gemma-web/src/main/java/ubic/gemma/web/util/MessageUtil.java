@@ -100,10 +100,20 @@ public class MessageUtil extends ApplicationObjectSupport {
      */
     @SuppressWarnings("unchecked")
     public void saveMessage( HttpSession session, String msg ) {
-        List<String> messages = ( List<String> ) session.getAttribute( "messages" );
+        Object sessAttr = session.getAttribute( "messages" );
+        List<String> messages; 
 
-        if ( messages == null ) {
+        if ( sessAttr == null ) {
             messages = new ArrayList<String>();
+        }
+        else {
+            if (sessAttr instanceof String) {
+                messages = new ArrayList<String>();
+                messages.add( (String) sessAttr );
+            }
+            else {
+                messages = ( List<String> ) sessAttr;
+            }
         }
 
         messages.add( msg );
