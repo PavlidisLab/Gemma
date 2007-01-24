@@ -43,20 +43,54 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-    
     /**
      * @return String
      */
     public String getDateCachedNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        if (object.getDateCached() == null) {
+        if ( object.getDateCached() == null ) {
             return "";
+        } else {
+            if ( object.getDateCached().length() > 10 ) {
+                return object.getDateCached().substring( 0, 10 );
+            } else {
+                return object.getDateCached();
+            }
         }
-        else {
-            return object.getDateCached().substring( 0, 10 );
+    }
+
+    /**
+     * @return String
+     */
+    public String getDateCreatedNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object.getDateCreated() == null ) {
+            return "";
+        } else {
+            if ( object.getDateCreated().length() > 10 ) {
+                return object.getDateCreated().substring( 0, 10 );
+            } else {
+                return object.getDateCreated();
+            }
         }
-    } 
-    
+    }
+
+    /**
+     * @return String
+     */
+    public String getDateLastUpdatedNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object.getDateLastUpdated() == null ) {
+            return "";
+        } else {
+            if ( object.getDateLastUpdated().length() > 10 ) {
+                return object.getDateLastUpdated().substring( 0, 10 );
+            } else {
+                return object.getDateLastUpdated();
+            }
+        }
+    }
+
     /**
      * @return String
      */
@@ -66,9 +100,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             // custom code
             // put in GEO link if it is GEO
             // TODO we should create external database links dynamically
-            if (object.getExternalDatabase().equalsIgnoreCase( "geo" )) {
-                return "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + 
-                    object.getAccession() + "'>GEO</a>";
+            if ( object.getExternalDatabase().equalsIgnoreCase( "geo" ) ) {
+                return "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + object.getAccession()
+                        + "'>GEO</a>";
             }
             return object.getExternalDatabase();
         }
@@ -107,8 +141,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         long count = object.getBioAssayCount();
 
-        return count + " <a href=\"/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
-                + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+        return count + " <a href=\"/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id="
+                + object.getId() + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
     }
 
     /**
@@ -162,12 +196,13 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return "<a title=\"" + object.getName() + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
+            return "<a title=\"" + object.getName()
+                    + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
                     + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
         }
         return "No design";
     }
-    
+
     /**
      * Returns the count of the array designs for the specific expression experiment
      * 
@@ -176,7 +211,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getArrayDesignLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return Long.toString(object.getArrayDesignCount());
+            return Long.toString( object.getArrayDesignCount() );
         }
         return "No design";
     }
@@ -186,61 +221,56 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getQtName() {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
-        return (( QuantitationType ) entry.getKey()).getName();
+        return ( ( QuantitationType ) entry.getKey() ).getName();
     }
-    
+
     /**
      * @return View for status of the QTs
      */
     public String getQtPreferredStatus() {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
-        if ( (( QuantitationType ) entry.getKey()).getIsPreferred()) {
+        if ( ( ( QuantitationType ) entry.getKey() ).getIsPreferred() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for background status of the QTs
      */
     public String getQtBackground() {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
-        if ( (( QuantitationType ) entry.getKey()).getIsBackground()) {
+        if ( ( ( QuantitationType ) entry.getKey() ).getIsBackground() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for background subtracted status of the QTs
      */
     public String getQtBackgroundSubtracted() {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
-        if ( (( QuantitationType ) entry.getKey()).getIsBackgroundSubtracted()) {
+        if ( ( ( QuantitationType ) entry.getKey() ).getIsBackgroundSubtracted() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for normalized status of the QTs
      */
     public String getQtNormalized() {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
-        if ( (( QuantitationType ) entry.getKey()).getIsNormalized()) {
+        if ( ( ( QuantitationType ) entry.getKey() ).getIsNormalized() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
 
     /**
      * @return View for value of the quantitation type counts.
@@ -270,7 +300,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
                 + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
 
     }
-    
+
     public String getEdit() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
 
@@ -278,12 +308,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "Expression Experiment unavailable";
         }
 
-
-        return "<input type='button' " +
-               " onclick=\"location.href='editExpressionExperiment.html?id=" + object.getId() + "'\"" + 
-               " value='Edit'>";
-        
-        
+        return "<input type='button' " + " onclick=\"location.href='editExpressionExperiment.html?id=" + object.getId()
+                + "'\"" + " value='Edit'>";
 
     }
 }

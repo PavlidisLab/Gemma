@@ -272,19 +272,22 @@
 			<BR />
 			<b>Details by quantitation type:</b>
 		</p>
-		<aazone tableId="dataVectorList" zone="dataVectorTable" />
-		<aa:zone name="dataVectorTable">
-			<display:table name="qtCountSet" class="list"
+			<display:table name="quantitationTypes" class="list"
 				requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
 				id="dataVectorList" pagesize="10"
-				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+				decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
 				<display:column property="qtName" sortable="true" maxWords="20"
 					titleKey="quantitationType.name" />
-				<display:column property="qtValue" sortable="true" maxWords="20"
-					titleKey="quantitationType.countVectors" />
+				<display:column property="qtPreferredStatus" sortable="true" maxWords="20"
+					titleKey="quantitationType.preferred" />
+				<display:column property="qtBackground" sortable="true" maxWords="20"
+					titleKey="quantitationType.background" />
+				<display:column property="qtBackgroundSubtracted" sortable="true" maxWords="20"
+					titleKey="quantitationType.backgroundSubtracted" />
+				<display:column property="qtNormalized" sortable="true" maxWords="20"
+					titleKey="quantitationType.normalized" />
 				<display:setProperty name="basic.empty.showtable" value="false" />
 			</display:table>
-		</aa:zone>
 		
 		<authz:authorize ifAnyGranted="admin">
 			<h3>

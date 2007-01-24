@@ -22,6 +22,8 @@
 			<display:column property="preferredDesignElementDataVectorCount" sortable="true" titleKey="expressionExperiment.preferredDesignElementDataVectorCount" />
 			<display:column property="bioMaterialCount" sortable="true" titleKey="expressionExperiment.bioMaterialCount" />
 			<display:column property="dateCachedNoTime" sortable="true" title="Cached" />
-							
+			<display:column property="dateCreatedNoTime" sortable="true" title="Created" />
+			<display:column property="dateLastUpdatedNoTime" sortable="true" title="Updated" />
+													
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>

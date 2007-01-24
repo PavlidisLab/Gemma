@@ -114,12 +114,16 @@ public class ExpressionExperimentReportService {
         String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd hh:mm" );
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = (ExpressionExperimentValueObject) object;
-            ExpressionExperiment tempEe = ExpressionExperiment.Factory.newInstance();
-            tempEe.setId( Long.parseLong( eeVo.getId() ) );
+            ExpressionExperiment tempEe =  expressionExperimentService.findById( Long.parseLong( eeVo.getId() ) );
+
             eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
             eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService.getPreferredDesignElementDataVectorCount( tempEe ) );
             eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( tempEe ).longValue() );
             eeVo.setDateCached( timestamp );
+            if ( tempEe.getAuditTrail() != null ) {                
+                eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
+            }
+            eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate().toString() );
             
         }
     }
@@ -185,6 +189,8 @@ public class ExpressionExperimentReportService {
                 eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
+                eeVo.setDateCreated( cacheVo.getDateCreated() );
+                eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
             }
         }
     }

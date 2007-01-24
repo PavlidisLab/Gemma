@@ -145,9 +145,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
        
-        Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
-        mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById( id ).entrySet() );
-
+        //Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
+        //mav.addObject( "qtCountSet", s );
+        Collection quantitationTypes = expressionExperimentService.getQuantitationTypes( expressionExperiment );
+        mav.addObject( "quantitationTypes", quantitationTypes );
+     
+        
         // add arrayDesigns used, by name
         Collection<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
