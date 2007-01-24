@@ -19,8 +19,15 @@
 
 package ubic.gemma.model.common.description;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceImpl;
 
 /**
  * @author keshav
@@ -28,6 +35,8 @@ import java.util.Map;
  * @see ubic.gemma.model.common.description.OntologyEntryService
  */
 public class OntologyEntryServiceImpl extends ubic.gemma.model.common.description.OntologyEntryServiceBase {
+    
+    private static Log log = LogFactory.getLog( OntologyEntryServiceImpl.class.getName() );
 
     /**
      * @see ubic.gemma.model.common.description.OntologyEntryService#findOrCreate(ubic.gemma.model.common.description.OntologyEntry)
@@ -129,6 +138,117 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
         
         return this.getOntologyEntryDao().findByAccession( accession );
         
+    }
+    
+    final String ALL = "all";
+    
+    // Caches
+   private  Map<String, OntologyEntry> ontologyCache = new HashMap<String, OntologyEntry>();
+   private Map<OntologyEntry, Collection> ontologyTreeCache = new HashMap<OntologyEntry, Collection>();
+   
+   protected Map handleGetAllParents( Collection children ) {
+
+        if ( ( children == null ) || ( children.isEmpty() ) ) return null;
+
+        Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
+        Map<OntologyEntry, Collection> allParents = new HashMap<OntologyEntry, Collection>();
+
+        // Check to see if the childrens parents are already chached.
+        // Check: if a child is the root then done.
+        // Make sublist of nonchaced children whose parents need retrieving.
+        for ( Object obj : children ) {
+            
+            OntologyEntry child = (OntologyEntry) obj;
+            //log.info( "Checking cache for ontology entries" );
+            
+            if ( ontologyTreeCache.containsKey( child ) )
+                allParents.put( child, ontologyTreeCache.get( child ) );
+
+            else if ( child.getAccession().equalsIgnoreCase( ALL ) )
+                continue;
+
+            else
+                notCached.add( child );
+        }
+
+        // all children where already cached. Just return.
+        if ( notCached.isEmpty() ) return allParents;
+
+        // Retrive the 1st level of the non-cached childrens parents.
+        Map<OntologyEntry, Collection> parents = this.getParents( notCached );
+        
+
+        // Now for each non-cached child, we have all the parents. Use recurison to get all the parents parents and so
+        // on.Then flatten out the returned results and add to allParents.
+        for ( OntologyEntry child : notCached ) {
+            
+            Map<OntologyEntry, Collection> foundParents = new HashMap<OntologyEntry, Collection>();
+            
+            foundParents.put(child, parents.get( child ));
+            
+            Map<OntologyEntry, Collection> grandParents = this.getAllParents( parents.get( child ) );
+       
+            
+            if ( ( grandParents == null ) || grandParents.isEmpty() ) {              
+                cache(foundParents);
+                allParents.putAll( foundParents );
+                continue;            
+            }
+            
+            Collection<OntologyEntry> flatParents = new ArrayList<OntologyEntry>();
+
+            for ( OntologyEntry parent : grandParents.keySet() )
+                flatParents.addAll( grandParents.get( parent ) );
+
+            foundParents.get(child).addAll(  flatParents );
+            cache(foundParents);
+           // log.info("Caching parent entries" );
+            allParents.putAll( foundParents );
+            
+        }
+               
+        return allParents;
+    }
+
+    // Modifies passed in collection.
+    private void cache( Map<OntologyEntry, Collection> toCache ) {
+
+        
+        Map<OntologyEntry, Collection> cached = new HashMap<OntologyEntry, Collection>();
+
+        if ( ( toCache == null ) || ( toCache.isEmpty() ) ) return;
+
+        for ( OntologyEntry oe : toCache.keySet() ) {
+
+            Collection<OntologyEntry> parents = toCache.get( oe );
+            Collection<OntologyEntry> cachedParents = new ArrayList<OntologyEntry>();
+
+            for ( OntologyEntry parent : parents ) {
+
+                if ( ontologyCache.containsKey( parent.getAccession() ) )
+                    cachedParents.add( ontologyCache.get( parent.getAccession() ) );
+                else{
+                    cachedParents.add( parent );
+                    ontologyCache.put( parent.getAccession(), parent);
+                }
+
+            }
+
+            if ( ontologyCache.containsKey( oe.getAccession() ) )
+                cached.put( ontologyCache.get( oe.getAccession() ), cachedParents );
+            else{
+                cached.put( oe, cachedParents );
+                ontologyCache.put( oe.getAccession(), oe);
+                }
+
+        }
+
+        ontologyTreeCache.putAll( cached );
+        toCache = cached;
+        
+        log.debug( "Size of Ontology Parents Cache: " + ontologyTreeCache.keySet().size() );
+        log.debug( "Size of ontology object cache: "  + ontologyCache.size());
+
     }
 
 

@@ -167,7 +167,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         if ( ontologyEntry.getId() == null ) {
             throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
         }
-        String queryString = "select from OntologyEntryImpl parent where :oe in elements(parent.associations)";
+        String queryString = "from OntologyEntryImpl parent where :oe in elements(parent.associations)";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "oe", ontologyEntry );
@@ -198,9 +198,11 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
                     ontoParents.put( obj, new ArrayList() );
             }
             // add parents to the map
-            for ( Object[] object : entries )
-                ontoParents.get( object[0] ).add( object[1] );
-
+            //remove root.
+            for ( Object[] object : entries ){
+                if (!  ((OntologyEntry)(object[1])).getAccession().equalsIgnoreCase( "all" )   )
+                    ontoParents.get( object[0] ).add( object[1] );
+            }
             return ontoParents;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

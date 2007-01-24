@@ -31,6 +31,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
 
+    OntologyEntry root;    
     OntologyEntry top;
     OntologyEntry middle;
     OntologyEntry child;
@@ -38,6 +39,7 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
 
     OntologyEntryDao oed;
     ExternalDatabaseDao edd;
+    OntologyEntryService oes;
     ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
 
     /*
@@ -51,12 +53,18 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
 
         oed = ( OntologyEntryDao ) this.getBean( "ontologyEntryDao" );
         edd = ( ExternalDatabaseDao ) this.getBean( "externalDatabaseDao" );
+        oes = (OntologyEntryService) this.getBean( "ontologyEntryService" );
 
         ed.setName( "foo" );
 
         ed = ( ExternalDatabase ) edd.create( ed );
 
         // this is our top level one
+        
+        root = OntologyEntry.Factory.newInstance();
+        root.setAccession( "all" );
+        root.setExternalDatabase( ed );
+      
         top = OntologyEntry.Factory.newInstance();
         top.setAccession( "fred" );
         top.setExternalDatabase( ed );
@@ -77,6 +85,8 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
         middle = ( OntologyEntry ) oed.create( middle );
         top.getAssociations().add( middle );
         top = ( OntologyEntry ) oed.create( top );
+        root.getAssociations().add( top );
+        root = (OntologyEntry) oed.create( root );
 
     }
 
@@ -96,6 +106,18 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
     public final void testGetParents() {
         OntologyEntry actualValue = ( OntologyEntry ) oed.getParents( child ).iterator().next();
         assertEquals( middle.getAccession(), actualValue.getAccession() );
+    }
+    
+    public final void testGetParentsCollection(){
+            
+        Collection<OntologyEntry> children = new ArrayList<OntologyEntry>();
+        children.add( childsChild );
+        children.add( middle );
+        
+        Map<OntologyEntry,Collection> resultMap = oed.getParents( children );
+        assertEquals(2,resultMap.keySet().size());
+        assertEquals(1, resultMap.get( middle ).size());
+        
     }
 
     public final void testGetParentsMap() {
@@ -129,5 +151,15 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
        
     }
     
+    public final void testGetAllParents(){
+        ArrayList children = new ArrayList<OntologyEntry>();
+        OntologyEntry oe = oed.findByAccession( "jeff" );
+        children.add( oe );
+        
+       Map<OntologyEntry, Collection> parents = oes.getAllParents( children  );
+       assertEquals( 1, parents.keySet().size() );
+       assertEquals(2, parents.get(oe).size());
+        
+    }
 
 }

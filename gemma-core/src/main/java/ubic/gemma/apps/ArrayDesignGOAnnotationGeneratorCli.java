@@ -61,7 +61,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     final String LONG = "long";
     final String BIOPROCESS = "biologicalprocess";
     final String BIOPROCESS_ACCESSION = "GO:0008150";
-    final String ALL = "all";
+   
 
     // services
     Gene2GOAssociationService gene2GoAssociationService;
@@ -69,9 +69,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     GeneService geneService;
     OntologyEntryService oeService;
 
-    // Caches
-    Map<String, OntologyEntry> ontologyCache;
-    Map<OntologyEntry, Collection> ontologyTreeCache;
+ 
     Collection<Exception> exceptions;
 
     // file info
@@ -88,6 +86,14 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     long linesWritten;
     long genesSkipped;
 
+    
+    
+     public void initForTests(String[] args){
+          processCommandLine( "Test", args );
+          processOptions();               
+    }
+    
+    
     /*
      * (non-Javadoc)
      * 
@@ -95,6 +101,9 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      */
     @SuppressWarnings("static-access")
     @Override
+    
+
+    
     protected void buildOptions() {
         super.buildOptions();
 
@@ -333,7 +342,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         if ( this.shortAnnotations ) return ontos;
 
-        Map<OntologyEntry, Collection> ontoMap = getAllParents( ontos );
+        Map<OntologyEntry, Collection> ontoMap = oeService.getAllParents( ontos );
 
         if ( this.longAnnotations ) {
             for ( Collection<OntologyEntry> oes : ontoMap.values() )
@@ -365,124 +374,34 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
-    protected Map<OntologyEntry, Collection> getParents( Collection<OntologyEntry> children ) {
+//     Map<OntologyEntry, Collection> getParents( Collection<OntologyEntry> children ) {
+//
+//        if ( ( children == null ) || ( children.isEmpty() ) ) return null;
+//
+//        Map<OntologyEntry, Collection> parents = new HashMap<OntologyEntry, Collection>();
+//        Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
+//
+//        for ( OntologyEntry oe : children ) {
+//
+//            if ( ontologyTreeCache.containsKey( oe ) )
+//                parents.put( oe, ontologyTreeCache.get( oe ) );
+//
+//            else
+//                notCached.add( oe );
+//
+//        }
+//
+//        if ( notCached.isEmpty() ) return parents;
+//
+//        Map<OntologyEntry, Collection> newlyFound = oeService.getParents( notCached );
+//
+//        cache( newlyFound );
+//        parents.putAll( newlyFound );
+//
+//        return parents;
+//    }
 
-        if ( ( children == null ) || ( children.isEmpty() ) ) return null;
 
-        Map<OntologyEntry, Collection> parents = new HashMap<OntologyEntry, Collection>();
-        Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
-
-        for ( OntologyEntry oe : children ) {
-
-            if ( ontologyTreeCache.containsKey( oe ) )
-                parents.put( oe, ontologyTreeCache.get( oe ) );
-
-            else
-                notCached.add( oe );
-
-        }
-
-        if ( notCached.isEmpty() ) return parents;
-
-        Map<OntologyEntry, Collection> newlyFound = oeService.getParents( notCached );
-
-        cache( newlyFound );
-        parents.putAll( newlyFound );
-
-        return parents;
-    }
-
-    protected Map<OntologyEntry, Collection> getAllParents( Collection<OntologyEntry> children ) {
-
-        if ( ( children == null ) || ( children.isEmpty() ) ) return null;
-
-        Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
-        Map<OntologyEntry, Collection> allParents = new HashMap<OntologyEntry, Collection>();
-
-        // Check to see if the childrens parents are already chached.
-        // Check: if a child is the root then done.
-        // Make sublist of nonchaced children whose parents need retrieving.
-        for ( OntologyEntry child : children ) {
-            
-            log.info( "Checking cache for ontology entries" );
-            
-            if ( ontologyTreeCache.containsKey( child ) )
-                allParents.put( child, ontologyTreeCache.get( child ) );
-
-            else if ( child.getAccession().equalsIgnoreCase( ALL ) )
-                continue;
-
-            else
-                notCached.add( child );
-        }
-
-        // all children where already cached. Just return.
-        if ( notCached.isEmpty() ) return allParents;
-
-        // Retrive the 1st level of the non-cached childrens parents.
-        Map<OntologyEntry, Collection> parents = oeService.getParents( notCached );
-        
-
-        log.info( "Retrieved parents from DB" );
-        // Now for each non-cached child, we have all the parents. Use recurison to get all the parents parents and so
-        // on.Then flatten out the returned results and add to allParents.
-        for ( OntologyEntry child : notCached ) {
-
-            Map<OntologyEntry, Collection> foundParents = new HashMap<OntologyEntry, Collection>();
-            
-            log.info( "Making recursive call" );
-            Map<OntologyEntry, Collection> grandParents = getAllParents( parents.get( child ) );
-            log.info( "returned with grandparents." );
-            
-            if ( ( grandParents == null ) || grandParents.isEmpty() ) continue;
-
-            Collection<OntologyEntry> flatParents = new ArrayList<OntologyEntry>();
-
-            for ( OntologyEntry parent : grandParents.keySet() )
-                flatParents.addAll( grandParents.get( parent ) );
-
-            foundParents.put( child, flatParents );
-            cache(foundParents);
-            log.info("Caching parent entries" );
-            allParents.putAll( foundParents );
-            
-        }
-               
-        return allParents;
-    }
-
-    // Modifies passed in collection.
-    private void cache( Map<OntologyEntry, Collection> toCache ) {
-
-        Map<OntologyEntry, Collection> cached = new HashMap<OntologyEntry, Collection>();
-
-        if ( ( toCache == null ) || ( toCache.isEmpty() ) ) return;
-
-        for ( OntologyEntry oe : toCache.keySet() ) {
-
-            Collection<OntologyEntry> parents = toCache.get( oe );
-            Collection<OntologyEntry> cachedParents = new ArrayList<OntologyEntry>();
-
-            for ( OntologyEntry parent : parents ) {
-
-                if ( ontologyCache.containsKey( parent.getAccession() ) )
-                    cachedParents.add( ontologyCache.get( parent.getAccession() ) );
-                else
-                    cachedParents.add( parent );
-
-            }
-
-            if ( ontologyCache.containsKey( oe.getAccession() ) )
-                cached.put( ontologyCache.get( oe.getAccession() ), cachedParents );
-            else
-                cached.put( oe, cachedParents );
-
-        }
-
-        ontologyTreeCache.putAll( cached );
-        toCache = cached;
-
-    }
 
     private void processType( String type ) {
 
@@ -514,7 +433,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( this.hasOption( 'l' ) ) {
             this.batchFileName = this.getOptionValue( 'l' );
         }
-
+      
         gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
 
         compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
@@ -522,9 +441,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         geneService = ( GeneService ) this.getBean( "geneService" );
 
         oeService = ( OntologyEntryService ) this.getBean( "ontologyEntryService" );
-
-        ontologyCache = new HashMap<String, OntologyEntry>();
-        ontologyTreeCache = new HashMap<OntologyEntry, Collection>();
+       
         exceptions = new ArrayList<Exception>();
 
     }
