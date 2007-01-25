@@ -56,10 +56,12 @@ public class GffParserTest extends TestCase {
         parser.setTaxon( t );
         parser.parse( is );
         Collection<Object> res = parser.getResults();
+        assertEquals(382, res.size());
         for ( Object object : res ) {
             assertEquals( GeneImpl.class, object.getClass() );
             Gene gene = ( Gene ) object;
             assertTrue( gene.getName() != null );
+            assertFalse( gene.getName().contains( "\"" ) );
             assertEquals( 1, gene.getProducts().size() );
         }
     }
