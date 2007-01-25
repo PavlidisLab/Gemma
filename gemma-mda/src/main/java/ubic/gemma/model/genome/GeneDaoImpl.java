@@ -491,5 +491,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
     }
+    
+    @Override
+    protected Collection handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
+        Collection<Gene> miRNA = null;
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon and gene.description like '%micro RNA or sno RNA'";
 
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "taxon", taxon );
+            miRNA = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return miRNA;
+
+    }
 }

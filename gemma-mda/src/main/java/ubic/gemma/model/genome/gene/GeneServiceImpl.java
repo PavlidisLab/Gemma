@@ -231,4 +231,13 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected Collection handleLoad( Collection ids ) throws Exception {
         return this.getGeneDao().load( ids );
     }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMicroRnaByTaxon(Taxon)
+     */
+    @Override
+    protected Collection handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
+        return this.getGeneDao().getMicroRnaByTaxon(taxon);
+    }
+    
 }
