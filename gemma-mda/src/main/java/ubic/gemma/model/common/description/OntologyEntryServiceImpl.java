@@ -22,12 +22,11 @@ package ubic.gemma.model.common.description;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceImpl;
 
 /**
  * @author keshav
@@ -195,7 +194,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
                 continue;            
             }
             
-            Collection<OntologyEntry> flatParents = new ArrayList<OntologyEntry>();
+            Collection<OntologyEntry> flatParents = new HashSet<OntologyEntry>();
 
             for ( OntologyEntry parent : grandParents.keySet() )
                 flatParents.addAll( grandParents.get( parent ) );
@@ -221,7 +220,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
         for ( OntologyEntry oe : toCache.keySet() ) {
 
             Collection<OntologyEntry> parents = toCache.get( oe );
-            Collection<OntologyEntry> cachedParents = new ArrayList<OntologyEntry>();
+            Collection<OntologyEntry> cachedParents = new HashSet<OntologyEntry>();
 
             for ( OntologyEntry parent : parents ) {
 

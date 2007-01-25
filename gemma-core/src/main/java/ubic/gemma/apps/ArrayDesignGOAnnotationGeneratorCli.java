@@ -29,7 +29,7 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -60,8 +60,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     final String SHORT = "short";
     final String LONG = "long";
     final String BIOPROCESS = "biologicalprocess";
-    final String BIOPROCESS_ACCESSION = "GO:0008150";
-   
+    final String BIOLOGICAL_PROCESS = "biological_process";
 
     // services
     Gene2GOAssociationService gene2GoAssociationService;
@@ -69,7 +68,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     GeneService geneService;
     OntologyEntryService oeService;
 
- 
     Collection<Exception> exceptions;
 
     // file info
@@ -86,14 +84,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     long linesWritten;
     long genesSkipped;
 
-    
-    
-     public void initForTests(String[] args){
-          processCommandLine( "Test", args );
-          processOptions();               
+    public void initForTests( String[] args ) {
+        processCommandLine( "Test", args );
+        processOptions();
     }
-    
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -101,9 +96,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      */
     @SuppressWarnings("static-access")
     @Override
-    
-
-    
     protected void buildOptions() {
         super.buildOptions();
 
@@ -336,7 +328,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     protected Collection<OntologyEntry> getGoTerms( Gene gene ) {
 
-        Collection<OntologyEntry> ontos = gene2GoAssociationService.findByGene( gene );
+        Collection<OntologyEntry> ontos = new HashSet<OntologyEntry>( gene2GoAssociationService.findByGene( gene ) );
 
         if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return ontos;
 
@@ -353,19 +345,25 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         if ( this.biologicalProcessAnnotations ) {
 
-            OntologyEntry bioprocess = oeService.findByAccession( BIOPROCESS_ACCESSION );
-
-            ontos = new ArrayList<OntologyEntry>();
+            ontos = new HashSet<OntologyEntry>();
 
             for ( OntologyEntry key : ontoMap.keySet() ) {
                 Collection<OntologyEntry> values = ontoMap.get( key );
 
-                if ( !values.contains( bioprocess ) ) continue;
+                if ( ( key == null ) || ( key.getCategory() == null ) ) continue;
 
-                values.remove( bioprocess ); // we don't want the root term in all the go terms
-                ontos.addAll( values );
-                ontos.add( key );
+                for ( Object obj : ontoMap.get( key ) ) {
+
+                    OntologyEntry parent = ( OntologyEntry ) obj;
+
+                    if ( ( parent == null ) || ( parent.getCategory() == null ) ) continue;
+
+                    if ( parent.getCategory().equalsIgnoreCase( BIOLOGICAL_PROCESS ) ) ontos.add( parent );
+                }
+
+                if ( key.getCategory().equalsIgnoreCase( BIOLOGICAL_PROCESS ) ) ontos.add( key );
             }
+            
             return ontos;
 
         }
@@ -374,34 +372,32 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
-//     Map<OntologyEntry, Collection> getParents( Collection<OntologyEntry> children ) {
-//
-//        if ( ( children == null ) || ( children.isEmpty() ) ) return null;
-//
-//        Map<OntologyEntry, Collection> parents = new HashMap<OntologyEntry, Collection>();
-//        Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
-//
-//        for ( OntologyEntry oe : children ) {
-//
-//            if ( ontologyTreeCache.containsKey( oe ) )
-//                parents.put( oe, ontologyTreeCache.get( oe ) );
-//
-//            else
-//                notCached.add( oe );
-//
-//        }
-//
-//        if ( notCached.isEmpty() ) return parents;
-//
-//        Map<OntologyEntry, Collection> newlyFound = oeService.getParents( notCached );
-//
-//        cache( newlyFound );
-//        parents.putAll( newlyFound );
-//
-//        return parents;
-//    }
-
-
+    // Map<OntologyEntry, Collection> getParents( Collection<OntologyEntry> children ) {
+    //
+    // if ( ( children == null ) || ( children.isEmpty() ) ) return null;
+    //
+    // Map<OntologyEntry, Collection> parents = new HashMap<OntologyEntry, Collection>();
+    // Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
+    //
+    // for ( OntologyEntry oe : children ) {
+    //
+    // if ( ontologyTreeCache.containsKey( oe ) )
+    // parents.put( oe, ontologyTreeCache.get( oe ) );
+    //
+    // else
+    // notCached.add( oe );
+    //
+    // }
+    //
+    // if ( notCached.isEmpty() ) return parents;
+    //
+    // Map<OntologyEntry, Collection> newlyFound = oeService.getParents( notCached );
+    //
+    // cache( newlyFound );
+    // parents.putAll( newlyFound );
+    //
+    // return parents;
+    // }
 
     private void processType( String type ) {
 
@@ -433,7 +429,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( this.hasOption( 'l' ) ) {
             this.batchFileName = this.getOptionValue( 'l' );
         }
-      
+
         gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
 
         compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
@@ -441,7 +437,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         geneService = ( GeneService ) this.getBean( "geneService" );
 
         oeService = ( OntologyEntryService ) this.getBean( "ontologyEntryService" );
-       
+
         exceptions = new ArrayList<Exception>();
 
     }
