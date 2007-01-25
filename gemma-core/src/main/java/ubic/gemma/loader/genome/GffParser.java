@@ -95,20 +95,27 @@ public class GffParser extends BasicLineParser {
         for ( int i = 0; i < attFields.length; i++ ) {
 
             String f = attFields[i];
+
+            if ( f == null || f.length() == 0 ) continue;
+
             f = StringUtils.strip( f );
             log.debug( f );
             String[] subf = StringUtils.split( f, '=' );
 
-            if ( subf.length == 2 ) {
-                String ti = subf[0];
-                String val = subf[1];
+            if ( subf.length != 2 ) {
+                throw new IllegalArgumentException( "Couldn't parse '" + f + "'" );
+            }
 
-                if ( ti.equals( "ID" ) ) {
-                    newGene.setName( val );
-                    gp.setName( val );
-                } else if ( ti.equals( "ACC" ) ) {
-                    // don't know what database!
-                }
+            String ti = subf[0];
+            String val = subf[1];
+
+            if ( ti.equals( "ID" ) ) {
+                val = val.replaceAll( "\"", "" );
+                newGene.setName( val );
+                newGene.setOfficialSymbol( val );
+                gp.setName( val );
+            } else if ( ti.equals( "ACC" ) ) {
+                // don't know what database!
             }
         }
 
@@ -117,17 +124,21 @@ public class GffParser extends BasicLineParser {
         Chromosome chromosome = Chromosome.Factory.newInstance();
         chromosome.setName( seqName );
         chromosome.setTaxon( taxon );
+
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
         pl.setChromosome( chromosome );
         pl.setNucleotide( start );
         pl.setNucleotideLength( length );
         pl.setStrand( strand );
-
-        newGene.setPhysicalLocation( pl );
         gp.setPhysicalLocation( pl );
-
-        newGene.getProducts().add( gp );
         gp.setGene( newGene );
+
+        PhysicalLocation gpl = PhysicalLocation.Factory.newInstance();
+        gpl.setChromosome( chromosome );
+
+        newGene.setTaxon( taxon );
+        newGene.setPhysicalLocation( gpl );
+        newGene.getProducts().add( gp );
 
         return newGene;
 
