@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -110,5 +111,28 @@ public class GeneDaoTest extends BaseSpringContextTest {
         CoexpressionCollectionValueObject genes = (CoexpressionCollectionValueObject) geneDao.getCoexpressedGenes( gene, ees, 1 );
         assertNotNull(genes);
     }
+
+    public void testGetMicroRnaByTaxon(){
+    
+        geneDao = (GeneDao) this.getBean( "geneDao" );
+        TaxonService taxonSrv = (TaxonService) this.getBean( "taxonService");
+        
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( (long) 1 );
+        gene.setName( "test_genedao" );
+        gene.setDescription( "Imported from Golden Path: micro RNA or sno RNA" );
+        
+        Taxon human = taxonSrv.findByCommonName( "human" );
+        gene.setTaxon( human );
+        
+        geneDao.create( gene );
+        
+        Collection genes = geneDao.getMicroRnaByTaxon( human );
+        assertNotNull(genes);
+        assert(genes.contains( gene ));
+        geneDao.remove( gene );
+      
+  }
+
 
 }
