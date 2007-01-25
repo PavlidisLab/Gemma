@@ -50,7 +50,14 @@ public class GeneWrapper extends TableDecorator {
     
     public String getAccession() {
         DatabaseEntry object = (DatabaseEntry) getCurrentRowObject();
-        return object.getAccession() + "." + object.getAccessionVersion();
+        String accession = "";
+        if (object.getAccession() != null) {
+            accession += object.getAccession();
+            if (object.getAccessionVersion() != null) {
+                accession += object.getAccessionVersion();
+            }
+        }
+        return accession;
     }
     
     public String getNcbiLink() {
