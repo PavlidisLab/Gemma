@@ -41,9 +41,6 @@
             <field property="description" depends="required">
                 <arg0 key="expressionExperiment.description"/>
             </field>
-            <field property="source" depends="required">
-                <arg0 key="expressionExperiment.source"/>
-            </field>
         </form>
         
         <form name="expressionExperimentVisualizationCommand">

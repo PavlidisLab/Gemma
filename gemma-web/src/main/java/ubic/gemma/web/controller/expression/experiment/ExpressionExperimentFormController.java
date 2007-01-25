@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tools.ant.filters.StringInputStream;
@@ -302,7 +303,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         // create bibliographicReference if necessary
         String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
-        if (pubMedId == null) {
+        if (StringUtils.isBlank( pubMedId )) {
             // do nothing
         }
         else {
