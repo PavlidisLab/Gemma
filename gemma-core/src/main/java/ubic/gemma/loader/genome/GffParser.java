@@ -89,6 +89,8 @@ public class GffParser extends BasicLineParser {
         String attributes = fields[8];
 
         newGene.setDescription( featureType );
+        gp.setDescription( featureType );
+
         String[] attFields = StringUtils.splitPreserveAllTokens( attributes, ';' );
         for ( int i = 0; i < attFields.length; i++ ) {
 
