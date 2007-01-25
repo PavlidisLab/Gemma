@@ -45,7 +45,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
  * @version $Id$
  */
 public class GffParser extends BasicLineParser {
-    private static Log log = LogFactory.getLog( GffParserTest.class.getName() );
+    private static Log log = LogFactory.getLog( GffParser.class.getName() );
     Collection<Gene> results = new HashSet<Gene>();
 
     Taxon taxon;
