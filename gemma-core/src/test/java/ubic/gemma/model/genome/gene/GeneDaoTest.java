@@ -38,101 +38,102 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
     private GeneDao geneDao = null;
 
-
     public void testGetCompositeSequenceCountById() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
-        long num  = geneDao.getCompositeSequenceCountById( 1 );
-        assertNotNull(num);
+        long num = geneDao.getCompositeSequenceCountById( 1 );
+        assertNotNull( num );
     }
 
     @SuppressWarnings("unchecked")
     public void testGetCompositeSequencesById() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
-        Collection<CompositeSequence> cs = geneDao.getCompositeSequencesById( (long) 1 );
-        assertNotNull(cs);
+        Collection<CompositeSequence> cs = geneDao.getCompositeSequencesById( ( long ) 1 );
+        assertNotNull( cs );
     }
 
     @SuppressWarnings("unchecked")
     public void testGetByGeneAlias() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
-        
+
         Collection<GeneAlias> aliases = new ArrayList<GeneAlias>();
         GeneAlias alias = GeneAlias.Factory.newInstance();
-        alias.setId( (long) 1 );
+        alias.setId( ( long ) 1 );
         alias.setAlias( "GRIN1" );
         alias.setGene( gene );
         alias.setSymbol( "test_genedao" );
         aliases.add( alias );
-        
+
         gene.setAliases( aliases );
         Collection<Gene> genes = geneDao.getByGeneAlias( "GRIN1" );
-        assertNotNull(genes);
+        assertNotNull( genes );
     }
-    
+
     @SuppressWarnings("unchecked")
     public void testGetCoexpressedElements() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
         Collection elements = geneDao.getCoexpressedElements( gene );
-        assertNotNull(elements);
+        assertNotNull( elements );
     }
-    
+
     @SuppressWarnings("unchecked")
     public void testGetCoexpressedElementsById() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
-        Collection elements = geneDao.getCoexpressedElementsById( (long) 1 );
-        assertNotNull(elements);
+        Collection elements = geneDao.getCoexpressedElementsById( ( long ) 1 );
+        assertNotNull( elements );
     }
-    
+
     @SuppressWarnings("unchecked")
     public void testGetCoexpressedGenes() {
-        geneDao = (GeneDao) this.getBean( "geneDao" );
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
         Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName("human");
+        taxon.setCommonName( "human" );
         gene.setTaxon( taxon );
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
-        CoexpressionCollectionValueObject genes = (CoexpressionCollectionValueObject) geneDao.getCoexpressedGenes( gene, ees, 1 );
-        assertNotNull(genes);
+        CoexpressionCollectionValueObject genes = ( CoexpressionCollectionValueObject ) geneDao.getCoexpressedGenes(
+                gene, ees, 1 );
+        assertNotNull( genes );
     }
 
-    public void testGetMicroRnaByTaxon(){
-    
-        geneDao = (GeneDao) this.getBean( "geneDao" );
-        TaxonService taxonSrv = (TaxonService) this.getBean( "taxonService");
-        
+    public void testGetMicroRnaByTaxon() {
+
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( (long) 1 );
+        gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
-        gene.setDescription( "Imported from Golden Path: micro RNA or sno RNA" );
-        
+
+        // either one of these should work now.
+        // gene.setDescription( "Imported from Golden Path: micro RNA or sno RNA" );
+        gene.setDescription( "miRNA" );
         Taxon human = taxonSrv.findByCommonName( "human" );
         gene.setTaxon( human );
-        
-        geneDao.create( gene );
-        
-        Collection genes = geneDao.getMicroRnaByTaxon( human );
-        assertNotNull(genes);
-        assert(genes.contains( gene ));
-        geneDao.remove( gene );
-      
-  }
 
+        geneDao.create( gene );
+
+        Collection genes = geneDao.getMicroRnaByTaxon( human );
+        assertNotNull( genes );
+        assert ( genes.contains( gene ) );
+        geneDao.remove( gene );
+
+    }
 
 }
