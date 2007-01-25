@@ -38,7 +38,7 @@ public class PubMedSearchTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
-    public void testSearchAndRetriveByHTTP() throws Exception {
+    public void testSearchAndRetrieveByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
             Collection<String> searchTerms = new HashSet<String>();
@@ -46,8 +46,24 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "hippocampus" );
             searchTerms.add( "habenula" );
             searchTerms.add( "glucose" );
-            Collection<BibliographicReference> actualResult = pms.searchAndRetriveByHTTP( searchTerms );
+            Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
             assertEquals( 4, actualResult.size() ); // at least, this was the result on 8/10/2006.
+        } catch ( java.net.UnknownHostException e ) {
+            log.warn( "Test skipped due to unknown host exception" );
+            return;
+        }
+    }
+    
+    /*
+     * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
+     */
+    public void testSearchAndRetrieveIdByHTTP() throws Exception {
+        try {
+            PubMedSearch pms = new PubMedSearch();
+            Collection<String> searchTerms = new HashSet<String>();
+            searchTerms.add( "17084362" );
+            Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
+            assertEquals( 1, actualResult.size() ); // at least, this was the result on 8/10/2006.
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
@@ -57,14 +73,14 @@ public class PubMedSearchTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
-    public void testSearchAndRetriveByHTTPInChunks() throws Exception {
+    public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
             Collection<String> searchTerms = new HashSet<String>();
             searchTerms.add( "brain" );
             searchTerms.add( "hippocampus" );
             searchTerms.add( "habenula" );
-            Collection<BibliographicReference> actualResult = pms.searchAndRetriveByHTTP( searchTerms );
+            Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
             assertEquals( 20, actualResult.size() ); // at least, this was the result on 2/15/2006. }
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );

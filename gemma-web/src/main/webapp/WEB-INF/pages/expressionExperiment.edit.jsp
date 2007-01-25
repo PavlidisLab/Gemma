@@ -160,10 +160,9 @@
 					            if ( expressionExperiment.getPrimaryPublication() != null ) {
 					%>	
 					<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
-					<% 
-					            } else {
-					                out.print( "Primary publication unavailable" );
-					            }
+					<% } else { %>
+				    <input type="text" name="expressionExperiment.PubMedId" value=""/> (enter PubMed Id here)
+					<% }
 					%>
 				</td>
 			</tr>  

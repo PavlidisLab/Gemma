@@ -59,7 +59,7 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
         if ( err != null ) return err;
 
         try {
-            Collection<BibliographicReference> refs = pms.searchAndRetriveByHTTP( getArgList() );
+            Collection<BibliographicReference> refs = pms.searchAndRetrieveByHTTP( getArgList() );
 
             System.out.println( refs.size() + " references found" );
 

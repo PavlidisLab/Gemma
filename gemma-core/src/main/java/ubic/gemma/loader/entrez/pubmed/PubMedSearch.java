@@ -71,9 +71,8 @@ public class PubMedSearch {
      * @return BibliographicReference representing the publication
      * @throws IOException
      */
-    public Collection<BibliographicReference> searchAndRetriveByHTTP( Collection<String> searchTerms )
+    public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms )
             throws IOException, SAXException, ParserConfigurationException {
-
         StringBuilder builder = new StringBuilder();
         builder.append( uri );
         builder.append( "&term=" );
@@ -88,14 +87,48 @@ public class PubMedSearch {
         ESearchXMLParser parser = new ESearchXMLParser();
         Collection<String> ids = parser.parse( toBeGotten.openStream() );
 
+        Collection<BibliographicReference> results = fetchById( ids );
+
+        log.info( "Fetched " + results.size() + " references" );
+
+        return results;
+    }
+    
+    /**
+     * For an integer pubmed id
+     * 
+     * @param pubMedId
+     * @return BibliographicReference representing the publication
+     * @throws IOException
+     */
+    public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
+            throws IOException, SAXException, ParserConfigurationException {
+
+        Collection<String> ids = searchTerms;
+
+        Collection<BibliographicReference> results = fetchById( ids );
+
+        log.info( "Fetched " + results.size() + " references" );
+
+        return results;
+    }
+
+    private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {
         Collection<BibliographicReference> results = new HashSet<BibliographicReference>();
 
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         Collection<Integer> ints = new HashSet<Integer>();
         int count = 0;
+        
         for ( String str : ids ) {
+            log.info( "Fetching pubmed " + str );
+            
             ints.add( Integer.parseInt( str ) );
-            count++;
 
+            count++;
+            
+
+            
             if ( count >= CHUNK_SIZE ) {
                 results.addAll( fetcher.retrieveByHTTP( ints ) );
                 ints = new HashSet<Integer>();
@@ -107,9 +140,6 @@ public class PubMedSearch {
         if ( count > 0 ) {
             results.addAll( fetcher.retrieveByHTTP( ints ) );
         }
-
-        log.info( "Fetched " + results.size() + " references" );
-
         return results;
     }
 }

@@ -37,7 +37,11 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -46,6 +50,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseFormController;
 
 import com.sdicons.json.model.JSONArray;
@@ -67,6 +72,8 @@ import com.sdicons.json.parser.JSONParser;
  * @spring.property name = "bioMaterialService" ref="bioMaterialService"
  * @spring.property name = "contactService" ref="contactService"
  * @spring.property name = "externalDatabaseDao" ref="externalDatabaseDao"
+ * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
+ * @spring.property name = "persisterHelper" ref="persisterHelper"
  * @spring.property name = "validator" ref="expressionExperimentValidator"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
@@ -76,6 +83,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
     ContactService contactService = null;
     BioAssayService bioAssayService = null;
     BioMaterialService bioMaterialService = null;
+    BibliographicReferenceService bibliographicReferenceService = null;
+    PersisterHelper persisterHelper = null;
 
     private Long id = null;
 
@@ -89,6 +98,20 @@ public class ExpressionExperimentFormController extends BaseFormController {
     // Will fix this later.
 
 
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
 
     public ExpressionExperimentFormController() {
         /*
@@ -277,6 +300,52 @@ public class ExpressionExperimentFormController extends BaseFormController {
             ( ( ExpressionExperiment ) command ).getAccession().setExternalDatabase( ed );
         }
 
+        // create bibliographicReference if necessary
+        String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
+        if (pubMedId == null) {
+            // do nothing
+        }
+        else {
+            // first, search for the pubMedId in the database
+            // if it is in the database, then just point the EE to that
+            // if it doesn't, then grab the BibliographicReference from PubMed and persist. Then point EE to the new entry.
+            BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubMedId );
+            if (publication != null) {
+                ( ( ExpressionExperiment ) command ).setPrimaryPublication( publication );
+            }
+            else {
+                // search for pubmedId
+                PubMedSearch pms = new PubMedSearch();
+                Collection<String> searchTerms = new ArrayList<String>();
+                searchTerms.add( pubMedId );
+                Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+                // check to see if there are publications found
+                // if there are none, or more than one, add an error message and do nothing
+                if (publications.size() == 0) {
+                    this.saveMessage( request, "Cannot find PubMed ID " + pubMedId );
+                }
+                else if (publications.size() > 1) {
+                    this.saveMessage( request, "PubMed ID " + pubMedId + "");        
+                }
+                else {
+                    publication = publications.iterator().next();         
+                    
+                    DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
+                    pubAccession.setAccession( pubMedId );
+                    ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+                    ed.setName( "PubMed" );
+                    pubAccession.setExternalDatabase( ed );
+                    
+                    publication.setPubAccession( pubAccession );
+                    
+                    // persist new publication
+                    publication = (BibliographicReference) persisterHelper.persist( publication );
+                    //publication = bibliographicReferenceService.findOrCreate( publication );
+                    // assign to expressionExperiment
+                    ( ( ExpressionExperiment ) command ).setPrimaryPublication( publication );
+                }
+            }
+        }
 
         saveMessage( request, "object.saved", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Saved" );
 
