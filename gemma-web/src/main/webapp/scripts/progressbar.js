@@ -34,7 +34,7 @@ function updateIndeterminateProgress(data){
    if (previousMessage != data.description) {
 		previousMessage = data.description
 		
-		document.getElementById("progressTextArea").innerHTML += data.description + "\n";	
+		document.getElementById("progressTextArea").innerHTML += data.description + "<br />";	
    	document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 	}
 	
