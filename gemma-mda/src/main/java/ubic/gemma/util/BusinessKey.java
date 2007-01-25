@@ -87,7 +87,7 @@ public class BusinessKey {
 
         addNameRestriction( queryObject, arrayDesign );
 
-         if ( arrayDesign.getShortName() != null )
+        if ( arrayDesign.getShortName() != null )
             queryObject.add( Restrictions.eq( "shortName", arrayDesign.getShortName() ) );
 
         if ( arrayDesign.getDesignProvider() != null
@@ -307,6 +307,7 @@ public class BusinessKey {
      * @param taxon
      */
     private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
+        if ( taxon == null ) throw new IllegalArgumentException( "Taxon was null" );
         if ( taxon.getNcbiId() != null ) {
             queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
         } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
