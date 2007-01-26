@@ -83,12 +83,12 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /**
      * @see ubic.gemma.model.genome.PhysicalLocation#nearlyEquals(java.lang.Object)
+     * @deprecated
      */
     @Override
+    @Deprecated
     public boolean nearlyEquals( Object object ) {
         if ( this == object ) {
             return true;
@@ -161,7 +161,7 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
             return hashCode;
         }
 
-        assert this.getChromosome() != null; 
+        assert this.getChromosome() != null;
         hashCode += this.getChromosome().hashCode();
 
         if ( this.getNucleotide() != null ) hashCode += this.getNucleotide().hashCode();
@@ -180,5 +180,30 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         buf.append( " on " + this.getStrand() + " strand" );
 
         return buf.toString();
+    }
+
+    @Override
+    public int computeOverlap( PhysicalLocation other ) {
+
+        if ( this.getId() == null || other.getId() == null || !this.getId().equals( other.getId() ) ) {
+            if ( !this.getChromosome().equals( other.getChromosome() ) ) return 0;
+
+            if ( this.getStrand() != null && other.getStrand() != null && !this.getStrand().equals( other.getStrand() ) ) {
+                return 0;
+            }
+
+            if ( this.getNucleotide() != null && other.getNucleotide() != null && this.getNucleotideLength() != null
+                    && other.getNucleotideLength() != null ) {
+                long starta = this.getNucleotide();
+                long enda = starta + this.getNucleotideLength();
+                long startb = other.getNucleotide();
+                long endb = startb + other.getNucleotideLength();
+
+                return computeOverlap( starta, enda, startb, endb );
+
+            }
+            return 0;
+        }
+        return 0;
     }
 }
