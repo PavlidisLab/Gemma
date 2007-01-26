@@ -35,6 +35,7 @@
             <prop key="/users.html">userListController</prop>
             <prop key="/activeUsers.html">userListController</prop>
             <prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
+            <prop key="/bibRef/*">bibliographicReferenceController</prop>
             <prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
             <prop key="/bibRefSearch.html">pubMedQueryController</prop>
             <prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
@@ -133,8 +134,7 @@
 		<props>
 			<prop key="/bibRef/showAllBibRef.html">showAll</prop>
 			<prop key="/bibRef/deleteBibRef.html">delete</prop>
-			<prop key="/bibRef/showBibRef.html">show</prop>
-			<prop key="/bibRef/searchBibRef.html">show</prop>
+			<prop key="/bibRef/bibRefView.html">show</prop>
 		</props>
 	</property>
 </bean>

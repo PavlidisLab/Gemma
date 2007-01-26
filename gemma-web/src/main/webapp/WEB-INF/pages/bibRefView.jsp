@@ -6,7 +6,7 @@
 <jsp:useBean id="bibliographicReference" scope="request"
 	class="ubic.gemma.model.common.description.BibliographicReferenceImpl"></jsp:useBean>
 
-	<title>Bibliographic Reference Search Results</title>
+<title>Bibliographic Reference Search Results</title>
 
 
 
@@ -47,7 +47,8 @@
 					</td>
 					<td>
 						<c:if test="${requestScope.existsInSystem}">
-							<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">
+							<authz:acl domainObject="${bibliographicReference}"
+								hasPermission="1,6">
 								<div align="right">
 									<input type="button" method="get"
 										action="bibRefEdit.html?action=delete&acc=${bibliographicReference.pubAccession.accession}"
@@ -59,11 +60,13 @@
 
 					<td>
 						<c:if test="${requestScope.existsInSystem}">
-							<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">
+							<authz:acl domainObject="${bibliographicReference}"
+								hasPermission="1,6">
 
 								<div align="right">
 									<input type="button" method="get"
-										action="bibRefEdit.html?action=edit&acc=${bibliographicReference.pubAccession.accession}" value="Edit" />
+										action="bibRefEdit.html?action=edit&acc=${bibliographicReference.pubAccession.accession}"
+										value="Edit" />
 								</div>
 
 							</authz:acl>
@@ -71,7 +74,8 @@
 					</td>
 					<td align="right">
 						<div align="right">
-							<input type="submit" method="get" action="/bibRefSearch.html" value="New Search">
+							<input type="submit" method="get" action="searchBibRef.html"
+								value="New Search">
 						</div>
 					</td>
 				</tr>

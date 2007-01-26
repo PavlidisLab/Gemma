@@ -74,7 +74,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
 
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         request.setAttribute( "accession", pubMedId );
-        return new ModelAndView( "bibliogrpahicReferenceView" ).addObject( "bibliographicReference", bibRef );
+        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef );
     }
 
     /**
@@ -84,7 +84,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "pubMed.GetAll.results.view" ).addObject( "bibliographicReferences",
+        return new ModelAndView( "bibRefList" ).addObject( "bibliographicReferences",
                 bibliographicReferenceService.getAll() );
     }
 
