@@ -57,10 +57,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
     public void testGetExpressionExperiments() throws Exception {
         log.debug( "-> (association), => (composition)" );
 
-        // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
-
-        ee = ( ExpressionExperiment ) ( ( PersisterHelper ) this.getBean( "persisterHelper" ) ).persist( ee );
+        /* persisterHelper.persist calls the ExpressionExperimentService, so you will not bypass security. */
+        this.getTestPersistentExpressionExperiment();
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
                 "/expressionExperiment/showAllExpressionExperiments.html" );
@@ -76,6 +74,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
         // assertNotNull( m.get( "expressionExperiments" ) );
         // assertEquals( mav.getViewName(), "expressionExperiments" );
 
+        /* uncomment to leave data in the database */
+        // this.setComplete();
     }
 
     // /**
