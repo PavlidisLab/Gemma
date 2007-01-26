@@ -140,4 +140,9 @@ public class BibliographicReferenceServiceImpl extends
         return this.getBibliographicReferenceDao().findOrCreate( bibliographicReference );
     }
 
+    @Override
+    protected BibliographicReference handleLoad( Long id ) throws Exception {
+        return ( BibliographicReference ) this.getBibliographicReferenceDao().load( id );
+    }
+
 }
