@@ -46,7 +46,7 @@ public class HttpProgressObserver implements Observer, Serializable {
     private boolean hasLiveJob = false;
 
     /**
-     * Generaly use constructor. Will automatically register for observer the current users progress jobs. todo add
+     * General use constructor. Will automatically register for observer the current users progress jobs. todo add
      * support for users with multiple progress jobs
      */
     public HttpProgressObserver() {
@@ -75,12 +75,30 @@ public class HttpProgressObserver implements Observer, Serializable {
     }
 
     /**
-     * A secondary constructor that can be used for testing purposes or when it is desierable to monitor another users
-     * processes.
+     * Use this constructor if the taskId of the Job is known.  Best Case situation. 
      */
-    public HttpProgressObserver( String userName ) {
+    public HttpProgressObserver( String taskId ) {
         pData = new ProgressData( 0, "Initializing", false );
-        ProgressManager.addToNotification( userName, this );
+        
+        this.hasLiveJob = ProgressManager.addToNotification( taskId, this );
+        
+        if (!hasLiveJob){
+            
+            //try again (3 times).  If still fails then something is wrong!
+            try{
+                this.wait( 500 );
+                this.hasLiveJob = ProgressManager.addToNotification( taskId, this );
+                if (this.hasLiveJob)
+                    return;
+                this.wait(500);
+                this.hasLiveJob = ProgressManager.addToNotification( taskId, this );
+                
+            }catch(Exception e){
+                logger.warn( "Error while pausing for between attempts at registering for progress info: " + e );
+            }
+            
+        }
+        
 
     }
 

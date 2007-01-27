@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.web.util.MessageUtil;
 
@@ -61,7 +62,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * @param request
      * @return task id
      */
-    protected synchronized String startJob( Object command, HttpServletRequest request ) {
+    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -76,7 +77,9 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
-        return taskId;
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( "taskId", taskId );
+        return mnv;
     }
 
     /**

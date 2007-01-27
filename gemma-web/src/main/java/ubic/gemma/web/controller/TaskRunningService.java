@@ -22,15 +22,12 @@ import ubic.gemma.util.progress.ProgressManager;
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="taskRunningService"
- * @spring.property name="progressManager" ref="progressManager"
  */
 public class TaskRunningService {
 
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
 
     private static final int KEY_LENGTH = 16;
-
-    ProgressManager progressManager;
 
     final Map<Object, Future> submittedTasks = new ConcurrentHashMap<Object, Future>();
 
@@ -133,12 +130,6 @@ public class TaskRunningService {
         return finished;
     }
 
-    /**
-     * @param progressManager the progressManager to set
-     */
-    public void setProgressManager( ProgressManager progressManager ) {
-        this.progressManager = progressManager;
-    }
 
     /**
      * @param taskId

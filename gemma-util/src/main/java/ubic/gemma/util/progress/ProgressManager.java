@@ -76,7 +76,7 @@ public class ProgressManager {
      * @return the Simple case. Have a progressJob and want to add themselves for notifications. Could have been done
      *         directly.
      */
-    public static synchronized boolean addToNotification( ProgressJob pj, Observer po ) {
+    private static synchronized boolean addToNotification( ProgressJob pj, Observer po ) {
 
         pj.addObserver( po );
         return true;
@@ -92,12 +92,18 @@ public class ProgressManager {
 
         assert key != null;
 
-        if ( !progressJobs.containsKey( key ) ) return false; // No such user exists with any jobs
+        // if ( !progressJobs.containsKey( key ) )
+        // return false; // No such user exists with any jobs
+        // else {
+        // Collection<ProgressJob> pJobs = progressJobs.get( key );
+        // for ( ProgressJob obs : pJobs )
+        // obs.addObserver( po );
+        //
+        // }
 
-        Collection<ProgressJob> pJobs = progressJobs.get( key );
-        for ( ProgressJob obs : pJobs ) {
-            obs.addObserver( po );
-        }
+        if ( !progressJobsByTaskId.containsKey( key ) ) return false;
+
+        progressJobsByTaskId.get( key ).addObserver( po );
 
         return true;
     }
@@ -107,7 +113,7 @@ public class ProgressManager {
      * @param po
      * @return Given the jobId this method will add the given observer to recieve notifications from that job
      */
-    public static synchronized boolean addToNotification( Long jobId, Observer po ) {
+    protected static synchronized boolean addToNotification( Long jobId, Observer po ) {
 
         if ( !progressJobsById.containsKey( jobId ) ) return false; // No such job with this id
 
@@ -122,7 +128,7 @@ public class ProgressManager {
      * @param po
      * @return This adds the observer to only the most recently created progress job for the given user.
      */
-    public static synchronized boolean addToRecentNotification( String username, Observer po ) {
+    protected static synchronized boolean addToRecentNotification( String username, Observer po ) {
 
         ProgressManager.dump();
         if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
@@ -425,7 +431,6 @@ public class ProgressManager {
         assert job != null : "No job of id " + key;
         job.getJobInfo().setFailedMessage( cause.toString() );
         destroyProgressJob( job );
-
     }
 
 }

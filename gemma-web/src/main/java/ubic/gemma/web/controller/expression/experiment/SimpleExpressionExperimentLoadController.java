@@ -283,8 +283,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
             return showForm( request, response, errors );
         }
 
-        startJob( commandObject, request );
-        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html" ) );
+        return startJob( commandObject, request );        
 
     }
 

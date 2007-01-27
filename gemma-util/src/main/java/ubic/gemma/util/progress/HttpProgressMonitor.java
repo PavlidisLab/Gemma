@@ -36,28 +36,29 @@ public class HttpProgressMonitor {
     protected static final Log logger = LogFactory.getLog( HttpProgressMonitor.class );
     public static final String PROGRESS_ATTRIBUTE = "progressInfo";
 
-    public ProgressData getProgressStatus() {
+    public ProgressData getProgressStatus(String taskId) {
 
         HttpSession session = WebContextFactory.get().getSession();
         HttpProgressObserver po = ( HttpProgressObserver ) session.getAttribute( PROGRESS_ATTRIBUTE );
-
+        ProgressData  pd;
         // if observer not in the session means 1st time through. Add to session and move on.
         if ( po == null ) {
             po = new HttpProgressObserver();
 
             /*
-             * If we don't have a live job, we'll check again later.
+             * If we don't have a live job, forward user away
              */
             if (!po.hasLiveJob() ) {
                 po = null;
-                return new ProgressData();
+                pd = new ProgressData(100,"No Live Job Found", true,"/Gemma/checkJobProgress.html");
+                return pd;               
             }
             
             session.setAttribute( PROGRESS_ATTRIBUTE, po );
 
         }
 
-        ProgressData pd = po.getProgressData();
+        pd = po.getProgressData();
 
         // if progress has finished need to remove observer from session and get make sure observer cleans up after
         // itself.
@@ -65,6 +66,9 @@ public class HttpProgressMonitor {
             po.finished();
             po = null;
             session.removeAttribute( PROGRESS_ATTRIBUTE );
+            if ((pd.getForwardingURL() == null) || (pd.getForwardingURL().length() < 2))
+                pd.setForwardingURL( "/Gemma/checkJobProgress.html" );
+            
         }
 
         return pd;

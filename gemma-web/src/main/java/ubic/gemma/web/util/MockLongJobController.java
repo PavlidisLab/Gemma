@@ -61,8 +61,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
-        String taskId = startJob( null, request );
-        return new ModelAndView( new RedirectView( "processProgress.html?taskId=" + taskId ) );
+        return startJob( null, request );
 
     }
 

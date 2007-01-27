@@ -130,9 +130,8 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
         ProgressManager.destroyProgressJob( job );
 
-        startJob( commandObject, request );
-
-        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html" ) );
+        return startJob( commandObject, request );
+       
     }
 
     public void setArrayDesignSequenceProcessingService(

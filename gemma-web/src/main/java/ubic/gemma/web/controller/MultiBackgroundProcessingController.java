@@ -26,6 +26,7 @@ package ubic.gemma.web.controller;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.web.util.MessageUtil;
 
@@ -68,7 +69,7 @@ import ubic.gemma.web.util.MessageUtil;
          * 
          * This allows the background controller job to be created outside and passed in effectively allowing one controller to create more than 1 job
          */
-        protected synchronized String startJob( HttpServletRequest request,  BackgroundControllerJob<ModelAndView> job ) {
+        protected synchronized ModelAndView startJob( HttpServletRequest request,  BackgroundControllerJob<ModelAndView> job ) {
             /*
              * all new threads need this to acccess protected resources (like services)
              */
@@ -80,8 +81,10 @@ import ubic.gemma.web.util.MessageUtil;
             job.setTaskId(taskId);   
 
             taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
-
-            return taskId;
+            
+            ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+            mnv.addObject( "taskId", taskId );
+            return mnv;
         }
 
          /**

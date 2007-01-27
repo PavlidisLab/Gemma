@@ -1,5 +1,6 @@
 function refreshProgress() {
-	HttpProgressMonitor.getProgressStatus(updateProgress);
+	//HttpProgressMonitor.getProgressStatus(updateProgress);
+	HttpProgressMonitor.getProgressStatus(updateProgress,DWRUtil.getValue("taskId"));
 }
 var determinate;
 
@@ -52,9 +53,9 @@ function startProgress() {
 
    if (determinate == 0){
 		//progressMotion();
-		document.getElementById("progressTextArea").value = "Monitoring Progress...";
+		document.getElementById("progressTextArea").innerHTML = "Monitoring Progress...";
 	}	else
-		document.getElementById("progressBarText").innerHTML = "Monitoring Progress...";
+		document.getElementById("progressBarText").value = "Monitoring Progress...";
 	
 	
 	window.setTimeout("refreshProgress()", 400);

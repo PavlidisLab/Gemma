@@ -63,8 +63,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        String taskId = startJob( command, request );
-        return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
+        return  startJob( command, request );
     }
 
     /**

@@ -91,9 +91,8 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         else
             return new ModelAndView( this.getFormView() );
 
-        String taskId = startJob( request, index );
-
-        return new ModelAndView( new RedirectView( "processProgress.html?taskid=" + taskId ) );
+        return startJob( request, index );
+       
     }
 
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,

@@ -17,7 +17,9 @@
 			startProgress();
 		</script>
 
+		
 
+		<input type = "hidden" name="taskId" id="taskId" value= "${taskId}"/> 
 		<form method="post" action="<c:url value='/processDelete.html'/>">			
 			<input type="submit" value="cancel" />
 		</form>

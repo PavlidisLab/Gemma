@@ -75,7 +75,9 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
-        return new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( "taskId", taskId );
+        return mnv;
     }
 
 }
