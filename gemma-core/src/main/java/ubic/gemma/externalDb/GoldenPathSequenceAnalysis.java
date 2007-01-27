@@ -108,12 +108,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param starts
      * @param sizes
      * @param exonOverlap Exon overlap we're starting with. We only care to improve on this.
+     * @param strand of the region
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
      */
     @SuppressWarnings("unchecked")
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
-            int exonOverlap ) {
+            int exonOverlap, String strand ) {
 
         String key = chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString();
 
@@ -122,7 +123,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             log.info( "Cache hit!" );
             mRNAs = ( Collection<Gene> ) cache.get( key );
         } else {
-            mRNAs = findRNAs( chromosome, queryStart, queryEnd );
+            mRNAs = findRNAs( chromosome, queryStart, queryEnd, strand );
             cache.put( key, mRNAs );
         }
 
@@ -183,11 +184,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
         int exonOverlap = 0;
         if ( starts != null & sizes != null ) {
-            exonOverlap = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, null, geneProduct );
+            exonOverlap = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, geneLoc.getStrand(),
+                    geneProduct );
             int totalSize = SequenceManipulation.totalSize( sizes );
             assert exonOverlap <= totalSize;
             if ( exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
-                exonOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap );
+                exonOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
+                        .getStrand() );
             }
         }
 
@@ -288,7 +291,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                          * Do not use this as the official_name: it isn't (?)
                          */
                         gene.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
-//                        gene.setOfficialName( rs.getString( 8 ) );
+                        // gene.setOfficialName( rs.getString( 8 ) );
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
@@ -637,7 +640,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The mRNAs which overlap the query region.
      */
     @SuppressWarnings("unchecked")
-    public Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
+    public Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd, String strand ) {
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT mrna.qName, mrna.qName, mrna.tStart, mrna.tEnd, mrna.strand, mrna.blockSizes, mrna.tStarts  "
@@ -645,10 +648,20 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "((mrna.tStart > ? AND mrna.tEnd < ?) OR (mrna.tStart < ? AND mrna.tEnd > ?) OR "
                 + "(mrna.tStart > ?  AND mrna.tStart < ?) OR  (mrna.tEnd > ? AND  mrna.tEnd < ? )) and mrna.tName = ? ";
 
+        if ( strand != null ) {
+            query = query + " and mrna.strand = ?";
+        }
         query = query + " order by mrna.tStart ";
 
-        Object[] params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
-                regionStart, regionEnd, searchChrom };
+        Object[] params = null;
+
+        if ( strand == null )
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
+                    regionStart, regionEnd, searchChrom };
+        else
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
+                    regionStart, regionEnd, searchChrom, strand };
+
         try {
             return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
