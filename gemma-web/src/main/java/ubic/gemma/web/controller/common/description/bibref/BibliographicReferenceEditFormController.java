@@ -39,11 +39,11 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @spring.bean id="bibliographicReferenceEditFormController"
  * @spring.property name="commandClass" value="ubic.gemma.model.common.description.BibliographicReference"
- * @spring.property name="commandName" value="bibRef"
+ * @spring.property name="commandName" value="bibliographicReference"
  * @spring.property name="formView" value="bibRefEdit"
- * @spring.property name="successView" value="bibliographicReferenceView"
+ * @spring.property name="successView" value="bibRefView"
  * @spring.property name="validator" ref="bibliographicReferenceValidator"
- * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService" *
+ * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name="localFileService" ref="localFileService"
  * @author pavlidis
@@ -118,7 +118,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
                             "No pubmed database" );
                     return showForm( request, response, errors );
                 }
- 
+
                 bibRef.getPubAccession().setExternalDatabase( pubMedDb );
                 bibRef = bibliographicReferenceService.create( bibRef );
                 saveMessage( request, "object.saved", new Object[] { "Reference",
@@ -131,7 +131,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
                     new Object[] { "Reference", bibRef.getPubAccession().getAccession() }, "Updated" );
         }
 
-        return new ModelAndView( "bibliographicReferenceView" ).addObject( "bibliographicReference", bibRef );
+        return new ModelAndView( getSuccessView() ).addObject( "bibliographicReference", bibRef );
     }
 
     private void upLoadPdf() {
@@ -202,13 +202,15 @@ public class BibliographicReferenceEditFormController extends BaseFormController
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-
-        BibliographicReference bibRef = ( BibliographicReference ) request.getAttribute( "bibliographicReference" );
-
-        if ( bibRef == null ) {
-            bibRef = BibliographicReference.Factory.newInstance();
+        BibliographicReference bibRef = null;
+        String ids = request.getParameter( "id" );
+        if ( ids != null ) {
+            Long id = Long.parseLong( ids );
+            bibRef = ( BibliographicReference ) bibliographicReferenceService.load( id );
+            if ( bibRef == null ) {
+                bibRef = BibliographicReference.Factory.newInstance();
+            }
         }
-
         return bibRef;
     }
 }

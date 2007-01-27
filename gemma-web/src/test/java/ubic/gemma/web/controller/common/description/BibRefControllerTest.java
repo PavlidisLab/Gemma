@@ -31,6 +31,7 @@ import ubic.gemma.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController;
 
 /**
  * Tests the BibliographicReferenceController

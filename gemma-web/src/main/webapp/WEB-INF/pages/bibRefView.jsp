@@ -9,78 +9,89 @@
 <title>Bibliographic Reference Search Results</title>
 
 
+<h2>
+	Bibliographic Reference Search Results
+</h2>
 
-<table width="100%">
+<c:if test="${!requestScope.existsInSystem}">
+	<p>
+		This reference was obtained from PubMed; it is not in the Gemma
+		system. You can add it to Gemma by clicking the button on the bottom
+		of the page, or do a
+		<a href="<c:url value="/bibRef/bibRefSearch.html"/>">new search</a>.
+	</p>
+</c:if>
+
+<spring:hasBindErrors name="bibliographicReference">
+	<div class="error">
+		There were the following error(s) with your submission:
+		<ul>
+			<c:forEach var="errMsgObj" items="${errors.allErrors}">
+				<li>
+					<spring:message code="${errMsgObj.code}"
+						text="${errMsgObj.defaultMessage}" />
+				</li>
+			</c:forEach>
+		</ul>
+	</div>
+</spring:hasBindErrors>
+
+<Gemma:bibref bibliographicReference="${bibliographicReference}" />
+
+
+<table>
 	<tr>
-		<td colspan="2">
-			<b>Bibliographic Reference Search Results</b>
+		<td align="left">
+			<c:if test="${!requestScope.existsInSystem}">
+				<div align="left">
+					<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>"
+						<input type="hidden" name="acc"
+							value="${bibliographicReference.pubAccession.accession}">
+						<input type="submit" value="Add to Gemma Database">
+					</form>
+				</div>
+			</c:if>
 		</td>
-	</tr>
-	<tr>
-		<td colspan="2">
-			<HR>
-		</td>
-	</tr>
-	<tr>
-		<td colspan="2">
-			<Gemma:bibref bibliographicReference="${bibliographicReference}" />
 		<td>
-	</tr>
-	<tr>
-		<td colspan="2">
-			<HR>
+			<c:if test="${requestScope.existsInSystem}">
+				<authz:acl domainObject="${bibliographicReference}"
+					hasPermission="1,6">
+					<div align="right">
+						<form method="get"
+							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
+							<input type="hidden"  name="acc" value="${bibliographicReference.pubAccession.accession}"
+							<input type="submit"  
+										value="Delete from Gemma" /></form>
+					</div>
+				</authz:acl>
+			</c:if>
 		</td>
-	</tr>
-	<tr>
 
-		<td colspan="2">
-			<table>
-				<tr>
-					<td align="left">
-						<c:if test="${!requestScope.existsInSystem}">
-							<div align="left">
-								<input type="button" method="get"
-									action="bibRefEdit.html?action=add&acc=${bibliographicReference.pubAccession.accession}"
-									value="Add to Gemma Database">
-							</div>
-						</c:if>
-					</td>
-					<td>
-						<c:if test="${requestScope.existsInSystem}">
-							<authz:acl domainObject="${bibliographicReference}"
-								hasPermission="1,6">
-								<div align="right">
-									<input type="button" method="get"
-										action="bibRefEdit.html?action=delete&acc=${bibliographicReference.pubAccession.accession}"
-										value="Delete from Gemma" />
-								</div>
-							</authz:acl>
-						</c:if>
-					</td>
 
-					<td>
-						<c:if test="${requestScope.existsInSystem}">
-							<authz:acl domainObject="${bibliographicReference}"
-								hasPermission="1,6">
+		<td>
+			<c:if test="${requestScope.existsInSystem}">
+				<authz:acl domainObject="${bibliographicReference}"
+					hasPermission="1,6">
 
-								<div align="right">
-									<input type="button" method="get"
-										action="bibRefEdit.html?action=edit&acc=${bibliographicReference.pubAccession.accession}"
-										value="Edit" />
-								</div>
-
-							</authz:acl>
-						</c:if>
-					</td>
-					<td align="right">
-						<div align="right">
-							<input type="submit" method="get" action="searchBibRef.html"
-								value="New Search">
-						</div>
-					</td>
-				</tr>
-			</table>
+					<div align="right">
+						<form method="GET" action="<c:url value="/bibRefEdit.html"/>">
+							<input type="submit" value="Edit" />
+							<input type="hidden" name="id"
+								value="${bibliographicReference.id}">
+						</form>
+					</div>
+				</authz:acl>
+			</c:if>
 		</td>
+
 	</tr>
+
+
+
 </table>
+
+<div align="left">
+	<a href="<c:url value="/bibRefSearch.html"/>">New Search</a>
+</div>
+
 

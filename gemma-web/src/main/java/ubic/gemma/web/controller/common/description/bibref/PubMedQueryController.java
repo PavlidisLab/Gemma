@@ -41,7 +41,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand"
  * @spring.property name="commandName" value="searchCriteria"
  * @spring.property name="formView" value="bibRefSearch"
- * @spring.property name="successView" value="bibliographicReferenceView"
+ * @spring.property name="successView" value="bibRefView"
  * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="pubMedXmlFetcher" ref="pubMedXmlFetcher"
@@ -50,10 +50,6 @@ public class PubMedQueryController extends BaseFormController {
     private BibliographicReferenceService bibliographicReferenceService;
 
     private PubMedXMLFetcher pubMedXmlFetcher;
-
-    /* Form for user is just a pubmed id. Model for SuccessView is a BibliographicReference */
-
-    /* success view allows user to save the reference in our system, with a pdf if they want */
 
     /*
      * (non-Javadoc)
@@ -90,9 +86,9 @@ public class PubMedQueryController extends BaseFormController {
                     errors.rejectValue( "accession", "bibliographicReference.notfoundInNCBI", "Not found in NCBI" );
                     return showForm( request, response, errors );
                 }
-                
+
                 this.saveMessage( request, "bibliographicReference.found", accession, "Found" );
-                
+
             } catch ( NumberFormatException e ) {
                 errors.rejectValue( "accession", "error.integer", "Not a number" );
                 return showForm( request, response, errors );
