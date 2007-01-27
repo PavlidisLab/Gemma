@@ -263,20 +263,20 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
             genes = geneService.load( geneIds );
 
-            String geneNames = "";
-            String geneDescriptions = "";
+            String geneNames = null;
+            String geneDescriptions = null;
             Collection<OntologyEntry> goTerms = new ArrayList<OntologyEntry>();
 
             // Might be mulitple genes for a given cs. Need to hash it into one.
-            for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
+            for ( Object obj : genes ) {
 
-                Gene gene = ( Gene ) iter.next();
+                Gene gene = ( Gene ) obj;
 
                 if ( gene == null ) continue;
 
                 // Don't add gemmaGene info to annotation file
                 if ( ( gene instanceof ProbeAlignedRegion ) || ( gene instanceof PredictedGene ) ) {
-                    log.info( "Gene:  " + gene.getOfficialSymbol()
+                    log.debug( "Gene:  " + gene.getOfficialSymbol()
                             + "  not included in annotations because it is a probeAligedRegion or predictedGene" );
                     continue;
                 }
@@ -284,14 +284,21 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 Collection<OntologyEntry> terms = getGoTerms( gene );
                 if ( ( terms != null ) && !( terms.isEmpty() ) ) goTerms.addAll( terms );
 
-                if ( gene.getOfficialSymbol() != null ) geneNames += gene.getOfficialSymbol();
-
-                if ( gene.getOfficialName() != null ) geneDescriptions += gene.getOfficialName();
-
-                if ( iter.hasNext() ) {
-                    if ( gene.getOfficialSymbol() != null ) geneNames += "|";
-                    if ( gene.getOfficialName() != null ) geneDescriptions += "|";
+                
+                if ( gene.getOfficialSymbol() != null ){
+                    if (geneNames == null)
+                        geneNames = gene.getOfficialSymbol();
+                    else
+                        geneNames += "|" + gene.getOfficialSymbol();
                 }
+
+                if ( gene.getOfficialName() != null ){
+                    if (geneDescriptions == null)
+                        geneDescriptions = gene.getOfficialName();
+                    else
+                        geneDescriptions += "|" + gene.getOfficialName();
+                }
+
 
             }
 
