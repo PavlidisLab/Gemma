@@ -637,7 +637,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The number of mRNAs which overlap the query region.
      */
     @SuppressWarnings("unchecked")
-    private Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
+    public Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT mrna.qName, mrna.qName, mrna.tStart, mrna.tEnd, mrna.strand, mrna.blockSizes, mrna.tStarts  "
