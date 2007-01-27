@@ -634,7 +634,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param chromosome
      * @param regionStart the region to be checked
      * @param regionEnd
-     * @return The number of mRNAs which overlap the query region.
+     * @return The mRNAs which overlap the query region.
      */
     @SuppressWarnings("unchecked")
     public Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
