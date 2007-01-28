@@ -30,6 +30,7 @@ import ubic.gemma.model.common.Securable;
 
 /**
  * @author keshav
+ * @version $Id$
  * @spring.bean name="securityService"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  */
