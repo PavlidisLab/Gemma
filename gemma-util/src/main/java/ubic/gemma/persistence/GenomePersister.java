@@ -323,7 +323,9 @@ abstract public class GenomePersister extends CommonPersister {
     private Chromosome persistChromosome( Chromosome chromosome ) {
         if ( chromosome == null ) return null;
         if ( !isTransient( chromosome ) ) return chromosome;
-
+        if ( chromosome.getTaxon().getCommonName() == null || chromosome.getName() == null ) {
+            throw new IllegalArgumentException( "Chromosome must have taxon common name and a name" );
+        }
         String key = chromosome.getTaxon().getCommonName() + " " + chromosome.getName();
 
         if ( seenChromosomes.containsKey( key ) ) {
@@ -399,6 +401,13 @@ abstract public class GenomePersister extends CommonPersister {
         if ( geneProduct.getPhysicalLocation() != null ) {
             geneProduct.getPhysicalLocation().setChromosome(
                     persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
+
+            // sanity check, as we've had this problem...somehow.
+            if ( !geneProduct.getPhysicalLocation().getChromosome().getTaxon()
+                    .equals( geneProduct.getGene().getTaxon() ) ) {
+                throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
+            }
+
         }
 
         if ( geneProduct.getExons() != null ) {
