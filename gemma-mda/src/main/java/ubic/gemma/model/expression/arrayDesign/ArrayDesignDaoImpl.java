@@ -232,6 +232,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     /**
+     * FIXME factor this out, it is getting repeated.
      * @param id
      * @param queryString
      * @return
@@ -881,6 +882,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetRawCompositeSequenceSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoImpl
      */
     @Override
     protected Collection handleGetRawCompositeSequenceSummary( ArrayDesign arrayDesign ) throws Exception {
@@ -889,7 +891,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         long id = arrayDesign.getId();
 
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,"
+                + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
+                + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
                 + " from "
                 + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
                 + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "

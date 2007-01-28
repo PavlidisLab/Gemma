@@ -181,12 +181,24 @@ public class CompositeSequenceServiceImpl extends
         return compositeSequencesMap.values();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoad(java.util.Collection)
      */
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         return this.getCompositeSequenceDao().load( ids );
+    }
+
+    @Override
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence ) throws Exception {
+        return this.getCompositeSequenceDao().getRawSummary( compositeSequence );
+    }
+
+    @Override
+    protected Collection handleGetRawSummary( Collection compositeSequences ) throws Exception {
+        return this.getCompositeSequenceDao().getRawSummary( compositeSequences );
     }
 
 }

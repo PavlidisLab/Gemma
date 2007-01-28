@@ -117,7 +117,8 @@ ${ summary } <br>
 					Number of probes
 				</td>
 				<td>
-					<c:out value="${numCompositeSequences}" />
+					<c:out value="${numCompositeSequences}" />  <a href="/Gemma/arrays/showCompositeSequenceSummary.html?id=<jsp:getProperty name="arrayDesign" property="id" />"><img src="/Gemma/images/magnifier.png" /></a>
+ 
 				</td>
 			</tr>
 			<tr>
@@ -179,15 +180,6 @@ ${ summary } <br>
 				</td>
 			</tr>
 			
-			<tr>
-				<td class="label">
-					Composite Sequences
-				</td>
-				<td>
-					<a href="/Gemma/arrays/showCompositeSequenceSummary.html?id=<jsp:getProperty name="arrayDesign" property="id" />">(list)</a>
-
-				</td>
-			</tr>
 			
 
 			<table>

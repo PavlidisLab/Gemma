@@ -20,12 +20,14 @@
 package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -108,7 +110,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
      */
     @Override
@@ -124,6 +128,99 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             throw super.convertHibernateAccessException( ex );
         }
         return compositeSequences;
+    }
+
+    /**
+     * FIXME duplicated code from ArrayDesignDao
+     * 
+     * @param id
+     * @param queryString
+     * @return
+     */
+    private Collection nativeQueryByIdReturnCollection( Long id, final String queryString ) {
+        try {
+
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setLong( "id", id );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    private Collection nativeQuery( final String queryString ) {
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
+     */
+    @Override
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence ) throws Exception {
+        if ( compositeSequence == null || compositeSequence.getId() == null ) {
+            throw new IllegalArgumentException();
+        }
+        long id = compositeSequence.getId();
+
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,"
+                + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
+                + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
+                + " from "
+                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
+                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID "
+                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
+                + "WHERE gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class='GeneProductImpl' AND cs.ID = :id";
+        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
+        return retVal;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(java.util.Collection)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetRawSummary( Collection compositeSequences ) throws Exception {
+        StringBuilder buf = new StringBuilder();
+
+        for ( Iterator<CompositeSequence> it = compositeSequences.iterator(); it.hasNext(); ) {
+            CompositeSequence compositeSequence = it.next();
+            if ( compositeSequence == null || compositeSequence.getId() == null ) {
+                throw new IllegalArgumentException();
+            }
+            long id = compositeSequence.getId();
+            buf.append( id );
+            if ( it.hasNext() ) buf.append( "," );
+        }
+
+        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,"
+                + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
+                + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
+                + " from "
+                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
+                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID "
+                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
+                + "WHERE gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class='GeneProductImpl' AND cs.ID IN ("
+                + buf.toString() + ")";
+        Collection retVal = nativeQuery( nativeQueryString );
+        return retVal;
     }
 
 }

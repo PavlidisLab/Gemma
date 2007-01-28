@@ -97,9 +97,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
         
         ModelAndView mav = new ModelAndView("arrayDesign.compositeSequences");
-        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign ); 
+        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign );
+        
+        if (compositeSequenceSummary == null || compositeSequenceSummary.size() == 0) {
+            /// FIXME, return error or do something else intelligent.
+        }
+        
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "sequenceData", compositeSequenceSummary );
+        mav.addObject("numCompositeSequences", compositeSequenceSummary.size());
         return mav;
     }
 

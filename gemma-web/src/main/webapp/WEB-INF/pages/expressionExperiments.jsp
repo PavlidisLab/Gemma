@@ -1,45 +1,57 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-		<title><fmt:message key="expressionExperiments.title" /></title>
+<title><fmt:message key="expressionExperiments.title" />
+</title>
 
-	<form name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
-			<h4> Enter search criteria for finding a specific dataset here </h4>
-			<input type="text" name="filter" size="78" />
-			<input type="submit" value="Find"/>			
-		</form>
-	
-		<h3>
-			Displaying  <b> <c:out value="${numExpressionExperiments}" /> </b> Datasets		
-		</h3>		
-		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
+<form name="ExpresssionExperimentFilter"
+	action="filterExpressionExperiments.html" method="POST">
+	<h4>
+		Enter search criteria for finding a specific dataset here
+	</h4>
+	<input type="text" name="filter" size="78" />
+	<input type="submit" value="Find" />
+</form>
 
-		<display:table pagesize="50" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
-			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+<h3>
+	Displaying
+	<b> <c:out value="${numExpressionExperiments}" /> </b> Datasets
+</h3>
+<a class="helpLink" href="?"
+	onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
-			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" 
-				comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
-			/>
+<display:table pagesize="50" name="expressionExperiments" sort="list"
+	class="list" requestURI="" id="expressionExperimentList"
+	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+	<display:column property="nameLink" sortable="true" sortProperty="name"
+		titleKey="expressionExperiment.name"
+		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
-			<authz:authorize ifAnyGranted="admin">
-	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" 
-	 				comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"/>
-			</authz:authorize>
-		
+	<display:column property="shortName" sortable="true"
+		titleKey="expressionExperiment.shortName" />
 
- 			<display:column property="assaysLink" sortable="true" sortProperty="bioAssayCount" titleKey="bioAssays.title" 
- 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"/>
+	<authz:authorize ifAnyGranted="admin">
+		<display:column property="arrayDesignLink" sortable="true"
+			title="Arrays"
+			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
+	</authz:authorize>
 
-			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
-				
-			<authz:authorize ifAnyGranted="admin">
-				<display:column property="dateCreatedNoTime" sortable="true" title="Created" />		
-				<display:column property="edit" sortable="false" title="Edit" />
-				<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
-			</authz:authorize>
+	<display:column property="assaysLink" sortable="true"
+		sortProperty="bioAssayCount" titleKey="bioAssays.title"
+		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
-			<display:setProperty name="basic.empty.showtable" value="true" />
-		</display:table>
+	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
+
+
+	<authz:authorize ifAnyGranted="admin">
+		<display:column property="dateCreatedNoTime" sortable="true"
+			title="Created" />
+		<display:column property="edit" sortable="false" title="Edit" />
+		<display:column property="delete" sortable="false"
+			titleKey="expressionExperiment.delete" />
+	</authz:authorize>
+
+	<display:setProperty name="basic.empty.showtable" value="true" />
+</display:table>

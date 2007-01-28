@@ -88,40 +88,53 @@ public class ArrayDesignMapResultService {
         return this.summarizeMapResults( arrayDesign.getCompositeSequences() );
 
     }
-    
+
+    /**
+     * FIXME is this used anywhere?
+     * 
+     * @param arrayDesign
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public Collection<CompositeSequenceMapSummary> getSummaryMapResults(ArrayDesign arrayDesign) {
-        Collection<CompositeSequenceMapSummary> compositeSequenceSummaries = null;
-        
+    public Collection<CompositeSequenceMapSummary> getSummaryMapResults( ArrayDesign arrayDesign ) {
         Collection sequenceData = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign );
-        
-        HashMap<Long, Long> bioSequenceIds = new HashMap<Long,Long>();
-        HashMap<Long, HashSet<Long>> blatResultIds = new HashMap<Long,HashSet<Long>>();
-        HashMap<Long, HashSet<Long>> geneProductIds = new HashMap<Long,HashSet<Long>>();
-        HashMap<Long, HashSet<Long>> geneIds = new HashMap<Long,HashSet<Long>>();
+        return getSummaryMapResults( sequenceData );
+    }
+
+    /**
+     * @param sequenceData
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<CompositeSequenceMapSummary> getSummaryMapResults( Collection<CompositeSequence> sequenceData ) {
+        Collection<CompositeSequenceMapSummary> compositeSequenceSummaries;
+        HashMap<Long, Long> bioSequenceIds = new HashMap<Long, Long>();
+        HashMap<Long, HashSet<Long>> blatResultIds = new HashMap<Long, HashSet<Long>>();
+        HashMap<Long, HashSet<Long>> geneProductIds = new HashMap<Long, HashSet<Long>>();
+        HashMap<Long, HashSet<Long>> geneIds = new HashMap<Long, HashSet<Long>>();
         HashSet<Long> compositeSequenceIds = new HashSet<Long>();
-        
+
         for ( Object o : sequenceData ) {
-            String[] row = (String[]) o;
+            String[] row = ( String[] ) o;
             Long csId = Long.parseLong( row[0] );
-            
-            Long bioSequenceId = null ;
-            if (row[1] != null) {
+
+            Long bioSequenceId = null;
+            if ( row[1] != null ) {
                 Long.parseLong( row[1] );
             }
-            Long blatId = null; 
-            if (row[3] != null) {
-                Long.parseLong(row[3]);
+            Long blatId = null;
+            if ( row[3] != null ) {
+                Long.parseLong( row[3] );
             }
             Long geneProductId = null;
-            if (row[4] != null) {
-                Long.parseLong(row[4]);
+            if ( row[4] != null ) {
+                Long.parseLong( row[4] );
             }
             Long geneId = null;
-            if (row[5] != null) {
-                Long.parseLong(row[5]);
+            if ( row[5] != null ) {
+                Long.parseLong( row[5] );
             }
-            
+
             // store compositeSequenceId
             compositeSequenceIds.add( csId );
             // fill in bioSequence if not known
@@ -131,138 +144,143 @@ public class ArrayDesignMapResultService {
             // add in blatResult (if it exists)
             addToResultSet( blatResultIds, csId, blatId );
             // add to geneProducts (if it exists)
-            addToResultSet( geneProductIds, csId, geneProductId);
+            addToResultSet( geneProductIds, csId, geneProductId );
             // add to genes (if it exists)
-            addToResultSet(geneIds, csId, geneId);
+            addToResultSet( geneIds, csId, geneId );
         }
-        
+
         sequenceData = null;
-        
+
         // all ids are in memory now. Mass-load compositeSequences, bioSequences, blatResults, geneProducts, and genes.
         Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( compositeSequenceIds );
-        Collection<BioSequence> bioSequences = bioSequenceService.load( bioSequenceIds.values() );
+        // Collection<BioSequence> bioSequences = bioSequenceService.load( bioSequenceIds.values() );
         Collection<BlatResult> blatResults = blatResultService.load( blatResultIds.values() );
-        Collection<GeneProduct> geneProducts = geneProductService.load( geneProductIds.values() );
-        Collection<Gene> genes = geneService.load( geneIds.values() );
-     
+        // Collection<GeneProduct> geneProducts = geneProductService.load( geneProductIds.values() );
+        // Collection<Gene> genes = geneService.load( geneIds.values() );
+
         // build summary array
         compositeSequenceSummaries = new ArrayList<CompositeSequenceMapSummary>();
-        for ( CompositeSequence cs : compositeSequences) {
-            Long csId = cs.getId();
-            CompositeSequenceMapSummary summary = new CompositeSequenceMapSummary(cs);
+        for ( CompositeSequence cs : compositeSequences ) {
+            // Long csId = cs.getId();
+            CompositeSequenceMapSummary summary = new CompositeSequenceMapSummary( cs );
             summary.setBlatResults( blatResults );
-            
+
         }
         return compositeSequenceSummaries;
     }
 
-    public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects(ArrayDesign arrayDesign) {
-        
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
         Collection sequenceData = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign );
-        
-        HashMap<Long,CompositeSequenceMapValueObject> summary = new HashMap<Long,CompositeSequenceMapValueObject>();
+        return getSummaryMapValueObjects( sequenceData );
+    }
+
+    /**
+     * @param sequenceData
+     * @return
+     */
+    private Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection sequenceData ) {
+        HashMap<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
         // TODO fix number of blatHits to check the ID per BlatResult so it does not overcount
-        HashMap<Long,HashSet<Long>> blatResultCount = new HashMap<Long,HashSet<Long>>();
+        HashMap<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
         for ( Object o : sequenceData ) {
-            Object[] row = (Object[]) o;
-            Long csId = ((BigInteger) row[0]).longValue();
-            String csName = (String)row[1];
-            String bioSequenceName = (String)row[2];
-            String bioSequenceNcbiId = (String) row[3];
-           
+            Object[] row = ( Object[] ) o;
+            Long csId = ( ( BigInteger ) row[0] ).longValue();
+            String csName = ( String ) row[1];
+            String bioSequenceName = ( String ) row[2];
+            String bioSequenceNcbiId = ( String ) row[3];
+
             Object blatId = row[4];
-            
+
             Object geneProductId = row[5];
-            
-            String geneProductName = (String) row[6];
-            String geneProductAccession = (String) row[7];
+
+            String geneProductName = ( String ) row[6];
+            String geneProductAccession = ( String ) row[7];
             Object geneProductGeneId = row[8];
-            String geneProductType = (String) row[9];
-            
+            String geneProductType = ( String ) row[9];
+
             Object geneId = row[10];
-            
-            String geneName = (String)row[11];
-            String geneAccession = (String)row[12];
-          
+
+            String geneName = ( String ) row[11];
+            String geneAccession = ( String ) row[12];
+
             CompositeSequenceMapValueObject vo;
-            if (summary.containsKey( csId )) {
+            if ( summary.containsKey( csId ) ) {
                 vo = summary.get( csId );
-            }
-            else {
+            } else {
                 vo = new CompositeSequenceMapValueObject();
                 summary.put( csId, vo );
             }
-            
+
             vo.setCompositeSequenceId( csId.toString() );
             vo.setCompositeSequenceName( csName );
-            
+
             // fill in value object
-            if (bioSequenceName != null && vo.getBioSequenceName() == null) {
+            if ( bioSequenceName != null && vo.getBioSequenceName() == null ) {
                 vo.setBioSequenceName( bioSequenceName );
             }
-            
+
             // fill in value object
-            if (bioSequenceNcbiId != null && vo.getBioSequenceNcbiId() == null) {
+            if ( bioSequenceNcbiId != null && vo.getBioSequenceNcbiId() == null ) {
                 vo.setBioSequenceNcbiId( bioSequenceNcbiId );
             }
-            
+
             // count the number of blat hits
-            if (blatId != null) {
-                Long blatIdObj = ((BigInteger) blatId).longValue();
-                if (blatResultCount.containsKey( csId )) {
+            if ( blatId != null ) {
+                Long blatIdObj = ( ( BigInteger ) blatId ).longValue();
+                if ( blatResultCount.containsKey( csId ) ) {
                     blatResultCount.get( csId ).add( blatIdObj );
-                }
-                else {
+                } else {
                     HashSet<Long> blatResultHash = new HashSet<Long>();
                     blatResultHash.add( blatIdObj );
                     blatResultCount.put( csId, blatResultHash );
                 }
-                
-                if (vo.getNumBlatHits() == null) {
-                    vo.setNumBlatHits( new Long(1) );
-                }   
-                else {
+
+                if ( vo.getNumBlatHits() == null ) {
+                    vo.setNumBlatHits( new Long( 1 ) );
+                } else {
                     vo.setNumBlatHits( blatResultCount.get( csId ).size() );
                 }
             }
-            
+
             // fill in value object for geneProducts
-            if (geneProductId != null) {
+            if ( geneProductId != null ) {
                 Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
                 // if the geneProduct is already in the map, do not do anything.
                 // if it isn't there, put it in the map
-                if (!geneProductSet.containsKey( geneProductId )) {
+                if ( !geneProductSet.containsKey( geneProductId ) ) {
                     GeneProductValueObject gpVo = new GeneProductValueObject();
-                    gpVo.setId(  ((BigInteger)geneProductId).longValue() );
+                    gpVo.setId( ( ( BigInteger ) geneProductId ).longValue() );
                     gpVo.setName( geneProductName );
                     gpVo.setNcbiId( geneProductAccession );
-                    if (geneProductGeneId != null) {
-                        gpVo.setGeneId( ((BigInteger) geneProductGeneId).longValue() );
+                    if ( geneProductGeneId != null ) {
+                        gpVo.setGeneId( ( ( BigInteger ) geneProductGeneId ).longValue() );
                     }
                     gpVo.setType( geneProductType );
-                    geneProductSet.put( ((BigInteger)geneProductId).toString(), gpVo );
+                    geneProductSet.put( ( ( BigInteger ) geneProductId ).toString(), gpVo );
                 }
             }
-            
+
             // fill in value object for genes
-            if (geneId != null) {
+            if ( geneId != null ) {
                 Map<String, GeneValueObject> geneSet = vo.getGenes();
-                if (!geneSet.containsKey( geneId )) {
-                    GeneValueObject gVo= new GeneValueObject();
-                    gVo.setId( ((BigInteger) geneId ).longValue());
+                if ( !geneSet.containsKey( geneId ) ) {
+                    GeneValueObject gVo = new GeneValueObject();
+                    gVo.setId( ( ( BigInteger ) geneId ).longValue() );
                     gVo.setOfficialSymbol( geneName );
-                    gVo.setNcbiId( geneAccession);
-                    geneSet.put( ((BigInteger) geneId).toString(), gVo );
+                    gVo.setNcbiId( geneAccession );
+                    geneSet.put( ( ( BigInteger ) geneId ).toString(), gVo );
                 }
             }
 
         }
-        
-             
-        
+
         return summary.values();
     }
-    
+
     /**
      * @param results
      * @param keyId
