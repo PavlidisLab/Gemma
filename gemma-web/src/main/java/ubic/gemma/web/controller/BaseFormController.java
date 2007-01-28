@@ -56,7 +56,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="messageUtil" ref="messageUtil"
  */
 public abstract class BaseFormController extends SimpleFormController {
-    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
+    protected static Log log = LogFactory.getLog( BaseFormController.class.getName() );
     private MessageUtil messageUtil;
     protected MailEngine mailEngine = null;
     protected SimpleMailMessage mailMessage = null;
