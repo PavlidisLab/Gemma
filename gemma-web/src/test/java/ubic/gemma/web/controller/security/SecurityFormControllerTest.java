@@ -20,18 +20,16 @@ package ubic.gemma.web.controller.security;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.web.controller.security.SecurityFormController;
 
 /**
  * @author keshav
  * @version $Id$
  */
 public class SecurityFormControllerTest extends BaseSpringWebTest {
-    private ExpressionExperiment ee = null;
 
     /*
      * (non-Javadoc)
@@ -40,9 +38,6 @@ public class SecurityFormControllerTest extends BaseSpringWebTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
-        // TODO will make this ee private
-        // ee = this.getTestPersistentExpressionExperiment();
-
         super.onSetUpInTransaction();
     }
 
@@ -61,14 +56,23 @@ public class SecurityFormControllerTest extends BaseSpringWebTest {
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
         // request.setAttribute( "type", "profile" );
 
+        SecurityCommand command = new SecurityCommand();
+        command.setSecurableId( 1L );
+        command.setSecurableType( "Expression Experiment" );
+        command.setMask( "public" );
+
+        ModelAndView mav = null;
         boolean fail = false;
         try {
-            securityFormController.onSubmit( request, response, null, null );
+            mav = securityFormController.onSubmit( request, response, command, null );
         } catch ( Exception e ) {
             fail = true;
             e.printStackTrace();
         } finally {
             assertFalse( fail );
+            assertNotNull( mav );
+            log.debug( "View is " + mav.getViewName() );
+            log.debug( "Model is " + mav.getModel() );
         }
 
     }
