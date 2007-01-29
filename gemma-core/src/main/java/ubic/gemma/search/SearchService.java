@@ -120,6 +120,7 @@ public class SearchService {
      * @return
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public List<Gene> geneDbSearch( String searchString ) throws Exception {
 
         // search by inexact symbol
