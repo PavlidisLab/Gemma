@@ -167,12 +167,14 @@ public class SearchService {
      */
     @SuppressWarnings("unchecked")
     public List<CompositeSequence> compositeSequenceSearch( String searchString, ArrayDesign arrayDesign ) {
-
-        if ( StringUtils.isBlank( searchString ) ) return null;
-        Collection<CompositeSequence> nameMatch;
         List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
+        if ( StringUtils.isBlank( searchString ) ) return allResults;
+        Collection<CompositeSequence> nameMatch;
+
+        String cleanedSearchString = StringUtils.strip( searchString );
+
         if ( arrayDesign == null ) {
-            nameMatch = compositeSequenceService.findByName( searchString );
+            nameMatch = compositeSequenceService.findByName( cleanedSearchString );
             allResults.addAll( nameMatch );
         } else {
             assert arrayDesign.getId() != null;
