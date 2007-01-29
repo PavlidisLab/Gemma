@@ -102,6 +102,7 @@ public class DesignElementController extends BaseMultiActionController {
         ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "sequenceData", compositeSequenceSummary );
+        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
         this.saveMessage( request, "Search Criteria: " + filter );
 
         return mav;
