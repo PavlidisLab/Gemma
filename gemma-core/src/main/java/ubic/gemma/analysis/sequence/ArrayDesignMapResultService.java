@@ -187,7 +187,6 @@ public class ArrayDesignMapResultService {
      */
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection sequenceData ) {
         HashMap<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
-        // TODO fix number of blatHits to check the ID per BlatResult so it does not overcount
         HashMap<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
         for ( Object o : sequenceData ) {
             Object[] row = ( Object[] ) o;

@@ -899,9 +899,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
                 + "left join BIO_SEQUENCE bs on BIO_SEQUENCE_FK=bs.ID "
                 + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
-                + "WHERE gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class='GeneProductImpl' AND cs.ARRAY_DESIGN_FK = :id";
+                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK AND geneProductRNA.TYPE='RNA' AND geneProductRNA.class ='GeneProductImpl') "
+                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID and gene.class in ('GeneImpl','PredictedGeneImpl','ProbeAlignedRegionImpl') ) "
+                + "WHERE  cs.ARRAY_DESIGN_FK = :id";
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
