@@ -265,11 +265,7 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( eeIds.size() > 0 ) {
             eeVos = expressionExperimentService.loadValueObjects( eeIds );
         }
-        // load in array design value objects for each expression experiment
-        for ( ExpressionExperimentValueObject object : eeVos ) {
-            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-            ee.setId( Long.parseLong( object.getId() ) );
-        }
+
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
 
         // no genes are coexpressed
