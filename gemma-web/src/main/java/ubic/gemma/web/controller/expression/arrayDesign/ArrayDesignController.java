@@ -36,7 +36,6 @@ import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchService;
@@ -68,7 +67,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private ArrayDesignReportService arrayDesignReportService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private final String messageName = "Array design with name";
-    private final String messageId = "Array design with id";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
 
     /**
@@ -84,28 +82,28 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
-    
-    public ModelAndView showCompositeSequences(HttpServletRequest request, HttpServletResponse response) {
-        
+
+    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+
         String idStr = request.getParameter( "id" );
-        
-        if (  idStr == null  ) {
+
+        if ( idStr == null ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
         }
-        
+
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
-        
-        ModelAndView mav = new ModelAndView("arrayDesign.compositeSequences");
+
+        ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );
         Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign );
-        
-        if (compositeSequenceSummary == null || compositeSequenceSummary.size() == 0) {
-            /// FIXME, return error or do something else intelligent.
+
+        if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
+            // / FIXME, return error or do something else intelligent.
         }
-        
+
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "sequenceData", compositeSequenceSummary );
-        mav.addObject("numCompositeSequences", compositeSequenceSummary.size());
+        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
         return mav;
     }
 
@@ -115,7 +113,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param errors
      * @return
      */
-   // @SuppressWarnings({ "unused", "unchecked" })
+    // @SuppressWarnings({ "unused", "unchecked" })
     @SuppressWarnings("unchecked")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
@@ -138,71 +136,61 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             throw new EntityNotFoundException( name + " not found" );
         }
         long id = arrayDesign.getId();
-        
-        Long numCompositeSequences = new Long(arrayDesignService.getCompositeSequenceCount( arrayDesign ));
+
+        Long numCompositeSequences = new Long( arrayDesignService.getCompositeSequenceCount( arrayDesign ) );
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
-        Long numExpressionExperiments = new Long(ee.size());
+        Long numExpressionExperiments = new Long( ee.size() );
         Taxon t = arrayDesignService.getTaxon( id );
         String taxon = "";
-        if (t != null) {
+        if ( t != null ) {
             taxon = t.getScientificName();
-        }
-        else {
+        } else {
             taxon = "(No taxon available)";
         }
         String techType = arrayDesign.getTechnologyType().getValue();
         String colorString = "";
-        if (techType.equalsIgnoreCase( "ONECOLOR" )) {
+        if ( techType.equalsIgnoreCase( "ONECOLOR" ) ) {
             colorString = "one-color";
-        }
-        else if (techType.equalsIgnoreCase( "TWOCOLOR" )) {
-            colorString = "two-color";   
-        }
-        else if (techType.equalsIgnoreCase( "DUALMODE" )) {
-            colorString = "dual mode"; 
-        }
-        else {
+        } else if ( techType.equalsIgnoreCase( "TWOCOLOR" ) ) {
+            colorString = "two-color";
+        } else if ( techType.equalsIgnoreCase( "DUALMODE" ) ) {
+            colorString = "dual mode";
+        } else {
             colorString = "No color";
         }
-        
+
         String summary = arrayDesignReportService.getArrayDesignReport( id );
-        
+
         String[] eeIdList = new String[ee.size()];
         int i = 0;
-        for (ExpressionExperiment e : ee) {
+        for ( ExpressionExperiment e : ee ) {
             eeIdList[i] = e.getId().toString();
             i++;
         }
-        String eeIds = StringUtils.join( eeIdList,",");
+        String eeIds = StringUtils.join( eeIdList, "," );
 
+        ModelAndView mav = new ModelAndView( "arrayDesign.detail" );
 
-        
-        ModelAndView mav =  new ModelAndView( "arrayDesign.detail" );
-
-        
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
-        mav.addObject( "numCompositeSequences",  numCompositeSequences );
+        mav.addObject( "numCompositeSequences", numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
 
-
-        
-        mav.addObject( "expressionExperimentIds", eeIds );      
+        mav.addObject( "expressionExperimentIds", eeIds );
         mav.addObject( "technologyType", colorString );
-        mav.addObject( "summary", summary);
+        mav.addObject( "summary", summary );
         return mav;
     }
 
     /**
-     * 
      * @param request
      * @param response
      * @return
      */
-  //  @SuppressWarnings({ "unused", "unchecked" })
+    // @SuppressWarnings({ "unused", "unchecked" })
     @SuppressWarnings("unchecked")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        
+
         String sId = request.getParameter( "id" );
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
         String summary = null;
@@ -210,8 +198,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Arrays" );
-            arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
-            summary = arrayDesignReportService.getArrayDesignReport(); 
+            arrayDesigns.addAll( arrayDesignService.loadAllValueObjects() );
+            summary = arrayDesignReportService.getArrayDesignReport();
         }
 
         // if ids are specified, then display only those arrayDesigns
@@ -224,26 +212,25 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             }
             arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) );
         }
-        
-        Long numArrayDesigns = new Long(arrayDesigns.size());
+
+        Long numArrayDesigns = new Long( arrayDesigns.size() );
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", arrayDesigns );
-        mav.addObject("numArrayDesigns", numArrayDesigns);
-        mav.addObject( "summaryString", summary);
+        mav.addObject( "numArrayDesigns", numArrayDesigns );
+        mav.addObject( "summaryString", summary );
 
         return mav;
     }
-    
+
     /**
-     * 
      * @param request
      * @param response
      * @return
      */
-  //  @SuppressWarnings({ "unused", "unchecked" })
+    // @SuppressWarnings({ "unused", "unchecked" })
     @SuppressWarnings("unchecked")
     public ModelAndView showAllStats( HttpServletRequest request, HttpServletResponse response ) {
-        
+
         String sId = request.getParameter( "id" );
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
         Collection<ArrayDesignValueObjectSummary> summaries = new ArrayList<ArrayDesignValueObjectSummary>();
@@ -251,7 +238,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Arrays" );
-            arrayDesigns.addAll( arrayDesignService.loadAllValueObjects()); 
+            arrayDesigns.addAll( arrayDesignService.loadAllValueObjects() );
         }
 
         // if ids are specified, then display only those arrayDesigns
@@ -264,38 +251,37 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             }
             arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) );
         }
-        
+
         for ( ArrayDesignValueObject ad : arrayDesigns ) {
             String summary = arrayDesignReportService.getArrayDesignReport( ad.getId() );
-            ArrayDesignValueObjectSummary adSummary = new ArrayDesignValueObjectSummary(ad, summary);
+            ArrayDesignValueObjectSummary adSummary = new ArrayDesignValueObjectSummary( ad, summary );
             summaries.add( adSummary );
         }
-        
-        Long numArrayDesigns = new Long(arrayDesigns.size());
+
+        Long numArrayDesigns = new Long( arrayDesigns.size() );
         ModelAndView mav = new ModelAndView( "arrayDesignStatistics" );
         mav.addObject( "arrayDesigns", summaries );
-        mav.addObject("numArrayDesigns", numArrayDesigns);
+        mav.addObject( "numArrayDesigns", numArrayDesigns );
 
         return mav;
     }
+
     /**
-     * 
      * @param request
      * @param response
      * @return
      */
-  //  @SuppressWarnings({ "unused", "unchecked" })
+    // @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
-        
+
         String sId = request.getParameter( "id" );
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            return  startJob(request, new GenerateSummary(request, arrayDesignReportService) );
-        }
-        else {
+            return startJob( request, new GenerateSummary( request, arrayDesignReportService ) );
+        } else {
             Long id = Long.parseLong( sId );
-            return  startJob(request, new GenerateSummary(request, arrayDesignReportService, id) );  
+            return startJob( request, new GenerateSummary( request, arrayDesignReportService, id ) );
         }
     }
 
@@ -336,12 +322,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                     arrayDesign.getName() } );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
-        
-        return  startJob(request, new RemoveArrayJob(request, arrayDesign, arrayDesignService) );
-        
+
+        return startJob( request, new RemoveArrayJob( request, arrayDesign, arrayDesignService ) );
 
     }
-    
+
     /**
      * shows a list of BioAssays for an expression experiment subset
      * 
@@ -351,7 +336,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return ModelAndView
      */
     @SuppressWarnings("unused")
-  public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
             // should be a validation error, on 'submit'.
@@ -359,22 +344,21 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
-        if (arrayDesign == null) {
-            this.addMessage( request, "errors.objectnotfound", new Object[] { "Array Design "} );
+        if ( arrayDesign == null ) {
+            this.addMessage( request, "errors.objectnotfound", new Object[] { "Array Design " } );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
-    
+
         Collection ees = arrayDesignService.getExpressionExperiments( arrayDesign );
         Collection<Long> eeIds = new ArrayList<Long>();
         for ( Object object : ees ) {
-            eeIds.add( ((ExpressionExperiment) object).getId() );
+            eeIds.add( ( ( ExpressionExperiment ) object ).getId() );
         }
-        String ids = StringUtils.join( eeIds.toArray(),"," );
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + ids ) );
+        String ids = StringUtils.join( eeIds.toArray(), "," );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
+                + ids ) );
     }
 
-    
-    
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
         String filter = request.getParameter( "filter" );
 
@@ -386,20 +370,19 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         List<ArrayDesign> searchResults = searchService.compassArrayDesignSearch( filter );
 
-       if ((searchResults == null) || (searchResults.size() == 0)) {
-           this.saveMessage( request, "Your search yielded no results");
-           return showAll(request, response);
-       }
-           
+        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+            this.saveMessage( request, "Your search yielded no results" );
+            return showAll( request, response );
+        }
+
         String list = "";
         for ( ArrayDesign ad : searchResults )
             list += ad.getId() + ",";
-        
+
         this.saveMessage( request, "Search Criteria: " + filter );
         this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ));
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
     }
-
 
     /**
      * @return the searchService
@@ -414,22 +397,23 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
     }
-    
+
     /**
-     * 
-     *Inner class used for deleting array designs
+     * Inner class used for deleting array designs
      * <hr>
-     * <p>Copyright (c) 2006 UBC Pavlab
+     * <p>
+     * Copyright (c) 2006 UBC Pavlab
+     * 
      * @author klc
      * @version $Id$
      */
     class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
-        
+
         private ArrayDesignService arrayDesignService;
         private ArrayDesign ad;
-        
+
         public RemoveArrayJob( HttpServletRequest request, ArrayDesign ad, ArrayDesignService arrayDesignService ) {
-            super( request, getMessageUtil() );   
+            super( request, getMessageUtil() );
             this.arrayDesignService = arrayDesignService;
             this.ad = ad;
         }
@@ -438,46 +422,42 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         public ModelAndView call() throws Exception {
 
             init();
-        
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                    .getAuthentication().getName(), "Deleting Array: "
-                    + ad.getShortName());
-                        
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Deleting Array: " + ad.getShortName() );
+
             arrayDesignService.remove( ad );
-            saveMessage( "Array "+ad.getShortName()  +" removed from Database." );                
+            saveMessage( "Array " + ad.getShortName() + " removed from Database." );
             ad = null;
 
-
             ProgressManager.destroyProgressJob( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html") );
-
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
 
         }
     }
 
-    
-    
     /**
-     * 
-     *Inner class used for deleting array designs
+     * Inner class used for deleting array designs
      * <hr>
-     * <p>Copyright (c) 2006 UBC Pavlab
+     * <p>
+     * Copyright (c) 2006 UBC Pavlab
+     * 
      * @author klc
      * @version $Id$
      */
     class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
-        
+
         private ArrayDesignReportService arrayDesignReportService;
         private Long id;
-        
+
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
-            super( request, getMessageUtil() );   
+            super( request, getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
             id = null;
         }
-        
+
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService, Long id ) {
-            super( request, getMessageUtil() );   
+            super( request, getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
             this.id = id;
         }
@@ -486,30 +466,24 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         public ModelAndView call() throws Exception {
 
             init();
-        
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                    .getAuthentication().getName(), "Generating ArrayDesign Report summary");
-            
 
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Generating ArrayDesign Report summary" );
 
-            if (id == null ) {
-                saveMessage("Generated summary for all platforms" );
+            if ( id == null ) {
+                saveMessage( "Generated summary for all platforms" );
                 job.updateProgress( "Generated summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
-            }
-            else {
-                saveMessage("Generating summary for platform " + id );
+            } else {
+                saveMessage( "Generating summary for platform " + id );
                 job.updateProgress( "Generating summary for specified platform" );
-                arrayDesignReportService.generateArrayDesignReport(id);                
+                arrayDesignReportService.generateArrayDesignReport( id );
             }
             ProgressManager.destroyProgressJob( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + id) );
-            
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + id ) );
 
         }
     }
-
-
 
     /**
      * @param arrayDesignMapResultService the arrayDesignMapResultService to set

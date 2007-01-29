@@ -19,16 +19,12 @@
 package ubic.gemma.web.controller.expression.designElement;
 
 import java.util.Collection;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -51,7 +47,6 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  */
 public class DesignElementController extends BaseMultiActionController {
 
-    private static Log log = LogFactory.getLog( DesignElementController.class.getName() );
     private SearchService searchService;
     private ArrayDesignService arrayDesignService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService;
