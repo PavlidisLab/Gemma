@@ -178,7 +178,7 @@ public class SearchService {
             allResults.addAll( nameMatch );
         } else {
             assert arrayDesign.getId() != null;
-            CompositeSequence res = compositeSequenceService.findByName( arrayDesign, searchString );
+            CompositeSequence res = compositeSequenceService.findByName( arrayDesign, cleanedSearchString );
             if ( res != null ) allResults.add( res );
         }
 
