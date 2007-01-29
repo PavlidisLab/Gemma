@@ -18,17 +18,22 @@
  */
 package ubic.gemma.web.controller.security;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -37,6 +42,8 @@ import ubic.gemma.web.controller.BaseFormController;
  * @author keshav
  * @version $Id$
  * @spring.bean id="securityFormController"
+ * @spring.property name = "commandName" value="securityCommand"
+ * @spring.property name = "commandClass" value="ubic.gemma.web.controller.security.SecurityCommand"
  * @spring.property name="securityService" ref="securityService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
@@ -49,6 +56,96 @@ public class SecurityFormController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private ArrayDesignService arrayDesignService = null;
 
+    private final String expressionExperimentType = "Expression Experiment";
+    private final String arrayDesignType = "Array Design";
+    private final String PUBLIC = "Public";
+    private final String PRIVATE = "Private";
+
+    public SecurityFormController() {
+        /*
+         * if true, reuses the same command object across the get-submit-process (get-post-process).
+         */
+        setSessionForm( true );
+    }
+
+    /**
+     * Populates drop downs.
+     * 
+     * @param request
+     * @return Map
+     */
+    @Override
+    protected Map referenceData( HttpServletRequest request ) {
+        log.debug( "referenceData" );
+
+        Map<String, List<? extends Object>> dropDownMap = new HashMap<String, List<? extends Object>>();
+
+        List<String> securableTypes = new ArrayList<String>();
+        securableTypes.add( expressionExperimentType );
+        securableTypes.add( arrayDesignType );
+
+        dropDownMap.put( "securableTypes", securableTypes );
+
+        return dropDownMap;
+    }
+
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see
+    // org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+    // */
+    // @Override
+    // @SuppressWarnings("unused")
+    // protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+    // log.debug( "formBackingObject" );
+    //            
+    // Long id = null;
+    // try {
+    // id = Long.parseLong( request.getParameter( "id" ) );
+    // } catch ( NumberFormatException e ) {
+    // throw new RuntimeException( "Id was not valid Long integer", e );
+    // }
+    //            
+    // ExpressionExperiment ee = null;
+    //            
+    // // SecurityCommand securityCommand = new SecurityCommand();
+    // // request.getParameter( "id" );
+    // // Object target = securityCommand.setTarget();
+    //            
+    // if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
+    // ee = expressionExperimentService.findById( id );
+    // } else {
+    // ee = ExpressionExperiment.Factory.newInstance();
+    // }
+    //            
+    // // securityCommand.setTarget( target);
+    //    
+    // return null;
+    // }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+        log.debug( "processFormSubmission" );
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            log.info( "Cancelled" );
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -58,33 +155,49 @@ public class SecurityFormController extends BaseFormController {
     @Override
     @SuppressWarnings("unused")
     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException error ) throws Exception {
+            BindException errors ) throws Exception {
+        log.debug( "onSubmit" );
 
-        ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(), "Making data private." );
+        SecurityCommand sc = ( SecurityCommand ) command;
+        Long id = sc.getSecurableId();
 
-        // TODO add in the command object
-        // Object target = command.getTarget();
-        // securityService.makePrivate( target );
+        String type = sc.getSecurableType();
 
-        ProgressManager.destroyProgressJob( job );
+        Object target = null;
+        if ( StringUtils.equalsIgnoreCase( type, expressionExperimentType ) ) {
+            target = this.expressionExperimentService.findById( id );
+        } else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
+            // target = this.arrayDesignService.findArrayDesignByName( name );//TODO no findById ... maybe use name
+            return processErrors( request, response, command, errors,
+                    "Cannot change permissions of array designs at this time." );
+        }
 
-        ModelAndView mav = new ModelAndView( getSuccessView() );
-        // mav.addObject( "securityManager.detail", securityCommand );
-        return mav;
-    }
+        if ( target == null ) {
+            return processErrors( request, response, command, errors, "No securable object with id " + id + " found" );
+        }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    @SuppressWarnings("unused")
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        // SecurityCommand securityCommand = new SecurityCommand();
-        // request.getParameter( "id" );
-        // Object target = securityCommand.setTarget();
-        return null;
+        String mask = sc.getMask();
+        int aclMask = 0;
+        if ( StringUtils.equalsIgnoreCase( mask, PUBLIC ) )
+            aclMask = 6;
+
+        else if ( StringUtils.equalsIgnoreCase( mask, PRIVATE ) )
+            aclMask = 1;
+
+        else
+            return processErrors( request, response, command, errors,
+                    "Supported masks are 1 (private) and 6 (public), not " + mask );
+
+        // ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(), "Making data private." );
+        securityService.makePrivate( target, aclMask );
+        // ProgressManager.destroyProgressJob( job );
+
+        saveMessage( request, target + " made " + mask + "." );
+        String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                + "/" + getSuccessView() + ".html";
+
+        log.debug( "Redirecting to " + url );
+        return new ModelAndView( new RedirectView( url ) );
     }
 
     /**
