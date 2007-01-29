@@ -664,7 +664,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
-                + " where eventCreated.action='CREATE' and ee.id in (:ids) " + " group by ee order by ee.name";
+                + " where eventCreated.action='C' and ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
