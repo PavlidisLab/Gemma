@@ -27,9 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -195,6 +192,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetRawSummary( Collection compositeSequences ) throws Exception {
+        if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
         StringBuilder buf = new StringBuilder();
 
         for ( Iterator<CompositeSequence> it = compositeSequences.iterator(); it.hasNext(); ) {

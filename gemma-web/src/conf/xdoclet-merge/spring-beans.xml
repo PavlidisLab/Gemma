@@ -149,7 +149,7 @@
 			<prop key="/arrays/showArrayDesign.html">show</prop>
 			<prop key="/arrays/showCompositeSequenceSummary.html">showCompositeSequences</prop>
 			<prop key="/arrays/showExpressionExperimentsFromArrayDesign.html">showExpressionExperiments</prop>
-			<prop key="/arrays/filterArrayDesigns.html">filter</prop>	
+			<prop key="/arrays/filterArrayDesigns.html">filter</prop>
 			<prop key="/arrays/generateArrayDesignSummary.html">generateSummary</prop>			
 		</props>
 	</property>
@@ -160,6 +160,7 @@
 			<prop key="/designElement/showAllDesignElements.html">showAll</prop>
 			<prop key="/designElement/deleteDesignElement.html">delete</prop>
 			<prop key="/designElement/showDesignElement.html">show</prop>
+			<prop key="/designElement/filterCompositeSequences.html">filter</prop>
 		</props>
 	</property>
 </bean>

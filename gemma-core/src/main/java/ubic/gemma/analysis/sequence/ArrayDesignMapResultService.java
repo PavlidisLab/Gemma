@@ -179,10 +179,13 @@ public class ArrayDesignMapResultService {
     }
 
     /**
-     * @param sequenceData
+     * FIXME this is only public so we can use it in the DesignElementController; need refactoring (see
+     * CompositeSequenceService)
+     * 
+     * @param rawSummaryData
      * @return
      */
-    private Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection sequenceData ) {
+    public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection sequenceData ) {
         HashMap<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
         // TODO fix number of blatHits to check the ID per BlatResult so it does not overcount
         HashMap<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();

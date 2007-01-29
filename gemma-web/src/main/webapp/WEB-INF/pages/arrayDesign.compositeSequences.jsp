@@ -8,26 +8,30 @@
 	href="<c:url value='/styles/scrolltable.css'/>" />
 
 <title>Composite Sequences : <jsp:getProperty name="arrayDesign"
-		property="name" />
-</title>
+		property="name" /></title>
 
 <content tag="heading">
 Composite Sequence Viewer : Platform
-<jsp:getProperty name="arrayDesign" property="name" /> (<jsp:getProperty name="arrayDesign" property="shortName" />) 
+<jsp:getProperty name="arrayDesign" property="name" />
+(
+<jsp:getProperty name="arrayDesign" property="shortName" />
+)
 
 </content>
 
 
 <p>
-	Displaying ${numCompositeSequences}	probes.
+	Displaying ${numCompositeSequences} probes.
 </p>
 
 <form name="CompositeSequenceFilter"
-	action="filterCompositeSequences.html" method="POST">
+	action="<c:url value="/designElement/filterCompositeSequences.html" />"
+	method="POST">
 	<h4>
 		Enter search criteria for finding specific probes here
 	</h4>
 	<input type="text" name="filter" size="78" />
+	<input type="hidden" name="arid"  value="<jsp:getProperty name="arrayDesign" property="id" />" />
 	<input type="submit" value="Find" />
 </form>
 
@@ -69,4 +73,6 @@ Composite Sequence Viewer : Platform
 
 </c:if>
 <a class="helpLink" href="?"
-	onclick="showHelpTip(event, 'Summarizes multiple probes (array design elements).'); return false"><img src="/Gemma/images/help.png" /></a>
+	onclick="showHelpTip(event, 'Summarizes multiple probes (array design elements).'); return false"><img
+		src="/Gemma/images/help.png" />
+</a>

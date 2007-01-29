@@ -16,11 +16,11 @@
 package ubic.gemma.security.afterInvocation;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.acegisecurity.AccessDeniedException;
 import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthorizationServiceException;
 import org.acegisecurity.ConfigAttribute;
 import org.acegisecurity.ConfigAttributeDefinition;
 import org.acegisecurity.acl.AclEntry;
@@ -120,6 +120,7 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
 
                 Filterer filterer = null;
 
+                boolean wasSingleton = false;
                 if ( returnedObject instanceof Collection ) {
                     Collection collection = ( Collection ) returnedObject;
                     filterer = new CollectionFilterer( collection );
@@ -127,9 +128,11 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
                     Object[] array = ( Object[] ) returnedObject;
                     filterer = new ArrayFilterer( array );
                 } else {
-                    throw new AuthorizationServiceException(
-                            "A Collection or an array (or null) was required as the returnedObject, but the returnedObject was: "
-                                    + returnedObject );
+                    // shortcut, just put the object in a collection. (PP)
+                    wasSingleton = true;
+                    Collection<Object> coll = new HashSet<Object>();
+                    coll.add( returnedObject );
+                    filterer = new CollectionFilterer( coll );
                 }
 
                 // Locate unauthorised Collection elements
@@ -185,7 +188,14 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
                         }
                     }
                 }
+                if ( wasSingleton ) {
+                    if ( ( ( Collection ) filterer.getFilteredObject() ).size() == 1 ) {
+                        return ( ( Collection ) filterer.getFilteredObject() ).iterator().next();
+                    } else {
+                        return null;
+                    }
 
+                }
                 return filterer.getFilteredObject();
             }
         }

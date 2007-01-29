@@ -18,29 +18,94 @@
  */
 package ubic.gemma.web.controller.expression.designElement;
 
+import java.util.Collection;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
-/** 
- * 
+/**
  * @author keshav
+ * @author paul
  * @version $Id$
  * @spring.bean id="designElementController"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="methodNameResolver" ref="designElementActions"
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
+ * @spring.property name="searchService" ref="searchService"
  */
 public class DesignElementController extends BaseMultiActionController {
 
     private static Log log = LogFactory.getLog( DesignElementController.class.getName() );
-
+    private SearchService searchService;
     private ArrayDesignService arrayDesignService = null;
+    private ArrayDesignMapResultService arrayDesignMapResultService;
+    private CompositeSequenceService compositeSequenceService;
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
+        String filter = request.getParameter( "filter" );
+        String arid = request.getParameter( "arid" );
+
+        ArrayDesign arrayDesign = null;
+        if ( arid != null ) {
+            try {
+                arrayDesign = arrayDesignService.load( Long.parseLong( arid ) );
+            } catch ( NumberFormatException e ) {
+                // Fail gracefull, please.
+            }
+        }
+
+        // Validate the filtering search criteria.
+        if ( StringUtils.isBlank( filter ) ) {
+            this.saveMessage( request, "No search critera provided" );
+            // return showAll( request, response );
+
+        }
+
+        /*
+         * There have to be a few ways of searching: - by ID, by bioSequence, by Gene name. An array design may or may
+         * not be given.
+         */
+
+        Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( filter, arrayDesign );
+
+        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+            this.saveMessage( request, "Your search yielded no results" );
+            // return showAll( request, response );
+        } else {
+            this.saveMessage( request, searchResults.size() + " probes matched your search." );
+        }
+
+        Collection rawSummaries = compositeSequenceService.getRawSummary( searchResults );
+        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+
+        ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );
+        mav.addObject( "arrayDesign", arrayDesign );
+        mav.addObject( "sequenceData", compositeSequenceSummary );
+        this.saveMessage( request, "Search Criteria: " + filter );
+
+        return mav;
+    }
 
     /**
      * @param request
@@ -68,6 +133,7 @@ public class DesignElementController extends BaseMultiActionController {
     // }
     /**
      * Disabled for now.
+     * 
      * @param request
      * @param response
      * @return
@@ -75,18 +141,14 @@ public class DesignElementController extends BaseMultiActionController {
     @SuppressWarnings( { "unused" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
-        
         this.addMessage( request, "object.unavailable", null );
-        return new ModelAndView("mainMenu");
+        return new ModelAndView( "mainMenu" );
         /*
-        log.debug( "entered showAll from " + request.getRequestURI() );
-
-        String name = request.getParameter( "name" );
-
-        ArrayDesign ad = arrayDesignService.findArrayDesignByName( name );
-        Collection<CompositeSequence> ads = ad.getCompositeSequences();
-        // FIXME this only works on composite sequences.
-        return new ModelAndView( "designElements" ).addObject( "designElements", ads );*/
+         * log.debug( "entered showAll from " + request.getRequestURI() ); String name = request.getParameter( "name" );
+         * ArrayDesign ad = arrayDesignService.findArrayDesignByName( name ); Collection<CompositeSequence> ads =
+         * ad.getCompositeSequences(); // FIXME this only works on composite sequences. return new ModelAndView(
+         * "designElements" ).addObject( "designElements", ads );
+         */
     }
 
     /**
@@ -127,6 +189,18 @@ public class DesignElementController extends BaseMultiActionController {
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
+
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
     }
 
 }

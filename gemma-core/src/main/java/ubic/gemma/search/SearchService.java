@@ -20,6 +20,7 @@
 package ubic.gemma.search;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -43,7 +44,9 @@ import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.spring.web.mvc.CompassSearchResults;
 
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -54,11 +57,9 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * This a service class used for preforming searches. there are two kinds of searches available, percise db searchs
  * looking for specific exact mathces in the db and the compass/lucene style searches
- * <hr>
- * <p>
- * Copyright (c) 2006 UBC Pavlab
  * 
  * @author klc
+ * @author paul
  * @version $Id$
  * @spring.bean id="searchService"
  * @spring.property name="geneService" ref="geneService"
@@ -107,7 +108,7 @@ public class SearchService {
             if ( !geneDbList.contains( gene ) ) combinedGeneList.add( gene );
         }
 
-        //returned combined list
+        // returned combined list
         return combinedGeneList;
     }
 
@@ -127,20 +128,20 @@ public class SearchService {
         Set<Gene> aliasMatch = new HashSet<Gene>();
         Set<Gene> geneProductMatch = new HashSet<Gene>();
         Set<Gene> bioSequenceMatch = new HashSet<Gene>();
-        
+
         // replace * with % for inexact symbol search
         String inexactString = searchString;
         Pattern pattern = Pattern.compile( "\\*" );
         Matcher match = pattern.matcher( inexactString );
         inexactString = match.replaceAll( "%" );
-        
+
         geneMatch.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
         aliasMatch.addAll( geneService.getByGeneAlias( inexactString ) );
 
         geneProductMatch.addAll( geneProductService.getGenesByName( inexactString ) );
         geneProductMatch.addAll( geneProductService.getGenesByNcbiId( inexactString ) );
 
-        bioSequenceMatch.addAll( bioSequenceService.getGenesByAccession(inexactString  ) );
+        bioSequenceMatch.addAll( bioSequenceService.getGenesByAccession( inexactString ) );
         bioSequenceMatch.addAll( bioSequenceService.getGenesByName( inexactString ) );
 
         geneSet.addAll( geneMatch );
@@ -149,7 +150,7 @@ public class SearchService {
         geneSet.addAll( bioSequenceMatch );
 
         List<Gene> geneList = new ArrayList<Gene>( geneSet );
-        Comparator<Gene> comparator = new GeneComparator();
+        Comparator<Describable> comparator = new DescribableComparator();
         Collections.sort( geneList, comparator );
 
         return geneList;
@@ -157,22 +158,38 @@ public class SearchService {
     }
 
     /**
-     * An inner class used for the ordering of genes
-     * <hr>
-     * <p>
-     * Copyright (c) 2006 UBC Pavlab
+     * Partial implementation
      * 
-     * @author klc
-     * @version $Id$
+     * @param searchString
+     * @param arrayDesign
+     * @return
+     * @throws Exception
      */
+    @SuppressWarnings("unchecked")
+    public List<CompositeSequence> compositeSequenceSearch( String searchString, ArrayDesign arrayDesign ) {
 
-    class GeneComparator implements Comparator<Gene> {
+        if ( StringUtils.isBlank( searchString ) ) return null;
+        Collection<CompositeSequence> nameMatch;
+        List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
+        if ( arrayDesign == null ) {
+            nameMatch = compositeSequenceService.findByName( searchString );
+            allResults.addAll( nameMatch );
+        } else {
+            assert arrayDesign.getId() != null;
+            CompositeSequence res = compositeSequenceService.findByName( arrayDesign, searchString );
+            if ( res != null ) allResults.add( res );
+        }
 
-        public int compare( Gene arg0, Gene arg1 ) {
-            Gene obj0 = arg0;
-            Gene obj1 = arg1;
+        Collections.sort( allResults, new DescribableComparator() );
+        return allResults;
+    }
 
-            return obj0.getName().compareTo( obj1.getName() );
+    /**
+     * An inner class used for the ordering of genes
+     */
+    class DescribableComparator implements Comparator<Describable> {
+        public int compare( Describable arg0, Describable arg1 ) {
+            return arg0.getName().compareTo( arg1.getName() );
         }
     }
 
@@ -196,6 +213,10 @@ public class SearchService {
         return convert2GeneList( searchResults.getHits() );
     }
 
+    /**
+     * @param anArray
+     * @return
+     */
     protected List<Gene> convert2GeneList( CompassHit[] anArray ) {
 
         ArrayList<Gene> converted = new ArrayList<Gene>( anArray.length );
@@ -207,6 +228,10 @@ public class SearchService {
 
     }
 
+    /**
+     * @param anArray
+     * @return
+     */
     protected List<ExpressionExperiment> convert2ExpressionList( CompassHit[] anArray ) {
 
         ArrayList<ExpressionExperiment> converted = new ArrayList<ExpressionExperiment>( anArray.length );
@@ -262,6 +287,10 @@ public class SearchService {
         return convert2ArrayDesignList( searchResults.getHits() );
     }
 
+    /**
+     * @param anArray
+     * @return
+     */
     protected List<ArrayDesign> convert2ArrayDesignList( CompassHit[] anArray ) {
 
         ArrayList<ArrayDesign> converted = new ArrayList<ArrayDesign>( anArray.length );
@@ -273,6 +302,11 @@ public class SearchService {
 
     }
 
+    /**
+     * @param query
+     * @param session
+     * @return
+     */
     protected CompassSearchResults performSearch( String query, CompassSession session ) {
         long time = System.currentTimeMillis();
 
@@ -302,24 +336,10 @@ public class SearchService {
     }
 
     /**
-     * @return the compositeSequenceService
-     */
-    public CompositeSequenceService getCompositeSequenceService() {
-        return compositeSequenceService;
-    }
-
-    /**
      * @param compositeSequenceService the compositeSequenceService to set
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @return the geneProductService
-     */
-    public GeneProductService getGeneProductService() {
-        return geneProductService;
     }
 
     /**
@@ -330,24 +350,10 @@ public class SearchService {
     }
 
     /**
-     * @return Returns the bibliographicReferenceService.
-     */
-    public GeneService getGeneService() {
-        return geneService;
-    }
-
-    /**
      * @param geneService The geneService to set.
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }
-
-    /**
-     * @return the geneBean
-     */
-    public Compass getGeneBean() {
-        return geneBean;
     }
 
     /**
@@ -358,24 +364,10 @@ public class SearchService {
     }
 
     /**
-     * @return the eeBean
-     */
-    public Compass getEeBean() {
-        return eeBean;
-    }
-
-    /**
      * @param eeBean the eeBean to set
      */
     public void setEeBean( Compass eeBean ) {
         this.eeBean = eeBean;
-    }
-
-    /**
-     * @return the arrayBean
-     */
-    public Compass getArrayBean() {
-        return arrayBean;
     }
 
     /**
