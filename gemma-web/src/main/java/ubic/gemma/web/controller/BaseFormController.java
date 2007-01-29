@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
@@ -244,6 +245,30 @@ public abstract class BaseFormController extends SimpleFormController {
         }
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * New errors are added if <tt>message</tt> is not empty (as per the definition of
+     * {@link org.apache.commons.lang.StringUtils#isEmpty}. If empty, a new error will not be added, but existing
+     * errors will still be processed.
+     * 
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @param message - The error message to be displayed.
+     * @return ModelAndView
+     * @throws Exception
+     */
+
+    protected ModelAndView processErrors( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors, String message ) throws Exception {
+        if ( !StringUtils.isEmpty( message ) ) {
+            log.error( message );
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+        }
+
+        return this.processFormSubmission( request, response, command, errors );
     }
 
     /**
