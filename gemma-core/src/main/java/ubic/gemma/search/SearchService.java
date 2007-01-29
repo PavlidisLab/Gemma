@@ -70,7 +70,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="eeBean" ref="compassExpression"
  * @spring.property name="arrayBean" ref="compassArray"
  */
-
 public class SearchService {
 
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
