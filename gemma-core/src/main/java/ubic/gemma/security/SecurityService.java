@@ -39,23 +39,30 @@ public class SecurityService {
 
     private BasicAclExtendedDao basicAclExtendedDao = null;
 
+    private final int PUBLIC_MASK = 6;
+    private final int PRIVATE_MASK = 1;
+
     /**
-     * Changes the acl_permission of the object to ADMINISTRATION (mask=1).
+     * Changes the acl_permission of the object to either administrator/PUBLIC (mask=1), or read-write/PRIVATE (mask=6).
      * 
      * @param object
+     * @param mask
      */
-    public void makePrivate( Object object ) {
+    public void makePrivate( Object object, int mask ) {
         log.debug( "Changing acl of object " + object + "." );
+
+        if ( mask != PUBLIC_MASK && mask != PRIVATE_MASK ) {
+            throw new RuntimeException( "Supported masks are 1 (PUBLIC) and 6 (PRIVATE)." );
+        }
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
         Authentication authentication = securityCtx.getAuthentication();
         Object recipient = authentication.getPrincipal();
 
-        int privateMask = 1;
         if ( object instanceof Securable ) {
 
             try {
-                basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, privateMask );
+                basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
             } catch ( Exception e ) {
                 throw new RuntimeException( "Problems changing mask of " + object, e );
             }
