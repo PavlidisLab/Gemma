@@ -200,6 +200,10 @@
 			<a href="<c:url value="/genome/goldenPathSequenceLoad.html"/>"> <fmt:message
 					key="menu.goldenPathSequenceLoad" /> </a>
 		</li>
+		<li>
+			<a href="<c:url value="/securityManager.html"/>"> <fmt:message
+					key="menu.securityManager" /> </a>
+		</li>
 	</ul>
 
 	<h2>
