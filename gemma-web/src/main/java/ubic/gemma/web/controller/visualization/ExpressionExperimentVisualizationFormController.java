@@ -437,29 +437,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
-     * New errors are added if <tt>message</tt> is not empty (as per the definition of
-     * {@link org.apache.commons.lang.StringUtils#isEmpty}. If empty, a new error will not be added, but existing
-     * errors will still be processed.
-     * 
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @param message - The error message to be displayed.
-     * @return ModelAndView
-     * @throws Exception
-     */
-    private ModelAndView processErrors( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors, String message ) throws Exception {
-        if ( !StringUtils.isEmpty( message ) ) {
-            log.error( message );
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
      * @param compositeSequenceService
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
