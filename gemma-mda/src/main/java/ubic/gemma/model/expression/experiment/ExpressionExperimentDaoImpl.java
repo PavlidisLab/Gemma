@@ -430,8 +430,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 expressionExperiment.getDesignElementDataVectors().size();
                 expressionExperiment.getBioAssays().size();
                 expressionExperiment.getSubsets().size();
-                if ( expressionExperiment.getPrimaryPublication() != null )
-                    session.update( expressionExperiment.getPrimaryPublication() );
+                if ( expressionExperiment.getAccession() != null )
+                    expressionExperiment.getAccession().getExternalDatabase();
+                thawPrimaryReference( expressionExperiment, session );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
@@ -442,6 +443,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }, true );
     }
 
+    private void thawPrimaryReference( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
+        if ( expressionExperiment.getPrimaryPublication() != null ) {
+            session.update( expressionExperiment.getPrimaryPublication() );
+            session.update( expressionExperiment.getPrimaryPublication().getPubAccession() );
+            session.update( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase()
+                    .getName() );
+        }
+    }
+
     @Override
     protected void handleThawBioAssays( final ExpressionExperiment expressionExperiment ) {
         HibernateTemplate templ = this.getHibernateTemplate();
@@ -449,6 +459,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( expressionExperiment );
                 expressionExperiment.getBioAssays().size();
+                thawPrimaryReference( expressionExperiment, session );
+                if ( expressionExperiment.getAccession() != null )
+                    expressionExperiment.getAccession().getExternalDatabase();
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
@@ -682,7 +695,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setBioAssayCount( list.getInteger( 7 ) );
                 v.setArrayDesignCount( list.getInteger( 8 ) );
                 v.setShortName( list.getString( 9 ) );
-                v.setDateCreated( list.getDate( 10 ).toString()  );
+                v.setDateCreated( list.getDate( 10 ).toString() );
                 // removed to speed up query
                 // v.setDesignElementDataVectorCount( list.getInteger( 8 ) );
                 // v.setBioMaterialCount( list.getInteger( 9 ) );

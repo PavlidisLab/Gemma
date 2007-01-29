@@ -18,7 +18,8 @@
  */
 package ubic.gemma.web.taglib.displaytag.common.description;
 
-import org.apache.commons.lang.StringUtils;
+import java.text.SimpleDateFormat;
+
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -31,15 +32,15 @@ import ubic.gemma.model.common.description.BibliographicReference;
  */
 public class BibliographicReferenceWrapper extends TableDecorator {
 
-//    public String getAuthors() {
-//        BibliographicReference ref = ( BibliographicReference ) this.getCurrentRowObject();
-//        return StringUtils.abbreviate( ref.getAuthorList(), 20 );
-//    }
-//
-//    public String getTitle() {
-//        BibliographicReference ref = ( BibliographicReference ) this.getCurrentRowObject();
-//        return StringUtils.abbreviate( ref.getTitle(), 50 );
-//    }
+    // public String getAuthors() {
+    // BibliographicReference ref = ( BibliographicReference ) this.getCurrentRowObject();
+    // return StringUtils.abbreviate( ref.getAuthorList(), 20 );
+    // }
+    //
+    // public String getTitle() {
+    // BibliographicReference ref = ( BibliographicReference ) this.getCurrentRowObject();
+    // return StringUtils.abbreviate( ref.getTitle(), 50 );
+    // }
 
     public String getCitation() {
         // basically copied from the BibliographicReferenceTag.
@@ -52,6 +53,12 @@ public class BibliographicReferenceWrapper extends TableDecorator {
         }
         buf.append( bibliographicReference.getPages() );
         return buf.toString();
+    }
+
+    public String getYear() {
+        BibliographicReference bibliographicReference = ( BibliographicReference ) this.getCurrentRowObject();
+        SimpleDateFormat form = new SimpleDateFormat( "yyyy" );
+        return form.format( bibliographicReference.getPublicationDate() );
     }
 
 }

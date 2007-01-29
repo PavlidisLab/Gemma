@@ -30,20 +30,19 @@ if ( request.getAttribute( "bibliographicReferences" ) != null ) {
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
 	<display:column sortable="true" href="bibRefView.html"
 		paramId="accession" paramProperty="pubAccession.accession"
-		title="View details">
-		<%="Details"%>
+		title="">
+		<img src="/Gemma/images/magnifier.png" />
 	</display:column>
 
 	<display:column property="title" sortable="true"
 		titleKey="pubMed.title" maxLength="50" />
-	<display:column property="publication" sortable="true"
-		titleKey="pubMed.publication" />
 	<display:column property="authorList" sortable="true"
 		titleKey="pubMed.authors" maxLength="20" />
+	<display:column property="year" titleKey="pubMed.year" />
 	<display:column property="citation" sortable="true"
 		titleKey="pubMed.cite" />
 	<display:setProperty name="basic.empty.showtable" value="true" />
-	<display:column sortable="true"
+	<display:column sortable="true" 
 		href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=ID&query_hl=3"
 		paramId="list_uids" paramProperty="pubAccession.accession"
 		title="PubMed">
