@@ -53,7 +53,7 @@ public class QuantitationTypePropertyEditor extends PropertyEditorSupport {
 
     @Override
     public void setAsText( String text ) throws IllegalArgumentException {
-        if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
+        if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a quantitation type..." );
         Object ad = this.map.get( text );
         this.setValue( ad ); // okay to be null
     }
