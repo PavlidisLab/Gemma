@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -29,6 +30,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author jsantos
  * @spring.bean name="expressionExperimentReportService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  */
 public class ExpressionExperimentReportService {
@@ -39,7 +41,13 @@ public class ExpressionExperimentReportService {
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private ExpressionExperimentService expressionExperimentService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-    
+    private AuditTrailService auditTrailService;
+    /**
+     * @param auditTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
     /**
      * @return the probe2ProbeCoexpressionService
      */
@@ -115,11 +123,13 @@ public class ExpressionExperimentReportService {
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = (ExpressionExperimentValueObject) object;
             ExpressionExperiment tempEe =  expressionExperimentService.findById( Long.parseLong( eeVo.getId() ) );
-
+            
             eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
             eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService.getPreferredDesignElementDataVectorCount( tempEe ) );
             eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( tempEe ).longValue() );
             eeVo.setDateCached( timestamp );
+            
+            auditTrailService.thaw( tempEe.getAuditTrail() );
             if ( tempEe.getAuditTrail() != null ) {                
                 eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
             }
