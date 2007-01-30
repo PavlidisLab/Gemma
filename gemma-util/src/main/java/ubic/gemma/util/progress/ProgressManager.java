@@ -92,20 +92,20 @@ public class ProgressManager {
 
         assert key != null;
 
-        // if ( !progressJobs.containsKey( key ) )
-        // return false; // No such user exists with any jobs
-        // else {
-        // Collection<ProgressJob> pJobs = progressJobs.get( key );
-        // for ( ProgressJob obs : pJobs )
-        // obs.addObserver( po );
-        //
-        // }
+        if ( progressJobsByTaskId.containsKey( key ) ) {
+            progressJobsByTaskId.get( key ).addObserver( po );
+            return true;
+        }
+        // Perhaps the notification is stored as a name and not an id.
+        if ( progressJobs.containsKey( key ) ) {
+            Collection<ProgressJob> pJobs = progressJobs.get( key );
+            for ( ProgressJob obs : pJobs )
+                obs.addObserver( po );
 
-        if ( !progressJobsByTaskId.containsKey( key ) ) return false;
+            return true;
+        }
 
-        progressJobsByTaskId.get( key ).addObserver( po );
-
-        return true;
+        return false;
     }
 
     /**
