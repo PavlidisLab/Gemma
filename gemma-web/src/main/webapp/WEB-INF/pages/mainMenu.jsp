@@ -160,17 +160,8 @@
 					key="menu.compassIndexer" /> </a>
 		</li>
 		<li>
-			<a href="<c:url value="/bibRef/showAllBibRef.html"/>">Bibliographic
-				references</a>
-		</li>
-		<li>
-			<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>">
-				Regenerate Platform/Array Summary </a>
-		</li>
-		<li>
-			<a
-				href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>">
-				Regenerate Expression Experiment Link Summaries </a>
+			<a href="<c:url value="/bibRef/showAllBibRef.html"/>">Articles
+				referenced in Gemma</a>
 		</li>
 		<li>
 			<a href="<c:url value="/arrays/showAllArrayDesignStatistics.html"/>">
