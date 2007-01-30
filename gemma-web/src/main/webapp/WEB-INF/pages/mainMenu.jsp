@@ -17,7 +17,8 @@
 </spring:bind>
 
 
-<title><fmt:message key="mainMenu.title" /></title>
+<title><fmt:message key="mainMenu.title" />
+</title>
 <table class="datasummary">
 	<tr>
 		<td colspan=2>
@@ -73,7 +74,7 @@
 
 	<table>
 		<caption>
-		Coexpression Analysis
+			Coexpression Analysis
 		</caption>
 		<tr>
 			<td valign="top">
@@ -91,20 +92,20 @@
 				</spring:bind>
 			</td>
 			<td>
-				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				<a class="helpLink" href="?"
+					onclick="showHelpTip(event, 
 				'Official symbol of a gene'); return false">
-				<img src="/Gemma/images/help.png" />
-				</a>
+					<img src="/Gemma/images/help.png" /> </a>
 			</td>
 		</tr>
-		
-		
+
+
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="label.species" /> </b>
 			</td>
-			
-			
+
+
 			<td>
 				<spring:bind path="coexpressionSearchCommand.taxon">
 					<select name="${status.expression}">
@@ -119,13 +120,16 @@
 				</spring:bind>
 			</td>
 			<td>
-				<a class="helpLink" href="?" onclick="showHelpTip(event, 
+				<a class="helpLink" href="?"
+					onclick="showHelpTip(event, 
 				'Species to use in the coexpression search'); return false">
-				<img src="/Gemma/images/help.png" />
-				</a>
+					<img src="/Gemma/images/help.png" /> </a>
 			</td>
 		</tr>
-	<tr> <td>&nbsp; </td>
+		<tr>
+			<td>
+				&nbsp;
+			</td>
 			<td>
 				<input type="submit" class="button" name="submit"
 					value="<fmt:message key="button.search"/>" />
@@ -161,29 +165,30 @@
 		</li>
 		<li>
 			<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>">
-				Regenerate Platform/Array Summary
-			</a>
+				Regenerate Platform/Array Summary </a>
 		</li>
 		<li>
-			<a href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>">
-				Regenerate Expression Experiment Link Summaries
-			</a>
+			<a
+				href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>">
+				Regenerate Expression Experiment Link Summaries </a>
 		</li>
 		<li>
 			<a href="<c:url value="/arrays/showAllArrayDesignStatistics.html"/>">
-				Show Platform/Array Summaries
-			</a>
+				Show Platform/Array Summaries </a>
 		</li>
 		<li>
-			<a href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"/>">
-				Show Expression Experiment Link Summaries
-
-			</a>
+			<a
+				href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"/>">
+				Show Expression Experiment Link Summaries </a>
 		</li>
 
 		<li>
 			<a href="<c:url value="/loadExpressionExperiment.html"/>"> <fmt:message
 					key="menu.loadExpressionExperiment" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="/geoBrowser/showBatch.html" />">Browse GEO
+				records</a>
 		</li>
 		<li>
 			<a href="<c:url value="loadSimpleExpressionExperiment.html"/>">
