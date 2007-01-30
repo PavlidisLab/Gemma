@@ -18,13 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,7 +31,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
 import ubic.gemma.expression.experiment.ExpressionExperimentReportService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -300,9 +297,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         );
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
-
-
-
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;

@@ -23,51 +23,56 @@
 		</list>
 	</property>
 	<property name="mappings">
-        <props>
-            <prop key="/dwr/**/*">dwrController</prop>
-            <prop key="/arrays/*">arrayDesignController</prop>
-            <prop key="/signup.html">signupController</prop>
-            <prop key="/mainMenu.html">mainMenuController</prop>
-            <prop key="/editUser.html">userFormController</prop>
-            <prop key="/editProfile.html">userFormController</prop>
-            <prop key="/uploadFile.html">fileUploadController</prop>
-            <prop key="/selectFile.html">fileUploadController</prop>
-            <prop key="/users.html">userListController</prop>
-            <prop key="/activeUsers.html">userListController</prop>
-            <prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
-            <prop key="/bibRef/*">bibliographicReferenceController</prop>
-            <prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
-            <prop key="/bibRefSearch.html">pubMedQueryController</prop>
-            <prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
-            <prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
-            <prop key="/bioAssay/*">bioAssayController</prop>
-            <prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
-            <prop key="/bioMaterial/*">bioMaterialController</prop>
-            <prop key="/designElement/*">designElementController</prop>
-            <prop key="/compositeSequence/*">compositeSequenceController</prop>
-            <prop key="/experimentalDesign/*">experimentalDesignController</prop>
-            <prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
-            <prop key="/experimentalFactor/*">experimentalFactorController</prop>
-            <prop key="/expressionExperiment/*">expressionExperimentController</prop>
-            <prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
-            <prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
- 			<prop key="/expressionExperiment/expressionExperimentVisualization.html">expressionExperimentVisualizationFormController</prop>
-			<prop key="/expressionExperiment/visualizeDataMatrix.html">expressionExperimentVisualizationController</prop>
-            <prop key="/candidateGeneList*">candidateGeneListController</prop>
-            <prop key="/gene/*">geneController</prop>
-            <prop key="/geneFinder.html">geneFinderController</prop>
-            <prop key="/addTestData.html">testDataAddingController</prop>
-            <prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
-            <prop key="/genome/bioSequence/*">bioSequenceController</prop>
-            <prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
-            <prop key="/processDelete.html">processDeleteController</prop>
-            <prop key="/checkJobProgress.html">taskCompletionController</prop>
-            <prop key="/mock.html">mockController</prop>
-            <prop key="/indexer.html">indexController</prop>
-            <prop key="/searcher.html">generalSearchController</prop>
-            <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
-            <prop key="/securityManager.html">securityFormController</prop> 
-        </props>
+		<props>
+			<prop key="/dwr/**/*">dwrController</prop>
+			<prop key="/arrays/*">arrayDesignController</prop>
+			<prop key="/signup.html">signupController</prop>
+			<prop key="/mainMenu.html">mainMenuController</prop>
+			<prop key="/editUser.html">userFormController</prop>
+			<prop key="/editProfile.html">userFormController</prop>
+			<prop key="/uploadFile.html">fileUploadController</prop>
+			<prop key="/selectFile.html">fileUploadController</prop>
+			<prop key="/users.html">userListController</prop>
+			<prop key="/activeUsers.html">userListController</prop>
+			<prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
+			<prop key="/bibRef/*">bibliographicReferenceController</prop>
+			<prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
+			<prop key="/bibRefSearch.html">pubMedQueryController</prop>
+			<prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
+			<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
+			<prop key="/bioAssay/*">bioAssayController</prop>
+			<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
+			<prop key="/bioMaterial/*">bioMaterialController</prop>
+			<prop key="/designElement/*">designElementController</prop>
+			<prop key="/compositeSequence/*">compositeSequenceController</prop>
+			<prop key="/experimentalDesign/*">experimentalDesignController</prop>
+			<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
+			<prop key="/experimentalFactor/*">experimentalFactorController</prop>
+			<prop key="/expressionExperiment/*">expressionExperimentController</prop>
+			<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
+			<prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
+			<prop key="/expressionExperiment/expressionExperimentVisualization.html">
+				expressionExperimentVisualizationFormController
+			</prop>
+			<prop key="/expressionExperiment/visualizeDataMatrix.html">
+				expressionExperimentVisualizationController
+			</prop>
+			<prop key="/candidateGeneList*">candidateGeneListController</prop>
+			<prop key="/gene/*">geneController</prop>
+			<prop key="/geneFinder.html">geneFinderController</prop>
+			<prop key="/addTestData.html">testDataAddingController</prop>
+			<prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
+			<prop key="/genome/bioSequence/*">bioSequenceController</prop>
+			<prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
+			<prop key="/processDelete.html">processDeleteController</prop>
+			<prop key="/checkJobProgress.html">taskCompletionController</prop>
+			<prop key="/mock.html">mockController</prop>
+			<prop key="/indexer.html">indexController</prop>
+			<prop key="/searcher.html">generalSearchController</prop>
+			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+			<prop key="/securityManager.html">securityFormController</prop>
+			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
+		</props>
 	</property>
 </bean>
 <!-- default mapping, as a fallback. Avoid using. -->
@@ -107,8 +112,8 @@
 	<property name="exceptionMappings">
 		<props>
 			<prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
-            <prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop>
-            <prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop>
+			<prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop>
+			<prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop>
 			<prop key="java.lang.Exception">error</prop>
 		</props>
 	</property>
@@ -126,7 +131,6 @@
 		</props>
 	</property>
 </bean>
-
 <!-- ==================================================== -->
 <!-- Action resolvers for MultiActionControllers -->
 <!-- ==================================================== -->
@@ -150,7 +154,7 @@
 			<prop key="/arrays/showCompositeSequenceSummary.html">showCompositeSequences</prop>
 			<prop key="/arrays/showExpressionExperimentsFromArrayDesign.html">showExpressionExperiments</prop>
 			<prop key="/arrays/filterArrayDesigns.html">filter</prop>
-			<prop key="/arrays/generateArrayDesignSummary.html">generateSummary</prop>			
+			<prop key="/arrays/generateArrayDesignSummary.html">generateSummary</prop>
 		</props>
 	</property>
 </bean>
@@ -172,7 +176,8 @@
 		</props>
 	</property>
 </bean>
-<bean id="compositeSequenceActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="compositeSequenceActions"
+	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/compositeSequence/showAllCompositeSequences.html">showAll</prop>
@@ -214,8 +219,7 @@
 		</props>
 	</property>
 </bean>
-<bean id="geneActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="geneActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/gene/showAllGenes.html">showAll</prop>
@@ -249,6 +253,13 @@
 			<prop key="/experimentalFactor/showAllExperimentalFactors.html">showAll</prop>
 			<!--  <prop key="/experiment/deleteExperimentalFactor.html">delete</prop> -->
 			<prop key="/experimentalFactor/showExperimentalFactor.html">show</prop>
+		</props>
+	</property>
+</bean>
+<bean id="geoRecordBrowserActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+	<property name="mappings">
+		<props>
+			<prop key="/geoBrowser/showBatch.html">showBatch</prop>
 		</props>
 	</property>
 </bean>
@@ -338,7 +349,6 @@
 		<value>expressionExperiment</value>
 	</property>
 </bean>
-
 <!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 <bean id="conversion.service" class="org.springframework.binding.convert.support.DefaultConversionService"
