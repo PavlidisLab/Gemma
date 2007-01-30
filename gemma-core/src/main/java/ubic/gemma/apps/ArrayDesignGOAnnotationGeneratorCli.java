@@ -311,7 +311,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             Collection<OntologyEntry> goTerms ) throws IOException {
 
         linesWritten++;
-        log.info( "Generating line for annotation file  \n" );
+        log.debug( "Generating line for annotation file  \n" );
 
         writer.write( probeId + "\t" + gene + "\t" + description + "\t" );
 
