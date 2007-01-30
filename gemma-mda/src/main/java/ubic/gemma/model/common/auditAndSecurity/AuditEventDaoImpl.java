@@ -16,10 +16,6 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
@@ -29,8 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.AuditableImpl;
-import ubic.gemma.util.ReflectionUtil;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
