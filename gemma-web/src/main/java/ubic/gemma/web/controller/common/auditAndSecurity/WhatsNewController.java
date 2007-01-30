@@ -58,4 +58,15 @@ public class WhatsNewController extends BaseMultiActionController {
         return mav;
     }
 
+    public ModelAndView daily( HttpServletRequest request, HttpServletResponse response ) {
+        ModelAndView mav = new ModelAndView( "wnDay" );
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addDays( date, -1 );
+        WhatsNew wn = whatsNewService.getReport( date );
+        mav.addObject( "whatsnew", wn );
+        mav.addObject( "timeSpan", "In the past day" );
+        return mav;
+    }
+
 }

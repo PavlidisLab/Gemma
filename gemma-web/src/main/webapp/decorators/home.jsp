@@ -43,6 +43,7 @@
 
 				<div id="sub" class="home">
 					<%@ include file="/common/subarea.jsp"%>
+					<Gemma:whatsNew whatsNew="${whatsNew}"  />
 				</div>
 
 				<c:set var="currentMenu" scope="request">
