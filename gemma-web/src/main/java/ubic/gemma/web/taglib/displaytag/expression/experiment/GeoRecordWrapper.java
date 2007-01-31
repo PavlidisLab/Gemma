@@ -18,6 +18,10 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.experiment;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
@@ -39,8 +43,8 @@ public class GeoRecordWrapper extends TableDecorator {
 
         if ( record.getCorrespondingExperiments().size() == 0 ) {
             String accession = record.getGeoAccession();
-            return "<strong><a href=\"/Gemma/loadExpressionExperiment.html&accession=" + accession
-                    + "\">Load</a></strong>";
+            return "<strong><form method=\"POST\" action=\"/Gemma/loadExpressionExperiment.html\"><input type=\"hidden\" name=\"accession\" value=\""
+                    + accession + "\" /><input type=\"submit\" value=\"Load\" /></form></strong>";
         } else {
             StringBuilder buf = new StringBuilder();
             for ( ExpressionExperiment ee : record.getCorrespondingExperiments() ) {
@@ -59,6 +63,13 @@ public class GeoRecordWrapper extends TableDecorator {
         GeoRecord record = ( GeoRecord ) getCurrentRowObject();
         return "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + record.getGeoAccession() + "'>"
                 + record.getGeoAccession() + "</a>";
+    }
+
+    public String getReleaseDateNoTime() {
+        GeoRecord record = ( GeoRecord ) getCurrentRowObject();
+        Date d = record.getReleaseDate();
+        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy" ); // F out.
+        return df.format( d );
     }
 
     /**

@@ -58,6 +58,9 @@ public class GeoBrowserService {
         rec: for ( GeoRecord record : records ) {
 
             Collection<String> organisms = record.getOrganisms();
+            if ( organisms == null || organisms.size() == 0 ) {
+                continue rec;
+            }
             int i = 1;
             for ( String string : organisms ) {
                 Taxon t = taxonService.findByCommonName( string );

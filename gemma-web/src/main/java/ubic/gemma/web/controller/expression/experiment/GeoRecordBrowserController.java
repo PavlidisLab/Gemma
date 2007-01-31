@@ -39,7 +39,7 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  */
 public class GeoRecordBrowserController extends BaseMultiActionController {
 
-    private static final int DEFAULT_BATCH_SIZE = 20;
+    private static final int DEFAULT_BATCH_SIZE = 50;
     private static final int DEFAULT_START = 0;
     GeoBrowserService geoBrowserService;
 

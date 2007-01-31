@@ -55,7 +55,7 @@ public class WhatsNewBoxTag extends TagSupport {
         int numUpdated = whatsNew.getUpdatedObjects().size();
 
         StringBuilder buf = new StringBuilder();
-        buf.append( "<h3>What's new in Gemma in the past " );
+        buf.append( "<h3>What's new in Gemma in the " );
         Date date = whatsNew.getDate();
         Date now = Calendar.getInstance().getTime();
         long millis = now.getTime() - date.getTime();
@@ -73,26 +73,26 @@ public class WhatsNewBoxTag extends TagSupport {
             int numEEs = whatsNew.getNewExpressionExperiments().size(); // FIXME make a link to see them.
             int numADs = whatsNew.getNewArrayDesigns().size(); // FIXME make a link to see them.
             if ( numEEs > 0 ) {
-                buf.append( "<p>" + numEEs + " new data sets.</p>" );
+                buf.append( "<li>" + numEEs + " new data set" + ( numEEs > 1 ? "s" : "" ) + ".</li>" );
             }
             if ( numADs > 0 ) {
-                buf.append( "<p>" + numADs + " new array designs.</p>" );
+                buf.append( "<li>" + numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + ".</li>" );
             }
         } else {
-            buf.append( "<p>Nothing new</p>" );
+            buf.append( "<li>[Nothing new]</li>" );
         }
 
         if ( numUpdated > 0 ) {
             int numEEs = whatsNew.getUpdatedExpressionExperiments().size(); // FIXME make a link to see them.
             int numADs = whatsNew.getUpdatedArrayDesigns().size(); // FIXME make a link to see them.
             if ( numEEs > 0 ) {
-                buf.append( "<p>" + numEEs + " updated data sets.</p>" );
+                buf.append( "<li>" + numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".</li>" );
             }
             if ( numADs > 0 ) {
-                buf.append( "<p>" + numADs + " updated array designs.</p>" );
+                buf.append( "<li>" + numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".</li>" );
             }
         } else {
-            buf.append( "<p>Nothing updated</p>" );
+            buf.append( "<li>[Nothing updated]</li>" );
         }
         try {
             pageContext.getOut().print( buf.toString() );

@@ -29,7 +29,7 @@
 			title="Name"
 			comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
-		<display:column property="releaseDate" sortable="true" />
+		<display:column property="releaseDateNoTime" sortable="true" title="Released" />
 
 		<display:column property="numSamples" sortable="true"
 			sortProperty="numSamples" titleKey="bioAssays.title"

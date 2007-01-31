@@ -51,7 +51,7 @@ public class GeoBrowser {
     private String GEO_BROWSE_URL = "http://www.ncbi.nlm.nih.gov/projects/geo/query/browse.cgi?mode=series&private=0&sorton=pub_date&sortdir=1&start=";
     private String GEO_BROWSE_SUFFIX = "&pgsize=";
 
-    private String GEO_TABLE_CELL_REGEXP = ".+?(DEEBDC|EEEEEE)\".*?>(.+?)</td>";
+    private String GEO_TABLE_CELL_REGEXP = ".+?(DEEBDC|EEEEEE)\".*?>(.*?)</td>"; // allows for empty cells.
 
     /**
      * For an example of the HTML used, see
@@ -63,7 +63,7 @@ public class GeoBrowser {
      */
     public List<GeoRecord> getRecentGeoRecords( int startPoint, int numberToFetch ) {
         Pattern pat = Pattern.compile( GEO_TABLE_CELL_REGEXP );
-        Pattern simpleUrlPat = Pattern.compile( "<.+?>(.+?)<.+?>" );
+        Pattern simpleUrlPat = Pattern.compile( "<.+?>(.+?)</.+?>" );
         URL url = null;
         List<GeoRecord> records = new ArrayList<GeoRecord>();
         try {
@@ -79,7 +79,6 @@ public class GeoBrowser {
 
             while ( ( line = br.readLine() ) != null ) {
                 Matcher mat = pat.matcher( line );
-                log.debug( line );
                 if ( mat.find() ) {
                     String captured = mat.group( 2 );
                     log.debug( "Field " + fieldnum + " Got: " + captured );
@@ -92,25 +91,32 @@ public class GeoBrowser {
                             geoRecord = new GeoRecord();
                             Pattern accath = Pattern.compile( ".+?acc=(GSE\\d+).+" );
                             Matcher accmat = accath.matcher( captured );
-                            accmat.find();
-                            geoRecord.setGeoAccession( accmat.group( 1 ) );
+                            if ( accmat.find() ) {
+                                geoRecord.setGeoAccession( accmat.group( 1 ) );
+                            }
                             break;
                         case 1:
                             geoRecord.setTitle( captured );
                             break;
                         case 2:
-                            int numSamples = Integer.parseInt( captured );
-                            geoRecord.setNumSamples( numSamples );
+                            try {
+                                int numSamples = Integer.parseInt( captured );
+                                geoRecord.setNumSamples( numSamples );
+                            } catch ( NumberFormatException e ) {
+                                //
+                            }
                             break;
                         case 3:
                             String[] fields = captured.split( "; " );
 
                             for ( String string : fields ) {
                                 Matcher specCap = simpleUrlPat.matcher( string );
-                                specCap.find();
-                                String organism = specCap.group( 1 );
-                                log.debug( "Organism: " + organism );
-                                geoRecord.getOrganisms().add( organism );
+                                if ( specCap.find() ) {
+                                    String organism = specCap.group( 1 );
+                                    log.debug( "Organism: " + organism );
+                                    geoRecord.getOrganisms().add( organism );
+                                }
+
                             }
                             break;
                         case 4:
@@ -120,16 +126,20 @@ public class GeoBrowser {
                             // contact
                             log.debug( captured );
                             Matcher specCap = simpleUrlPat.matcher( captured );
-                            specCap.find();
+                            if ( !specCap.find() ) break;
                             String contact = specCap.group( 1 );
                             geoRecord.setContactName( contact );
                             specCap.find();
                             break;
                         case 6:
                             DateFormat df = DateFormat.getDateInstance();
-                            Date d = df.parse( captured );
-                            log.debug( d );
-                            geoRecord.setReleaseDate( d );
+                            try {
+                                Date d = df.parse( captured );
+                                log.debug( d );
+                                geoRecord.setReleaseDate( d );
+                            } catch ( ParseException e ) {
+                                //
+                            }
                             fieldnum = -1; // back to start.
                             break;
                         default:
@@ -155,9 +165,6 @@ public class GeoBrowser {
         } catch ( NumberFormatException e ) {
             log.error( e, e );
             throw new RuntimeException( "Could not parse sample count" );
-        } catch ( ParseException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "Could not parse date" );
         }
 
     }
