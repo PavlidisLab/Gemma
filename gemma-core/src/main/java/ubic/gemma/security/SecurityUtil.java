@@ -58,11 +58,7 @@ public class SecurityUtil {
      */
     public static UserDetails getPrincipal() {
 
-        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if ( obj instanceof UserDetails ) {
-            return ( ( UserDetails ) obj );
-        }
-        return null;
+        return ( UserDetails ) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
     }
 
