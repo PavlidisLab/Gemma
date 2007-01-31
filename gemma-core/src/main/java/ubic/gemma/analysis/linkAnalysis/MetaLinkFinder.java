@@ -144,7 +144,12 @@ public class MetaLinkFinder {
     	}
     	for(int col = 0; col < this.linkCount.columns(); col++)
 			if(this.linkCount.bitCount(row,col) >= num){
-				System.err.println(this.getRowGene(row).getName() + "  " + this.getColGene(col).getName() + " " + this.linkCount.bitCount(row,col));
+				System.err.println(this.getColGene(col).getName() + " " + this.linkCount.bitCount(row,col));
+    	}
+    	System.err.println("=====================================================");
+    	for(int col = 0; col < this.linkCount.columns(); col++)
+			if(this.linkCount.bitCount(row,col) >= num){
+				System.err.println(this.getColGene(col).getName());
     	}
     }
     public void output(int num){
