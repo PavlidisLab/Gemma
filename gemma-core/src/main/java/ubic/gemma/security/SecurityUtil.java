@@ -51,15 +51,13 @@ public class SecurityUtil {
 
     /**
      * Returns the username of the current principal (user). This can be invoked from anywhere (ie. in a controller,
-     * service, dao), and does not rely on any external security features. This is useful for determining information
-     * about the current user (ie. GrantedAuthority).
+     * service, dao), and does not rely on any external security features. The return type should checked if it is an
+     * instance of UserDetails and typecast to access information about the current user (ie. GrantedAuthority).
      * 
-     * @return UserDetails
+     * @return Object
      */
-    public static UserDetails getPrincipal() {
-
-        return ( UserDetails ) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
+    public static Object getPrincipal() {
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
 }
