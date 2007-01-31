@@ -106,37 +106,45 @@ public class TwoChannelMissingValues {
         for ( DesignElementDataVector vector : allVectors ) {
             QuantitationType qType = vector.getQuantitationType();
             String name = qType.getName();
-            if ( qType.getIsPreferred() ) {
+            if ( qType.getIsPreferred() && preferred == null ) {
                 if ( preferred != null && !qType.equals( preferred ) )
                     throw new IllegalStateException( "More than one preferred quantitation type found for " + expExp
                             + " (already had " + preferred + ", just got " + qType + ")" );
                 preferred = qType;
-            } else if ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
+                log.info( "Preferred=" + qType );
+            } else if ( backgroundChannelA == null && ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" ) )
                     || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                     || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
                     || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
                     || name.equals( "CH1_BKD_ Median" ) ) {
                 backgroundChannelA = qType;
-            } else if ( name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" )
+                log.info( "Background A=" + qType );
+            } else if ( backgroundChannelB == null && ( name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" ) )
                     || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
                     || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
                     || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
                     || name.equals( "CH2_BKD_ Median" ) ) {
                 backgroundChannelB = qType;
-            } else if ( name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
-                    || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" )
-                    || name.equals( "SIGNAL_CHANNEL 1MEDIAN" ) || name.toLowerCase().matches( "ch1_smtm" )
-                    || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" ) || name.equals( "ch1.Intensity" )
-                    || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" ) 
-                    || name.toUpperCase().matches("\\w{2}\\d{3}_CY3")) {
+                log.info( "Background B=" + qType );
+            } else if ( signalChannelA == null
+                    && ( name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
+                            || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" )
+                            || name.equals( "SIGNAL_CHANNEL 1MEDIAN" ) || name.toLowerCase().matches( "ch1_smtm" )
+                            || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
+                            || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" )
+                            || name.equals( "CH1_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) ) ) {
                 signalChannelA = qType;
-            } else if ( name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" )
-                    || name.equals( "RAW_CONTROL" ) || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" )
-                    || name.equals( "SIGNAL_CHANNEL 2MEDIAN" ) || name.toLowerCase().matches( "ch2_smtm" )
-                    || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" ) || name.equals( "ch2.Intensity" )
-                    || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" ) 
-                    || name.toUpperCase().matches("\\w{2}\\d{3}_CY5")) {
+                log.info( "Signal A=" + qType );
+            } else if ( signalChannelB == null
+                    && ( name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" )
+                            || name.equals( "RAW_CONTROL" )
+                            || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" )
+                            || name.equals( "SIGNAL_CHANNEL 2MEDIAN" ) || name.toLowerCase().matches( "ch2_smtm" )
+                            || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
+                            || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" )
+                            || name.equals( "CH2_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) ) ) {
                 signalChannelB = qType;
+                log.info( "Signal B=" + qType );
             } else if ( name.matches( "CH1D_MEAN" ) ) {
                 bkgSubChannelA = qType; // specific for SGD data bug
             }
@@ -341,15 +349,18 @@ public class TwoChannelMissingValues {
         }
 
         if ( !( signalChannelA.rows() == signalChannelB.rows() ) ) {
-            throw new IllegalArgumentException( "Collection sizes must match" );
+            throw new IllegalArgumentException( "Collection sizes must match in channel A and B "
+                    + signalChannelA.rows() + " != " + signalChannelB.rows() );
         }
 
         if ( !( signalChannelA.rows() == preferred.rows() ) ) {
-            throw new IllegalArgumentException( "Collection sizes must match" );
+            throw new IllegalArgumentException( "Collection sizes must match in channel A and preferred type "
+                    + signalChannelA.rows() + " != " + preferred.rows() );
         }
 
         if ( ( bkgChannelA != null && bkgChannelB != null ) && bkgChannelA.rows() != bkgChannelB.rows() )
-            throw new IllegalArgumentException( "Collection sizes must match" );
+            throw new IllegalArgumentException( "Collection sizes must match for background  " + bkgChannelA.rows()
+                    + " != " + bkgChannelB.rows() );
 
         if ( signalToNoiseThreshold <= 0.0 ) {
             throw new IllegalArgumentException( "Signal-to-noise threshold must be greater than zero" );
