@@ -219,18 +219,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     }
 
     // Please leave this here, we use it to load data sets for chopping.
-    // @SuppressWarnings("unchecked")
-    // public void testFetchASeries() throws Exception {
-    // endTransaction();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GSE4345" );// replace accession.
-    // geoService.fetchAndLoad( "GSE2776" );// replace accession.
-    // geoService.fetchAndLoad( "GSE432" );// replace accession.
-    // geoService.fetchAndLoad( "GSE2982" );
-    // geoService.fetchAndLoad( "GSE404" );
-    // geoService.fetchAndLoad( "GSE3791" );
-    // geoService.fetchAndLoad( "GDS75" );
-    // }
+//    @SuppressWarnings("unchecked")
+//    public void testFetchASeries() throws Exception {
+//        endTransaction();
+//        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+//        geoService.fetchAndLoad( "GSE464" );
+//    }
 
     /**
      * GSE3434 has no dataset. It's small so okay to download.
@@ -321,6 +315,54 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertEquals( 10, actualValue );
     }
 
+    /**
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE60() throws Exception {
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse60Short" ) );
+
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE60" );
+        ee = results.iterator().next();
+    }
+
+    /**
+     * Suffers from two data sets with the same platform - but has other problems, GEO must fix them.
+     * 
+     * @throws Exception
+     */
+    // @SuppressWarnings("unchecked")
+    // public void testFetchAndLoadGSE1074() throws Exception {
+    // String path = getTestFileBasePath();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+    // + "gse1074Short" ) );
+    //
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+    // .fetchAndLoad( "GSE1074" );
+    // ee = results.iterator().next();
+    // }
+    
+    /**
+     *  Suffers from two data sets with the same platform
+     */
+     @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE464() throws Exception {
+     String path = getTestFileBasePath();
+     geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+     + "gse464Short" ) );
+    
+     Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE464" );
+     ee = results.iterator().next();
+     }
+    
+    
+    /**
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS994() throws Exception {
         endTransaction();

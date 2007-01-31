@@ -526,7 +526,7 @@ public class GeoConverter implements Converter {
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             List<GeoSample> samples = platformSamples.get( platform );
             log.info( samples.size() + " samples on " + platform );
-            convertSampleOnPlatformVectors( geoSeries.getValues(), expExp, samples, platform );
+            convertVectorsForPlatform( geoSeries.getValues(), expExp, samples, platform );
             geoSeries.getValues().clear( platform );
         }
 
@@ -543,7 +543,7 @@ public class GeoConverter implements Converter {
         log.info( datasetSamples.size() + " samples in " + geoDataset );
         GeoPlatform geoPlatform = geoDataset.getPlatform();
 
-        convertSampleOnPlatformVectors( values, expExp, datasetSamples, geoPlatform );
+        convertVectorsForPlatform( values, expExp, datasetSamples, geoPlatform );
 
         values.clear( geoPlatform );
     }
@@ -553,7 +553,7 @@ public class GeoConverter implements Converter {
      * @param datasetSamples
      * @param geoPlatform
      */
-    private void convertSampleOnPlatformVectors( GeoValues values, ExpressionExperiment expExp,
+    private void convertVectorsForPlatform( GeoValues values, ExpressionExperiment expExp,
             List<GeoSample> datasetSamples, GeoPlatform geoPlatform ) {
         assert datasetSamples.size() > 0 : "No samples in dataset";
 
@@ -2124,6 +2124,8 @@ public class GeoConverter implements Converter {
 
         boolean filledIn = isPopulated( dataVectors );
 
+        values.clear( platform, datasetSamples, quantitationTypeIndex );
+        
         if ( !filledIn ) return null;
 
         return dataVectors;

@@ -235,6 +235,22 @@ public class GeoValues {
     }
 
     /**
+     * If possible, null out the data for a quantitation type on a given platform.
+     * 
+     * @param platform
+     * @param datasetSamples
+     * @param quantitationTypeIndex
+     */
+    public void clear( GeoPlatform platform, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
+        if ( datasetSamples.size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
+            return; // can't really clear
+        }
+        log.info( "Clearing" );
+        data.get( platform ).remove( quantitationTypeIndex );
+
+    }
+
+    /**
      * Return a 'slice' of the data corresponding to the indices provided.
      * 
      * @param quantitationType
