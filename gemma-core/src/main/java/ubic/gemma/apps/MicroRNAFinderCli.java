@@ -14,7 +14,9 @@ import org.apache.commons.lang.time.StopWatch;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
+import sun.font.PhysicalStrike;
 import ubic.gemma.analysis.sequence.BlatResultGeneSummary;
+import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -26,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.PhysicalLocationDao;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -88,33 +91,19 @@ public class MicroRNAFinderCli extends AbstractSpringAwareCLI {
 		}
 		return taxon;
 	}
-	Collection<GeneProduct> checkMappedRNAs(long start, long end){
+	private Collection<GeneProduct> checkMappedRNAs(PhysicalLocation targetLocation){
 		Collection<GeneProduct> returnedRNAs = new HashSet<GeneProduct>();
-		for(GeneProduct miRNA:miRNAs){
-			//if(!miRNA.getName().equals("mmu-mir-29c")) continue;
-			PhysicalLocation location = miRNA.getPhysicalLocation();
-			if(location.getNucleotide() >= start && location.getNucleotide()+location.getNucleotideLength() <= end)
-					returnedRNAs.add(miRNA);
-		}
-		return returnedRNAs;
-	}
-	Collection<GeneProduct> checkMappedRNAs(PhysicalLocation targetLocation){
-		/*
 		if(targetLocation == null){
-			Collection<GeneProduct> returnedRNAs = new HashSet<GeneProduct>();
 			return returnedRNAs;
-		}else
-			return checkMappedRNAs(targetLocation.getNucleotide(),targetLocation.getNucleotide()+targetLocation.getNucleotideLength());
-		*/
-		Collection<GeneProduct> returnedRNAs = new HashSet<GeneProduct>();
-		if(targetLocation == null) return returnedRNAs;
+		}
 		for(GeneProduct miRNA:miRNAs){
-			//if(!miRNA.getName().equals("mmu-mir-29c")) continue;
+			//if(!miRNA.getName().equals("mmu-let-7b")) continue;
 			PhysicalLocation location = miRNA.getPhysicalLocation();
-			if(targetLocation.nearlyEquals(location))
+			if(targetLocation.computeOverlap(location) >= location.getNucleotideLength())
 					returnedRNAs.add(miRNA);
 		}
 		return returnedRNAs;
+
 	}
 
 	@Override
@@ -138,11 +127,6 @@ public class MicroRNAFinderCli extends AbstractSpringAwareCLI {
         for(Gene gene:genes){
         	miRNAs.addAll(gene.getProducts());
         }
-        for(GeneProduct geneProduct:miRNAs){
-        	System.err.print(geneProduct.getName());
-        	System.err.print("\t" + geneProduct.getPhysicalLocation().getNucleotide());
-        	System.err.println("\t" + geneProduct.getPhysicalLocation().getNucleotideLength());
-        }
         
         ArrayDesign arrayDesign = adService.findByShortName(this.arrayDesignName);
         if(arrayDesign == null){
@@ -152,29 +136,40 @@ public class MicroRNAFinderCli extends AbstractSpringAwareCLI {
         
         HashMap<CompositeSequence, HashSet<GeneProduct>> results = new HashMap<CompositeSequence, HashSet<GeneProduct>>();
 
-        //adService.thaw(arrayDesign);
-        Collection<CompositeSequence> allCSs= adService.loadCompositeSequences(arrayDesign);
-        for(CompositeSequence cs:allCSs){
-        	//if(!cs.getName().equals("1460033_at")) continue;
-        	Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
-        	HashSet<GeneProduct> mappedRNAs = new HashSet<GeneProduct>();
-            for ( Object object : bs2gps ) {
-                BioSequence2GeneProduct bs2gp = (BioSequence2GeneProduct) object;
-                if (bs2gp instanceof BlatAssociation) {
-                    BlatAssociation blatAssociation =  (BlatAssociation) bs2gp;
-                    blatAssociationService.thaw(blatAssociation);
-                    GeneProduct associatedGeneProduct = blatAssociation.getGeneProduct();
-                    //BlatResult blatResult = blatAssociation.getBlatResult();
-                    //mappedRNAs.addAll(checkMappedRNAs(blatResult.getTargetStart(), blatResult.getTargetEnd()));
-                    mappedRNAs.addAll(checkMappedRNAs(associatedGeneProduct.getPhysicalLocation()));
-                }
-            }
-            if(mappedRNAs.size() > 0)
-            	results.put(cs, mappedRNAs);
-        }
-        
-        
         try{
+        	
+        	GoldenPathSequenceAnalysis analysis = new GoldenPathSequenceAnalysis(taxon);
+        	Collection<CompositeSequence> allCSs= adService.loadCompositeSequences(arrayDesign);
+
+        	for(CompositeSequence cs:allCSs){
+        		//if(!cs.getName().equals("1440357_at")) continue;
+        		Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+        		HashSet<GeneProduct> mappedRNAs = new HashSet<GeneProduct>();
+        		for ( Object object : bs2gps ) {
+        			BioSequence2GeneProduct bs2gp = (BioSequence2GeneProduct) object;
+        			if (bs2gp instanceof BlatAssociation) {
+        				BlatAssociation blatAssociation =  (BlatAssociation) bs2gp;
+        				blatAssociationService.thaw(blatAssociation);
+        				GeneProduct geneProduct = blatAssociation.getGeneProduct();
+        				PhysicalLocation targetLocation = geneProduct.getPhysicalLocation();
+        				mappedRNAs.addAll(checkMappedRNAs(targetLocation));
+        				
+        				BlatResult blatResult = blatAssociation.getBlatResult();
+        				if(blatResult == null) continue;
+        				long start = blatResult.getTargetStart();
+        				long end = blatResult.getTargetEnd();
+        				String chromosome = blatResult.getTargetChromosome().getName();
+        				Collection<Gene> alignedGenes = analysis.findRNAs(chromosome, start, end, blatResult.getStrand());
+        				for(Gene gene:alignedGenes){
+        					targetLocation = gene.getPhysicalLocation();
+            				mappedRNAs.addAll(checkMappedRNAs(targetLocation));
+        				}
+        			}
+        		}
+        		if(mappedRNAs.size() > 0)
+        			results.put(cs, mappedRNAs);
+        	}
+
        		PrintStream output = new PrintStream(new FileOutputStream(new File(this.outFileName)));
        		for(CompositeSequence cs:results.keySet()){
        			output.print(cs.getName());
