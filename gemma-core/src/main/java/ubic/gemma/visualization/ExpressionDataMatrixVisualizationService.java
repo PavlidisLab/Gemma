@@ -75,6 +75,7 @@ public class ExpressionDataMatrixVisualizationService {
         ColorMatrix colorMatrix = createColorMatrix( expressionDataMatrix );
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
+        display.setMaxColumnLength( 20 );
 
         display.setCellSize( new Dimension( 10, 10 ) );
 
@@ -98,7 +99,7 @@ public class ExpressionDataMatrixVisualizationService {
             numProfiles = NUM_PROFILES_TO_DISPLAY;
         }
 
-        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection(); 
         Iterator iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
             double[] data = ( double[] ) iter.next();
