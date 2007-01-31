@@ -204,6 +204,6 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
             }
             return 0;
         }
-        return 0;
+        return other.getNucleotideLength(); //The two locations are the same object.
     }
 }
