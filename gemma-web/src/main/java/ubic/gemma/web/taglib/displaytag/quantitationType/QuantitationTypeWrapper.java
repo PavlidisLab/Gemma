@@ -3,15 +3,14 @@
  */
 package ubic.gemma.web.taglib.displaytag.quantitationType;
 
-import java.util.Map;
-
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 /**
  * @author jsantos
- *
+ * @author paul
+ * @version $Id$
  */
 public class QuantitationTypeWrapper extends TableDecorator {
     /**
@@ -22,56 +21,53 @@ public class QuantitationTypeWrapper extends TableDecorator {
         return qt.getName();
     }
     
+    
     /**
      * @return View for status of the QTs
      */
     public String getQtPreferredStatus() {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
-        if ( qt.getIsPreferred()) {
+        if ( qt.getIsPreferred() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for background status of the QTs
      */
     public String getQtBackground() {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
-        if ( qt.getIsBackground()) {
+        if ( qt.getIsBackground() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for background subtracted status of the QTs
      */
     public String getQtBackgroundSubtracted() {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
-        if ( qt.getIsBackgroundSubtracted()) {
+        if ( qt.getIsBackgroundSubtracted() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for normalized status of the QTs
      */
     public String getQtNormalized() {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
-        if ( qt.getIsNormalized()) {
+        if ( qt.getIsNormalized() ) {
             return "<input type=checkbox checked disabled></input>";
-        }
-        else {
+        } else {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
 }
