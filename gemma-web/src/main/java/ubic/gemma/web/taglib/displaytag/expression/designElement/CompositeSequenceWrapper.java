@@ -72,27 +72,29 @@ public class CompositeSequenceWrapper extends TableDecorator {
      */
     private String getGenomeBrowserLink( BlatResult blatResult ) {
 
+        if ( ( blatResult.getQuerySequence() == null ) || ( blatResult.getQuerySequence().getTaxon() == null ) )
+            return null;
+
         Taxon taxon = blatResult.getQuerySequence().getTaxon();
+        String organism = taxon.getCommonName();
 
-        if ( taxon.getExternalDatabase() == null || taxon.getExternalDatabase().getName() == null ) return null;
-
-        String database = taxon.getExternalDatabase().getName();
-        String organism = blatResult.getQuerySequence().getTaxon().getCommonName();
+        String database = "hg18";
+        if ( organism.equalsIgnoreCase( "Human" ) ) {
+            database = "hg18";
+        } else if ( organism.equalsIgnoreCase( "Rat" ) ) {
+            database = "rn4";
+        } else if ( organism.equalsIgnoreCase( "Mouse" ) ) {
+            database = "mm8";
+        }
 
         // build position if the biosequence has an accession
         // otherwise point to location
-        // DatabaseEntry accession = blatResult.getQuerySequence().getSequenceDatabaseEntry();
-        String position = "";
-        // if (accession != null) {
-        // position = "+" + accession.getAccession();
-        // }
-        // else {
-        String retVal = "Chr";
-        retVal += blatResult.getTargetChromosome().getName();
-        retVal += ":";
-        retVal += blatResult.getTargetStart().toString() + "-";
-        retVal += blatResult.getTargetEnd().toString();
-        position = retVal;
+        String position = "Chr";
+        position += blatResult.getTargetChromosome().getName();
+        position += ":";
+        position += blatResult.getTargetStart().toString() + "-";
+        position += blatResult.getTargetEnd().toString();
+
         // }
         String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=" + organism + "&db=" + database
                 + "&position=" + position + "&pix=620";
