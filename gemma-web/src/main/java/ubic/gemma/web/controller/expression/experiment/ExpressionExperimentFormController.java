@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.Map.Entry;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -37,6 +39,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
@@ -303,6 +306,26 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         // create bibliographicReference if necessary
         String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
+        updatePubMed( request, (ExpressionExperiment)command, pubMedId );
+
+        saveMessage( request, "object.saved", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Saved" );
+
+        
+        return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                + request.getServerPort() + request.getContextPath()
+                + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+    }
+
+    /**
+     * 
+     * @param request
+     * @param command
+     * @param pubMedId
+     * @throws IOException
+     * @throws SAXException
+     * @throws ParserConfigurationException
+     */
+    private void updatePubMed( HttpServletRequest request, ExpressionExperiment command, String pubMedId ) throws IOException, SAXException, ParserConfigurationException {
         if (StringUtils.isBlank( pubMedId )) {
             // do nothing
         }
@@ -347,13 +370,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 }
             }
         }
-
-        saveMessage( request, "object.saved", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Saved" );
-
-        
-        return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                + request.getServerPort() + request.getContextPath()
-                + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
     }
 
     /**
