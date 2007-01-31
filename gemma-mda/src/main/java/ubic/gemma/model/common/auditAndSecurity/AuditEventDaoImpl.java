@@ -36,10 +36,11 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     /**
      * FIXME this isn't complete.
      */
-    private static String[] AUDITABLES = { "ubic.gemma.model.expression.analysis.ExpressionAnalysisImpl",
+    private static String[] AUDITABLES = { 
+//            "ubic.gemma.model.expression.analysis.ExpressionAnalysisImpl",
             "ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl",
-            "ubic.gemma.model.common.description.BibliographicReferenceImpl",
-            "ubic.gemma.model.common.auditAndSecurity.ContactImpl",
+//            "ubic.gemma.model.common.description.BibliographicReferenceImpl",
+//            "ubic.gemma.model.common.auditAndSecurity.ContactImpl",
             "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" };
 
     private static Log log = LogFactory.getLog( AuditEventDaoImpl.class.getName() );
@@ -52,7 +53,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) {
         // first get the audit trails for the objects. Then we have to get the auditables.
 
-        String queryString = "select atr from AuditTrailImpl as atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
+        String queryString = "select atr from AuditTrailImpl as atr inner join fetch atr.events as ae where ae.date > :date and ae.action='U'";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -96,7 +97,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      */
     @SuppressWarnings("unchecked")
     protected java.util.Collection handleGetNewSinceDate( java.util.Date date ) {
-        String queryString = "select atr from AuditTrailImpl as atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
+        String queryString = "select atr from AuditTrailImpl as atr inner join fetch atr.events as ae where ae.date > :date and ae.action='C'";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "date", date );
