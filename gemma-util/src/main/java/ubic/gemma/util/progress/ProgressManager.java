@@ -417,7 +417,8 @@ public class ProgressManager {
         log.debug( key + " Cancelled" );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
-        job.getJobInfo().setFailedMessage( "Cancellation was signalled by user" );
+        if ( job != null ) job.getJobInfo().setFailedMessage( "Cancellation was signalled by user" );
+
         destroyProgressJob( job );
     }
 
@@ -429,7 +430,7 @@ public class ProgressManager {
         log.error( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
-        job.getJobInfo().setFailedMessage( cause.toString() );
+        if ( job != null ) job.getJobInfo().setFailedMessage( cause.toString() );
         destroyProgressJob( job );
     }
 

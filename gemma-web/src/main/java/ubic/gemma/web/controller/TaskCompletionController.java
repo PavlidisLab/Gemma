@@ -37,7 +37,7 @@ import org.springframework.web.servlet.view.RedirectView;
  * @spring.bean id="taskCompletionController"
  * @spring.property name="taskRunningService" ref="taskRunningService"
  */
-public class TaskCompletionController extends AbstractController {
+public class TaskCompletionController extends BaseFormController {
 
     private static Log log = LogFactory.getLog( TaskCompletionController.class.getName() );
 
@@ -68,7 +68,9 @@ public class TaskCompletionController extends AbstractController {
         String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
 
         if ( taskId == null ) {
-            throw new IllegalArgumentException( "No task id" );
+            
+            this.saveMessage( request, "Can not monitor a task with a null task Id" );
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
 
         if ( request.getAttribute( CANCEL_ATTRIBUTE ) != null ) {
