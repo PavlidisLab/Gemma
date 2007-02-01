@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -66,13 +69,22 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         return this.getAuditTrailDao().create( auditTrail );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleThaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
     @Override
     protected void handleThaw( AuditTrail auditTrail ) throws Exception {
-        this.getAuditTrailDao().thaw(auditTrail);
-        
+        this.getAuditTrailDao().thaw( auditTrail );
+
+    }
+
+    @Override
+    protected AuditEvent handleAddUpdateEvent( Auditable auditable, String note ) throws Exception {
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( Calendar.getInstance().getTime(), AuditAction.UPDATE,
+                note, null );
+        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
     }
 
 }
