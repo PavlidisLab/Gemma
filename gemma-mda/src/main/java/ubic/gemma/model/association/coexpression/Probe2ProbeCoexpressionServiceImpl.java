@@ -20,6 +20,7 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -153,6 +154,12 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     protected Collection handleFindCoexpressionRelationships( Gene givenG, Collection ees, QuantitationType qt )
             throws Exception {
         return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( givenG, ees, qt );
+    }
+
+    @Override
+    protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees )
+            throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( genes, qt, ees );
     }
 
     /*
