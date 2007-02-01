@@ -40,7 +40,7 @@ public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
         this.arrayDesignService = arrayDesignService;
     }
 
-    private static Log log = LogFactory.getLog( TaxonPropertyEditor.class.getName() );
+    private static Log log = LogFactory.getLog( ArrayDesignPropertyEditor.class.getName() );
 
     @Override
     public String getAsText() {

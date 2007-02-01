@@ -33,7 +33,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  * @version $Id$
  */
 public class QuantitationTypePropertyEditor extends PropertyEditorSupport {
-    private static Log log = LogFactory.getLog( TaxonPropertyEditor.class.getName() );
+    private static Log log = LogFactory.getLog( QuantitationTypePropertyEditor.class.getName() );
 
     private Map<String, QuantitationType> map = new HashMap<String, QuantitationType>();
 
