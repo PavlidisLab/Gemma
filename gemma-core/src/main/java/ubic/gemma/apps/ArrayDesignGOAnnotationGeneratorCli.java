@@ -54,6 +54,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * 
  * @author klc
  */
+
 public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
 
     // constants
@@ -79,6 +80,8 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     boolean shortAnnotations;
     boolean longAnnotations;
     boolean biologicalProcessAnnotations;
+    
+    boolean includeGemmaGenes;
 
     // summary info
     long linesWritten;
@@ -102,8 +105,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" ).withDescription(
                 "Optional: The name of the Annotation file to be generated" ).withLongOpt( "annotation" ).create( 'f' );
 
+        Option genesIncludedOption = OptionBuilder.hasArg().withArgName( "Genes to include" ).withDescription(
+        "Optional: The type of genes that will be included All or Standard (defaults to standard). All includes predicted genes and probe alighned genes. Standard mode only includes the regular variety of genes" ).withLongOpt( "genes" ).create( 'g' );
+
         Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" ).withDescription(
-                "Optional: Which go terms to add to the annotation file:  short, long, biologicalprocess" )
+                "Optional: Which go terms to add to the annotation file (defaults to short):  short, long, biologicalprocess" )
                 .withLongOpt( "type" ).create( 't' );
 
         Option fileLoading = OptionBuilder
@@ -116,6 +122,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         addOption( annotationFileOption );
         addOption( annotationType );
         addOption( fileLoading );
+        addOption(genesIncludedOption);
 
     }
 
@@ -155,6 +162,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         return null;
     }
 
+    /**
+     * @throws IOException
+     * process the current AD
+     */
     protected void processAD() throws IOException {
 
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
@@ -275,12 +286,14 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 if ( gene == null ) continue;
 
                 // Don't add gemmaGene info to annotation file
-                if ( ( gene instanceof ProbeAlignedRegion ) || ( gene instanceof PredictedGene ) ) {
+                if ((!includeGemmaGenes) && ( ( gene instanceof ProbeAlignedRegion ) || ( gene instanceof PredictedGene ) )) {
                     log.debug( "Gene:  " + gene.getOfficialSymbol()
                             + "  not included in annotations because it is a probeAligedRegion or predictedGene" );
                     continue;
                 }
 
+                log.debug( "Adding gene: " + gene.getOfficialSymbol() + " of type: " +  gene.getClass() );
+                
                 Collection<OntologyEntry> terms = getGoTerms( gene );
                 if ( ( terms != null ) && !( terms.isEmpty() ) ) goTerms.addAll( terms );
 
@@ -379,32 +392,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
-    // Map<OntologyEntry, Collection> getParents( Collection<OntologyEntry> children ) {
-    //
-    // if ( ( children == null ) || ( children.isEmpty() ) ) return null;
-    //
-    // Map<OntologyEntry, Collection> parents = new HashMap<OntologyEntry, Collection>();
-    // Collection<OntologyEntry> notCached = new ArrayList<OntologyEntry>();
-    //
-    // for ( OntologyEntry oe : children ) {
-    //
-    // if ( ontologyTreeCache.containsKey( oe ) )
-    // parents.put( oe, ontologyTreeCache.get( oe ) );
-    //
-    // else
-    // notCached.add( oe );
-    //
-    // }
-    //
-    // if ( notCached.isEmpty() ) return parents;
-    //
-    // Map<OntologyEntry, Collection> newlyFound = oeService.getParents( notCached );
-    //
-    // cache( newlyFound );
-    // parents.putAll( newlyFound );
-    //
-    // return parents;
-    // }
+
 
     private void processType( String type ) {
 
@@ -421,6 +409,17 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             shortAnnotations = true;
 
     }
+    
+    
+    private void processGenesIncluded(String genesToInclude){
+        includeGemmaGenes = false;
+        
+        if (genesToInclude.equalsIgnoreCase( "all" ))
+            includeGemmaGenes = true;
+        
+        
+        
+    }
 
     protected void processOptions() {
         super.processOptions();
@@ -436,6 +435,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( this.hasOption( 'l' ) ) {
             this.batchFileName = this.getOptionValue( 'l' );
         }
+        
+        if (this.hasOption( 'g' ))
+            processGenesIncluded(this.getOptionValue( 'g' ));
+        
 
         gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
 

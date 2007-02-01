@@ -53,7 +53,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     protected void unlazifyArrayDesign(  ArrayDesign arrayDesign ) {
         
-        if ((cachedAD != null) && (arrayDesign.getId() == cachedAD.getId() )){
+        if ((cachedAD != null) && (arrayDesign.getName().equalsIgnoreCase( cachedAD.getName() )) && (arrayDesign.getShortName().equalsIgnoreCase(  cachedAD.getShortName()) )){
             arrayDesign = cachedAD;
             return;
         }
