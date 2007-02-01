@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -46,16 +48,28 @@ import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseFormController;
+
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
 
 import com.sdicons.json.model.JSONArray;
 import com.sdicons.json.model.JSONInteger;
@@ -69,6 +83,8 @@ import com.sdicons.json.parser.JSONParser;
  * @version $Id$
  * @spring.bean id="expressionExperimentFormController"
  * @spring.property name = "commandName" value="expressionExperiment"
+ * @spring.property name="commandClass"
+ *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditCommand"
  * @spring.property name = "formView" value="expressionExperiment.edit"
  * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
@@ -79,6 +95,8 @@ import com.sdicons.json.parser.JSONParser;
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name = "persisterHelper" ref="persisterHelper"
  * @spring.property name = "validator" ref="expressionExperimentValidator"
+ * @spring.property name = "quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
     private static Log log = LogFactory.getLog( ExpressionExperimentFormController.class.getName() );
@@ -89,8 +107,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
     BioMaterialService bioMaterialService = null;
     BibliographicReferenceService bibliographicReferenceService = null;
     PersisterHelper persisterHelper = null;
-
-    private Long id = null;
+    QuantitationTypeService quantitationTypeService;
+    DesignElementDataVectorService designElementDataVectorService;
 
     private ExternalDatabaseDao externalDatabaseDao = null;
 
@@ -100,8 +118,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
     // It works if you call the dao layer directly from your controller (I know we are not supposed to do this, but it
     // works).
     // Will fix this later.
-
-
 
     /**
      * @param persisterHelper the persisterHelper to set
@@ -130,24 +146,34 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @return Object
      * @throws ServletException
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            saveMessage( request, "Id was not a number" );
+            throw new IllegalArgumentException( "Id was not a number" );
+        }
 
-        id = Long.parseLong( request.getParameter( "id" ) );
-
-        ExpressionExperiment ee = null;
-
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        List<QuantitationType> qts = new ArrayList<QuantitationType>();
         log.debug( id );
-
-        if ( !"".equals( id ) )
+        ExpressionExperimentEditCommand obj;
+        if ( id != null ) {
             ee = expressionExperimentService.findById( id );
+            qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
+            obj = new ExpressionExperimentEditCommand( ee, qts );
+        } else {
+            obj = new ExpressionExperimentEditCommand( ee, qts );
+        }
 
-        else
-            ee = ExpressionExperiment.Factory.newInstance();
+        if ( ee.getId() != null ) {
+            saveMessage( request, "object.editing", new Object[] { "Data set", ee.getId() }, "Editing" );
+        }
 
-        saveMessage( request, "object.editing", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Editing" );
-
-        return ee;
+        return obj;
     }
 
     /**
@@ -164,7 +190,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         log.debug( "entering processFormSubmission" );
 
-        id = ( ( ExpressionExperiment ) command ).getId();
+        Long id = ( ( ExpressionExperimentEditCommand ) command ).getId();
 
         if ( request.getParameter( "cancel" ) != null ) {
             if ( id != null ) {
@@ -179,9 +205,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     + "/expressionExperiment/showAllExpressionExperiments.html" ) );
         }
 
-    
         ModelAndView mav = super.processFormSubmission( request, response, command, errors );
-        
+
         Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
         mav.addObject( "qtCountSet", s );
 
@@ -206,183 +231,325 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         log.debug( "entering onSubmit" );
 
-        ExpressionExperiment ee = ( ExpressionExperiment ) command;
+        ExpressionExperimentEditCommand eeCommand = ( ExpressionExperimentEditCommand ) command;
 
-        if (ee == null || ee.getId() == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "Expression experiment was null or had null id" ) );
+        if ( eeCommand == null || eeCommand.getId() == null ) {
+            errors.addError( new ObjectError( command.toString(), null, null,
+                    "Expression experiment was null or had null id" ) );
             return processFormSubmission( request, response, command, errors );
         }
 
-        expressionExperimentService.update( ( ExpressionExperiment ) command ); 
+        ExpressionExperiment expressionExperiment = eeCommand.toExpressionExperiment();
+        // create bibliographicReference if necessary
 
+        updatePubMed( request, expressionExperiment );
+
+        /**
+         * Takes care of the basics.
+         */
+        expressionExperimentService.update( expressionExperiment );
+
+        /**
+         * Much more complicated
+         */
+        updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
+
+        updateBioMaterialMap( request );
+
+        updateAccession( request, expressionExperiment );
+
+        saveMessage( request, "object.saved", new Object[] { expressionExperiment.getClass().getSimpleName(),
+                expressionExperiment.getId() }, "Saved" );
+
+        return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
+                + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
+                + eeCommand.getId() ) );
+    }
+
+    /**
+     * @param request
+     * @param expressionExperiment
+     */
+    private void updateAccession( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
+        String accession = request.getParameter( "expressionExperiment.accession.accession" );
+
+        if ( accession == null ) {
+            // do nothing
+        } else {
+            /* database entry */
+            expressionExperiment.getAccession().setAccession( accession );
+
+            /* external database */
+            ExternalDatabase ed = ( expressionExperiment.getAccession().getExternalDatabase() );
+            ed = externalDatabaseDao.findOrCreate( ed );
+            expressionExperiment.getAccession().setExternalDatabase( ed );
+        }
+    }
+
+    /**
+     * @param request
+     * @throws TokenStreamException
+     * @throws RecognitionException
+     */
+    private void updateBioMaterialMap( HttpServletRequest request ) throws TokenStreamException, RecognitionException {
         // parse JSON-serialized map
         String jsonSerialization = request.getParameter( "assayToMaterialMap" );
         // convert back to a map
-        JSONParser parser = new JSONParser(new StringInputStream(jsonSerialization));
+        JSONParser parser = new JSONParser( new StringInputStream( jsonSerialization ) );
 
-        Map<String, JSONValue> bioAssayMap = ((JSONObject) parser.nextValue()).getValue();
- 
-        Map<BioAssay,BioMaterial> deleteAssociations = new HashMap<BioAssay,BioMaterial>();
+        Map<String, JSONValue> bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
+
+        Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<BioAssay, BioMaterial>();
         // set the bioMaterial - bioAssay associations if they are different
-        Set<Entry<String,JSONValue>> bioAssays = bioAssayMap.entrySet();
+        Set<Entry<String, JSONValue>> bioAssays = bioAssayMap.entrySet();
         for ( Entry<String, JSONValue> entry : bioAssays ) {
             // check if the bioAssayId is a nullElement
             // if it is, skip over this entry
-            if (entry.getKey().equalsIgnoreCase( "nullElement" )) {
+            if ( entry.getKey().equalsIgnoreCase( "nullElement" ) ) {
                 continue;
             }
-            Long bioAssayId = Long.parseLong(entry.getKey());
+            Long bioAssayId = Long.parseLong( entry.getKey() );
 
-            Collection<JSONValue> bioMaterialValues =  ((JSONArray)entry.getValue()).getValue();
+            Collection<JSONValue> bioMaterialValues = ( ( JSONArray ) entry.getValue() ).getValue();
             Collection<Long> newBioMaterials = new ArrayList<Long>();
             for ( JSONValue value : bioMaterialValues ) {
-                if (value.isString()) {
-                    Long newMaterial = Long.parseLong(( (JSONString)value).getValue());
+                if ( value.isString() ) {
+                    Long newMaterial = Long.parseLong( ( ( JSONString ) value ).getValue() );
+                    newBioMaterials.add( newMaterial );
+                } else {
+                    Long newMaterial = ( ( JSONInteger ) value ).getValue().longValue();
                     newBioMaterials.add( newMaterial );
                 }
-                else {
-                    Long newMaterial = ((JSONInteger)value).getValue().longValue();
-                    newBioMaterials.add( newMaterial );               
-                }
             }
-            
+
             BioAssay bioAssay = bioAssayService.findById( bioAssayId );
             Collection<BioMaterial> bMats = bioAssay.getSamplesUsed();
             Collection<Long> oldBioMaterials = new ArrayList<Long>();
             for ( BioMaterial material : bMats ) {
                 oldBioMaterials.add( material.getId() );
             }
-            
+
             // try to find the bioMaterials in the list of current samples
             // if it is not in the current samples, add it
             // if it is in the current sample list, skip to next entry
             // if the current sample does not exist in the new bioMaterial list, remove it
             for ( Long newBioMaterialId : newBioMaterials ) {
-                if (oldBioMaterials.contains( newBioMaterialId )) {
+                if ( oldBioMaterials.contains( newBioMaterialId ) ) {
                     continue;
-                }
-                else {
+                } else {
                     BioMaterial newMaterial = bioMaterialService.findById( newBioMaterialId );
                     bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
                 }
             }
-            
-            
+
             // put all unnecessary associations in a collection
             // they are not deleted immediately to let all new associations be added first
             // before any deletions are made. This makes sure that
             // no bioMaterials are removed unnecessarily
             for ( Long oldBioMaterialId : oldBioMaterials ) {
-                if (newBioMaterials.contains( oldBioMaterialId )) {
+                if ( newBioMaterials.contains( oldBioMaterialId ) ) {
                     continue;
-                }
-                else {
+                } else {
                     BioMaterial oldMaterial = bioMaterialService.findById( oldBioMaterialId );
-                    deleteAssociations.put( bioAssay,oldMaterial );
+                    deleteAssociations.put( bioAssay, oldMaterial );
                 }
             }
 
         }
-        
+
         // remove unnecessary biomaterial associations
         Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
         for ( BioAssay assay : deleteKeys ) {
             bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
         }
-        String accession = request.getParameter( "expressionExperiment.accession.accession" );
-
-        
-        if ( accession == null ) {
-            // do nothing
-        } else {
-            /* database entry */
-            ( ( ExpressionExperiment ) command ).getAccession().setAccession( accession );
-
-            /* external database */
-            ExternalDatabase ed = ( ( ( ExpressionExperiment ) command ).getAccession().getExternalDatabase() );
-            ed = externalDatabaseDao.findOrCreate( ed );
-            ( ( ExpressionExperiment ) command ).getAccession().setExternalDatabase( ed );
-        }
-
-        // create bibliographicReference if necessary
-        String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
-        updatePubMed( request, (ExpressionExperiment)command, pubMedId );
-
-        saveMessage( request, "object.saved", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Saved" );
-
-        
-        return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                + request.getServerPort() + request.getContextPath()
-                + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
     }
 
     /**
+     * Check old vs. new quantitation types, and update any affected data vectors.
      * 
      * @param request
+     * @param expressionExperiment
+     * @param updatedQuantitationTypes
+     */
+    @SuppressWarnings("unchecked")
+    private void updateQuantTypes( HttpServletRequest request, ExpressionExperiment expressionExperiment,
+            Collection<QuantitationType> updatedQuantitationTypes ) {
+
+        Collection<QuantitationType> oldQuantitationTypes = expressionExperimentService
+                .getQuantitationTypes( expressionExperiment );
+
+        for ( QuantitationType qType : oldQuantitationTypes ) {
+            assert qType != null;
+            Long id = qType.getId();
+            boolean dirty = false;
+            QuantitationType revisedType = QuantitationType.Factory.newInstance();
+            for ( QuantitationType newQtype : updatedQuantitationTypes ) {
+                if ( newQtype.getId().equals( id ) ) {
+
+                    String oldName = qType.getName();
+                    String oldDescription = qType.getDescription();
+                    GeneralType gentype = qType.getGeneralType();
+                    boolean isBkg = qType.getIsBackground();
+                    boolean isBkgSub = qType.getIsBackgroundSubtracted();
+                    boolean isNormalized = qType.getIsNormalized();
+                    PrimitiveType rep = qType.getRepresentation();
+                    ScaleType scale = qType.getScale();
+                    StandardQuantitationType type = qType.getType();
+                    boolean isPreferred = qType.getIsPreferred();
+
+                    String newName = newQtype.getName();
+                    String newDescription = newQtype.getDescription();
+                    GeneralType newgentype = newQtype.getGeneralType();
+                    boolean newisBkg = newQtype.getIsBackground();
+                    boolean newisBkgSub = newQtype.getIsBackgroundSubtracted();
+                    boolean newisNormalized = newQtype.getIsNormalized();
+                    PrimitiveType newrep = newQtype.getRepresentation();
+                    ScaleType newscale = newQtype.getScale();
+                    StandardQuantitationType newType = newQtype.getType();
+                    boolean newisPreferred = newQtype.getIsPreferred();
+
+                    // make it a copy.
+                    revisedType.setIsBackgroundSubtracted( newisBkgSub );
+                    revisedType.setIsBackground( newisBkg );
+                    revisedType.setIsPreferred( newisPreferred );
+                    revisedType.setRepresentation( newrep );
+                    revisedType.setType( newType );
+                    revisedType.setScale( newscale );
+                    revisedType.setGeneralType( newgentype );
+                    revisedType.setDescription( newDescription );
+                    revisedType.setName( newName );
+                    revisedType.setIsNormalized( newisNormalized );
+
+                    if ( !oldName.equals( newName ) ) {
+                        dirty = true;
+                    }
+                    if ( !oldDescription.equals( newDescription ) ) {
+                        dirty = true;
+                    }
+                    if ( !gentype.equals( newgentype ) ) {
+                        dirty = true;
+                    }
+                    if ( !scale.equals( newscale ) ) {
+                        dirty = true;
+                    }
+
+                    if ( !type.equals( newType ) ) {
+                        dirty = true;
+                    }
+                    if ( !rep.equals( newrep ) ) {
+                        dirty = true;
+                    }
+                    if ( isPreferred != newisPreferred ) {
+                        // special case - make sure there is only one preferred per platform?
+                        dirty = true;
+                    }
+                    if ( isBkg != newisBkg ) {
+                        dirty = true;
+                    }
+                    if ( isBkgSub != newisBkgSub ) {
+                        dirty = true;
+                    }
+                    if ( isNormalized != newisNormalized ) {
+                        dirty = true;
+                    }
+
+                    break;
+                }
+            }
+            if ( dirty ) {// now move all the designelementdatavectors that used the old type to the new one.
+                Collection<DesignElementDataVector> vectors = designElementDataVectorService.findAllForMatrix(
+                        expressionExperiment, qType );
+                QuantitationType newType = quantitationTypeService.findOrCreate( revisedType );
+                log.info( "Updating quantitation type " + newType.getName() + " for " + vectors.size()
+                        + " data vectors" );
+                for ( DesignElementDataVector vector : vectors ) {
+                    vector.setQuantitationType( newType );
+                }
+
+                designElementDataVectorService.update( vectors );
+            }
+        }
+
+    }
+
+    /**
+     * @param request
      * @param command
-     * @param pubMedId
      * @throws IOException
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    private void updatePubMed( HttpServletRequest request, ExpressionExperiment command, String pubMedId ) throws IOException, SAXException, ParserConfigurationException {
-        if (StringUtils.isBlank( pubMedId )) {
-            // do nothing
+    private void updatePubMed( HttpServletRequest request, ExpressionExperiment command ) throws IOException,
+            SAXException, ParserConfigurationException {
+        String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
+        if ( StringUtils.isBlank( pubMedId ) ) {
+            return;
         }
-        else {
-            // first, search for the pubMedId in the database
-            // if it is in the database, then just point the EE to that
-            // if it doesn't, then grab the BibliographicReference from PubMed and persist. Then point EE to the new entry.
-            BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubMedId );
-            if (publication != null) {
-                ( ( ExpressionExperiment ) command ).setPrimaryPublication( publication );
-            }
-            else {
-                // search for pubmedId
-                PubMedSearch pms = new PubMedSearch();
-                Collection<String> searchTerms = new ArrayList<String>();
-                searchTerms.add( pubMedId );
-                Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
-                // check to see if there are publications found
-                // if there are none, or more than one, add an error message and do nothing
-                if (publications.size() == 0) {
-                    this.saveMessage( request, "Cannot find PubMed ID " + pubMedId );
-                }
-                else if (publications.size() > 1) {
-                    this.saveMessage( request, "PubMed ID " + pubMedId + "");        
-                }
-                else {
-                    publication = publications.iterator().next();         
-                    
-                    DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
-                    pubAccession.setAccession( pubMedId );
-                    ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-                    ed.setName( "PubMed" );
-                    pubAccession.setExternalDatabase( ed );
-                    
-                    publication.setPubAccession( pubAccession );
-                    
-                    // persist new publication
-                    publication = (BibliographicReference) persisterHelper.persist( publication );
-                    //publication = bibliographicReferenceService.findOrCreate( publication );
-                    // assign to expressionExperiment
-                    ( ( ExpressionExperiment ) command ).setPrimaryPublication( publication );
-                }
+        // first, search for the pubMedId in the database
+        // if it is in the database, then just point the EE to that
+        // if it doesn't, then grab the BibliographicReference from PubMed and persist. Then point EE to the new
+        // entry.
+        BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubMedId );
+        if ( publication != null ) {
+            command.setPrimaryPublication( publication );
+        } else {
+            // search for pubmedId
+            PubMedSearch pms = new PubMedSearch();
+            Collection<String> searchTerms = new ArrayList<String>();
+            searchTerms.add( pubMedId );
+            Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+            // check to see if there are publications found
+            // if there are none, or more than one, add an error message and do nothing
+            if ( publications.size() == 0 ) {
+                this.saveMessage( request, "Cannot find PubMed ID " + pubMedId );
+            } else if ( publications.size() > 1 ) {
+                this.saveMessage( request, "PubMed ID " + pubMedId + "" );
+            } else {
+                publication = publications.iterator().next();
+
+                DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
+                pubAccession.setAccession( pubMedId );
+                ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+                ed.setName( "PubMed" );
+                pubAccession.setExternalDatabase( ed );
+
+                publication.setPubAccession( pubAccession );
+
+                // persist new publication
+                publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                // publication = bibliographicReferenceService.findOrCreate( publication );
+                // assign to expressionExperiment
+                command.setPrimaryPublication( publication );
             }
         }
+
     }
 
     /**
      * @param request
      * @return Map
      */
+    @SuppressWarnings("unchecked")
     @Override
-    @SuppressWarnings( { "unused", "unchecked" })
     protected Map referenceData( HttpServletRequest request ) {
+        Map<Object, Object> referenceData = new HashMap<Object, Object>();
         Collection<ExternalDatabase> edCol = externalDatabaseDao.loadAll();
-        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
-        edMap.put( "externalDatabases", edCol );
-        return edMap;
+
+        Collection<ExternalDatabase> keepers = new HashSet<ExternalDatabase>();
+        for ( ExternalDatabase database : edCol ) {
+            if ( database.getType() == null ) continue;
+            if ( database.getType().equals( DatabaseType.EXPRESSION ) ) {
+                keepers.add( database );
+            }
+        }
+
+        referenceData.put( "externalDatabases", keepers );
+
+        referenceData.put( "standardQuantitationTypes", new ArrayList<String>( StandardQuantitationType.literals() ) );
+        referenceData.put( "scaleTypes", new ArrayList<String>( ScaleType.literals() ) );
+        referenceData.put( "generalQuantitationTypes", new ArrayList<String>( GeneralType.literals() ) );
+        referenceData.put( "representations", new ArrayList<String>( PrimitiveType.literals() ) );
+        return referenceData;
     }
 
     /**
@@ -405,7 +572,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
     }
-    
+
     /**
      * @param bioAssayService the bioAssayService to set
      */
@@ -418,5 +585,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
         this.bioMaterialService = bioMaterialService;
+    }
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
     }
 }
