@@ -16,20 +16,23 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Calendar;
+
+import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.userdetails.UserDetails;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.Auditable;
 
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
+ * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
+ * @author pavlidis
+ * @version $Id$
  */
 public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoBase {
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
@@ -45,10 +48,23 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     }
 
+    /**
+     * 
+     */
     @Override
     protected AuditEvent handleAddEvent( final Auditable auditable, final AuditEvent auditEvent ) throws Exception {
+
+        if ( auditEvent.getAction() == null ) {
+            throw new IllegalArgumentException( "auditEvent was missing a required field" );
+        }
+
+        if ( auditEvent.getDate() == null ) {
+            auditEvent.setDate( Calendar.getInstance().getTime() );
+        }
+
         if ( auditEvent.getPerformer() == null ) {
-            // get the principal. Not sure how to do this here.
+            User user = getUser(); // could be null, if anonymous.
+            auditEvent.setPerformer( user );
         }
 
         HibernateTemplate templ = this.getHibernateTemplate();
@@ -63,6 +79,46 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         assert auditEvent.getId() != null;
         return auditEvent;
+    }
+
+    /**
+     * @return
+     */
+    private String getPrincipalName() {
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username = null;
+        if ( obj instanceof UserDetails ) {
+            username = ( ( UserDetails ) obj ).getUsername();
+        } else {
+            username = obj.toString();
+        }
+
+        return username;
+    }
+
+    /**
+     * @return
+     */
+    private User getUser() {
+        String name = getPrincipalName();
+        assert name != null; // might be anonymous
+
+        if ( name.equals( "anonymous" ) ) {
+            return null;
+        }
+
+        try {
+            String queryString = "from ContactImpl where userName=:userName";
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "userName", name );
+            java.util.List results = queryObject.list();
+            assert results.size() == 1;
+            Object result = results.iterator().next();
+            return ( User ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }
