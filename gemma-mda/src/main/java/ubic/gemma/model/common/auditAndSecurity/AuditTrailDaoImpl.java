@@ -104,6 +104,10 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         String name = getPrincipalName();
         assert name != null; // might be anonymous
 
+        /*
+         * Note: this name is defined in the applicationContext-security.xml file. Normally audit events would not be
+         * added by 'anonymous' using the methods in this class, but this allows the possibility.
+         */
         if ( name.equals( "anonymous" ) ) {
             return null;
         }
