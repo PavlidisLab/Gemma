@@ -65,9 +65,9 @@ public class PubMedSearch {
     }
 
     /**
-     * For an integer pubmed id
+     * Search based on terms
      * 
-     * @param pubMedId
+     * @param searchTerms
      * @return BibliographicReference representing the publication
      * @throws IOException
      */
