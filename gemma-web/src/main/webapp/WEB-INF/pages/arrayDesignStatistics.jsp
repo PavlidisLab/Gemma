@@ -22,7 +22,7 @@ ${summaryString}
 </h3>
 
 <authz:authorize ifAnyGranted="admin">
-	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>">
+	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>" onclick="return confirm('Regenerate report for all platforms?');">
 		Regenerate this report</a>
 </authz:authorize>
 
@@ -37,11 +37,13 @@ ${summaryString}
 		titleKey="arrayDesign.shortName" />
 	<display:column property="expressionExperimentCountLink"
 		sortable="true" title="Expts" />
+	<display:column property="summaryTable" title="Probe Summary" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="color" sortable="true"
 			titleKey="arrayDesign.technologyType" />
+		<display:column property="refreshReport" title="Refresh" />
 	</authz:authorize>
-	<display:column property="summaryTable" title="Probe Summary" />
+
 	<display:setProperty name="basic.empty.showtable" value="true" />
 
 </display:table>

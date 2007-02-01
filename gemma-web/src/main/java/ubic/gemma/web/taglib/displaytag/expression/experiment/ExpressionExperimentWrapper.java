@@ -296,11 +296,24 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
 
         return "<form action=\"deleteExpressionExperiment.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirmDelete('Expression experiment " + object.getName()
+                + "\" onSubmit=\"return confirmMessage('Expression experiment " + object.getName()
                 + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
 
     }
 
+    public String getRefreshReport() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+
+        if ( object == null ) {
+            return "Expression Experiment unavailable";
+        }
+
+        return "<form action=\"generateExpressionExperimentLinkSummary.html?id=" + object.getId()
+                + "\" onSubmit=\"return confirm('Refresh summary for experiment " + object.getName()
+                + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" title='Refresh Report'/></form>";
+
+    }
+    
     public String getEdit() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
 

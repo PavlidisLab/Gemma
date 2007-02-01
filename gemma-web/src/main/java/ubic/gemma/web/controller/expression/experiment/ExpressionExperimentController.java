@@ -404,7 +404,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperimentReportService.generateSummaryObjects( ids );
             String idStr = StringUtils.join( ids.toArray(), "," );
             return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
+                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
         }
 
     }

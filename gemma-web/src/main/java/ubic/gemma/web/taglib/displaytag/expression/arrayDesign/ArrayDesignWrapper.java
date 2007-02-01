@@ -64,6 +64,19 @@ public class ArrayDesignWrapper extends TableDecorator {
 
      }
      
+     public String getRefreshReport() {
+         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+         if ( object == null ) {
+             return "Array Design unavailable";
+         }
+
+         return "<form action=\"generateArrayDesignSummary.html?id=" + object.getId()
+                 + "\" onSubmit=\"return confirm('Refresh report for " + object.getName()
+                 + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" /></form>";
+
+     }
+     
      public String getColor() {
          ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
          

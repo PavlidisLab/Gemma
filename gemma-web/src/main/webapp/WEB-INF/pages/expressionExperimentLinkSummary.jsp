@@ -16,7 +16,7 @@
 <authz:authorize ifAnyGranted="admin">
 	<p>
 		<a
-			href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>">
+			href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>" onclick="return confirm('Regenerate reports for all experiments?');">
 			Regenerate Expression Experiment Link Summaries </a>
 
 	</p>
@@ -45,6 +45,9 @@
 		title="Created" />
 	<display:column property="dateLastUpdatedNoTime" sortable="true"
 		title="Updated" />
+	<authz:authorize ifAnyGranted="admin">
+		<display:column property="refreshReport" title="Refresh" />
+	</authz:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 </display:table>

@@ -247,7 +247,7 @@ public class ArrayDesignReportService
     private String generateReportString(long numCsBioSequences, long numCsBlatResults, long numCsGenes, long numGenes, long numCsPredictedGenes, long numCsProbeAlignedRegions, long numCsPureGenes) {
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
-        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd hh:mm" );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
         // write into table format
         StringBuffer s = new StringBuffer();
         s.append("<table class='datasummary'>" +

@@ -202,13 +202,6 @@ ${ summary } <br>
 								value="Edit">
 						</div>
 					</td>
-					<td COLSPAN="2">
-						<div align="left">
-							<input type="button"
-								onclick="location.href='/Gemma/arrays/generateArrayDesignSummary.html?id=<%=request.getAttribute( "id" )%>'"
-								value="Refresh Summary">
-						</div>
-					</td>
 				</authz:acl>
 			</tr>
 		</table>

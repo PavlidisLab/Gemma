@@ -480,7 +480,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 arrayDesignReportService.generateArrayDesignReport( id );
             }
             ProgressManager.destroyProgressJob( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + id ) );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) );
 
         }
     }
