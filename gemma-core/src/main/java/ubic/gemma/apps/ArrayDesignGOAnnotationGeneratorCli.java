@@ -187,6 +187,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    /**
+     * @param fileName
+     * @throws IOException
+     * used for batch processing
+     */
     protected void processBatchFile( String fileName ) throws IOException {
 
         log.info( "Loading platforms to annotate from " + fileName );
@@ -241,6 +246,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    /**
+     * @param adName
+     * @throws IOException
+     * Creates the given file
+     */
     protected void initFile( String adName ) throws IOException {
         // write into file
         log.info( "Creating new annotation file " + adName + " \n" );
@@ -253,6 +263,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    /**
+     * @param cs
+     * @throws IOException
+     * Gets the file ready for printing
+     */
     protected void generateAnnotationFile( Collection<CompositeSequence> cs ) throws IOException {
 
         linesWritten = 0;
@@ -320,6 +335,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         }
     }
 
+    /**
+     * @param probeId
+     * @param gene
+     * @param description
+     * @param goTerms
+     * @throws IOException
+     * 
+     * Adds one line at a time to the annotation file
+     */
     protected void generateAnnotationFileLine( String probeId, String gene, String description,
             Collection<OntologyEntry> goTerms ) throws IOException {
 
@@ -346,6 +370,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    /**
+     * @param gene
+     * @return
+     * gets all the goTerms for a given gene
+     */
     protected Collection<OntologyEntry> getGoTerms( Gene gene ) {
 
         Collection<OntologyEntry> ontos = new HashSet<OntologyEntry>( gene2GoAssociationService.findByGene( gene ) );
@@ -394,6 +423,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
 
 
+    /**
+     * @param type
+     * Intilizes variables depending on they type for file that is needed
+     */
     private void processType( String type ) {
 
         shortAnnotations = false;
@@ -452,6 +485,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    /**
+     * @param e
+     * 
+     * A cache for storing exceptions. todo: should be displayed to user or dumped to log file
+     */
     protected void store( Exception e ) {
         exceptions.add( e );
     }
