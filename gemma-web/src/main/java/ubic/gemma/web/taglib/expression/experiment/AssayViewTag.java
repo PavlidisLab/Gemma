@@ -155,6 +155,7 @@ public class AssayViewTag extends TagSupport {
         Comparator<BioMaterial> comparator = new BioMaterialComparator();
         Collections.sort( materials, comparator );
         int elementCount = 1;
+        int emptyCount = 0;
         for ( BioMaterial material : materials ) {
             if ( count % 2 == 0 ) {
                 buf.append( "<tr class='even' align=justify>" );
@@ -164,7 +165,7 @@ public class AssayViewTag extends TagSupport {
             buf.append( "<td>" + material.getName() + "</td>" );
 
             Map<ArrayDesign, Collection<BioAssay>> assayMap = bioAssayMap.get( material );
-            int emptyCount = 0;
+
             String image = "<img height=10 width=10 src='/Gemma/images/arrow_out.png' />";
             for ( ArrayDesign design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
