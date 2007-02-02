@@ -55,7 +55,7 @@ public class WhatsNewBoxTag extends TagSupport {
         int numUpdated = whatsNew.getUpdatedObjects().size();
 
         StringBuilder buf = new StringBuilder();
-        buf.append( "<h3>What's new in Gemma in the " );
+        buf.append( "<h2>What's new in Gemma in the " );
         Date date = whatsNew.getDate();
         Date now = Calendar.getInstance().getTime();
         long millis = now.getTime() - date.getTime();
@@ -67,33 +67,35 @@ public class WhatsNewBoxTag extends TagSupport {
         } else {
             buf.append( " last " + days + " days" );
         }
-        buf.append( "</h3>" );
-
+        buf.append( "</h2>" );
+        buf.append("<p>");
         if ( numNew > 0 ) {
             int numEEs = whatsNew.getNewExpressionExperiments().size(); // FIXME make a link to see them.
             int numADs = whatsNew.getNewArrayDesigns().size(); // FIXME make a link to see them.
             if ( numEEs > 0 ) {
-                buf.append( "<li>" + numEEs + " new data set" + ( numEEs > 1 ? "s" : "" ) + ".</li>" );
+                buf.append( numEEs + " new data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
             }
             if ( numADs > 0 ) {
-                buf.append( "<li>" + numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + ".</li>" );
+                buf.append( numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
             }
         } else {
-            buf.append( "<li>[Nothing new]</li>" );
+            buf.append( "[No new experiments or platforms]<br />" );
         }
 
         if ( numUpdated > 0 ) {
             int numEEs = whatsNew.getUpdatedExpressionExperiments().size(); // FIXME make a link to see them.
             int numADs = whatsNew.getUpdatedArrayDesigns().size(); // FIXME make a link to see them.
             if ( numEEs > 0 ) {
-                buf.append( "<li>" + numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".</li>" );
+                buf.append(numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
             }
             if ( numADs > 0 ) {
-                buf.append( "<li>" + numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".</li>" );
+                buf.append( numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
             }
         } else {
-            buf.append( "<li>[Nothing updated]</li>" );
+            buf.append( "[No experiments or platforms updated]<br />" );
         }
+        
+        buf.append("</p>");
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
