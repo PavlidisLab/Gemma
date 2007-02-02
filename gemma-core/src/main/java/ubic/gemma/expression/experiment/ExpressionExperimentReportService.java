@@ -119,16 +119,16 @@ public class ExpressionExperimentReportService {
     
     
     private void getStats( Collection vos ) {
-        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd hh:mm" );
+        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = (ExpressionExperimentValueObject) object;
             ExpressionExperiment tempEe =  expressionExperimentService.findById( Long.parseLong( eeVo.getId() ) );
-            
+           
             eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
             eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService.getPreferredDesignElementDataVectorCount( tempEe ) );
             eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( tempEe ).longValue() );
             eeVo.setDateCached( timestamp );
-            
+
             auditTrailService.thaw( tempEe.getAuditTrail() );
             if ( tempEe.getAuditTrail() != null ) {                
                 eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
