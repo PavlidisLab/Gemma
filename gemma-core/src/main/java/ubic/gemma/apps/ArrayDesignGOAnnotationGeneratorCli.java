@@ -56,7 +56,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  */
 
 public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
-
+    
     // constants
     final String SHORT = "short";
     final String LONG = "long";
@@ -86,11 +86,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     // summary info
     long linesWritten;
     long genesSkipped;
-
-    public void initForTests( String[] args ) {
-        processCommandLine( "Test", args );
-        processOptions();
-    }
 
     /*
      * (non-Javadoc)
