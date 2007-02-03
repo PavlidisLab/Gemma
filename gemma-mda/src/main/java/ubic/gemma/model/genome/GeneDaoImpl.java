@@ -514,4 +514,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return miRNA;
 
     }
+
+    @Override
+    protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

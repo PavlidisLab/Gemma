@@ -25,6 +25,8 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+
 /**
  * @see ubic.gemma.model.analysis.AnalysisService
  */
@@ -66,7 +68,11 @@ public class AnalysisServiceImpl
     protected ubic.gemma.model.analysis.Analysis handleCreate(ubic.gemma.model.analysis.Analysis analysis)
         throws java.lang.Exception
     {
-      return null;
+        if ( analysis instanceof ExpressionAnalysis ) 
+            return (Analysis) this.getExpressionAnalysisDao().create( (ExpressionAnalysis ) analysis );    
+            
+        throw new java.lang.Exception( "analysis isn't of a known type. don't know how to create."
+                + analysis );
     }
 
     /**

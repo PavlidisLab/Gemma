@@ -21,15 +21,11 @@ package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -40,6 +36,12 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.genome.gene.GeneService
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
+
+    @Override
+    protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
+        return this.getGeneDao().getCoexpressedGeneMap( stringincy, gene );
+    }
+
     private Log log = LogFactory.getLog( GeneServiceImpl.class );
 
     /*
@@ -216,7 +218,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      */
     @Override
     protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
-        return this.getGeneDao().getCoexpressedGenes( gene, ees , stringency);
+        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
     }
 
     @Override
@@ -224,20 +226,24 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getGenesByTaxon( taxon );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleLoad(java.util.Collection)
      */
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         return this.getGeneDao().load( ids );
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMicroRnaByTaxon(Taxon)
      */
     @Override
     protected Collection handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
-        return this.getGeneDao().getMicroRnaByTaxon(taxon);
+        return this.getGeneDao().getMicroRnaByTaxon( taxon );
     }
-    
+
 }
