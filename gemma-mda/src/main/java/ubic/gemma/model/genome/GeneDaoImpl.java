@@ -650,6 +650,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
+     * 
      * @param givenG
      * @return
      */
