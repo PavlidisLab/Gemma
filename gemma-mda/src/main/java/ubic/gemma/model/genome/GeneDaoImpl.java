@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -518,6 +519,109 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
         // TODO Auto-generated method stub
-        return null;
+        Gene givenG = gene;
+        long id = givenG.getId();
+
+        String p2pClassName;
+        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
+            p2pClassName = "HumanProbeCoExpressionImpl";
+        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
+            p2pClassName = "MouseProbeCoExpressionImpl";
+        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
+            p2pClassName = "RatProbeCoExpressionImpl";
+        else
+            // must be other
+            p2pClassName = "OtherProbeCoExpressionImpl";
+
+        Map<Long, Collection<Long>> geneEEsMap = new HashMap<Long, Collection<Long>>();
+
+        String queryStringFirstVector =
+        // return values
+        "select distinct coGene.id, p2pc.firstVector.expressionExperiment.id"
+                // source tables
+                + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
+                // join table
+                + p2pClassName
+                + " as p2pc,"
+                // target tables
+                + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
+                + " where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
+                + " and coCompositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
+                + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
+                + " and coGene.products.id=coBs2gp.geneProduct.id "
+                + " and gene.id = :id and coGene.taxon.id = :taxonId";
+
+        String queryStringSecondVector =
+        // return values
+        "select distinct coGene.id, p2pc.secondVector.expressionExperiment.id"
+                // source tables
+                + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
+                // join table
+                + p2pClassName
+                + " as p2pc,"
+                // target tables
+                + "GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
+                + " where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
+                + " and coCompositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
+                + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
+                + " and coGene.products.id=coBs2gp.geneProduct.id "
+                + " and gene.id = :id and coGene.taxon.id = :taxonId";
+
+        try {
+            // do query joining coexpressed genes through the firstVector to the secondVector
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
+            queryObject.setLong( "id", id );
+            // this is to make the query faster by narrowing down the gene join
+            queryObject.setLong( "taxonId", gene.getTaxon().getId() );
+
+            ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( scroll.next() ) {
+                Collection<Long> eeIds = null;
+                Long geneId = scroll.getLong( 0 );
+                // check to see if geneId is already in the geneMap
+                if ( geneEEsMap.containsKey( geneId ) ) {
+                    eeIds = geneEEsMap.get( geneId );
+                } else {
+                	eeIds = new HashSet<Long>();
+                    geneEEsMap.put( geneId, eeIds );
+                }
+                eeIds.add(scroll.getLong(1));
+            }
+
+            // do query joining coexpressed genes through the secondVector to the firstVector
+            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
+            queryObject.setLong( "id", id );
+            // this is to make the query faster by narrowing down the gene join
+            queryObject.setLong( "taxonId", gene.getTaxon().getId() );
+            scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( scroll.next() ) {
+                Collection<Long> eeIds = null;
+                Long geneId = scroll.getLong( 0 );
+                // check to see if geneId is already in the geneMap
+                if ( geneEEsMap.containsKey( geneId ) ) {
+                    eeIds = geneEEsMap.get( geneId );
+                } else {
+                	eeIds = new HashSet<Long>();
+                    geneEEsMap.put( geneId, eeIds );
+                }
+                eeIds.add(scroll.getLong(1));
+            }
+            Collection<Long> needToRemove = new HashSet<Long>();
+            for(Long geneId:geneEEsMap.keySet()){
+            	Collection<Long> eeIds = geneEEsMap.get(geneId);
+            	if(eeIds.size() < stringincy)
+            		needToRemove.add(geneId);
+            }
+            for(Long geneId:needToRemove){
+            	geneEEsMap.remove(geneId);
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return geneEEsMap;
     }
 }
