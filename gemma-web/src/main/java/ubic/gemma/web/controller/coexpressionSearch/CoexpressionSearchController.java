@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -213,7 +214,7 @@ public class CoexpressionSearchController extends BaseFormController {
         // there are no matches, search all expression experiments
         if ( ees.size() > 0 ) {
             // if there are matches, fihter the expression experiments first by taxon
-            
+
             Collection<ExpressionExperiment> eeToRemove = new ArrayList<ExpressionExperiment>();
             for ( ExpressionExperiment ee : ees ) {
                 Taxon t = expressionExperimentService.getTaxon( ee.getId() );
@@ -222,8 +223,7 @@ public class CoexpressionSearchController extends BaseFormController {
                 }
             }
             ees.removeAll( eeToRemove );
-            
-            
+
             numExpressionExperiments = ees.size();
         } else {
             Map taxonCount = expressionExperimentService.getPerTaxonCount();
@@ -277,6 +277,8 @@ public class CoexpressionSearchController extends BaseFormController {
         Long numCoexpressedGenes = new Long( coexpressions.getStringencyLinkCount() );
         Integer numMatchedLinks = coexpressions.getLinkCount();
 
+        addTimingInformation( request, coexpressions );
+
         mav.addObject( "coexpressedGenes", coexpressedGenes );
         mav.addObject( "numCoexpressedGenes", numCoexpressedGenes );
         mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
@@ -286,6 +288,16 @@ public class CoexpressionSearchController extends BaseFormController {
         mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
 
         return mav;
+    }
+
+    private void addTimingInformation( HttpServletRequest request, CoexpressionCollectionValueObject coexpressions ) {
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        nf.setMaximumFractionDigits( 2 );
+        saveMessage( request, nf.format( coexpressions.getFirstQuerySeconds() + coexpressions.getSecondQuerySeconds()
+                + coexpressions.getPostProcessSeconds() )
+                + " seconds elapsed ("
+                + nf.format( coexpressions.getFirstQuerySeconds() + coexpressions.getSecondQuerySeconds() )
+                + " query, " + nf.format( coexpressions.getPostProcessSeconds() ) + " postprocess)" );
     }
 
     /**

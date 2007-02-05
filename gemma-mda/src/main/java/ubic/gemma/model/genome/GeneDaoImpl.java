@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -257,9 +258,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * Gets all the genes that are coexpressed with another gene, identified by the given ID.
+     * Gets all the genes that are coexpressed with another gene
      * 
-     * @param id
+     * @param gene to use as the query
+     * @param ees Data sets to restrict the search to.
+     * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
      * @return Collection
      */
     @SuppressWarnings("unchecked")
@@ -268,23 +271,136 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Gene givenG = gene;
         long id = givenG.getId();
 
-        String p2pClassName;
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
-            p2pClassName = "HumanProbeCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
-            p2pClassName = "MouseProbeCoExpressionImpl";
-        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
-            p2pClassName = "RatProbeCoExpressionImpl";
-        else
-            // must be other
-            p2pClassName = "OtherProbeCoExpressionImpl";
+        String p2pClassName = getP2PClassName( givenG );
 
         Map<Long, CoexpressionValueObject> geneMap = new HashMap<Long, CoexpressionValueObject>();
         Map<Long, ExpressionExperimentValueObject> eeMap = new HashMap<Long, ExpressionExperimentValueObject>();
 
+        CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
+
+        try {
+            Collection<Long> eeIds = getEEIds( ees );
+
+            StopWatch watch = new StopWatch();
+
+            watch.start();
+
+            // do query joining coexpressed genes through the firstVector to the secondVector
+            String queryString = getQueryString( p2pClassName, "firstVector", "secondVector" );
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject = setCoexpQueryParameters( gene, ees, id, eeIds, queryString );
+
+            processCoexpQueryResults( geneMap, queryObject );
+
+            watch.split();
+            Long elapsed = watch.getSplitTime();
+            coexpressions.setFirstQueryElapsedTime( elapsed );
+
+            queryString = getQueryString( p2pClassName, "secondVector", "firstVector" );
+            queryObject = setCoexpQueryParameters( gene, ees, id, eeIds, queryString );
+            processCoexpQueryResults( geneMap, queryObject );
+
+            watch.split();
+            elapsed = watch.getSplitTime();
+            coexpressions.setSecondQueryElapsedTime( elapsed );
+
+            collectMapInfo( stringency, geneMap, eeMap, coexpressions );
+
+            watch.split();
+            elapsed = watch.getSplitTime();
+            coexpressions.setPostProcessTime( elapsed );
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return coexpressions;
+    }
+
+    /**
+     * @param stringency
+     * @param geneMap
+     * @param eeMap
+     * @param coexpressions
+     */
+    private void collectMapInfo( Integer stringency, Map<Long, CoexpressionValueObject> geneMap,
+            Map<Long, ExpressionExperimentValueObject> eeMap, CoexpressionCollectionValueObject coexpressions ) {
+        // add count of original matches to coexpression data
+        coexpressions.setLinkCount( geneMap.size() );
+        // parse out stringency failures
+        Set keys = geneMap.keySet();
+        for ( Object object : keys ) {
+            Long key = ( Long ) object;
+            if ( geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency ) {
+                // add in coexpressions that match stringency
+                coexpressions.getCoexpressionData().add( geneMap.get( key ) );
+                // add in expression experiments that match stringency
+                Collection eeVos = geneMap.get( key ).getExpressionExperimentValueObjects();
+                for ( Object o : eeVos ) {
+                    ExpressionExperimentValueObject ee = ( ExpressionExperimentValueObject ) o;
+                    eeMap.put( Long.parseLong( ee.getId() ), ee );
+                }
+            }
+        }
+        // add count of pruned matches to coexpression data
+        coexpressions.setStringencyLinkCount( coexpressions.getCoexpressionData().size() );
+        // add the distinct set of expression experiments involved
+        // in the query to coexpression data
+        coexpressions.setExpressionExperiments( eeMap.values() );
+    }
+
+    /**
+     * @param gene
+     * @param ees
+     * @param id
+     * @param eeIds
+     * @param queryString
+     * @return
+     */
+    private org.hibernate.Query setCoexpQueryParameters( Gene gene, Collection ees, long id, Collection<Long> eeIds,
+            String queryString ) {
+        org.hibernate.Query queryObject;
+        queryObject = super.getSession( false ).createQuery( queryString );
+        queryObject.setLong( "id", id );
+        // this is to make the query faster by narrowing down the gene join
+        queryObject.setLong( "taxonId", gene.getTaxon().getId() );
+        if ( ees.size() > 0 ) {
+            queryObject.setParameterList( "ees", eeIds );
+        }
+        return queryObject;
+    }
+
+    /**
+     * @param ees
+     * @return
+     */
+    private Collection<Long> getEEIds( Collection ees ) {
+        Collection<Long> eeIds = new ArrayList<Long>();
+        if ( ees != null && ees.size() > 0 ) {
+            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
+                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
+                eeIds.add( e.getId() );
+            }
+        }
+        return eeIds;
+    }
+
+    /**
+     * @param p2pClassName
+     * @param optional collection of ExpressionExperiments on which to limit the search.
+     * @param in either "firstVector" or "secondVector"
+     * @param out whatever "a" isn't.
+     * @return
+     */
+    private String getQueryString( String p2pClassName, String in, String out ) {
         String queryStringFirstVector =
         // return values
-        "select distinct coGene.id, coGene.name, coGene.officialName,p2pc.firstVector.expressionExperiment.id, p2pc.firstVector.expressionExperiment.shortName, p2pc.firstVector.expressionExperiment.name"
+        "select distinct coGene.id, coGene.name, coGene.officialName,p2pc."
+                + out
+                + ".expressionExperiment.id, p2pc."
+                + out
+                + ".expressionExperiment.shortName, p2pc."
+                + out
+                + ".expressionExperiment.name"
                 // source tables
                 + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
                 // join table
@@ -294,135 +410,53 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
                 + " where gene.products.id=bs2gp.geneProduct.id "
                 + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
-                + " and coCompositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
+                + " and compositeSequence.designElementDataVectors.id=p2pc." + out + ".id "
+                + " and coCompositeSequence.designElementDataVectors.id=p2pc." + in + ".id "
                 + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
                 + " and coGene.products.id=coBs2gp.geneProduct.id "
                 + " and gene.id = :id and coGene.taxon.id = :taxonId";
 
-        String queryStringSecondVector =
-        // return values
-        "select distinct coGene.id, coGene.name, coGene.officialName,p2pc.secondVector.expressionExperiment.id, p2pc.secondVector.expressionExperiment.shortName, p2pc.secondVector.expressionExperiment.name "
-                // source tables
-                + "from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                // join table
-                + p2pClassName
-                + " as p2pc,"
-                // target tables
-                + "GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
-                + " where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
-                + " and coCompositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
-                + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
-                + " and coGene.products.id=coBs2gp.geneProduct.id "
-                + " and gene.id = :id and coGene.taxon.id = :taxonId";
+        return queryStringFirstVector;
+    }
 
-        // OPTIONAL joins
-        // if there are expressionExperiment arguments
-        Collection<Long> eeIds = new ArrayList<Long>();
-        CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
-        if ( ees.size() > 0 ) {
-            queryStringFirstVector += " and p2pc.firstVector.expressionExperiment.id in (:ees) ";
-            queryStringSecondVector += " and p2pc.secondVector.expressionExperiment.id in (:ees) ";
-            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
-                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
-                eeIds.add( e.getId() );
-            }
+    /**
+     * @param geneMap
+     * @param queryObject
+     */
+    private void processCoexpQueryResults( Map<Long, CoexpressionValueObject> geneMap, org.hibernate.Query queryObject ) {
+        ScrollableResults scroll;
+        // put genes in the geneSet
+        scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( scroll.next() ) {
+            processCoexpQueryResult( geneMap, scroll );
         }
+    }
 
-        try {
-            // do query joining coexpressed genes through the firstVector to the secondVector
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
-            queryObject.setLong( "id", id );
-            // this is to make the query faster by narrowing down the gene join
-            queryObject.setLong( "taxonId", gene.getTaxon().getId() );
-            if ( ees.size() > 0 ) {
-                queryObject.setParameterList( "ees", eeIds );
-            }
-            // queryObject.setInteger( "stringency", stringency );
-
-            // put genes in the geneSet
-            ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( scroll.next() ) {
-                CoexpressionValueObject vo;
-                Long geneId = scroll.getLong( 0 );
-                // check to see if geneId is already in the geneMap
-                if ( geneMap.containsKey( geneId ) ) {
-                    vo = geneMap.get( geneId );
-                } else {
-                    vo = new CoexpressionValueObject();
-                    vo.setGeneId( geneId );
-                    vo.setGeneName( scroll.getString( 1 ) );
-                    vo.setGeneOfficialName( scroll.getString( 2 ) );
-                    geneMap.put( geneId, vo );
-                }
-                // add the expression experiment
-                ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
-                eeVo.setId( scroll.getLong( 3 ).toString() );
-                eeVo.setShortName( scroll.getString( 4 ) );
-                eeVo.setName( scroll.getString( 5 ) );
-                vo.addExpressionExperimentValueObject( eeVo );
-            }
-
-            // do query joining coexpressed genes through the secondVector to the firstVector
-            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
-            queryObject.setLong( "id", id );
-            // this is to make the query faster by narrowing down the gene join
-            queryObject.setLong( "taxonId", gene.getTaxon().getId() );
-            if ( ees.size() > 0 ) {
-                queryObject.setParameterList( "ees", eeIds );
-            }
-
-            // put genes in the geneSet
-            scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( scroll.next() ) {
-                CoexpressionValueObject vo;
-                Long geneId = scroll.getLong( 0 );
-                // check to see if geneId is already in the geneMap
-                if ( geneMap.containsKey( geneId ) ) {
-                    vo = geneMap.get( geneId );
-                } else {
-                    vo = new CoexpressionValueObject();
-                    vo.setGeneId( geneId );
-                    vo.setGeneName( scroll.getString( 1 ) );
-                    vo.setGeneOfficialName( scroll.getString( 2 ) );
-                    geneMap.put( geneId, vo );
-                }
-                // add the expression experiment
-                ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
-                eeVo.setId( scroll.getLong( 3 ).toString() );
-                eeVo.setShortName( scroll.getString( 4 ) );
-                eeVo.setName( scroll.getString( 5 ) );
-                vo.addExpressionExperimentValueObject( eeVo );
-            }
-
-            // add count of original matches to coexpression data
-            coexpressions.setLinkCount( geneMap.size() );
-            // parse out stringency failures
-            Set keys = geneMap.keySet();
-            for ( Object object : keys ) {
-                Long key = ( Long ) object;
-                if ( geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency ) {
-                    // add in coexpressions that match stringency
-                    coexpressions.getCoexpressionData().add( geneMap.get( key ) );
-                    // add in expression experiments that match stringency
-                    Collection eeVos = geneMap.get( key ).getExpressionExperimentValueObjects();
-                    for ( Object o : eeVos ) {
-                        ExpressionExperimentValueObject ee = ( ExpressionExperimentValueObject ) o;
-                        eeMap.put( Long.parseLong( ee.getId() ), ee );
-                    }
-                }
-            }
-            // add count of pruned matches to coexpression data
-            coexpressions.setStringencyLinkCount( coexpressions.getCoexpressionData().size() );
-            // add the distinct set of expression experiments involved
-            // in the query to coexpression data
-            coexpressions.setExpressionExperiments( eeMap.values() );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+    /**
+     * Process a single query result from the coexpression search.
+     * 
+     * @param geneMap
+     * @param scroll
+     */
+    private void processCoexpQueryResult( Map<Long, CoexpressionValueObject> geneMap, ScrollableResults scroll ) {
+        CoexpressionValueObject vo;
+        Long geneId = scroll.getLong( 0 );
+        // check to see if geneId is already in the geneMap
+        if ( geneMap.containsKey( geneId ) ) {
+            vo = geneMap.get( geneId );
+        } else {
+            vo = new CoexpressionValueObject();
+            vo.setGeneId( geneId );
+            vo.setGeneName( scroll.getString( 1 ) );
+            vo.setGeneOfficialName( scroll.getString( 2 ) );
+            geneMap.put( geneId, vo );
         }
-        return coexpressions;
+        // add the expression experiment
+        ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
+        eeVo.setId( scroll.getLong( 3 ).toString() );
+        eeVo.setShortName( scroll.getString( 4 ) );
+        eeVo.setName( scroll.getString( 5 ) );
+        vo.addExpressionExperimentValueObject( eeVo );
     }
 
     /**
@@ -518,20 +552,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     @Override
     protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
-        // TODO Auto-generated method stub
+        // FIXME refactor to use the methods defined above.
         Gene givenG = gene;
         long id = givenG.getId();
 
-        String p2pClassName;
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
-            p2pClassName = "HumanProbeCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
-            p2pClassName = "MouseProbeCoExpressionImpl";
-        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
-            p2pClassName = "RatProbeCoExpressionImpl";
-        else
-            // must be other
-            p2pClassName = "OtherProbeCoExpressionImpl";
+        String p2pClassName = getP2PClassName( givenG );
 
         Map<Long, Collection<Long>> geneEEsMap = new HashMap<Long, Collection<Long>>();
 
@@ -586,10 +611,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 if ( geneEEsMap.containsKey( geneId ) ) {
                     eeIds = geneEEsMap.get( geneId );
                 } else {
-                	eeIds = new HashSet<Long>();
+                    eeIds = new HashSet<Long>();
                     geneEEsMap.put( geneId, eeIds );
                 }
-                eeIds.add(scroll.getLong(1));
+                eeIds.add( scroll.getLong( 1 ) );
             }
 
             // do query joining coexpressed genes through the secondVector to the firstVector
@@ -605,23 +630,40 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 if ( geneEEsMap.containsKey( geneId ) ) {
                     eeIds = geneEEsMap.get( geneId );
                 } else {
-                	eeIds = new HashSet<Long>();
+                    eeIds = new HashSet<Long>();
                     geneEEsMap.put( geneId, eeIds );
                 }
-                eeIds.add(scroll.getLong(1));
+                eeIds.add( scroll.getLong( 1 ) );
             }
             Collection<Long> needToRemove = new HashSet<Long>();
-            for(Long geneId:geneEEsMap.keySet()){
-            	Collection<Long> eeIds = geneEEsMap.get(geneId);
-            	if(eeIds.size() < stringincy)
-            		needToRemove.add(geneId);
+            for ( Long geneId : geneEEsMap.keySet() ) {
+                Collection<Long> eeIds = geneEEsMap.get( geneId );
+                if ( eeIds.size() < stringincy ) needToRemove.add( geneId );
             }
-            for(Long geneId:needToRemove){
-            	geneEEsMap.remove(geneId);
+            for ( Long geneId : needToRemove ) {
+                geneEEsMap.remove( geneId );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
         return geneEEsMap;
+    }
+
+    /**
+     * @param givenG
+     * @return
+     */
+    private String getP2PClassName( Gene givenG ) {
+        String p2pClassName;
+        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
+            p2pClassName = "HumanProbeCoExpressionImpl";
+        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
+            p2pClassName = "MouseProbeCoExpressionImpl";
+        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
+            p2pClassName = "RatProbeCoExpressionImpl";
+        else
+            // must be other
+            p2pClassName = "OtherProbeCoExpressionImpl";
+        return p2pClassName;
     }
 }
