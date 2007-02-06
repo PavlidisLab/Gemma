@@ -252,6 +252,10 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
+                ubic.gemma.expression.experiment.ExpressionExperimentReportService.generateSummaryObjects=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.expression.experiment.ExpressionExperimentReportService.generateSummaryObject=user,admin,ROLE_ANONYMOUS                
+                ubic.gemma.expression.experiment.ExpressionExperimentReportService.getStats=user,admin,ROLE_ANONYMOUS   
+                ubic.gemma.expression.experiment.ExpressionExperimentReportService.retrieveSummaryObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.create=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.findOrCreate=user,admin
@@ -300,7 +304,6 @@
                 ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findAllForMatrix=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.getDesignElementDataVectors=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
