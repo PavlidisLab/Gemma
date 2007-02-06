@@ -312,7 +312,7 @@ public class SearchService {
     protected CompassSearchResults performSearch( String query, CompassSession session ) {
         long time = System.currentTimeMillis();
 
-        assert StringUtils.isBlank( query );
+        assert !StringUtils.isBlank( query );
         CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
 
         CompassHits hits = compassQuery.hits();
