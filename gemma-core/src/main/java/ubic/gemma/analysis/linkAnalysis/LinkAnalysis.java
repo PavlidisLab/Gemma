@@ -198,6 +198,7 @@ public class LinkAnalysis {
     }
 
     /**
+     * FIXME this can probably use newer methods that are faster.
      * @return
      */
     @SuppressWarnings("unchecked")

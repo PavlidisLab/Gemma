@@ -217,6 +217,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
         ExpressionDataDoubleMatrix eeDoubleMatrix = ( ExpressionDataDoubleMatrix ) this.expressionDataMatrixService
                 .getMatrix( ee, qts );
+        
+        if (eeDoubleMatrix.rows() == 0) return "No data found!";
+        
         DoubleMatrixNamed dataMatrix = eeDoubleMatrix.getNamedMatrix();
         dataMatrix = this.filter( dataMatrix, eeDoubleMatrix, ee );
 
