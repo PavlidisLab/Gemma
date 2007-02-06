@@ -241,7 +241,7 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( stringency == null ) {
             stringency = DEFAULT_STRINGENCY;
         } else if ( stringency < 1 ) {
-            stringency = 1;
+            stringency = DEFAULT_STRINGENCY;
         }
         csc.setStringency( stringency );
 
