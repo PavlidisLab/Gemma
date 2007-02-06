@@ -118,6 +118,21 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
     /**
      * @param expressionExperiment
+     * @param quantitationTypes
+     * @return
+     */
+    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
+            Collection<QuantitationType> quantitationTypes ) {
+        Collection<DesignElementDataVector> selected = new HashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        for ( QuantitationType type : quantitationTypes ) {
+            selected.addAll( this.selectVectors( type, vectors ) );
+        }
+        return selected;
+    }
+
+    /**
+     * @param expressionExperiment
      * @param quantitationType
      * @return Collection<DesignElementDataVector>
      */
@@ -178,10 +193,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *                                                             ----------------
-     *                                                             ******              -- only a few samples run on this platform
-     *                                                               **********        -- ditto
-     *                                                                         ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *                                                                 ----------------
+     *                                                                 ******              -- only a few samples run on this platform
+     *                                                                   **********        -- ditto
+     *                                                                             ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -189,10 +204,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                             ----------------
-     *                                                             ****************
-     *                                                             ************
-     *                                                             ********
+     *                                                                 ----------------
+     *                                                                 ****************
+     *                                                                 ************
+     *                                                                 ********
      * </pre>
      * 
      * <p>
@@ -200,8 +215,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                             -----------------
-     *                                                             *****************
+     *                                                                 -----------------
+     *                                                                 *****************
      * </pre>
      * 
      * <p>
@@ -209,9 +224,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                             -----------------
-     *                                                             *****************
-     *                                                             *****************
+     *                                                                 -----------------
+     *                                                                 *****************
+     *                                                                 *****************
      * </pre>
      * 
      * <p>

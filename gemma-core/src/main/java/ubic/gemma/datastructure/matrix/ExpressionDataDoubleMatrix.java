@@ -95,6 +95,13 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( vectorsOfInterest );
     }
 
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
+            Collection<QuantitationType> quantitationTypes ) {
+        init();
+        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationTypes );
+        vectorsToMatrix( vectorsOfInterest );
+    }
+
     /**
      * @param expressionExperiment
      * @param quantitationType

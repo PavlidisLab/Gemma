@@ -188,17 +188,14 @@ public class DesignElementDataVectorDaoImpl extends
      * @return
      * @throws Exception todo: still untested
      */
-    protected Map handleGetGeneCoexpressionPattern( Collection ees, Collection genes )
-            throws Exception {
-        Collection<DesignElementDataVector> vectors = null;
+    protected Map handleGetGeneCoexpressionPattern( Collection ees, Collection genes ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
-        
-        final String queryString =
-            "select distinct dedv, gene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
-            + " where gene.products.id=bs2gp.geneProduct.id and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-            + " and compositeSequence.designElementDataVectors.id=dedv.id and dedv.expressionExperiment.id in (:collectionOfEE) "
-            + " and dedv.quantitationType.isPreferred = true and gene.id in (:collectionOfGenes)";
-        
+
+        final String queryString = "select distinct dedv, gene from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl as dedv"
+                + " where gene.products.id=bs2gp.geneProduct.id and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=dedv.id and dedv.expressionExperiment.id in (:collectionOfEE) "
+                + " and dedv.quantitationType.isPreferred = true and gene.id in (:collectionOfGenes)";
+
         // Need to turn given collections into collections of IDs
         Collection<Long> eeIds = new ArrayList<Long>();
         for ( Object e : ees )
@@ -212,7 +209,7 @@ public class DesignElementDataVectorDaoImpl extends
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "collectionOfEE", eeIds );
             queryObject.setParameterList( "collectionOfGenes", geneIds );
-        
+
             ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( results.next() ) {
                 DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
@@ -233,14 +230,14 @@ public class DesignElementDataVectorDaoImpl extends
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        
+
         return geneMap;
     }
 
     /**
      * Places objects in the collection in a list surrounded by parenthesis and separated by commas. Useful for placing
      * this String representation of the list in a sql "in" statement. ie. "... in stringReturnedFromThisMethod" will
-     * look like "... in (a,b,c)"
+     * look like "... in (a,b,c)" FIXME this isn't necessary for HQL? Can just use list as a parameter?
      * 
      * @param objects
      * @return String

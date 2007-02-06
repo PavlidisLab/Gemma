@@ -19,6 +19,7 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,7 +53,7 @@ public class ExpressionDataMatrixService {
      */
     @SuppressWarnings("unchecked")
     public DoubleMatrixNamed getDoubleNamedMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
-        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
+        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.find( expExp, qt );
         if ( vectors == null || vectors.size() == 0 ) {
             log.warn( "No vectors for " + expExp + " and " + qt );
             return null;
@@ -67,16 +68,16 @@ public class ExpressionDataMatrixService {
      */
     @SuppressWarnings("unchecked")
     public ExpressionDataMatrix getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
-        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
-        if ( vectors == null || vectors.size() == 0 ) {
-            log.warn( "No vectors for " + expExp + " and " + qt );
-            return null;
-        }
-
-        // designElementDataVectorService.thaw(vectors); // FIXME this is needed.
-
         return new ExpressionDataDoubleMatrix( expExp, qt );
+    }
 
+    /**
+     * @param ee
+     * @param qts
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getMatrix( ExpressionExperiment ee, Collection<QuantitationType> qts ) {
+        return new ExpressionDataDoubleMatrix( ee, qts );
     }
 
     /**

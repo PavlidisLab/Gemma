@@ -94,13 +94,13 @@ public class LinkAnalysis {
     /**
      * @return
      */
-    public boolean analysis() {
+    public boolean analyze() {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
         assert this.ppService != null;
         assert this.taxon != null;
         assert this.deService != null;
-        log.info( "Taxon: " + this.taxon.getCommonName() );
+        log.debug( "Taxon: " + this.taxon.getCommonName() );
 
         this.init();
         if ( this.uniqueItems == 0 ) {
@@ -313,6 +313,7 @@ public class LinkAnalysis {
      */
     public void writeDataIntoFile( String paraFileName ) {
         BufferedWriter writer = null;
+        // FIXME : don't use hard-coded paths, use a config file instead.
         try {
             writer = new BufferedWriter( new FileWriter( this.localHome + "/TestResult/" + paraFileName ) );
         } catch ( IOException e ) {

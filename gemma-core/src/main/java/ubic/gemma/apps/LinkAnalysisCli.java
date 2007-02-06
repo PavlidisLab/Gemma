@@ -210,13 +210,13 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("unchecked")
     private String analysis( ExpressionExperiment ee ) {
         eeService.thaw( ee );
-        QuantitationType qt = this.getQuantitationType( ee );
-        if ( qt == null ) return ( "No usable quantitation type in " + ee.getShortName() );
+        Collection<QuantitationType> qts = this.getPreferredQuantitationTypes( ee );
+        if ( qts.size() == 0 ) return ( "No usable quantitation type in " + ee.getShortName() );
 
         log.info( "Load Data for  " + ee.getShortName() );
 
         ExpressionDataDoubleMatrix eeDoubleMatrix = ( ExpressionDataDoubleMatrix ) this.expressionDataMatrixService
-                .getMatrix( ee, qt );
+                .getMatrix( ee, qts );
         DoubleMatrixNamed dataMatrix = eeDoubleMatrix.getNamedMatrix();
         dataMatrix = this.filter( dataMatrix, eeDoubleMatrix, ee );
 
@@ -228,7 +228,11 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             return ( "No enough samples " + ee.getShortName() );
 
         this.linkAnalysis.setDataMatrix( dataMatrix );
-        Collection<DesignElementDataVector> dataVectors = vectorService.findAllForMatrix( ee, qt );
+        
+        /*
+         * FIXME this repeats the query that was just done inside getMatrix -- probably it can be avoided?
+         */
+        Collection<DesignElementDataVector> dataVectors = vectorService.find( ee, qts );
         if ( dataVectors == null ) return ( "No data vector " + ee.getShortName() );
 
         this.linkAnalysis.setDataVector( dataVectors );
@@ -249,8 +253,11 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 .getBean( "probe2ProbeCoexpressionService" );
         ppcs.deleteLinks( ee );
 
+        /*
+         * Start the analysis.
+         */
         log.info( "Starting generating Raw Links for " + ee.getShortName() );
-        if ( this.linkAnalysis.analysis() == true ) {
+        if ( this.linkAnalysis.analyze() == true ) {
             log.info( "Successful Generating Raw Links for " + ee.getShortName() );
         }
 
@@ -315,18 +322,17 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
      * *Use the one with the preferred set to TRUE*****
      */
     @SuppressWarnings("unchecked")
-    private QuantitationType getQuantitationType( ExpressionExperiment ee ) {
-        QuantitationType qtf = null;
+    private Collection<QuantitationType> getPreferredQuantitationTypes( ExpressionExperiment ee ) {
         Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes( ee );
+        Collection<QuantitationType> preferredTypes = new HashSet<QuantitationType>();
         for ( QuantitationType qt : eeQT ) {
             if ( qt.getIsPreferred() ) {
-                qtf = qt;
                 StandardQuantitationType tmpQT = qt.getType();
                 if ( tmpQT != StandardQuantitationType.DERIVEDSIGNAL && tmpQT != StandardQuantitationType.RATIO ) {
-                    log.info( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
+                    log.warn( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
                             + tmpQT.toString() );
                 }
-                break;
+                preferredTypes.add( qt );
             }
             /*
              * StandardQuantitationType tmpQT = qt.getType(); if (tmpQT == StandardQuantitationType.DERIVEDSIGNAL ||
@@ -334,10 +340,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
              * break; }
              */
         }
-        if ( qtf == null ) {
-            log.info( "Expression Experiment " + ee.getShortName() + " doesn't have a preferred quantitation type" );
+        if ( preferredTypes.size() == 0 ) {
+            log.warn( "Expression Experiment " + ee.getShortName() + " doesn't have a preferred quantitation type" );
         }
-        return qtf;
+        return preferredTypes;
     }
 
     @SuppressWarnings("static-access")

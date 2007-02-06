@@ -37,20 +37,23 @@ public class DesignElementDataVectorServiceImpl extends
 
     @Override
     protected void handleUpdate( DesignElementDataVector dedv ) throws Exception {
-       this.getDesignElementDataVectorDao().update( dedv );       
+        this.getDesignElementDataVectorDao().update( dedv );
     }
-    
+
     @Override
     protected void handleUpdate( Collection dedvs ) throws Exception {
-       this.getDesignElementDataVectorDao().update( dedvs );       
+        this.getDesignElementDataVectorDao().update( dedvs );
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGeneCoexpressionPattern(java.util.Collection, java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGeneCoexpressionPattern(java.util.Collection,
+     *      java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
     protected Map handleGetGeneCoexpressionPattern( Collection ees, Collection genes ) throws Exception {
-        return this.getDesignElementDataVectorDao().getGeneCoexpressionPattern(ees,genes);
+        return this.getDesignElementDataVectorDao().getGeneCoexpressionPattern( ees, genes );
     }
 
     @Override
@@ -79,9 +82,9 @@ public class DesignElementDataVectorServiceImpl extends
      *      ubic.gemma.model.expression.designElement.DesignElement)
      */
     @Override
-    protected Collection handleFindAllForMatrix( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType ) throws Exception {
-        return this.getDesignElementDataVectorDao().findAllForMatrix( expressionExperiment, quantitationType );
+    protected Collection handleFind( ExpressionExperiment expressionExperiment, QuantitationType quantitationType )
+            throws Exception {
+        return this.getDesignElementDataVectorDao().find( expressionExperiment, quantitationType );
     }
 
     /*
@@ -144,6 +147,12 @@ public class DesignElementDataVectorServiceImpl extends
     protected void handleRemoveDataForQuantitationType( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) throws Exception {
         this.getDesignElementDataVectorDao().removeDataFromQuantitationType( expressionExperiment, quantitationType );
+    }
+
+    @Override
+    protected Collection handleFind( ExpressionExperiment expressionExperiment, Collection quantitationTypes )
+            throws Exception {
+        return this.getDesignElementDataVectorDao().find( expressionExperiment, quantitationTypes );
     }
 
 }
