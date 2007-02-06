@@ -274,7 +274,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String p2pClassName = getP2PClassName( givenG );
 
         Map<Long, CoexpressionValueObject> geneMap = new HashMap<Long, CoexpressionValueObject>();
-        Map<Long, ExpressionExperimentValueObject> eeMap = new HashMap<Long, ExpressionExperimentValueObject>();
 
         CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
 
@@ -284,7 +283,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             StopWatch watch = new StopWatch();
 
             watch.start();
-
+            log.info( "Starting first query" );
             // do query joining coexpressed genes through the firstVector to the secondVector
             String queryString = getQueryString( p2pClassName, "firstVector", "secondVector" );
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -292,24 +291,31 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
             processCoexpQueryResults( geneMap, queryObject );
 
-            watch.split();
-            Long elapsed = watch.getSplitTime();
+            watch.stop();
+            Long elapsed = watch.getTime();
             coexpressions.setFirstQueryElapsedTime( elapsed );
+            watch.reset();
+            watch.start();
 
+            log.info( "Starting second query" );
             queryString = getQueryString( p2pClassName, "secondVector", "firstVector" );
             queryObject = setCoexpQueryParameters( gene, ees, id, eeIds, queryString );
             processCoexpQueryResults( geneMap, queryObject );
 
-            watch.split();
-            elapsed = watch.getSplitTime();
+            watch.stop();
             coexpressions.setSecondQueryElapsedTime( elapsed );
 
-            collectMapInfo( stringency, geneMap, eeMap, coexpressions );
+            elapsed = watch.getTime();
+            watch.reset();
+            watch.start();
 
-            watch.split();
-            elapsed = watch.getSplitTime();
+            log.info( "Starting postprocessing" );
+            collectMapInfo( stringency, geneMap, coexpressions );
+
+            watch.stop();
+            elapsed = watch.getTime();
             coexpressions.setPostProcessTime( elapsed );
-
+            log.info( "Done postprocessing" );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -319,33 +325,30 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /**
      * @param stringency
      * @param geneMap
-     * @param eeMap
      * @param coexpressions
      */
+    @SuppressWarnings("unchecked")
     private void collectMapInfo( Integer stringency, Map<Long, CoexpressionValueObject> geneMap,
-            Map<Long, ExpressionExperimentValueObject> eeMap, CoexpressionCollectionValueObject coexpressions ) {
+            CoexpressionCollectionValueObject coexpressions ) {
+        Collection<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
         // add count of original matches to coexpression data
         coexpressions.setLinkCount( geneMap.size() );
         // parse out stringency failures
-        Set keys = geneMap.keySet();
-        for ( Object object : keys ) {
-            Long key = ( Long ) object;
-            if ( geneMap.get( key ).getExpressionExperimentValueObjects().size() >= stringency ) {
+        for ( Long key : geneMap.keySet() ) {
+            CoexpressionValueObject v = geneMap.get( key );
+            if ( v.getExpressionExperimentValueObjects().size() >= stringency ) {
                 // add in coexpressions that match stringency
-                coexpressions.getCoexpressionData().add( geneMap.get( key ) );
+                coexpressions.getCoexpressionData().add( v );
                 // add in expression experiments that match stringency
-                Collection eeVos = geneMap.get( key ).getExpressionExperimentValueObjects();
-                for ( Object o : eeVos ) {
-                    ExpressionExperimentValueObject ee = ( ExpressionExperimentValueObject ) o;
-                    eeMap.put( Long.parseLong( ee.getId() ), ee );
-                }
+                ees.addAll( v.getExpressionExperimentValueObjects() );
+
             }
         }
         // add count of pruned matches to coexpression data
         coexpressions.setStringencyLinkCount( coexpressions.getCoexpressionData().size() );
         // add the distinct set of expression experiments involved
         // in the query to coexpression data
-        coexpressions.setExpressionExperiments( eeMap.values() );
+        coexpressions.setExpressionExperiments( ees );
     }
 
     /**
@@ -424,9 +427,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param queryObject
      */
     private void processCoexpQueryResults( Map<Long, CoexpressionValueObject> geneMap, org.hibernate.Query queryObject ) {
-        ScrollableResults scroll;
-        // put genes in the geneSet
-        scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( scroll.next() ) {
             processCoexpQueryResult( geneMap, scroll );
         }
@@ -650,7 +651,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * 
      * @param givenG
      * @return
      */

@@ -295,9 +295,7 @@ public class CoexpressionSearchController extends BaseFormController {
         nf.setMaximumFractionDigits( 2 );
         saveMessage( request, nf.format( coexpressions.getFirstQuerySeconds() + coexpressions.getSecondQuerySeconds()
                 + coexpressions.getPostProcessSeconds() )
-                + " seconds elapsed ("
-                + nf.format( coexpressions.getFirstQuerySeconds() + coexpressions.getSecondQuerySeconds() )
-                + " query, " + nf.format( coexpressions.getPostProcessSeconds() ) + " postprocess)" );
+                + " seconds elapsed" );
     }
 
     /**

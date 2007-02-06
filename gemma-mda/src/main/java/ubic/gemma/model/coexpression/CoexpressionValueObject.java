@@ -2,7 +2,6 @@ package ubic.gemma.model.coexpression;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
