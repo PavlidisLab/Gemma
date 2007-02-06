@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -273,9 +274,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param out
      * @return
      */
-    private String getNativeQueryString( String p2pClassName, String in, String out ) {
+    private String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
         String inKey = in.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
+        String eeClause = "";
+        if (eeIds.size() > 0) {
+            eeClause += " dedvin.EXPRESSION_EXPERIMENT_FK in (";
+            eeClause += StringUtils.join( eeIds.iterator(), "," );
+            eeClause += ") ";
+        }
 
         String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name  FROM DESIGN_ELEMENT_DATA_VECTOR "
@@ -283,14 +290,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + outKey
                 + " AS ID FROM   GENE2CS gc,  DESIGN_ELEMENT_DATA_VECTOR dedvin, "
                 + getP2PTableNameForClassName( p2pClassName )
-                + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
+                + " coexp WHERE " + eeClause + " AND gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
                 + inKey
                 + "=dedvin.ID)"
                 + " AS outers ON dedvout.ID=outers.ID "
                 + " INNER JOIN COMPOSITE_SEQUENCE cs2 ON cs2.ID=dedvout.DESIGN_ELEMENT_FK"
-                + " INNER JOIN BIO_SEQUENCE2_GENE_PRODUCT bsgp2 ON cs2.BIOLOGICAL_CHARACTERISTIC_FK=bsgp2.BIO_SEQUENCE_FK"
-                + " INNER JOIN CHROMOSOME_FEATURE gprodout ON gprodout.ID=bsgp2.GENE_PRODUCT_FK"
-                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gprodout.GENE_FK"
+                + " INNER JOIN GENE2CS gcout ON gcout.CS=cs2.ID"
+                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE"
                 + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=dedvout.EXPRESSION_EXPERIMENT_FK"
                 + " INNER JOIN INVESTIGATION inv ON ee.ID=inv.ID";
 
@@ -344,7 +350,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param queryString
      * @return
      */
-    private org.hibernate.Query setCoexpQueryParameters( Gene gene, Collection ees, long id, Collection<Long> eeIds,
+    private org.hibernate.Query setCoexpQueryParameters( Gene gene, long id, 
             String queryString ) {
         // org.hibernate.Query queryObject;
         org.hibernate.SQLQuery queryObject;
@@ -362,10 +368,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // this is to make the query faster by narrowing down the gene join
         // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
 
-        if ( ees.size() > 0 ) {
-            // queryObject.setParameterList( "ees", eeIds );
-            throw new UnsupportedOperationException( "Queries with restrictions on EEs not supported yet" );
-        }
         return queryObject;
     }
 
@@ -574,8 +576,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             watch.start();
             log.info( "Starting first query" );
             // do query joining coexpressed genes through the firstVector to the secondVector
-            String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector" );
-            org.hibernate.Query queryObject = setCoexpQueryParameters( gene, ees, id, eeIds, queryString );
+            // eeIds is an argument because the native SQL query needs to be built with the knowledge
+            // of the number of expressionExperimentId arguments.
+            String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
+            org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
             processCoexpQueryResults( geneMap, queryObject );
 
             watch.stop();
@@ -585,8 +589,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             watch.start();
 
             log.info( "Starting second query" );
-            queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector" );
-            queryObject = setCoexpQueryParameters( gene, ees, id, eeIds, queryString );
+            queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
+            queryObject = setCoexpQueryParameters( gene, id, queryString );
             processCoexpQueryResults( geneMap, queryObject );
 
             watch.stop();
