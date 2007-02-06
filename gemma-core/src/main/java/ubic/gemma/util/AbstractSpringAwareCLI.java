@@ -18,6 +18,12 @@
  */
 package ubic.gemma.util;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +44,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     protected BeanFactory ctx = null;
     PersisterHelper ph = null;
+    protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
 
     @Override
     protected void buildStandardOptions() {
@@ -50,6 +57,36 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         CompassUtils.deleteCompassLocks();
 
+    }
+
+    /**
+     * @param fileName
+     * @return Given a file name returns a collection of strings.
+     *  Each string represents one line of the file
+     */
+    protected Collection<String> processFile( String fileName ) {
+
+        Collection<String> lines = new ArrayList<String>();
+        int lineNumber = 0;
+        try {
+
+            InputStream is = new FileInputStream( fileName );
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+            String line = null;
+
+            while ( ( line = br.readLine() ) != null ) {
+                lineNumber++;
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+                lines.add( line.trim().toUpperCase() );
+            }
+        } catch ( IOException ioe ) {
+            log.error( "At line: " + lineNumber + " an error occured processing " + fileName + ". \n Error is: " + ioe );
+        }
+        
+        return lines;
     }
 
     /**
@@ -160,6 +197,25 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             }
             buf.append( "---------------------\n" );
             log.error( buf );
+        }
+    }
+    
+    /**
+     * @param e
+     * Adds an exception to a cache.  this is usefull in the scenairo where we don't want the CLI to bomb on the exception
+     * but continue with its processing.  Granted if the exception is fatal then the CLI should terminate regardless.
+     * 
+     */
+    protected void cacheException(Exception e){
+        exceptionCache.add( e );
+    }
+    
+    
+    protected void printExceptions(){
+        log.info( "Displaying cached error messages: " );
+        
+        for (Exception e: exceptionCache){
+            log.info( e );
         }
     }
 

@@ -19,40 +19,74 @@
 
 package ubic.gemma.apps;
 
-import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Given an array design creates a Gene Ontology Annotation file
- * <p>
+ * 
  * 
  * @author klc
  */
 
 public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
+    private static final int DEFAULT_STRINGINCY = 1;
+    // Used Services
+    ExpressionExperimentService eeS;
+    GeneService geneS;
+    TaxonService taxonS;
+
+    Collection<ExpressionExperiment> toUseEE;
+    Collection<Gene> toUseGenes;
+    Taxon toUseTaxon;
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
 
-        Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" ).withDescription(
-                "Optional: The name of the Annotation file to be generated" ).withLongOpt( "annotation" ).create( 'f' );
+        Option geneFileOption = OptionBuilder.hasArg().withArgName( "Gene List File Name" ).withDescription(
+                "A text file that contains a list of gene symbols.  a new gene symbon on each line" ).withLongOpt( "geneFile" ).create( 'g' );
 
-        addOption( annotationFileOption );
+        Option expExperimentFileOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Expression Experiment List File Name" )
+                .withDescription(
+                        "A text file that contains a list of expression experiments. Each line of the file contains the short name or the name of the expressionExperiment" )
+                .withLongOpt( "eeFile" ).create( 'e' );
+
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription( "The taxon to use" )
+                .withLongOpt( "taxon.  Use the common name." ).create( 't' );
+
+        geneFileOption.setRequired( true );
+        expExperimentFileOption.setRequired( true );
+        taxonOption.setRequired( true );
+
+        addOption( geneFileOption );
+        addOption( expExperimentFileOption );
+        addOption( taxonOption );
 
     }
 
     public static void main( String[] args ) {
-        ArrayDesignGOAnnotationGeneratorCli p = new ArrayDesignGOAnnotationGeneratorCli();
+        Gene2GeneCoexpressionGeneratorCli p = new Gene2GeneCoexpressionGeneratorCli();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -73,19 +107,107 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "Gene 2 Gene Coexpression Caching tool ", args );
         if ( err != null ) return err;
 
+        Collection processedGenes = new HashSet<Gene>();
+        
+        for (Gene gene : toUseGenes){
+            
+            CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneS
+            .getCoexpressedGenes( gene, toUseEE, DEFAULT_STRINGINCY );
+            
+            //persist(coexpressions,processedGenes);
+            
+            
+            processedGenes.add(gene);
+        }
+        
+        
         return null;
     }
 
     /**
-     * @throws IOException process the current AD
+     * 
      */
 
     protected void processOptions() {
+        
+        
+
         super.processOptions();
 
-        if ( this.hasOption( 'f' ) ) {
-            // this.fileName = this.getOptionValue( 'f' );
+        initSpringBeans();
+        initAttributes();
+        
+        if ( this.hasOption( 't' ) ) {
+            toUseTaxon = taxonS.findByCommonName( this.getOptionValue( 't' ) );
+        } 
+        
+        if ( this.hasOption( 'e' ) ) {
+            processEEFile( this.getOptionValue( 'e' ) );
         }
+
+        if ( this.hasOption( 'g' ) ) {
+            processGeneFile( this.getOptionValue( 'g' ) );
+        }
+
+       
+
+        
+        
+    }
+
+    private void processEEFile( String fileName ) {
+
+        Collection<String> eeIds = processFile( fileName );
+
+        for ( String id : eeIds ) {
+            ExpressionExperiment ee = eeS.findByName( id );
+
+            if ( ee == null ) ee = eeS.findByShortName( id );
+
+            if ( ee == null ) {
+                log.info( "Couldn't find Expression Experiment: " + id );
+                continue;
+            }
+
+            toUseEE.add( ee );
+        }
+
+    }
+
+    private void processGeneFile( String fileName ) {
+
+        Collection<String> geneIds = processFile( fileName );
+
+        for ( String id : geneIds ) {
+
+            Collection<Gene> genes = geneS.findByOfficialSymbol( id );
+
+            if ( ( genes == null ) || ( genes.isEmpty() ) ) genes = geneS.findByOfficialName( id );
+
+            // What to do with a search results that returns more than one gene?
+            for ( Gene g : genes ) {
+
+                if ( !toUseTaxon.equals( g.getTaxon() ) ) continue;
+
+                toUseGenes.add( g );
+                log.info( "Gene " + g.getOfficialSymbol() + " with id: " + g.getId() + " added to processing list " );
+
+            }
+        }
+    }
+
+    private void initSpringBeans() {
+
+        geneS = ( GeneService ) this.getBean( "geneService" );
+        eeS = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        taxonS = ( TaxonService ) this.getBean( "taxonService" );
+        
+
+    }
+
+    private void initAttributes() {
+        toUseEE = new HashSet<ExpressionExperiment>();
+        toUseGenes = new HashSet<Gene>();
     }
 
 }
