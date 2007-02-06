@@ -12,7 +12,6 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -94,12 +93,10 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getCoexpressionLink(CoexpressionValueObject object, String innerHTML) {
         StringBuffer link = new StringBuffer();
         Collection<String> paramList = new ArrayList<String>();
-        Collection<String> excludeList = new ArrayList<String>();
-        // exclude the submit, searchString, and exactSearch params
-        excludeList.add( "submit" );
-        excludeList.add( "searchString" );
-        excludeList.add( "exactSearch" );
-        extractParameters( paramList, excludeList );
+        Collection<String> includeList = new ArrayList<String>();
+        // include just taxon params
+        includeList.add( "taxon" );
+        extractParameters( paramList, includeList );
         // add in the current gene with exactSearch
         paramList.add( "searchString=" + object.getGeneName() );
         paramList.add( "exactSearch=on" );
@@ -131,7 +128,7 @@ public class CoexpressionWrapper extends TableDecorator {
         Set params = this.getPageContext().getRequest().getParameterMap().entrySet();
         for ( Object param : params ) {
             Map.Entry entry =  (Map.Entry) param;
-            if (isInExcludeList( excludeList, entry )) {
+            if (!isInIncludeList( excludeList, entry )) {
                 continue;
             }
             String[] values = (String[]) entry.getValue();
@@ -152,6 +149,21 @@ public class CoexpressionWrapper extends TableDecorator {
     private boolean isInExcludeList( Collection<String> excludeList, Map.Entry entry ) {
         for ( String exclude : excludeList ) {
             if ( ((String)entry.getKey()).equals( exclude ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Helper function. Checks to see if the entry is in the given include list
+     * @param excludeList
+     * @param entry
+     * @return
+     */
+    private boolean isInIncludeList( Collection<String> includeList, Map.Entry entry ) {
+        for ( String include : includeList ) {
+            if ( ((String)entry.getKey()).equals( include ) ) {
                 return true;
             }
         }
