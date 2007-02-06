@@ -281,7 +281,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if (eeIds.size() > 0) {
             eeClause += " dedvin.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
-            eeClause += ") ";
+            eeClause += ") AND ";
         }
 
         String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
@@ -290,7 +290,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + outKey
                 + " AS ID FROM   GENE2CS gc,  DESIGN_ELEMENT_DATA_VECTOR dedvin, "
                 + getP2PTableNameForClassName( p2pClassName )
-                + " coexp WHERE " + eeClause + " AND gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
+                + " coexp WHERE " + eeClause + " gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
                 + inKey
                 + "=dedvin.ID)"
                 + " AS outers ON dedvout.ID=outers.ID "
