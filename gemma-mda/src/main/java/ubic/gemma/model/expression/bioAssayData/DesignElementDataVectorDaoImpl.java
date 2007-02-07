@@ -183,7 +183,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     /**
      * @param genes
-     * @param ees
+     * @param expressionExperimentService
      * @param qt
      * @return
      * @throws Exception todo: still untested
