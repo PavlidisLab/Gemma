@@ -28,6 +28,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -102,6 +103,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
     private HashMap<DesignElement, DoubleArrayList> rankData = new HashMap<DesignElement, DoubleArrayList>();
     private DesignElementDataVectorService devService = null;
     private ExpressionExperimentService eeService = null;
+    private boolean PRESENTPERCENTAGE = false;
 
     protected void processOptions() {
         super.processOptions();
@@ -123,12 +125,25 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         Option OutOption = OptionBuilder.hasArg().isRequired().withArgName( "outputFile" ).withDescription(
                 "The name of the file to save the output " ).withLongOpt( "outputFile" ).create( 'o' );
         addOption( OutOption );
-
+        if ( hasOption( 'm' ) ) {
+            this.PRESENTPERCENTAGE = true;
+        }
     }
 
     private QuantitationType getQuantitationType( ExpressionExperiment ee ) {
         QuantitationType qtf = null;
         Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes( ee );
+        if(this.PRESENTPERCENTAGE){
+        	for ( QuantitationType qt : eeQT ) 
+        		if(qt.getType() == StandardQuantitationType.PRESENTABSENT){
+        			qtf = qt;
+        			break;
+        		}
+        	if(qtf == null){
+        		log.info( "Expression Experiment " + ee.getShortName() + " doesn't have a presentabsent call" );
+        	}
+        	return qtf;
+        }
         for ( QuantitationType qt : eeQT ) {
             if ( qt.getIsPreferred() ) {
                 qtf = qt;
@@ -145,7 +160,36 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         }
         return qtf;
     }
+    String processEEForPercentage(ExpressionExperiment ee){
+        eeService.thaw( ee );
+        QuantitationType qt = this.getQuantitationType( ee );
+        if ( qt == null ) return ( "No usable quantitation type in " + ee.getShortName() );
+        log.info( "Load Data for  " + ee.getShortName() );
 
+        Collection<DesignElementDataVector> dataVectors = devService.find( ee, qt );
+        if ( dataVectors == null ) return ( "No data vector " + ee.getShortName() );
+        ByteArrayConverter bac = new ByteArrayConverter();
+        
+        for(DesignElementDataVector vector:dataVectors){
+        	DesignElement de = vector.getDesignElement();
+        	DoubleArrayList rankList = this.rankData.get(de);
+        	if(rankList == null){
+        		//return (" EE data vectors don't match array design for probe " + de.getName());
+        		continue;
+        	}
+            byte[] bytes = vector.getData();
+            //String vals = bac.byteArrayToAsciiString( bytes );
+            char [] chars = bac.byteArrayToChars(bytes);
+            double presents = 0;
+            double total = 0;
+            for(int i = 0; i < chars.length; i++){
+            	if(chars[i] == 'P') presents++;
+            	if(chars[i] != '\t') total++;
+            }
+       		rankList.add(presents/total);
+        }
+        return null;
+	}
     @SuppressWarnings("unchecked")
     String processEE( ExpressionExperiment ee ) {
         eeService.thaw( ee );
@@ -222,15 +266,18 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         Collection<ExpressionExperiment> relatedEEs = adService.getExpressionExperiments( arrayDesign );
 
         for ( ExpressionExperiment ee : relatedEEs ) {
-            System.err.println( ee.getName() );
-            this.processEE( ee );
+        	System.err.println(ee.getName());
+        	if(this.PRESENTPERCENTAGE)
+        		this.processEEForPercentage(ee);
+        	else
+        		this.processEE(ee);
         }
         ObjectArrayList sortedList = new ObjectArrayList();
         for ( DesignElement de : this.rankData.keySet() ) {
             DoubleArrayList rankList = this.rankData.get( de );
             if ( rankList.size() > 0 ) {
                 SortedElement oneElement = new SortedElement( de, getStatValue( rankList, MIN ), getStatValue(
-                        rankList, MAX ), getStatValue( rankList, MEAN ), getStatValue( rankList, MIN ), getStatValue(
+                        rankList, MAX ), getStatValue( rankList, MEAN ), getStatValue( rankList, MEDIAN ), getStatValue(
                         rankList, STD ) );
                 sortedList.add( oneElement );
             } else {
