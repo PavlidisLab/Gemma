@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -287,10 +288,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE, coexp.SCORE  FROM DESIGN_ELEMENT_DATA_VECTOR "
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, outers.PVALUE as pvalue, outers.SCORE as score  FROM DESIGN_ELEMENT_DATA_VECTOR "
                 + "dedvout INNER JOIN (SELECT coexp."
                 + outKey
-                + " AS ID FROM   GENE2CS gc,  DESIGN_ELEMENT_DATA_VECTOR dedvin, "
+                + " AS ID, coexp.PVALUE as PVALUE, coexp.SCORE as SCORE FROM   GENE2CS gc,  DESIGN_ELEMENT_DATA_VECTOR dedvin, "
                 + p2pClass
                 + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
                 + inKey
@@ -367,7 +368,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "exper", new LongType() );
         queryObject.addScalar( "shortName", new StringType() );
         queryObject.addScalar( "name", new StringType() );
-
+        queryObject.addScalar( "pvalue", new DoubleType() );
+        queryObject.addScalar( "score", new DoubleType() );
+        
         queryObject.setLong( "id", id );
         // this is to make the query faster by narrowing down the gene join
         // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
@@ -565,7 +568,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
         Gene givenG = gene;
         long id = givenG.getId();
-
+        log.info( "Gene: " + gene.getName() );
+        
         String p2pClassName = getP2PClassName( givenG );
 
         Map<Long, CoexpressionValueObject> geneMap = new HashMap<Long, CoexpressionValueObject>();
@@ -590,8 +594,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             Long elapsed = watch.getTime();
             coexpressions.setFirstQueryElapsedTime( elapsed );
             watch.reset();
+            log.info( "Elapsed time for first query: "  + elapsed );
+            
             watch.start();
-
             log.info( "Starting second query" );
             queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
             queryObject = setCoexpQueryParameters( gene, id, queryString );
@@ -601,6 +606,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coexpressions.setSecondQueryElapsedTime( elapsed );
 
             elapsed = watch.getTime();
+            log.info( "Elapsed time for second query: "  + elapsed );            
             watch.reset();
             watch.start();
 
@@ -611,6 +617,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             elapsed = watch.getTime();
             coexpressions.setPostProcessTime( elapsed );
             log.info( "Done postprocessing" );
+            log.info( "Elapsed time for postprocessing: "  + elapsed );  
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
