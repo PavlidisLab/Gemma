@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
@@ -248,6 +249,9 @@ public class CoexpressionSearchController extends BaseFormController {
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
                 .getCoexpressedGenes( sourceGene, ees, stringency );
 
+        StopWatch watch = new StopWatch();
+
+        watch.start();
         // get all the coexpressed genes and sort them by dataset count
         ArrayList<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
         coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
@@ -286,7 +290,9 @@ public class CoexpressionSearchController extends BaseFormController {
         mav.addObject( "sourceGene", sourceGene );
         mav.addObject( "expressionExperiments", eeVos );
         mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
-
+        Long elapsed = watch.getTime();
+        watch.stop();
+        log.info( "Processing after DAO call (elapsed time): " + elapsed );
         return mav;
     }
 
