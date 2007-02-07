@@ -29,6 +29,9 @@ public class CoexpressionValueObject {
     private String geneName;
     private Long geneId;
     private String geneOfficialName;
+    private Double pValue;
+    private Double score;
+    
     private Map<Long,ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
     public CoexpressionValueObject() {
@@ -39,7 +42,7 @@ public class CoexpressionValueObject {
     }
     
     /**
-     * @return the expressionExperimentValueObjects
+     * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene 
      */
     public Collection getExpressionExperimentValueObjects() {
         return expressionExperimentValueObjects.values();
@@ -86,6 +89,22 @@ public class CoexpressionValueObject {
      */
     public void setGeneOfficialName( String geneOfficialName ) {
         this.geneOfficialName = geneOfficialName;
+    }
+
+    public Double getPValue() {
+        return pValue;
+    }
+
+    public void setPValue( Double value ) {
+        pValue = value;
+    }
+
+    public Double getScore() {
+        return score;
+    }
+
+    public void setScore( Double score ) {
+        this.score = score;
     }
 
 }

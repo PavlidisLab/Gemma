@@ -16,6 +16,8 @@
  * limitations under the License.
  *
  */
+
+
 package ubic.gemma.model.coexpression;
 
 import java.util.Collection;
@@ -24,13 +26,14 @@ import java.util.HashSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
- * @author pavlidis
- * @version $Id$
+ * 
+ * @author klc
+ *
  */
 public class CoexpressionCollectionValueObject {
     private int linkCount;
     private int stringencyLinkCount;
-    private Collection<ExpressionExperimentValueObject> expressionExperiments;
+    private Collection<ExpressionExperimentValueObject> expressionExperiments;  
     private Collection<CoexpressionValueObject> coexpressionData;
     private double firstQuerySeconds;
     private double secondQuerySeconds;
@@ -86,7 +89,7 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the expressionExperiments
+     * @return the expressionExperiments that were searched for coexpression
      */
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         return expressionExperiments;
