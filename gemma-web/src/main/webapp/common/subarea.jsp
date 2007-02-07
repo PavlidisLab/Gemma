@@ -21,7 +21,7 @@
 <p class="line">
 	<strong>We're in an beta-release stage</strong>, so use the site at
 	your own risk. We're very interested in your
-	<a href="mailto:gemma@ubic.ca">feedback</a>. More information about the
+	<a href="mailto:gemma@bioinformatics.ubc.ca">feedback</a>. More information about the
 	project is available
 	<a href="<c:url value="/static/about.html"/>">here</a>, or help with
 	analysis is
