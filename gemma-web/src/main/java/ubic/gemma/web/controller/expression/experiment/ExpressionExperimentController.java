@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.security.SecurityUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -268,7 +270,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Datasets" );
-            expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
+            // TODO refactor this and make more generic (that is, turning securable objects into value objects).
+            // I did this because I need to go through security.
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+            // expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
         }
 
         // if ids are specified, then display only those expressionExperiments
@@ -281,7 +288,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                     ids.add( new Long( idList[i] ) );
                 }
             }
-            expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+            // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new StringComparator() {
@@ -301,6 +311,26 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * Get the expression experiment value objects for the expression experiments.
+     * 
+     * @param eeCol
+     * @return Collection<ExpressionExperimentValueObject>
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
+            Collection<ExpressionExperiment> eeCol ) {
+
+        log.debug( SecurityUtil.getPrincipal() );
+        if ( eeCol == null ) eeCol = expressionExperimentService.loadAll();
+        // FIXME use the ee, not the id
+        Collection ids = new LinkedHashSet();
+        for ( ExpressionExperiment ee : eeCol ) {
+            ids.add( ee.getId() );
+        }
+        return expressionExperimentService.loadValueObjects( ids );
+    }
+
+    /**
      * @param request
      * @param response
      * @return ModelAndView
@@ -314,7 +344,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Datasets" );
-            expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+            // expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
         }
 
         // if ids are specified, then display only those expressionExperiments
@@ -327,7 +360,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                     ids.add( new Long( idList[i] ) );
                 }
             }
-            expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+            // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
 
         // load cached data
