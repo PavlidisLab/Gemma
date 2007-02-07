@@ -27,20 +27,23 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.Securable;
+import ubic.gemma.model.common.SecurableDao;
 
 /**
  * @author keshav
  * @version $Id$
  * @spring.bean name="securityService"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
+ * @spring.property name="securableDao" ref="securableDao"
  */
 public class SecurityService {
     private Log log = LogFactory.getLog( SecurityService.class );
 
     private BasicAclExtendedDao basicAclExtendedDao = null;
+    private SecurableDao securableDao = null;
 
     private final int PUBLIC_MASK = 6;
-    private final int PRIVATE_MASK = 1;
+    private final int PRIVATE_MASK = 0;
 
     /**
      * Changes the acl_permission of the object to either administrator/PUBLIC (mask=1), or read-write/PRIVATE (mask=6).
@@ -52,16 +55,30 @@ public class SecurityService {
         log.debug( "Changing acl of object " + object + "." );
 
         if ( mask != PUBLIC_MASK && mask != PRIVATE_MASK ) {
-            throw new RuntimeException( "Supported masks are 1 (PUBLIC) and 6 (PRIVATE)." );
+            throw new RuntimeException( "Supported masks are 0 (PRIVATE) and 6 (PUBLIC)." );
         }
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
         Authentication authentication = securityCtx.getAuthentication();
         Object recipient = authentication.getPrincipal();
 
+        Authentication runAsAuthentication = null;
         if ( object instanceof Securable ) {
 
             try {
+                Securable securedObject = ( Securable ) object;
+                Long id = securedObject.getId();
+                String jdbcRecipient = securableDao.getRecipient( id );
+                // TODO can you use the runAsManager to run as this jdbc recipient?
+                // if ( !persistentRecipient.equals( recipient.toString() ) ) {
+                // RunAsManager runAsManager = new RunAsManagerImpl();
+                //
+                // ConfigAttributeDefinition attributeDefinition = new ConfigAttributeDefinition();
+                // attributeDefinition.addConfigAttribute( new SecurityConfig( jdbcRecipient ) );
+                // runAsAuthentication = runAsManager.buildRunAs( authentication, object, attributeDefinition );
+                // recipient = runAsAuthentication.getPrincipal();
+                //
+                // }
                 basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
             } catch ( Exception e ) {
                 throw new RuntimeException( "Problems changing mask of " + object, e );
@@ -80,6 +97,13 @@ public class SecurityService {
      */
     public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
         this.basicAclExtendedDao = basicAclExtendedDao;
+    }
+
+    /**
+     * @param securableDao the securableDao to set
+     */
+    public void setSecurableDao( SecurableDao securableDao ) {
+        this.securableDao = securableDao;
     }
 
 }
