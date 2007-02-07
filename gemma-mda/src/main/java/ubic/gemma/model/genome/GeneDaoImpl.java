@@ -284,13 +284,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             eeClause += ") AND ";
         }
 
+        
+        String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name  FROM DESIGN_ELEMENT_DATA_VECTOR "
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE, coexp.SCORE  FROM DESIGN_ELEMENT_DATA_VECTOR "
                 + "dedvout INNER JOIN (SELECT coexp."
                 + outKey
                 + " AS ID FROM   GENE2CS gc,  DESIGN_ELEMENT_DATA_VECTOR dedvin, "
-                + getP2PTableNameForClassName( p2pClassName )
-                + " coexp WHERE " + eeClause + " gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
+                + p2pClass
+                + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
                 + inKey
                 + "=dedvin.ID)"
                 + " AS outers ON dedvout.ID=outers.ID "
@@ -320,6 +322,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             vo.setGeneId( geneId );
             vo.setGeneName( scroll.getString( 1 ) );
             vo.setGeneOfficialName( scroll.getString( 2 ) );
+            vo.setPValue( scroll.getDouble( 6 ));
+            vo.setScore( scroll.getDouble( 7 ));
             geneMap.put( geneId, vo );
         }
         // add the expression experiment
@@ -554,7 +558,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param gene to use as the query
      * @param ees Data sets to restrict the search to.
      * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
-     * @return Collection
+     * @return Collection of CoexpressionCollectionValueObjects
      */
     @SuppressWarnings("unchecked")
     @Override
