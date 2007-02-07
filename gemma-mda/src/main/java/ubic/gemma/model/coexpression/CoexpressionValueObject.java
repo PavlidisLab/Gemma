@@ -29,9 +29,10 @@ public class CoexpressionValueObject {
     private String geneName;
     private Long geneId;
     private String geneOfficialName;
+
     private Double pValue;
     private Double score;
-    
+    // the expression experiments that this coexpression was involved in
     private Map<Long,ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
     public CoexpressionValueObject() {
