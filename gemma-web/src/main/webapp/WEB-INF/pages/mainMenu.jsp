@@ -38,8 +38,11 @@
 	<c:forEach var="taxon" items="${ taxonCount }">
 		<tr>
 			<td>
-				&emsp;
-				<c:out value="${ taxon.key}" />
+				&emsp;			
+				<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />">
+					<c:out value="${ taxon.key.scientificName}" />
+				</a>
+				
 			</td>
 			<td align="right">
 				<c:out value="${ taxon.value}" />
