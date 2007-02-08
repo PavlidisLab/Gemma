@@ -32,11 +32,33 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      */
     public String getRecipient( Long id ) {
 
-        String queryString = "SELECT recipient FROM acl_permission where id= " + id;
+        String queryString = "SELECT recipient FROM acl_permission WHERE id= " + id;
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
             return ( String ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.SecurableDaoBase#getAclObjectIdentityId(java.lang.Object, java.lang.Long)
+     */
+    public Long getAclObjectIdentityId( Object target, Long id ) {
+
+        String objectId = target.getClass().getName() + ":" + id;
+
+        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity=\'" + objectId + "\'";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            Integer result = ( Integer ) queryObject.uniqueResult();
+            Long longId = new Long( result );
+
+            return longId;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
