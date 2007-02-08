@@ -18,11 +18,8 @@
  */
 package ubic.gemma.security;
 
-import org.acegisecurity.Authentication;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,26 +55,33 @@ public class SecurityService {
             throw new RuntimeException( "Supported masks are 0 (PRIVATE) and 6 (PUBLIC)." );
         }
 
-        SecurityContext securityCtx = SecurityContextHolder.getContext();
-        Authentication authentication = securityCtx.getAuthentication();
-        Object recipient = authentication.getPrincipal();
+        // TODO add me again
+        // SecurityContext securityCtx = SecurityContextHolder.getContext();
+        // Authentication authentication = securityCtx.getAuthentication();
+        // Object principal = authentication.getPrincipal();
 
-        Authentication runAsAuthentication = null;
+        // Authentication runAsAuthentication = null;
         if ( object instanceof Securable ) {
 
             try {
                 Securable securedObject = ( Securable ) object;
+                /* id of target object */
                 Long id = securedObject.getId();
-                String jdbcRecipient = securableDao.getRecipient( id );
+
+                /* id of acl_object_identity */
+                Long objectIdentityId = securableDao.getAclObjectIdentityId( object, id );
+                String recipient = securableDao.getRecipient( objectIdentityId );
+
                 // TODO can you use the runAsManager to run as this jdbc recipient?
-                // if ( !persistentRecipient.equals( recipient.toString() ) ) {
+                // if ( !recipient.equals( principal.toString() ) ) {
                 // RunAsManager runAsManager = new RunAsManagerImpl();
-                //
                 // ConfigAttributeDefinition attributeDefinition = new ConfigAttributeDefinition();
-                // attributeDefinition.addConfigAttribute( new SecurityConfig( jdbcRecipient ) );
+                // attributeDefinition.addConfigAttribute( new SecurityConfig( recipient ) );
                 // runAsAuthentication = runAsManager.buildRunAs( authentication, object, attributeDefinition );
-                // recipient = runAsAuthentication.getPrincipal();
+                // Object runAsprincipal = runAsAuthentication.getPrincipal();
                 //
+                // } else {
+                // recipient = principal.toString();
                 // }
                 basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
             } catch ( Exception e ) {
