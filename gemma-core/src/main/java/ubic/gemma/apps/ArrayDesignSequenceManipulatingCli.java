@@ -38,8 +38,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringAwareCLI {
 
     ArrayDesignService arrayDesignService;
-    String arrayDesignName = null;
-    ArrayDesign cachedAD; 
+    String arrayDesignName = null;    
 
     @Override
     @SuppressWarnings("static-access")
@@ -52,14 +51,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     }
 
     protected void unlazifyArrayDesign(  ArrayDesign arrayDesign ) {
-        
-        if ((cachedAD != null) && (arrayDesign.getName().equalsIgnoreCase( cachedAD.getName() )) && (arrayDesign.getShortName().equalsIgnoreCase(  cachedAD.getShortName()) )){
-            arrayDesign = cachedAD;
-            return;
-        }
-        
+              
         arrayDesignService.thaw( arrayDesign );
-        cachedAD = arrayDesign;
     }
 
     /**
@@ -70,8 +63,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         
         String trimedName = name.trim().toUpperCase();
         
-        if ((cachedAD != null) && ((cachedAD.getName() == trimedName) || (cachedAD.getShortName() == trimedName)))
-            return cachedAD;
         
         ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name.trim().toUpperCase() );
 

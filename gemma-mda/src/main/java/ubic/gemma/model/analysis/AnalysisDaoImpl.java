@@ -35,9 +35,9 @@ import org.hibernate.ScrollableResults;
 public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
 
     @Override
-    protected Map handleFindByAnalyses( Collection investigators ) throws Exception {
+    protected Map handleFindByInvestigations( Collection investigators ) throws Exception {
 
-        final String queryString = "select distinct i,i.analyzedInvestigation from AnalysisImpl as i where i.analyzedInvestigation.id in (:investigations)";
+        final String queryString = "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where i.analyzedInvestigation.id in (:investigations))";
 
         Collection<Long> investigatorsById = new HashSet<Long>();
         for ( Object obj : investigators )
@@ -47,18 +47,18 @@ public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
         queryObject.setParameterList( "investigations", investigatorsById );
 
         ScrollableResults list = queryObject.scroll();
-        Map<Investigation, Collection<Analysis>> results = new HashMap<Investigation, Collection<Analysis>>();
+        Map<Analysis, Collection<Investigation>> results = new HashMap<Analysis, Collection<Investigation>>();
 
         while ( list.next() ) {
             Investigation inv = ( Investigation ) list.get( 1 );
             Analysis ana = ( Analysis ) list.get( 0 );
 
-            if ( results.containsKey( inv ) )
-                results.get( inv ).add( ana );
+            if ( results.containsKey( ana ) )
+                results.get( ana ).add( inv );
             else {
-                Collection<Analysis> anas = new HashSet<Analysis>();
-                anas.add( ana );
-                results.put( inv, anas );
+                Collection<Investigation> invs = new HashSet<Investigation>();
+                invs.add( inv );
+                results.put( ana, invs );
             }
         }
 

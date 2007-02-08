@@ -35,13 +35,32 @@ public class AnalysisServiceImpl
 {
 
     @Override
-    protected Map handleFindByAnalyses( Collection investigations ) throws Exception {
-        return this.getAnalysisDao().findByAnalyses( investigations );
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        return this.getAnalysisDao().findByInvestigation( investigation );
     }
 
     @Override
-    protected Collection handleFindByAnalysis( Investigation investigation ) throws Exception {
-       return this.getAnalysisDao().findByAnalysis( investigation );
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+       return this.getAnalysisDao().findByInvestigations( investigations );
+    }
+
+    @Override
+    protected Analysis handleFindByUniqueInvestigations( Collection Investigations ) throws Exception {
+
+        Map<Analysis, Collection<Investigation>> anas = this.getAnalysisDao().findByInvestigations( Investigations );
+        
+        for (Analysis ana: anas.keySet()){
+            
+            Collection<Investigation> foundInvestigations = anas.get( ana );
+                       
+                if (Investigations.size() == foundInvestigations.size()){
+                    if (Investigations.containsAll( foundInvestigations ))
+                            return ana;
+                
+            }
+        }
+        
+        return null;
     }
 
     /**
