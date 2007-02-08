@@ -294,4 +294,12 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getPreferredDesignElementDataVectorCount( expressionExperiment );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoad(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        return this.getExpressionExperimentDao().load( ids );
+    }
+
 }

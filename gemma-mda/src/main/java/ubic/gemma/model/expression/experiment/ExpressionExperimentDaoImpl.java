@@ -784,4 +784,26 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return count;
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoad(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<ExpressionExperiment> ee = null;
+        final String queryString = "select ee from ExpressionExperimentImpl as ee "
+                + " where ee.id in (:ids) ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            
+            ee = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return ee;
+    }
+
 }
