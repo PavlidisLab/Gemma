@@ -177,16 +177,16 @@ public class SecurityFormController extends BaseFormController {
         }
 
         String mask = sc.getMask();
-        int aclMask = 0;
+        int aclMask;
         if ( StringUtils.equalsIgnoreCase( mask, PUBLIC ) )
             aclMask = 6;
 
         else if ( StringUtils.equalsIgnoreCase( mask, PRIVATE ) )
-            aclMask = 1;
+            aclMask = 0;
 
         else
             return processErrors( request, response, command, errors,
-                    "Supported masks are 1 (private) and 6 (public), not " + mask );
+                    "Supported masks are 0 (private) and 6 (public), not " + mask );
 
         // ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(), "Making data private." );
         securityService.makePrivate( target, aclMask );
