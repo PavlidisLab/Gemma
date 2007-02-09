@@ -58,7 +58,8 @@ public class SecurityService {
         log.debug( "Changing acl of object " + object + "." );
 
         if ( mask != PUBLIC_MASK && mask != PRIVATE_MASK ) {
-            throw new RuntimeException( "Supported masks are 0 (PRIVATE) and 6 (PUBLIC)." );
+            throw new RuntimeException( "Supported masks are " + PRIVATE_MASK + " (PRIVATE) and " + PUBLIC_MASK
+                    + "(PUBLIC)." );
         }
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
@@ -67,7 +68,7 @@ public class SecurityService {
 
         if ( object instanceof Securable ) {
 
-            String recipient = checkWhoToRunAs( object, mask, authentication, principal );
+            String recipient = configureWhoToRunAs( object, mask, authentication, principal );
             try {
                 basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
             } catch ( Exception e ) {
@@ -84,14 +85,14 @@ public class SecurityService {
     }
 
     /**
-     * Runs as the recipient in acl_permission if the principal does not match the recipient.
+     * Runs as the recipient (in acl_permission) if the principal does not match the recipient.
      * 
      * @param object
      * @param mask
      * @param authentication
      * @param principal
      */
-    private String checkWhoToRunAs( Object object, int mask, Authentication authentication, Object principal ) {
+    private String configureWhoToRunAs( Object object, int mask, Authentication authentication, Object principal ) {
 
         Securable securedObject = ( Securable ) object;
         /* id of target object */

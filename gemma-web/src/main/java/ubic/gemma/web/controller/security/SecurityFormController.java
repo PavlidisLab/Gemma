@@ -31,7 +31,9 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -56,8 +58,8 @@ public class SecurityFormController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private ArrayDesignService arrayDesignService = null;
 
-    private final String expressionExperimentType = "Expression Experiment";
-    private final String arrayDesignType = "Array Design";
+    private final String expressionExperimentType = ExpressionExperiment.class.getSimpleName();
+    private final String arrayDesignType = ArrayDesign.class.getSimpleName();// TODO add other securables
     private final String PUBLIC = "Public";
     private final String PRIVATE = "Private";
 
@@ -88,41 +90,6 @@ public class SecurityFormController extends BaseFormController {
 
         return dropDownMap;
     }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-    // */
-    // @Override
-    // @SuppressWarnings("unused")
-    // protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-    // log.debug( "formBackingObject" );
-    //            
-    // Long id = null;
-    // try {
-    // id = Long.parseLong( request.getParameter( "id" ) );
-    // } catch ( NumberFormatException e ) {
-    // throw new RuntimeException( "Id was not valid Long integer", e );
-    // }
-    //            
-    // ExpressionExperiment ee = null;
-    //            
-    // // SecurityCommand securityCommand = new SecurityCommand();
-    // // request.getParameter( "id" );
-    // // Object target = securityCommand.setTarget();
-    //            
-    // if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
-    // ee = expressionExperimentService.findById( id );
-    // } else {
-    // ee = ExpressionExperiment.Factory.newInstance();
-    // }
-    //            
-    // // securityCommand.setTarget( target);
-    //    
-    // return null;
-    // }
 
     /**
      * @param request

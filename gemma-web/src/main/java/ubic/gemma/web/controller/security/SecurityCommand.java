@@ -36,16 +36,6 @@ public class SecurityCommand implements Serializable {
 
     private String mask = null;
 
-    // private String name = null;
-    //
-    // private Long expressionExperimentId = null;
-    //
-    // private String searchString = null;
-    //
-    // private boolean viewSampling;
-    //
-    // private QuantitationType quantitationType = null;
-
     /**
      * @return the securableType
      */
