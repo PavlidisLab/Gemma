@@ -75,7 +75,7 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             QuantitationType qType = dat.getBackgroundChannelA( dimension );
-            qTypes.add( qType );
+            if(qType != null) qTypes.add( qType );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -94,7 +94,7 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             QuantitationType qType = dat.getBackgroundChannelB( dimension );
-            qTypes.add( qType );
+            if(qType != null) qTypes.add( qType );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -233,7 +233,7 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             QuantitationType qType = dat.getSignalChannelB( dimension );
-            qTypes.add( qType );
+            if(qType != null) qTypes.add( qType );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -263,8 +263,7 @@ public class ExpressionDataMatrixBuilder {
             if ( channelANeedsReconstruction ) {
                 return getSignalChannelAFancy( arrayDesign );
             }
-
-            qTypes.add( signalChannelA );
+            if(signalChannelA != null) qTypes.add( signalChannelA );
         }
 
         return makeMatrix( dimensions, qTypes );
