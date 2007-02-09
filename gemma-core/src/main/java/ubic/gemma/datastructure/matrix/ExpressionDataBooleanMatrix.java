@@ -19,11 +19,15 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -89,10 +93,10 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     private ObjectMatrix2DNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
         ObjectMatrix2DNamed matrix = new ObjectMatrix2DNamed( vectors.size(), maxSize );
 
-        // initialize the matrix to NaN
+        // initialize the matrix to false
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setQuick( i, j, Double.NaN );
+                matrix.setQuick( i, j, Boolean.FALSE );
             }
         }
         for ( int j = 0; j < matrix.columns(); j++ ) {
@@ -101,15 +105,37 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
         ByteArrayConverter bac = new ByteArrayConverter();
         int rowNum = 0;
+
+        Collection<BioAssayDimension> seenDims = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
+            BioAssayDimension dimension = vector.getBioAssayDimension();
             matrix.addRowName( vector.getDesignElement() );
             byte[] bytes = vector.getData();
-            boolean[] vals = bac.byteArrayToBooleans( bytes );
 
-            BioAssayDimension dimension = vector.getBioAssayDimension();
+            boolean[] vals = null;
+            if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
+                vals = bac.byteArrayToBooleans( bytes );
+            } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
+                String val = bac.byteArrayToAsciiString( bytes );
+                String[] fields = StringUtils.split( val, '\t' );
+                vals = new boolean[fields.length];
+                int j = 0;
+                for ( String c : fields ) {
+                    if ( c.equals( "P" ) ) {
+                        vals[j] = true;
+                    } else if ( c.equals( "M" ) ) {
+                        vals[j] = false;
+                    } else if ( c.equals( "A" ) ) {
+                        vals[j] = false;
+                    }
+                    j++;
+                }
+            }
+
             Iterator<BioAssay> it = dimension.getBioAssays().iterator();
-
-            assert dimension.getBioAssays().size() == vals.length;
+            seenDims.add( dimension );
+            assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
+                    + dimension.getBioAssays().size();
             for ( int i = 0; i < vals.length; i++ ) {
                 BioAssay bioAssay = it.next();
                 matrix.setQuick( rowNum, columnAssayMap.get( bioAssay ), vals[i] );
@@ -117,6 +143,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
             rowNum++;
         }
+
         return matrix;
     }
 
@@ -149,7 +176,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[][] get( List designElements, List bioAssays ) {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /*
@@ -159,7 +186,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[] getColumn( BioAssay bioAssay ) {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /*
@@ -169,7 +196,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[][] getColumns( List bioAssays ) {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /*
@@ -179,7 +206,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[][] getMatrix() {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /*
@@ -234,12 +261,12 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
     public void set( int row, int column, Object value ) {
         // FIXME
-
+        throw new UnsupportedOperationException();
     }
 
     public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
         // FIXME
-
+        throw new UnsupportedOperationException();
     }
 
     public Object get( int row, int column ) {

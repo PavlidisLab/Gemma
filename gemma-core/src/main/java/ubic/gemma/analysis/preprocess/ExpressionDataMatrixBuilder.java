@@ -30,9 +30,11 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -269,6 +271,47 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * Compute an intensity matrix. For two-channel arrays, this is the geometric mean of the background-subtracted
+     * signals on the two channels. For one-color arrays, this is the same as the preferred data matrix.
+     * 
+     * @param arrayDesign
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getIntensity( ArrayDesign arrayDesign ) {
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
+
+            ExpressionDataDoubleMatrix signalA = this.getSignalChannelA( arrayDesign );
+            ExpressionDataDoubleMatrix signalB = this.getSignalChannelB( arrayDesign );
+            ExpressionDataDoubleMatrix backgroundA = this.getBackgroundChannelA( arrayDesign );
+            ExpressionDataDoubleMatrix backgroundB = this.getBackgroundChannelB( arrayDesign );
+
+            if ( backgroundA != null ) ExpressionDataDoubleMatrixUtil.subtractMatrices( signalA, backgroundA );
+
+            if ( backgroundB != null ) ExpressionDataDoubleMatrixUtil.subtractMatrices( signalB, backgroundB );
+
+            ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalA );
+            ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalB );
+
+            ExpressionDataDoubleMatrixUtil.addMatrices( signalA, signalB );
+
+            ExpressionDataDoubleMatrixUtil.scalarDivideMatrix( signalA, 2.0 );
+
+            return signalA; // now this contains the answer
+        } else {
+            return getPreferredData();
+        }
+    }
+
+    /**
+     * @param inMatrix
+     * @param missingValueMatrix
+     */
+    public void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ArrayDesign arrayDesign ) {
+        ExpressionDataBooleanMatrix missingValueMatrix = this.getMissingValueData( arrayDesign );
+        ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValueMatrix );
+    }
+
+    /**
      * add the background values back on.
      * 
      * @param signalDataA - already background subtracted
@@ -288,7 +331,7 @@ public class ExpressionDataMatrixBuilder {
      * @param vector
      * @return
      */
-    private ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
+    public ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
         ArrayDesign adUsed = vector.getBioAssayDimension().getBioAssays().iterator().next().getArrayDesignUsed();
         return adUsed;
     }
@@ -356,7 +399,7 @@ public class ExpressionDataMatrixBuilder {
      * @param arrayDesign Can be null
      * @return
      */
-    private List<QuantitationType> getPreferredQTypes( ArrayDesign arrayDesign ) {
+    public List<QuantitationType> getPreferredQTypes( ArrayDesign arrayDesign ) {
         Collection<DesignElementDataVector> allVectors = this.expressionExperiment.getDesignElementDataVectors();
         List<QuantitationType> result = new ArrayList<QuantitationType>();
 
