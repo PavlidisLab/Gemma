@@ -28,6 +28,8 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroupService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * Tests the UserGroupService.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -58,8 +60,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     }
 
     /**
-     * 
-     *
+     * Tests creating a UserGroup
      */
     public void testCreateUserGroup() {
         Securable persistentUserGroup = userGroupService.create( groupName, description );
@@ -67,11 +68,10 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     }
 
     /**
-     * 
-     *
+     * Tests updating the UserGroup
      */
     public void testUpdateUserGroup() {
-        // FIXME test passes, but user_group is not updated in the database.
+        log.debug( "updating user group" );
 
         userGroupService.create( groupName, description );
 
@@ -81,5 +81,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         groupMember.setDescription( "A new user " + username + " to add to group " + groupName );
 
         userGroupService.update( groupName, groupMember );
+
+        /* to see changes in the database, uncommment setComplete(); */
+        // setComplete();
     }
 }
