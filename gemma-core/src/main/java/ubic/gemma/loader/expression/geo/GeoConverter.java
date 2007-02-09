@@ -404,7 +404,11 @@ public class GeoConverter implements Converter {
                         // FIXME BUG 741 - converter makes it a tabbed string, which is a no-no.
                         toConvert.add( ( String ) rawValue );
                     } else if ( pt.equals( PrimitiveType.CHAR ) ) {
-                        toConvert.add( ( Character ) rawValue );
+                        if ( ( ( String ) rawValue ).length() != 1 ) {
+                            throw new IllegalStateException( "Attempt to cast a string of length "
+                                    + ( ( String ) rawValue ).length() + " to a char" );
+                        }
+                        toConvert.add( ( Character ) ( ( String ) rawValue ).toCharArray()[0] );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
                         toConvert.add( Integer.parseInt( ( String ) rawValue ) );
                     } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
