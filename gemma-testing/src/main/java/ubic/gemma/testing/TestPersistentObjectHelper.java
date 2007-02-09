@@ -557,6 +557,7 @@ public class TestPersistentObjectHelper {
     public static QuantitationType getTestNonPersistentQuantitationType() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
+        qt.setDescription( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setIsBackground( false );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
