@@ -233,6 +233,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /**
      * FIXME factor this out, it is getting repeated.
+     * 
      * @param id
      * @param queryString
      * @return
@@ -320,11 +321,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     }
 
                     session.update( bs );
+
                     bs.getTaxon();
 
                     if ( bs.getBioSequence2GeneProduct() == null ) {
                         continue;
                     }
+
                     for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
                         if ( bs2gp == null ) {
                             continue;
