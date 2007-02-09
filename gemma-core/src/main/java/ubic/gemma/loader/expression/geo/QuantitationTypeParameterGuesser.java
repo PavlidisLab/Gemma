@@ -213,11 +213,13 @@ public class QuantitationTypeParameterGuesser {
         representationDescPatterns.put( PrimitiveType.INT, new HashSet<String>() );
         representationDescPatterns.put( PrimitiveType.STRING, new HashSet<String>() );
         representationDescPatterns.put( PrimitiveType.BOOLEAN, new HashSet<String>() );
+        representationDescPatterns.put( PrimitiveType.CHAR, new HashSet<String>() );
 
         representationNamePatterns.put( PrimitiveType.DOUBLE, new HashSet<String>() );
         representationNamePatterns.put( PrimitiveType.INT, new HashSet<String>() );
         representationNamePatterns.put( PrimitiveType.STRING, new HashSet<String>() );
         representationNamePatterns.put( PrimitiveType.BOOLEAN, new HashSet<String>() );
+        representationNamePatterns.put( PrimitiveType.CHAR, new HashSet<String>() );
 
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of (background\\s)?pixels.*" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of feature pixels.*" );
