@@ -65,7 +65,10 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
-        assertEquals( 20, calls.size() );
+        /*
+         * There is one array design and it has 10 rows.
+         */
+        assertEquals( 10, calls.size() );
     }
 
     public void testMissingValueGSE523() throws Exception {
@@ -85,9 +88,16 @@ public class TwoChannelMissingValuesTest extends TestCase {
 
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
-        assertEquals( 20, calls.size() );
+        /*
+         * The expected number of rows is 30, because there are two platforms, one with 20 features and one with 10 (in
+         * this contrived example)
+         */
+        assertEquals( 30, calls.size() );
     }
 
+    /**
+     * @throws Exception
+     */
     public void testMissingValue() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );

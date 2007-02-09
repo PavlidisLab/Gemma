@@ -217,21 +217,21 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
         ExpressionDataDoubleMatrix eeDoubleMatrix = ( ExpressionDataDoubleMatrix ) this.expressionDataMatrixService
                 .getMatrix( ee, qts );
-        
-        if (eeDoubleMatrix.rows() == 0) return "No data found!";
-        
+
+        if ( eeDoubleMatrix.rows() == 0 ) return "No data found!";
+
+        if ( eeDoubleMatrix.rows() < 100 ) return ( "Most Probes are filtered out " + ee.getShortName() );
+
+        if ( eeDoubleMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE )
+            return ( "No enough samples " + ee.getShortName() );
+
         DoubleMatrixNamed dataMatrix = eeDoubleMatrix.getNamedMatrix();
         dataMatrix = this.filter( dataMatrix, eeDoubleMatrix, ee );
 
         if ( dataMatrix == null ) return ( "No data matrix " + ee.getShortName() );
 
-        if ( dataMatrix.rows() < 100 ) return ( "Most Probes are filtered out " + ee.getShortName() );
-
-        if ( dataMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE )
-            return ( "No enough samples " + ee.getShortName() );
-
         this.linkAnalysis.setDataMatrix( dataMatrix );
-        
+
         /*
          * FIXME this repeats the query that was just done inside getMatrix -- probably it can be avoided?
          */

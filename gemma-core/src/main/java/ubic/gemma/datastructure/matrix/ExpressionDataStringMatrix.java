@@ -17,9 +17,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix { 
+public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {  
 
-    private StringMatrix2DNamed matrix;
+    private StringMatrix2DNamed matrix; 
 
     public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
 
@@ -125,6 +125,20 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
     public Object get( DesignElement designElement, BioMaterial bioMaterial ) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public void set( int row, int column, Object value ) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public Object get( int row, int column ) {
+       return matrix.get(row,column);
     }
 
 }

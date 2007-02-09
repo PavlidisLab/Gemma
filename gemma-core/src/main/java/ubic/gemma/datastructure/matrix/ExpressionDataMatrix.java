@@ -38,7 +38,7 @@ public interface ExpressionDataMatrix<T> {
      * Access a single row of the matrix.
      * 
      * @param designElement
-     * @return T[][]
+     * @return T[]
      */
     public T[] getRow( DesignElement designElement );
 
@@ -46,7 +46,7 @@ public interface ExpressionDataMatrix<T> {
      * Access a single column of the matrix.
      * 
      * @param bioAssay
-     * @return T[][]
+     * @return T[]
      */
     public T[] getColumn( BioAssay bioAssay );
 
@@ -55,7 +55,7 @@ public interface ExpressionDataMatrix<T> {
      * 
      * @param designElement
      * @param bioAssay
-     * @return T[][]
+     * @return T
      */
     public T get( DesignElement designElement, BioAssay bioAssay );
 
@@ -64,9 +64,34 @@ public interface ExpressionDataMatrix<T> {
      * 
      * @param designElement
      * @param bioMaterial
-     * @return T[][]
+     * @return T
      */
     public T get( DesignElement designElement, BioMaterial bioMaterial );
+
+    /**
+     * @param row
+     * @param column
+     * @return
+     */
+    public T get( int row, int column );
+
+    /**
+     * Set a value in the matrix, by index
+     * 
+     * @param row
+     * @param column
+     * @param value
+     */
+    public void set( int row, int column, T value );
+
+    /**
+     * Set a value in the matrix
+     * 
+     * @param designElement
+     * @param bioMaterial
+     * @param value
+     */
+    public void set( DesignElement designElement, BioMaterial bioMaterial, T value );
 
     /**
      * Access a submatrix

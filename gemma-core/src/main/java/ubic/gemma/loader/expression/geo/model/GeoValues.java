@@ -245,9 +245,8 @@ public class GeoValues {
         if ( datasetSamples.size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
             return; // can't really clear
         }
-        log.info( "Clearing" );
+        log.debug( "Clearing" );
         data.get( platform ).remove( quantitationTypeIndex );
-
     }
 
     /**

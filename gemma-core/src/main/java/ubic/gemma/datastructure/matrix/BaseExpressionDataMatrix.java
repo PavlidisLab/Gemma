@@ -19,9 +19,11 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -50,9 +52,11 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
     protected Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
     protected Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
+    protected Map<DesignElement, Integer> rowDesignElementMap;
 
     protected void init() {
         rowElements = new LinkedHashSet<DesignElement>();
+        rowDesignElementMap = new HashMap<DesignElement, Integer>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
@@ -87,6 +91,14 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         return this.rowElements;
     }
 
+    protected int getColumnIndex( BioMaterial bioMaterial ) {
+        return columnBioMaterialMap.get( bioMaterial );
+    }
+
+    protected int getRowIndex( DesignElement designElement ) {
+        return rowDesignElementMap.get( designElement );
+    }
+
     /**
      * @param designElements
      * @param quantitationType
@@ -95,6 +107,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElement> designElements,
             QuantitationType quantitationType ) {
         Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
+        int i = 0;
         for ( DesignElement designElement : designElements ) {
             DesignElementDataVector vectorOfInterest = null;
             Collection<DesignElementDataVector> vectors = designElement.getDesignElementDataVectors();
@@ -105,6 +118,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                     vectorsOfInterest.add( vectorOfInterest );
                     rowElements.add( designElement );
                     bioAssayDimensions.add( vector.getBioAssayDimension() );
+                    rowDesignElementMap.put( designElement, i );
+                    i++; // only increment if we actually added a row.
                     break;
                 }
             }
@@ -112,6 +127,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 log.warn( "Vector not found for quantitation type " + quantitationType.getType() + ".  Skipping ..." );
                 continue;
             }
+
         }
         return vectorsOfInterest;
     }
@@ -150,12 +166,15 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
             Collection<DesignElementDataVector> vectors ) {
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        int i = 0;
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
                 rowElements.add( vector.getDesignElement() );
                 bioAssayDimensions.add( vector.getBioAssayDimension() );
+                rowDesignElementMap.put( vector.getDesignElement(), i );
+                i++; // only increment if we actually added a row.
             }
         }
         return vectorsOfInterest;
@@ -171,6 +190,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        int i = 0;
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             BioAssayDimension cand = vector.getBioAssayDimension();
@@ -178,8 +198,46 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 vectorsOfInterest.add( vector );
                 rowElements.add( vector.getDesignElement() );
                 bioAssayDimensions.add( vector.getBioAssayDimension() );
+                rowDesignElementMap.put( vector.getDesignElement(), i );
+                i++; // only increment if we actually added a row.
             }
         }
+        return vectorsOfInterest;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param quantitationTypes
+     * @param soughtBioAssayDimensions in the same order as the quantitation types
+     * @return
+     */
+    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
+            List<QuantitationType> quantitationTypes, List<BioAssayDimension> soughtBioAssayDimensions ) {
+
+        if ( quantitationTypes.size() != soughtBioAssayDimensions.size() )
+            throw new IllegalArgumentException(
+                    "Must have the same number of quantitation types and bioassay dimensions" );
+
+        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+
+        int j = 0;
+        for ( int i = 0; i < quantitationTypes.size(); i++ ) {
+            QuantitationType soughtType = quantitationTypes.get( i );
+            BioAssayDimension soughtDim = soughtBioAssayDimensions.get( i );
+            assert soughtType != null && soughtDim != null;
+            for ( DesignElementDataVector vector : expressionExperiment.getDesignElementDataVectors() ) {
+                QuantitationType vectorQuantitationType = vector.getQuantitationType();
+                BioAssayDimension cand = vector.getBioAssayDimension();
+                if ( vectorQuantitationType.equals( soughtType ) && cand.equals( soughtDim ) ) {
+                    vectorsOfInterest.add( vector );
+                    rowElements.add( vector.getDesignElement() );
+                    this.bioAssayDimensions.add( vector.getBioAssayDimension() );
+                    rowDesignElementMap.put( vector.getDesignElement(), i );
+                    j++; // only increment if we actually added a row.
+                }
+            }
+        }
+
         return vectorsOfInterest;
     }
 
@@ -193,10 +251,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *                                                                 ----------------
-     *                                                                 ******              -- only a few samples run on this platform
-     *                                                                   **********        -- ditto
-     *                                                                             ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *                                                                                          ----------------
+     *                                                                                          ******              -- only a few samples run on this platform
+     *                                                                                            **********        -- ditto
+     *                                                                                                      ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -204,10 +262,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                 ----------------
-     *                                                                 ****************
-     *                                                                 ************
-     *                                                                 ********
+     *                                                                                          ----------------
+     *                                                                                          ****************
+     *                                                                                          ************
+     *                                                                                          ********
      * </pre>
      * 
      * <p>
@@ -215,8 +273,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                 -----------------
-     *                                                                 *****************
+     *                                                                                          -----------------
+     *                                                                                          *****************
      * </pre>
      * 
      * <p>
@@ -224,9 +282,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                 -----------------
-     *                                                                 *****************
-     *                                                                 *****************
+     *                                                                                          -----------------
+     *                                                                                          *****************
+     *                                                                                          *****************
      * </pre>
      * 
      * <p>
@@ -238,7 +296,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      */
     protected int setUpColumnElements() {
         log.debug( "Setting up column elements" );
-        assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0;
+        assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0 : "No bioAssayDimensions defined";
 
         /*
          * build a map of biomaterials to bioassays. Because there can be more than one biomaterial used per bioassay,

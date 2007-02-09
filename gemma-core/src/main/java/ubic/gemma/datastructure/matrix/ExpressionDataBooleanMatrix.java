@@ -62,6 +62,19 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
         this.vectorsToMatrix( vectorsOfInterest );
     }
 
+    /**
+     * @param expressionExperiment
+     * @param bioAssayDimensions A list of bioAssayDimensions to use.
+     * @param quantitationTypes A list of quantitation types to use, in the same order as the bioAssayDimensions
+     */
+    public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment,
+            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
+                bioAssayDimensions );
+        vectorsToMatrix( selectedVectors );
+    }
+
     public int columns() {
         return matrix.columns();
     }
@@ -217,6 +230,20 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
         this.matrix = createMatrix( vectors, maxSize );
 
+    }
+
+    public void set( int row, int column, Object value ) {
+        // FIXME
+
+    }
+
+    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
+        // FIXME
+
+    }
+
+    public Object get( int row, int column ) {
+        return matrix.get( row, column );
     }
 
 }

@@ -173,9 +173,9 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 //        }
 //        Collection<DesignElementDataVector> allDevs = new HashSet<DesignElementDataVector>();
 //       	for(QuantitationType qt:eeMap.keySet()){
-//      			HashSet<ExpressionExperiment> ees = eeMap.get(qt);
-//      			System.err.println(ees.size() + " " + genes.size());
-//       			for(ExpressionExperiment ee:ees){
+//      			HashSet<ExpressionExperiment> expressionExperimentService = eeMap.get(qt);
+//      			System.err.println(expressionExperimentService.size() + " " + genes.size());
+//       			for(ExpressionExperiment ee:expressionExperimentService){
 //       				HashSet<ExpressionExperiment> tmpEEs = new HashSet<ExpressionExperiment>();
 //       				System.err.println(ee.getShortName() + " " + qt);
 //       				tmpEEs.add(ee);
@@ -193,7 +193,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 //       	       		}
 //       			}
 //      			try{
-//      				Collection<DesignElementDataVector> devs = vectorService.getGeneCoexpressionPattern(ees, genes, qt);
+//      				Collection<DesignElementDataVector> devs = vectorService.getGeneCoexpressionPattern(expressionExperimentService, genes, qt);
 //      				System.err.println(devs.size());
 //      				allDevs.addAll(devs);
 //      			}catch(Exception e){

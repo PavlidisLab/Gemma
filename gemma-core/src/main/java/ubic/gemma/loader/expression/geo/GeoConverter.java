@@ -614,6 +614,8 @@ public class GeoConverter implements Converter {
                         bioAssayDimension, designElementName, dataVector, qt );
 
                 if ( vector == null ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Null vector for DE=" + designElementName + " QT=" + quantitationType );
                     continue;
                 }
 
@@ -624,8 +626,8 @@ public class GeoConverter implements Converter {
 
                 expExp.getDesignElementDataVectors().add( vector );
 
-                if ( log.isInfoEnabled() && ++count % LOGGING_VECTOR_COUNT_UPDATE == 0 ) {
-                    log.info( count + " Data vectors added" );
+                if ( log.isDebugEnabled() && ++count % LOGGING_VECTOR_COUNT_UPDATE == 0 ) {
+                    log.debug( count + " Data vectors added" );
                 }
             }
             if ( log.isDebugEnabled() ) {
@@ -674,6 +676,7 @@ public class GeoConverter implements Converter {
 
         byte[] blob = convertData( dataVector, qt );
         if ( blob == null ) { // all missing etc.
+            if ( log.isDebugEnabled() ) log.debug( "All missing values for DE=" + designElementName + " QT=" + qt );
             return null;
         }
         if ( log.isDebugEnabled() ) {
@@ -2125,7 +2128,7 @@ public class GeoConverter implements Converter {
         boolean filledIn = isPopulated( dataVectors );
 
         values.clear( platform, datasetSamples, quantitationTypeIndex );
-        
+
         if ( !filledIn ) return null;
 
         return dataVectors;

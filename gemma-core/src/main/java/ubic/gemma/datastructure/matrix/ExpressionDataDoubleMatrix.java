@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
+    private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
     private DoubleMatrixNamed matrix;
 
@@ -80,6 +81,19 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         init();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationType,
                 bioAssayDimension );
+        vectorsToMatrix( selectedVectors );
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param bioAssayDimensions A list of bioAssayDimensions to use.
+     * @param quantitationTypes A list of quantitation types to use, in the same order as the bioAssayDimensions
+     */
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
+            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
+                bioAssayDimensions );
         vectorsToMatrix( selectedVectors );
     }
 
@@ -242,14 +256,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         return null;
     }
 
-    /**
-     * @return DoubleMatrixNamed
-     * @deprecated Access to the data should be through the ExpressionDataMatrix interface
-     */
-    public DoubleMatrixNamed getDoubleMatrixNamed() {
-        return this.matrix;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -281,6 +287,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
      */
     public Double[] getRow( DesignElement designElement ) {
+        if ( !this.matrix.containsRowName( designElement ) ) return null;
+
         double[] rawResult = this.matrix.getRowByName( designElement );
         assert rawResult != null;
         Double[] result = new Double[rawResult.length];
@@ -297,7 +305,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @param data The input data.
      */
     public void setRow( int rowIndex, Double[] data ) {
-        // TODO make part of interface?
         if ( rowIndex > this.matrix.rows() ) {
             throw new RuntimeException( "Specified row index " + rowIndex + " is larger than the matrix of size "
                     + this.matrix.rows() + "." );
@@ -347,7 +354,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     @Override
     public String toString() {
         int columns = this.columns();
+        int rows = this.rows();
+
         StringBuffer buf = new StringBuffer();
+        buf.append( rows + " x " + columns + " matrix of double values, showing up to " + MAX_ROWS_TO_STRING
+                + " rows\n" );
         int stop = 0;
         buf.append( "Row\\Col" );
         for ( int i = 0; i < columns; i++ ) {
@@ -363,7 +374,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 buf.append( "\t" + this.get( de, this.getBioMaterialForColumn( i ) ) );
             }
             buf.append( "\n" );
-            if ( stop > 1000 ) {
+            if ( stop > MAX_ROWS_TO_STRING ) {
                 buf.append( "...\n" );
                 break;
             }
@@ -387,6 +398,22 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
         this.matrix = createMatrix( vectors, maxSize );
 
+    }
+
+    public void set( int row, int column, Object value ) {
+        assert value instanceof Double;
+        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+    }
+
+    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
+        assert value instanceof Double;
+        int row = this.getRowIndex( designElement );
+        int column = this.getColumnIndex( bioMaterial );
+        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+    }
+
+    public Double get( int row, int column ) {
+        return matrix.get( row, column );
     }
 
 }

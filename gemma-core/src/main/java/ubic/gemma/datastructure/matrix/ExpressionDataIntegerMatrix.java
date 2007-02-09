@@ -143,4 +143,18 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
         return 0;
     }
 
+    public void set( int row, int column, Object value ) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public Object get( int row, int column ) {
+        return matrix.get( row, column );
+    }
+
 }

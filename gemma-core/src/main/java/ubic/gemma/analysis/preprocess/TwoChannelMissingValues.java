@@ -84,140 +84,27 @@ public class TwoChannelMissingValues {
      */
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp, ArrayDesign ad,
             double signalToNoiseThreshold ) {
-        Collection<DesignElementDataVector> allVectors = expExp.getDesignElementDataVectors();
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( expExp );
+        Collection<BioAssayDimension> dims = builder.getBioAssayDimensions( ad );
         Collection<DesignElementDataVector> finalResults = new HashSet<DesignElementDataVector>();
-
-        Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
-        for ( DesignElementDataVector vector : allVectors ) {
-            ArrayDesign adUsed = vector.getBioAssayDimension().getBioAssays().iterator().next().getArrayDesignUsed();
-            if ( ad == null || adUsed.equals( ad ) ) {
-                dimensions.add( vector.getBioAssayDimension() );
-            }
-        }
-
-        QuantitationType signalChannelA = null;
-        QuantitationType signalChannelB = null;
-        QuantitationType backgroundChannelA = null;
-        QuantitationType backgroundChannelB = null;
-
-        QuantitationType bkgSubChannelA = null;
-        QuantitationType preferred = null;
-
-        for ( DesignElementDataVector vector : allVectors ) {
-            QuantitationType qType = vector.getQuantitationType();
-            String name = qType.getName();
-            if ( qType.getIsPreferred() && preferred == null ) {
-                if ( preferred != null && !qType.equals( preferred ) )
-                    throw new IllegalStateException( "More than one preferred quantitation type found for " + expExp
-                            + " (already had " + preferred + ", just got " + qType + ")" );
-                preferred = qType;
-                log.info( "Preferred=" + qType );
-            } else if ( backgroundChannelA == null && ( name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" ) )
-                    || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
-                    || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
-                    || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
-                    || name.equals( "CH1_BKD_ Median" ) ) {
-                backgroundChannelA = qType;
-                log.info( "Background A=" + qType );
-            } else if ( backgroundChannelB == null && ( name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" ) )
-                    || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
-                    || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
-                    || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
-                    || name.equals( "CH2_BKD_ Median" ) ) {
-                backgroundChannelB = qType;
-                log.info( "Background B=" + qType );
-            } else if ( signalChannelA == null
-                    && ( name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
-                            || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" )
-                            || name.equals( "SIGNAL_CHANNEL 1MEDIAN" ) || name.toLowerCase().matches( "ch1_smtm" )
-                            || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
-                            || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" )
-                            || name.equals( "CH1_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) ) ) {
-                signalChannelA = qType;
-                log.info( "Signal A=" + qType );
-            } else if ( signalChannelB == null
-                    && ( name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" )
-                            || name.equals( "RAW_CONTROL" )
-                            || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" )
-                            || name.equals( "SIGNAL_CHANNEL 2MEDIAN" ) || name.toLowerCase().matches( "ch2_smtm" )
-                            || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
-                            || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" )
-                            || name.equals( "CH2_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) ) ) {
-                signalChannelB = qType;
-                log.info( "Signal B=" + qType );
-            } else if ( name.matches( "CH1D_MEAN" ) ) {
-                bkgSubChannelA = qType; // specific for SGD data bug
-            }
-            if ( signalChannelA != null && signalChannelB != null && backgroundChannelA != null
-                    && backgroundChannelB != null && preferred != null ) {
-                break; // no need to go through them all.
-            }
-        }
-
-        boolean channelANeedsReconstruction = false;
-        if ( signalChannelA == null || signalChannelB == null ) {
-
-            /*
-             * Okay, this can happen for some Stanford data sets where the CH1 data was not submitted. But we can
-             * sometimes reconstruct the values from the background
-             */
-
-            if ( signalChannelB != null && bkgSubChannelA != null && backgroundChannelA != null ) {
-                log.info( "Invoking work-around for missing channel 1 intensities" );
-                channelANeedsReconstruction = true;
-            } else {
-                throw new IllegalStateException( "Could not find signals for both channels: " + "Channel A ="
-                        + signalChannelA + ", Channel B=" + signalChannelB );
-            }
-        }
-
-        if ( preferred == null ) {
-            throw new IllegalStateException( "No preferred quantitation type for data set" );
-        }
-
-        if ( backgroundChannelA == null || backgroundChannelB == null ) {
-            log.warn( "No background values found, proceeding with raw signals" );
-        }
-
-        for ( BioAssayDimension bioAssayDimension : dimensions ) {
-
-            ExpressionDataDoubleMatrix preferredDAta = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension,
-                    preferred );
-
-            ExpressionDataDoubleMatrix bkgDataA = null;
-            if ( backgroundChannelA != null ) {
-                bkgDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, backgroundChannelA );
-            }
-
-            ExpressionDataDoubleMatrix bkgDataB = null;
-            if ( backgroundChannelB != null ) {
-                bkgDataB = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, backgroundChannelB );
-            }
-
-            ExpressionDataDoubleMatrix signalDataA = null;
-            if ( channelANeedsReconstruction ) {
-                // use background-subtracted data and add bkg back on later.
-                assert bkgDataA != null;
-                assert bkgSubChannelA != null;
-                signalDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, bkgSubChannelA );
-            } else if ( signalChannelA != null ) {
-                signalDataA = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, signalChannelA );
-            }
-
-            ExpressionDataDoubleMatrix signalDataB = null;
-            if ( signalChannelB != null ) {
-                signalDataB = new ExpressionDataDoubleMatrix( expExp, bioAssayDimension, signalChannelB );
-            }
-
+        /*
+         * Note we have to do this one array design at a time, because we are producing DesignElementDataVectors which
+         * must be associated with the correct BioAssayDimension.
+         */
+        for ( BioAssayDimension bioAssayDimension : dims ) {
+            ArrayDesign ades = bioAssayDimension.getBioAssays().iterator().next().getArrayDesignUsed();
+            ExpressionDataDoubleMatrix preferredData = builder.getPreferredData( ades );
+            ExpressionDataDoubleMatrix bkgDataA = builder.getBackgroundChannelA( ades );
+            ExpressionDataDoubleMatrix bkgDataB = builder.getBackgroundChannelB( ades );
+            ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA( ades );
+            ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB( ades );
             Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
-                    preferredDAta, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
-                    channelANeedsReconstruction );
+                    preferredData, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold );
 
             finalResults.addAll( dimRes );
         }
-
         return finalResults;
-
     }
 
     /**
@@ -237,7 +124,7 @@ public class TwoChannelMissingValues {
             BioAssayDimension bioAssayDimension, ExpressionDataDoubleMatrix preferred,
             ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
             ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
-            double signalToNoiseThreshold, boolean channelANeedsReconstruction ) {
+            double signalToNoiseThreshold ) {
 
         validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
 
@@ -255,6 +142,7 @@ public class TwoChannelMissingValues {
 
             boolean[] detectionCalls = new boolean[preferred.columns()];
             Double[] prefRow = preferred.getRow( designElement );
+
             Double[] signalA = signalChannelA != null ? signalChannelA.getRow( designElement ) : null;
             Double[] signalB = signalChannelB != null ? signalChannelB.getRow( designElement ) : null;
             Double[] bkgA = null;
@@ -264,10 +152,10 @@ public class TwoChannelMissingValues {
 
             if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
 
-            for ( int col = 0; col < prefRow.length; col++ ) {
+            for ( int col = 0; col < preferred.columns(); col++ ) {
 
                 // If the "preferred" value is already missing, we retain that.
-                Double pref = prefRow[col];
+                Double pref = prefRow == null ? Double.NaN : prefRow[col];
                 if ( pref == null || pref.isNaN() ) {
                     detectionCalls[col] = false;
                     continue;
@@ -281,13 +169,6 @@ public class TwoChannelMissingValues {
                 if ( bkgB != null ) bkgBV = bkgB[col];
 
                 Double sigAV = signalA[col] == null ? 0.0 : signalA[col];
-
-                /*
-                 * Put the background value back on.
-                 */
-                if ( channelANeedsReconstruction ) {
-                    sigAV = sigAV + bkgAV;
-                }
                 Double sigBV = signalB[col] == null ? 0.0 : signalB[col];
 
                 boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
@@ -312,6 +193,8 @@ public class TwoChannelMissingValues {
     }
 
     /**
+     * Construct the quantitation type that will be used for the generated DesignElementDataVEctors.
+     * 
      * @param signalToNoiseThreshold
      * @return
      */
@@ -329,6 +212,8 @@ public class TwoChannelMissingValues {
     }
 
     /**
+     * Check to make sure all the pieces are correctly in place to do the computation.
+     * 
      * @param preferred
      * @param signalChannelA
      * @param signalChannelB
@@ -349,18 +234,18 @@ public class TwoChannelMissingValues {
         }
 
         if ( !( signalChannelA.rows() == signalChannelB.rows() ) ) {
-            throw new IllegalArgumentException( "Collection sizes must match in channel A and B "
-                    + signalChannelA.rows() + " != " + signalChannelB.rows() );
+            log.warn( "Collection sizes probably should match in channel A and B " + signalChannelA.rows() + " != "
+                    + signalChannelB.rows() );
         }
 
-        if ( !( signalChannelA.rows() == preferred.rows() ) ) {
-            throw new IllegalArgumentException( "Collection sizes must match in channel A and preferred type "
-                    + signalChannelA.rows() + " != " + preferred.rows() );
+        if ( !( signalChannelA.rows() == preferred.rows() ) ) { // vectors with all-missing data are already removed
+            log.warn( "Collection sizes probably should match in channel A and preferred type " + signalChannelA.rows()
+                    + " != " + preferred.rows() );
         }
 
         if ( ( bkgChannelA != null && bkgChannelB != null ) && bkgChannelA.rows() != bkgChannelB.rows() )
-            throw new IllegalArgumentException( "Collection sizes must match for background  " + bkgChannelA.rows()
-                    + " != " + bkgChannelB.rows() );
+            log.warn( "Collection sizes probably should match for background  " + bkgChannelA.rows() + " != "
+                    + bkgChannelB.rows() );
 
         if ( signalToNoiseThreshold <= 0.0 ) {
             throw new IllegalArgumentException( "Signal-to-noise threshold must be greater than zero" );

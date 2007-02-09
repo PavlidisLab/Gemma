@@ -78,8 +78,8 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
 //        Collection genes;
 //        
 //        log.debug( "gene collection size: " + genes.size() );
-//        Collection ees = eeSrv.getByTaxon( mouse );
-//       // Collection qts = eeSrv.getQuantitationTypes( ( ExpressionExperiment ) ees.iterator().next() );
+//        Collection expressionExperimentService = eeSrv.getByTaxon( mouse );
+//       // Collection qts = eeSrv.getQuantitationTypes( ( ExpressionExperiment ) expressionExperimentService.iterator().next() );
 //        QuantitationType qt =  QuantitationType.Factory.newInstance();
 //        //qt.setId( (long) 1 );
 //        qt.setName( "VALUE" );
@@ -88,7 +88,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
 //        qt.setGeneralType(GeneralType.QUANTITATIVE);
 //        qt.setType(StandardQuantitationType.MEASUREDSIGNAL);
 //        qt = qtSrv.find(qt);        
-//        dedvs.getGeneCoexpressionPattern( ees, genes, qt );
+//        dedvs.getGeneCoexpressionPattern( expressionExperimentService, genes, qt );
 //
 //    }
 

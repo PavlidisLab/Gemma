@@ -19,14 +19,8 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
-import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,27 +35,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataMatrixService {
 
-    private static Log log = LogFactory.getLog( ExpressionDataMatrixService.class.getName() );
-
     DesignElementDataVectorService designElementDataVectorService;
 
     /**
-     * @param expExp
-     * @param qt
-     * @return
-     * @deprecated use getMatrix instead
-     */
-    @SuppressWarnings("unchecked")
-    public DoubleMatrixNamed getDoubleNamedMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
-        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.find( expExp, qt );
-        if ( vectors == null || vectors.size() == 0 ) {
-            log.warn( "No vectors for " + expExp + " and " + qt );
-            return null;
-        }
-        return new ExpressionDataDoubleMatrix( expExp, qt ).getNamedMatrix();
-    }
-
-    /**
+     * WARNING this method may not yield the expected results if the experiment contains more than one array design.
+     * 
      * @param expExp
      * @param qt
      * @return
