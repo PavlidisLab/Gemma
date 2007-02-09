@@ -229,7 +229,7 @@ public class QuantitationTypeParameterGuesser {
         representationDescPatterns.get( PrimitiveType.INT ).add( "b[\\s_]pixels" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*(array_row|array_column|top|left|right|bot).*" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*(x_coord|y_coord|x_location|y_location).*" );
-        representationNamePatterns.get( PrimitiveType.STRING ).add( "abs([ _])?call" );
+        representationNamePatterns.get( PrimitiveType.CHAR ).add( "abs([ _])?call" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "flag(s)?" );
 
         isBackgroundDescPatterns.put( Boolean.FALSE, new HashSet<String>() );

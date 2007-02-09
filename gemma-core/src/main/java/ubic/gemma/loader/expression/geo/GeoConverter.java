@@ -400,8 +400,11 @@ public class GeoConverter implements Converter {
                 try {
                     if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                         toConvert.add( Double.parseDouble( ( String ) rawValue ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                    } else if ( pt.equals( PrimitiveType.STRING ) || pt.equals( PrimitiveType.STRINGARRAY ) ) {
+                        // FIXME BUG 741 - converter makes it a tabbed string, which is a no-no.
                         toConvert.add( ( String ) rawValue );
+                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
+                        toConvert.add( ( Character ) rawValue );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
                         toConvert.add( Integer.parseInt( ( String ) rawValue ) );
                     } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
