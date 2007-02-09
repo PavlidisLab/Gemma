@@ -60,6 +60,9 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
         endTransaction();
 
+        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        taxon = taxonService.findByCommonName( "mouse" );
+
         // note that the name MG-U74A is not used by the result.
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
         app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
@@ -68,8 +71,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
-        taxon = taxonService.findByCommonName( "mouse" );
+
     }
 
     @Override
