@@ -132,7 +132,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 			return null;
 		}
 		Collection <ExpressionExperiment> allEE = eeService.getByTaxon(taxon);
-		Collection <Gene> testGenes = getTestGenes(geneService,taxon);
+//		Collection <Gene> testGenes = getTestGenes(geneService,taxon);
 		HashSet<String> geneNames = new HashSet<String>();
 		HashSet<String> targetGeneNames = new HashSet<String>();
 		boolean targetGene = true;
@@ -153,63 +153,34 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 			e.printStackTrace();
 			return e;
 		}
-        Collection<Gene> genes = this.getGenes(geneService, geneNames.toArray(), taxon);
+
+		Collection<Gene> genes = this.getGenes(geneService, geneNames.toArray(), taxon);
         Collection<Gene> targetGenes = this.getGenes(geneService, targetGeneNames.toArray(), taxon);
-//        HashMap<QuantitationType, HashSet<ExpressionExperiment>> eeMap = new HashMap<QuantitationType, HashSet<ExpressionExperiment>>();
-//        for(ExpressionExperiment ee:allEE){
-//        	Collection <QuantitationType> eeQT = eeService.getQuantitationTypes(ee);
-//        	for (QuantitationType qt : eeQT) {
-//        		if(qt.getIsPreferred()){
-//        			HashSet<ExpressionExperiment> eeCollection =  eeMap.get( qt );
-//        			if(eeCollection == null){
-//        				log.info(" Get Quantitation Type : " + qt.getName()+ ":"+qt.getType());
-//        				eeCollection = new HashSet<ExpressionExperiment>();
-//        				eeMap.put( qt, eeCollection );
-//        			}
-//        			eeCollection.add( ee );
-//        			break;
-//        		}
-//        	}
-//        }
-//        Collection<DesignElementDataVector> allDevs = new HashSet<DesignElementDataVector>();
-//       	for(QuantitationType qt:eeMap.keySet()){
-//      			HashSet<ExpressionExperiment> expressionExperimentService = eeMap.get(qt);
-//      			System.err.println(expressionExperimentService.size() + " " + genes.size());
-//       			for(ExpressionExperiment ee:expressionExperimentService){
-//       				HashSet<ExpressionExperiment> tmpEEs = new HashSet<ExpressionExperiment>();
-//       				System.err.println(ee.getShortName() + " " + qt);
-//       				tmpEEs.add(ee);
-//       	       		try{
-//       	       			Collection<DesignElementDataVector> devs = vectorService.getGeneCoexpressionPattern(tmpEEs, genes, qt);
-//       	       			System.err.println(devs.size());
-//       	       			vectorService.thaw(devs);
-//       	       			for(DesignElementDataVector dev:devs){
-//       	       				System.err.print(dev.getId() + "( " + dev.getQuantitationType().getId() + ") ");
-//       	       			}
-//       	       			System.err.println("");
-//       	       			allDevs.addAll(devs);
-//       	       		}catch(Exception e){
-//       	       			e.printStackTrace();
-//       	       		}
-//       			}
-//      			try{
-//      				Collection<DesignElementDataVector> devs = vectorService.getGeneCoexpressionPattern(expressionExperimentService, genes, qt);
-//      				System.err.println(devs.size());
-//      				allDevs.addAll(devs);
-//      			}catch(Exception e){
-//	       			e.printStackTrace();
-//   	       		}
-//       	}
         HashSet<Gene> queryGenes = new HashSet<Gene>();
         queryGenes.addAll(genes);
         queryGenes.addAll(targetGenes);
         System.err.println("Start the Query for "+ queryGenes.size() + " genes");
         StopWatch qWatch = new StopWatch();
         qWatch.start();
-
-        Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>(devService.getGeneCoexpressionPattern(allEE, queryGenes));
+        
+    	int count = 0;
+    	int CHUNK_LIMIT = 30;
+    	int total = queryGenes.size();
+    	Collection<Gene> genesInOneChunk = new HashSet<Gene>();
+    	Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
+    	for(Gene gene:queryGenes){
+    		genesInOneChunk.add(gene);
+    		count++;
+    		total--;
+    		if(count == CHUNK_LIMIT || total == 0){
+    			geneMap.putAll(devService.getGeneCoexpressionPattern(allEE, genesInOneChunk));
+    			count = 0;
+    			genesInOneChunk.clear();
+    			System.out.print(".");
+    		}
+    	}
         qWatch.stop();
-        System.err.println("Query takes " + qWatch.getTime());
+        System.err.println("\nQuery takes " + qWatch.getTime());
 
         GeneCoExpressionAnalysis coExperssion = new GeneCoExpressionAnalysis((Set)targetGenes, (Set)genes, (Set)new HashSet(allEE));
         
