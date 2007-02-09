@@ -43,7 +43,7 @@ public class GffParserTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        is.close();
+        if (is != null) is.close();
         super.tearDown();
     }
 
