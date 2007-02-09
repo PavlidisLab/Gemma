@@ -574,15 +574,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Map handleGetPerTaxonCount() throws Exception {
-        final String queryString = "select SU.sourceTaxon.scientificName, count(distinct EE.id) from ExpressionExperimentImpl as EE "
+        final String queryString = "select SU.sourceTaxon, count(distinct EE.id) from ExpressionExperimentImpl as EE "
                 + "inner join EE.bioAssays as BA inner join BA.samplesUsed as SU "
                 + "inner join SU.sourceTaxon group by SU.sourceTaxon.scientificName";
-        Map<String, Long> taxonCount = new HashMap<String, Long>();
+        Map<Taxon, Long> taxonCount = new HashMap<Taxon, Long>();
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                taxonCount.put( list.getString( 0 ), new Long( list.getInteger( 1 ) ) );
+                taxonCount.put( (Taxon) list.get( 0 ), new Long( list.getInteger( 1 ) ) );
             }
             return taxonCount;
         } catch ( org.hibernate.HibernateException ex ) {

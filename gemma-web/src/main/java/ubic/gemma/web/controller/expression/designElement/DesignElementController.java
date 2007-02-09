@@ -27,10 +27,12 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
@@ -43,6 +45,7 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.property name="methodNameResolver" ref="designElementActions"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
+ * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name="searchService" ref="searchService"
  */
 public class DesignElementController extends BaseMultiActionController {
@@ -51,6 +54,14 @@ public class DesignElementController extends BaseMultiActionController {
     private ArrayDesignService arrayDesignService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService;
     private CompositeSequenceService compositeSequenceService;
+    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
+
+    /**
+     * @param compositeSequenceGeneMapperService the compositeSequenceGeneMapperService to set
+     */
+    public void setCompositeSequenceGeneMapperService( CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
+    }
 
     /**
      * @param request
@@ -83,7 +94,29 @@ public class DesignElementController extends BaseMultiActionController {
          */
 
         Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( filter, arrayDesign );
-
+        Collection<Gene> geneResults = null;
+        try {
+            geneResults = searchService.geneSearch( filter );
+        } catch ( Exception e ) {
+            // fail quietly
+        }
+        // if there have been any genes returned, find the compositeSequences associated with the genes
+        if ( geneResults != null && geneResults.size() > 0 ) {
+            for ( Gene gene : geneResults ) {
+                
+                if (arrayDesign == null) {
+                Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService
+                        .getCompositeSequencesByGeneId( gene.getId() );
+                    searchResults.addAll( geneCs );
+                }
+                else {
+                    Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService
+                    .getCompositeSequencesByGeneId( gene, arrayDesign );
+                    searchResults.addAll( geneCs );
+                }
+                
+            }
+        }
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );
             // return showAll( request, response );

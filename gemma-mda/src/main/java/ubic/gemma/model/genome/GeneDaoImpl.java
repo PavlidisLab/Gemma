@@ -40,10 +40,10 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
 
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -60,6 +60,35 @@ import ubic.gemma.util.TaxonUtility;
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
+
+    /**
+     * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign.
+     * 
+     * @param gene, arrayDesign
+     * @return Collection
+     */
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetCompositeSequencesById( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+        Collection<CompositeSequence> compSeq = null;
+        final String queryString = "select distinct compositeSequence from GeneImpl as gene,  BioSequence2GeneProductImpl"
+                + " as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence " + " and gene = :gene and compositeSequence.arrayDesign = :arrayDesign ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "arrayDesign", arrayDesign);
+            queryObject.setParameter( "gene", gene );
+            compSeq = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compSeq;
+    }
 
     /*
      * (non-Javadoc)
@@ -241,6 +270,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param out whatever "a" isn't.
      * @return
      */
+    @SuppressWarnings("unused")
     private String getQueryString( String p2pClassName, String in, String out ) {
         String queryStringFirstVector =
         // return values
@@ -669,12 +699,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         final String queryString = "select distinct compositeSequence from GeneImpl as gene,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
                 + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        /*
-         * final String queryString = "select distinct compositeSequence from BioSequence2GeneProductImpl as
-         * bs2gp,CompositeSequenceImpl as compositeSequence " + "where bs2gp.geneProduct.id in (select gene.products.id
-         * from GeneImpl as gene where gene.id = :id) and " + "bs2gp.bioSequence =
-         * compositeSequence.biologicalCharacteristic";
-         */
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", id );

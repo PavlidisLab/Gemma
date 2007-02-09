@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -244,6 +245,14 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     @Override
     protected Collection handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
         return this.getGeneDao().getMicroRnaByTaxon( taxon );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Collection handleGetCompositeSequencesById( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+        return this.getGeneDao().getCompositeSequencesById( gene, arrayDesign );
     }
 
 }

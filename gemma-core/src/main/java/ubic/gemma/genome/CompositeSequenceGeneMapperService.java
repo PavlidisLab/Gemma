@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
@@ -123,9 +124,20 @@ public class CompositeSequenceGeneMapperService {
      * @param id
      * @return Collection<CompositeSequence>
      */
+    @SuppressWarnings("unchecked")
     public Collection<CompositeSequence> getCompositeSequencesByGeneId( long id ) {
         // TODO change name to getCompositeSequenceByGene(Gene gene)
         return this.geneDao.getCompositeSequencesById( id );
+    }
+    
+    /**
+     * @param id
+     * @return Collection<CompositeSequence>
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequence> getCompositeSequencesByGeneId( Gene gene, ArrayDesign arrayDesign ) {
+        // TODO change name to getCompositeSequenceByGene(Gene gene)
+        return this.geneDao.getCompositeSequencesById( gene,arrayDesign);
     }
 
     /**
