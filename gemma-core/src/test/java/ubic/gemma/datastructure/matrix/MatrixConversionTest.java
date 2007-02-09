@@ -102,6 +102,7 @@ public class MatrixConversionTest extends TestCase {
                 ba.setId( i );
                 baDimA.getBioAssays().add( ba );
             }
+            baDimA.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
 
             BioAssayDimension baDimB = BioAssayDimension.Factory.newInstance();
             Iterator<BioMaterial> bmitb = bioMaterials.iterator();
@@ -112,6 +113,7 @@ public class MatrixConversionTest extends TestCase {
                 ba.setId( i );
                 baDimB.getBioAssays().add( ba );
             }
+            baDimB.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
 
             // bio.a gets cs 0-99, bio.b gets 100-199.
             long j = 0;
