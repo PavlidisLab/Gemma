@@ -115,6 +115,21 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
             boolean[] vals = null;
             if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
                 vals = bac.byteArrayToBooleans( bytes );
+            } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.CHAR ) ) {
+                char[] charVals = bac.byteArrayToChars( bytes );
+                vals = new boolean[charVals.length];
+                int j = 0;
+                for ( char c : charVals ) {
+                    if ( c == 'P' ) {
+                        vals[j] = true;
+                    } else if ( c == 'M' ) {
+                        vals[j] = false;
+                    } else if ( c == 'A' ) {
+                        vals[j] = false;
+                    }
+                    j++;
+                }
+
             } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
                 String val = bac.byteArrayToAsciiString( bytes );
                 String[] fields = StringUtils.split( val, '\t' );

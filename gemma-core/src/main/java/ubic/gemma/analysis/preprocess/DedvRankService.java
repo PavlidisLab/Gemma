@@ -27,6 +27,7 @@ import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -76,7 +77,12 @@ public class DedvRankService {
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
 
             ExpressionDataDoubleMatrix intensities = builder.getIntensity( ad );
-            builder.maskMissingValues( intensities, ad );
+
+            // We don't remove missing values for Affymetrix based on absent/present calls.
+            if ( ad.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
+                builder.maskMissingValues( intensities, ad );
+            }
+
             IntArrayList ranks = getRanks( intensities, method );
 
             Collection<DesignElementDataVector> vectors = getVectors( ee, builder, ad );
