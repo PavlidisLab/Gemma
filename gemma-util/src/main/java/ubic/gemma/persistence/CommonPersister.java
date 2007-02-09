@@ -535,18 +535,21 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param entity
+     * @param qType
      */
-    protected QuantitationType persistQuantitationType( QuantitationType entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
+    protected QuantitationType persistQuantitationType( QuantitationType qType ) {
+        if ( qType == null ) return null;
+        if ( !isTransient( qType ) ) return qType;
 
-        Object key = entity.getName().hashCode() + entity.getDescription().hashCode();
+        int key = 0;
+        if ( qType.getName() == null ) throw new IllegalArgumentException( "QuantitationType must have a name" );
+        if ( qType.getDescription() != null ) key += qType.getDescription().hashCode();
+
         if ( quantitationTypeCache.containsKey( key ) ) {
             return quantitationTypeCache.get( key );
         }
 
-        QuantitationType qt = quantitationTypeService.findOrCreate( entity );
+        QuantitationType qt = quantitationTypeService.findOrCreate( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
     }
