@@ -30,6 +30,7 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -119,6 +120,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     }
 
     public final void testLoadImageCloneDesign() throws Exception {
+        endTransaction();
         SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
                 .getBean( "simpleExpressionDataLoaderService" );
 
@@ -149,7 +151,11 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         assertNotNull( ee );
 
+        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
+
         for ( DesignElementDataVector vector : ee.getDesignElementDataVectors() ) {
+            dedvs.thaw( vector );
             assertTrue( ( ( CompositeSequence ) vector.getDesignElement() ).getBiologicalCharacteristic().getName()
                     .startsWith( "IMAGE:" ) );
         }
