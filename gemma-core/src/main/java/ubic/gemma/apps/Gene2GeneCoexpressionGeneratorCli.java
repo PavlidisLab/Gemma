@@ -169,6 +169,8 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
             g2gCoexpression.setPvalue( co.getCollapsedPValue() );
             g2gCoexpression.setEffect( co.getNegitiveScore() ); // Which score to use????
 
+            //TODO persist gene twice for positive and negative corralations. 
+           
             // g2gCoexpression.setEffect( effect );
             // g2gCoexpression.setSource( toPersist.g);
 

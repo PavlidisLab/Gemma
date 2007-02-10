@@ -184,6 +184,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     private void collectMapInfo( Integer stringency, Map<Long, CoexpressionValueObject> geneMap,
             CoexpressionCollectionValueObject coexpressions ) {
+        
+        //TODO use +/- score information in value object to discern if stringincy was met 
         Collection<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
         // add count of original matches to coexpression data
         coexpressions.setLinkCount( geneMap.size() );
