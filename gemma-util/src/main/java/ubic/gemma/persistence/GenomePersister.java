@@ -323,10 +323,15 @@ abstract public class GenomePersister extends CommonPersister {
     private Chromosome persistChromosome( Chromosome chromosome ) {
         if ( chromosome == null ) return null;
         if ( !isTransient( chromosome ) ) return chromosome;
-        if ( chromosome.getTaxon().getCommonName() == null || chromosome.getName() == null ) {
-            throw new IllegalArgumentException( "Chromosome must have taxon common name and a name" );
-        }
-        String key = chromosome.getTaxon().getCommonName() + " " + chromosome.getName();
+
+        // note that we can't use the native hashcode method because we need to ignore the ID.
+        int key = chromosome.getName().hashCode();
+        if ( chromosome.getTaxon().getNcbiId() != null )
+            key += chromosome.getTaxon().getNcbiId().hashCode();
+        else if ( chromosome.getTaxon().getCommonName() != null )
+            key += chromosome.getTaxon().getCommonName().hashCode();
+        else if ( chromosome.getTaxon().getScientificName() != null )
+            key += chromosome.getTaxon().getScientificName().hashCode();
 
         if ( seenChromosomes.containsKey( key ) ) {
             return seenChromosomes.get( key );
