@@ -32,8 +32,7 @@ public class AllArrayDesignTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Tests for ubic.gemma.loader.expression.arrayDesign" );
         // $JUnit-BEGIN$
-        suite.addTestSuite( AbstractArrayDesignProcessingTest.class );
-        suite.addTestSuite( ArrayDesignParserIntegrationTest.class );
+          suite.addTestSuite( ArrayDesignParserIntegrationTest.class );
         suite.addTestSuite( IlluminaProbeReaderTest.class );
         suite.addTestSuite( AffyProbeReaderTest.class );
         suite.addTestSuite( ArrayDesignSequenceProcessorTest.class );
