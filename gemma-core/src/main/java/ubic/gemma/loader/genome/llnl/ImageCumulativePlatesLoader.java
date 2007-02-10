@@ -203,13 +203,15 @@ public class ImageCumulativePlatesLoader {
                 }
 
             }
+
+            // finish up.
+            persistBatch( bioSequencesToPersist );
+
         } catch ( Exception e ) {
             consumerDone = true;
+            producerDone = true; // stop everything.
             throw new RuntimeException( e );
         }
-
-        // finish up.
-        persistBatch( bioSequencesToPersist );
 
         log.info( "Loaded total of " + count + " sequences" );
         consumerDone = true;
