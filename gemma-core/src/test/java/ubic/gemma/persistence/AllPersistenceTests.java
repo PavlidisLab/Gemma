@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,24 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.persistence;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test for ubic.gemma.analysis.preprocess
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class AllPreProcessTests {
+public class AllPersistenceTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.analysis.preprocess" );
+        TestSuite suite = new TestSuite( "Test for ubic.gemma.persistence" );
         // $JUnit-BEGIN$
-        suite.addTestSuite( RMATest.class );
-        suite.addTestSuite( QuantileNormalizerTest.class );
-        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
-        suite.addTestSuite( RMABackgroundAdjusterTest.class );
-        suite.addTestSuite( TwoChannelMissingValuesTest.class );
-        suite.addTestSuite( DedvRankServiceTest.class );
+        suite.addTestSuite( GenomePersisterTest.class );
+        suite.addTestSuite( PersisterTest.class );
+        suite.addTestSuite( CrudUtilsTest.class );
+        suite.addTestSuite( BlatAssociationPersisterTest.class );
         // $JUnit-END$
         return suite;
     }

@@ -23,8 +23,10 @@ import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.sequence.ProbeMapperTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
+import ubic.gemma.datastructure.matrix.AllExpressionMatrixTests;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.NCBIGene2GOAssociationParserTest;
+import ubic.gemma.loader.description.AllDescriptionLoaderTests;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
 import ubic.gemma.loader.expression.arrayDesign.AllArrayDesignTests;
@@ -36,10 +38,11 @@ import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDeleteTest;
+import ubic.gemma.persistence.AllPersistenceTests;
 import ubic.gemma.persistence.CrudUtilsTest;
 import ubic.gemma.persistence.GenomePersisterTest;
 import ubic.gemma.persistence.PersisterTest;
+import ubic.gemma.scheduler.SchedulerFactoryBeanTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.TaxonUtilityTest;
 import ubic.gemma.util.progress.ProgressAppenderTest;
@@ -71,18 +74,21 @@ public class AllCoreTests {
         suite.addTest( AllGenomeTests.suite() );
         suite.addTest( AllModelTests.suite() );
 
+        suite.addTest( AllSecurityTests.suite() );
+        suite.addTest( AllPersistenceTests.suite() );
+
+        suite.addTest( AllExpressionMatrixTests.suite() );
+
+        suite.addTest( AllDescriptionLoaderTests.suite() );
+
         suite.addTestSuite( HttpFetcherTest.class );
         suite.addTestSuite( AbstractFetcherTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
-
-        suite.addTest( AllSecurityTests.suite() );
-
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
 
         suite.addTestSuite( NCBIGene2GOAssociationParserTest.class );
-        suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
         suite.addTestSuite( ExpressionDataMatrixVisualizationServiceTest.class );
@@ -91,8 +97,7 @@ public class AllCoreTests {
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );
         suite.addTestSuite( GenomePersisterTest.class );
-
-        suite.addTestSuite( ExpressionExperimentDeleteTest.class );
+        suite.addTestSuite( SchedulerFactoryBeanTest.class );
 
         suite.addTestSuite( TaxonUtilityTest.class );
 

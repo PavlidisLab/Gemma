@@ -41,6 +41,8 @@ public class AllSecurityTests {
         suite.addTestSuite( PrincipalTest.class );
         suite.addTestSuite( AuditInterceptorTest.class );
         suite.addTestSuite( PersistAclInterceptorTest.class );
+        suite.addTestSuite( UserGroupServiceTest.class );
+        suite.addTestSuite( SecurityServiceTest.class );
         // $JUnit-END$
         return suite;
     }

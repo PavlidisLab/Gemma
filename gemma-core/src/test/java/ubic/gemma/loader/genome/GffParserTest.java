@@ -21,6 +21,9 @@ package ubic.gemma.loader.genome;
 import java.io.InputStream;
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.Taxon;
@@ -32,7 +35,7 @@ import junit.framework.TestCase;
  * @version $Id$
  */
 public class GffParserTest extends TestCase {
-
+    private static Log log = LogFactory.getLog( GffParserTest.class.getName() );
     InputStream is;
 
     @Override
@@ -43,7 +46,7 @@ public class GffParserTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        if (is != null) is.close();
+        if ( is != null ) is.close();
         super.tearDown();
     }
 
@@ -56,14 +59,16 @@ public class GffParserTest extends TestCase {
         parser.setTaxon( t );
         parser.parse( is );
         Collection<Object> res = parser.getResults();
-        assertEquals(382, res.size());
+
         for ( Object object : res ) {
             assertEquals( GeneImpl.class, object.getClass() );
             Gene gene = ( Gene ) object;
             assertTrue( gene.getName() != null );
             assertFalse( gene.getName().contains( "\"" ) );
             assertEquals( 1, gene.getProducts().size() );
+            log.debug( object );
         }
+        assertEquals( 382, res.size() );
     }
 
 }

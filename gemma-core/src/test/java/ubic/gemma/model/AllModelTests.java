@@ -20,6 +20,7 @@ package ubic.gemma.model;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImplTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoTest;
 import ubic.gemma.model.common.auditAndSecurity.UserDaoImplTest;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
@@ -29,8 +30,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssayDaoImplTest;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoImplTest;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoImplTest;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDaoImplTest;
-import ubic.gemma.model.expression.experiment.DesignElementDataVectorDaoTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImplTest;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDeleteTest;
 import ubic.gemma.model.genome.BioSequencePersistTest;
 import ubic.gemma.model.genome.QtlDaoImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
@@ -60,16 +61,17 @@ public class AllModelTests {
         suite.addTestSuite( BioSequencePersistTest.class );
         suite.addTestSuite( CandidateGeneListDaoImplTest.class );
         suite.addTestSuite( GeneDaoTest.class );
-        
-        suite.addTestSuite( DesignElementDataVectorDaoTest.class );
-        
+
         suite.addTestSuite( BlatAssociationDaoImplTest.class );
         suite.addTestSuite( BlatResultDaoImplTest.class );
 
         suite.addTestSuite( ExpressionExperimentDaoImplTest.class );
+        suite.addTestSuite( ExpressionExperimentDeleteTest.class );
 
         suite.addTestSuite( QtlDaoImplTest.class );
         suite.addTestSuite( DesignElementDataVectorDaoImplTest.class );
+        suite.addTestSuite( Probe2ProbeCoexpressionDaoImplTest.class );
+
         return suite;
     }
 }

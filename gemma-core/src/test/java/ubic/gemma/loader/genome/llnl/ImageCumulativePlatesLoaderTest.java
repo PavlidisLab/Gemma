@@ -45,6 +45,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
         loader.setBioSequenceService( ( BioSequenceService ) this.getBean( "bioSequenceService" ) );
         loader.setExternalDatabaseService( ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" ) );
         int actualValue = loader.load( is );
+        is.close();
         assertEquals( 418, actualValue );
     }
 

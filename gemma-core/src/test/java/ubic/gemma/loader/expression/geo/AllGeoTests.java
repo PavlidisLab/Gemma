@@ -41,6 +41,7 @@ public class AllGeoTests {
         suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         suite.addTestSuite( RawDataFetcherTest.class );
         suite.addTestSuite( GeoPlatformServiceTest.class );
+        suite.addTestSuite( QuantitationTypeParameterGuesserTest.class );
         // $JUnit-END$
         return suite;
     }

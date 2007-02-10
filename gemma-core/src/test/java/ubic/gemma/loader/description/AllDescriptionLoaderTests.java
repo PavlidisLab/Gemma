@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,25 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.loader.description;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test for ubic.gemma.analysis.preprocess
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class AllPreProcessTests {
+public class AllDescriptionLoaderTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.analysis.preprocess" );
-        // $JUnit-BEGIN$
-        suite.addTestSuite( RMATest.class );
-        suite.addTestSuite( QuantileNormalizerTest.class );
-        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
-        suite.addTestSuite( RMABackgroundAdjusterTest.class );
-        suite.addTestSuite( TwoChannelMissingValuesTest.class );
-        suite.addTestSuite( DedvRankServiceTest.class );
-        // $JUnit-END$
+        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.description" );
+        //$JUnit-BEGIN$
+        suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
+        suite.addTestSuite( GeneOntologyLoaderIntegrationTest.class );
+        suite.addTestSuite( GeneOntologyEntryParserTest.class );
+        //$JUnit-END$
         return suite;
     }
 

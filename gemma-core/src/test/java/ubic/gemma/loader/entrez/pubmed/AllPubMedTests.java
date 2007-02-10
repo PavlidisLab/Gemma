@@ -32,6 +32,7 @@ public class AllPubMedTests {
         // $JUnit-BEGIN$
         suite.addTestSuite( PubMedXMLFetcherTest.class );
         suite.addTestSuite( ESearchXMLParserTest.class );
+        suite.addTestSuite( ExpressionExperimentBibRefFinderTest.class );
         suite.addTestSuite( PubMedXMLParserTest.class );
         suite.addTestSuite( PubMedSearchTest.class );
         suite.addTestSuite( PubMedSearcherTest.class );
