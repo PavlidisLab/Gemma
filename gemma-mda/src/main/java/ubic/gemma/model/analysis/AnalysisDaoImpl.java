@@ -37,8 +37,11 @@ public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
     @Override
     protected Map handleFindByInvestigations( Collection investigators ) throws Exception {
 
-        final String queryString = "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where i.analyzedInvestigation.id in (:investigations))";
-
+        final String queryString = "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where any elements(a.analyzedInvestigation) in (:investigations))";
+        //"select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where i.analyzedInvestigation.id in (:investigations))
+        //"from AnalysisImpl i where :investigation = any elements(i.analyzedInvestigation)", investigation)      
+        
+        
         Collection<Long> investigatorsById = new HashSet<Long>();
         for ( Object obj : investigators )
             investigatorsById.add( ( ( Investigation ) obj ).getId() );

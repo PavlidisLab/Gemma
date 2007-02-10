@@ -30,8 +30,15 @@ public class CoexpressionValueObject {
     private Long geneId;
     private String geneOfficialName;
 
-    private Double pValue;
+    @Deprecated
+    private Double pValue;  
+    @Deprecated
     private Double score;
+    
+    private Map<Double,Long> positiveScores;
+    private Map<Double,Long> negativeScores;
+    private Map<Double,Long> pValues;
+    
     // the expression experiments that this coexpression was involved in
     private Map<Long,ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
@@ -40,6 +47,10 @@ public class CoexpressionValueObject {
         geneId = null;
         geneOfficialName = null;
         expressionExperimentValueObjects = new HashMap<Long, ExpressionExperimentValueObject>();
+        positiveScores = new HashMap<Double, Long>();
+        negativeScores = new HashMap<Double, Long>();
+        pValues = new HashMap<Double, Long>();
+        
     }
     
     /**
@@ -92,20 +103,93 @@ public class CoexpressionValueObject {
         this.geneOfficialName = geneOfficialName;
     }
 
+    @Deprecated
     public Double getPValue() {
         return pValue;
     }
 
+    @Deprecated
     public void setPValue( Double value ) {
         pValue = value;
     }
 
+    @Deprecated
     public Double getScore() {
         return score;
     }
 
+    @Deprecated
     public void setScore( Double score ) {
         this.score = score;
+    }
+    
+    public void addPValue(Double pValue, Long probeID){
+        pValues.put( pValue, probeID );        
+    }
+    
+    public Map<Double,Long> getPValues(){
+        return pValues;
+        
+    }
+
+    /**
+     * @return the negativePValues
+     */
+    public Map<Double, Long> getNegativeScores() {
+        return negativeScores;
+    }
+
+    /**
+     * @return the positivePValues
+     */
+    public Map<Double, Long> getPositiveScores() {
+        return positiveScores;
+    }
+    
+    public void addScore(Double score, long probeID){
+        if (score < 0)
+            negativeScores.put( score, probeID );
+        else
+            positiveScores.put( score, probeID );
+    }
+
+    
+    public double getPositiveScore(){
+        
+        if (positiveScores.keySet().size() == 0)
+            return 0;
+        
+        double mean = 0;
+        for(double score: positiveScores.keySet())            
+            mean += score;
+        
+        return mean/positiveScores.keySet().size();
+        
+    }
+
+    public double getNegitiveScore(){
+        
+        if (negativeScores.keySet().size() == 0)
+            return 0;
+        
+        double mean = 0;
+        for(double score: negativeScores.keySet())            
+            mean += score;
+        
+        return mean/negativeScores.keySet().size();
+        
+    }
+    
+    public double getCollapsedPValue(){
+        
+        if (pValues.keySet().size() == 0)
+            return 0;
+        
+        double mean = 0;
+        for(double pValue: pValues.keySet())            
+            mean += pValue;
+        
+        return mean/pValues.keySet().size();
     }
 
 }

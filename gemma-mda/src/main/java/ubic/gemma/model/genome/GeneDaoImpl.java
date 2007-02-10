@@ -317,11 +317,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
-        String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, outers.PVALUE as pvalue, outers.SCORE as score  FROM DESIGN_ELEMENT_DATA_VECTOR "
+        String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, outers.PVALUE as pvalue, outers.SCORE as score, " +
+                        "outers.csIdIn as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM DESIGN_ELEMENT_DATA_VECTOR "
                 + "dedvout INNER JOIN (SELECT coexp."
                 + outKey
-                + " AS ID, coexp.PVALUE as PVALUE, coexp.SCORE as SCORE FROM   GENE2CS gc,  DESIGN_ELEMENT_DATA_VECTOR dedvin, "
+                + " AS ID, coexp.PVALUE as PVALUE, coexp.SCORE as SCORE, dedvin.DESIGN_ELEMENT_FK as csIdIn FROM GENE2CS gc, DESIGN_ELEMENT_DATA_VECTOR dedvin, "
                 + p2pClass
                 + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
                 + inKey
@@ -346,17 +347,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         CoexpressionValueObject vo;
         Long geneId = scroll.getLong( 0 );
         // check to see if geneId is already in the geneMap
-        if ( geneMap.containsKey( geneId ) ) {
+        if ( geneMap.containsKey( geneId ) )          
             vo = geneMap.get( geneId );
-        } else {
+        
+         else {
             vo = new CoexpressionValueObject();
             vo.setGeneId( geneId );
             vo.setGeneName( scroll.getString( 1 ) );
-            vo.setGeneOfficialName( scroll.getString( 2 ) );
-            vo.setPValue( scroll.getDouble( 6 ));
-            vo.setScore( scroll.getDouble( 7 ));
+            vo.setGeneOfficialName( scroll.getString( 2 ) );                       
             geneMap.put( geneId, vo );
         }
+        
+        Long probeID = scroll.getLong(9);        
+        vo.addScore( scroll.getDouble( 7 ), probeID );
+        vo.addPValue( scroll.getDouble( 6 ), probeID );
+        
         // add the expression experiment
         ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
         eeVo.setId( scroll.getLong( 3 ).toString() );
@@ -400,6 +405,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "name", new StringType() );
         queryObject.addScalar( "pvalue", new DoubleType() );
         queryObject.addScalar( "score", new DoubleType() );
+        queryObject.addScalar( "csIdIn", new LongType() );
+        queryObject.addScalar( "csIdOut", new LongType() );
         
         queryObject.setLong( "id", id );
         // this is to make the query faster by narrowing down the gene join
