@@ -60,6 +60,9 @@ public class GffParser extends BasicLineParser {
 
     @Override
     protected void addResult( Object obj ) {
+        if ( results.contains( obj ) ) {
+            log.warn( "Already have " + obj );
+        }
         results.add( ( Gene ) obj );
     }
 
@@ -76,7 +79,7 @@ public class GffParser extends BasicLineParser {
 
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         Gene newGene = Gene.Factory.newInstance();
-        GeneProduct gp = GeneProduct.Factory.newInstance();
+        GeneProduct geneProduct = GeneProduct.Factory.newInstance();
 
         String seqName = fields[0]; // chromosome
         // String source = fields[1];
@@ -89,14 +92,16 @@ public class GffParser extends BasicLineParser {
         String attributes = fields[8];
 
         newGene.setDescription( featureType );
-        gp.setDescription( featureType );
+        geneProduct.setDescription( featureType );
 
         String[] attFields = StringUtils.splitPreserveAllTokens( attributes, ';' );
         for ( int i = 0; i < attFields.length; i++ ) {
 
             String f = attFields[i];
 
-            if ( f == null || f.length() == 0 ) continue;
+            if ( f == null || f.length() == 0 ) {
+                continue;
+            }
 
             f = StringUtils.strip( f );
             log.debug( f );
@@ -113,7 +118,7 @@ public class GffParser extends BasicLineParser {
                 val = val.replaceAll( "\"", "" );
                 newGene.setName( val );
                 newGene.setOfficialSymbol( val );
-                gp.setName( val );
+                geneProduct.setName( val );
             } else if ( ti.equals( "ACC" ) ) {
                 // don't know what database!
             }
@@ -125,20 +130,18 @@ public class GffParser extends BasicLineParser {
         chromosome.setName( seqName );
         chromosome.setTaxon( taxon );
 
-        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        pl.setChromosome( chromosome );
-        pl.setNucleotide( start );
-        pl.setNucleotideLength( length );
-        pl.setStrand( strand );
-        gp.setPhysicalLocation( pl );
-        gp.setGene( newGene );
+        PhysicalLocation location = PhysicalLocation.Factory.newInstance();
+        location.setChromosome( chromosome );
+        location.setNucleotide( start );
+        location.setNucleotideLength( length );
+        location.setStrand( strand );
 
-        PhysicalLocation gpl = PhysicalLocation.Factory.newInstance();
-        gpl.setChromosome( chromosome );
+        geneProduct.setPhysicalLocation( location );
+        geneProduct.setGene( newGene );
 
         newGene.setTaxon( taxon );
-        newGene.setPhysicalLocation( gpl );
-        newGene.getProducts().add( gp );
+        newGene.setPhysicalLocation( location );
+        newGene.getProducts().add( geneProduct );
 
         return newGene;
 

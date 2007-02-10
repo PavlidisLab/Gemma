@@ -219,12 +219,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     }
 
     // Please leave this here, we use it to load data sets for chopping.
-//    @SuppressWarnings("unchecked")
-//    public void testFetchASeries() throws Exception {
-//        endTransaction();
-//        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-//        geoService.fetchAndLoad( "GSE464" );
-//    }
+    // @SuppressWarnings("unchecked")
+    // public void testFetchASeries() throws Exception {
+    // endTransaction();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    // geoService.fetchAndLoad( "GSE464" );
+    // }
 
     /**
      * GSE3434 has no dataset. It's small so okay to download.
@@ -279,12 +279,16 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         endTransaction();
         int expectedValue = 20;
         String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gds999short" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                .fetchAndLoad( "GDS999" );
 
-        ee = results.iterator().next();
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                    + "gds999short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GDS999" );
+            ee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ExpressionExperiment ) e.getData();
+        }
         assertEquals( 34, ee.getBioAssays().size() );
 
         assertEquals( 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
@@ -344,22 +348,20 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // .fetchAndLoad( "GSE1074" );
     // ee = results.iterator().next();
     // }
-    
     /**
-     *  Suffers from two data sets with the same platform
+     * Suffers from two data sets with the same platform
      */
-     @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadGSE464() throws Exception {
-     String path = getTestFileBasePath();
-     geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-     + "gse464Short" ) );
-    
-     Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse464Short" ) );
+
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE464" );
-     ee = results.iterator().next();
-     }
-    
-    
+        ee = results.iterator().next();
+    }
+
     /**
      * @throws Exception
      */
@@ -654,11 +656,17 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         }
 
         // it is important for this test that GSE3193 not already be in the database.
+        ExpressionExperiment eeold = this.eeService.findByShortName( "GSE3193" );
+        if (eeold != null) {
+            eeService.delete( eeold );
+        }
+        
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                 .fetchAndLoad( "GSE3193" );
         ee = results.iterator().next();
+
         assertNotNull( ee );
 
         // FIXME: check that we haven't loaded samples twice.

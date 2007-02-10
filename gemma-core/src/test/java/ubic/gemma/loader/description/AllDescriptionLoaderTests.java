@@ -22,7 +22,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -30,11 +29,11 @@ public class AllDescriptionLoaderTests {
 
     public static Test suite() {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.description" );
-        //$JUnit-BEGIN$
+        // $JUnit-BEGIN$
         suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
-        suite.addTestSuite( GeneOntologyLoaderIntegrationTest.class );
+        // suite.addTestSuite( GeneOntologyLoaderIntegrationTest.class ); this test is too big to run routinely.
         suite.addTestSuite( GeneOntologyEntryParserTest.class );
-        //$JUnit-END$
+        // $JUnit-END$
         return suite;
     }
 
