@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
