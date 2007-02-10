@@ -52,7 +52,7 @@ public class QuantitationTypeParameterGuesser {
 
     private static Set<String> measuredSignalDescPatterns = new HashSet<String>();
     private static Set<String> derivedSignalDescPatterns = new HashSet<String>();
-    private static Set<String> ratioStringDescPatterns = new HashSet<String>();
+    private static Set<String> ratioDescPatterns = new HashSet<String>();
     private static Set<String> measuredSignalNamePatterns = new HashSet<String>();
     private static Set<String> derivedSignalNamePatterns = new HashSet<String>();
     // private static Set<String> ratioStringNamePatterns = new HashSet<String>();
@@ -88,7 +88,8 @@ public class QuantitationTypeParameterGuesser {
 
         measuredSignalDescPatterns.addAll( config.getList( "measuredSignalPatterns" ) );
         derivedSignalDescPatterns.addAll( config.getList( "derivedSignalPatterns" ) );
-        ratioStringDescPatterns.addAll( config.getList( "ratioStringPatterns" ) );
+
+        ratioDescPatterns.addAll( config.getList( "ratioStringPatterns" ) );
 
         measuredSignalDescPatterns.add( ".*channel[\\s_ ][12] (mean|median) (signal|intensity) (?!- background).*" );
         measuredSignalDescPatterns.add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );
@@ -190,7 +191,7 @@ public class QuantitationTypeParameterGuesser {
         typeDescPatterns.get( StandardQuantitationType.CORRELATION ).add( ".*correlation.*" );
 
         typeNamePatterns.get( StandardQuantitationType.RATIO ).add( "(pix_)?rat[12]n?_(mean|median)" );
-        typeDescPatterns.get( StandardQuantitationType.RATIO ).add( "log2?\\(.+?/.+?\\)" );
+        typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*\\(.+?/.+?\\).*" );
         typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*(fold_change|ratio).*" );
         typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*test/reference.*" );
         typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*normch2/normch1.*" );
@@ -253,6 +254,7 @@ public class QuantitationTypeParameterGuesser {
         isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*background[\\s-](subtracted|corrected).*(?!ratio).*" );
         isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
         isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
+        isBackgroundSubtractedDescPatterns.add( ".*background intensity subtracted.*" );
         isBackgroundSubtractedNamePatterns.add( ".*- ch[12]_bkd" );
         isBackgroundSubtractedNamePatterns.add( "ch[12]d.*" );
         isBackgroundSubtractedNamePatterns.add( ".*((- )|_)b(532|635)" );
@@ -356,6 +358,7 @@ public class QuantitationTypeParameterGuesser {
                     return type;
                 }
             }
+
             for ( String patt : typeDescPatterns.get( type ) ) {
                 log.debug( "description=" + description + " test " + patt );
                 if ( description.matches( patt ) ) {
@@ -525,12 +528,17 @@ public class QuantitationTypeParameterGuesser {
             rType = PrimitiveType.INT;
         }
 
-        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
+        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" )
+                || name.equals( "experiment name" ) ) {
             /*
              * special case...not a quantitation type.
              */
             qType = StandardQuantitationType.OTHER;
             sType = ScaleType.UNSCALED;
+            gType = GeneralType.CATEGORICAL;
+        }
+
+        if ( description.contains( "qualitative" ) ) {
             gType = GeneralType.CATEGORICAL;
         }
 
