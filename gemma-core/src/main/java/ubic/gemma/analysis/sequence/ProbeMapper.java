@@ -40,6 +40,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.ProbeAlignedRegionService;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
@@ -53,6 +55,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * @spring.bean name="probeMapper"
  * @spring.property name="probeAlignedRegionService" ref="probeAlignedRegionService"
  * @spring.property name="chromosomeService" ref="chromosomeService"
+ * @spring.property name="taxonService" ref="taxonService"
  * @author pavlidis
  * @version $Id$
  */
@@ -67,6 +70,7 @@ public class ProbeMapper {
 
     private ProbeAlignedRegionService probeAlignedRegionService;
     private ChromosomeService chromosomeService;
+    private TaxonService taxonService;
 
     /**
      * @return the blatScoreThreshold
@@ -621,8 +625,24 @@ public class ProbeMapper {
     private PhysicalLocation blatResultToPhysicalLocation( BlatResult blatResult ) {
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
         Chromosome chrom = blatResult.getTargetChromosome();
-        if ( chrom.getTaxon() == null ) chrom.setTaxon( blatResult.getQuerySequence().getTaxon() );
-        if ( chrom.getId() == null ) chrom = chromosomeService.find( chrom );
+        Taxon taxon = blatResult.getQuerySequence().getTaxon();
+        if ( taxon.getId() == null ) {
+            taxon = taxonService.findOrCreate( taxon ); // usually only during tests.
+        }
+
+        assert taxon.getId() != null;
+
+        chrom.setTaxon( taxon );
+        if ( chrom.getId() == null ) {
+            Chromosome foundChrom = chromosomeService.find( chrom );
+            if ( foundChrom == null )
+                chrom = chromosomeService.findOrCreate( chrom ); // typically only during tests.
+            else
+                chrom = foundChrom;
+        }
+
+        assert chrom.getId() != null;
+
         pl.setChromosome( chrom );
         pl.setNucleotide( blatResult.getTargetStart() );
         pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - blatResult.getTargetStart() ) ).intValue() );
@@ -759,5 +779,9 @@ public class ProbeMapper {
 
     public void setChromosomeService( ChromosomeService chromosomeService ) {
         this.chromosomeService = chromosomeService;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 }
