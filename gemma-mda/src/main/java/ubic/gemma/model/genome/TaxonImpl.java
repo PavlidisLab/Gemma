@@ -73,6 +73,8 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
             hashCode += this.getNcbiId().hashCode();
         } else if ( this.getScientificName() != null ) {
             hashCode += this.getScientificName().hashCode();
+        } else if ( this.getCommonName() != null ) {
+            hashCode += this.getCommonName().hashCode();
         } else {
             hashCode += super.hashCode();
         }
