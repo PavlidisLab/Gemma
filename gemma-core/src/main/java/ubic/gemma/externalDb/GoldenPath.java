@@ -83,6 +83,12 @@ public class GoldenPath {
     public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException {
         this.databaseName = databaseName;
 
+        getTaxonForDbName( databaseName );
+
+        init( port, host, user, password );
+    }
+
+    private void getTaxonForDbName( String databaseName ) {
         // This is a little dumb
         this.taxon = Taxon.Factory.newInstance();
         if ( databaseName.startsWith( "hg" ) ) {
@@ -94,8 +100,6 @@ public class GoldenPath {
         } else {
             throw new IllegalArgumentException( "Cannot infer taxon for " + databaseName );
         }
-
-        init( port, host, user, password );
     }
 
     /**
@@ -105,6 +109,15 @@ public class GoldenPath {
      */
     public GoldenPath( Taxon taxon ) throws SQLException {
         this.taxon = taxon;
+        init();
+    }
+
+    /**
+     * @param databaseName hg18, rn4 etc.
+     * @throws SQLException
+     */
+    public GoldenPath( String databaseName ) throws SQLException {
+        getTaxonForDbName( databaseName );
         init();
     }
 
@@ -149,7 +162,7 @@ public class GoldenPath {
     private void init() throws SQLException {
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
-            databaseName = "mm8"; // FIXME get these names from an external source.
+            databaseName = "mm8"; // FIXME get these names from an external source - e.g., the taxon service.
         } else if ( commonName.equals( "human" ) ) {
             databaseName = "hg18";
         } else if ( commonName.equals( "rat" ) ) {

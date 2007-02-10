@@ -30,9 +30,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     File tempFile;
 
     ProbeMapperCli p;
-    private String databaseHost;
-    private String databaseUser;
-    private String databasePassword;
+    private String user;
+    private String password;
 
     /*
      * (non-Javadoc)
@@ -45,11 +44,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         tempFile = File.createTempFile( "cli", ".txt" );
         p = new ProbeMapperCli();
 
-        databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
-        databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
-        databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
-
-        log.info( " databaseHost = " + databaseHost );
+        user = ConfigUtils.getString( "gemma.admin.user" );
+        password = ConfigUtils.getString( "gemma.admin.password" );
 
     }
 
@@ -59,8 +55,9 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     }
 
     public final void testMainBadPort() throws Exception {
-        Exception result = p.doWork( new String[] { "-v", "3", "-P", "c", "-u", databaseUser, "-p", databasePassword,
-                "-H", databaseHost, "-o", tempFile.getAbsolutePath() } ); // should result in an exception
+        Exception result = p.doWork( new String[] { "-testing", "-v", "3", "-P", "c", "-u", user, "-p", password, "-o",
+                tempFile.getAbsolutePath() } ); // should result in an
+        // exception
         if ( result == null ) {
             fail( "Expected bad port" );
         }
@@ -75,8 +72,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         assert ( new File( blatFile ) ).canRead() : "Input blat result file not readable from " + blatFile;
 
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
-                databaseHost, "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", user, "-p", password, "-o",
+                tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18", "-testing" } );
         if ( result != null ) {
             result.printStackTrace();
             throw ( result );
@@ -92,16 +89,16 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         assert ( new File( gbFile ) ).canRead();
 
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
-                databaseHost, "-o", tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg18" } );
+        Exception result = p.doWork( new String[] { "-testing", "-v", "3", "-u", user, "-p", password, "-o",
+                tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg18" } );
         if ( result != null ) {
             throw ( result );
         }
     }
 
     public void testSingleGb() throws Exception {
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
-                databaseHost, "-o", tempFile.getAbsolutePath(), "-d", "hg18", "AF015731", "BX473803" } );
+        Exception result = p.doWork( new String[] { "-testing", "-v", "3", "-u", user, "-p", password, "-o",
+                tempFile.getAbsolutePath(), "-d", "hg18", "AF015731", "BX473803" } );
         if ( result != null ) {
             throw ( result );
         }
@@ -113,8 +110,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         String blatFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.doesntexist.noheader.txt";
 
-        Exception result = p.doWork( new String[] { "-u", databaseUser, "-p", databasePassword, "-H", databaseHost,
-                "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
+        Exception result = p.doWork( new String[] { "-testing", "-u", user, "-p", password, "-o",
+                tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
         if ( result == null ) {
             fail( "Expected bad file" );
         }

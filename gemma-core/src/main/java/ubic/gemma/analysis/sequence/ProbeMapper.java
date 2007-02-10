@@ -34,6 +34,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
@@ -50,6 +52,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * 
  * @spring.bean name="probeMapper"
  * @spring.property name="probeAlignedRegionService" ref="probeAlignedRegionService"
+ * @spring.property name="chromosomeService" ref="chromosomeService"
  * @author pavlidis
  * @version $Id$
  */
@@ -63,6 +66,7 @@ public class ProbeMapper {
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
     private ProbeAlignedRegionService probeAlignedRegionService;
+    private ChromosomeService chromosomeService;
 
     /**
      * @return the blatScoreThreshold
@@ -558,6 +562,8 @@ public class ProbeMapper {
         }
 
         // no genes, have to look for pre-existing probealignedregions that overlap.
+        if ( blatResult.getQuerySequence().getTaxon() == null )
+            blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
         return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
 
     }
@@ -614,7 +620,10 @@ public class ProbeMapper {
      */
     private PhysicalLocation blatResultToPhysicalLocation( BlatResult blatResult ) {
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        pl.setChromosome( blatResult.getTargetChromosome() );
+        Chromosome chrom = blatResult.getTargetChromosome();
+        if ( chrom.getTaxon() == null ) chrom.setTaxon( blatResult.getQuerySequence().getTaxon() );
+        if ( chrom.getId() == null ) chrom = chromosomeService.find( chrom );
+        pl.setChromosome( chrom );
         pl.setNucleotide( blatResult.getTargetStart() );
         pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - blatResult.getTargetStart() ) ).intValue() );
         pl.setStrand( blatResult.getStrand() );
@@ -746,5 +755,9 @@ public class ProbeMapper {
 
     public void setProbeAlignedRegionService( ProbeAlignedRegionService probeAlignedRegionService ) {
         this.probeAlignedRegionService = probeAlignedRegionService;
+    }
+
+    public void setChromosomeService( ChromosomeService chromosomeService ) {
+        this.chromosomeService = chromosomeService;
     }
 }

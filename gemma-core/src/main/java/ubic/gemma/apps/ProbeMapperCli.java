@@ -35,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
+import ubic.gemma.externalDb.GoldenPathDumper;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.genome.FastaParser;
@@ -134,9 +135,6 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
         addOption( databaseNameOption );
 
-        addUserNameAndPasswordOptions();
-        addHostAndPortOptions( false, false );
-
     }
 
     @Override
@@ -186,7 +184,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
                 GoldenPathSequenceAnalysis goldenPathDb;
 
-                goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username, password );
+                goldenPathDb = new GoldenPathSequenceAnalysis( this.databaseName );
 
                 for ( int i = 0; i < moreArgs.length; i++ ) {
                     String gbId = moreArgs[i];
@@ -239,8 +237,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
     public Map<String, Collection<BlatAssociation>> runOnSequences( InputStream stream, Writer output ) {
 
         try {
-            GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host,
-                    username, password );
+            GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( this.databaseName );
 
             FastaParser parser = new FastaParser();
             parser.parse( stream );
@@ -265,6 +262,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
     @Override
     protected void processOptions() {
+        super.processOptions();
 
         probeMapper = ( ProbeMapper ) this.getBean( "probeMapper" );
 
@@ -347,8 +345,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
     public Map<String, Collection<BlatAssociation>> runOnBlatResults( InputStream blatResultInputStream, Writer output )
             throws IOException, SQLException {
 
-        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username,
-                password );
+        GoldenPathSequenceAnalysis goldenPathAnalysis = new GoldenPathSequenceAnalysis( this.databaseName );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( blatResultInputStream );
@@ -357,7 +354,8 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
         Collection<BlatResult> blatResults = brp.getResults();
 
-        Map<String, Collection<BlatAssociation>> allRes = probeMapper.processBlatResults( goldenPathDb, blatResults );
+        Map<String, Collection<BlatAssociation>> allRes = probeMapper.processBlatResults( goldenPathAnalysis,
+                blatResults );
 
         printBlatAssociations( output, allRes );
 
@@ -388,8 +386,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
      */
     public Map<String, Collection<BlatAssociation>> runOnGbIds( InputStream stream, Writer writer ) throws IOException,
             SQLException {
-        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username,
-                password );
+        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( this.databaseName );
 
         TabDelimParser parser = new TabDelimParser();
         parser.parse( stream );

@@ -70,6 +70,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         super( taxon );
     }
 
+    public GoldenPathSequenceAnalysis( String databaseName ) throws SQLException {
+        super( databaseName );
+    }
+
     /**
      * Convert blocks into PhysicalLocations
      * 
