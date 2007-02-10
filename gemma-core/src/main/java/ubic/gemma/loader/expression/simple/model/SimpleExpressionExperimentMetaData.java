@@ -61,6 +61,8 @@ public class SimpleExpressionExperimentMetaData {
 
     private StandardQuantitationType type;
 
+    private Boolean isRatio = Boolean.FALSE;
+
     private DatabaseEntry externalReference;
 
     private String sourceUrl;
@@ -272,6 +274,14 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setTechnologyType( TechnologyType technologyType ) {
         this.technologyType = technologyType;
+    }
+
+    public Boolean getIsRatio() {
+        return isRatio;
+    }
+
+    public void setIsRatio( Boolean isRatio ) {
+        this.isRatio = isRatio;
     }
 
 }

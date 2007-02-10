@@ -130,7 +130,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
                     command.setType( StandardQuantitationType.fromString( cookie.getString( "type" ) ) );
                     command.setScale( ScaleType.fromString( cookie.getString( "scale" ) ) );
-
+                    command.setIsRatio( Boolean.parseBoolean( cookie.getString( "isRatio" ) ) );
                     command.setQuantitationTypeName( cookie.getString( "quantitationTypeName" ) );
                     command.setQuantitationTypeDescription( cookie.getString( "quantitationTypeDescription" ) );
 
@@ -283,7 +283,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
             return showForm( request, response, errors );
         }
 
-        return startJob( commandObject, request );        
+        return startJob( commandObject, request );
 
     }
 
@@ -330,6 +330,12 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
             if ( command.getScale() != null ) {
                 this.setProperty( "scale", command.getScale().toString() );
+            }
+
+            if ( command.getIsRatio() == true ) {
+                this.setProperty( "isRatio", "true" );
+            } else {
+                this.setProperty( "isRatio", "false" );
             }
 
             if ( StringUtils.isNotBlank( command.getQuantitationTypeName() ) ) {

@@ -72,6 +72,8 @@ public class QuantitationTypeParameterGuesser {
     private static Map<StandardQuantitationType, Set<String>> typeNamePatterns = new HashMap<StandardQuantitationType, Set<String>>();
     private static Map<PrimitiveType, Set<String>> representationNamePatterns = new HashMap<PrimitiveType, Set<String>>();
     private static Map<Boolean, Set<String>> isBackgroundNamePatterns = new HashMap<Boolean, Set<String>>();
+    private static Map<Boolean, Set<String>> isRatioNamePatterns = new HashMap<Boolean, Set<String>>();
+    private static Map<Boolean, Set<String>> isRatioDescPatterns = new HashMap<Boolean, Set<String>>();
 
     static {
         CompositeConfiguration config = new CompositeConfiguration();
@@ -149,19 +151,15 @@ public class QuantitationTypeParameterGuesser {
         scaleNamePatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
 
         typeDescPatterns.put( StandardQuantitationType.PRESENTABSENT, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.DERIVEDSIGNAL, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.MEASUREDSIGNAL, new HashSet<String>() );
+        typeDescPatterns.put( StandardQuantitationType.AMOUNT, new HashSet<String>() );
         typeDescPatterns.put( StandardQuantitationType.CONFIDENCEINDICATOR, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.RATIO, new HashSet<String>() );
         typeDescPatterns.put( StandardQuantitationType.COORDINATE, new HashSet<String>() );
         typeDescPatterns.put( StandardQuantitationType.CORRELATION, new HashSet<String>() );
         typeDescPatterns.put( StandardQuantitationType.OTHER, new HashSet<String>() );
 
         typeNamePatterns.put( StandardQuantitationType.PRESENTABSENT, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.DERIVEDSIGNAL, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.MEASUREDSIGNAL, new HashSet<String>() );
+        typeNamePatterns.put( StandardQuantitationType.AMOUNT, new HashSet<String>() );
         typeNamePatterns.put( StandardQuantitationType.CONFIDENCEINDICATOR, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.RATIO, new HashSet<String>() );
         typeNamePatterns.put( StandardQuantitationType.COORDINATE, new HashSet<String>() );
         typeNamePatterns.put( StandardQuantitationType.CORRELATION, new HashSet<String>() );
         typeNamePatterns.put( StandardQuantitationType.OTHER, new HashSet<String>() );
@@ -178,23 +176,17 @@ public class QuantitationTypeParameterGuesser {
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*ch[12][i][_\\s]sd" );
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*det(ection)?[_\\s-]p(-value)?.*" );
 
-        typeDescPatterns.get( StandardQuantitationType.MEASUREDSIGNAL ).addAll( measuredSignalDescPatterns );
-        typeDescPatterns.get( StandardQuantitationType.DERIVEDSIGNAL ).addAll( derivedSignalDescPatterns );
-        typeNamePatterns.get( StandardQuantitationType.MEASUREDSIGNAL ).addAll( measuredSignalNamePatterns );
-        typeNamePatterns.get( StandardQuantitationType.DERIVEDSIGNAL ).addAll( derivedSignalNamePatterns );
+        typeDescPatterns.get( StandardQuantitationType.AMOUNT ).addAll( measuredSignalDescPatterns );
+        typeDescPatterns.get( StandardQuantitationType.AMOUNT ).addAll( derivedSignalDescPatterns );
+        typeNamePatterns.get( StandardQuantitationType.AMOUNT ).addAll( measuredSignalNamePatterns );
+        typeNamePatterns.get( StandardQuantitationType.AMOUNT ).addAll( derivedSignalNamePatterns );
 
-        typeNamePatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*abs([ _])?call.*" );
+        typeNamePatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*(pre|abs)([ _])?call.*" );
         typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*call.+present.*" );
         typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*dchip detection call.*" );
         typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT ).add( "detection" );
 
         typeDescPatterns.get( StandardQuantitationType.CORRELATION ).add( ".*correlation.*" );
-
-        typeNamePatterns.get( StandardQuantitationType.RATIO ).add( "(pix_)?rat[12]n?_(mean|median)" );
-        typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*\\(.+?/.+?\\).*" );
-        typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*(fold_change|ratio).*" );
-        typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*test/reference.*" );
-        typeDescPatterns.get( StandardQuantitationType.RATIO ).add( ".*normch2/normch1.*" );
 
         typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add(
                 ".*(array_row|array_column|top|left|right|bot).*" );
@@ -227,6 +219,7 @@ public class QuantitationTypeParameterGuesser {
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of (positive )?probe pairs.*" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of probe set.*" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*(?<!positive/)pairs[_\\s]used.*" );
+        representationDescPatterns.get( PrimitiveType.INT ).add( "number of (positive|negative) probe pairs" );
         representationNamePatterns.get( PrimitiveType.INT ).add( "pairs[_\\s]in[_\\s]?avg" );
         representationDescPatterns.get( PrimitiveType.INT ).add( "area" );
         representationDescPatterns.get( PrimitiveType.INT ).add( "b[\\s_]pixels" );
@@ -240,6 +233,18 @@ public class QuantitationTypeParameterGuesser {
 
         isBackgroundNamePatterns.put( Boolean.FALSE, new HashSet<String>() );
         isBackgroundNamePatterns.put( Boolean.TRUE, new HashSet<String>() );
+
+        isRatioNamePatterns.put( Boolean.FALSE, new HashSet<String>() );
+        isRatioNamePatterns.put( Boolean.TRUE, new HashSet<String>() );
+        isRatioDescPatterns.put( Boolean.FALSE, new HashSet<String>() );
+        isRatioDescPatterns.put( Boolean.TRUE, new HashSet<String>() );
+
+        isRatioNamePatterns.get( Boolean.TRUE ).add( "(pix_)?rat[12]n?_(mean|median)" );
+        isRatioNamePatterns.get( Boolean.TRUE ).add( ".*\\(.+?/.+?\\).*" );
+        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*(fold[_\\s]change|ratio).*" );
+        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*test/reference.*" );
+        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*normch2/normch1.*" );
+        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*percent(age)?.*" );
 
         isBackgroundNamePatterns.get( Boolean.TRUE ).add( "ch[12]b.*" );
         isBackgroundDescPatterns
@@ -313,6 +318,28 @@ public class QuantitationTypeParameterGuesser {
         return false;
     }
 
+    protected static boolean isRatio( String name, String description ) {
+
+        if ( !maybeRatio( name ) ) return false;
+
+        for ( Boolean type : isRatioNamePatterns.keySet() ) {
+            for ( String patt : isRatioNamePatterns.get( type ) ) {
+                log.debug( name + " test " + patt );
+                if ( name.matches( patt ) ) {
+                    return type;
+                }
+            }
+            for ( String patt : isRatioDescPatterns.get( type ) ) {
+                log.debug( description + " test " + patt );
+                if ( description.matches( patt ) ) {
+                    return type;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @param name
      * @param description
@@ -342,11 +369,9 @@ public class QuantitationTypeParameterGuesser {
     protected static StandardQuantitationType guessType( String name, String description ) {
         for ( StandardQuantitationType type : typeDescPatterns.keySet() ) {
 
-            if ( type == StandardQuantitationType.DERIVEDSIGNAL && !maybeDerivedSignal( name ) ) {
+            if ( type == StandardQuantitationType.AMOUNT && !maybeDerivedSignal( name ) ) {
                 continue;
-            } else if ( type == StandardQuantitationType.MEASUREDSIGNAL && !maybeMeasuredSignal( name ) ) {
-                continue;
-            } else if ( type == StandardQuantitationType.RATIO && !maybeRatio( name ) ) {
+            } else if ( type == StandardQuantitationType.AMOUNT && !maybeMeasuredSignal( name ) ) {
                 continue;
             }
 
@@ -369,7 +394,7 @@ public class QuantitationTypeParameterGuesser {
 
         }
 
-        return StandardQuantitationType.MEASUREDSIGNAL;
+        return StandardQuantitationType.AMOUNT; // default.
 
     }
 
@@ -476,6 +501,9 @@ public class QuantitationTypeParameterGuesser {
         if ( name.matches( "(pix_)?(rat(io)?).*" ) ) {
             return false;
         }
+
+        if ( name.matches( "detection" ) ) return false;
+
         return true;
     }
 
@@ -509,6 +537,7 @@ public class QuantitationTypeParameterGuesser {
         Boolean isBackgroundSubtracted = Boolean.FALSE;
         // Boolean isPreferred = Boolean.FALSE;
         Boolean isNormalized = Boolean.FALSE;
+        Boolean isRatio = Boolean.FALSE;
 
         sType = guessScaleType( namelc, descriptionlc );
         qType = guessType( namelc, descriptionlc );
@@ -516,8 +545,9 @@ public class QuantitationTypeParameterGuesser {
         isBackground = guessIsBackground( namelc, descriptionlc ) && maybeBackground( namelc, descriptionlc );
         isBackgroundSubtracted = isBackgroundSubtracted( namelc, descriptionlc );
         isNormalized = isNormalized( namelc, descriptionlc );
+        isRatio = isRatio( namelc, descriptionlc );
 
-        if ( qType.equals( StandardQuantitationType.MEASUREDSIGNAL ) ) {
+        if ( qType.equals( StandardQuantitationType.AMOUNT ) ) {
             // rType = PrimitiveType.DOUBLE;
             gType = GeneralType.QUANTITATIVE;
         } else if ( qType.equals( StandardQuantitationType.PRESENTABSENT ) ) {
@@ -549,7 +579,7 @@ public class QuantitationTypeParameterGuesser {
         qt.setIsBackground( isBackground );
         qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
         qt.setIsNormalized( isNormalized );
-
+        qt.setIsRatio( isRatio );
         qt.setIsPreferred( isPreferred( qt ) );
 
     }

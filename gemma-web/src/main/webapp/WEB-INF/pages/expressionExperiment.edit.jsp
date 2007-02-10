@@ -49,7 +49,7 @@
 				<spring:bind path="expressionExperiment.description">
 					<textarea rows="8" cols="75"
 						name="<c:out value="${status.expression}"/>"
-						value="<c:out value="${status.value}"/>">${status.value}</textarea>
+						value="<c:out value="${status.value}"/>" type="_moz">${status.value}</textarea>
 				</spring:bind>
 			</td>
 		</tr>
@@ -272,6 +272,7 @@
 			<th>Name</th>
 			<th>Desc</th>
 			<th>Pref?</th>
+			<th>Ratio?</th>
 			<th>Bkg?</th>
 			<th>BkgSub?</th>
 			<th>Norm?</th>
@@ -310,6 +311,14 @@
 						</spring:bind>
 					</td>
 					<td>
+						<spring:bind path="isRatio">
+							<input id="ratioCheckbox" type="checkbox"
+								name="${status.expression}"
+								<c:if test="${status.value == true}">checked="checked"</c:if> />
+							<input type="hidden"
+								name="_<c:out value="${status.expression}"/>">
+						</spring:bind>
+					</td>
 						<spring:bind path="isBackground">
 							<input id="backgroundCheckbox" type="checkbox"
 								name="${status.expression}"

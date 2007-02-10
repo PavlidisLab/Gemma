@@ -106,7 +106,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.RATIO );
+        metaData.setType( StandardQuantitationType.AMOUNT );
+        metaData.setIsRatio( true );
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );

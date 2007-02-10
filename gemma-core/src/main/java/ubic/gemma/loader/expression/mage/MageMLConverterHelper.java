@@ -2122,19 +2122,23 @@ public class MageMLConverterHelper {
         ubic.gemma.model.common.quantitationtype.QuantitationType result = ubic.gemma.model.common.quantitationtype.QuantitationType.Factory
                 .newInstance();
 
+        // FIXME other fields have to be filled in.
+        result.setIsRatio( false );
+
         // note that PrimitiveType and Scale are set via associations.
         if ( mageObj instanceof SpecializedQuantitationType ) {
             result.setGeneralType( GeneralType.UNKNOWN );
             result.setType( StandardQuantitationType.OTHER );
         } else if ( mageObj instanceof MeasuredSignal ) {
             result.setGeneralType( GeneralType.QUANTITATIVE );
-            result.setType( StandardQuantitationType.MEASUREDSIGNAL );
+            result.setType( StandardQuantitationType.AMOUNT );
         } else if ( mageObj instanceof DerivedSignal ) {
             result.setGeneralType( GeneralType.QUANTITATIVE );
-            result.setType( StandardQuantitationType.DERIVEDSIGNAL );
+            result.setType( StandardQuantitationType.AMOUNT );
         } else if ( mageObj instanceof Ratio ) {
             result.setGeneralType( GeneralType.QUANTITATIVE );
-            result.setType( StandardQuantitationType.RATIO );
+            result.setType( StandardQuantitationType.AMOUNT );
+            result.setIsRatio( true );
         } else if ( mageObj instanceof Failed ) {
             result.setGeneralType( GeneralType.CATEGORICAL );
             result.setType( StandardQuantitationType.FAILED );

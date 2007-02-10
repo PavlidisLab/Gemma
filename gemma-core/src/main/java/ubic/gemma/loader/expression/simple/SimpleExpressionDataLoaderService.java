@@ -323,6 +323,7 @@ public class SimpleExpressionDataLoaderService {
         result.setIsNormalized( Boolean.TRUE );
         result.setIsBackgroundSubtracted( Boolean.TRUE );
         result.setScale( metaData.getScale() );
+        result.setIsRatio( metaData.getIsRatio() );
         result.setIsBackground( false );
         return result;
     }

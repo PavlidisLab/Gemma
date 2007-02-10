@@ -298,7 +298,8 @@ public class GeoConverterTest extends TestCase {
             if ( qt.getIsPreferred() ) {
                 ok = true;
                 assertEquals( "VALUE", qt.getName() );
-                assertEquals( StandardQuantitationType.RATIO, qt.getType() );
+                assertEquals( StandardQuantitationType.AMOUNT, qt.getType() );
+                assertTrue( qt.getIsRatio() );
             }
         }
         assertTrue( ok );

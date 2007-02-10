@@ -331,7 +331,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         for ( QuantitationType qt : eeQT ) {
             if ( qt.getIsPreferred() ) {
                 StandardQuantitationType tmpQT = qt.getType();
-                if ( tmpQT != StandardQuantitationType.DERIVEDSIGNAL && tmpQT != StandardQuantitationType.RATIO ) {
+                if ( tmpQT != StandardQuantitationType.AMOUNT ) {
                     log.warn( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
                             + tmpQT.toString() );
                 }

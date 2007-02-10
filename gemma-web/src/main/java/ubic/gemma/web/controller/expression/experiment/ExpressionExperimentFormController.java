@@ -396,6 +396,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     ScaleType scale = qType.getScale();
                     StandardQuantitationType type = qType.getType();
                     boolean isPreferred = qType.getIsPreferred();
+                    boolean isRatio = qType.getIsRatio();
 
                     String newName = newQtype.getName();
                     String newDescription = newQtype.getDescription();
@@ -407,11 +408,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     ScaleType newscale = newQtype.getScale();
                     StandardQuantitationType newType = newQtype.getType();
                     boolean newisPreferred = newQtype.getIsPreferred();
+                    boolean newisRatio = newQtype.getIsRatio();
 
                     // make it a copy.
                     revisedType.setIsBackgroundSubtracted( newisBkgSub );
                     revisedType.setIsBackground( newisBkg );
                     revisedType.setIsPreferred( newisPreferred );
+                    revisedType.setIsRatio( newisRatio );
                     revisedType.setRepresentation( newrep );
                     revisedType.setType( newType );
                     revisedType.setScale( newscale );
@@ -450,6 +453,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         dirty = true;
                     }
                     if ( isNormalized != newisNormalized ) {
+                        dirty = true;
+                    }
+
+                    if ( isRatio != newisRatio ) {
                         dirty = true;
                     }
 

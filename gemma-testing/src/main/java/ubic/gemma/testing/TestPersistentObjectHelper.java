@@ -561,7 +561,8 @@ public class TestPersistentObjectHelper {
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setIsBackground( false );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setIsRatio( false );
         qt.setScale( ScaleType.LINEAR );
         return qt;
     }

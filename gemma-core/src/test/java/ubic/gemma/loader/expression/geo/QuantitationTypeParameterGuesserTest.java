@@ -55,7 +55,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         qt.setScale( ScaleType.LINEAR );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
+        qt.setType( StandardQuantitationType.AMOUNT );
     }
 
     /**
@@ -70,7 +70,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
 
         assertEquals( ScaleType.LINEAR, qt.getScale() );
         assertEquals( GeneralType.QUANTITATIVE, qt.getGeneralType() );
-        assertEquals( StandardQuantitationType.MEASUREDSIGNAL, qt.getType() );
+        assertEquals( StandardQuantitationType.AMOUNT, qt.getType() );
         assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
     }
 
@@ -133,7 +133,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         String a = "RAT1_MEAN";
         String b = "ratio of CH1D_MEAN to CH2D_MEAN";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( StandardQuantitationType.RATIO, s );
+        assertEquals( StandardQuantitationType.AMOUNT, s );
     }
 
     /**
@@ -163,6 +163,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
             Boolean isPreferred = fields[8].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
             Boolean isNormalized = fields[9].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
             Boolean isBackgroundSubtracted = fields[10].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+            Boolean isRatio = fields[11].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
 
             qt = QuantitationType.Factory.newInstance();
             qt.setName( name );
@@ -201,7 +202,10 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
                 failed.add( line );
                 log.info( ">>> Line " + lineNum + ": Failed isNormalized for '" + fields[1] + " (" + fields[2] + ")"
                         + "', got " + qt.getIsNormalized() );
-
+            } else if ( qt.getIsRatio() != isRatio ) {
+                failed.add( line );
+                log.info( ">>> Line " + lineNum + ": Failed isRatio for '" + fields[1] + " (" + fields[2] + ")"
+                        + "', got " + qt.getIsRatio() );
             } else {
                 passed.add( line );
             }

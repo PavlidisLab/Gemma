@@ -115,12 +115,12 @@ public class DatasetCombiner {
     LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<String, String>();
 
     /**
-     * Given a GDS, find the corresponding GSE.
+     * Given a GDS, find the corresponding GSEs (there can be more than one in rare cases).
      * 
      * @param datasetAccession
-     * @return
+     * @return Collection of series this data set is derived from (this is almost always just a single item).
      */
-    public static String findGSEforGDS( String datasetAccession ) {
+    public static Collection<String> findGSEforGDS( String datasetAccession ) {
         /*
          * go from GDS to GSE, using screen scraping.
          */
@@ -142,7 +142,6 @@ public class DatasetCombiner {
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
                 Matcher mat = pat.matcher( line );
-
                 if ( mat.find() ) {
                     String capturedAccession = mat.group( 1 );
                     associatedSeriesAccession.add( capturedAccession );
@@ -157,15 +156,11 @@ public class DatasetCombiner {
             throw new RuntimeException( "Could not get data from remote server", e );
         }
 
-        if ( associatedSeriesAccession.size() > 1 ) {
-            throw new UnsupportedOperationException( "Multiple GSE per GDS not supported." );
-        }
-
         if ( associatedSeriesAccession.size() == 0 ) {
             throw new IllegalStateException( "No GSE found for " + datasetAccession );
         }
 
-        return associatedSeriesAccession.iterator().next();
+        return associatedSeriesAccession;
 
     }
 
@@ -180,24 +175,37 @@ public class DatasetCombiner {
     }
 
     /**
-     * Given a GEO series id, find all associated data sets.
+     * Given GEO series ids, find all associated data sets.
      * 
      * @param seriesAccession
      * @return a collection of associated GDS accessions. If no GDS is found, the collection will be empty.
      */
-    public static Collection<String> findGDSforGSE( String seriesAccession ) {
+    public static Collection<String> findGDSforGSE( Collection<String> seriesAccessions ) {
         /*
          * go from GSE to GDS, using screen scraping.
          */
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
         // grep on "GDS[[digits]] record"
-        URL url = null;
-
-        Pattern pat = Pattern.compile( "(GDS\\d+)\\srecord" );
-
         Collection<String> associatedDatasetAccessions = new HashSet<String>();
 
+        for ( String seriesAccession : seriesAccessions ) {
+            associatedDatasetAccessions.addAll( findGDSforGSE( seriesAccession ) );
+        }
+        return associatedDatasetAccessions;
+
+    }
+
+    /**
+     * @param associatedDatasetAccessions
+     * @param seriesAccession
+     * @return GDSs that correspond to the given series.
+     */
+    public static Collection<String> findGDSforGSE( String seriesAccession ) {
+        URL url = null;
+        Collection<String> associatedDatasetAccessions = new HashSet<String>();
         try {
+
+            Pattern pat = Pattern.compile( "(GDS\\d+)\\srecord" );
             url = new URL( ENTREZ_GEO_QUERY_URL_BASE + seriesAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
 
             URLConnection conn = url.openConnection();
@@ -214,6 +222,7 @@ public class DatasetCombiner {
                 }
             }
             is.close();
+            return associatedDatasetAccessions;
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( "Invalid URL " + url, e );
         } catch ( UnknownHostException e ) {
@@ -221,9 +230,6 @@ public class DatasetCombiner {
         } catch ( IOException e ) {
             throw new RuntimeException( "Could not get data from remote server", e );
         }
-
-        return associatedDatasetAccessions;
-
     }
 
     /**

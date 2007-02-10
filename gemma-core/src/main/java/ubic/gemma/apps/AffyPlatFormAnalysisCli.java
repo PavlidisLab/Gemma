@@ -54,7 +54,8 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         private Double mean, min, max, median, std, presentAbsentCall;
         private DesignElement de;
 
-        public SortedElement( DesignElement de, double min, double max, double mean, double median, double std, double presentAbsentCall ) {
+        public SortedElement( DesignElement de, double min, double max, double mean, double median, double std,
+                double presentAbsentCall ) {
             this.de = de;
             this.mean = mean;
             this.min = min;
@@ -91,9 +92,9 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         public DesignElement getDE() {
             return de;
         }
-        
-        public Double getPresentAbsentCall(){
-        	return presentAbsentCall;
+
+        public Double getPresentAbsentCall() {
+            return presentAbsentCall;
         }
     }
 
@@ -134,23 +135,23 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
     private QuantitationType getQuantitationType( ExpressionExperiment ee, boolean PRESENTABSENT ) {
         QuantitationType qtf = null;
         Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes( ee );
-        if(PRESENTABSENT){
-        	for ( QuantitationType qt : eeQT ) 
-        		if(qt.getType() == StandardQuantitationType.PRESENTABSENT){
-        			qtf = qt;
-        			break;
-        		}
-        	if(qtf == null){
-        		log.info( "Expression Experiment " + ee.getShortName() + " doesn't have a presentabsent call" );
-        	}
-        	return qtf;
+        if ( PRESENTABSENT ) {
+            for ( QuantitationType qt : eeQT )
+                if ( qt.getType() == StandardQuantitationType.PRESENTABSENT ) {
+                    qtf = qt;
+                    break;
+                }
+            if ( qtf == null ) {
+                log.info( "Expression Experiment " + ee.getShortName() + " doesn't have a presentabsent call" );
+            }
+            return qtf;
         }
         for ( QuantitationType qt : eeQT ) {
             if ( qt.getIsPreferred() ) {
                 qtf = qt;
                 StandardQuantitationType tmpQT = qt.getType();
-                if ( tmpQT != StandardQuantitationType.DERIVEDSIGNAL && tmpQT != StandardQuantitationType.RATIO ) {
-                    log.info( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
+                if ( tmpQT != StandardQuantitationType.AMOUNT ) {
+                    log.warn( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
                             + tmpQT.toString() );
                 }
                 break;
@@ -161,40 +162,42 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         }
         return qtf;
     }
-    String processEEForPercentage(ExpressionExperiment ee){
-        //eeService.thaw( ee );
-        QuantitationType qt = this.getQuantitationType( ee, true);
+
+    String processEEForPercentage( ExpressionExperiment ee ) {
+        // eeService.thaw( ee );
+        QuantitationType qt = this.getQuantitationType( ee, true );
         if ( qt == null ) return ( "No usable quantitation type in " + ee.getShortName() );
         log.info( "Load Data for  " + ee.getShortName() );
 
         Collection<DesignElementDataVector> dataVectors = devService.find( ee, qt );
         if ( dataVectors == null ) return ( "No data vector " + ee.getShortName() );
         ByteArrayConverter bac = new ByteArrayConverter();
-        
-        for(DesignElementDataVector vector:dataVectors){
-        	DesignElement de = vector.getDesignElement();
-        	DoubleArrayList presentAbsentList = this.presentAbsentData.get(de);
-        	if(presentAbsentList == null){
-        		//return (" EE data vectors don't match array design for probe " + de.getName());
-        		continue;
-        	}
+
+        for ( DesignElementDataVector vector : dataVectors ) {
+            DesignElement de = vector.getDesignElement();
+            DoubleArrayList presentAbsentList = this.presentAbsentData.get( de );
+            if ( presentAbsentList == null ) {
+                // return (" EE data vectors don't match array design for probe " + de.getName());
+                continue;
+            }
             byte[] bytes = vector.getData();
-            //String vals = bac.byteArrayToAsciiString( bytes );
-            char [] chars = bac.byteArrayToChars(bytes);
+            // String vals = bac.byteArrayToAsciiString( bytes );
+            char[] chars = bac.byteArrayToChars( bytes );
             double presents = 0;
             double total = 0;
-            for(int i = 0; i < chars.length; i++){
-            	if(chars[i] == 'P') presents++;
-            	if(chars[i] != '\t') total++;
+            for ( int i = 0; i < chars.length; i++ ) {
+                if ( chars[i] == 'P' ) presents++;
+                if ( chars[i] != '\t' ) total++;
             }
-            presentAbsentList.add(presents/total);
+            presentAbsentList.add( presents / total );
         }
         return null;
-	}
+    }
+
     @SuppressWarnings("unchecked")
     String processEE( ExpressionExperiment ee ) {
-        //eeService.thaw( ee );
-        QuantitationType qt = this.getQuantitationType( ee,false );
+        // eeService.thaw( ee );
+        QuantitationType qt = this.getQuantitationType( ee, false );
         if ( qt == null ) return ( "No usable quantitation type in " + ee.getShortName() );
         log.info( "Load Data for  " + ee.getShortName() );
 
@@ -268,9 +271,9 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         Collection<ExpressionExperiment> relatedEEs = adService.getExpressionExperiments( arrayDesign );
 
         for ( ExpressionExperiment ee : relatedEEs ) {
-        	System.err.println(ee.getName());
-        		this.processEEForPercentage(ee);
-        		this.processEE(ee);
+            System.err.println( ee.getName() );
+            this.processEEForPercentage( ee );
+            this.processEE( ee );
         }
         ObjectArrayList sortedList = new ObjectArrayList();
         for ( DesignElement de : this.rankData.keySet() ) {
@@ -278,8 +281,8 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
             DoubleArrayList presentAbsentList = this.presentAbsentData.get( de );
             if ( rankList.size() > 0 ) {
                 SortedElement oneElement = new SortedElement( de, getStatValue( rankList, MIN ), getStatValue(
-                        rankList, MAX ), getStatValue( rankList, MEAN ), getStatValue( rankList, MEDIAN ), getStatValue(
-                        rankList, STD ), getStatValue( presentAbsentList, MAX) );
+                        rankList, MAX ), getStatValue( rankList, MEAN ), getStatValue( rankList, MEDIAN ),
+                        getStatValue( rankList, STD ), getStatValue( presentAbsentList, MAX ) );
                 sortedList.add( oneElement );
             } else {
                 System.err.print( de.getName() );
