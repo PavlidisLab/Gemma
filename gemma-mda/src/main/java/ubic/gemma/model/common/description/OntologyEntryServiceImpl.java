@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @see ubic.gemma.model.common.description.OntologyEntryService
  */
 public class OntologyEntryServiceImpl extends ubic.gemma.model.common.description.OntologyEntryServiceBase {
-    
+
     private static Log log = LogFactory.getLog( OntologyEntryServiceImpl.class.getName() );
 
     /**
@@ -124,28 +124,32 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     protected Map handleGetParents( Collection ontologyEntries ) throws Exception {
         return this.getOntologyEntryDao().getParents( ontologyEntries );
     }
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleGetChildren(ubic.gemma.model.common.description.OntologyEntry)
      */
     @Override
     protected Collection handleGetChildren( OntologyEntry ontologyEntry ) throws Exception {
+        this.getOntologyEntryDao().getAllChildren( ontologyEntry ); // FIXME this is just temporary, to thaw the entry.
         return ontologyEntry.getAssociations();
     }
-    
-    protected ubic.gemma.model.common.description.OntologyEntry handleFindByAccession(java.lang.String accession)
-    throws java.lang.Exception{
-        
+
+    protected ubic.gemma.model.common.description.OntologyEntry handleFindByAccession( java.lang.String accession )
+            throws java.lang.Exception {
+
         return this.getOntologyEntryDao().findByAccession( accession );
-        
+
     }
-    
+
     final String ALL = "all";
-    
+
     // Caches
-   private  Map<String, OntologyEntry> ontologyCache = new HashMap<String, OntologyEntry>();
-   private Map<OntologyEntry, Collection> ontologyTreeCache = new HashMap<OntologyEntry, Collection>();
-   
-   protected Map handleGetAllParents( Collection children ) {
+    private Map<String, OntologyEntry> ontologyCache = new HashMap<String, OntologyEntry>();
+    private Map<OntologyEntry, Collection> ontologyTreeCache = new HashMap<OntologyEntry, Collection>();
+
+    protected Map handleGetAllParents( Collection children ) {
 
         if ( ( children == null ) || ( children.isEmpty() ) ) return null;
 
@@ -156,10 +160,10 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
         // Check: if a child is the root then done.
         // Make sublist of nonchaced children whose parents need retrieving.
         for ( Object obj : children ) {
-            
-            OntologyEntry child = (OntologyEntry) obj;
-            //log.info( "Checking cache for ontology entries" );
-            
+
+            OntologyEntry child = ( OntologyEntry ) obj;
+            // log.info( "Checking cache for ontology entries" );
+
             if ( ontologyTreeCache.containsKey( child ) )
                 allParents.put( child, ontologyTreeCache.get( child ) );
 
@@ -175,44 +179,41 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
 
         // Retrive the 1st level of the non-cached childrens parents.
         Map<OntologyEntry, Collection> parents = this.getParents( notCached );
-        
 
         // Now for each non-cached child, we have all the parents. Use recurison to get all the parents parents and so
         // on.Then flatten out the returned results and add to allParents.
         for ( OntologyEntry child : notCached ) {
-            
+
             Map<OntologyEntry, Collection> foundParents = new HashMap<OntologyEntry, Collection>();
-            
-            foundParents.put(child, parents.get( child ));
-            
+
+            foundParents.put( child, parents.get( child ) );
+
             Map<OntologyEntry, Collection> grandParents = this.getAllParents( parents.get( child ) );
-       
-            
-            if ( ( grandParents == null ) || grandParents.isEmpty() ) {              
-                cache(foundParents);
+
+            if ( ( grandParents == null ) || grandParents.isEmpty() ) {
+                cache( foundParents );
                 allParents.putAll( foundParents );
-                continue;            
+                continue;
             }
-            
+
             Collection<OntologyEntry> flatParents = new HashSet<OntologyEntry>();
 
             for ( OntologyEntry parent : grandParents.keySet() )
                 flatParents.addAll( grandParents.get( parent ) );
 
-            foundParents.get(child).addAll(  flatParents );
-            cache(foundParents);
-           // log.info("Caching parent entries" );
+            foundParents.get( child ).addAll( flatParents );
+            cache( foundParents );
+            // log.info("Caching parent entries" );
             allParents.putAll( foundParents );
-            
+
         }
-               
+
         return allParents;
     }
 
     // Modifies passed in collection.
     private void cache( Map<OntologyEntry, Collection> toCache ) {
 
-        
         Map<OntologyEntry, Collection> cached = new HashMap<OntologyEntry, Collection>();
 
         if ( ( toCache == null ) || ( toCache.isEmpty() ) ) return;
@@ -226,29 +227,28 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
 
                 if ( ontologyCache.containsKey( parent.getAccession() ) )
                     cachedParents.add( ontologyCache.get( parent.getAccession() ) );
-                else{
+                else {
                     cachedParents.add( parent );
-                    ontologyCache.put( parent.getAccession(), parent);
+                    ontologyCache.put( parent.getAccession(), parent );
                 }
 
             }
 
             if ( ontologyCache.containsKey( oe.getAccession() ) )
                 cached.put( ontologyCache.get( oe.getAccession() ), cachedParents );
-            else{
+            else {
                 cached.put( oe, cachedParents );
-                ontologyCache.put( oe.getAccession(), oe);
-                }
+                ontologyCache.put( oe.getAccession(), oe );
+            }
 
         }
 
         ontologyTreeCache.putAll( cached );
         toCache = cached;
-        
+
         log.debug( "Size of Ontology Parents Cache: " + ontologyTreeCache.keySet().size() );
-        log.debug( "Size of ontology object cache: "  + ontologyCache.size());
+        log.debug( "Size of ontology object cache: " + ontologyCache.size() );
 
     }
-
 
 }
