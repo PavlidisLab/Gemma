@@ -103,11 +103,8 @@ public class SecurityService {
         String recipient = securableDao.getRecipient( objectIdentityId );
 
         if ( !recipient.equals( principal.toString() ) ) {
-            RunAsManagerImpl runAsManager = new RunAsManagerImpl();
-            runAsManager.setKey( recipient );
-            ConfigAttributeDefinition attributeDefinition = new ConfigAttributeDefinition();
-            attributeDefinition.addConfigAttribute( new SecurityConfig( "RUN_AS_" + recipient ) );
-            runAsManager.buildRunAs( authentication, object, attributeDefinition );
+            RunAsManager runAsManager = new RunAsManager();
+            runAsManager.buildRunAs( object, authentication, recipient );
 
         } else {
             recipient = principal.toString();
