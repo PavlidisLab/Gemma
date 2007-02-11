@@ -20,6 +20,7 @@ package ubic.gemma.analysis.ontology;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,7 +48,9 @@ public class GeneOntologyService implements InitializingBean {
 
     private DirectedGraph graph = null;
 
-    private boolean ready = false;
+    private AtomicBoolean ready = new AtomicBoolean( false );
+
+    private AtomicBoolean running = new AtomicBoolean( false );
 
     /*
      * (non-Javadoc)
@@ -56,6 +59,12 @@ public class GeneOntologyService implements InitializingBean {
      */
     public void afterPropertiesSet() throws Exception {
         // FIXME: this should look for GeneOntology specifically; this is not guaranteed by this.
+
+        if ( running.get() ) {
+            log.warn( "GO initialization is already running" );
+            return;
+        }
+
         final OntologyEntry root = ontologyEntryService.findByAccession( "all" );
         if ( root == null ) {
             log.warn( "Could not locate root of GO" );
@@ -69,10 +78,19 @@ public class GeneOntologyService implements InitializingBean {
         graph = new DirectedGraph();
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
+                if ( running.get() ) return;
+                running.set( true );
                 log.info( "Loading Gene Ontology..." );
-                graph.addNode( new DirectedGraphNode( root, root, graph ) );
-                addChildrenOf( root );
-                ready = true;
+                try {
+                    graph.addNode( new DirectedGraphNode( root, root, graph ) );
+                    addChildrenOf( root );
+                } catch ( Exception e ) {
+                    log.error( e, e );
+                    ready.set( false );
+                    running.set( false );
+                }
+                ready.set( true );
+                running.set( false );
                 log.info( "Gene Ontology loaded" );
             }
         } );
@@ -84,10 +102,12 @@ public class GeneOntologyService implements InitializingBean {
     @SuppressWarnings("unchecked")
     private void addChildrenOf( OntologyEntry item ) {
         if ( item == null ) return;
+
         Collection<OntologyEntry> children = ontologyEntryService.getChildren( item );
-        if ( Math.random() < 0.02 ) { // report approx every 2% of updates.
-            log.info( "Loading children of " + item + " (among others)..." );
+        if ( Math.random() < 0.005 && children.size() > 0 ) { // report only occasional updates.
+            log.info( "Loading " + children.size() + " children of " + item + " (among others)..." );
         }
+        if ( children == null ) return;
         for ( OntologyEntry entry : children ) {
             if ( entry == null ) continue;
             graph.addChildTo( item, entry, entry );
@@ -103,7 +123,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> getParents( OntologyEntry entry ) {
-        if ( !ready ) {
+        if ( !ready.get() ) {
             return ontologyEntryService.getParents( entry );
         }
         Collection<DirectedGraphNode> parents = ( ( DirectedGraphNode ) graph.get( entry ) ).getParentNodes();
@@ -125,7 +145,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> getChildren( OntologyEntry entry ) {
-        if ( !ready ) {
+        if ( !ready.get() ) {
             return ontologyEntryService.getChildren( entry );
         }
         Collection<DirectedGraphNode> children = ( ( DirectedGraphNode ) graph.get( entry ) ).getChildNodes();

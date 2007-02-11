@@ -132,8 +132,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
      */
     @Override
     protected Collection handleGetChildren( OntologyEntry ontologyEntry ) throws Exception {
-        this.getOntologyEntryDao().getAllChildren( ontologyEntry ); // FIXME this is just temporary, to thaw the entry.
-        return ontologyEntry.getAssociations();
+        return this.getOntologyEntryDao().getChildren( ontologyEntry );
     }
 
     protected ubic.gemma.model.common.description.OntologyEntry handleFindByAccession( java.lang.String accession )

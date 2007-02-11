@@ -52,7 +52,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
     }
 
     @Override
-    public OntologyEntry handleFindByAccession(String accession){
+    public OntologyEntry handleFindByAccession( String accession ) {
         if ( accession == null ) {
             throw new IllegalArgumentException( "Accession number is null" );
         }
@@ -60,17 +60,17 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "accession", accession );
-            
-            OntologyEntry oe = (OntologyEntry) queryObject.iterate().next();           
-            
+
+            OntologyEntry oe = ( OntologyEntry ) queryObject.iterate().next();
+
             return oe;
-           
+
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        
+
     }
-    
+
     @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
 
@@ -177,6 +177,28 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         }
     }
 
+    @Override
+    public Collection<OntologyEntry> handleGetChildren( final OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
+        }
+        final Collection<OntologyEntry> result = new HashSet<OntologyEntry>();
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            @SuppressWarnings("synthetic-access")
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.update( ontologyEntry );
+                Collection<OntologyEntry> children = ontologyEntry.getAssociations();
+                for ( OntologyEntry child : children ) {
+                    session.update( child );
+                    result.add( child );
+                }
+                return null;
+            }
+        }, true );
+
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public Map handleGetParents( Collection oes ) {
@@ -194,13 +216,13 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
             // the query only returns OntologyEntries that had parents.
             // inilize the map to include the ontology entries that didn't have parents
             for ( Object obj : oes ) {
-                if (!ontoParents.containsKey( obj ))    //defensive coding to defend against duplicates
+                if ( !ontoParents.containsKey( obj ) ) // defensive coding to defend against duplicates
                     ontoParents.put( obj, new ArrayList() );
             }
             // add parents to the map
-            //remove root.
-            for ( Object[] object : entries ){
-                if (!  ((OntologyEntry)(object[1])).getAccession().equalsIgnoreCase( "all" )   )
+            // remove root.
+            for ( Object[] object : entries ) {
+                if ( !( ( OntologyEntry ) ( object[1] ) ).getAccession().equalsIgnoreCase( "all" ) )
                     ontoParents.get( object[0] ).add( object[1] );
             }
             return ontoParents;
