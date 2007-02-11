@@ -21,6 +21,8 @@ package ubic.gemma.analysis.ontology;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.dataStructure.graph.DirectedGraph;
@@ -39,9 +41,13 @@ import ubic.gemma.model.common.description.OntologyEntryService;
  */
 public class GeneOntologyService implements InitializingBean {
 
+    private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
+
     private OntologyEntryService ontologyEntryService;
 
-    private DirectedGraph graph;
+    private DirectedGraph graph = null;
+
+    private boolean ready = false;
 
     /*
      * (non-Javadoc)
@@ -50,15 +56,40 @@ public class GeneOntologyService implements InitializingBean {
      */
     public void afterPropertiesSet() throws Exception {
         // FIXME: this should look for GeneOntology specifically; this is not guaranteed by this.
-        OntologyEntry root = ontologyEntryService.findByAccession( "all" );
-        graph.addNode( new DirectedGraphNode( root, root, graph ) );
-        addChildrenOf( root );
+        final OntologyEntry root = ontologyEntryService.findByAccession( "all" );
+        if ( root == null ) {
+            log.warn( "Could not locate root of GO" );
+            return;
+        }
+        if ( !root.getExternalDatabase().getName().equals( "GO" ) ) {
+            log.warn( "Could not locate root of GO (got something else instead: " + root + ")" );
+            return;
+        }
+
+        graph = new DirectedGraph();
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+                log.info( "Loading Gene Ontology..." );
+                graph.addNode( new DirectedGraphNode( root, root, graph ) );
+                addChildrenOf( root );
+                ready = true;
+                log.info( "Gene Ontology loaded" );
+            }
+        } );
+
+        loadThread.start();
+
     }
 
     @SuppressWarnings("unchecked")
     private void addChildrenOf( OntologyEntry item ) {
+        if ( item == null ) return;
         Collection<OntologyEntry> children = ontologyEntryService.getChildren( item );
+        if ( Math.random() < 0.02 ) { // report approx every 2% of updates.
+            log.info( "Loading children of " + item + " (among others)..." );
+        }
         for ( OntologyEntry entry : children ) {
+            if ( entry == null ) continue;
             graph.addChildTo( item, entry, entry );
             addChildrenOf( entry );
         }
@@ -72,6 +103,9 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> getParents( OntologyEntry entry ) {
+        if ( !ready ) {
+            return ontologyEntryService.getParents( entry );
+        }
         Collection<DirectedGraphNode> parents = ( ( DirectedGraphNode ) graph.get( entry ) ).getParentNodes();
         Collection<OntologyEntry> returnVal = new HashSet<OntologyEntry>();
         for ( DirectedGraphNode node : parents ) {
@@ -91,6 +125,9 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> getChildren( OntologyEntry entry ) {
+        if ( !ready ) {
+            return ontologyEntryService.getChildren( entry );
+        }
         Collection<DirectedGraphNode> children = ( ( DirectedGraphNode ) graph.get( entry ) ).getChildNodes();
         Collection<OntologyEntry> returnVal = new HashSet<OntologyEntry>();
         for ( DirectedGraphNode node : children ) {
@@ -100,6 +137,10 @@ public class GeneOntologyService implements InitializingBean {
             returnVal.add( goEntry );
         }
         return returnVal;
+    }
+
+    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
+        this.ontologyEntryService = ontologyEntryService;
     }
 
 }
