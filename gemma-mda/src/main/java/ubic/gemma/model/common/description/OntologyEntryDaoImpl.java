@@ -180,9 +180,14 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryDaoBase#handleGetChildren(ubic.gemma.model.common.description.OntologyEntry)
+     */
     @Override
     public Collection<OntologyEntry> handleGetChildren( final OntologyEntry ontologyEntry ) {
-        if ( ontologyEntry == null ) return null;
+        if ( ontologyEntry == null ) throw new IllegalArgumentException( "Ontology Entry cannot be null" );
         if ( ontologyEntry.getId() == null ) {
             throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
         }
@@ -190,9 +195,11 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             @SuppressWarnings("synthetic-access")
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                if ( log.isDebugEnabled() ) log.debug( "Get children of " + ontologyEntry );
                 session.update( ontologyEntry );
                 Collection<OntologyEntry> children = ontologyEntry.getAssociations();
                 for ( OntologyEntry child : children ) {
+                    if ( log.isTraceEnabled() ) log.trace( "Child: " + child );
                     session.update( child );
                     result.add( child );
                 }
@@ -226,6 +233,11 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         }, true );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryDaoBase#handleGetParents(java.util.Collection)
+     */
     @SuppressWarnings("unchecked")
     @Override
     public Map handleGetParents( Collection oes ) {

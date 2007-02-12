@@ -65,6 +65,14 @@ public class GeneOntologyService implements InitializingBean {
             return;
         }
 
+        init();
+
+    }
+
+    /**
+     * This is made protected so it can be tested.
+     */
+    protected void init() {
         final OntologyEntry root = ontologyEntryService.findByAccession( "all" );
         if ( root == null ) {
             log.warn( "Could not locate root of GO" );
@@ -80,6 +88,7 @@ public class GeneOntologyService implements InitializingBean {
             public void run() {
                 if ( running.get() ) return;
                 running.set( true );
+                ready.set( false );
                 log.info( "Loading Gene Ontology..." );
                 try {
                     graph.addNode( new DirectedGraphNode( root, root, graph ) );
@@ -96,7 +105,6 @@ public class GeneOntologyService implements InitializingBean {
         } );
 
         loadThread.start();
-
     }
 
     @SuppressWarnings("unchecked")
@@ -107,30 +115,42 @@ public class GeneOntologyService implements InitializingBean {
         if ( Math.random() < 0.005 && children.size() > 0 ) { // report only occasional updates.
             log.info( "Loading " + children.size() + " children of " + item + " (among others)..." );
         }
-        if ( children == null ) return;
+        if ( children == null || children.size() == 0 ) {
+            log.debug( item + " has no children" );
+            return;
+        }
         for ( OntologyEntry entry : children ) {
-            if ( entry == null ) continue;
+            log.debug( "Adding " + entry );
             graph.addChildTo( item, entry, entry );
             addChildrenOf( entry );
         }
     }
 
     /**
-     * Return the immediate parent(s) of the given entry.
+     * Return the immediate parent(s) of the given entry. The root node is never returned.
      * 
      * @param entry
-     * @return collection, because entries can have multiple parents.
+     * @return collection, because entries can have multiple parents. (root is excluded)
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> getParents( OntologyEntry entry ) {
         if ( !ready.get() ) {
             return ontologyEntryService.getParents( entry );
         }
-        Collection<DirectedGraphNode> parents = ( ( DirectedGraphNode ) graph.get( entry ) ).getParentNodes();
+
+        DirectedGraphNode childNode = ( DirectedGraphNode ) graph.get( entry );
+        if ( childNode == null ) {
+            log.warn( "GO does not contain " + entry );
+            return null;
+        }
+
+        Collection<DirectedGraphNode> parents = childNode.getParentNodes();
+
         Collection<OntologyEntry> returnVal = new HashSet<OntologyEntry>();
         for ( DirectedGraphNode node : parents ) {
             if ( node == null ) continue;
             OntologyEntry goEntry = ( OntologyEntry ) node.getItem();
+            if ( isRoot( goEntry ) ) continue;
             if ( goEntry == null ) continue;
             returnVal.add( goEntry );
         }
@@ -138,17 +158,119 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
-     * Returns the immediate children of the given entry
+     * Return all the parents of an OntologyEntry, up to the root. NOTE: the term itself is NOT included; nor is the
+     * root.
      * 
+     * @param entry
+     * @return parents (excluding the root)
+     */
+    public Collection<OntologyEntry> getAllParents( OntologyEntry entry ) {
+        Collection<OntologyEntry> result = new HashSet<OntologyEntry>();
+        getAllParents( entry, result );
+        return result;
+    }
+
+    /**
+     * @param entry
+     * @param parents (excluding the root)
+     */
+    private void getAllParents( OntologyEntry entry, Collection<OntologyEntry> parents ) {
+        if ( parents == null ) throw new IllegalArgumentException();
+        Collection<OntologyEntry> immediateParents = getParents( entry );
+        if ( immediateParents == null ) return;
+        for ( OntologyEntry entry2 : immediateParents ) {
+            if ( isRoot( entry2 ) ) continue;
+            parents.add( entry2 );
+            getAllParents( entry2, parents );
+        }
+    }
+
+    /**
+     * @param entries NOTE terms that are in this collection are NOT explicitly included; however, some of them may be
+     *        included incidentally if they are parents of other terms in the collection.
+     * @return
+     */
+    public Collection<OntologyEntry> getAllParents( Collection<OntologyEntry> entries ) {
+        if ( entries == null ) return null;
+        Collection<OntologyEntry> result = new HashSet<OntologyEntry>();
+        for ( OntologyEntry entry : entries ) {
+            getAllParents( entry, result );
+        }
+        return result;
+    }
+
+    /**
      * @param entry
      * @return
      */
+    public Collection<OntologyEntry> getAllChildren( OntologyEntry entry ) {
+        Collection<OntologyEntry> result = new HashSet<OntologyEntry>();
+        getAllChildren( entry, result );
+        return result;
+    }
+
+    /**
+     * @param entry
+     * @param children
+     */
+    private void getAllChildren( OntologyEntry entry, Collection<OntologyEntry> children ) {
+        if ( children == null ) throw new IllegalArgumentException();
+        Collection<OntologyEntry> immediateChildren = getChildren( entry );
+        if ( immediateChildren == null ) return;
+        for ( OntologyEntry entry2 : immediateChildren ) {
+            children.add( entry2 );
+            getAllChildren( entry2, children );
+        }
+    }
+
+    /**
+     * Determines if one ontology entry is a parent (direct or otherwise) of a given child term.
+     * 
+     * @param child
+     * @param potentialParent
+     * @return True if potentialParent is in the parent graph of the child; false otherwise.
+     */
+    public Boolean isAParentOf( OntologyEntry child, OntologyEntry potentialParent ) {
+        if ( isRoot( potentialParent ) ) return true;
+        Collection<OntologyEntry> parents = getAllParents( child );
+        return parents.contains( potentialParent );
+    }
+
+    /**
+     * @param entity
+     * @return
+     */
+    protected Boolean isRoot( OntologyEntry entity ) {
+        return entity.getAccession().equals( "all" ); // FIXME, use the line below instead.
+        // return entity.equals( this.graph.getRoot().getItem() );
+    }
+
+    /**
+     * Determins if one ontology entry is a child (direct or otherwise) of a given parent term.
+     * 
+     * @param parent
+     * @param potentialChild
+     * @return
+     */
+    public Boolean isAChildOf( OntologyEntry parent, OntologyEntry potentialChild ) {
+        return isAParentOf( potentialChild, parent );
+    }
+
+    /**
+     * Returns the immediate children of the given entry
+     * 
+     * @param entry
+     * @return children of entry, or null if there are no children (or if entry is null)
+     */
     @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> getChildren( OntologyEntry entry ) {
+        if ( entry == null ) return null;
         if ( !ready.get() ) {
             return ontologyEntryService.getChildren( entry );
         }
-        Collection<DirectedGraphNode> children = ( ( DirectedGraphNode ) graph.get( entry ) ).getChildNodes();
+        DirectedGraphNode parentNode = ( DirectedGraphNode ) graph.get( entry );
+        if ( parentNode == null ) return null;
+        Collection<DirectedGraphNode> children = parentNode.getChildNodes();
         Collection<OntologyEntry> returnVal = new HashSet<OntologyEntry>();
         for ( DirectedGraphNode node : children ) {
             if ( node == null ) continue;

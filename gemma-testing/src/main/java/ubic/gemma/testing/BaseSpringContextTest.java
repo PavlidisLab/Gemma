@@ -106,6 +106,14 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
         hibernateSupport.getHibernateTemplate().clear();
     }
 
+    public void deleteSingleObject( Object entity ) {
+        hibernateSupport.getHibernateTemplate().delete( entity );
+    }
+
+    public void thawSingleObject( Object entity ) {
+        hibernateSupport.getHibernateTemplate().update( entity );
+    }
+
     /**
      * Force the hibernate session to flush.
      */
