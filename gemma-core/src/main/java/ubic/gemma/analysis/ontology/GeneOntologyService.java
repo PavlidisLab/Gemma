@@ -30,6 +30,7 @@ import ubic.basecode.dataStructure.graph.DirectedGraph;
 import ubic.basecode.dataStructure.graph.DirectedGraphNode;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.description.OntologyEntryService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Holds a complete copy of the GeneOntology. This gets loaded on startup. Where possible, use this instead of calling
@@ -73,6 +74,12 @@ public class GeneOntologyService implements InitializingBean {
      * This is made protected so it can be tested.
      */
     protected void init() {
+        boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
+        // if loading ontologies is disabled in the configuration, return
+        if (!loadOntology) {
+            return;
+        }
+        
         final OntologyEntry root = ontologyEntryService.findByAccession( "all" );
         if ( root == null ) {
             log.warn( "Could not locate root of GO" );
@@ -105,6 +112,7 @@ public class GeneOntologyService implements InitializingBean {
         } );
 
         loadThread.start();
+
     }
 
     @SuppressWarnings("unchecked")
