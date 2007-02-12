@@ -142,6 +142,15 @@ public class SecurityService {
     }
 
     /**
+     * Returns the Authentication object from the SecurityContextHolder.
+     * 
+     * @return Authentication
+     */
+    public static Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    /**
      * @param aclDao the aclDao to set
      */
     public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
