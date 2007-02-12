@@ -38,6 +38,8 @@ import ubic.gemma.model.common.SecurableDao;
  * @spring.property name="securableDao" ref="securableDao"
  */
 public class SecurityService {
+    private static final String ADMINISTRATOR = "administrator";
+
     private Log log = LogFactory.getLog( SecurityService.class );
 
     private BasicAclExtendedDao basicAclExtendedDao = null;
@@ -67,12 +69,12 @@ public class SecurityService {
         if ( object instanceof Securable ) {
 
             String recipient = configureWhoToRunAs( object, mask, authentication, principal );
+
             try {
                 basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
             } catch ( Exception e ) {
                 throw new RuntimeException( "Problems changing mask of " + object, e );
             }
-
         }
 
         else {
@@ -83,7 +85,8 @@ public class SecurityService {
     }
 
     /**
-     * Runs as the recipient (in acl_permission) if the principal does not match the recipient.
+     * Runs as the recipient (in acl_permission) if the principal does not match the recipient. Returns null if
+     * principal is not an administrator.
      * 
      * @param object
      * @param mask
@@ -100,12 +103,16 @@ public class SecurityService {
         Long objectIdentityId = securableDao.getAclObjectIdentityId( object, id );
         String recipient = securableDao.getRecipient( objectIdentityId );
 
-        if ( !recipient.equals( principal.toString() ) ) {
-            RunAsManager runAsManager = new RunAsManager();
-            runAsManager.buildRunAs( object, authentication, recipient );
+        if ( principal.equals( ADMINISTRATOR ) ) {
+            if ( !recipient.equals( principal.toString() ) ) {
+                RunAsManager runAsManager = new RunAsManager();
+                runAsManager.buildRunAs( object, authentication, recipient );
 
+            } else {
+                recipient = principal.toString();
+            }
         } else {
-            recipient = principal.toString();
+            throw new RuntimeException( "User " + principal + " not authorized to execute this method." );
         }
         return recipient;
     }

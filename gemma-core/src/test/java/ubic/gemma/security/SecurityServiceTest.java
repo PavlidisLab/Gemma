@@ -102,4 +102,32 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          */
         this.setComplete();
     }
+
+    /**
+     * Tests changing object level security on the ArrayDesign from public to private WITHOUT the correct permission
+     * (You need to be administrator).
+     * 
+     * @throws Exception
+     */
+    public void testMakePrivateWithoutPermission() throws Exception {
+
+        this.onSetUpInTransactionGrantingUserAuthority( "unauthorizedTestUser" );
+
+        ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
+        SecurityService securityService = new SecurityService();
+
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+
+        boolean fail = false;
+        try {
+            securityService.makePrivate( ad, 0 );
+        } catch ( Exception e ) {
+            fail = true;
+            log.error( "TEST SUCCESSFULLY FAILED WITH: " );
+            e.printStackTrace();
+        } finally {
+            assertTrue( fail );
+        }
+    }
 }
