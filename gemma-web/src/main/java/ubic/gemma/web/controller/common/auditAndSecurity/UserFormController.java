@@ -126,7 +126,7 @@ public class UserFormController extends UserAuthenticatingController {
                 signInUser( request, user.asUser(), unencryptedPassword );
             }
 
-            return new ModelAndView( new RedirectView( "/mainMenu.html" ) ); // breaks on 8443?
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // breaks on 8443?
         } else if ( userIsNew ) {
             assert StringUtils.equals( request.getParameter( "from" ), "list" );
 
