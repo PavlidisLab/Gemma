@@ -44,6 +44,7 @@ import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.spring.web.mvc.CompassSearchResults;
 
+import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -66,6 +67,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="geneProductService" ref="geneProductService"
  * @spring.property name="bioSequenceService" ref="bioSequenceService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name="geneBean" ref="compassGene"
  * @spring.property name="eeBean" ref="compassExpression"
  * @spring.property name="arrayBean" ref="compassArray"
@@ -78,12 +80,14 @@ public class SearchService {
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
     private BioSequenceService bioSequenceService;
+    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
     private Compass geneBean;
     private Compass eeBean;
     private Compass arrayBean;
 
+
     /**
-     * combines the compass style search and the db style search and returns 1 combined list with no duplicates.
+     * combines the compass style search, the db style search, and the compositeSequence search and returns 1 combined list with no duplicates.
      * 
      * @param searchString
      * @return
@@ -93,11 +97,12 @@ public class SearchService {
 
         List<Gene> geneDbList = geneDbSearch( searchString );
         List<Gene> geneCompassList = compassGeneSearch( searchString );
+        List<Gene> geneCsList = geneCompositeSequenceSearch(searchString);
 
         // If either search has no results return the other list
-        if ( geneDbList.isEmpty() ) return geneCompassList;
+//        if ( geneDbList.isEmpty() ) return geneCompassList;
 
-        if ( geneCompassList.isEmpty() ) return geneDbList;
+//        if ( geneCompassList.isEmpty() ) return geneDbList;
 
         // Both searchs aren't empty at this point. so just check for duplicates
         List<Gene> combinedGeneList = new ArrayList<Gene>();
@@ -105,6 +110,10 @@ public class SearchService {
 
         for ( Gene gene : geneCompassList ) {
             if ( !geneDbList.contains( gene ) ) combinedGeneList.add( gene );
+        }
+        
+        for ( Gene gene : geneCsList ) {
+            if ( !combinedGeneList.contains( gene ) ) combinedGeneList.add( gene );
         }
 
         // returned combined list
@@ -148,6 +157,35 @@ public class SearchService {
         geneSet.addAll( aliasMatch );
         geneSet.addAll( geneProductMatch );
         geneSet.addAll( bioSequenceMatch );
+
+        List<Gene> geneList = new ArrayList<Gene>( geneSet );
+        Comparator<Describable> comparator = new DescribableComparator();
+        Collections.sort( geneList, comparator );
+
+        return geneList;
+
+    }
+    
+    /**
+     * searchs the DB for genes that are matched by a given compositeSequence
+     * tables
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public List<Gene> geneCompositeSequenceSearch( String searchString ) throws Exception {
+
+
+        Set<Gene> geneSet = new HashSet<Gene>();
+
+        // search by exact composite sequence name
+        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( searchString );
+        for ( CompositeSequence sequence : matchedCs ) {
+            geneSet.addAll( compositeSequenceGeneMapperService.getGenesForCompositeSequence( sequence ));   
+        }
+
 
         List<Gene> geneList = new ArrayList<Gene>( geneSet );
         Comparator<Describable> comparator = new DescribableComparator();
@@ -377,6 +415,13 @@ public class SearchService {
      */
     public void setArrayBean( Compass arrayBean ) {
         this.arrayBean = arrayBean;
+    }
+    
+    /**
+     * @param compositeSequenceGeneMapperService the compositeSequenceGeneMapperService to set
+     */
+    public void setCompositeSequenceGeneMapperService( CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 
 }
