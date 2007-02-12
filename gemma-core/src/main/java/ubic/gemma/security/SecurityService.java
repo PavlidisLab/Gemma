@@ -103,7 +103,7 @@ public class SecurityService {
         Long objectIdentityId = securableDao.getAclObjectIdentityId( object, id );
         String recipient = securableDao.getRecipient( objectIdentityId );
 
-        if ( principal.equals( ADMINISTRATOR ) ) {
+        if ( principal.toString().equals( ADMINISTRATOR ) ) {
             if ( !recipient.equals( principal.toString() ) ) {
                 RunAsManager runAsManager = new RunAsManager();
                 runAsManager.buildRunAs( object, authentication, recipient );
