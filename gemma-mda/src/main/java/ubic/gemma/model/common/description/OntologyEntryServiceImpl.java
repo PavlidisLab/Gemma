@@ -33,6 +33,18 @@ import org.apache.commons.logging.LogFactory;
  * @version $Id$
  * @see ubic.gemma.model.common.description.OntologyEntryService
  */
+/**
+ * TODO Document Me
+ * 
+ * @author Paul
+ * @version $Id$
+ */
+/**
+ * TODO Document Me
+ * 
+ * @author Paul
+ * @version $Id$
+ */
 public class OntologyEntryServiceImpl extends ubic.gemma.model.common.description.OntologyEntryServiceBase {
 
     private static Log log = LogFactory.getLog( OntologyEntryServiceImpl.class.getName() );
@@ -73,6 +85,11 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     @Override
     protected void handleUpdate( OntologyEntry ontologyEntry ) throws Exception {
         this.getOntologyEntryDao().update( ontologyEntry );
+    }
+
+    @Override
+    protected void handleThaw( OntologyEntry ontologyEntry ) throws Exception {
+        this.getOntologyEntryDao().thaw( ontologyEntry );
     }
 
     /*

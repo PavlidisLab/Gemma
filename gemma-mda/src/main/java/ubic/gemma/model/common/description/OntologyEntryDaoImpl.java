@@ -202,18 +202,18 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
 
         return result;
     }
-    
+
     /**
      * @param ontologyEntry
      * @return
      */
     @Override
-    public void> handleThaw( final OntologyEntry ontologyEntry ) {
+    public void handleThaw( final OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return;
         if ( ontologyEntry.getId() == null ) {
             throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
         }
-                this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             @SuppressWarnings("synthetic-access")
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( ontologyEntry );
@@ -225,8 +225,6 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
             }
         }, true );
     }
-    
-    
 
     @SuppressWarnings("unchecked")
     @Override
