@@ -126,10 +126,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
-     * @param method - method called to trigger this action
-     * @param object - represents the domain object.
-     * @param recipient
-     * @param permission
+     * @param object The domain object.
      */
     public void addPermission( Object object ) {
 
@@ -403,7 +400,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * For the current principal (user), return the permissions mask. If the current principal has role "admin", they
      * are granted ADMINISTRATION authority. If they are role "user", they are granted READ_WRITE authority.
      * 
-     * @return
+     * @return Integer
      */
     protected static Integer getAuthority() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
