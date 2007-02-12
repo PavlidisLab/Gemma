@@ -337,7 +337,7 @@ public class GeoDataset extends GeoData {
             return PlatformType.spottedOligonucleotide;
         } else if ( string.equals( "in situ oligonucleotide" ) ) {
             return PlatformType.inSituOligonucleotide;
-        } else if ( string.equals( "oligonucleotide Beads" ) ) {
+        } else if ( string.equalsIgnoreCase( "oligonucleotide Beads" ) ) {
             return PlatformType.oligonucleotideBeads;
         } else if ( string.equals( "SAGE NlaIII" ) ) {
             return PlatformType.SAGENlaIII;
