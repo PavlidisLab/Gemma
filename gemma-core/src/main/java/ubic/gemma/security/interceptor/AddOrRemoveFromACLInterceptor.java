@@ -32,6 +32,7 @@ import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.acegisecurity.acl.basic.SimpleAclEntry;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
@@ -76,6 +77,10 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  */
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
+
+    private static final String ANONYMOUS = "anonymous";
+
+    private static final String ADMINISTRATOR = "administrator";
 
     CrudUtils crudUtils;
 
@@ -342,7 +347,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     /**
      * @param object
-     * @return
+     * @return AbstractBasicAclEntry
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
@@ -350,7 +355,12 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
         simpleAclEntry.setMask( getAuthority() );
-        simpleAclEntry.setRecipient( UserDetailsServiceImpl.getCurrentUsername() );
+
+        String recipient = UserDetailsServiceImpl.getCurrentUsername();
+        if ( StringUtils.equalsIgnoreCase( recipient, ADMINISTRATOR ) ) {
+            recipient = ANONYMOUS;
+        }
+        simpleAclEntry.setRecipient( recipient );
         return simpleAclEntry;
     }
 
