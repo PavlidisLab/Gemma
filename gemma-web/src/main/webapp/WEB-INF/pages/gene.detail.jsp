@@ -141,7 +141,6 @@
 	<display:column property="value" sortable="true" maxWords="20" />
 	<display:column property="category" sortable="true" maxWords="20" />
 	<display:column property="description" sortable="true" maxWords="20" />
-	<display:column property="parents" sortable="true" maxWords="20" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 

@@ -85,31 +85,6 @@ public class GeneController extends BaseMultiActionController {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    /*
-     * @Override @SuppressWarnings( { "unused", "unchecked" }) public ModelAndView handleRequestInternal(
-     * HttpServletRequest request, HttpServletResponse response ) throws Exception { Map<String, Object> geneModel =
-     * new HashMap<String, Object>(); long geneID = 0; String action = request.getParameter( "action" ); if (
-     * request.getParameter( "geneID" ) != null ) geneID = new Long( request.getParameter( "geneID" ) ).longValue(); if (
-     * geneID == 0 ) throw new Exception( "Error: Must pass geneID parameter" ); if ( action == null ) action = "view";
-     * Gene g = this.getGeneService().findByID( geneID ); if ( action.equals( "addcitation" ) ) { String pubmedID =
-     * request.getParameter( "pubmedID" ); BibliographicReference br =
-     * this.getBibliographicReferenceService().findByExternalId( pubmedID, "PUBMED" ); // if ( br == null ) br =
-     * this.getBibliographicReferenceService().create( pubmedID, "PUBMED" ); if ( br != null ) { Collection<BibliographicReference>
-     * cites = g.getCitations(); cites.add( br ); g.setCitations( cites ); this.getGeneService().update( g ); return new
-     * ModelAndView( new RedirectView( "candidateGeneListActionComplete.htm?target=geneDetail&geneID=" + g.getId() ) ); } }
-     * if ( action.equals( "removecitation" ) ) { long citationID = new Long( request.getParameter( "citationID" )
-     * ).longValue(); java.util.Collection cites = g.getCitations(); BibliographicReference br = null; for (
-     * java.util.Iterator iter = cites.iterator(); iter.hasNext(); ) { br = ( BibliographicReference ) iter.next(); if (
-     * br.getId().longValue() == citationID ) { cites.remove( br ); } } g.setCitations( cites );
-     * this.getGeneService().update( g ); return new ModelAndView( new RedirectView(
-     * "candidateGeneListActionComplete.htm?target=geneDetail&geneID=" + g.getId() ) ); } if ( action.equals(
-     * "updatecitation" ) ) { long citationID = new Long( request.getParameter( "citationID" ) ).longValue(); String
-     * description = request.getParameter( "description" ); Collection<BibliographicReference> cites =
-     * g.getCitations(); for ( BibliographicReference br : cites ) { if ( br.getId().longValue() == citationID ) {
-     * br.setDescription( description ); } } g.setCitations( cites ); this.getGeneService().update( g ); return new
-     * ModelAndView( new RedirectView( "candidateGeneListActionComplete.htm?target=geneDetail&geneID=" + g.getId() ) ); }
-     * geneModel.put( "gene", g ); return new ModelAndView( "geneDetail", "model", geneModel ); }
-     */
     /**
      * @param request
      * @param response
@@ -163,8 +138,7 @@ public class GeneController extends BaseMultiActionController {
 
         // get the ontolgy terms and their parents
         if ( ontos.size() != 0 ) {
-            Map ontoMap = ontologyEntryService.getParents( ontos );
-            mav.addObject( "ontologyEntries", ontoMap.entrySet() );
+            mav.addObject( "ontologyEntries", ontos );
         }
 
         mav.addObject( "numOntologyEntries", ontos.size() );
