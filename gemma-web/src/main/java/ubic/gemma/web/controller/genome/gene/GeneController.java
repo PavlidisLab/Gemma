@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,7 +30,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
-import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -48,14 +46,12 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="methodNameResolver" ref="geneActions"
- * @spring.property name="ontologyEntryService" ref="ontologyEntryService"
  */
 public class GeneController extends BaseMultiActionController {
     private GeneService geneService = null;
     private BibliographicReferenceService bibliographicReferenceService = null;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
     private Gene2GOAssociationService gene2GOAssociationService = null;
-    private OntologyEntryService ontologyEntryService = null;
 
     /**
      * @return Returns the geneService.
@@ -184,13 +180,6 @@ public class GeneController extends BaseMultiActionController {
      */
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /**
-     * @param ontologyEntryService the ontologyEntryService to set
-     */
-    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
-        this.ontologyEntryService = ontologyEntryService;
     }
 
 }
