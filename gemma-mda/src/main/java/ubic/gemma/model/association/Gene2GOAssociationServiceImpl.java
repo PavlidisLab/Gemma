@@ -32,6 +32,16 @@ import ubic.gemma.model.genome.Gene;
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
     /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
+     */
+    @Override
+    protected Collection handleFindByGOTerm( Collection goTerms ) throws Exception {
+
+        //this.getOntologyEntryService().
+        return null;
+    }
+
+    /* (non-Javadoc)
      * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -68,15 +78,5 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
     }
 
  
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(ubic.gemma.model.common.description.OntologyEntry)
-     */
-    @Override
-    protected java.util.Collection handleFindByGOTerm( ubic.gemma.model.common.description.OntologyEntry goTerm )
-            throws java.lang.Exception {
-        // @todo implement protected java.util.Collection
-        // handleFindByGOTerm(ubic.gemma.model.common.description.OntologyEntry goTerm)
-        return null;
-    }
 
 }

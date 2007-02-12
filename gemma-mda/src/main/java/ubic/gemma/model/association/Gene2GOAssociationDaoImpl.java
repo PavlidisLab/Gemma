@@ -56,6 +56,30 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return ontos;
     }
 
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGOTerm(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindByGOTerm( Collection goIDs ) throws Exception {
+        Collection<OntologyEntry> ontos = null;
+        
+//        this.
+//        final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
+//
+//        try {
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            queryObject.setParameter( "gene", gene );
+//            ontos = queryObject.list();
+//
+//        } catch ( org.hibernate.HibernateException ex ) {
+//            throw super.convertHibernateAccessException( ex );
+//        }
+//        return ontos;
+        
+        return null;
+    }
+    
     /*
      * (non-Javadoc)
      * 

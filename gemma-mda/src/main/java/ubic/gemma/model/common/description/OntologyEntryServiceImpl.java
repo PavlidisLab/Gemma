@@ -32,14 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.common.description.OntologyEntryService
- */
-/**
- * TODO Document Me
- * 
- * @author Paul
- * @version $Id$
- */
-/**
+
  * TODO Document Me
  * 
  * @author Paul
