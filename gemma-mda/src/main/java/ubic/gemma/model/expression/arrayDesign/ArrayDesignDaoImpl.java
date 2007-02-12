@@ -336,6 +336,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         if ( geneProduct != null && geneProduct.getGene() != null ) {
                             Gene g = geneProduct.getGene();
                             g.getAliases().size();
+                            session.evict( g );
+                            session.evict( geneProduct );
                         }
 
                     }
@@ -349,6 +351,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
+                    if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
                     session.evict( bs );
                 }
                 return null;
