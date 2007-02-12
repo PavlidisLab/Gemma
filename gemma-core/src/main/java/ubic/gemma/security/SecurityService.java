@@ -19,13 +19,11 @@
 package ubic.gemma.security;
 
 import org.acegisecurity.Authentication;
-import org.acegisecurity.ConfigAttributeDefinition;
-import org.acegisecurity.SecurityConfig;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.runas.RunAsManagerImpl;
+import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -110,7 +108,37 @@ public class SecurityService {
             recipient = principal.toString();
         }
         return recipient;
+    }
 
+    /**
+     * Returns the username of the current principal (user). This can be invoked from anywhere (ie. in a controller,
+     * service, dao), and does not rely on any external security features. This is useful for determining who is the
+     * current user.
+     * 
+     * @return String
+     */
+    public static String getPrincipalName() {
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String username = null;
+        if ( obj instanceof UserDetails ) {
+            username = ( ( UserDetails ) obj ).getUsername();
+        } else {
+            username = obj.toString();
+        }
+
+        return username;
+    }
+
+    /**
+     * Returns the username of the current principal (user). This can be invoked from anywhere (ie. in a controller,
+     * service, dao), and does not rely on any external security features. The return type should checked if it is an
+     * instance of UserDetails and typecast to access information about the current user (ie. GrantedAuthority).
+     * 
+     * @return Object
+     */
+    public static Object getPrincipal() {
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     /**

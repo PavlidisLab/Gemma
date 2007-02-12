@@ -42,9 +42,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityUtil;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -338,7 +337,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects(
             Collection<ExpressionExperiment> eeCol ) {
 
-        log.debug( SecurityUtil.getPrincipal() );
+        log.debug( SecurityService.getPrincipal() );
 
         Collection<ExpressionExperiment> allEEs = expressionExperimentService.loadAll();
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
