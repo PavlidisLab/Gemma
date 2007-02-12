@@ -20,6 +20,7 @@ package ubic.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.sequence.ProbeMapperTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
@@ -27,7 +28,6 @@ import ubic.gemma.datastructure.matrix.AllExpressionMatrixTests;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.NCBIGene2GOAssociationParserTest;
 import ubic.gemma.loader.description.AllDescriptionLoaderTests;
-import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
 import ubic.gemma.loader.expression.arrayDesign.AllArrayDesignTests;
 import ubic.gemma.loader.expression.arrayExpress.DataFileFetcherIntegrationTest;
@@ -87,6 +87,7 @@ public class AllCoreTests {
         suite.addTestSuite( ExternalDatabaseTest.class );
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
+        suite.addTestSuite( GeneOntologyService.class );
 
         suite.addTestSuite( NCBIGene2GOAssociationParserTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
