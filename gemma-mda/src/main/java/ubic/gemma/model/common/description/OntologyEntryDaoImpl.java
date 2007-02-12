@@ -60,11 +60,14 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "accession", accession );
-
-            OntologyEntry oe = ( OntologyEntry ) queryObject.iterate().next();
-
-            return oe;
-
+            List results = queryObject.list();
+            if ( results.size() == 0 ) return null;
+            if ( results.size() > 1 )
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '"
+                                + ubic.gemma.model.common.description.OntologyEntry.class.getName()
+                                + "' was found when executing query" );
+            return ( OntologyEntry ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -179,6 +182,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
 
     @Override
     public Collection<OntologyEntry> handleGetChildren( final OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry == null ) return null;
         if ( ontologyEntry.getId() == null ) {
             throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
         }
@@ -198,6 +202,31 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
 
         return result;
     }
+    
+    /**
+     * @param ontologyEntry
+     * @return
+     */
+    @Override
+    public void> handleThaw( final OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry == null ) return;
+        if ( ontologyEntry.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
+        }
+                this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            @SuppressWarnings("synthetic-access")
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.update( ontologyEntry );
+                Collection<OntologyEntry> children = ontologyEntry.getAssociations();
+                for ( OntologyEntry child : children ) {
+                    session.update( child );
+                }
+                return null;
+            }
+        }, true );
+    }
+    
+    
 
     @SuppressWarnings("unchecked")
     @Override
