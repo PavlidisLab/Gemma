@@ -72,7 +72,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
-
     /**
      * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
      */
@@ -270,16 +269,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String sId = request.getParameter( "id" );
         String taxonId = request.getParameter( "taxonId" );
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-        
+
         // if a taxon ID is specified, load all expression experiments for this taxon
-        if (taxonId != null) {
+        if ( taxonId != null ) {
             Taxon taxon = Taxon.Factory.newInstance();
             Long tId = Long.parseLong( taxonId );
             taxon.setId( tId );
-            //taxon = taxonService.find( taxon );
+            // taxon = taxonService.find( taxon );
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-            .getExpressionExperimentValueObjects( expressionExperimentService.getByTaxon( taxon ) );
-            
+                    .getExpressionExperimentValueObjects( expressionExperimentService.getByTaxon( taxon ) );
+
             expressionExperiments.addAll( eeValObjectCol );
         }
         // if no IDs are specified, then load all expressionExperiments
@@ -299,10 +298,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
                 if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    //ids.add( new Long( idList[i] ) );
+                    // ids.add( new Long( idList[i] ) );
                     ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                    ee.setId( new Long(idList[i]) );
-                    eeList.add(ee);
+                    ee.setId( new Long( idList[i] ) );
+                    eeList.add( ee );
                 }
             }
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
@@ -339,13 +338,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         log.debug( SecurityService.getPrincipal() );
 
+        /* Filtering happens here. */
         Collection<ExpressionExperiment> allEEs = expressionExperimentService.loadAll();
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
-        
-        if ( eeCol == null ) { 
+
+        if ( eeCol == null ) {
             securedEEs = allEEs;
-        }
-        else {
+        } else {
             Collection ids = new LinkedHashSet();
             for ( ExpressionExperiment ee : eeCol ) {
                 ids.add( ee.getId() );
@@ -360,7 +359,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects( Collection<ExpressionExperiment> securedEEs ) {
+    private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
+            Collection<ExpressionExperiment> securedEEs ) {
         // FIXME use the ee, not the id
         Collection ids = new LinkedHashSet();
         for ( ExpressionExperiment ee : securedEEs ) {
