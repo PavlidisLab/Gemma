@@ -46,4 +46,38 @@ public class DatabaseEntryImpl extends ubic.gemma.model.common.description.Datab
         return buf.toString();
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( !( object instanceof DatabaseEntry ) ) return false;
+
+        DatabaseEntry that = ( DatabaseEntry ) object;
+
+        if ( this.getId() != null && that.getId() != null ) return super.equals( object );
+
+        if ( this.getAccession() != null && that.getAccession() != null
+                && !this.getAccession().equals( that.getAccession() ) ) return false;
+
+        if ( this.getAccessionVersion() != null && that.getAccessionVersion() != null
+                && !this.getAccessionVersion().equals( that.getAccessionVersion() ) ) return false;
+
+        if ( this.getExternalDatabase() != null && that.getExternalDatabase() != null
+                && !this.getExternalDatabase().equals( that.getExternalDatabase() ) ) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null ) return super.hashCode();
+
+        int hashCode = 0;
+        if ( this.getAccession() != null ) hashCode = 29 * this.getAccession().hashCode();
+
+        if ( this.getAccessionVersion() != null ) hashCode += this.getAccessionVersion().hashCode();
+
+        if ( this.getExternalDatabase() != null ) hashCode += this.getExternalDatabase().hashCode();
+
+        return hashCode;
+    }
+
 }

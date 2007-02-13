@@ -20,8 +20,6 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import ubic.gemma.model.common.Securable;
-
 /**
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  * @author pavlidis
@@ -42,10 +40,19 @@ public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequ
         }
         final BioSequence that = ( BioSequence ) object;
         if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
-            if ( this.getName() == null || that.getName() == null ) {
+
+            if ( this.getSequenceDatabaseEntry() != null && that.getSequenceDatabaseEntry() != null
+                    && !this.getSequenceDatabaseEntry().equals( that.getSequenceDatabaseEntry() ) ) return false;
+
+            if ( this.getTaxon() != null && that.getTaxon() != null && !this.getTaxon().equals( that.getTaxon() ) )
                 return false;
-            }
-            return this.getName().equals( that.getName() );
+
+            if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
+                return false;
+
+            if ( this.getSequence() != null && that.getSequence() != null
+                    && !this.getSequence().equals( that.getSequence() ) ) return false;
+
         }
         return true;
     }
@@ -53,8 +60,16 @@ public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequ
     @Override
     public int hashCode() {
         int hashCode = 0;
-        int nameHash = this.getName() == null ? 0 : getName().hashCode();
-        hashCode = 29 * hashCode + ( getId() == null ? nameHash : getId().hashCode() );
+
+        if ( this.getId() != null ) {
+            return 29 * getId().hashCode();
+        } else {
+            int nameHash = this.getName() == null ? 0 : getName().hashCode();
+            int seqHash = this.getSequence() == null ? 0 : getSequence().hashCode();
+            int taxonHash = this.getTaxon() == null ? 0 : getTaxon().hashCode();
+            int dbHash = this.getSequenceDatabaseEntry() == null ? 0 : getSequenceDatabaseEntry().hashCode();
+            hashCode = 29 * nameHash + seqHash + dbHash + taxonHash;
+        }
         return hashCode;
     }
 }

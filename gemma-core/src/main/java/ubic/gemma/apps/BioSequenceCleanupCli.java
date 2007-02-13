@@ -18,23 +18,36 @@
  */
 package ubic.gemma.apps;
 
+import java.util.Collection;
+import java.util.Iterator;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Goes through the biosequences in the database and removes duplicates. This should be much faster than doing
- * findOrCreate at loadtime.
+ * Goes through the biosequences in the database and removes duplicates.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class BioSequenceCleanupCli extends AbstractSpringAwareCLI {
 
+    private boolean justTesting = true;
+
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
-
+        Option justTestingOption = OptionBuilder.withArgName( "tryout mode" ).withDescription(
+                "Set to run without any database modifications" ).create( 'f' );
+        addOption( justTestingOption );
     }
 
     public static void main( String[] args ) {
@@ -50,32 +63,87 @@ public class BioSequenceCleanupCli extends AbstractSpringAwareCLI {
     }
 
     @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'f' ) ) {
+            this.justTesting = true;
+            log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "Sequence cleanup", args );
         if ( err != null ) return err;
 
-        // Strategy: do a 'find' on all the biosequences in the db (one at a time). If two are retrieved the odd one
-        // will be deleted.
-
         BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+        ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
-        BioSequence template = BioSequence.Factory.newInstance();
+        Collection<ArrayDesign> ads = adService.loadAll();
+        int i = 0;
+        for ( ArrayDesign design : ads ) {
+            log.info( design );
+            adService.thaw( design );
+            for ( CompositeSequence cs : design.getCompositeSequences() ) {
 
-        // maybe a better way to do this?
-        Integer total = bss.countAll();
-        log.info( "Have " + total + " to process." );
-        for ( int i = 1; i <= total; i++ ) {
+                BioSequence bs = cs.getBiologicalCharacteristic();
+                Collection<BioSequence> seqs = bss.findByName( bs.getName() );
+                if ( seqs.size() == 2 ) {
+                    // make sure they really are duplicates
+                    Iterator<BioSequence> it = seqs.iterator();
+                    BioSequence bs1 = it.next();
+                    BioSequence bs2 = it.next();
 
-            BioSequence bs = bss.load( i );
-            if ( bs != null ) {
-                template.setName( bs.getName() );
-                template.setTaxon( bs.getTaxon() );
-                bss.find( template ); // this will clobber the extras.
-            }
+                    if ( !bs1.equals( bs2 ) ) continue;
 
-            if ( ++i % 2000 == 0 ) {
-                log.info( "Processed " + i );
+                    if ( log.isDebugEnabled() ) log.debug( "Duplicates: " + bs1 + " " + bs2 );
+
+                    /*
+                     * Important! This assumes that the only use of a biosequence is as a biologicalcharactersitic; if
+                     * that changes this will break.
+                     */
+                    // then load all composite sequences for this.
+                    Collection<CompositeSequence> havingDupSeqs = css.findByBioSequenceName( bs.getName() );
+
+                    if ( havingDupSeqs.size() == 1 ) {
+                        /*
+                         * Remove the other sequence.
+                         */
+                        log.info( "Deleting unused duplicate sequence " + bs2 );
+                        if ( !justTesting ) bss.remove( bs2 );
+                    } else {
+                        /*
+                         * Switch references from bs2 to bs1.
+                         */
+                        for ( CompositeSequence sequence : havingDupSeqs ) {
+
+                            if ( sequence.getBiologicalCharacteristic().equals( bs1 ) ) {
+                                // no problem.
+                            } else if ( sequence.getBiologicalCharacteristic().equals( bs2 ) ) {
+                                log.info( "Switching bioseq for " + sequence + " from " + bs2 + " to " + bs1 );
+                                if ( !justTesting ) sequence.setBiologicalCharacteristic( bs1 );
+                                if ( !justTesting ) css.update( sequence );
+                            } else {
+                                log.warn( "Hmm, " + sequence + " doesn't have seq " + bs1 + " or " + bs2
+                                        + " but name matches: " + sequence.getBiologicalCharacteristic() );
+                            }
+                        }
+
+                        log.info( "Deleting duplicate sequence " + bs2 );
+                        if ( !justTesting ) bss.remove( bs2 );
+                    }
+
+                } else if ( seqs.size() > 2 ) {
+                    log.warn( seqs.size() - 1 + " potential duplicates of " + bs
+                            + ", this program can only handle pairs" );
+                }
+
+                if ( ++i % 2000 == 0 ) {
+                    log.info( "Processed " + i );
+                }
             }
 
         }
@@ -83,5 +151,4 @@ public class BioSequenceCleanupCli extends AbstractSpringAwareCLI {
         return null;
 
     }
-
 }

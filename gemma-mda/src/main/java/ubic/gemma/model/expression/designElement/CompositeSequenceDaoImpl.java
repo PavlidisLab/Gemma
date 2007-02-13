@@ -223,22 +223,48 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         return retVal;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        Collection<CompositeSequence> compositeSequences = null;
+        final String queryString = "select distinct compositeSequence from CompositeSequenceImpl"
+                + " cs where cs.biologicalCharacteristic = :id";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "id", bioSequence );
+            compositeSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compositeSequences;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByBioSequenceName( String name ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        Collection<CompositeSequence> compositeSequences = null;
+        final String queryString = "select distinct compositeSequence from CompositeSequenceImpl"
+                + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "name", name );
+            compositeSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compositeSequences;
     }
 
 }

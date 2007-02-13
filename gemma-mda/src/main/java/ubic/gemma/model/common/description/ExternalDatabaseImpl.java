@@ -27,12 +27,28 @@ package ubic.gemma.model.common.description;
 /**
  * @see ubic.gemma.model.common.description.ExternalDatabase
  */
-public class ExternalDatabaseImpl
-    extends ubic.gemma.model.common.description.ExternalDatabase
-{
+public class ExternalDatabaseImpl extends ubic.gemma.model.common.description.ExternalDatabase {
 
     /**
      * 
      */
     private static final long serialVersionUID = 5857412688940867544L;
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( !( object instanceof ExternalDatabase ) ) return false;
+
+        ExternalDatabase that = ( ExternalDatabase ) object;
+        if ( this.getId() != null && that.getId() != null ) return super.equals( object );
+
+        return this.getName().equals( that.getName() );
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null ) return super.hashCode();
+
+        return this.getName().hashCode();
+    }
+
 }

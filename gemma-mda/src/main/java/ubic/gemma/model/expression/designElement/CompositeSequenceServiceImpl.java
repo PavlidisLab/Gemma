@@ -202,22 +202,24 @@ public class CompositeSequenceServiceImpl extends
         return this.getCompositeSequenceDao().getRawSummary( compositeSequences );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
     protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        return this.getCompositeSequenceDao().findByBioSequence( bioSequence );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByBioSequenceName(java.lang.String)
      */
     @Override
     protected Collection handleFindByBioSequenceName( String name ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        return this.getCompositeSequenceDao().findByBioSequenceName( name );
     }
 
 }
