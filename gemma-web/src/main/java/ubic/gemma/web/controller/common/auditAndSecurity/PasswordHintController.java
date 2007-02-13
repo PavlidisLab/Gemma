@@ -17,6 +17,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.MailEngine;
 import ubic.gemma.util.RequestUtil;
 
@@ -45,7 +46,9 @@ public class PasswordHintController implements Controller {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'handleRequest' method..." );
         }
-        String username = request.getParameter( "username" );
+
+        String username = SecurityService.getPrincipalName();
+
         MessageSourceAccessor text = new MessageSourceAccessor( messageSource, request.getLocale() );
 
         // ensure that the username has been sent
