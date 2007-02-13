@@ -254,7 +254,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected Collection handleFindByBioSequenceName( String name ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
-        final String queryString = "select distinct compositeSequence from CompositeSequenceImpl"
+        final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
