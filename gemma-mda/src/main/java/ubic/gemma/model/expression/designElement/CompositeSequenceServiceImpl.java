@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author keshav
@@ -199,6 +200,24 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected Collection handleGetRawSummary( Collection compositeSequences ) throws Exception {
         return this.getCompositeSequenceDao().getRawSummary( compositeSequences );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByBioSequenceName(java.lang.String)
+     */
+    @Override
+    protected Collection handleFindByBioSequenceName( String name ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

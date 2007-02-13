@@ -27,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -219,6 +221,24 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 + buf.toString() + ")";
         Collection retVal = nativeQuery( nativeQueryString );
         return retVal;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
+     */
+    @Override
+    protected Collection handleFindByBioSequenceName( String name ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
