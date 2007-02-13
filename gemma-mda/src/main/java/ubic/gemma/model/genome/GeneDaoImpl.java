@@ -184,24 +184,41 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     private void collectMapInfo( Integer stringency, Map<Long, CoexpressionValueObject> geneMap,
             CoexpressionCollectionValueObject coexpressions ) {
-        
-        //TODO use +/- score information in value object to discern if stringincy was met 
+             
         Collection<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
         // add count of original matches to coexpression data
         coexpressions.setLinkCount( geneMap.size() );
-        // parse out stringency failures
+        // filter out stringency failures
+        int positiveLinkCount = 0;
+        int negativeLinkCount = 0;
+        
         for ( Long key : geneMap.keySet() ) {
             CoexpressionValueObject v = geneMap.get( key );
-            if ( v.getExpressionExperimentValueObjects().size() >= stringency ) {
+            boolean added = false;
+            
+            if ( v.getPositiveLinkCount() >= stringency ) {
+                positiveLinkCount++;
+                added = true;
                 // add in coexpressions that match stringency
                 coexpressions.getCoexpressionData().add( v );
                 // add in expression experiments that match stringency
-                ees.addAll( v.getExpressionExperimentValueObjects() );
-
+                ees.addAll( v.getExpressionExperimentValueObjects() );              
+            }
+            
+            if (v.getNegativeLinkCount() >= stringency)
+            {
+                negativeLinkCount++;
+                if (added) continue;    //no point in adding the same element twice
+                // add in coexpressions that match stringency
+                coexpressions.getCoexpressionData().add( v );
+                // add in expression experiments that match stringency
+                ees.addAll( v.getExpressionExperimentValueObjects() );   
+                
             }
         }
         // add count of pruned matches to coexpression data
-        coexpressions.setStringencyLinkCount( coexpressions.getCoexpressionData().size() );
+        coexpressions.setPositiveStringencyLinkCount( positiveLinkCount );
+        coexpressions.setNegativeStringencyLinkCount( negativeLinkCount );
         // add the distinct set of expression experiments involved
         // in the query to coexpression data
         coexpressions.setExpressionExperiments( ees );

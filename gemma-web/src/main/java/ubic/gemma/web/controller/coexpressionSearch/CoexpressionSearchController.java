@@ -278,7 +278,7 @@ public class CoexpressionSearchController extends BaseFormController {
             saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
 
-        Long numCoexpressedGenes = new Long( coexpressions.getStringencyLinkCount() );
+        Long numCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
         Integer numMatchedLinks = coexpressions.getLinkCount();
 
         addTimingInformation( request, coexpressions );

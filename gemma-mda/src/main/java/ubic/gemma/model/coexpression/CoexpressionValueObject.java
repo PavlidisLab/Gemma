@@ -191,5 +191,16 @@ public class CoexpressionValueObject {
         
         return mean/pValues.keySet().size();
     }
+    
+    public int getPositiveLinkCount(){    
+       return this.positiveScores.size();
+    }
+    
+    public int getNegativeLinkCount(){
+        
+        return this.negativeScores.size();
+    }
+    
+    
 
 }

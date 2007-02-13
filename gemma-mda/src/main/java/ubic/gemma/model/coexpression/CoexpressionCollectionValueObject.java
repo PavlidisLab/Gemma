@@ -30,7 +30,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  */
 public class CoexpressionCollectionValueObject {
     private int linkCount; // the total number of links for this specific coexpression
-    private int stringencyLinkCount; // the number of links for this coexpression that passed the stringency requirements
+    private int positiveStringencyLinkCount; // the number of links for this coexpression that passed the stringency requirements
+    private int negativeStringencyLinkCount;
     private Collection<ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were involved in the query
     private Collection<CoexpressionValueObject> coexpressionData; 
     private double firstQuerySeconds;
@@ -39,7 +40,8 @@ public class CoexpressionCollectionValueObject {
 
     public CoexpressionCollectionValueObject() {
         linkCount = 0;
-        stringencyLinkCount = 0;
+        positiveStringencyLinkCount = 0;
+        negativeStringencyLinkCount = 0;
         coexpressionData = new HashSet<CoexpressionValueObject>();
         expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
     }
@@ -75,17 +77,32 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the stringencyLinkCount
      */
-    public int getStringencyLinkCount() {
-        return stringencyLinkCount;
+    public int getPositiveStringencyLinkCount() {
+        return positiveStringencyLinkCount;
     }
 
     /**
      * @param stringencyLinkCount the stringencyLinkCount to set
      */
-    public void setStringencyLinkCount( int stringencyLinkCount ) {
-        this.stringencyLinkCount = stringencyLinkCount;
+    public void setPositiveStringencyLinkCount( int stringencyLinkCount ) {
+        this.positiveStringencyLinkCount = stringencyLinkCount;
     }
 
+    /**
+     * @return the stringencyLinkCount
+     */
+    public int getNegativeStringencyLinkCount() {
+        return negativeStringencyLinkCount;
+    }
+
+    /**
+     * @param stringencyLinkCount the stringencyLinkCount to set
+     */
+    public void setNegativeStringencyLinkCount( int stringencyLinkCount ) {
+        this.negativeStringencyLinkCount = stringencyLinkCount;
+    }
+
+    
     /**
      * @return the expressionExperiments that were searched for coexpression
      */
