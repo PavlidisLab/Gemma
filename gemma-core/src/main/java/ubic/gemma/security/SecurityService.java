@@ -38,7 +38,6 @@ import ubic.gemma.model.common.SecurableDao;
  * @spring.property name="securableDao" ref="securableDao"
  */
 public class SecurityService {
-    private static final String ADMINISTRATOR = "administrator";
 
     private Log log = LogFactory.getLog( SecurityService.class );
 
@@ -47,6 +46,7 @@ public class SecurityService {
 
     private final int PUBLIC_MASK = 6;
     private final int PRIVATE_MASK = 0;
+    private static final String ADMINISTRATOR = "administrator";
 
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
