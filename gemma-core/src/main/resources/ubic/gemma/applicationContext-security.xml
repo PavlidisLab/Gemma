@@ -163,7 +163,8 @@
                 <![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=admin,user,ROLE_ANONYMOUS
-                /passwordhint.html*=admin,user,ROLE_ANONYMOUS
+                /passwordHint.html*=admin,user
+                /editProfile.html*=admin,user
                 /users.html*=admin
                 /clickstreams.jsp*=admin
                 /flushCache.*=admin
