@@ -549,7 +549,11 @@ abstract public class CommonPersister extends AbstractPersister {
             return quantitationTypeCache.get( key );
         }
 
-        QuantitationType qt = quantitationTypeService.findOrCreate( qType );
+        /*
+         * Note: we use 'create' here instead of 'findOrCreate' because we don't want quantitation types shared across
+         * experiments.
+         */
+        QuantitationType qt = quantitationTypeService.create( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
     }
