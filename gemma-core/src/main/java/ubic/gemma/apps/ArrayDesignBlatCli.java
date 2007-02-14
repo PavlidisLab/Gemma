@@ -28,6 +28,8 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -108,8 +110,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                 log.info( "Got " + blatResults.size() + " blat records" );
                 persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, blatResults );
+                audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
             } else {
                 persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign );
+                audit( arrayDesign, "Based on a fresh alignment analysis" );
             }
         } catch ( FileNotFoundException e ) {
             return e;
@@ -120,6 +124,14 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         log.info( "Persisted " + persistedResults.size() + " results" );
 
         return null;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
     @Override

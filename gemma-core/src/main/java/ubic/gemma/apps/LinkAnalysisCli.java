@@ -44,6 +44,9 @@ import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -73,6 +76,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
 
     private static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
+
+    AuditTrailService auditTrailService;
 
     /**
      * How many samples a dataset has to have before we consider analyzing it.
@@ -428,6 +433,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                         String info = this.analysis( ee );
                         if ( info == null ) {
                             persistedObjects.add( ee.toString() );
+                            audit( expressionExperiment, "Part of run on all EEs" );
                         } else {
                             errorObjects.add( ee.getShortName() + " contains errors: " + info );
                         }
@@ -454,6 +460,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                             String info = this.analysis( expressionExperiment );
                             if ( info == null ) {
                                 persistedObjects.add( expressionExperiment.toString() );
+                                audit( expressionExperiment, "From list in file: " + geneExpressionList );
                             } else {
                                 errorObjects.add( expressionExperiment.getShortName() + " contains errors: " + info );
                             }
@@ -481,6 +488,14 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             }
         }
         return null;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = LinkAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     @Override
@@ -522,6 +537,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'd' ) ) {
             this.linkAnalysis.setUseDB( false );
         }
+
+        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 
 }

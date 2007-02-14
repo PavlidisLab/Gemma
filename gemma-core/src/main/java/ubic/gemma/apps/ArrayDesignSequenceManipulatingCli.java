@@ -23,6 +23,7 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
@@ -38,7 +39,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringAwareCLI {
 
     ArrayDesignService arrayDesignService;
-    String arrayDesignName = null;    
+    String arrayDesignName = null;
+    AuditTrailService auditTrailService;
 
     @Override
     @SuppressWarnings("static-access")
@@ -50,8 +52,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     }
 
-    protected void unlazifyArrayDesign(  ArrayDesign arrayDesign ) {
-              
+    protected void unlazifyArrayDesign( ArrayDesign arrayDesign ) {
+
         arrayDesignService.thaw( arrayDesign );
     }
 
@@ -60,7 +62,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      * @return
      */
     protected ArrayDesign locateArrayDesign( String name ) {
-        
+
         ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name.trim().toUpperCase() );
 
         if ( arrayDesign == null ) {
@@ -81,6 +83,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 
     protected void updateAudit( String note ) {

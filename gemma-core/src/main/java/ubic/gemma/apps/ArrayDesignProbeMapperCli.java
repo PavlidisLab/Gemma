@@ -4,6 +4,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -72,6 +74,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         unlazifyArrayDesign( arrayDesign );
 
         arrayDesignProbeMapperService.processArrayDesign( arrayDesign, ignoreStrand );
+        audit( arrayDesign, "Run with 'ignoreStrand'=" + ignoreStrand );
 
         return null;
     }
@@ -82,6 +85,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
         this.ignoreStrand = this.hasOption( 'i' );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignGeneMappingEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
 }

@@ -26,6 +26,8 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -104,6 +106,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         arrayDesignSequenceProcessingService = ( ArrayDesignSequenceProcessingService ) this
                 .getBean( "arrayDesignSequenceProcessingService" );
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
         if ( this.hasOption( 'y' ) ) {
             sequenceType = this.getOptionValue( 'y' );
         }
@@ -165,12 +168,15 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn,
                         taxon );
 
+                audit( arrayDesign, "Sequences read from file: " + sequenceFile );
+
                 sequenceFileIs.close();
             } else {
                 log.info( "Retrieving sequences from BLAST databases" );
                 // FIXME - put in correctdatabases to search. Don't always want to do mouse, human etc.
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, new String[] { "nt",
                         "est_others", "est_human", "est_mouse" }, null, force );
+                audit( arrayDesign, "Sequence looked up from BLAST databases" );
             }
 
         } catch ( Exception e ) {
@@ -178,6 +184,14 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             return e;
         }
         return null;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignSequenceUpdateEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
 }

@@ -19,32 +19,31 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Goes through the biosequences in the database and removes duplicates.
+ * Goes through the biosequences for array designs in the database and removes duplicates.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class BioSequenceCleanupCli extends AbstractSpringAwareCLI {
+public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
-    private boolean justTesting = true;
+    private boolean justTesting = false;
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
+        super.buildOptions();
         Option justTestingOption = OptionBuilder.withArgName( "tryout mode" ).withDescription(
                 "Set to run without any database modifications" ).create( 'f' );
         addOption( justTestingOption );
@@ -79,76 +78,97 @@ public class BioSequenceCleanupCli extends AbstractSpringAwareCLI {
         if ( err != null ) return err;
 
         BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
-        ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
-        Collection<ArrayDesign> ads = adService.loadAll();
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        if ( this.arrayDesignName != null ) {
+            ads.add( locateArrayDesign( this.arrayDesignName ) );
+        } else {
+            ads = this.arrayDesignService.loadAll();
+        }
         int i = 0;
         for ( ArrayDesign design : ads ) {
             log.info( design );
-            adService.thaw( design );
-            for ( CompositeSequence cs : design.getCompositeSequences() ) {
+            unlazifyArrayDesign( design );
+            dups: for ( CompositeSequence cs : design.getCompositeSequences() ) {
 
                 BioSequence bs = cs.getBiologicalCharacteristic();
+                if ( bs == null ) {
+                    continue;
+                }
                 Collection<BioSequence> seqs = bss.findByName( bs.getName() );
-                if ( seqs.size() == 2 ) {
-                    // make sure they really are duplicates
-                    Iterator<BioSequence> it = seqs.iterator();
-                    BioSequence bs1 = it.next();
-                    BioSequence bs2 = it.next();
 
-                    if ( !bs1.equals( bs2 ) ) continue;
+                // ensure this group really does contain all duplicates.
+                for ( BioSequence bs2 : seqs ) {
+                    if ( !this.equals( bs, bs2 ) ) {
+                        log.info( "Group of " + seqs.size() + " sequences with name " + bs.getName()
+                                + " are not all duplicates" );
+                        continue dups;
+                    }
+                    if ( log.isDebugEnabled() ) log.debug( "Duplicates: " + bs + " " + bs2 );
+                }
 
-                    if ( log.isDebugEnabled() ) log.debug( "Duplicates: " + bs1 + " " + bs2 );
+                for ( BioSequence toChange : seqs ) {
 
                     /*
                      * Important! This assumes that the only use of a biosequence is as a biologicalcharactersitic; if
                      * that changes this will break.
                      */
-                    // then load all composite sequences for this.
-                    Collection<CompositeSequence> havingDupSeqs = css.findByBioSequenceName( bs.getName() );
 
-                    if ( havingDupSeqs.size() == 1 ) {
-                        /*
-                         * Remove the other sequence.
-                         */
-                        log.info( "Deleting unused duplicate sequence " + bs2 );
-                        if ( !justTesting ) bss.remove( bs2 );
-                    } else {
-                        /*
-                         * Switch references from bs2 to bs1.
-                         */
-                        for ( CompositeSequence sequence : havingDupSeqs ) {
+                    // all composite sequences for bs2 will be switched to bs1.
+                    Collection<CompositeSequence> havingDupSeqs = css.findByBioSequence( toChange );
 
-                            if ( sequence.getBiologicalCharacteristic().equals( bs1 ) ) {
-                                // no problem.
-                            } else if ( sequence.getBiologicalCharacteristic().equals( bs2 ) ) {
-                                log.info( "Switching bioseq for " + sequence + " from " + bs2 + " to " + bs1 );
-                                if ( !justTesting ) sequence.setBiologicalCharacteristic( bs1 );
-                                if ( !justTesting ) css.update( sequence );
-                            } else {
-                                log.warn( "Hmm, " + sequence + " doesn't have seq " + bs1 + " or " + bs2
-                                        + " but name matches: " + sequence.getBiologicalCharacteristic() );
-                            }
-                        }
+                    css.thaw( havingDupSeqs );
 
-                        log.info( "Deleting duplicate sequence " + bs2 );
-                        if ( !justTesting ) bss.remove( bs2 );
+                    for ( CompositeSequence sequence : havingDupSeqs ) {
+
+                        log.info( "Switching bioseq for " + sequence + " on " + sequence.getArrayDesign() + " from "
+                                + toChange + " to " + bs );
+                        if ( !justTesting ) sequence.setBiologicalCharacteristic( bs );
+                        if ( !justTesting ) css.update( sequence );
+
                     }
 
-                } else if ( seqs.size() > 2 ) {
-                    log.warn( seqs.size() - 1 + " potential duplicates of " + bs
-                            + ", this program can only handle pairs" );
-                }
+                    /*
+                     * Remove the other sequence.
+                     */
+                    log.info( "Deleting unused duplicate sequence " + toChange );
+                    if ( !justTesting ) bss.remove( toChange );
 
-                if ( ++i % 2000 == 0 ) {
-                    log.info( "Processed " + i );
+                    if ( ++i % 2000 == 0 ) {
+                        log.info( "Processed " + i );
+                    }
                 }
             }
-
         }
 
         return null;
 
     }
+
+    /**
+     * Test whether two sequences are effectively equal (ignore the ID)
+     * 
+     * @param one
+     * @param that
+     * @return
+     */
+    private boolean equals( BioSequence one, BioSequence that ) {
+
+        if ( one.getSequenceDatabaseEntry() != null
+                && that.getSequenceDatabaseEntry() != null
+                && !one.getSequenceDatabaseEntry().getAccession().equals(
+                        that.getSequenceDatabaseEntry().getAccession() ) ) return false;
+
+        if ( one.getTaxon() != null && that.getTaxon() != null && !one.getTaxon().equals( that.getTaxon() ) )
+            return false;
+
+        if ( one.getName() != null && that.getName() != null && !one.getName().equals( that.getName() ) ) return false;
+
+        if ( one.getSequence() != null && that.getSequence() != null && !one.getSequence().equals( that.getSequence() ) )
+            return false;
+
+        return true;
+    }
+
 }

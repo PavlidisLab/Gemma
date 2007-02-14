@@ -28,6 +28,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -139,6 +142,12 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 persistedObjects.add( ee.toString() );
             }
         }
+
+        AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditEventService" );
+        AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
+        auditEventService
+                .addUpdateEvent( ee, type, "Computed missing value data on array designs: " + arrayDesignsUsed );
+
     }
 
     @SuppressWarnings("unchecked")
