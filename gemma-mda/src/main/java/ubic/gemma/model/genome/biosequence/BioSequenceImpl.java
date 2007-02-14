@@ -39,21 +39,21 @@ public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequ
             return false;
         }
         final BioSequence that = ( BioSequence ) object;
-        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
 
-            if ( this.getSequenceDatabaseEntry() != null && that.getSequenceDatabaseEntry() != null
-                    && !this.getSequenceDatabaseEntry().equals( that.getSequenceDatabaseEntry() ) ) return false;
+        // The way this is constructed, ALL of the items must be the same.
+        if ( this.getSequenceDatabaseEntry() != null && that.getSequenceDatabaseEntry() != null
+                && !this.getSequenceDatabaseEntry().equals( that.getSequenceDatabaseEntry() ) ) return false;
 
-            if ( this.getTaxon() != null && that.getTaxon() != null && !this.getTaxon().equals( that.getTaxon() ) )
-                return false;
+        if ( this.getTaxon() != null && that.getTaxon() != null && !this.getTaxon().equals( that.getTaxon() ) )
+            return false;
 
-            if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
-                return false;
+        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
+            return false;
 
-            if ( this.getSequence() != null && that.getSequence() != null
-                    && !this.getSequence().equals( that.getSequence() ) ) return false;
+        if ( this.getSequence() != null && that.getSequence() != null
+                && !this.getSequence().equals( that.getSequence() ) ) return false;
 
-        }
         return true;
     }
 
