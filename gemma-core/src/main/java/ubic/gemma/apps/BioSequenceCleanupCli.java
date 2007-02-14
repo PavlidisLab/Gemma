@@ -92,23 +92,37 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
             unlazifyArrayDesign( design );
             dups: for ( CompositeSequence cs : design.getCompositeSequences() ) {
 
-                BioSequence bs = cs.getBiologicalCharacteristic();
-                if ( bs == null ) {
+                BioSequence anchorSeq = cs.getBiologicalCharacteristic();
+                if ( anchorSeq == null ) {
                     continue;
                 }
-                Collection<BioSequence> seqs = bss.findByName( bs.getName() );
+                Collection<BioSequence> seqs = bss.findByName( anchorSeq.getName() );
+
+                // no evidence of duplicates?
+                if ( seqs.size() == 1 ) {
+                    continue;
+                }
+
+                seqs.remove( anchorSeq );
 
                 // ensure this group really does contain all duplicates.
-                for ( BioSequence bs2 : seqs ) {
-                    if ( !this.equals( bs, bs2 ) ) {
-                        log.info( "Group of " + seqs.size() + " sequences with name " + bs.getName()
-                                + " are not all duplicates" );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Examining set of " + seqs.size() + " possible duplicates of " + anchorSeq );
+
+                for ( BioSequence candidateForRemoval : seqs ) {
+                    if ( log.isDebugEnabled() ) log.debug( "   Examining: " + candidateForRemoval );
+                    assert !candidateForRemoval.equals( anchorSeq ) : candidateForRemoval + " equals " + anchorSeq;
+                    if ( !this.equals( anchorSeq, candidateForRemoval ) ) {
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Group of " + seqs.size() + " sequences with name " + anchorSeq.getName()
+                                    + " are not all duplicates" );
                         continue dups;
                     }
-                    if ( log.isDebugEnabled() ) log.debug( "Duplicates: " + bs + " " + bs2 );
+                    if ( log.isDebugEnabled() ) log.debug( "    Duplicate: " + anchorSeq + " " + candidateForRemoval );
                 }
 
                 for ( BioSequence toChange : seqs ) {
+                    if ( log.isDebugEnabled() ) log.debug( "Processing " + toChange );
 
                     /*
                      * Important! This assumes that the only use of a biosequence is as a biologicalcharactersitic; if
@@ -116,15 +130,15 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                      */
 
                     // all composite sequences for bs2 will be switched to bs1.
-                    Collection<CompositeSequence> havingDupSeqs = css.findByBioSequence( toChange );
+                    Collection<CompositeSequence> usingDuplicatedSequence = css.findByBioSequence( toChange );
 
-                    css.thaw( havingDupSeqs );
+                    css.thaw( usingDuplicatedSequence );
 
-                    for ( CompositeSequence sequence : havingDupSeqs ) {
+                    for ( CompositeSequence sequence : usingDuplicatedSequence ) {
 
                         log.info( "Switching bioseq for " + sequence + " on " + sequence.getArrayDesign() + " from "
-                                + toChange + " to " + bs );
-                        if ( !justTesting ) sequence.setBiologicalCharacteristic( bs );
+                                + toChange + " to " + anchorSeq );
+                        if ( !justTesting ) sequence.setBiologicalCharacteristic( anchorSeq );
                         if ( !justTesting ) css.update( sequence );
 
                     }

@@ -320,6 +320,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                         }
                     }
 
+                    session.update( cs.getArrayDesign() );
+                    cs.getArrayDesign().getName();
+
                     if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
                     session.evict( bs );
                 }
