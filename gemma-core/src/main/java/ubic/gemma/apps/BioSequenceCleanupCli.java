@@ -109,20 +109,24 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 if ( log.isDebugEnabled() )
                     log.debug( "Examining set of " + seqs.size() + " possible duplicates of " + anchorSeq );
 
+                Collection<BioSequence> notDuplicate = new HashSet<BioSequence>();
                 for ( BioSequence candidateForRemoval : seqs ) {
                     if ( log.isDebugEnabled() ) log.debug( "   Examining: " + candidateForRemoval );
                     assert !candidateForRemoval.equals( anchorSeq ) : candidateForRemoval + " equals " + anchorSeq;
                     if ( !this.equals( anchorSeq, candidateForRemoval ) ) {
+                        notDuplicate.add( candidateForRemoval );
+                    } else {
                         if ( log.isDebugEnabled() )
-                            log.debug( "Group of " + seqs.size() + " sequences with name " + anchorSeq.getName()
-                                    + " are not all duplicates" );
-                        continue dups;
+                            log.debug( "    Duplicate: " + anchorSeq + " " + candidateForRemoval );
                     }
-                    if ( log.isDebugEnabled() ) log.debug( "    Duplicate: " + anchorSeq + " " + candidateForRemoval );
                 }
+
+                seqs.removeAll( notDuplicate );
 
                 for ( BioSequence toChange : seqs ) {
                     if ( log.isDebugEnabled() ) log.debug( "Processing " + toChange );
+
+                    assert this.equals( anchorSeq, toChange );
 
                     /*
                      * Important! This assumes that the only use of a biosequence is as a biologicalcharactersitic; if
