@@ -64,6 +64,8 @@ public class GeneCoExpressionAnalysis {
 	private HashMap<Long, Double> devRank = null;
 	
     private static Log log = LogFactory.getLog( GeneCoExpressionAnalysis.class.getName() );
+    
+    private static int MINIMUM_SAMPLE = 5;
 
 	public GeneCoExpressionAnalysis(Set<Gene> targetGenes, Set<Gene> dependentGenes, Set<ExpressionExperiment> ees){
 		meanData = new HashMap<Long, Double>();
@@ -245,6 +247,7 @@ public class GeneCoExpressionAnalysis {
 //			System.err.println(devJ.getId() +  " " + jval.length + " (" + devJ.getExpressionExperiment().getId() + ") ");
 			return Double.NaN;
 		}
+		if(ival.length < GeneCoExpressionAnalysis.MINIMUM_SAMPLE ) return Double.NaN;
 		if(devI.getId() == devJ.getId()){
 //			System.err.println("Error in " + devI.getExpressionExperiment().getId());
 			return Double.NaN;
