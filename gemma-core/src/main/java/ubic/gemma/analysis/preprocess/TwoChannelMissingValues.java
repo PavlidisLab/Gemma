@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * Computes a missing value matrix for ratiometric data sets.
  * <p>
- * Supported formats:
+ * Supported formats and special cases:
  * <ul>
  * <li>Genepix: CH1B_MEDIAN etc; (various versions)</li>
  * <li>Incyte GEMTools: RAW_DATA etc (no background values)</li>
@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * <li>Agilent (Ch2BkgMedian etc or CH2_SIG_MEAN etc)</li>
  * <li>GSE3251 (ch1.Background etc)
  * <li>GPL560 (*_CY3 vs *CY5)
+ * <li>GSE1501 (NormCH2)
  * </ul>
  * <p>
  * The missing values are computed with the following considerations with respect to available data
