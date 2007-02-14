@@ -411,6 +411,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
         entity.setOwner( ( Contact ) persist( entity.getOwner() ) );
 
+        persistCollectionElements( entity.getQuantitationTypes() );
         persistCollectionElements( entity.getOtherRelevantPublications() );
         persistCollectionElements( entity.getInvestigators() );
 

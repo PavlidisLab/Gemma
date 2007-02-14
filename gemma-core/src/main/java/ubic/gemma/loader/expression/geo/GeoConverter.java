@@ -612,6 +612,8 @@ public class GeoConverter implements Converter {
             qt.setDescription( description );
             QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description );
 
+            expExp.getQuantitationTypes().add( qt );
+
             int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
                 List<Object> dataVector = dataVectors.get( designElementName );

@@ -222,4 +222,14 @@ public class CompositeSequenceServiceImpl extends
         return this.getCompositeSequenceDao().findByBioSequenceName( name );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleThaw(java.util.Collection)
+     */
+    @Override
+    protected void handleThaw( Collection compositeSequences ) throws Exception {
+        this.getCompositeSequenceDao().thaw( compositeSequences );
+    }
+
 }

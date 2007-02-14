@@ -26,8 +26,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
 
 /**
  * @author pavlidis
@@ -114,6 +118,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
@@ -232,7 +237,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
-        final String queryString = "select distinct compositeSequence from CompositeSequenceImpl"
+        final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs where cs.biologicalCharacteristic = :id";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -265,6 +270,64 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             throw super.convertHibernateAccessException( ex );
         }
         return compositeSequences;
+    }
+
+    @Override
+    protected void handleThaw( final Collection compositeSequences ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            @SuppressWarnings("unchecked")
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                int i = 0;
+                /*
+                 * Note this code is copied from ArrayDesignDaoImpl
+                 */
+                int numToDo = compositeSequences.size();
+                for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+                    BioSequence bs = cs.getBiologicalCharacteristic();
+                    if ( bs == null ) {
+                        continue;
+                    }
+
+                    session.update( bs );
+
+                    bs.getTaxon();
+
+                    if ( bs.getBioSequence2GeneProduct() == null ) {
+                        continue;
+                    }
+
+                    for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                        if ( bs2gp == null ) {
+                            continue;
+                        }
+                        GeneProduct geneProduct = bs2gp.getGeneProduct();
+                        if ( geneProduct != null && geneProduct.getGene() != null ) {
+                            Gene g = geneProduct.getGene();
+                            g.getAliases().size();
+                            session.evict( g );
+                            session.evict( geneProduct );
+                        }
+
+                    }
+
+                    if ( ++i % 2000 == 0 ) {
+                        log.info( "Progress: " + i + "/" + numToDo + "..." );
+                        try {
+                            Thread.sleep( 10 );
+                        } catch ( InterruptedException e ) {
+                            //
+                        }
+                    }
+
+                    if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
+                    session.evict( bs );
+                }
+                session.clear();
+                return null;
+            }
+        }, true );
+
     }
 
 }

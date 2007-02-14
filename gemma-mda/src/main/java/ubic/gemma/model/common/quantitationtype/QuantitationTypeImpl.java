@@ -52,6 +52,26 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
             return false;
         }
 
+        if ( !this.getIsPreferred().equals( that.getIsPreferred() ) ) {
+            return false;
+        }
+
+        if ( !this.getIsRatio().equals( that.getIsRatio() ) ) {
+            return false;
+        }
+
+        if ( !this.getIsNormalized().equals( that.getIsNormalized() ) ) {
+            return false;
+        }
+        
+        if ( !this.getIsBackground().equals( that.getIsBackground() ) ) {
+            return false;
+        }
+
+        if ( !this.getIsBackgroundSubtracted().equals( that.getIsBackgroundSubtracted() ) ) {
+            return false;
+        }
+
         if ( this.getGeneralType() != null && that.getGeneralType() != null
                 && !this.getGeneralType().equals( that.getGeneralType() ) ) {
             return false;
@@ -93,6 +113,11 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
         if ( this.getScale() != null ) {
             hashCode = hashCode + this.getScale().hashCode();
         }
+        hashCode += this.getIsBackground().hashCode();
+        hashCode += this.getIsBackgroundSubtracted().hashCode();
+        hashCode += this.getIsNormalized().hashCode();
+        hashCode += this.getIsPreferred().hashCode();
+        hashCode += this.getIsRatio().hashCode();
 
         return hashCode;
     }

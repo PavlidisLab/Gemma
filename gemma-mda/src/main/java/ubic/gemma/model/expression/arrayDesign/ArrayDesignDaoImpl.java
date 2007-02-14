@@ -354,6 +354,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
                     session.evict( bs );
                 }
+                session.clear();
                 return null;
             }
         }, true );

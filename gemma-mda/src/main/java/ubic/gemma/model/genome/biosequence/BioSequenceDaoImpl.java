@@ -27,13 +27,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
-import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -217,9 +212,12 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         Collection<BioSequence> bioSequences = null;
@@ -235,7 +233,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         return bioSequences;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
@@ -247,22 +247,21 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( bioSequence );
                 bioSequence.getBioSequence2GeneProduct().size();
-               
-                DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-                @SuppressWarnings("unused")
-                ExternalDatabase externalDb = dbEntry.getExternalDatabase();
-                
-                @SuppressWarnings("unused")
-                Taxon taxon = bioSequence.getTaxon();
-                
-                
 
+                bioSequence.getSequenceDatabaseEntry();
+                session.update( bioSequence.getTaxon() );
+
+                DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+                if ( dbEntry != null ) session.update( dbEntry.getExternalDatabase() );
+                session.evict( bioSequence );
                 return null;
             }
         }, true );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
      */
     @Override
@@ -277,16 +276,17 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     session.update( bioSequence );
                     bioSequence.getBioSequence2GeneProduct().size();
 
-                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-                    @SuppressWarnings("unused")
-                    ExternalDatabase externalDb = dbEntry.getExternalDatabase();
+                    bioSequence.getTaxon();
 
-                    @SuppressWarnings("unused")
-                    Taxon taxon = bioSequence.getTaxon();
+                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+                    if ( dbEntry != null ) {
+                        dbEntry.getExternalDatabase();
+                    }
+
                 }
+                session.clear();
                 return null;
             }
         }, true );
     }
-
 }
