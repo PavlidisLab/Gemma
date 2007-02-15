@@ -27,6 +27,7 @@ import java.util.Collection;
 import ubic.gemma.model.genome.Gene;
 
 /**
+ * @version $Id$
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
  */
 public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase {
@@ -67,6 +68,11 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
     @Override
     protected void handleThaw( Collection blatAssociations ) throws Exception {
         this.getBlatAssociationDao().thaw( blatAssociations );
+    }
+
+    @Override
+    protected void handleUpdate( BlatAssociation blatAssociation ) throws Exception {
+        this.getBlatAssociationDao().update( blatAssociation );
     }
 
 }

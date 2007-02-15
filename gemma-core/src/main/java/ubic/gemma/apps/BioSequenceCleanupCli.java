@@ -24,11 +24,17 @@ import java.util.HashSet;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.association.BioSequence2GeneProductService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 
 /**
  * Goes through the biosequences for array designs in the database and removes duplicates.
@@ -79,6 +85,9 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+        BlatResultService blatResultService = ( BlatResultService ) this.getBean( "blatResultService" );
+        BlatAssociationService blatAssociationService = ( BlatAssociationService ) this
+                .getBean( "blatAssociationService" );
 
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         if ( this.arrayDesignName != null ) {
@@ -128,11 +137,6 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
                     assert this.equals( anchorSeq, toChange );
 
-                    /*
-                     * Important! This assumes that the only use of a biosequence is as a biologicalcharactersitic; if
-                     * that changes this will break.
-                     */
-
                     // all composite sequences for bs2 will be switched to bs1.
                     Collection<CompositeSequence> usingDuplicatedSequence = css.findByBioSequence( toChange );
 
@@ -145,6 +149,20 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                         if ( !justTesting ) sequence.setBiologicalCharacteristic( anchorSeq );
                         if ( !justTesting ) css.update( sequence );
 
+                    }
+
+                    Collection<BlatResult> blatResults = blatResultService.findByBioSequence( toChange );
+
+                    for ( BlatResult br : blatResults ) {
+                        if ( !justTesting ) br.setQuerySequence( anchorSeq );
+                        if ( !justTesting ) blatResultService.update( br );
+                    }
+
+                    Collection<BlatAssociation> bs2gps = blatAssociationService.find( toChange );
+
+                    for ( BlatAssociation bs2gp : bs2gps ) {
+                        if ( !justTesting ) bs2gp.setBioSequence( anchorSeq );
+                        if ( !justTesting ) blatAssociationService.update( bs2gp );
                     }
 
                     /*

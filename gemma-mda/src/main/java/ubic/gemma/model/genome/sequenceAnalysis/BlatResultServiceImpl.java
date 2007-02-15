@@ -27,6 +27,7 @@ import java.util.Collection;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
+ * @version $Id$
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService
  */
 public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase {
@@ -77,12 +78,19 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
         return this.getBlatResultDao().findByBioSequence( bioSequence );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
      */
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         return this.getBlatResultDao().load( ids );
+    }
+
+    @Override
+    protected void handleUpdate( BlatResult blatResult ) throws Exception {
+        this.getBlatResultDao().update( blatResult );
     }
 
 }
