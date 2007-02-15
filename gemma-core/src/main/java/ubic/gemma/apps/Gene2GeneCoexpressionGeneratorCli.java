@@ -19,7 +19,6 @@
 
 package ubic.gemma.apps;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -39,6 +38,8 @@ import ubic.gemma.model.association.coexpression.OtherGeneCoExpression;
 import ubic.gemma.model.association.coexpression.RatGeneCoExpression;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -54,18 +55,20 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 
 public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
-    private static final int DEFAULT_STRINGINCY = 1;
+    private static final int DEFAULT_STRINGINCY = 2;
     // Used Services
     ExpressionExperimentService eeS;
     GeneService geneS;
     TaxonService taxonS;
     Gene2GeneCoexpressionService gene2geneS;
     AnalysisService analysisS;
+    ProtocolService protocolS;
 
     Collection<ExpressionExperiment> toUseEE;
     Collection<Gene> toUseGenes;
     Taxon toUseTaxon;
     Analysis toUseAnalysis;
+    int toUseStringency;
 
     /*
      * (non-Javadoc)
@@ -91,6 +94,9 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription( "The taxon to use" )
                 .withLongOpt( "taxon.  Use the common name." ).create( 't' );
 
+        Option stringencyOption = OptionBuilder.hasArg().withArgName( "Stringency" ).withDescription(
+                "The stringency value: Defaults to 2" ).withLongOpt( "stringency" ).create( 's' );
+
         geneFileOption.setRequired( true );
         expExperimentFileOption.setRequired( true );
         taxonOption.setRequired( true );
@@ -98,6 +104,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         addOption( geneFileOption );
         addOption( expExperimentFileOption );
         addOption( taxonOption );
+        addOption( stringencyOption );
 
     }
 
@@ -124,11 +131,11 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         if ( err != null ) return err;
 
         Collection<Gene> processedGenes = new HashSet<Gene>();
-        
+
         for ( Gene gene : toUseGenes ) {
 
             CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneS
-                    .getCoexpressedGenes( gene, toUseEE, DEFAULT_STRINGINCY );
+                    .getCoexpressedGenes( gene, toUseEE, toUseStringency );
 
             persistCoexpressions( gene, coexpressions, processedGenes );
 
@@ -144,6 +151,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
      */
     protected void persistCoexpressions( Gene firstGene, CoexpressionCollectionValueObject toPersist,
             final Collection<Gene> alreadyPersisted ) {
+
         Gene2GeneCoexpression g2gCoexpression;
 
         if ( toUseTaxon.getCommonName().equalsIgnoreCase( "mouse" ) )
@@ -155,7 +163,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         else
             g2gCoexpression = OtherGeneCoExpression.Factory.newInstance();
 
-        g2gCoexpression.setNumDataSetsTested( toPersist.getExpressionExperiments().size() );
+        log.info( "Persisting Gene2Gene coexpression data to the "+ toUseTaxon.getCommonName() + "GeneCoexpression table" );      
         g2gCoexpression.setSourceAnalysis( toUseAnalysis );
 
         for ( CoexpressionValueObject co : toPersist.getCoexpressionData() ) {
@@ -167,16 +175,21 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
             g2gCoexpression.setSecondGene( secondGene );
             g2gCoexpression.setNumDataSets( co.getExpressionExperimentValueObjects().size() );
             g2gCoexpression.setPvalue( co.getCollapsedPValue() );
-            g2gCoexpression.setEffect( co.getNegitiveScore() ); // Which score to use????
 
-            //TODO persist gene twice for positive and negative corralations. 
-           
-            // g2gCoexpression.setEffect( effect );
-            // g2gCoexpression.setSource( toPersist.g);
+            if ( co.getNegativeLinkCount() >= toUseStringency ) {
+                g2gCoexpression.setEffect( co.getNegitiveScore() );
+                gene2geneS.create( g2gCoexpression );
+            }
 
-            gene2geneS.create( g2gCoexpression );
+            if ( co.getPositiveLinkCount() >= toUseStringency ) {
+                g2gCoexpression.setEffect( co.getPositiveScore() );
+                gene2geneS.create( g2gCoexpression );
+            }
+            
+            log.info("Persisted: " + firstGene.getOfficialSymbol() + " --> " + secondGene.getOfficialSymbol() + " ( " + co.getNegitiveScore() + " , +" + co.getPositiveScore() + " )");
+
             // TODO optimization: this could be cached and done in a collection create after the for loop. Faster at the
-            // cost of higher memory.
+            // cost of higher memory requirements.
 
         }
 
@@ -191,7 +204,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         super.processOptions();
 
         initSpringBeans();
-        
 
         if ( this.hasOption( 't' ) ) {
             toUseTaxon = taxonS.findByCommonName( this.getOptionValue( 't' ) );
@@ -205,8 +217,13 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
             processGeneFile( this.getOptionValue( 'g' ) );
         }
 
+        toUseStringency = DEFAULT_STRINGINCY;
+        if ( this.hasOption( 's' ) ) {
+            toUseStringency = Integer.parseInt( this.getOptionValue( 's' ) );
+        }
+
         initAttributes();
-        
+
     }
 
     private void processEEFile( String fileName ) {
@@ -224,6 +241,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
             }
 
             toUseEE.add( ee );
+            log.info( "Expression Expreiment: " + ee.getShortName() + " added to processing list " );
         }
 
     }
@@ -232,16 +250,29 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
         Collection<String> geneIds = processFile( fileName );
 
+        if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) {
+            log.warn( "No valid genes found.  Unable to process" );
+            return;
+        }
+
         for ( String id : geneIds ) {
 
             Collection<Gene> genes = geneS.findByOfficialSymbol( id );
 
             if ( ( genes == null ) || ( genes.isEmpty() ) ) genes = geneS.findByOfficialName( id );
 
+            if ( ( genes == null ) || ( genes.isEmpty() ) ) {
+                log.info( "Gene with id: " + id + " not found.  Removed from processing list" );
+                continue;
+            }
             // What to do with a search results that returns more than one gene?
             for ( Gene g : genes ) {
 
-                if ( !toUseTaxon.equals( g.getTaxon() ) ) continue;
+                if ( !toUseTaxon.equals( g.getTaxon() ) ) {
+                    log.info( "Gene " + g.getOfficialSymbol() + " with id: " + g.getId()
+                            + "removed from processing list. Wrong Taxon. " );
+                    continue;
+                }
 
                 toUseGenes.add( g );
                 log.info( "Gene " + g.getOfficialSymbol() + " with id: " + g.getId() + " added to processing list " );
@@ -255,17 +286,18 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         geneS = ( GeneService ) this.getBean( "geneService" );
         eeS = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         taxonS = ( TaxonService ) this.getBean( "taxonService" );
-        gene2geneS = ( Gene2GeneCoexpressionService ) this.getBean( "gene2geneCoexpressionService" );
+        gene2geneS = ( Gene2GeneCoexpressionService ) this.getBean( "gene2GeneCoexpressionService" );
         analysisS = ( AnalysisService ) this.getBean( "analysisService" );
+        protocolS = ( ProtocolService ) this.getBean( "protocolService" );
 
+        toUseEE = new HashSet<ExpressionExperiment>();
+        toUseGenes = new HashSet<Gene>();
     }
 
     private void initAttributes() {
-        toUseEE = new HashSet<ExpressionExperiment>();
-        toUseGenes = new HashSet<Gene>();
-        
+
         toUseAnalysis = ExpressionAnalysis.Factory.newInstance();
-        toUseAnalysis.setAnalyzedInvestigation( new ArrayList<Investigation>( toUseEE ) );
+        toUseAnalysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
         toUseAnalysis.setDescription( "Coexpression analysis for " + toUseTaxon.getCommonName() + "using "
                 + toUseEE.size() + " expression experiments" );
 
@@ -275,8 +307,15 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
                 + cal.get( Calendar.MONTH ) + " " + cal.get( Calendar.DAY_OF_MONTH ) + " "
                 + cal.get( Calendar.HOUR_OF_DAY ) + ":" + cal.get( Calendar.MINUTE ) );
 
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Stored Gene2GeneCoexpressions" );
+        protocol.setDescription( "Using: " + this.toUseEE.size() + " Expression Experiments,  " + toUseGenes.size()
+                + " Genes" );
+        protocol = protocolS.findOrCreate( protocol );
+
+        toUseAnalysis.setProtocol( protocol );
         toUseAnalysis = analysisS.create( toUseAnalysis );
-        
+
     }
 
 }
