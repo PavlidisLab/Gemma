@@ -148,10 +148,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
         final String queryString = "select distinct quantType "
-                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors as vector "
-                + "inner join vector.quantitationType as quantType " + "where ee  = :ee ";
-
+            + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+            + "inner join ee.quantitationTypes as quantType "
+            +  "where ee  = :ee ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "ee", expressionExperiment );
@@ -167,13 +166,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( arrayDesign == null ) {
             return handleGetQuantitationTypes( expressionExperiment );
         }
-
-        final String queryString = "select distinct quantType "
+        
+        /*final String queryString = "select distinct quantType "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.designElementDataVectors as vector "
                 + "inner join vector.quantitationType as quantType " + "inner join vector.bioAssayDimension bad "
-                + "inner join bad.bioAssays ba inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
-
+                + "inner join bad.bioAssays ba inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";*/
+        final String queryString = "select distinct quantType "
+            + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+            + "inner join ee.quantitationTypes as quantType "
+            + "inner join ee.bioAssays as ba "
+            + "inner join ba.arrayDesignUsed ad " 
+            + "where ee = :ee and ad = :ad";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "ee", expressionExperiment );
