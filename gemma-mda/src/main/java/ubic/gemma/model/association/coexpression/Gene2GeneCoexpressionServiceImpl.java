@@ -22,6 +22,8 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.analysis.Analysis;
+
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService
  */
@@ -123,8 +125,8 @@ public class Gene2GeneCoexpressionServiceImpl extends
      *      java.util.Collection)
      */
     protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection expressionExperiments ) throws java.lang.Exception {
-        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, expressionExperiments );
+            Analysis analysis, int stringency ) throws java.lang.Exception {
+        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, analysis, stringency );
     }
 
     private Boolean validCollection( java.util.Collection g2gExpressions ) throws IllegalArgumentException {

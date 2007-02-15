@@ -22,6 +22,7 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -33,7 +34,7 @@ public class Gene2GeneCoexpressionDaoImpl
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null, java.util.Collection)
      */
-    protected java.util.Collection handleFindCoexpressionRelationships(Gene gene, java.util.Collection expressionExperiments)
+    protected java.util.Collection handleFindCoexpressionRelationships(Gene gene, Analysis analysis, int stringency)
     {
         // @todo implement public java.util.Collection handleFindCoexpressionRelationships(null gene, java.util.Collection expressionExperiments)
         return null;
