@@ -75,7 +75,7 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             QuantitationType qType = dat.getBackgroundChannelA( dimension );
-            if ( qType != null ) qTypes.add( qType );
+            if(qType != null) qTypes.add( qType );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -94,7 +94,7 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             QuantitationType qType = dat.getBackgroundChannelB( dimension );
-            if ( qType != null ) qTypes.add( qType );
+            if(qType != null) qTypes.add( qType );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -110,7 +110,7 @@ public class ExpressionDataMatrixBuilder {
     public List<BioAssayDimension> getBioAssayDimensions( ArrayDesign arrayDesign ) {
 
         List<BioAssayDimension> result = new ArrayList<BioAssayDimension>();
-        if ( arrayDesign == null && dimMap.keySet().size() > 1 ) {
+        if ( arrayDesign == null && dimMap.keySet().size() > 0 ) {
             result.addAll( dimMap.values() );
             return result;
         } else if ( arrayDesign != null && dimMap.containsKey( arrayDesign ) ) {
@@ -122,15 +122,13 @@ public class ExpressionDataMatrixBuilder {
         Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : allVectors ) {
             ArrayDesign adUsed = arrayDesignForVector( vector );
-            if ( arrayDesign == null || adUsed.equals( arrayDesign ) ) {
+            if(!dimMap.containsKey(adUsed))
+            	dimMap.put( adUsed, vector.getBioAssayDimension() );
+            if ( arrayDesign == null || adUsed.equals( arrayDesign )) {
                 assert vector.getBioAssayDimension() != null;
                 dimensions.add( vector.getBioAssayDimension() );
-                // dimMap.put( arrayDesign, vector.getBioAssayDimension() );
-                dimMap.put( adUsed, vector.getBioAssayDimension() );
-                continue;
             }
         }
-
         result.addAll( dimensions );
         return result;
     }
@@ -234,7 +232,7 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             QuantitationType qType = dat.getSignalChannelB( dimension );
-            if ( qType != null ) qTypes.add( qType );
+            if(qType != null) qTypes.add( qType );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -264,7 +262,7 @@ public class ExpressionDataMatrixBuilder {
             if ( channelANeedsReconstruction ) {
                 return getSignalChannelAFancy( arrayDesign );
             }
-            if ( signalChannelA != null ) qTypes.add( signalChannelA );
+            if(signalChannelA != null) qTypes.add( signalChannelA );
         }
 
         return makeMatrix( dimensions, qTypes );
@@ -298,7 +296,8 @@ public class ExpressionDataMatrixBuilder {
 
             return signalA; // now this contains the answer
         } else {
-            return getPreferredData();
+            //return getPreferredData();
+        	return getPreferredData(arrayDesign);
         }
     }
 
@@ -513,7 +512,8 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
                 || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
                 || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM*CH1" );
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" )
+        		|| name.toUpperCase().matches( "NORM*CH1" );
     }
 
     /**
@@ -527,7 +527,8 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
                 || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
                 || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM*CH2" );
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" )
+                || name.toUpperCase().matches( "NORM*CH2" );
     }
 
     /**
