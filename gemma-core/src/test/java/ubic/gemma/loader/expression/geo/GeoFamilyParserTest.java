@@ -85,7 +85,7 @@ public class GeoFamilyParserTest extends TestCase {
      */
     public void testParseGse432() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse432Short/GSE432.soft.gz" ) );
+                "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
         parser.parse( is );
     }
 
