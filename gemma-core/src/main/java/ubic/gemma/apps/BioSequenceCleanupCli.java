@@ -90,7 +90,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         for ( ArrayDesign design : ads ) {
             log.info( design );
             unlazifyArrayDesign( design );
-            dups: for ( CompositeSequence cs : design.getCompositeSequences() ) {
+            for ( CompositeSequence cs : design.getCompositeSequences() ) {
 
                 BioSequence anchorSeq = cs.getBiologicalCharacteristic();
                 if ( anchorSeq == null ) {
