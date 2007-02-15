@@ -466,7 +466,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             if ( dirty ) {// now move all the designelementdatavectors that used the old type to the new one.
                 Collection<DesignElementDataVector> vectors = designElementDataVectorService.find(
                         expressionExperiment, qType );
-                QuantitationType newType = quantitationTypeService.findOrCreate( revisedType );
+                QuantitationType newType = quantitationTypeService.create( revisedType );
                 log.info( "Updating quantitation type " + newType.getName() + " for " + vectors.size()
                         + " data vectors" );
                 for ( DesignElementDataVector vector : vectors ) {
