@@ -19,7 +19,7 @@ if ( expressionExperiment.getName() != null ) {
 
 <table width="100%" cellspacing="10">
 	<tr>
-		<td class="label">
+		<td class="label" >
 			<fmt:message key="expressionExperiment.name" />
 		</td>
 		<td>
@@ -150,26 +150,15 @@ if ( expressionExperiment.getName() != null ) {
 				                }
 				%>
 			</td>
-		<tr>
-		<tr>
-			<td class="label">
-				Analysis info
-			</td>
-			<td>
-				<Gemma:eeAudit expressionExperiment="${expressionExperiment}" />
-			</td>
 		</tr>
 	</authz:authorize>
-	<tr>
-		<td class="label">
+	<tr><td class="label">
 			Profiles
 		</td>
-		<td>
-			${designElementDataVectorCount}
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 
+		<td>${designElementDataVectorCount} <a class="helpLink" href="?"
+					onclick="showHelpTip(event, 
 				'The total number of expression profiles for this experiment, combined across all quantitation types.'); return false">
-				<img src="/Gemma/images/help.png" /> </a>
+					<img src="/Gemma/images/help.png" /> </a>
 		</td>
 	</tr>
 	<tr>
@@ -178,10 +167,9 @@ if ( expressionExperiment.getName() != null ) {
 		<td>
 			<%
 			out.print( expressionExperiment.getBioAssays().size() );
-			%>
-			<a
+			%> <a
 				href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
-				<img src="/Gemma/images/magnifier.png" /> </a>
+				<img src="/Gemma/images/magnifier.png" /></a> 
 		</td>
 
 	</tr>
@@ -193,7 +181,7 @@ if ( expressionExperiment.getName() != null ) {
 				<c:out value="${ arrayDesign.name}" />
 				<a
 					href="/Gemma/arrays/showArrayDesign.html?id=<c:out value="${ arrayDesign.id}" />">
-					<img src="/Gemma/images/magnifier.png" /> </a>
+					<img src="/Gemma/images/magnifier.png" /></a>
 				<br />
 			</c:forEach>
 
@@ -204,7 +192,12 @@ if ( expressionExperiment.getName() != null ) {
 			<td class="label">
 				Coexpression Links
 			<td>
+				<c:if test="${ eeCoexpressionLinks != null}" >
 				${eeCoexpressionLinks}
+				</c:if>
+				<c:if test="${ eeCoexpressionLinks == null}" >
+					(count not available)
+				</c:if>				
 			</td>
 		</tr>
 	</authz:authorize>
@@ -287,12 +280,10 @@ if ( expressionExperiment.getName() != null ) {
 	%>
 </authz:authorize>
 
-<h3>
-	Quantitation Types
-	<a class="helpLink" href="?"
-		onclick="showHelpTip(event, 
+<h3>Quantitation Types <a class="helpLink" href="?"
+					onclick="showHelpTip(event, 
 				'Quantitation types are the different measurements available for this experiment.'); return false">
-		<img src="/Gemma/images/help.png" /> </a>
+					<img src="/Gemma/images/help.png" /> </a>
 </h3>
 <div id="tableContainer" class="tableContainer">
 	<display:table name="quantitationTypes" class="scrollTable"
@@ -305,6 +296,8 @@ if ( expressionExperiment.getName() != null ) {
 			titleKey="description" />
 		<display:column property="qtPreferredStatus" sortable="true"
 			maxWords="20" titleKey="quantitationType.preferred" />
+		<display:column property="qtRatioStatus" sortable="true"
+			maxWords="20" titleKey="quantitationType.ratio" />		
 		<display:column property="qtBackground" sortable="true" maxWords="20"
 			titleKey="quantitationType.background" />
 		<display:column property="qtBackgroundSubtracted" sortable="true"
@@ -313,8 +306,7 @@ if ( expressionExperiment.getName() != null ) {
 			titleKey="quantitationType.normalized" />
 		<display:column property="generalType" sortable="true" />
 		<display:column property="type" sortable="true" />
-		<display:column property="representation" sortable="true"
-			title="Repr." />
+		<display:column property="representation" sortable="true" title="Repr." />
 		<display:column property="scale" sortable="true" />
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>

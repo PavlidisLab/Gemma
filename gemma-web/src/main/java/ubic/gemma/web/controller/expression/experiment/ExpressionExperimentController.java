@@ -171,8 +171,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 .getDesignElementDataVectorCountById( id ) );
         mav.addObject( "designElementDataVectorCount", designElementDataVectorCount );
 
-        Integer eeLinks = probe2ProbeCoexpressionService.countLinks( expressionExperiment );
-        mav.addObject( "eeCoexpressionLinks", eeLinks );
+        // load coexpression link count from cache
+        Collection<Long> eeId = new ArrayList<Long>();
+        eeId.add( id );
+        Collection eeVo = expressionExperimentReportService.retrieveSummaryObjects( eeId );
+        if (eeVo != null && eeVo.size() > 0) {
+            ExpressionExperimentValueObject vo = (ExpressionExperimentValueObject) eeVo.iterator().next();
+            String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
+            mav.addObject( "eeCoexpressionLinks", eeLinks );
+        }
+
         return mav;
     }
 
