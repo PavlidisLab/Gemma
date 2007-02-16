@@ -319,6 +319,7 @@
 								name="_<c:out value="${status.expression}"/>">
 						</spring:bind>
 					</td>
+					<td>
 						<spring:bind path="isBackground">
 							<input id="backgroundCheckbox" type="checkbox"
 								name="${status.expression}"
