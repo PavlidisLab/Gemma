@@ -142,6 +142,12 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
         
         
     }
+    
+    public void testFindByName(){
+        
+        Analysis result = analysisS.findByName( "Test" );
+        assertEquals( "TestAnalysis3", result.getName() );
+    }
 
     /**
      * @param analysisS the analysisS to set

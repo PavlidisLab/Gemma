@@ -23,6 +23,7 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
@@ -33,6 +34,32 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 public class AnalysisServiceImpl
     extends ubic.gemma.model.analysis.AnalysisServiceBase
 {
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.analysis.AnalysisServiceBase#handleFindByName(java.lang.String)
+     */
+    @Override
+    protected Analysis handleFindByName( String name ) throws Exception {
+       Collection results = this.getAnalysisDao().findByName( name + "?" );
+       
+       Analysis mostRecent = null;
+       
+       //find the most recent one that matches
+       for (Object obj: results){
+           Analysis ana = (Analysis) obj;
+           
+           if (mostRecent == null){
+               mostRecent = ana;
+               continue;
+           }
+           
+           Date current = ana.getAuditTrail().getLast().getDate();
+           if (current.after( mostRecent.getAuditTrail().getLast().getDate() ))
+               mostRecent = ana;           
+       }
+       
+       return mostRecent;
+    }
 
     @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
