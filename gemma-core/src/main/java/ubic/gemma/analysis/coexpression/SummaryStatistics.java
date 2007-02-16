@@ -35,6 +35,7 @@ import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -63,6 +64,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
     private String taxonName;
     TaxonService taxonService;
     ArrayDesignService arrayDesignService;
+    CompositeSequenceService compositeSequenceService;
 
     /**
      * For each gene, count how many expression experiments it appears in.
@@ -90,7 +92,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
 
             for ( ArrayDesign design : ads ) {
                 log.info( i + " " + design );
-                Collection<Object[]> vals = arrayDesignService.getRawCompositeSequenceSummary( design );
+                Collection<Object[]> vals = compositeSequenceService.getRawSummary( design );
                 log.info( "Got " + vals.size() + " reports" );
                 for ( Object[] objects : vals ) {
 
@@ -221,7 +223,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
 
             for ( ArrayDesign design : ads ) {
 
-                Collection<Object[]> vals = arrayDesignService.getRawCompositeSequenceSummary( design );
+                Collection<Object[]> vals = compositeSequenceService.getRawSummary( design );
                 log.info( numEEs + " " + design + "Got " + vals.size() + " reports" );
 
                 for ( Object[] objects : vals ) {
@@ -344,6 +346,13 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
         this.taxonService = ( TaxonService ) getBean( "taxonService" );
         this.arrayDesignService = ( ArrayDesignService ) getBean( "arrayDesignService" );
         this.expressionExperimentService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
+        this.compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
+    }
 
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
     }
 }

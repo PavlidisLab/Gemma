@@ -48,6 +48,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
  * @spring.bean id="arrayDesignMapResultService"
  * @spring.property name="blatAssociationService" ref="blatAssociationService"
  * @spring.property name="arrayDesignService" ref ="arrayDesignService"
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="blatResultService" ref="blatResultService"
  * 
  * @author Paul
@@ -60,7 +61,15 @@ public class ArrayDesignMapResultService {
     private BlatResultService blatResultService;
     private BlatAssociationService blatAssociationService;
     private ArrayDesignService arrayDesignService;
+    private CompositeSequenceService compositeSequenceService;
 
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
 
     public void setBlatResultService( BlatResultService blatResultService ) {
         this.blatResultService = blatResultService;
@@ -85,7 +94,7 @@ public class ArrayDesignMapResultService {
      * @return
      */
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
-        Collection sequenceData = arrayDesignService.getRawCompositeSequenceSummary( arrayDesign );
+        Collection sequenceData = compositeSequenceService.getRawSummary( arrayDesign );
         return getSummaryMapValueObjects( sequenceData );
     }
 

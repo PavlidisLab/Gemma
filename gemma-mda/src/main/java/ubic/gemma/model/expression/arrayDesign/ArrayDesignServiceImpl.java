@@ -31,13 +31,7 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetRawCompositeSequenceSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    protected Collection handleGetRawCompositeSequenceSummary( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().getRawCompositeSequenceSummary( arrayDesign );
-    }
+
 
     /* (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)

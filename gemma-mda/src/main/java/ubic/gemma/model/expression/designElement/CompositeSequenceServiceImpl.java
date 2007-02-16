@@ -43,6 +43,14 @@ public class CompositeSequenceServiceImpl extends
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Collection handleGetRawSummary( ArrayDesign arrayDesign ) throws Exception {
+        return this.getCompositeSequenceDao().getRawSummary( arrayDesign );
+    }
+
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#saveCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */

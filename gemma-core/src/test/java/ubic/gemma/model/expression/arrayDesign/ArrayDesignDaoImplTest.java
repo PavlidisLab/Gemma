@@ -123,11 +123,6 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         assertNotNull( cs.getArrayDesign().getId() );
     }
     
-    public void testGetRawCompositeSequenceSummary() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection cs = arrayDesignDao.getRawCompositeSequenceSummary(  ad );
-        assertNotNull(cs);  
-    }
 
     public void testDelete() {
 
