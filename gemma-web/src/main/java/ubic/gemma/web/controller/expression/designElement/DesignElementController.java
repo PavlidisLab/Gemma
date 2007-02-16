@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.designElement;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -117,15 +119,17 @@ public class DesignElementController extends BaseMultiActionController {
                 
             }
         }
+        
+        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );
+            compositeSequenceSummary = new ArrayList<CompositeSequenceMapValueObject>();
             // return showAll( request, response );
         } else {
             this.saveMessage( request, searchResults.size() + " probes matched your search." );
+            Collection rawSummaries = compositeSequenceService.getRawSummary( searchResults );
+            compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );         
         }
-
-        Collection rawSummaries = compositeSequenceService.getRawSummary( searchResults );
-        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
 
         ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );
         mav.addObject( "arrayDesign", arrayDesign );
