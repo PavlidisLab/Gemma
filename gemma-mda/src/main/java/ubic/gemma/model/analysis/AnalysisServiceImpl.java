@@ -23,7 +23,6 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
@@ -40,21 +39,28 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
      */
     @Override
     protected Analysis handleFindByName( String name ) throws Exception {
-        Collection results = this.getAnalysisDao().findByName( name + "?" );
+        Collection results = this.getAnalysisDao().findByName( name + "%" );
 
         Analysis mostRecent = null;
+        
+        // find the most recent one that matches. Perhaps the best way is to use the audit trail but would have to thaw
+        // them.
+        // Instead of thawing the audit trail just use the analysis with the largest ID as we don't update analysis
+        // currently so
+        // the same resutls should be returned.
 
-        // find the most recent one that matches
         for ( Object obj : results ) {
             Analysis ana = ( Analysis ) obj;
 
+            if (ana.getName().equalsIgnoreCase( name ))
+                return ana;
+            
             if ( mostRecent == null ) {
                 mostRecent = ana;
                 continue;
             }
 
-            Date current = ana.getAuditTrail().getCreationEvent().getDate();
-            if ( current.after( mostRecent.getAuditTrail().getCreationEvent().getDate() ) ) mostRecent = ana;
+            if ( ana.getId() > mostRecent.getId() ) mostRecent = ana;
         }
 
         return mostRecent;

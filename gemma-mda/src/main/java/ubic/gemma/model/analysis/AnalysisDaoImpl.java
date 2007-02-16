@@ -69,15 +69,5 @@ public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByName(java.lang.String)
-     */
-    @Override
-    protected Collection handleFindByName( String name ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
 }

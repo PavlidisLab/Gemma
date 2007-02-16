@@ -45,6 +45,7 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
    Analysis eAnalysis1;
    Analysis eAnalysis2;
    Analysis eAnalysis3;
+   Analysis eAnalysis4;
    
    ExpressionExperiment e1;
    ExpressionExperiment e2;
@@ -85,12 +86,22 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
        eAnalysis2 = analysisS.create( eAnalysis2 );
        
 
-       eAnalysis3 = ExpressionAnalysis.Factory.newInstance();
+       eAnalysis4 = ExpressionAnalysis.Factory.newInstance();
        investigations = new HashSet<Investigation>();
        investigations.add( e1 );
        investigations.add( e2 );
        investigations.add( e3 );
        
+       eAnalysis4.setAnalyzedInvestigation( investigations);
+       eAnalysis4.setName( "Test" );
+       eAnalysis4.setDescription( "An analysis Test 4");
+       eAnalysis4 = analysisS.create( eAnalysis4 );
+       
+       eAnalysis3 = ExpressionAnalysis.Factory.newInstance();
+       investigations = new HashSet<Investigation>();
+       investigations.add( e1 );
+       investigations.add( e2 );
+       investigations.add( e3 );
        eAnalysis3.setAnalyzedInvestigation( investigations);
        eAnalysis3.setName( "TestAnalysis3" );
        eAnalysis3.setDescription( "An analysis Test 3");
@@ -119,13 +130,13 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
     public void testFindByInvestion(){
         
         Collection results = analysisS.findByInvestigation( e1 );
-        assertEquals(3,results.size());
+        assertEquals(4,results.size());
         
         results = analysisS.findByInvestigation( e2 );
-        assertEquals( 2, results.size() );
+        assertEquals( 3, results.size() );
         
         results = analysisS.findByInvestigation( e3 );
-        assertEquals( 1, results.size() );
+        assertEquals( 2, results.size() );
         
     }
     
@@ -143,9 +154,15 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
         
     }
     
-    public void testFindByName(){
+    public void testFindByNameExact(){
         
         Analysis result = analysisS.findByName( "Test" );
+        assertEquals( "Test", result.getName() );
+    }
+    
+    public void testFindByNameRecent(){
+        
+        Analysis result = analysisS.findByName( "TestA" );
         assertEquals( "TestAnalysis3", result.getName() );
     }
 
