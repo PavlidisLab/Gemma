@@ -120,13 +120,13 @@ public class DedvRankService {
                         valueForRank = DescriptiveWithMissing.min( row );
                         break;
                     case MAX:
-                        valueForRank = Descriptive.max( row );
+                        valueForRank = DescriptiveWithMissing.max( row );
                         break;
                     case MEAN:
-                        valueForRank = Descriptive.mean( row );
+                        valueForRank = DescriptiveWithMissing.mean( row );
                         break;
                     case MEDIAN:
-                        valueForRank = Descriptive.median( row );
+                        valueForRank = DescriptiveWithMissing.median( row );
                         break;
                 }
             }
