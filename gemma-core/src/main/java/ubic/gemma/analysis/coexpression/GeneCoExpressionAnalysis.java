@@ -348,7 +348,7 @@ public class GeneCoExpressionAnalysis {
 					for(int ii = 0; ii < devI.length; ii++)
 						for(int jj = 0; jj < devJ.length; jj++){
 							double corr = this.coRelation((DesignElementDataVector)devI[ii], (DesignElementDataVector)devJ[jj]);
-							if(corr != Double.NaN)
+							if(!Double.isNaN(corr))
 								sortedData.put(new Double(corr), new Integer(ii*shift + jj));
 						}
 
