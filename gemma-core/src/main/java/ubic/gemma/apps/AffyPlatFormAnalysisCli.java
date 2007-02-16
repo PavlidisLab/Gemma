@@ -29,6 +29,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -222,16 +223,16 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         double value = 0.0;
         switch ( method ) {
             case MIN:
-                value = Descriptive.min( valList );
+                value = DescriptiveWithMissing.min( valList );
                 break;
             case MAX:
-                value = Descriptive.max( valList );
+                value = DescriptiveWithMissing.max( valList );
                 break;
             case MEAN:
-                value = Descriptive.mean( valList );
+                value = DescriptiveWithMissing.mean( valList );
                 break;
             case MEDIAN:
-                value = Descriptive.median( valList );
+                value = DescriptiveWithMissing.median( valList );
                 break;
             case STD:
                 int N = valList.size();
