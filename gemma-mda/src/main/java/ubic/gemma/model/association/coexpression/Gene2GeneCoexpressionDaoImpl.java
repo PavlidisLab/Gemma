@@ -22,22 +22,63 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.TaxonUtility;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  */
-public class Gene2GeneCoexpressionDaoImpl
-    extends ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase
-{
+public class Gene2GeneCoexpressionDaoImpl extends
+        ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
     /**
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null, java.util.Collection)
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
+     *      java.util.Collection)
      */
-    protected java.util.Collection handleFindCoexpressionRelationships(Gene gene, Analysis analysis, int stringency)
-    {
-        // @todo implement public java.util.Collection handleFindCoexpressionRelationships(null gene, java.util.Collection expressionExperiments)
-        return null;
-}
+    protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, Analysis analysis, int stringency ) {
+        String g2gClassName;
+
+        if ( TaxonUtility.isHuman( gene.getTaxon() ) )
+            g2gClassName = "HumanGeneCoExpressionImpl";
+        else if ( TaxonUtility.isMouse( gene.getTaxon() ) )
+            g2gClassName = "MouseGeneCoExpressionImpl";
+        else if ( TaxonUtility.isRat( gene.getTaxon() ) )
+            g2gClassName = "RatGeneCoExpressionImpl";
+        else
+            // must be other
+            g2gClassName = "OtherGeneCoExpressionImpl";
+
+        final String queryStringFirstVector = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.sourceAnalysis.id = :analysisID and g2g.firstGene.id = :geneID and g2g.numDataSets >= :stringency";
+
+        final String queryStringSecondVector = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.sourceAnalysis.id = :analysisID and g2g.secondGene.id = :geneID and g2g.numDataSets >= :stringency";
+
+        Collection results;
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
+            queryObject.setLong( "analysisID", analysis.getId() );
+            queryObject.setLong( "geneID", gene.getId() );
+            queryObject.setInteger( "stringency", stringency );
+            results = queryObject.list();
+
+            // do query joining coexpressed genes through the secondVector to the firstVector
+            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
+            queryObject.setLong( "analysisID", analysis.getId() );
+            queryObject.setLong( "geneID", gene.getId() );
+            queryObject.setInteger( "stringency", stringency );
+            results.addAll( queryObject.list() );
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return results;
+    }
 
 }

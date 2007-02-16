@@ -275,7 +275,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
                 }
 
                 toUseGenes.add( g );
-                log.info( "Gene " + g.getOfficialSymbol() + " with id: " + g.getId() + " added to processing list " );
+                log.debug( "Gene " + g.getOfficialSymbol() + " with id: " + g.getId() + " added to processing list " );
 
             }
         }
