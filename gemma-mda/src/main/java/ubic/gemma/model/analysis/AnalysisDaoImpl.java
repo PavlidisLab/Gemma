@@ -37,12 +37,12 @@ public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
     @Override
     protected Map handleFindByInvestigations( Collection investigators ) throws Exception {
 
-        //TODO: this query doesn't work. fix.  Causses an npe when hibernate tries to generated the sql
+        // TODO: this query doesn't work. fix. Causses an npe when hibernate tries to generated the sql
         final String queryString = "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where (:investigations) = any elements(analysis.analyzedInvestigation))";
-        //"select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where i.analyzedInvestigation.id in (:investigations))
-        //"from AnalysisImpl i where :investigation = any elements(i.analyzedInvestigation)", investigation)      
-        
-        
+        // "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis
+        // from AnalysisImpl where i.analyzedInvestigation.id in (:investigations))
+        // "from AnalysisImpl i where :investigation = any elements(i.analyzedInvestigation)", investigation)
+
         Collection<Long> investigatorsById = new HashSet<Long>();
         for ( Object obj : investigators )
             investigatorsById.add( ( ( Investigation ) obj ).getId() );
@@ -67,6 +67,17 @@ public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
         }
 
         return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByName(java.lang.String)
+     */
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
