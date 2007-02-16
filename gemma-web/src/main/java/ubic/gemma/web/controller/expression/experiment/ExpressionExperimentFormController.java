@@ -422,6 +422,19 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     revisedType.setDescription( newDescription );
                     revisedType.setName( newName );
                     revisedType.setIsNormalized( newisNormalized );
+   
+                    
+                    qType.setIsBackgroundSubtracted( newisBkgSub );
+                    qType.setIsBackground( newisBkg );
+                    qType.setIsPreferred( newisPreferred );
+                    qType.setIsRatio( newisRatio );
+                    qType.setRepresentation( newrep );
+                    qType.setType( newType );
+                    qType.setScale( newscale );
+                    qType.setGeneralType( newgentype );
+                    qType.setDescription( newDescription );
+                    qType.setName( newName );
+                    qType.setIsNormalized( newisNormalized );
 
                     if ( !oldName.equals( newName ) ) {
                         dirty = true;
@@ -463,20 +476,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     break;
                 }
             }
-            if ( dirty ) {// now move all the designelementdatavectors that used the old type to the new one.
-                Collection<DesignElementDataVector> vectors = designElementDataVectorService.find(
-                        expressionExperiment, qType );
-                QuantitationType newType = quantitationTypeService.create( revisedType );
-                log.info( "Updating quantitation type " + newType.getName() + " for " + vectors.size()
-                        + " data vectors" );
-                for ( DesignElementDataVector vector : vectors ) {
-                    vector.setQuantitationType( newType );
-                }
-
-                designElementDataVectorService.update( vectors );
+            if ( dirty ) {
+                // update the quantitation type
+                quantitationTypeService.update( qType );
             }
         }
-
     }
 
     /**
