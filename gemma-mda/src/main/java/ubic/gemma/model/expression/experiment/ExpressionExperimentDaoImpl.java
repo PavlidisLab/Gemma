@@ -148,9 +148,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
         final String queryString = "select distinct quantType "
-            + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-            + "inner join ee.quantitationTypes as quantType "
-            +  "where ee  = :ee ";
+                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.quantitationTypes as quantType " + "where ee  = :ee ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "ee", expressionExperiment );
@@ -166,18 +165,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( arrayDesign == null ) {
             return handleGetQuantitationTypes( expressionExperiment );
         }
-        
-        /*final String queryString = "select distinct quantType "
-                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors as vector "
-                + "inner join vector.quantitationType as quantType " + "inner join vector.bioAssayDimension bad "
-                + "inner join bad.bioAssays ba inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";*/
+
+        /*
+         * final String queryString = "select distinct quantType " + "from
+         * ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee " + "inner join
+         * ee.designElementDataVectors as vector " + "inner join vector.quantitationType as quantType " + "inner join
+         * vector.bioAssayDimension bad " + "inner join bad.bioAssays ba inner join ba.arrayDesignUsed ad " + "where ee =
+         * :ee and ad = :ad";
+         */
         final String queryString = "select distinct quantType "
-            + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-            + "inner join ee.quantitationTypes as quantType "
-            + "inner join ee.bioAssays as ba "
-            + "inner join ba.arrayDesignUsed ad " 
-            + "where ee = :ee and ad = :ad";
+                + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
+                + "inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "ee", expressionExperiment );
@@ -455,6 +454,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
+    // thaw lite.
     @Override
     protected void handleThawBioAssays( final ExpressionExperiment expressionExperiment ) {
         HibernateTemplate templ = this.getHibernateTemplate();
@@ -468,6 +468,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
+                }
+                for ( QuantitationType type : expressionExperiment.getQuantitationTypes() ) {
+                    session.update( type );
                 }
                 return null;
             }
@@ -586,7 +589,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                taxonCount.put( (Taxon) list.get( 0 ), new Long( list.getInteger( 1 ) ) );
+                taxonCount.put( ( Taxon ) list.get( 0 ), new Long( list.getInteger( 1 ) ) );
             }
             return taxonCount;
         } catch ( org.hibernate.HibernateException ex ) {
@@ -788,26 +791,51 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return count;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         Collection<ExpressionExperiment> ee = null;
-        final String queryString = "select ee from ExpressionExperimentImpl as ee "
-                + " where ee.id in (:ids) ";
+        final String queryString = "select ee from ExpressionExperimentImpl as ee " + " where ee.id in (:ids) ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            
+
             ee = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
         return ee;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      java.util.Collection)
+     */
+    @Override
+    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
+            Collection quantitationTypes ) throws Exception {
+        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
+                + "inner join ee.designElementDataVectors as dev "
+                + "inner join dev.quantitationType as qt inner join fetch dev.bioAssayDimension bad inner join fetch bad.bioAssays bas "
+                + "inner join fetch bas.arrayDesignUsed inner join fetch bas.samplesUsed where ee = :ee and qt in (:qts) ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "ee", expressionExperiment );
+            queryObject.setParameterList( "qts", quantitationTypes );
+            List results = queryObject.list();
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

@@ -33,15 +33,23 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import junit.framework.TestCase;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class TwoChannelMissingValuesTest extends TestCase {
+public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     GeoConverter gc = new GeoConverter();
+    TwoChannelMissingValues tcmv;
+
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+        endTransaction();
+    }
 
     /**
      * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
@@ -60,9 +68,7 @@ public class TwoChannelMissingValuesTest extends TestCase {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
-
-        TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
-
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         /*
@@ -83,9 +89,7 @@ public class TwoChannelMissingValuesTest extends TestCase {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
-
-        TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
-
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         /*
@@ -110,9 +114,7 @@ public class TwoChannelMissingValuesTest extends TestCase {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
-
-        TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
-
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         assertEquals( 500, calls.size() );

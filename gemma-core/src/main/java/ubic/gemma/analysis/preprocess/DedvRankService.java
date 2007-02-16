@@ -19,13 +19,10 @@
 package ubic.gemma.analysis.preprocess;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -71,9 +68,12 @@ public class DedvRankService {
      */
     @SuppressWarnings("unchecked")
     public void computeDevRankForExpressionExperiment( ExpressionExperiment ee, Method method ) {
-        this.eeService.thaw( ee );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( ee );
+        eeService.thawLite( ee );
+        Collection<DesignElementDataVector> vectors = eeService.getDesignElementDataVectors( ee,
+                ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee ) );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
 
             ExpressionDataDoubleMatrix intensities = builder.getIntensity( ad );
@@ -85,40 +85,17 @@ public class DedvRankService {
 
             IntArrayList ranks = getRanks( intensities, method );
 
-            Collection<DesignElementDataVector> vectors = getVectors( ee, builder, ad );
-            for ( DesignElementDataVector vector : vectors ) {
+            Collection<DesignElementDataVector> preferredVectors = builder.getPreferredDataVectors( ad );
+            for ( DesignElementDataVector vector : preferredVectors ) {
                 DesignElement de = vector.getDesignElement();
                 int i = intensities.getRowIndex( de );
                 double rank = ( double ) ranks.get( i ) / ranks.size();
                 vector.setRank( rank );
             }
 
-            this.devService.update( vectors );
+            this.devService.update( preferredVectors );
         }
 
-    }
-
-    /**
-     * @param ee
-     * @param builder
-     * @param ad
-     * @return
-     */
-    private Collection<DesignElementDataVector> getVectors( ExpressionExperiment ee,
-            ExpressionDataMatrixBuilder builder, ArrayDesign ad ) {
-        // get the vectors.
-        List<QuantitationType> types = builder.getPreferredQTypes( ad );
-        assert types.size() == 1;
-        QuantitationType preferredType = types.iterator().next();
-
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
-        for ( DesignElementDataVector vector : ee.getDesignElementDataVectors() ) {
-            if ( !vector.getQuantitationType().equals( preferredType ) ) continue;
-            ArrayDesign adUsed = builder.arrayDesignForVector( vector );
-            if ( !adUsed.equals( ad ) ) continue;
-            vectors.add( vector );
-        }
-        return vectors;
     }
 
     /**

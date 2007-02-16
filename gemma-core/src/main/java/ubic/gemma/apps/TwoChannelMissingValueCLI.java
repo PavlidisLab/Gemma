@@ -175,7 +175,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
 
         log.info( "Got " + ee + ", thawing..." );
-        this.getExpressionExperimentService().thaw( ee );
         TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
         log.info( "Computing missing value data.." );

@@ -72,6 +72,28 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     }
 
     /**
+     * @param dataVectors
+     * @param bioAssayDimensions
+     * @param quantitationTypes
+     */
+    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
+            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimensions,
+                quantitationTypes );
+        vectorsToMatrix( selectedVectors );
+    }
+    
+    
+    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
+            BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimension,
+                quantitationType );
+        vectorsToMatrix( selectedVectors );
+    }
+
+    /**
      * @param expressionExperiment
      * @param bioAssayDimension
      * @param quantitationType

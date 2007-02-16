@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Computes a missing value matrix for ratiometric data sets.
@@ -66,12 +67,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * consistency).
  * </ol>
  * 
+ * @spring.bean id="twoChannelMissingValues"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author pavlidis
  * @version $Id$
  */
 public class TwoChannelMissingValues {
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValues.class.getName() );
+
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
@@ -83,12 +88,18 @@ public class TwoChannelMissingValues {
      *        present.
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
+    @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp, ArrayDesign ad,
             double signalToNoiseThreshold ) {
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( expExp );
+        expressionExperimentService.thawLite( expExp );
+        Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors( expExp,
+                ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( expExp ) );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions( ad );
         Collection<DesignElementDataVector> finalResults = new HashSet<DesignElementDataVector>();
+
         /*
          * Note we have to do this one array design at a time, because we are producing DesignElementDataVectors which
          * must be associated with the correct BioAssayDimension.
@@ -259,5 +270,9 @@ public class TwoChannelMissingValues {
             throw new IllegalArgumentException( "Number of samples doesn't match!" );
         }
 
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 }

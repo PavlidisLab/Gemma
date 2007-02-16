@@ -278,7 +278,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetBioMaterialCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
@@ -286,20 +288,37 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getBioMaterialCount( expressionExperiment );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment )
+            throws Exception {
         return this.getExpressionExperimentDao().getPreferredDesignElementDataVectorCount( expressionExperiment );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoad(java.util.Collection)
      */
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         return this.getExpressionExperimentDao().load( ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetDesignElementDataVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      java.util.Collection)
+     */
+    @Override
+    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
+            Collection quantitationTypes ) throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, quantitationTypes );
     }
 
 }

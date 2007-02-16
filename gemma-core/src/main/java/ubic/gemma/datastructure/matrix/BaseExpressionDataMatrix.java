@@ -218,14 +218,29 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             throw new IllegalArgumentException(
                     "Must have the same number of quantitation types and bioassay dimensions" );
 
-        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
 
+        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( vectors, soughtBioAssayDimensions,
+                quantitationTypes );
+
+        return vectorsOfInterest;
+    }
+
+    /**
+     * @param vectors
+     * @param bioAssayDimensions
+     * @param quantitationTypes
+     * @return
+     */
+    protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
+            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
+        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         int j = 0;
         for ( int i = 0; i < quantitationTypes.size(); i++ ) {
             QuantitationType soughtType = quantitationTypes.get( i );
-            BioAssayDimension soughtDim = soughtBioAssayDimensions.get( i );
+            BioAssayDimension soughtDim = bioAssayDimensions.get( i );
             assert soughtType != null && soughtDim != null;
-            for ( DesignElementDataVector vector : expressionExperiment.getDesignElementDataVectors() ) {
+            for ( DesignElementDataVector vector : vectors ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 BioAssayDimension cand = vector.getBioAssayDimension();
                 if ( vectorQuantitationType.equals( soughtType ) && cand.equals( soughtDim ) ) {
@@ -237,7 +252,32 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 }
             }
         }
+        return vectorsOfInterest;
+    }
 
+    /**
+     * @param vectors
+     * @param bioAssayDimension
+     * @param quantitationType
+     * @return
+     */
+    protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
+            BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
+        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        int j = 0;
+
+        for ( DesignElementDataVector vector : vectors ) {
+            QuantitationType vectorQuantitationType = vector.getQuantitationType();
+            BioAssayDimension cand = vector.getBioAssayDimension();
+            if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
+                vectorsOfInterest.add( vector );
+                rowElements.add( vector.getDesignElement() );
+                this.bioAssayDimensions.add( vector.getBioAssayDimension() );
+                rowDesignElementMap.put( vector.getDesignElement(), j );
+                j++; // only increment if we actually added a row.
+            }
+
+        }
         return vectorsOfInterest;
     }
 
@@ -251,10 +291,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *                                                                                            ----------------
-     *                                                                                            ******              -- only a few samples run on this platform
-     *                                                                                              **********        -- ditto
-     *                                                                                                        ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *                                                                                                 ----------------
+     *                                                                                                 ******              -- only a few samples run on this platform
+     *                                                                                                   **********        -- ditto
+     *                                                                                                             ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -262,10 +302,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                                            ----------------
-     *                                                                                            ****************
-     *                                                                                            ************
-     *                                                                                            ********
+     *                                                                                                 ----------------
+     *                                                                                                 ****************
+     *                                                                                                 ************
+     *                                                                                                 ********
      * </pre>
      * 
      * <p>
@@ -273,8 +313,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                                            -----------------
-     *                                                                                            *****************
+     *                                                                                                 -----------------
+     *                                                                                                 *****************
      * </pre>
      * 
      * <p>
@@ -282,9 +322,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                                            -----------------
-     *                                                                                            *****************
-     *                                                                                            *****************
+     *                                                                                                 -----------------
+     *                                                                                                 *****************
+     *                                                                                                 *****************
      * </pre>
      * 
      * <p>
