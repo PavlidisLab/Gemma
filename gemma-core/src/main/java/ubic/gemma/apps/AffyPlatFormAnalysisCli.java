@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
-import cern.jet.stat.Descriptive;
 
 /**
  * @author unknown
@@ -236,9 +235,9 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
                 break;
             case STD:
                 int N = valList.size();
-                double sum = Descriptive.sum( valList );
-                double ss = Descriptive.sumOfSquares( valList );
-                value = Descriptive.standardDeviation( Descriptive.variance( N, sum, ss ) );
+                double sum = DescriptiveWithMissing.sum( valList );
+                double ss = DescriptiveWithMissing.sumOfSquares( valList );
+                value = DescriptiveWithMissing.standardDeviation( DescriptiveWithMissing.variance( N, sum, ss ) );
                 break;
         }
         if ( Double.isNaN( value ) ) value = 0.0;
