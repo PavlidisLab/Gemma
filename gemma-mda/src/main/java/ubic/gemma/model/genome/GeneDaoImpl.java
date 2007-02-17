@@ -339,18 +339,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, outers.PVALUE as pvalue, outers.SCORE as score, "
-                + "outers.csIdIn as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM DESIGN_ELEMENT_DATA_VECTOR "
-                + "dedvout INNER JOIN (SELECT coexp."
-                + outKey
-                + " AS ID, coexp.PVALUE as PVALUE, coexp.SCORE as SCORE, dedvin.DESIGN_ELEMENT_FK as csIdIn FROM GENE2CS gc, DESIGN_ELEMENT_DATA_VECTOR dedvin, "
-                + p2pClass + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp." + inKey
-                + "=dedvin.ID)" + " AS outers ON dedvout.ID=outers.ID "
-                + " INNER JOIN COMPOSITE_SEQUENCE cs2 ON cs2.ID=dedvout.DESIGN_ELEMENT_FK"
-                + " INNER JOIN GENE2CS gcout ON gcout.CS=cs2.ID"
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE as pvalue, coexp.SCORE as score, " +
+                        "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM "
+                + " GENE2CS gcIn " 
+                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS "
+                + " INNER JOIN " + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
+                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "                
+                + " INNER JOIN GENE2CS gcout ON gcout.CS=dedvout.DESIGN_ELEMENT_FK"
                 + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE"
                 + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=dedvout.EXPRESSION_EXPERIMENT_FK"
-                + " INNER JOIN INVESTIGATION inv ON ee.ID=inv.ID";
+                + " INNER JOIN INVESTIGATION inv ON ee.ID=inv.ID "
+                + " where " + eeClause + " gcIn.GENE=:id ";
 
         return query;
     }
