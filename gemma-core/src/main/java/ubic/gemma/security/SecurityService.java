@@ -18,6 +18,12 @@
  */
 package ubic.gemma.security;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
 import org.acegisecurity.Authentication;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
@@ -26,9 +32,21 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.StringUtils;
 
+import ubic.gemma.model.association.RelationshipImpl;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.description.DatabaseEntryImpl;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.expression.bioAssayData.DataVectorImpl;
+import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
+import ubic.gemma.model.genome.GeneImpl;
+import ubic.gemma.model.genome.TaxonImpl;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
+import ubic.gemma.model.genome.gene.GeneAliasImpl;
+import ubic.gemma.model.genome.gene.GeneProductImpl;
 
 /**
  * @author keshav
@@ -47,6 +65,32 @@ public class SecurityService {
     private final int PUBLIC_MASK = 6;
     private final int PRIVATE_MASK = 0;
     private static final String ADMINISTRATOR = "administrator";
+    private static final String ACCESSOR_PREFIX = "get";
+
+    /**
+     * For some types of objects, we don't put permissions on them directly, but on the containing object. Example:
+     * reporter - we secure the arrayDesign, but not the reporter.
+     */
+    private static final Collection<Class> unsecuredClasses = new HashSet<Class>();
+
+    /*
+     * Classes to skip because they aren't secured. Either these are always "public" objects, or they are secured by
+     * composition. In principle this shouldn't needed in most cases because the methods for the corresponding services
+     * are not interccepted anyway.
+     */
+    static {// TODO use parent classes and interface (like DesignElement.class)
+        unsecuredClasses.add( DataVectorImpl.class );
+        unsecuredClasses.add( DatabaseEntryImpl.class );
+        unsecuredClasses.add( BioSequenceImpl.class );
+        unsecuredClasses.add( RelationshipImpl.class );
+        // unsecuredClasses.add( DesignElementImpl.class );
+        unsecuredClasses.add( CompositeSequenceImpl.class );
+        unsecuredClasses.add( TaxonImpl.class );
+        unsecuredClasses.add( GeneImpl.class );
+        unsecuredClasses.add( GeneProductImpl.class );
+        unsecuredClasses.add( GeneAliasImpl.class );
+        unsecuredClasses.add( QuantitationTypeImpl.class );
+    }
 
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
@@ -68,13 +112,7 @@ public class SecurityService {
 
         if ( object instanceof Securable ) {
 
-            String recipient = configureWhoToRunAs( object, mask, authentication, principal );
-
-            try {
-                basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
-            } catch ( Exception e ) {
-                throw new RuntimeException( "Problems changing mask of " + object, e );
-            }
+            processAssociations( object, mask, authentication, principal );
         }
 
         else {
@@ -82,6 +120,91 @@ public class SecurityService {
                     + "." );
         }
 
+    }
+
+    /**
+     * @param targetObject
+     * @param mask
+     * @param authentication
+     * @param principal
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     * @throws SecurityException
+     * @throws IllegalArgumentException
+     */
+    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal ) {
+        String recipient = configureWhoToRunAs( targetObject, mask, authentication, principal );
+
+        Class clazz = targetObject.getClass();
+        Method[] methods = clazz.getMethods();
+
+        for ( Method method : methods ) {
+            String name = method.getName();
+            if ( StringUtils.startsWithIgnoreCase( name, ACCESSOR_PREFIX ) ) {
+                Class returnType = method.getReturnType();
+
+                if ( returnType.getName().equalsIgnoreCase( String.class.getName() ) ) {
+                    continue;
+                }
+                if ( returnType.getName().equalsIgnoreCase( Integer.class.getName() ) ) {
+                    continue;
+                }
+                if ( returnType.getName().equalsIgnoreCase( Long.class.getName() ) ) {
+                    continue;
+                }
+                if ( returnType.getName().equalsIgnoreCase( Class.class.getName() ) ) {
+                    continue;
+                }
+                if ( returnType.getName().equalsIgnoreCase( AuditTrail.class.getName() ) ) {
+                    continue;// TODO add to list of objects that need processing
+                }
+
+                try {
+                    if ( returnType == java.util.Collection.class ) {
+
+                        Collection returnedCollection = ( Collection ) clazz.getMethod( name, null ).invoke(
+                                targetObject, null );
+                        if ( returnedCollection.isEmpty() ) continue;
+
+                        /* check if an object in collection is in unsecuredCol */
+                        Object objInCol = returnedCollection.iterator().next();
+                        if ( unsecuredClasses.contains( objInCol.getClass() ) ) {
+                            continue;
+                        } else {
+                            /* if object in collectin is not in unsecuredCol, process */
+                            Iterator iter = returnedCollection.iterator();
+                            while ( iter.hasNext() ) {
+                                Object ob = iter.next();
+                                log.debug( "process " + ob );
+                                changeMask( ob, mask, recipient );
+                            }
+                        }
+                    } else {
+                        Object ob = clazz.getMethod( name, null ).invoke( targetObject, null );
+                        if ( ob == null || ( ( Securable ) ob ).getId() == null ) continue;
+                        changeMask( ob, mask, recipient );
+                    }
+                } catch ( Exception e ) {
+                    throw new RuntimeException( "Error is: " + e );
+                }
+            }
+
+        }
+        changeMask( targetObject, mask, recipient );
+    }
+
+    /**
+     * @param object
+     * @param mask
+     * @param recipient
+     */
+    private void changeMask( Object object, int mask, String recipient ) {
+        try {
+            basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
+        } catch ( Exception e ) {
+            throw new RuntimeException( "Problems changing mask of " + object, e );
+        }
     }
 
     /**
