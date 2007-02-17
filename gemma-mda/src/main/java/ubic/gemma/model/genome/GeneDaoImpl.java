@@ -67,8 +67,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param gene, arrayDesign
      * @return Collection
      */
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -76,11 +79,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<CompositeSequence> compSeq = null;
         final String queryString = "select distinct compositeSequence from GeneImpl as gene,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence " + " and gene = :gene and compositeSequence.arrayDesign = :arrayDesign ";
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and gene = :gene and compositeSequence.arrayDesign = :arrayDesign ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "arrayDesign", arrayDesign);
+            queryObject.setParameter( "arrayDesign", arrayDesign );
             queryObject.setParameter( "gene", gene );
             compSeq = queryObject.list();
 
@@ -184,36 +188,35 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     private void collectMapInfo( Integer stringency, Map<Long, CoexpressionValueObject> geneMap,
             CoexpressionCollectionValueObject coexpressions ) {
-             
+
         Collection<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
         // add count of original matches to coexpression data
         coexpressions.setLinkCount( geneMap.size() );
         // filter out stringency failures
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
-        
+
         for ( Long key : geneMap.keySet() ) {
             CoexpressionValueObject v = geneMap.get( key );
             boolean added = false;
-            
+
             if ( v.getPositiveLinkCount() >= stringency ) {
                 positiveLinkCount++;
                 added = true;
                 // add in coexpressions that match stringency
                 coexpressions.getCoexpressionData().add( v );
                 // add in expression experiments that match stringency
-                ees.addAll( v.getExpressionExperimentValueObjects() );              
+                ees.addAll( v.getExpressionExperimentValueObjects() );
             }
-            
-            if (v.getNegativeLinkCount() >= stringency)
-            {
+
+            if ( v.getNegativeLinkCount() >= stringency ) {
                 negativeLinkCount++;
-                if (added) continue;    //no point in adding the same element twice
+                if ( added ) continue; // no point in adding the same element twice
                 // add in coexpressions that match stringency
                 coexpressions.getCoexpressionData().add( v );
                 // add in expression experiments that match stringency
-                ees.addAll( v.getExpressionExperimentValueObjects() );   
-                
+                ees.addAll( v.getExpressionExperimentValueObjects() );
+
             }
         }
         // add count of pruned matches to coexpression data
@@ -328,25 +331,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String inKey = in.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
         String eeClause = "";
-        if (eeIds.size() > 0) {
+        if ( eeIds.size() > 0 ) {
             eeClause += " dedvin.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
             eeClause += ") AND ";
         }
 
-        
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, outers.PVALUE as pvalue, outers.SCORE as score, " +
-                        "outers.csIdIn as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM DESIGN_ELEMENT_DATA_VECTOR "
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, outers.PVALUE as pvalue, outers.SCORE as score, "
+                + "outers.csIdIn as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM DESIGN_ELEMENT_DATA_VECTOR "
                 + "dedvout INNER JOIN (SELECT coexp."
                 + outKey
                 + " AS ID, coexp.PVALUE as PVALUE, coexp.SCORE as SCORE, dedvin.DESIGN_ELEMENT_FK as csIdIn FROM GENE2CS gc, DESIGN_ELEMENT_DATA_VECTOR dedvin, "
-                + p2pClass
-                + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp."
-                + inKey
-                + "=dedvin.ID)"
-                + " AS outers ON dedvout.ID=outers.ID "
+                + p2pClass + " coexp  WHERE gc.GENE=:id and  gc.CS=dedvin.DESIGN_ELEMENT_FK and coexp." + inKey
+                + "=dedvin.ID)" + " AS outers ON dedvout.ID=outers.ID "
                 + " INNER JOIN COMPOSITE_SEQUENCE cs2 ON cs2.ID=dedvout.DESIGN_ELEMENT_FK"
                 + " INNER JOIN GENE2CS gcout ON gcout.CS=cs2.ID"
                 + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE"
@@ -366,27 +365,29 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         CoexpressionValueObject vo;
         Long geneId = scroll.getLong( 0 );
         // check to see if geneId is already in the geneMap
-        if ( geneMap.containsKey( geneId ) )          
+        if ( geneMap.containsKey( geneId ) )
             vo = geneMap.get( geneId );
-        
-         else {
+
+        else {
             vo = new CoexpressionValueObject();
             vo.setGeneId( geneId );
             vo.setGeneName( scroll.getString( 1 ) );
-            vo.setGeneOfficialName( scroll.getString( 2 ) );                       
+            vo.setGeneOfficialName( scroll.getString( 2 ) );
             geneMap.put( geneId, vo );
         }
-        
-        Long probeID = scroll.getLong(9);        
-        vo.addScore( scroll.getDouble( 7 ), probeID );
-        vo.addPValue( scroll.getDouble( 6 ), probeID );
-        
+
         // add the expression experiment
         ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject();
-        eeVo.setId( scroll.getLong( 3 ).toString() );
+        Long eeID = scroll.getLong( 3 );
+        eeVo.setId( eeID.toString() );
         eeVo.setShortName( scroll.getString( 4 ) );
         eeVo.setName( scroll.getString( 5 ) );
         vo.addExpressionExperimentValueObject( eeVo );
+
+        Long probeID = scroll.getLong( 9 );
+        vo.addScore( eeID, scroll.getDouble( 7 ), probeID );
+        vo.addPValue( eeID, scroll.getDouble( 6 ), probeID );
+
     }
 
     /**
@@ -409,8 +410,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param queryString
      * @return
      */
-    private org.hibernate.Query setCoexpQueryParameters( Gene gene, long id, 
-            String queryString ) {
+    private org.hibernate.Query setCoexpQueryParameters( Gene gene, long id, String queryString ) {
         // org.hibernate.Query queryObject;
         org.hibernate.SQLQuery queryObject;
         // queryObject = super.getSession( false ).createQuery( queryString );
@@ -426,7 +426,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
-        
+
         queryObject.setLong( "id", id );
         // this is to make the query faster by narrowing down the gene join
         // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
@@ -625,7 +625,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Gene givenG = gene;
         long id = givenG.getId();
         log.info( "Gene: " + gene.getName() );
-        
+
         String p2pClassName = getP2PClassName( givenG );
 
         Map<Long, CoexpressionValueObject> geneMap = new HashMap<Long, CoexpressionValueObject>();
@@ -650,8 +650,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             Long elapsed = watch.getTime();
             coexpressions.setFirstQueryElapsedTime( elapsed );
             watch.reset();
-            log.info( "Elapsed time for first query: "  + elapsed );
-            
+            log.info( "Elapsed time for first query: " + elapsed );
+
             watch.start();
             log.info( "Starting second query" );
             queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
@@ -662,7 +662,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coexpressions.setSecondQueryElapsedTime( elapsed );
 
             elapsed = watch.getTime();
-            log.info( "Elapsed time for second query: "  + elapsed );            
+            log.info( "Elapsed time for second query: " + elapsed );
             watch.reset();
             watch.start();
 
@@ -673,7 +673,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             elapsed = watch.getTime();
             coexpressions.setPostProcessTime( elapsed );
             log.info( "Done postprocessing" );
-            log.info( "Elapsed time for postprocessing: "  + elapsed );  
+            log.info( "Elapsed time for postprocessing: " + elapsed );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

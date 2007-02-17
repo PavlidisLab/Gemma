@@ -31,30 +31,30 @@ public class CoexpressionValueObject {
     private String geneOfficialName;
 
     @Deprecated
-    private Double pValue;  
+    private Double pValue;
     @Deprecated
     private Double score;
-    
-    private Map<Double,Long> positiveScores;
-    private Map<Double,Long> negativeScores;
-    private Map<Double,Long> pValues;
-    
+
+    private Map<Long, Map<Long, Double>> positiveScores;
+    private Map<Long, Map<Long, Double>> negativeScores;
+    private Map<Long, Map<Long, Double>> pValues;
+
     // the expression experiments that this coexpression was involved in
-    private Map<Long,ExpressionExperimentValueObject> expressionExperimentValueObjects;
+    private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
     public CoexpressionValueObject() {
         geneName = "";
         geneId = null;
         geneOfficialName = null;
         expressionExperimentValueObjects = new HashMap<Long, ExpressionExperimentValueObject>();
-        positiveScores = new HashMap<Double, Long>();
-        negativeScores = new HashMap<Double, Long>();
-        pValues = new HashMap<Double, Long>();
-        
+        positiveScores = new HashMap<Long, Map<Long, Double>>();
+        negativeScores = new HashMap<Long, Map<Long, Double>>();
+        pValues = new HashMap<Long, Map<Long, Double>>();
+
     }
-    
+
     /**
-     * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene 
+     * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene
      */
     public Collection getExpressionExperimentValueObjects() {
         return expressionExperimentValueObjects.values();
@@ -63,39 +63,46 @@ public class CoexpressionValueObject {
     /**
      * @param expressionExperimentValueObjects the expressionExperimentValueObjects to set
      */
-    public void addExpressionExperimentValueObject(ExpressionExperimentValueObject expressionExperimentValueObject ) {
-        this.expressionExperimentValueObjects.put( new Long(expressionExperimentValueObject.getId()), expressionExperimentValueObject);    
+    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject expressionExperimentValueObject ) {
+        this.expressionExperimentValueObjects.put( new Long( expressionExperimentValueObject.getId() ),
+                expressionExperimentValueObject );
     }
+
     /**
      * @return the geneId
      */
     public Long getGeneId() {
         return geneId;
     }
+
     /**
      * @param geneId the geneId to set
      */
     public void setGeneId( Long geneId ) {
         this.geneId = geneId;
     }
+
     /**
      * @return the geneName
      */
     public String getGeneName() {
         return geneName;
     }
+
     /**
      * @param geneName the geneName to set
      */
     public void setGeneName( String geneName ) {
         this.geneName = geneName;
     }
+
     /**
      * @return the geneOfficialName
      */
     public String getGeneOfficialName() {
         return geneOfficialName;
     }
+
     /**
      * @param geneOfficialName the geneOfficialName to set
      */
@@ -122,85 +129,105 @@ public class CoexpressionValueObject {
     public void setScore( Double score ) {
         this.score = score;
     }
-    
-    public void addPValue(Double pValue, Long probeID){
-        pValues.put( pValue, probeID );        
+
+    public void addPValue( Long eeID, Double pValue, Long probeID ) {
+
+        if ( !pValues.containsKey( eeID ) ) pValues.put( eeID, new HashMap<Long, Double>() );
+
+        pValues.get( eeID ).put( probeID, pValue );
+
     }
-    
-    public Map<Double,Long> getPValues(){
+
+    public Map<Long, Map<Long, Double>> getPValues() {
         return pValues;
-        
+
     }
 
     /**
      * @return the negativePValues
      */
-    public Map<Double, Long> getNegativeScores() {
+    public Map<Long, Map<Long, Double>> getNegativeScores() {
         return negativeScores;
     }
 
     /**
      * @return the positivePValues
      */
-    public Map<Double, Long> getPositiveScores() {
+    public Map<Long, Map<Long, Double>> getPositiveScores() {
         return positiveScores;
     }
-    
-    public void addScore(Double score, long probeID){
-        if (score < 0)
-            negativeScores.put( score, probeID );
-        else
-            positiveScores.put( score, probeID );
+
+    public void addScore( Long eeID, Double score, long probeID ) {
+        if ( score < 0 ) {
+            if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
+
+            negativeScores.get( eeID ).put( probeID, score );
+
+        } else {
+            if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
+
+            positiveScores.get( eeID ).put( probeID, score );
+
+        }
     }
 
-    
-    public double getPositiveScore(){
-        
-        if (positiveScores.keySet().size() == 0)
-            return 0;
-        
+    public double getPositiveScore() {
+
+        if ( positiveScores.keySet().size() == 0 ) return 0;
+
         double mean = 0;
-        for(double score: positiveScores.keySet())            
-            mean += score;
-        
-        return mean/positiveScores.keySet().size();
-        
+        int size = 0;
+
+        for ( Map<Long, Double> scores : positiveScores.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += score;
+                size++;
+            }
+        }
+        return mean / size;
+
     }
 
-    public double getNegitiveScore(){
-        
-        if (negativeScores.keySet().size() == 0)
-            return 0;
-        
+    public double getNegitiveScore() {
+
+        if ( negativeScores.keySet().size() == 0 ) return 0;
+
         double mean = 0;
-        for(double score: negativeScores.keySet())            
-            mean += score;
-        
-        return mean/negativeScores.keySet().size();
-        
+        int size = 0;
+
+        for ( Map<Long, Double> scores : negativeScores.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += score;
+                size++;
+            }
+        }
+        return mean / size;
+
     }
-    
-    public double getCollapsedPValue(){
-        
-        if (pValues.keySet().size() == 0)
-            return 0;
-        
+
+    public double getCollapsedPValue() {
+
+        if ( pValues.keySet().size() == 0 ) return 0;
+
         double mean = 0;
-        for(double pValue: pValues.keySet())            
-            mean += pValue;
-        
-        return mean/pValues.keySet().size();
+        int size = 0;
+
+        for ( Map<Long, Double> scores : pValues.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += score;
+                size++;
+            }
+        }
+        return mean / size;
     }
-    
-    public int getPositiveLinkCount(){    
-       return this.positiveScores.size();
+
+    public int getPositiveLinkCount() {
+        return this.positiveScores.keySet().size();
     }
-    
-    public int getNegativeLinkCount(){
-        
-        return this.negativeScores.size();
+
+    public int getNegativeLinkCount() {
+
+        return this.negativeScores.keySet().size();
     }
-    
-    
 
 }
