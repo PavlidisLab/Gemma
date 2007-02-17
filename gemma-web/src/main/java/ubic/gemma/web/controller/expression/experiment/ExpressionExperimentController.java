@@ -175,8 +175,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<Long> eeId = new ArrayList<Long>();
         eeId.add( id );
         Collection eeVo = expressionExperimentReportService.retrieveSummaryObjects( eeId );
-        if (eeVo != null && eeVo.size() > 0) {
-            ExpressionExperimentValueObject vo = (ExpressionExperimentValueObject) eeVo.iterator().next();
+        if ( eeVo != null && eeVo.size() > 0 ) {
+            ExpressionExperimentValueObject vo = ( ExpressionExperimentValueObject ) eeVo.iterator().next();
             String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
             mav.addObject( "eeCoexpressionLinks", eeLinks );
         }
@@ -574,9 +574,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 expressionExperimentReportService.generateSummaryObjects( ids );
             }
             ProgressManager.destroyProgressJob( job );
-            String idStr = StringUtils.join( ids.toArray(), "," );
-            return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
+            if ( ids != null ) {
+                String idStr = StringUtils.join( ids.toArray(), "," );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
+            } else {
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
+            }
 
         }
     }
