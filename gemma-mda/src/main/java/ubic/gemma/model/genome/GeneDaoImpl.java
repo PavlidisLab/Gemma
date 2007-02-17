@@ -292,7 +292,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param out whatever "a" isn't.
      * @return
      */
-    @SuppressWarnings("unused")
+    @Deprecated
     private String getQueryString( String p2pClassName, String in, String out ) {
         String queryStringFirstVector =
         // return values
