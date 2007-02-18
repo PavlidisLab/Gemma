@@ -24,19 +24,39 @@ import java.util.HashSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
- * 
  * @author jsantos
- *
  */
 public class CoexpressionCollectionValueObject {
     private int linkCount; // the total number of links for this specific coexpression
-    private int positiveStringencyLinkCount; // the number of links for this coexpression that passed the stringency requirements
+    private int positiveStringencyLinkCount; // the number of links for this coexpression that passed the stringency
+    // requirements
     private int negativeStringencyLinkCount;
-    private Collection<ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were involved in the query
-    private Collection<CoexpressionValueObject> coexpressionData; 
+    private Collection<ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were
+    // involved in the query
+    private Collection<CoexpressionValueObject> coexpressionData;
     private double firstQuerySeconds;
     private double secondQuerySeconds;
     private double postProcessSeconds;
+    private double elapsedWallSeconds;
+
+    /**
+     * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
+     * of threading)
+     * 
+     * @return
+     */
+    public double getElapsedWallSeconds() {
+        return elapsedWallSeconds;
+    }
+
+    /**
+     * Set the amount of time we had to wait for the queries (which can be less than the time per query because
+     * 
+     * @param elapsedWallTime (in milliseconds)
+     */
+    public void setElapsedWallTimeElapsed( double elapsedWallSeconds ) {
+        this.elapsedWallSeconds = elapsedWallSeconds / 1000.0;
+    }
 
     public CoexpressionCollectionValueObject() {
         linkCount = 0;
@@ -102,7 +122,6 @@ public class CoexpressionCollectionValueObject {
         this.negativeStringencyLinkCount = stringencyLinkCount;
     }
 
-    
     /**
      * @return the expressionExperiments that were searched for coexpression
      */

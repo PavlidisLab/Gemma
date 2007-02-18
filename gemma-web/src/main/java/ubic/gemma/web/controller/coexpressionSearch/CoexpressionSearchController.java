@@ -299,8 +299,7 @@ public class CoexpressionSearchController extends BaseFormController {
     private void addTimingInformation( HttpServletRequest request, CoexpressionCollectionValueObject coexpressions ) {
         NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits( 2 );
-        saveMessage( request, nf.format( coexpressions.getFirstQuerySeconds() + coexpressions.getSecondQuerySeconds()
-                + coexpressions.getPostProcessSeconds() )
+        saveMessage( request, nf.format( coexpressions.getElapsedWallSeconds() + coexpressions.getPostProcessSeconds() )
                 + " seconds elapsed" );
     }
 

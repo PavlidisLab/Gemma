@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -327,7 +328,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param out
      * @return
      */
-    private String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
+    private synchronized String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
         String inKey = in.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
         String eeClause = "";
@@ -411,7 +412,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // org.hibernate.Query queryObject;
         org.hibernate.SQLQuery queryObject;
         // queryObject = super.getSession( false ).createQuery( queryString );
-        queryObject = super.getSession( false ).createSQLQuery( queryString ); // for native query.
+        queryObject = super.getSession( true ).createSQLQuery( queryString ); // for native query.
 
         queryObject.addScalar( "id", new LongType() );
         queryObject.addScalar( "genesymb", new StringType() );
@@ -618,55 +619,84 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
+    protected Object handleGetCoexpressedGenes( final Gene gene, Collection ees, Integer stringency ) throws Exception {
         Gene givenG = gene;
-        long id = givenG.getId();
+        final long id = givenG.getId();
         log.info( "Gene: " + gene.getName() );
 
-        String p2pClassName = getP2PClassName( givenG );
+        final String p2pClassName = getP2PClassName( givenG );
 
-        Map<Long, CoexpressionValueObject> geneMap = new HashMap<Long, CoexpressionValueObject>();
+        final Map<Long, CoexpressionValueObject> geneMap = Collections
+                .synchronizedMap( new HashMap<Long, CoexpressionValueObject>() );
 
-        CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
+        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
 
         try {
-            Collection<Long> eeIds = getEEIds( ees );
+            final Collection<Long> eeIds = getEEIds( ees );
+
+            final AtomicBoolean firstDone = new AtomicBoolean( false );
+            final AtomicBoolean secondDone = new AtomicBoolean( false );
+
+            Thread firstQueryThread = new Thread( new Runnable() {
+                public void run() {
+                    StopWatch watch = new StopWatch();
+                    watch.start();
+                    log.info( "Starting first query" );
+                    // do query joining coexpressed genes through the firstVector to the secondVector
+                    // eeIds is an argument because the native SQL query needs to be built with the knowledge
+                    // of the number of expressionExperimentId arguments.
+                    String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
+                    org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
+                    processCoexpQueryResults( geneMap, queryObject );
+                    watch.stop();
+                    Long elapsed = watch.getTime();
+                    coexpressions.setFirstQueryElapsedTime( elapsed );
+                    log.info( "Elapsed time for first query: " + elapsed );
+                    firstDone.set( true );
+                };
+            } );
+
+            Thread secondQueryThread = new Thread( new Runnable() {
+                public void run() {
+                    StopWatch watch = new StopWatch();
+                    watch.start();
+                    log.info( "Starting second query" );
+                    String queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
+                    org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
+                    processCoexpQueryResults( geneMap, queryObject );
+                    watch.stop();
+                    Long elapsed = watch.getTime();
+                    coexpressions.setSecondQueryElapsedTime( elapsed );
+
+                    log.info( "Elapsed time for second query: " + elapsed );
+                    secondDone.set( true );
+                };
+            } );
+
+            firstQueryThread.start();
+            secondQueryThread.start();
+
+            // wait...
+            StopWatch overallWatch = new StopWatch();
+            overallWatch.start();
+            while ( !( firstDone.get() && secondDone.get() ) ) {
+                try {
+                    Thread.sleep( 100 );
+                } catch ( InterruptedException e ) {
+                    // ;
+                }
+            }
+            overallWatch.stop();
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "Query threads took a total of " + overallElapsed + "ms (wall clock time)" );
 
             StopWatch watch = new StopWatch();
-
-            watch.start();
-            log.info( "Starting first query" );
-            // do query joining coexpressed genes through the firstVector to the secondVector
-            // eeIds is an argument because the native SQL query needs to be built with the knowledge
-            // of the number of expressionExperimentId arguments.
-            String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
-            org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
-            processCoexpQueryResults( geneMap, queryObject );
-            watch.stop();
-            Long elapsed = watch.getTime();
-            coexpressions.setFirstQueryElapsedTime( elapsed );
-
-            log.info( "Elapsed time for first query: " + elapsed );
-
-            watch.reset();
-            watch.start();
-            log.info( "Starting second query" );
-            queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
-            queryObject = setCoexpQueryParameters( gene, id, queryString );
-            processCoexpQueryResults( geneMap, queryObject );
-            watch.stop();
-            elapsed = watch.getTime();
-            coexpressions.setSecondQueryElapsedTime( elapsed );
-
-            log.info( "Elapsed time for second query: " + elapsed );
-
-            watch.reset();
             watch.start();
             log.info( "Starting postprocessing" );
             collectMapInfo( stringency, geneMap, coexpressions );
 
             watch.stop();
-            elapsed = watch.getTime();
+            Long elapsed = watch.getTime();
             coexpressions.setPostProcessTime( elapsed );
             log.info( "Done postprocessing" );
             log.info( "Elapsed time for postprocessing: " + elapsed );
