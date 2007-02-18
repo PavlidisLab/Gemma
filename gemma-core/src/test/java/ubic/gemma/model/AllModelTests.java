@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImplTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoTest;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceImplTest;
 import ubic.gemma.model.common.auditAndSecurity.UserDaoImplTest;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
 import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
@@ -49,6 +50,7 @@ public class AllModelTests {
         TestSuite suite = new TestSuite( "Model-related tests for gemma-core" );
 
         suite.addTestSuite( AuditTrailDaoTest.class );
+        suite.addTestSuite( AuditTrailServiceImplTest.class );
         suite.addTestSuite( UserDaoImplTest.class );
 
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
