@@ -339,17 +339,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE as pvalue, coexp.SCORE as score, " +
-                        "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM "
-                + " GENE2CS gcIn " 
-                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS "
-                + " INNER JOIN " + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
-                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "                
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+                + "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM " + " GENE2CS gcIn "
+                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS " + " INNER JOIN "
+                + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
+                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "
                 + " INNER JOIN GENE2CS gcout ON gcout.CS=dedvout.DESIGN_ELEMENT_FK"
                 + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE"
                 + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=dedvout.EXPRESSION_EXPERIMENT_FK"
-                + " INNER JOIN INVESTIGATION inv ON ee.ID=inv.ID "
-                + " where " + eeClause + " gcIn.GENE=:id ";
+                + " INNER JOIN INVESTIGATION inv ON ee.ID=inv.ID " + " where " + eeClause + " gcIn.GENE=:id ";
 
         return query;
     }
@@ -644,27 +642,26 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
             org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
             processCoexpQueryResults( geneMap, queryObject );
-
             watch.stop();
             Long elapsed = watch.getTime();
             coexpressions.setFirstQueryElapsedTime( elapsed );
-            watch.reset();
+
             log.info( "Elapsed time for first query: " + elapsed );
 
+            watch.reset();
             watch.start();
             log.info( "Starting second query" );
             queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
             queryObject = setCoexpQueryParameters( gene, id, queryString );
             processCoexpQueryResults( geneMap, queryObject );
-
             watch.stop();
+            elapsed = watch.getTime();
             coexpressions.setSecondQueryElapsedTime( elapsed );
 
-            elapsed = watch.getTime();
             log.info( "Elapsed time for second query: " + elapsed );
+
             watch.reset();
             watch.start();
-
             log.info( "Starting postprocessing" );
             collectMapInfo( stringency, geneMap, coexpressions );
 
