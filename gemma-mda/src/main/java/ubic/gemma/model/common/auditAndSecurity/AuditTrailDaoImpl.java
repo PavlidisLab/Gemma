@@ -25,6 +25,7 @@ import org.acegisecurity.userdetails.UserDetails;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
@@ -70,6 +71,9 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                // if ( auditEvent.getEventType() != null ) {
+                // session.save( auditEvent.getEventType() ); // should cascade...
+                //                }
                 session.persist( auditEvent );
                 session.update( auditable );
                 auditable.getAuditTrail().addEvent( auditEvent );

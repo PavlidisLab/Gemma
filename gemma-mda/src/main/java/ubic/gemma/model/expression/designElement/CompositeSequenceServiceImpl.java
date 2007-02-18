@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -43,7 +44,9 @@ public class CompositeSequenceServiceImpl extends
 
     Log log = LogFactory.getLog( this.getClass() );
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -238,6 +241,21 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected void handleThaw( Collection compositeSequences ) throws Exception {
         this.getCompositeSequenceDao().thaw( compositeSequences );
+    }
+
+    @Override
+    protected Collection handleFindByGene( Gene gene ) throws Exception {
+        return this.getCompositeSequenceDao().findByGene( gene );
+    }
+
+    @Override
+    protected Collection handleFindByGene( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+        return this.getCompositeSequenceDao().findByGene( gene, arrayDesign );
+    }
+
+    @Override
+    protected Collection handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
+        return this.getCompositeSequenceDao().getGenes( compositeSequence );
     }
 
 }

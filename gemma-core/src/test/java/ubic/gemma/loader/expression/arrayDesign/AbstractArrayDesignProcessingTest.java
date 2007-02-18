@@ -73,4 +73,8 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
     }
 
+    public ArrayDesign getAd() {
+        return ad;
+    }
+
 }

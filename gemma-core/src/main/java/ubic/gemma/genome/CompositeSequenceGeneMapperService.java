@@ -89,9 +89,7 @@ public class CompositeSequenceGeneMapperService {
         for ( String officialSymbol : officialSymbols ) {
             Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
             if ( genes == null || genes.isEmpty() ) {
-                log
-                        .warn( "Gene with official symbol " + officialSymbol
-                                + " does not exist.  Discarding ... " );
+                log.warn( "Gene with official symbol " + officialSymbol + " does not exist.  Discarding ... " );
                 continue;
             }
             geneMap.put( officialSymbol, genes );
@@ -103,6 +101,7 @@ public class CompositeSequenceGeneMapperService {
     /**
      * @param compositeSequence
      * @return Collection<Gene>
+     * @deprecated use CompositeSequenceService.getGenes instead.
      */
     public Collection<Gene> getGenesForCompositeSequence( CompositeSequence compositeSequence ) {
         Collection<Gene> genes = null;
@@ -129,7 +128,7 @@ public class CompositeSequenceGeneMapperService {
         // TODO change name to getCompositeSequenceByGene(Gene gene)
         return this.geneDao.getCompositeSequencesById( id );
     }
-    
+
     /**
      * @param id
      * @return Collection<CompositeSequence>
@@ -137,7 +136,7 @@ public class CompositeSequenceGeneMapperService {
     @SuppressWarnings("unchecked")
     public Collection<CompositeSequence> getCompositeSequencesByGeneId( Gene gene, ArrayDesign arrayDesign ) {
         // TODO change name to getCompositeSequenceByGene(Gene gene)
-        return this.geneDao.getCompositeSequencesById( gene,arrayDesign);
+        return this.geneDao.getCompositeSequencesById( gene, arrayDesign );
     }
 
     /**

@@ -42,8 +42,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     private static Log log = LogFactory.getLog( CompositeSequenceDaoImpl.class.getName() );
 
-
-
     /*
      * (non-Javadoc)
      * 
@@ -187,8 +185,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
                 + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
                 + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
-                + "WHERE cs.ID = :id";
+                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) " + "WHERE cs.ID = :id";
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
@@ -230,8 +227,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         Collection retVal = nativeQuery( nativeQueryString );
         return retVal;
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -276,6 +275,59 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             throw super.convertHibernateAccessException( ex );
         }
         return compositeSequences;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<CompositeSequence> findByGene( Gene gene ) {
+        Collection<CompositeSequence> compositeSequences = null;
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl   gp, GeneImpl gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "gene", gene );
+            compositeSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compositeSequences;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
+        Collection<CompositeSequence> compositeSequences = null;
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl   gp, GeneImpl gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "gene", gene );
+            queryObject.setParameter( "arrayDesign", arrayDesign );
+            compositeSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compositeSequences;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "cs", compositeSequence );
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return genes;
     }
 
     /*
