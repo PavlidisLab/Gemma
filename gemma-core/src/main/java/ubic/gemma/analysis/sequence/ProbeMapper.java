@@ -587,7 +587,7 @@ public class ProbeMapper {
         PhysicalLocation pl = makePhysicalLocation( blatResult, ignoreStrand );
 
         Collection<ProbeAlignedRegion> pars = probeAlignedRegionService.findAssociations( pl );
-        if ( pars.size() > 0 ) log.info( "Found " + pars.size() + " PARS for " + blatResult );
+        if ( log.isDebugEnabled() && pars.size() > 0 ) log.debug( "Found " + pars.size() + " PARS for " + blatResult );
         Collection<BlatAssociation> results = new HashSet<BlatAssociation>();
         for ( ProbeAlignedRegion region : pars ) {
             BlatAssociation ba = BlatAssociation.Factory.newInstance();
