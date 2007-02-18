@@ -155,7 +155,8 @@ public class ProbeMapper {
                     ProbeAlignedRegion par = makePar( blatResult );
                     BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
                     blatAssociationsForSequence.add( parAssociation );
-                    log.info( "Adding PAR for " + sequence + " with alignment " + blatResult );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
                 }
 
                 if ( ++count % 100 == 0 && log.isInfoEnabled() )
