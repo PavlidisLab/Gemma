@@ -81,6 +81,12 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     }
 
     @Override
+    protected void handleThaw( Auditable auditable ) throws Exception {
+        this.getAuditTrailDao().thaw( auditable );
+
+    }
+
+    @Override
     protected AuditEvent handleAddUpdateEvent( Auditable auditable, String note ) throws Exception {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
         auditEvent.setDate( Calendar.getInstance().getTime() );
