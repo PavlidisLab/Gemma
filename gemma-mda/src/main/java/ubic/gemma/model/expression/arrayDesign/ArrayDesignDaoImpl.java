@@ -677,12 +677,32 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
+
+        // probably can do this as one query...
+
+        // First have to delete all blatAssociations, because they are referred to by the alignments
+        final String blatAssociationQueryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+                + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br,BlatAssociationImpl ba "
+                + "where br.querySequence = bs and ad=:arrayDesign and ba.bioSequence = bs";
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( blatAssociationQueryString );
+        queryObject.setParameter( "arrayDesign", arrayDesign );
+        Collection<BlatResult> toBeRemoved = queryObject.list();
+
+        if ( toBeRemoved.size() == 0 ) {
+            log.info( "No old blatAssociations for " + arrayDesign );
+            return;
+        }
+
+        log.info( "Have " + toBeRemoved.size() + " BlatAssociations to remove for " + arrayDesign
+                + "(they have to be removed to make way for new alignment data)" );
+        this.getHibernateTemplate().deleteAll( toBeRemoved );
+
         final String sequenceQueryString = "select br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
                 + "where br.querySequence = bs and ad=:arrayDesign";
-        org.hibernate.Query queryObject = super.getSession( false ).createQuery( sequenceQueryString );
+        queryObject = super.getSession( false ).createQuery( sequenceQueryString );
         queryObject.setParameter( "arrayDesign", arrayDesign );
-        final Collection<BlatResult> toBeRemoved = queryObject.list();
+        toBeRemoved = queryObject.list();
 
         if ( toBeRemoved.size() == 0 ) {
             log.info( "No old alignments to be removed for " + arrayDesign );
@@ -884,7 +904,5 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
         return nativeQueryByIdReturnCollection( id, nativeQueryString );
     }
-
-
 
 }
