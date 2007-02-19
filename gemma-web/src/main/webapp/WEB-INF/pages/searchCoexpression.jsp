@@ -23,7 +23,7 @@
 	</h2>
 </c:if>
 
-<c:if test="${numCoexpressedGenes != null}">
+<c:if test="${coexpressedGenes != null}">
 <title>Coexpression search for <c:out value="${sourceGene.officialSymbol}" /> (<c:out value="${sourceGene.officialName}" />)</title>
 <h2>
 Results for 
@@ -76,13 +76,21 @@ Results for
 	</tr>
 	<tr>
 		<td>
-			&nbsp;&nbsp;Met stringency
+			&nbsp;&nbsp;Met stringency (+)
 		</td>
 		<td>
-			<c:out value="${numCoexpressedGenes}" />
+			<c:out value="${numPositiveCoexpressedGenes}" />
 		</td>
 	</tr>
-
+	<tr>
+		<td>
+			&nbsp;&nbsp;Met stringency (-)
+		</td>
+		<td>
+			<c:out value="${numNegativeCoexpressedGenes}" />
+		</td>
+	</tr>
+	
 </table>
 </c:if>
 
@@ -238,7 +246,7 @@ Results for
 		
 	</table>
 
-<c:if test="${numCoexpressedGenes != null}">
+<c:if test="${coexpressedGenes != null}">
 <c:if test="${numLinkedExpressionExperiments != 0}">
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
@@ -292,7 +300,6 @@ Results for
 	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
 	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
 	<display:column property="dataSetCount" sortable="true" title="#DS" />	
-	<display:column property="dataSets" title="Data Sets" />	
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
