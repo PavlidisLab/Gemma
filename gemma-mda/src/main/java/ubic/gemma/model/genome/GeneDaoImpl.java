@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +31,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,10 +44,12 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 
+import ubic.basecode.util.NetUtils;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -408,11 +416,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param queryString
      * @return
      */
-    private org.hibernate.Query setCoexpQueryParameters( Gene gene, long id, String queryString ) {
+    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, long id, String queryString ) {
         // org.hibernate.Query queryObject;
         org.hibernate.SQLQuery queryObject;
         // queryObject = super.getSession( false ).createQuery( queryString );
-        queryObject = super.getSession( true ).createSQLQuery( queryString ); // for native query.
+        queryObject = session.createSQLQuery( queryString ); // for native query.
 
         queryObject.addScalar( "id", new LongType() );
         queryObject.addScalar( "genesymb", new StringType() );
@@ -436,7 +444,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from GeneImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -634,61 +642,90 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         try {
             final Collection<Long> eeIds = getEEIds( ees );
 
-            final AtomicBoolean firstDone = new AtomicBoolean( false );
-            final AtomicBoolean secondDone = new AtomicBoolean( false );
-
-            Thread firstQueryThread = new Thread( new Runnable() {
-                public void run() {
+            FutureTask<Boolean> firstQueryThread = new FutureTask<Boolean>( new Callable<Boolean>() {
+                @SuppressWarnings("synthetic-access")
+                public Boolean call() throws FileNotFoundException, IOException {
                     StopWatch watch = new StopWatch();
                     watch.start();
                     log.info( "Starting first query" );
-                    // do query joining coexpressed genes through the firstVector to the secondVector
-                    // eeIds is an argument because the native SQL query needs to be built with the knowledge
-                    // of the number of expressionExperimentId arguments.
-                    String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
-                    org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
-                    processCoexpQueryResults( geneMap, queryObject );
-                    watch.stop();
-                    Long elapsed = watch.getTime();
-                    coexpressions.setFirstQueryElapsedTime( elapsed );
-                    log.info( "Elapsed time for first query: " + elapsed );
-                    firstDone.set( true );
-                };
+
+                    try {
+                        // do query joining coexpressed genes through the firstVector to the secondVector
+                        // eeIds is an argument because the native SQL query needs to be built with the knowledge
+                        // of the number of expressionExperimentId arguments.
+                        String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
+                        Session session = getSession();
+                        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+                        synchronized ( geneMap ) {
+                            processCoexpQueryResults( geneMap, queryObject );
+                        }
+                        releaseSession( session );
+                        watch.stop();
+                        Long elapsed = watch.getTime();
+                        coexpressions.setFirstQueryElapsedTime( elapsed );
+                        log.info( "Elapsed time for first query: " + elapsed );
+                    } catch ( Exception e ) {
+                        log.error( e, e );
+                        return false;
+                    }
+                    return true;
+                }
             } );
 
-            Thread secondQueryThread = new Thread( new Runnable() {
-                public void run() {
+            FutureTask<Boolean> secondQueryThread = new FutureTask<Boolean>( new Callable<Boolean>() {
+                @SuppressWarnings("synthetic-access")
+                public Boolean call() throws FileNotFoundException, IOException {
                     StopWatch watch = new StopWatch();
                     watch.start();
                     log.info( "Starting second query" );
-                    String queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
-                    org.hibernate.Query queryObject = setCoexpQueryParameters( gene, id, queryString );
-                    processCoexpQueryResults( geneMap, queryObject );
-                    watch.stop();
-                    Long elapsed = watch.getTime();
-                    coexpressions.setSecondQueryElapsedTime( elapsed );
 
-                    log.info( "Elapsed time for second query: " + elapsed );
-                    secondDone.set( true );
+                    try {
+                        String queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
+                        Session session = getSession();
+                        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+                        synchronized ( geneMap ) {
+                            processCoexpQueryResults( geneMap, queryObject );
+                        }
+                        releaseSession( session );
+                        watch.stop();
+                        Long elapsed = watch.getTime();
+                        coexpressions.setSecondQueryElapsedTime( elapsed );
+
+                        log.info( "Elapsed time for second query: " + elapsed );
+                    } catch ( Exception e ) {
+                        log.error( e, e );
+                        return false;
+                    }
+                    return true;
                 };
             } );
 
-            firstQueryThread.start();
-            secondQueryThread.start();
+            ExecutorService executor = Executors.newCachedThreadPool();
+            executor.execute( firstQueryThread );
+            executor.execute( secondQueryThread );
+            executor.shutdown();
 
             // wait...
             StopWatch overallWatch = new StopWatch();
             overallWatch.start();
-            while ( !( firstDone.get() && secondDone.get() ) ) {
+
+            int ticks = 0;
+            while ( !firstQueryThread.isDone() || !secondQueryThread.isDone() ) {
                 try {
                     Thread.sleep( 100 );
-                } catch ( InterruptedException e ) {
-                    // ;
+                    if ( ++ticks % 10 == 0 ) {
+                        log.info( "Waiting..." );
+                    }
+                } catch ( InterruptedException ie ) {
+                    throw new RuntimeException( ie );
                 }
+
             }
+
             overallWatch.stop();
             Long overallElapsed = overallWatch.getTime();
             log.info( "Query threads took a total of " + overallElapsed + "ms (wall clock time)" );
+            coexpressions.setElapsedWallTimeElapsed( overallElapsed );
 
             StopWatch watch = new StopWatch();
             watch.start();

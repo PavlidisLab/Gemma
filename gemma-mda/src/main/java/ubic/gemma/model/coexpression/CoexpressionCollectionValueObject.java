@@ -54,8 +54,8 @@ public class CoexpressionCollectionValueObject {
      * 
      * @param elapsedWallTime (in milliseconds)
      */
-    public void setElapsedWallTimeElapsed( double elapsedWallSeconds ) {
-        this.elapsedWallSeconds = elapsedWallSeconds / 1000.0;
+    public void setElapsedWallTimeElapsed( double elapsedWallMillisSeconds ) {
+        this.elapsedWallSeconds = elapsedWallMillisSeconds / 1000.0;
     }
 
     public CoexpressionCollectionValueObject() {
