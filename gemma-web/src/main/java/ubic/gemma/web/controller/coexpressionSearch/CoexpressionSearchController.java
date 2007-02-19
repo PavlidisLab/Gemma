@@ -230,10 +230,10 @@ public class CoexpressionSearchController extends BaseFormController {
         } else {
             Map taxonCount = expressionExperimentService.getPerTaxonCount();
 
-            if ( taxonCount.get( sourceGene.getTaxon().getScientificName() ) == null )
+            if ( taxonCount.get( sourceGene.getTaxon() ) == null )
                 numExpressionExperiments = 0;
             else
-                numExpressionExperiments = ( ( Long ) taxonCount.get( sourceGene.getTaxon().getScientificName() ) )
+                numExpressionExperiments = ( ( Long ) taxonCount.get( sourceGene.getTaxon() ) )
                         .intValue();
 
         }
