@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -253,22 +254,20 @@ public class CoexpressionSearchController extends BaseFormController {
 
         watch.start();
         // get all the coexpressed genes and sort them by dataset count
-        ArrayList<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
+        List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
         coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
 
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedGenes, new CoexpressionComparator() );
 
         // load expression experiment value objects
-        Collection<Long> eeIds = new ArrayList<Long>();
+        Collection<Long> eeIds = new HashSet<Long>();
         Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
         for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
             eeIds.add( Long.parseLong( eeVo.getId() ) );
         }
-        Collection<ExpressionExperimentValueObject> eeVos = new ArrayList<ExpressionExperimentValueObject>();
-        if ( eeIds.size() > 0 ) {
-            eeVos = expressionExperimentService.loadValueObjects( eeIds );
-        }
+
+        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
 
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
 
@@ -464,19 +463,17 @@ public class CoexpressionSearchController extends BaseFormController {
      */
     class CoexpressionComparator implements Comparator {
 
-        public CoexpressionComparator() {
-            super();
-        }
-
         public int compare( Object o1, Object o2 ) {
-            int o1Size = ( ( CoexpressionValueObject ) o1 ).getExpressionExperimentValueObjects().size();
-            int o2Size = ( ( CoexpressionValueObject ) o2 ).getExpressionExperimentValueObjects().size();
+            CoexpressionValueObject v1 = ( ( CoexpressionValueObject ) o1 );
+            CoexpressionValueObject v2 = ( ( CoexpressionValueObject ) o1 );
+            int o1Size = v1.getExpressionExperimentValueObjects().size();
+            int o2Size = v2.getExpressionExperimentValueObjects().size();
             if ( o1Size > o2Size ) {
                 return -1;
             } else if ( o1Size < o2Size ) {
                 return 1;
             } else {
-                return 0;
+                return v2.getGeneId().compareTo( v1.getGeneId() );
             }
         }
     }
