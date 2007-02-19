@@ -160,6 +160,7 @@ public class ArrayDesignReportService {
         List<AuditEvent> sequenceUpdateEvents = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : ad.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
             if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignSequenceUpdateEvent ) {
                 sequenceUpdateEvents.add( event );
             }
@@ -192,6 +193,7 @@ public class ArrayDesignReportService {
         List<AuditEvent> sequenceAnalysisEvents = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : ad.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
             if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignSequenceAnalysisEvent ) {
                 sequenceAnalysisEvents.add( event );
             }
@@ -224,6 +226,7 @@ public class ArrayDesignReportService {
         List<AuditEvent> geneMappingEvents = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : ad.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
             if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignGeneMappingEvent ) {
                 geneMappingEvents.add( event );
             }
