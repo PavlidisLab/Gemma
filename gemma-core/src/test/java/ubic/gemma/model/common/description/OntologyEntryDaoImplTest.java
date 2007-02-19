@@ -31,7 +31,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
 
-    OntologyEntry root;    
+    OntologyEntry root;
     OntologyEntry top;
     OntologyEntry middle;
     OntologyEntry child;
@@ -53,18 +53,18 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
 
         oed = ( OntologyEntryDao ) this.getBean( "ontologyEntryDao" );
         edd = ( ExternalDatabaseDao ) this.getBean( "externalDatabaseDao" );
-        oes = (OntologyEntryService) this.getBean( "ontologyEntryService" );
+        oes = ( OntologyEntryService ) this.getBean( "ontologyEntryService" );
 
         ed.setName( "foo" );
 
         ed = ( ExternalDatabase ) edd.create( ed );
 
         // this is our top level one
-        
+
         root = OntologyEntry.Factory.newInstance();
         root.setAccession( "all" );
         root.setExternalDatabase( ed );
-      
+
         top = OntologyEntry.Factory.newInstance();
         top.setAccession( "fred" );
         top.setExternalDatabase( ed );
@@ -86,7 +86,7 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
         top.getAssociations().add( middle );
         top = ( OntologyEntry ) oed.create( top );
         root.getAssociations().add( top );
-        root = (OntologyEntry) oed.create( root );
+        root = ( OntologyEntry ) oed.create( root );
 
     }
 
@@ -107,32 +107,34 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
         OntologyEntry actualValue = ( OntologyEntry ) oed.getParents( child ).iterator().next();
         assertEquals( middle.getAccession(), actualValue.getAccession() );
     }
-    
-    public final void testGetParentsCollection(){
-            
+
+    @SuppressWarnings("unchecked")
+    public final void testGetParentsCollection() {
+
         Collection<OntologyEntry> children = new ArrayList<OntologyEntry>();
         children.add( childsChild );
         children.add( middle );
-        
-        Map<OntologyEntry,Collection> resultMap = oed.getParents( children );
-        assertEquals(2,resultMap.keySet().size());
-        assertEquals(1, resultMap.get( middle ).size());
-        
+
+        Map<OntologyEntry, Collection> resultMap = oed.getParents( children );
+        assertEquals( 2, resultMap.keySet().size() );
+        assertEquals( 1, resultMap.get( middle ).size() );
+
     }
 
     public final void testGetParentsMap() {
-        
+
         List<OntologyEntry> ontoList = new ArrayList<OntologyEntry>();
         ontoList.add( child );
         ontoList.add( middle );
-        
-        Map resultMap = oed.getParents( ontoList );   
-        assertEquals(2, resultMap.size());
-        
-        Collection parents = (Collection) resultMap.get(child);
-        assertEquals( true, parents.contains( middle ));
-        
+
+        Map resultMap = oed.getParents( ontoList );
+        assertEquals( 2, resultMap.size() );
+
+        Collection parents = ( Collection ) resultMap.get( child );
+        assertEquals( true, parents.contains( middle ) );
+
     }
+
     /**
      * Test method for {@link ubic.gemma.model.common.description.OntologyEntryImpl#getChildren()}.
      */
@@ -141,25 +143,26 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
         Collection<OntologyEntry> actualValue = oed.getAllChildren( top );
         assertEquals( 3, actualValue.size() );
     }
-    
-    public final void testFindByAccession(){
-        //this should be a test that causes a lazy load exception but it doesn't seem to replicate the probem.
-        //I believe the test data needs to be persisted to the db and evicted from the session for it to reproduce the
-        //lazy loading problems. 
-       OntologyEntry oe = oed.findByAccession( "fred" );
-       assertEquals("fred", oe.getAccession());
-       
+
+    public final void testFindByAccession() {
+        // this should be a test that causes a lazy load exception but it doesn't seem to replicate the probem.
+        // I believe the test data needs to be persisted to the db and evicted from the session for it to reproduce the
+        // lazy loading problems.
+        OntologyEntry oe = oed.findByAccession( "fred" );
+        assertEquals( "fred", oe.getAccession() );
+
     }
-    
-    public final void testGetAllParents(){
-        ArrayList children = new ArrayList<OntologyEntry>();
+
+    @SuppressWarnings("unchecked")
+    public final void testGetAllParents() {
+        Collection<OntologyEntry> children = new ArrayList<OntologyEntry>();
         OntologyEntry oe = oed.findByAccession( "jeff" );
         children.add( oe );
-        
-       Map<OntologyEntry, Collection> parents = oes.getAllParents( children  );
-       assertEquals( 1, parents.keySet().size() );
-       assertEquals(2, parents.get(oe).size());
-        
+
+        Map<OntologyEntry, Collection> parents = oes.getAllParents( children );
+        assertEquals( 1, parents.keySet().size() );
+        assertEquals( 2, parents.get( oe ).size() );
+
     }
 
 }

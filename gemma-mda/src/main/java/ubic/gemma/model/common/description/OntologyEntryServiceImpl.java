@@ -29,14 +29,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * @author keshav
- * @version $Id$
- * @see ubic.gemma.model.common.description.OntologyEntryService
-
- * TODO Document Me
+ * If you are dealing with Gene Ontology values, it is preferrable to use GeneOntologyService.
  * 
  * @author Paul
+ * @author keshav
  * @version $Id$
+ * @see ubic.gemma.analysis.ontology.GeneOntologyService
+ * @see ubic.gemma.model.common.description.OntologyEntryService
  */
 public class OntologyEntryServiceImpl extends ubic.gemma.model.common.description.OntologyEntryServiceBase {
 
@@ -158,6 +157,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     private Map<String, OntologyEntry> ontologyCache = new HashMap<String, OntologyEntry>();
     private Map<OntologyEntry, Collection> ontologyTreeCache = new HashMap<OntologyEntry, Collection>();
 
+    @SuppressWarnings("unchecked")
     protected Map handleGetAllParents( Collection children ) {
 
         if ( ( children == null ) || ( children.isEmpty() ) ) return null;
@@ -221,6 +221,7 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     }
 
     // Modifies passed in collection.
+    @SuppressWarnings("unchecked")
     private void cache( Map<OntologyEntry, Collection> toCache ) {
 
         Map<OntologyEntry, Collection> cached = new HashMap<OntologyEntry, Collection>();

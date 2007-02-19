@@ -16,7 +16,6 @@
  * limitations under the License.
  *
  */
-
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
@@ -26,22 +25,25 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.OntologyEntry;
-import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
@@ -49,11 +51,10 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file
- * <p>
  * 
  * @author klc
+ * @versio $Id$
  */
-
 public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
 
     // constants
@@ -64,15 +65,17 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     // services
     Gene2GOAssociationService gene2GoAssociationService;
-    CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
     GeneService geneService;
-    OntologyEntryService oeService;
-   
+    CompositeSequenceService compositeSequenceService;
+    GeneOntologyService oeService;
+
+    Collection<String> errorObjects = new HashSet<String>();
+    Collection<String> successObjects = new HashSet<String>();
 
     // file info
     String batchFileName;
-    Writer writer;
-    String fileName;
+
+    String fileName = null;
 
     // types
     boolean shortAnnotations;
@@ -80,10 +83,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     boolean biologicalProcessAnnotations;
 
     boolean includeGemmaGenes;
-
-    // summary info
-    long linesWritten;
-    long genesSkipped;
 
     /*
      * (non-Javadoc)
@@ -96,27 +95,26 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         super.buildOptions();
 
         Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" ).withDescription(
-                "Optional: The name of the Annotation file to be generated" ).withLongOpt( "annotation" ).create( 'f' );
+                "The name of the Annotation file to be generated [Default = stdout]" ).withLongOpt( "annotation" )
+                .create( 'f' );
 
-        Option genesIncludedOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Genes to include" )
-                .withDescription(
-                        "Optional: The type of genes that will be included All or Standard (defaults to standard). All includes predicted genes and probe alighned genes. Standard mode only includes the regular variety of genes" )
-                .withLongOpt( "genes" ).create( 'g' );
+        Option genesIncludedOption = OptionBuilder.hasArg().withArgName( "Genes to include" ).withDescription(
+                "The type of genes that will be included: all or standard."
+                        + " All includes predicted genes and probe aligned regions. "
+                        + "Standard mode only includes known genes [Default = standard]" ).withLongOpt( "genes" )
+                .create( 'g' );
 
-        Option annotationType = OptionBuilder
-                .hasArg()
-                .withArgName( "Type of annotation file" )
-                .withDescription(
-                        "Optional: Which go terms to add to the annotation file (defaults to short):  short, long, biologicalprocess" )
+        Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" ).withDescription(
+                "Which GO terms to add to the annotation file:  short, long, biologicalprocess "
+                        + "[Default=short (no parents)]. If you select biologialprocess, parents are not included." )
                 .withLongOpt( "type" ).create( 't' );
 
         Option fileLoading = OptionBuilder
                 .hasArg()
                 .withArgName( "Batch Generating of annotation files" )
                 .withDescription(
-                        "Optional: uses specified file for batch generating annotation files. file format: GPL,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
+                        "Use specified file for batch generating annotation files. file format: (per line) "
+                                + "GPL,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
                 .withLongOpt( "load" ).create( 'l' );
 
         addOption( annotationFileOption );
@@ -149,14 +147,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( err != null ) return err;
 
         try {
-            if ( batchFileName == null )
-                processAD();
-            else
+            if ( batchFileName == null ) {
+                ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+                processAD( arrayDesign, this.fileName );
+            } else {
                 processBatchFile( this.batchFileName );
+            }
 
-        } catch ( IOException e ) {
-            log.error( "Error writing to file " + e );
-            cacheException( e );
+        } catch ( Exception e ) {
+            return e;
         }
 
         return null;
@@ -165,25 +164,40 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     /**
      * @throws IOException process the current AD
      */
-    protected void processAD() throws IOException {
-
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+    protected void processAD( ArrayDesign arrayDesign, String fileName ) throws IOException {
         unlazifyArrayDesign( arrayDesign );
 
-        Collection<CompositeSequence> cs = arrayDesign.getCompositeSequences();
+        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
 
-        log.info( arrayDesignName + " has " + cs.size() + " composite sequences" );
+        log.info( arrayDesignName + " has " + compositeSequences.size() + " composite sequences" );
 
-        initFile( fileName );
+        Writer writer = initOutputFile( fileName );
 
-        generateAnnotationFile( cs );
+        int numProcessed = generateAnnotationFile( writer, compositeSequences );
 
         writer.flush();
         writer.close();
 
         log.info( "Finished processing platform: " + arrayDesignName );
-        log.info( "Created file:  " + fileName + " with " + linesWritten + " lines" );
 
+        successObjects.add( ( ( Describable ) arrayDesign ).getName() + " ("
+                + ( ( ArrayDesign ) arrayDesign ).getExternalReferences().iterator().next().getAccession() + ")" );
+
+        if ( StringUtils.isBlank( fileName ) ) {
+            log.info( "Processed " + numProcessed + " composite sequences" );
+            audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
+        } else {
+            log.info( "Created file:  " + fileName + " with " + numProcessed + " values" );
+            audit( arrayDesign, "Created file: " + fileName + " with " + numProcessed + " values" );
+        }
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignAnnotationFileEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
     /**
@@ -229,59 +243,86 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
             // need to set these so processing ad works correctly (todo: make processtype take all 3 parameter)
             this.arrayDesignName = gpl;
-            this.fileName = annotationFileName;
             processType( type );
+            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
             try {
-                processAD();
+                processAD( arrayDesign, annotationFileName );
             } catch ( Exception e ) {
-                log.warn( "Error processing platform. " + e );
+                log.error( "**** Exception while processing " + arrayDesignName + ": " + e.getMessage() + " ********" );
+                log.error( e, e );
                 cacheException( e );
+                errorObjects.add( arrayDesignName + ": " + e.getMessage() );
                 continue;
             }
 
         }
 
+        summarizeProcessing( errorObjects, successObjects );
+
     }
 
     /**
-     * @param adName
-     * @throws IOException Creates the given file
+     * Opens a file for writing anda adds the header.
+     * 
+     * @param fileName if Null, output will be written to standard output.
+     * @throws IOException
      */
-    protected void initFile( String adName ) throws IOException {
-        // write into file
-        log.info( "Creating new annotation file " + adName + " \n" );
+    protected Writer initOutputFile( String fileName ) throws IOException {
 
-        File f = new File( adName + ".an.txt" );
-        f.delete();
-        f.createNewFile();
-        writer = new FileWriter( f );
+        Writer writer;
+        if ( StringUtils.isBlank( fileName ) ) {
+            log.info( "Output to stdout" );
+            writer = new PrintWriter( System.out );
+        } else {
+
+            // write into file
+            log.info( "Creating new annotation file " + fileName + " \n" );
+
+            File f = new File( fileName + ".an.txt" );
+
+            if ( f.exists() ) {
+                log.warn( "Will overwrite existing file " + f );
+                f.delete();
+            }
+
+            f.createNewFile();
+            writer = new FileWriter( f );
+        }
+
         writer.write( "Probe ID \t Gene \t Description \t GO Terms \n" );
 
+        return writer;
     }
 
     /**
-     * @param cs
+     * @param compositeSequences
      * @throws IOException Gets the file ready for printing
      */
-    protected void generateAnnotationFile( Collection<CompositeSequence> cs ) throws IOException {
+    @SuppressWarnings("unchecked")
+    protected int generateAnnotationFile( Writer writer, Collection<CompositeSequence> compositeSequences )
+            throws IOException {
 
-        linesWritten = 0;
+        int compositeSequencesProcessed = 0;
 
-        for ( CompositeSequence sequence : cs ) {
+        for ( CompositeSequence sequence : compositeSequences ) {
 
-            Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( sequence );
+            Collection<Gene> genes = compositeSequenceService.getGenes( sequence );
+
+            ++compositeSequencesProcessed;
 
             if ( ( genes == null ) || ( genes.isEmpty() ) ) {
-                generateAnnotationFileLine( sequence.getName(), "", "", null );
+                writeAnnotationLine( writer, sequence.getName(), "", "", null );
                 continue;
             }
 
             // actually the collection gotten back is a collection of proxies which causes issues. Need to reload the
             // genes from the db.
             Collection<Long> geneIds = new ArrayList<Long>();
-            for ( Gene g : genes )
+
+            for ( Gene g : genes ) {
                 geneIds.add( g.getId() );
+            }
 
             genes = geneService.load( geneIds );
 
@@ -290,13 +331,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             Collection<OntologyEntry> goTerms = new ArrayList<OntologyEntry>();
 
             // Might be mulitple genes for a given cs. Need to hash it into one.
-            for ( Object obj : genes ) {
-
-                Gene gene = ( Gene ) obj;
+            for ( Gene gene : genes ) {
 
                 if ( gene == null ) continue;
 
-                // Don't add gemmaGene info to annotation file
+                // Add PARs or predicted gene info to annotation file?
                 if ( ( !includeGemmaGenes )
                         && ( ( gene instanceof ProbeAlignedRegion ) || ( gene instanceof PredictedGene ) ) ) {
                     log.debug( "Gene:  " + gene.getOfficialSymbol()
@@ -304,30 +343,50 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                     continue;
                 }
 
-                log.debug( "Adding gene: " + gene.getOfficialSymbol() + " of type: " + gene.getClass() );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Adding gene: " + gene.getOfficialSymbol() + " of type: " + gene.getClass() );
 
-                Collection<OntologyEntry> terms = getGoTerms( gene );
-                if ( ( terms != null ) && !( terms.isEmpty() ) ) goTerms.addAll( terms );
-
-                if ( gene.getOfficialSymbol() != null ) {
-                    if ( geneNames == null )
-                        geneNames = gene.getOfficialSymbol();
-                    else
-                        geneNames += "|" + gene.getOfficialSymbol();
-                }
-
-                if ( gene.getOfficialName() != null ) {
-                    if ( geneDescriptions == null )
-                        geneDescriptions = gene.getOfficialName();
-                    else
-                        geneDescriptions += "|" + gene.getOfficialName();
-                }
+                addGoTerms( goTerms, gene );
+                geneNames = addGeneSymbol( geneNames, gene );
+                geneDescriptions = addGeneName( geneDescriptions, gene );
 
             }
 
-            generateAnnotationFileLine( sequence.getName(), geneNames, geneDescriptions, goTerms );
+            writeAnnotationLine( writer, sequence.getName(), geneNames, geneDescriptions, goTerms );
+
+            if ( compositeSequencesProcessed % 500 == 0 && log.isInfoEnabled() ) {
+                log.info( "Processed " + compositeSequencesProcessed + "/" + compositeSequences.size()
+                        + " compositeSequences " );
+            }
 
         }
+        return compositeSequencesProcessed;
+    }
+
+    private Collection<OntologyEntry> addGoTerms( Collection<OntologyEntry> goTerms, Gene gene ) {
+        Collection<OntologyEntry> terms = getGoTerms( gene );
+        goTerms.addAll( terms );
+        return terms;
+    }
+
+    private String addGeneName( String geneDescriptions, Gene gene ) {
+        if ( gene.getOfficialName() != null ) {
+            if ( geneDescriptions == null )
+                geneDescriptions = gene.getOfficialName();
+            else
+                geneDescriptions += "|" + gene.getOfficialName();
+        }
+        return geneDescriptions;
+    }
+
+    private String addGeneSymbol( String geneNames, Gene gene ) {
+        if ( gene.getOfficialSymbol() != null ) {
+            if ( geneNames == null )
+                geneNames = gene.getOfficialSymbol();
+            else
+                geneNames += "|" + gene.getOfficialSymbol();
+        }
+        return geneNames;
     }
 
     /**
@@ -337,11 +396,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * @param goTerms
      * @throws IOException Adds one line at a time to the annotation file
      */
-    protected void generateAnnotationFileLine( String probeId, String gene, String description,
+    protected void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
             Collection<OntologyEntry> goTerms ) throws IOException {
 
-        linesWritten++;
-        log.debug( "Generating line for annotation file  \n" );
+        if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
 
         if ( gene == null ) gene = "";
 
@@ -377,8 +435,9 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     /**
      * @param gene
-     * @return gets all the goTerms for a given gene
+     * @return the goTerms for a given gene, as configured
      */
+    @SuppressWarnings("unchecked")
     protected Collection<OntologyEntry> getGoTerms( Gene gene ) {
 
         Collection<OntologyEntry> ontos = new HashSet<OntologyEntry>( gene2GoAssociationService.findByGene( gene ) );
@@ -387,42 +446,24 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         if ( this.shortAnnotations ) return ontos;
 
-        Map<OntologyEntry, Collection> ontoMap = oeService.getAllParents( ontos );
-
         if ( this.longAnnotations ) {
-            for ( Collection<OntologyEntry> oes : ontoMap.values() )
-                ontos.addAll( oes );
+            Collection<OntologyEntry> oes = oeService.getAllParents( ontos );
+            ontos.addAll( oes );
+        } else if ( this.biologicalProcessAnnotations ) {
+            Collection<OntologyEntry> toRemove = new HashSet<OntologyEntry>();
 
-            return ontos;
-        }
+            for ( OntologyEntry ont : ontos ) {
+                if ( ( ont == null ) || ( ont.getCategory() == null ) ) continue;
 
-        if ( this.biologicalProcessAnnotations ) {
-
-            ontos = new HashSet<OntologyEntry>();
-
-            for ( OntologyEntry key : ontoMap.keySet() ) {
-                Collection<OntologyEntry> values = ontoMap.get( key );
-
-                if ( ( key == null ) || ( key.getCategory() == null ) ) continue;
-
-                for ( Object obj : ontoMap.get( key ) ) {
-
-                    OntologyEntry parent = ( OntologyEntry ) obj;
-
-                    if ( ( parent == null ) || ( parent.getCategory() == null ) ) continue;
-
-                    if ( parent.getCategory().equalsIgnoreCase( BIOLOGICAL_PROCESS ) ) ontos.add( parent );
-                }
-
-                if ( key.getCategory().equalsIgnoreCase( BIOLOGICAL_PROCESS ) ) ontos.add( key );
+                if ( !ont.getCategory().equalsIgnoreCase( BIOLOGICAL_PROCESS ) ) toRemove.add( ont );
             }
 
-            return ontos;
-
+            for ( OntologyEntry toRemoveOnto : toRemove ) {
+                ontos.remove( toRemoveOnto );
+            }
         }
 
-        return null;
-
+        return ontos;
     }
 
     /**
@@ -444,6 +485,9 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    /**
+     * @param genesToInclude
+     */
     private void processGenesIncluded( String genesToInclude ) {
         includeGemmaGenes = false;
 
@@ -451,6 +495,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
 
@@ -470,15 +515,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
 
-        compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
-                .getBean( "compositeSequenceGeneMapperService" );
+        compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
 
-        oeService = ( OntologyEntryService ) this.getBean( "ontologyEntryService" );
-     
+        oeService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
 
     }
-
- 
 
 }

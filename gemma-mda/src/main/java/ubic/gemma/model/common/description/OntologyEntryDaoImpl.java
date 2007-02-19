@@ -170,7 +170,10 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         if ( ontologyEntry.getId() == null ) {
             throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
         }
-        String queryString = "from OntologyEntryImpl parent where :oe in elements(parent.associations)";
+
+        // It turns out that HQL generates really horrible SQL the original query, which used "element(assoc)".
+        String queryString = "select parent from OntologyEntryImpl parent inner join parent.associations as assoc where :oe in (assoc)";
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "oe", ontologyEntry );

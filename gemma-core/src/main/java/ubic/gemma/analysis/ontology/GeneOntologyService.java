@@ -43,6 +43,11 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class GeneOntologyService implements InitializingBean {
 
+    /**
+     * Report only this fraction (on average) of term loading events.
+     */
+    private static final double FRACTION_OF_LOAD_UPDATE_LOGGING = 0.0002;
+
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
 
     private OntologyEntryService ontologyEntryService;
@@ -76,10 +81,10 @@ public class GeneOntologyService implements InitializingBean {
     protected void init() {
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
         // if loading ontologies is disabled in the configuration, return
-        if (!loadOntology) {
+        if ( !loadOntology ) {
             return;
         }
-        
+
         final OntologyEntry root = ontologyEntryService.findByAccession( "all" );
         if ( root == null ) {
             log.warn( "Could not locate root of GO" );
@@ -120,7 +125,8 @@ public class GeneOntologyService implements InitializingBean {
         if ( item == null ) return;
 
         Collection<OntologyEntry> children = ontologyEntryService.getChildren( item );
-        if ( Math.random() < 0.005 && children.size() > 0 ) { // report only occasional updates.
+        if ( Math.random() < FRACTION_OF_LOAD_UPDATE_LOGGING && children.size() > 0 ) { // report only occasional
+                                                                                        // updates.
             log.info( "Loading " + children.size() + " children of " + item + " (among others)..." );
         }
         if ( children == null || children.size() == 0 ) {
