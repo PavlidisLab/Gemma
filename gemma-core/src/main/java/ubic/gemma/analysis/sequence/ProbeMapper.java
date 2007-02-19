@@ -159,8 +159,9 @@ public class ProbeMapper {
                         log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
                 }
 
-                if ( ++count % 100 == 0 && log.isInfoEnabled() )
-                    log.info( "Annotations computed for " + count + " blat results" );
+                // there are rarely this many, but it does happen.
+                if ( ++count % 100 == 0 && log.isDebugEnabled() )
+                    log.debug( "Annotations computed for " + count + " blat results for " + sequence );
 
             } // end of iteration over results for this sequence.
 
