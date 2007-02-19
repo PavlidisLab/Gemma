@@ -37,67 +37,89 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-     
-     public String getExpressionExperimentCountLink() {
-         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-         if (object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0) {
-             long id = object.getId();
-         
-             return object.getExpressionExperimentCount() + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
-                     + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
-         }
-        
-         return "0";
+    public String getSummaryTable() {
+        StringBuilder buf = new StringBuilder();
+        ArrayDesignValueObjectSummary object = ( ArrayDesignValueObjectSummary ) getCurrentRowObject();
 
-     }
-     
-     public String getDelete() {
-         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object.getSummaryTable().startsWith( "No " ) ) {
+            return "[Not avail.]";
+        }
 
-         if ( object == null ) {
-             return "Array Design unavailable";
-         }
+        String arraySummary = "arraySummary_" + object.getId();
 
-         return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
-                 + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
-                 + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+        buf.append( "<span name=\"" + arraySummary + "\" onclick=\"return toggleVisibility('" + arraySummary + "')\">" );
+        buf.append( "<img src=\"/Gemma/images/chart_organisation_add.png\" /></span>" );
 
-     }
-     
-     public String getRefreshReport() {
-         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        buf.append( "<span name=\"" + arraySummary + "\" style=\"display:none\" onclick=\"return toggleVisibility('"
+                + arraySummary + "')\">" );
+        buf.append( "<img src=\"/Gemma/images/chart_organisation_delete.png\" /></span>" );
 
-         if ( object == null ) {
-             return "Array Design unavailable";
-         }
+        buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
-         return "<form action=\"generateArrayDesignSummary.html?id=" + object.getId()
-                 + "\" onSubmit=\"return confirm('Refresh report for " + object.getName()
-                 + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" /></form>";
+        buf.append( "<div name=\"" + arraySummary + "\" style=\"display:none\">" );
+        buf.append( object.getSummaryTable() );
+        buf.append( "</div>" );
+        return buf.toString();
+    }
 
-     }
-     
-     public String getColor() {
-         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-         
-         if ( object == null ) {
-             return "Array Design unavailable";
-         }
-         
-         String colorString = "";
-         if (object.getColor().equalsIgnoreCase( "ONECOLOR" )) {
-             colorString = "one-color";
-         }
-         else if (object.getColor().equalsIgnoreCase( "TWOCOLOR" )) {
-             colorString = "two-color";   
-         }
-         else if (object.getColor().equalsIgnoreCase( "DUALMODE" )) {
-             colorString = "dual mode"; 
-         }
-         else {
-             colorString = "No color";
-         }
-         return colorString;         
-     }
-     
+    public String getExpressionExperimentCountLink() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0 ) {
+            long id = object.getId();
+
+            return object.getExpressionExperimentCount()
+                    + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
+                    + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+        }
+
+        return "0";
+
+    }
+
+    public String getDelete() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+        if ( object == null ) {
+            return "Array Design unavailable";
+        }
+
+        return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
+                + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
+                + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+
+    }
+
+    public String getRefreshReport() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+        if ( object == null ) {
+            return "Array Design unavailable";
+        }
+
+        return "<form action=\"generateArrayDesignSummary.html?id=" + object.getId()
+                + "\" onSubmit=\"return confirm('Refresh report for " + object.getName()
+                + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" /></form>";
+
+    }
+
+    public String getColor() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+        if ( object == null ) {
+            return "Array Design unavailable";
+        }
+
+        String colorString = "";
+        if ( object.getColor().equalsIgnoreCase( "ONECOLOR" ) ) {
+            colorString = "one-color";
+        } else if ( object.getColor().equalsIgnoreCase( "TWOCOLOR" ) ) {
+            colorString = "two-color";
+        } else if ( object.getColor().equalsIgnoreCase( "DUALMODE" ) ) {
+            colorString = "dual mode";
+        } else {
+            colorString = "No color";
+        }
+        return colorString;
+    }
+
 }

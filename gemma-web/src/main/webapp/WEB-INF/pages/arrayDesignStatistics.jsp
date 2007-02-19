@@ -1,6 +1,6 @@
 <%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
-
+<script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
 <authz:authorize ifAnyGranted="admin">
@@ -22,13 +22,14 @@ ${summaryString}
 </h3>
 
 <authz:authorize ifAnyGranted="admin">
-	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>" onclick="return confirm('Regenerate report for all platforms?');">
+	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>"
+		onclick="return confirm('Regenerate report for all platforms?');">
 		Regenerate this report</a>
 </authz:authorize>
 
 
 <display:table name="arrayDesigns" sort="list" class="list"
-	requestURI="" id="arrayDesignList" pagesize="10"
+	requestURI="" id="arrayDesignList" pagesize="30"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 	<display:column property="name" sortable="true"
 		href="showArrayDesign.html" paramId="id" paramProperty="id"
@@ -39,6 +40,12 @@ ${summaryString}
 		sortable="true" title="Expts" />
 	<display:column property="summaryTable" title="Probe Summary" />
 	<authz:authorize ifAnyGranted="admin">
+		<display:column property="lastSequenceUpdate" sortable="true"
+			title="Seq. Update" />
+		<display:column property="lastSequenceAnalysis" sortable="true"
+			title="Seq. Analysis" />
+		<display:column property="lastGeneMapping" sortable="true"
+			title="Gene mapping" />
 		<display:column property="color" sortable="true"
 			titleKey="arrayDesign.technologyType" />
 		<display:column property="refreshReport" title="Refresh" />

@@ -223,6 +223,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
+     * Show statistics for all (by default) array designs.
+     * 
      * @param request
      * @param response
      * @return
@@ -255,6 +257,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         for ( ArrayDesignValueObject ad : arrayDesigns ) {
             String summary = arrayDesignReportService.getArrayDesignReport( ad.getId() );
             ArrayDesignValueObjectSummary adSummary = new ArrayDesignValueObjectSummary( ad, summary );
+            adSummary.setLastSequenceAnalysis( arrayDesignReportService.getLastSequenceAnalysisEvent( ad.getId() ) );
+            adSummary.setLastGeneMapping( arrayDesignReportService.getLastGeneMappingEvent( ad.getId() ) );
+            adSummary.setLastSequenceUpdate( arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) );
             summaries.add( adSummary );
         }
 
