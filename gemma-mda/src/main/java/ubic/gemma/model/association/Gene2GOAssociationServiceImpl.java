@@ -16,29 +16,37 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
+
 package ubic.gemma.model.association;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+
 
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociationService
+ * @author klc
  */
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
+
+    
+    
+
 
     /* (non-Javadoc)
      * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
      */
     @Override
-    protected Collection handleFindByGOTerm( Collection goTerms ) throws Exception {
+    protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
 
-        //this.getOntologyEntryService().
-        return null;
+        OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
+        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
+        
+        return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );
+        
     }
 
     /* (non-Javadoc)
@@ -77,6 +85,6 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         return this.getGene2GOAssociationDao().findOrCreate( gene2GOAssociation );
     }
 
- 
+
 
 }

@@ -23,11 +23,13 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.hibernate.Criteria;
 
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -61,23 +63,31 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGOTerm(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGOTerm( Collection goIDs ) throws Exception {
-        Collection<OntologyEntry> ontos = null;
+    protected Collection handleFindByGOTerm( Collection goTerms, Taxon taxon ) throws Exception {
+                       
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.accession in (:goIDs) and geneAss.gene.taxon = :taxon";
+
+        //need to turn the collection of goTerms into a collection of GOId's
+        Collection<String> goIDs = new HashSet<String>();
+        for(Object obj: goTerms){
+            OntologyEntry oe = (OntologyEntry) obj;
+            goIDs.add( oe.getAccession() );
+        }
+
+        Collection<Gene> results;
         
-//        this.
-//        final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
-//
-//        try {
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setParameter( "gene", gene );
-//            ontos = queryObject.list();
-//
-//        } catch ( org.hibernate.HibernateException ex ) {
-//            throw super.convertHibernateAccessException( ex );
-//        }
-//        return ontos;
-        
-        return null;
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "goIDs", goIDs );
+            queryObject.setParameter( "taxon", taxon );
+            
+            results = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return results;
+             
     }
     
     /*
