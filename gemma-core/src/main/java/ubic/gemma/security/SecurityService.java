@@ -40,7 +40,6 @@ import ubic.gemma.model.association.RelationshipImpl;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
-import ubic.gemma.model.common.auditAndSecurity.ContactImpl;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.common.description.LocalFileImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
@@ -86,7 +85,7 @@ public class SecurityService {
      * composition. In principle this shouldn't needed in most cases because the methods for the corresponding services
      * are not interccepted anyway.
      */
-    static {// TODO use parent classes and interface (like DesignElement.class)
+    static {// TODO use parent classes and interfaces (like DesignElement.class)
         // unsecuredClasses.add( DataVectorImpl.class );
         unsecuredClasses.add( DesignElementDataVectorImpl.class );
         unsecuredClasses.add( DatabaseEntryImpl.class );
@@ -106,7 +105,6 @@ public class SecurityService {
         // TODO remove these
         unsecuredClasses.add( BioAssayImpl.class );
         unsecuredClasses.add( ExperimentalFactorImpl.class );
-        unsecuredClasses.add( ContactImpl.class );
     }
 
     /**
@@ -150,7 +148,6 @@ public class SecurityService {
      * @throws IllegalArgumentException
      */
     private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal ) {
-        String recipient = configureWhoToRunAs( targetObject, mask, authentication, principal );
 
         Class clazz = targetObject.getClass();
         Method[] methods = clazz.getMethods();
@@ -214,7 +211,8 @@ public class SecurityService {
             }
 
         }
-        changeMask( targetObject, mask, recipient );
+        String recipient = configureWhoToRunAs( targetObject, mask, authentication, principal );
+        if ( recipient != null ) changeMask( targetObject, mask, recipient );
     }
 
     /**
@@ -247,7 +245,11 @@ public class SecurityService {
 
         /* id of acl_object_identity */
         Long objectIdentityId = securableDao.getAclObjectIdentityId( object, id );
-        String recipient = securableDao.getRecipient( objectIdentityId );
+
+        String recipient = null;
+        if ( objectIdentityId == null ) return recipient;
+
+        recipient = securableDao.getRecipient( objectIdentityId );
 
         if ( principal.toString().equals( ADMINISTRATOR ) ) {
             if ( !recipient.equals( principal.toString() ) ) {
