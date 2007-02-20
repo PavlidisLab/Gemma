@@ -32,19 +32,16 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.springframework.util.StringUtils;
 
 import ubic.gemma.model.association.RelationshipImpl;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactImpl;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.LocalFileImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
@@ -102,12 +99,14 @@ public class SecurityService {
         unsecuredClasses.add( GeneProductImpl.class );
         unsecuredClasses.add( GeneAliasImpl.class );
         unsecuredClasses.add( QuantitationTypeImpl.class );
-        unsecuredClasses.add( BioAssayImpl.class );// TODO remove these
-        unsecuredClasses.add( ExperimentalFactorImpl.class );
+        // these are not of type Securable
         unsecuredClasses.add( AuditTrailImpl.class );
-        unsecuredClasses.add( ContactImpl.class );
         unsecuredClasses.add( DatabaseEntryImpl.class );
         unsecuredClasses.add( LocalFileImpl.class );
+        // TODO remove these
+        unsecuredClasses.add( BioAssayImpl.class );
+        unsecuredClasses.add( ExperimentalFactorImpl.class );
+        unsecuredClasses.add( ContactImpl.class );
     }
 
     /**
@@ -179,18 +178,6 @@ public class SecurityService {
                 if ( returnType.getName().equalsIgnoreCase( Class.class.getName() ) ) {
                     continue;
                 }
-                if ( returnType.getName().equalsIgnoreCase( AuditTrail.class.getName() ) ) {
-                    continue;// TODO add to list of objects that need processing
-                }
-                if ( returnType.getName().equalsIgnoreCase( DatabaseEntry.class.getName() ) ) {
-                    continue;// TODO remove this check, add null check for acl_object_identity
-                }
-                if ( returnType.getName().equalsIgnoreCase( LocalFile.class.getName() ) ) {
-                    continue;// TODO remove this check, add null check for acl_object_identity
-                }
-                if ( returnType.getName().equalsIgnoreCase( Contact.class.getName() ) ) {
-                    continue;// TODO remove this check, add null check for acl_object_identity
-                }
 
                 try {
                     if ( returnType == java.util.Collection.class ) {
@@ -214,8 +201,11 @@ public class SecurityService {
                         }
                     } else {
                         Object ob = clazz.getMethod( name, null ).invoke( targetObject, null );
-                        if ( ob == null || ( ( Securable ) ob ).getId() == null
-                                || unsecuredClasses.contains( ob.getClass() ) ) continue;
+
+                        ob = getImplementationFromProxy( ob );
+
+                        if ( ob == null || unsecuredClasses.contains( ob.getClass() )
+                                || ( ( Securable ) ob ).getId() == null ) continue;
                         makePrivate( ob, mask );// recursive
                     }
                 } catch ( Exception e ) {
@@ -311,6 +301,23 @@ public class SecurityService {
      */
     public static Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    /**
+     * Returns the Implementation object from the HibernateProxy. If target is not an instanceof HibernateProxy, target
+     * is returned.
+     * 
+     * @param target
+     * @return Object
+     */
+    public static Object getImplementationFromProxy( Object target ) {
+        // TODO move method in a utility as it is accesseded by daos (SeurableDaoImpl)
+        if ( target instanceof HibernateProxy ) {
+            HibernateProxy proxy = ( HibernateProxy ) target;
+            return proxy.getHibernateLazyInitializer().getImplementation();
+        }
+
+        return target;
     }
 
     /**

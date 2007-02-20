@@ -20,6 +20,8 @@ package ubic.gemma.model.common;
 
 import org.hibernate.proxy.HibernateProxy;
 
+import ubic.gemma.security.SecurityService;
+
 /**
  * @author keshav
  * @version $Id$
@@ -51,16 +53,9 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      */
     public Long getAclObjectIdentityId( Object target, Long id ) {
 
-        String object = target.getClass().getName() + ":" + id;
+        String objectIdentity = createObjectIdentityFromObject( target, id );
 
-        if ( target instanceof HibernateProxy ) {
-
-            HibernateProxy proxy = ( HibernateProxy ) target;
-            Object implementation = proxy.getHibernateLazyInitializer().getImplementation();
-            object = implementation.getClass().getName() + ":" + id;
-        }
-
-        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity=\'" + object + "\'";
+        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity=\'" + objectIdentity + "\'";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
@@ -71,5 +66,23 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /**
+     * Creates the object_identity to be used in the acl_object_identity table.
+     * 
+     * @param target
+     * @param id
+     * @return String
+     */
+    private String createObjectIdentityFromObject( Object target, Long id ) {
+
+        Object implementation = null;
+        if ( target instanceof HibernateProxy ) {
+            implementation = SecurityService.getImplementationFromProxy( target );
+            return implementation.getClass().getName() + ":" + id;
+        }
+
+        return target.getClass().getName() + ":" + id;
     }
 }
