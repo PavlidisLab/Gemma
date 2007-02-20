@@ -29,11 +29,10 @@ public class SecurityUtil {
      * Returns the Implementation object from the HibernateProxy. If target is not an instanceof HibernateProxy, target
      * is returned.
      * 
-     * @param target
-     * @return Object
+     * @param target The proxy
+     * @return Object The implementation
      */
     public static Object getImplementationFromProxy( Object target ) {
-        // TODO move method in a utility as it is accesseded by daos (SeurableDaoImpl)
         if ( target instanceof HibernateProxy ) {
             HibernateProxy proxy = ( HibernateProxy ) target;
             return proxy.getHibernateLazyInitializer().getImplementation();
