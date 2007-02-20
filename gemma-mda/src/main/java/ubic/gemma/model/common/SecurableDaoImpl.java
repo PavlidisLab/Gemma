@@ -60,7 +60,11 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
             Integer result = ( Integer ) queryObject.uniqueResult();
-            Long longId = new Long( result );
+
+            Long longId = null;
+            if ( result != null ) {
+                longId = new Long( result );
+            }
 
             return longId;
         } catch ( org.hibernate.HibernateException ex ) {
