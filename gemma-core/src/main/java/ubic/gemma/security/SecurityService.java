@@ -32,7 +32,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.springframework.util.StringUtils;
 
@@ -52,6 +51,7 @@ import ubic.gemma.model.genome.TaxonImpl;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.model.genome.gene.GeneAliasImpl;
 import ubic.gemma.model.genome.gene.GeneProductImpl;
+import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
@@ -199,7 +199,7 @@ public class SecurityService {
                     } else {
                         Object ob = clazz.getMethod( name, null ).invoke( targetObject, null );
 
-                        ob = getImplementationFromProxy( ob );
+                        ob = SecurityUtil.getImplementationFromProxy( ob );
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
                                 || ( ( Securable ) ob ).getId() == null ) continue;
@@ -303,23 +303,6 @@ public class SecurityService {
      */
     public static Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    /**
-     * Returns the Implementation object from the HibernateProxy. If target is not an instanceof HibernateProxy, target
-     * is returned.
-     * 
-     * @param target
-     * @return Object
-     */
-    public static Object getImplementationFromProxy( Object target ) {
-        // TODO move method in a utility as it is accesseded by daos (SeurableDaoImpl)
-        if ( target instanceof HibernateProxy ) {
-            HibernateProxy proxy = ( HibernateProxy ) target;
-            return proxy.getHibernateLazyInitializer().getImplementation();
-        }
-
-        return target;
     }
 
     /**

@@ -20,7 +20,7 @@ package ubic.gemma.model.common;
 
 import org.hibernate.proxy.HibernateProxy;
 
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
@@ -83,7 +83,7 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
 
         Object implementation = null;
         if ( target instanceof HibernateProxy ) {
-            implementation = SecurityService.getImplementationFromProxy( target );
+            implementation = SecurityUtil.getImplementationFromProxy( target );
             return implementation.getClass().getName() + ":" + id;
         }
 
