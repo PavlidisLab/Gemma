@@ -96,7 +96,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.makePrivate( ad, 6 );
+        securityService.changePermission( ad, 0 );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
@@ -121,7 +121,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         boolean fail = false;
         try {
-            securityService.makePrivate( ad, 0 );
+            securityService.changePermission( ad, 0 );
         } catch ( Exception e ) {
             fail = true;
             log.error( "TEST SUCCESSFULLY FAILED WITH: " );
@@ -130,4 +130,20 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             assertTrue( fail );
         }
     }
+
+    // /**
+    // * @throws Exception
+    // */
+    // public void testMakePrivateExpressionExperiment() throws Exception {
+    // // ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+    // ExpressionExperiment ee = ( ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" ) )
+    // .findById( 1l );
+    //
+    // SecurityService securityService = new SecurityService();
+    // securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+    // securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+    // securityService.changePermission( ee, 6 );
+    // setComplete();
+    //
+    // }
 }
