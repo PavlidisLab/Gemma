@@ -560,9 +560,12 @@ public class TestPersistentObjectHelper {
         qt.setDescription( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setIsBackground( false );
+        qt.setIsBackgroundSubtracted( false );
+        qt.setIsNormalized( false );
+        qt.setIsPreferred( false );
+        qt.setIsRatio( false );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
-        qt.setIsRatio( false );
         qt.setScale( ScaleType.LINEAR );
         return qt;
     }
