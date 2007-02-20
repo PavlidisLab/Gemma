@@ -32,16 +32,25 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.proxy.LazyInitializer;
 import org.springframework.util.StringUtils;
 
 import ubic.gemma.model.association.RelationshipImpl;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.ContactImpl;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.description.LocalFileImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
-import ubic.gemma.model.expression.bioAssayData.DataVectorImpl;
+import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.TaxonImpl;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
@@ -56,6 +65,8 @@ import ubic.gemma.model.genome.gene.GeneProductImpl;
  * @spring.property name="securableDao" ref="securableDao"
  */
 public class SecurityService {
+
+    private static final String NET_SF = "net.sf";
 
     private Log log = LogFactory.getLog( SecurityService.class );
 
@@ -79,7 +90,8 @@ public class SecurityService {
      * are not interccepted anyway.
      */
     static {// TODO use parent classes and interface (like DesignElement.class)
-        unsecuredClasses.add( DataVectorImpl.class );
+        // unsecuredClasses.add( DataVectorImpl.class );
+        unsecuredClasses.add( DesignElementDataVectorImpl.class );
         unsecuredClasses.add( DatabaseEntryImpl.class );
         unsecuredClasses.add( BioSequenceImpl.class );
         unsecuredClasses.add( RelationshipImpl.class );
@@ -90,6 +102,12 @@ public class SecurityService {
         unsecuredClasses.add( GeneProductImpl.class );
         unsecuredClasses.add( GeneAliasImpl.class );
         unsecuredClasses.add( QuantitationTypeImpl.class );
+        unsecuredClasses.add( BioAssayImpl.class );// TODO remove these
+        unsecuredClasses.add( ExperimentalFactorImpl.class );
+        unsecuredClasses.add( AuditTrailImpl.class );
+        unsecuredClasses.add( ContactImpl.class );
+        unsecuredClasses.add( DatabaseEntryImpl.class );
+        unsecuredClasses.add( LocalFileImpl.class );
     }
 
     /**
@@ -99,6 +117,7 @@ public class SecurityService {
      * @param mask
      */
     public void makePrivate( Object object, int mask ) {
+
         log.debug( "Changing acl of object " + object + "." );
 
         if ( mask != PUBLIC_MASK && mask != PRIVATE_MASK ) {
@@ -113,9 +132,7 @@ public class SecurityService {
         if ( object instanceof Securable ) {
 
             processAssociations( object, mask, authentication, principal );
-        }
-
-        else {
+        } else {
             throw new RuntimeException( "Object not Securable.  Cannot change permissions for object of type " + object
                     + "." );
         }
@@ -144,6 +161,12 @@ public class SecurityService {
             if ( StringUtils.startsWithIgnoreCase( name, ACCESSOR_PREFIX ) ) {
                 Class returnType = method.getReturnType();
 
+                if ( returnType.getName().equalsIgnoreCase( LazyInitializer.class.getName() ) ) {
+                    continue;
+                }
+                if ( returnType.getName().contains( NET_SF ) ) {
+                    continue;
+                }
                 if ( returnType.getName().equalsIgnoreCase( String.class.getName() ) ) {
                     continue;
                 }
@@ -158,6 +181,15 @@ public class SecurityService {
                 }
                 if ( returnType.getName().equalsIgnoreCase( AuditTrail.class.getName() ) ) {
                     continue;// TODO add to list of objects that need processing
+                }
+                if ( returnType.getName().equalsIgnoreCase( DatabaseEntry.class.getName() ) ) {
+                    continue;// TODO remove this check, add null check for acl_object_identity
+                }
+                if ( returnType.getName().equalsIgnoreCase( LocalFile.class.getName() ) ) {
+                    continue;// TODO remove this check, add null check for acl_object_identity
+                }
+                if ( returnType.getName().equalsIgnoreCase( Contact.class.getName() ) ) {
+                    continue;// TODO remove this check, add null check for acl_object_identity
                 }
 
                 try {
@@ -177,13 +209,14 @@ public class SecurityService {
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
                                 log.debug( "process " + ob );
-                                changeMask( ob, mask, recipient );
+                                makePrivate( ob, mask );// recursive
                             }
                         }
                     } else {
                         Object ob = clazz.getMethod( name, null ).invoke( targetObject, null );
-                        if ( ob == null || ( ( Securable ) ob ).getId() == null ) continue;
-                        changeMask( ob, mask, recipient );
+                        if ( ob == null || ( ( Securable ) ob ).getId() == null
+                                || unsecuredClasses.contains( ob.getClass() ) ) continue;
+                        makePrivate( ob, mask );// recursive
                     }
                 } catch ( Exception e ) {
                     throw new RuntimeException( "Error is: " + e );
