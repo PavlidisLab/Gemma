@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common;
 
+import org.hibernate.proxy.HibernateProxy;
+
 /**
  * @author keshav
  * @version $Id$
@@ -49,9 +51,16 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      */
     public Long getAclObjectIdentityId( Object target, Long id ) {
 
-        String objectId = target.getClass().getName() + ":" + id;
+        String object = target.getClass().getName() + ":" + id;
 
-        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity=\'" + objectId + "\'";
+        if ( target instanceof HibernateProxy ) {
+
+            HibernateProxy proxy = ( HibernateProxy ) target;
+            Object implementation = proxy.getHibernateLazyInitializer().getImplementation();
+            object = implementation.getClass().getName() + ":" + id;
+        }
+
+        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity=\'" + object + "\'";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
