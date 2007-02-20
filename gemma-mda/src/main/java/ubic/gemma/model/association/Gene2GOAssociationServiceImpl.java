@@ -44,6 +44,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
 
         OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
         Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
+        searchOntologies.add( searchOnto );
         
         return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );
         

@@ -134,7 +134,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
     @Override
     public java.util.Collection<OntologyEntry> handleGetAllChildren( final OntologyEntry ontologyEntry ) {
         final Collection<OntologyEntry> children = new HashSet<OntologyEntry>();
-        if ( ontologyEntry.getId() == null ) {
+        if ( (ontologyEntry == null) || (ontologyEntry.getId() == null )) {
             this.getChildren( ontologyEntry, children );
         } else {
             this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
@@ -157,6 +157,9 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
      * @return
      */
     private void getChildren( OntologyEntry start, Collection<OntologyEntry> addTo ) {
+        if (start == null)
+            return;
+        
         for ( OntologyEntry oe : start.getAssociations() ) {
             addTo.add( oe );
             if ( log.isDebugEnabled() ) log.debug( "Adding " + oe );
