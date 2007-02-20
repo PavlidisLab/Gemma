@@ -177,8 +177,8 @@ public class MainMenuController extends BaseFormController {
         mav.addObject( "taxonCount", taxonCount );
         mav.addObject( "expressionExperimentCount", expressionExperimentCount );
 
-        WhatsNew wn = getWhatsNewReport();
-        mav.addObject( "whatsNew", wn );
+        //WhatsNew wn = getWhatsNewReport();
+        //mav.addObject( "whatsNew", wn );
         mav.addObject( "timeSpan", "In the past day" );
         return mav;
     }
