@@ -71,7 +71,7 @@ Results for
 			&nbsp;&nbsp;Found
 		</td>
 		<td>
-			<c:out value="${numMatchedLinks}" />
+			<c:out value="${numGenes}" />
 		</td>
 	</tr>
 	<tr>
@@ -90,7 +90,50 @@ Results for
 			<c:out value="${numNegativeCoexpressedGenes}" />
 		</td>
 	</tr>
-	
+<authz:authorize ifAnyGranted="admin">
+	<tr>
+		<td colspan=2>
+			Predicted Genes
+		</td>
+	</tr>
+	<tr>
+		<td>
+			&nbsp;&nbsp;Found
+		</td>
+		<td>
+			<c:out value="${numPredictedGenes}" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			&nbsp;&nbsp;Met stringency
+		</td>
+		<td>
+			<c:out value="${numStringencyPredictedGenes}" />
+		</td>
+	</tr>	
+	<tr>
+		<td colspan=2>
+			Probe Aligned Regions
+		</td>
+	</tr>
+	<tr>
+		<td>
+			&nbsp;&nbsp;Found
+		</td>
+		<td>
+			<c:out value="${numProbeAlignedRegions}" />
+		</td>
+	</tr>	
+	<tr>
+		<td>
+			&nbsp;&nbsp;Met stringency
+		</td>
+		<td>
+			<c:out value="${numStringencyProbeAlignedRegions}" />
+		</td>
+	</tr>
+</authz:authorize>
 </table>
 </c:if>
 

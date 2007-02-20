@@ -29,6 +29,7 @@ public class CoexpressionValueObject {
     private String geneName;
     private Long geneId;
     private String geneOfficialName;
+    private String geneType;
 
     @Deprecated
     private Double pValue;
@@ -230,4 +231,17 @@ public class CoexpressionValueObject {
         return this.negativeScores.keySet().size();
     }
 
+    /**
+     * @return the geneType
+     */
+    public String getGeneType() {
+        return geneType;
+    }
+
+    /**
+     * @param geneType the geneType to set
+     */
+    public void setGeneType( String geneType ) {
+        this.geneType = geneType;
+    }
 }

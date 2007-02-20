@@ -202,29 +202,59 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // filter out stringency failures
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
-
+        // count the number of genes, predictedGenes, and probeAlignedRegions, both filtered and unfiltered by stringency
+        int numGenes = 0;
+        int numPredictedGenes = 0;
+        int numProbeAlignedRegions = 0;
+   
+        int numStringencyGenes = 0;
+        int numStringencyPredictedGenes = 0;
+        int numStringencyProbeAlignedRegions = 0;
+        
         for ( Long key : geneMap.keySet() ) {
             CoexpressionValueObject v = geneMap.get( key );
             boolean added = false;
+            if ( v.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
+                numGenes++;
+                if ( (v.getPositiveLinkCount() >= stringency) || (v.getNegativeLinkCount() >= stringency) ){
+                    numStringencyGenes++;    
+                }
+                
+                if ( v.getPositiveLinkCount() >= stringency ) {
 
-            if ( v.getPositiveLinkCount() >= stringency ) {
-                positiveLinkCount++;
-                added = true;
-                // add in coexpressions that match stringency
-                coexpressions.getCoexpressionData().add( v );
-                // add in expression experiments that match stringency
-                ees.addAll( v.getExpressionExperimentValueObjects() );
+  
+                    positiveLinkCount++;
+                    added = true;
+                    // add in coexpressions that match stringency
+                    coexpressions.getCoexpressionData().add( v );
+                    // add in expression experiments that match stringency
+                    ees.addAll( v.getExpressionExperimentValueObjects() );
+
+                }
+
+                if ( v.getNegativeLinkCount() >= stringency ) {
+                    negativeLinkCount++;
+                    if ( added ) continue; // no point in adding the same element twice
+                    // add in coexpressions that match stringency
+                    coexpressions.getCoexpressionData().add( v );
+                    // add in expression experiments that match stringency
+                    ees.addAll( v.getExpressionExperimentValueObjects() );
+
+                }
             }
-
-            if ( v.getNegativeLinkCount() >= stringency ) {
-                negativeLinkCount++;
-                if ( added ) continue; // no point in adding the same element twice
-                // add in coexpressions that match stringency
-                coexpressions.getCoexpressionData().add( v );
-                // add in expression experiments that match stringency
-                ees.addAll( v.getExpressionExperimentValueObjects() );
-
+            else if (v.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" )) {
+                numPredictedGenes++;
+                if ( (v.getPositiveLinkCount() >= stringency) || (v.getNegativeLinkCount() >= stringency) ){
+                    numStringencyPredictedGenes++;    
+                }
             }
+            else if (v.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" )) {
+                numProbeAlignedRegions++;
+                if ( (v.getPositiveLinkCount() >= stringency) || (v.getNegativeLinkCount() >= stringency) ){
+                    numStringencyProbeAlignedRegions++;    
+                }
+            }
+            
         }
         // add count of pruned matches to coexpression data
         coexpressions.setPositiveStringencyLinkCount( positiveLinkCount );
@@ -232,6 +262,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // add the distinct set of expression experiments involved
         // in the query to coexpression data
         coexpressions.setExpressionExperiments( ees );
+        // add the counts for genes, predicted genes, and probe-aligned region
+        coexpressions.setNumGenes( numGenes );
+        coexpressions.setNumPredictedGenes( numPredictedGenes );
+        coexpressions.setNumProbeAlignedRegions( numProbeAlignedRegions );
+        coexpressions.setNumStringencyGenes( numStringencyGenes );
+        coexpressions.setNumStringencyPredictedGenes( numStringencyPredictedGenes );
+        coexpressions.setNumStringencyProbeAlignedRegions( numStringencyProbeAlignedRegions );
     }
 
     private void debug( List results ) {
@@ -348,7 +385,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut FROM " + " GENE2CS gcIn "
+                + "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut, geneout.class as geneType  FROM " + " GENE2CS gcIn "
                 + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS " + " INNER JOIN "
                 + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
                 + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "
@@ -379,6 +416,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             vo.setGeneId( geneId );
             vo.setGeneName( scroll.getString( 1 ) );
             vo.setGeneOfficialName( scroll.getString( 2 ) );
+            vo.setGeneType( scroll.getString( 10 ) );
             geneMap.put( geneId, vo );
         }
 
@@ -436,7 +474,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
-
+        queryObject.addScalar( "geneType", new StringType() );
+        
         queryObject.setLong( "id", id );
         // this is to make the query faster by narrowing down the gene join
         // queryObject.setLong( "taxonId", gene.getTaxon().getId() );

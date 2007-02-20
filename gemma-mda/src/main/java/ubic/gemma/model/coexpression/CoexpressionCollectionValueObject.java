@@ -32,12 +32,24 @@ public class CoexpressionCollectionValueObject {
     // requirements
     private int negativeStringencyLinkCount;
     private Collection<ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were
+    
+    // the number of actual genes, predicted genes, and probe aligned regions in the query, unfiltered by stringency
+    private int numGenes;
+    private int numPredictedGenes;
+    private int numProbeAlignedRegions;
+    
+    // the number of actual genes, predicted genes, and probe aligned regions in the query, filtered by stringency
+    private int numStringencyGenes;
+    private int numStringencyPredictedGenes;
+    private int numStringencyProbeAlignedRegions;
+    
     // involved in the query
     private Collection<CoexpressionValueObject> coexpressionData;
     private double firstQuerySeconds;
     private double secondQuerySeconds;
     private double postProcessSeconds;
     private double elapsedWallSeconds;
+    
 
     /**
      * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
@@ -62,6 +74,14 @@ public class CoexpressionCollectionValueObject {
         linkCount = 0;
         positiveStringencyLinkCount = 0;
         negativeStringencyLinkCount = 0;
+        numGenes = 0;
+        numPredictedGenes = 0;
+        numProbeAlignedRegions = 0;
+        
+        numStringencyGenes = 0;
+        numStringencyProbeAlignedRegions = 0;
+        numStringencyPredictedGenes = 0;
+        
         coexpressionData = new HashSet<CoexpressionValueObject>();
         expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
     }
@@ -179,6 +199,90 @@ public class CoexpressionCollectionValueObject {
 
     public double getSecondQuerySeconds() {
         return secondQuerySeconds;
+    }
+
+    /**
+     * @return the numGenes
+     */
+    public int getNumGenes() {
+        return numGenes;
+    }
+
+    /**
+     * @param numGenes the numGenes to set
+     */
+    public void setNumGenes( int numGenes ) {
+        this.numGenes = numGenes;
+    }
+
+    /**
+     * @return the numPredictedGenes
+     */
+    public int getNumPredictedGenes() {
+        return numPredictedGenes;
+    }
+
+    /**
+     * @param numPredictedGenes the numPredictedGenes to set
+     */
+    public void setNumPredictedGenes( int numPredictedGenes ) {
+        this.numPredictedGenes = numPredictedGenes;
+    }
+
+    /**
+     * @return the numProbeAlignedRegions
+     */
+    public int getNumProbeAlignedRegions() {
+        return numProbeAlignedRegions;
+    }
+
+    /**
+     * @param numProbeAlignedRegions the numProbeAlignedRegions to set
+     */
+    public void setNumProbeAlignedRegions( int numProbeAlignedRegions ) {
+        this.numProbeAlignedRegions = numProbeAlignedRegions;
+    }
+
+    /**
+     * @return the numStringencyGenes
+     */
+    public int getNumStringencyGenes() {
+        return numStringencyGenes;
+    }
+
+    /**
+     * @param numStringencyGenes the numStringencyGenes to set
+     */
+    public void setNumStringencyGenes( int numStringencyGenes ) {
+        this.numStringencyGenes = numStringencyGenes;
+    }
+
+    /**
+     * @return the numStringencyPredictedGenes
+     */
+    public int getNumStringencyPredictedGenes() {
+        return numStringencyPredictedGenes;
+    }
+
+    /**
+     * @param numStringencyPredictedGenes the numStringencyPredictedGenes to set
+     */
+    public void setNumStringencyPredictedGenes( int numStringencyPredictedGenes ) {
+        this.numStringencyPredictedGenes = numStringencyPredictedGenes;
+    }
+
+    /**
+     * @return the numStringencyProbeAlignedRegions
+     */
+    public int getNumStringencyProbeAlignedRegions() {
+        return numStringencyProbeAlignedRegions;
+    }
+
+    /**
+     * @param numStringencyProbeAlignedRegions the numStringencyProbeAlignedRegions to set
+     */
+    public void setNumStringencyProbeAlignedRegions( int numStringencyProbeAlignedRegions ) {
+        this.numStringencyProbeAlignedRegions = numStringencyProbeAlignedRegions;
     }
 
 }
