@@ -156,7 +156,7 @@ public class SecurityFormController extends BaseFormController {
                     "Supported masks are 0 (private) and 6 (public), not " + mask );
 
         // ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(), "Making data private." );
-        securityService.makePrivate( target, aclMask );
+        securityService.changePermission( target, aclMask );
         // ProgressManager.destroyProgressJob( job );
 
         saveMessage( request, target + " made " + mask + "." );

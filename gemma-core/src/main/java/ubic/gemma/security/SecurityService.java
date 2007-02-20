@@ -113,7 +113,7 @@ public class SecurityService {
      * @param object
      * @param mask
      */
-    public void makePrivate( Object object, int mask ) {
+    public void changePermission( Object object, int mask ) {
 
         log.debug( "Changing acl of object " + object + "." );
 
@@ -193,7 +193,7 @@ public class SecurityService {
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
                                 log.debug( "process " + ob );
-                                makePrivate( ob, mask );// recursive
+                                changePermission( ob, mask );// recursive
                             }
                         }
                     } else {
@@ -203,7 +203,7 @@ public class SecurityService {
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
                                 || ( ( Securable ) ob ).getId() == null ) continue;
-                        makePrivate( ob, mask );// recursive
+                        changePermission( ob, mask );// recursive
                     }
                 } catch ( Exception e ) {
                     throw new RuntimeException( "Error is: " + e );
