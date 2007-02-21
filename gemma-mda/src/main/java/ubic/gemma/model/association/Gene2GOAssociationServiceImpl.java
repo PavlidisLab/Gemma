@@ -19,12 +19,12 @@
 
 package ubic.gemma.model.association;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-
 
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociationService
@@ -32,31 +32,34 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
-    
-    
-
-
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
      */
     @Override
     protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
 
         OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
-        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
+
+        if ( searchOnto == null ) return new ArrayList();
+        
+        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );               
         searchOntologies.add( searchOnto );
-        
+
         return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );
-        
+
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
-      return this.getGene2GOAssociationDao().findByGene(gene);
-        
+        return this.getGene2GOAssociationDao().findByGene( gene );
+
     }
 
     /**
@@ -85,7 +88,5 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception {
         return this.getGene2GOAssociationDao().findOrCreate( gene2GOAssociation );
     }
-
-
 
 }

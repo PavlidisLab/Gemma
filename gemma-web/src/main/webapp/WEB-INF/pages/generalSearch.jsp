@@ -1,20 +1,90 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
-        <title>
-            <fmt:message key="generalSearch.title" />
-        </title>
 
-        <h2>
-            General search tool for searching Gemma
-            <br/> <br/>
-        </h2>
+<jsp:useBean id="coexpressionSearchCommand" scope="request"
+	class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
+	
+<spring:bind path="coexpressionSearchCommand.*">
+	<c:if test="${not empty status.errorMessages}">
+		<div class="error">
+			<c:forEach var="error" items="${status.errorMessages}">
+				<img src="<c:url value="/images/iconWarning.gif"/>"
+					alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<c:out value="${error}" escapeXml="false" />
+				<br />
+			</c:forEach>
+		</div>
+	</c:if>
+</spring:bind>
+	
+<title><fmt:message key="generalSearch.title" /></title>
 
-	<form name="generalSearch" action="searcher.html" method="POST">
-			<h4> Enter search criteria for searching the Gemma database here </h4>
-			<input type="text" name="searchString" size="76" />
-			<input type="submit" value="search"/>			
-		</form>
+<h2>
+	General search tool for searching Gemma
+	<br />
+	<br />
+</h2>
+
+<form name="generalSearch" action="searcher.html" method="POST">
+	<h4>
+		Enter search criteria for searching the Gemma database here
+	</h4>
+	<input type="text" name="searchString" size="76" />
+	<input type="submit" value="search" />
+
+
+	<script type='text/javascript'
+		src='/Gemma/scripts/expandableObjects.js'></script>
+		
+	<script language="javascript">
+		function toggleDisable()
+		{
+			if (document.getElementById('advancedSelect').disabled){
+				document.getElementById('advancedSelect').disabled = false;
+				document.getElementById('advancedTaxon').disabled = false;
+				}
+			else{
+				document.getElementById('advancedSelect').disabled = true;
+				document.getElementById('advancedTaxon').disabled = true;
+				}
+		}
+ 	</script>
+
+	<!-- Toggles for the expand/hide datasetList table -->
+	<span name="advancedSearch"
+		onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
+		<img src="/Gemma/images/chart_organisation_add.png" /> </span>
+	<span name="advancedSearch" style="display:none" onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
+	<img src="/Gemma/images/chart_organisation_delete.png" />
+</span>		
+
+<a href="#" onclick="toggleDisable(); return toggleVisibility('advancedSearch')" >(Advanced Search)</a> 
+
+<br/>
+<div name="advancedSearch" style="display:none">
+
+	<select id="advancedSelect" name="advancedSelect"  multiple size=4 disabled="true"> 
+		<option  value = "GoID">Find Genes by Gene Ontology Id </option>
+		<option selected value = "Gene"> Search Gene Database </option>
+		<option selected value = "DataSet">Search DataSet Database </option>
+		<option selected value = "Array">Search Array Database</option>	
+	</select>
+
+				<spring:bind path="coexpressionSearchCommand.taxon">
+					<select id="advancedTaxon" name="${status.expression}" disabled="true">
+						<c:forEach items="${taxa}" var="taxon">
+							<spring:transform value="${taxon}" var="scientificName" />
+							<option value="${scientificName}"
+								<c:if test="${status.value == scientificName}">selected </c:if>>
+								${scientificName}
+							</option>
+						</c:forEach>
+					</select>
+					
+				</spring:bind>
+	</div>
+</form>	
 		
 		<br/>
 	<c:if test="${numGenes != null}">
@@ -79,3 +149,20 @@
 					</authz:authorize>
 					<display:setProperty name="basic.empty.showtable" value="false" />
 				</display:table>
+
+				
+	<c:if test="${numGoGenes != null}">
+		<h3>		
+		The GO Term <b> <c:out value="${SearchString}"/> </b> is related to <b> <c:out value="${numGoGenes}" /> </b> Genes. 
+		</h3>	<br/> 
+	</c:if>
+
+
+	    <display:table name="goGeneList" class="list" requestURI="" id="goGeneList"  decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper" 
+            pagesize="20">	
+			<display:column property="nameLink" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
+			<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
+			<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />			
+            <display:setProperty name="basic.empty.showtable" value="false" />      
+        </display:table>				
+				
