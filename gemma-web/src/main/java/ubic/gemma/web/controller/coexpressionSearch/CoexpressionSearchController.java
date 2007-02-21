@@ -288,6 +288,8 @@ public class CoexpressionSearchController extends BaseFormController {
         Integer numMatchedLinks = coexpressions.getLinkCount();
 
         addTimingInformation( request, coexpressions );
+        
+        addStringencyInformation( stringency, coexpressions );
 
         mav.addObject( "coexpressedGenes", coexpressedGenes );
         mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
@@ -310,6 +312,17 @@ public class CoexpressionSearchController extends BaseFormController {
         watch.stop();
         log.info( "Processing after DAO call (elapsed time): " + elapsed );
         return mav;
+    }
+
+    /**
+     * @param stringency
+     * @param coexpressions
+     */
+    private void addStringencyInformation( Integer stringency, CoexpressionCollectionValueObject coexpressions ) {
+        // add in stringency filtering to the value objects
+        for ( CoexpressionValueObject vo : coexpressions.getCoexpressionData() ) {
+            vo.setStringencyFilterValue( stringency );
+        }
     }
 
     private void addTimingInformation( HttpServletRequest request, CoexpressionCollectionValueObject coexpressions ) {

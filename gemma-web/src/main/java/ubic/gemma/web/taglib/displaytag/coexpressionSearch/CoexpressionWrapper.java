@@ -61,6 +61,33 @@ public class CoexpressionWrapper extends TableDecorator {
     }
     
     /**
+     * Function to return the number of data sets for a coexpression match
+     * @return the data set count column
+     */
+    public String getLinkCount() {
+        String count = "";
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Integer positiveLinks = object.getPositiveLinkCount();
+        Integer negativeLinks = object.getNegativeLinkCount();
+        
+        if (positiveLinks != null && positiveLinks != 0) {
+            count += "<span class='positiveLink' >";
+            count += positiveLinks.toString();
+            count += "</span>";
+        }
+        
+        if (negativeLinks != null && negativeLinks != 0) {
+            if (count.length() > 0) {
+                count += "/";
+            }
+            count += "<span class='negativeLink' >";
+            count += "-" + negativeLinks.toString();
+            count += "</span>";
+        }
+        return count; 
+    }
+    
+    /**
      * Function to return the data sets for a coexpression match
      * @return the data set column
      */

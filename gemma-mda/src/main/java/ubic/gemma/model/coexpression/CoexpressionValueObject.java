@@ -39,6 +39,7 @@ public class CoexpressionValueObject {
     private Map<Long, Map<Long, Double>> positiveScores;
     private Map<Long, Map<Long, Double>> negativeScores;
     private Map<Long, Map<Long, Double>> pValues;
+    private Integer stringencyFilterValue;
 
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
@@ -51,7 +52,7 @@ public class CoexpressionValueObject {
         positiveScores = new HashMap<Long, Map<Long, Double>>();
         negativeScores = new HashMap<Long, Map<Long, Double>>();
         pValues = new HashMap<Long, Map<Long, Double>>();
-
+        stringencyFilterValue = null;
     }
 
     /**
@@ -189,7 +190,7 @@ public class CoexpressionValueObject {
 
     }
 
-    public double getNegitiveScore() {
+    public double getNegativeScore() {
 
         if ( negativeScores.keySet().size() == 0 ) return 0;
 
@@ -222,13 +223,40 @@ public class CoexpressionValueObject {
         return mean / size;
     }
 
-    public int getPositiveLinkCount() {
-        return this.positiveScores.keySet().size();
+    /**
+     * Function to return the positive link counts. If the count equals or exceeds the stringency filter value or the filter 
+     * value is not set, return the count. If the count is below the filter value, return null.
+     * @return the positive link counts
+     */
+    public Integer getPositiveLinkCount() {
+        Integer count = this.positiveScores.keySet().size();
+        if (stringencyFilterValue == null) {
+            return count;
+        }
+        else if ( count >= stringencyFilterValue ) {
+            return count;
+        }
+        else {
+            return null;
+        }
     }
 
-    public int getNegativeLinkCount() {
-
-        return this.negativeScores.keySet().size();
+    /**
+     * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the filter 
+     * value is not set, return the count. If the count is below the filter value, return null.
+     * @return the negative link counts
+     */
+    public Integer getNegativeLinkCount() {
+        Integer count = this.negativeScores.keySet().size();
+        if (stringencyFilterValue == null) {
+            return count;
+        }
+        else if ( count >= stringencyFilterValue ) {
+            return count;
+        }
+        else {
+            return null;
+        }
     }
 
     /**
@@ -243,5 +271,19 @@ public class CoexpressionValueObject {
      */
     public void setGeneType( String geneType ) {
         this.geneType = geneType;
+    }
+
+    /**
+     * @return the stringencyFilterValue
+     */
+    public Integer getStringencyFilterValue() {
+        return stringencyFilterValue;
+    }
+
+    /**
+     * @param stringencyFilterValue the stringencyFilterValue to set
+     */
+    public void setStringencyFilterValue( Integer stringencyFilterValue ) {
+        this.stringencyFilterValue = stringencyFilterValue;
     }
 }

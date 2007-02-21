@@ -193,7 +193,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
             if ( co.getNegativeLinkCount() >= toUseStringency ) {
                 g2gCoexpression.setNumDataSets( co.getNegativeLinkCount() );
-                g2gCoexpression.setEffect( co.getNegitiveScore() );
+                g2gCoexpression.setEffect( co.getNegativeScore() );
                 gene2geneS.create( g2gCoexpression );
                 persistedCount++;
             }
@@ -206,7 +206,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
             }
 
             log.debug( "Persisted: " + firstGene.getOfficialSymbol() + " --> " + secondGene.getOfficialSymbol() + " ( "
-                    + co.getNegitiveScore() + " , +" + co.getPositiveScore() + " )" );
+                    + co.getNegativeScore() + " , +" + co.getPositiveScore() + " )" );
 
             // TODO optimization: this could be cached and done in a collection create after the for loop. Faster at the
             // cost of higher memory requirements.
