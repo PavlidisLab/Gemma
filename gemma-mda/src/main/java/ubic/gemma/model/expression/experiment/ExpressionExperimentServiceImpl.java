@@ -18,11 +18,20 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -319,6 +328,99 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
             Collection quantitationTypes ) throws Exception {
         return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, quantitationTypes );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetLastLinkAnalysis( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not LinkAnalysis events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof LinkAnalysisEvent ) {
+                        if ( event == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetLastMissingValueAnalysis( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not LinkAnalysis events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof MissingValueAnalysisEvent ) {
+                        if ( event == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetLastRankComputation( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not LinkAnalysis events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof RankComputationEvent ) {
+                        if ( event == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
     }
 
 }

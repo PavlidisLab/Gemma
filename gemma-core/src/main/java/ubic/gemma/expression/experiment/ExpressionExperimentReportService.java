@@ -206,6 +206,26 @@ public class ExpressionExperimentReportService {
     }
     
     /**
+     * fills in event information from the database. This will only retrieve the
+     * latest event (if any).
+     * @return the filled out value objects
+     */
+    public void fillEventInformation( Collection vos ) {
+        for ( Object object : vos ) {
+            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+            ExpressionExperimentValueObject cacheVo = retrieveValueObject( Long.parseLong( eeVo.getId() ) );
+            if ( cacheVo != null ) {
+                eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
+                eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
+                eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
+                eeVo.setDateCached( cacheVo.getDateCached() );
+                eeVo.setDateCreated( cacheVo.getDateCreated() );
+                eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
+            }
+        }
+    }
+    
+    /**
      * @return the serialized value objects
      *
      */

@@ -831,4 +831,45 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetAuditEvents( Collection ids ) throws Exception {
+        final String queryString = "select ee.id, auditEvent from ExpressionExperimentImpl ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent " +
+                " where ee.id in (:ids) ";
+    try {
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        queryObject.setParameterList( "ids", ids );
+        ScrollableResults list = queryObject.scroll();
+        Map<Long,Collection<AuditEvent>> eventMap = new HashMap<Long,Collection<AuditEvent>>();
+        // process list of expression experiment ids that have events
+        while ( list.next() ) {
+            Long id = list.getLong( 0 );
+            AuditEvent event = (AuditEvent) list.get( 1 );
+
+            if (eventMap.containsKey( id )){
+                Collection<AuditEvent> events = eventMap.get( id );
+                events.add( event );
+            }
+            else {
+                Collection<AuditEvent> events = new ArrayList<AuditEvent>();
+                events.add( event );
+                eventMap.put( id, events );
+            }
+        }
+        // add in expression experiment ids that do not have events. Set their values to null.
+        for ( Object object : ids ) {
+            Long id = (Long) object;
+            if (!eventMap.containsKey( id )) {
+                eventMap.put( id, null );
+            }
+        }
+        return eventMap;
+    } catch ( org.hibernate.HibernateException ex ) {
+        throw super.convertHibernateAccessException( ex );
+    }
+    }
+
+
 }
