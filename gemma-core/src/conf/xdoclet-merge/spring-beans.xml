@@ -125,7 +125,7 @@
 	 </bean>
 
 	 
-	 	 <bean id="geneGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	 <bean id="geneGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 	   <property name="compass"><ref bean="compassGene" /></property>
 	   <property name="gpsDevices">
 	     <list>
@@ -135,6 +135,7 @@
 	     </list>
 	   </property>
 	 </bean>
+	 
 	  <bean id="arrayGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 	   <property name="compass"><ref bean="compassArray" /></property>
 	   <property name="gpsDevices">
@@ -145,6 +146,18 @@
 	     </list>
 	   </property>
 	 </bean>
+	 
+	 	 <bean id="ontologyGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	   <property name="compass"><ref bean="compassOntology" /></property>
+	   <property name="gpsDevices">
+	     <list>
+             <bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+                 <property name="gpsDevice" ref="hibernateGpsDevice" />
+             </bean>
+	     </list>
+	   </property>
+	 </bean>
+	 
 
 <!-- Quartz Indexing Configuration -->
 <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">

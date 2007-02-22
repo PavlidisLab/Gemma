@@ -66,6 +66,7 @@
 
 	<select id="advancedSelect" name="advancedSelect"  multiple size=4 disabled="true"> 
 		<option  value = "GoID">Find Genes by Gene Ontology Id </option>
+		<option  value = "ontology">Search Ontology Database </option>		
 		<option selected value = "Gene"> Search Gene Database </option>
 		<option selected value = "DataSet">Search DataSet Database </option>
 		<option selected value = "Array">Search Array Database</option>	
@@ -165,4 +166,23 @@
 			<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />			
             <display:setProperty name="basic.empty.showtable" value="false" />      
         </display:table>				
+				
+
+<c:if test="${numOntologyEntries > 0 }">
+	<h3>
+	Your search for <b> <c:out value="${SearchString}"/>  </b> found   <b> <c:out value="${numOntologyEntries}" /> </b> Ontology Terms	
+	</h3>
+</c:if>
+
+<display:table name="ontologyEntries" class="list" requestURI=""
+	id="ontologyEntriesList" pagesize="10"
+	decorator="ubic.gemma.web.taglib.displaytag.OntologyWrapper">
+	<display:column property="accession" sortable="true" maxWords="20" />
+	<display:column property="value" sortable="true" maxWords="20" />
+	<display:column property="category" sortable="true" maxWords="20" />
+	<display:column property="description" sortable="true" maxWords="20" />
+	<display:setProperty name="basic.empty.showtable" value="false" />
+</display:table>
+				
+				
 				

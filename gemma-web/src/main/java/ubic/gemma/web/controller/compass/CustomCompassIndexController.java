@@ -60,6 +60,7 @@ import ubic.gemma.web.controller.MultiBackgroundProcessingController;
  * @spring.property name="arrayGps" ref="arrayGps"
  * @spring.property name="expressionGps" ref="expressionGps"
  * @spring.property name="geneGps" ref="geneGps"
+ * @spring.property name="ontologyGps" ref="ontologyGps"
  * @spring.property name="formView" value="indexer"
  * @spring.property name="successView" value="indexer"
  */
@@ -71,28 +72,32 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     private CompassGpsInterfaceDevice expressionGps;
     private CompassGpsInterfaceDevice arrayGps;
     private CompassGpsInterfaceDevice geneGps;
+    private CompassGpsInterfaceDevice ontologyGps;
 
-    
-    
-    /* (non-Javadoc)
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,   BindException errors)
-            throws Exception {
-        
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
+
         IndexJob index;
 
         if ( StringUtils.hasText( request.getParameter( "geneIndex" ) ) ) {
-            index = new IndexJob( request, geneGps, "Gene Index" );            
+            index = new IndexJob( request, geneGps, "Gene Index" );
         } else if ( StringUtils.hasText( request.getParameter( "eeIndex" ) ) ) {
             index = new IndexJob( request, expressionGps, "Dataset Index" );
-        } else if ( StringUtils.hasText( request.getParameter( "arrayIndex" ) ) )
+        } else if ( StringUtils.hasText( request.getParameter( "arrayIndex" ) ) ) {
             index = new IndexJob( request, arrayGps, "Array Index" );
+        } else if ( StringUtils.hasText( request.getParameter( "ontologyIndex" ) ) )
+            index = new IndexJob( request, ontologyGps, "Ontology Index" );
         else
             return new ModelAndView( this.getFormView() );
 
         return startJob( request, index );
-       
+
     }
 
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
@@ -115,26 +120,22 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
-        if ( request.getParameter( "geneIndex" ) != null )  {
+        if ( request.getParameter( "geneIndex" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
-        if ( request.getParameter( "eeIndex" ) != null )  {
+        if ( request.getParameter( "eeIndex" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
-        if ( request.getParameter( "arrayIndex" ) != null )  {
+        if ( request.getParameter( "arrayIndex" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
- 
-        
+        if ( request.getParameter( "ontologyIndex" ) != null ) {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
 
         return super.showForm( request, response, errors );
     }
 
-
-
-   
-
-    
     /**
      * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      * 
@@ -147,7 +148,6 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         return request;
     }
 
-
     /**
      * <hr>
      * <p>
@@ -158,12 +158,12 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
      *          for creating a seperate thread that will delete the compass ee index
      */
     class IndexJob extends BackgroundControllerJob<ModelAndView> {
-     
+
         private CompassGpsInterfaceDevice gpsDevice;
         private String description;
-        
+
         public IndexJob( HttpServletRequest request, CompassGpsInterfaceDevice gpsDevice, String description ) {
-            super( request, getMessageUtil() );           
+            super( request, getMessageUtil() );
             this.gpsDevice = gpsDevice;
             this.description = description;
         }
@@ -180,7 +180,7 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
 
             job.updateProgress( "Preparing to rebuild " + this.description );
             log.info( "Preparing to rebuild " + this.description );
-            
+
             CompassUtils.rebuildCompassIndex( gpsDevice );
             time = System.currentTimeMillis() - time;
             CompassIndexResults indexResults = new CompassIndexResults( time );
@@ -189,12 +189,11 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
 
             ProgressManager.destroyProgressJob( job );
 
-            ModelAndView mv = new ModelAndView("indexer");
+            ModelAndView mv = new ModelAndView( "indexer" );
             mv.addObject( "time", time );
-            mv.addObject("description", this.description );
-            
+            mv.addObject( "description", this.description );
+
             return mv;
-            
 
         }
     }
@@ -239,6 +238,20 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
      */
     public void setGeneGps( CompassGpsInterfaceDevice geneGps ) {
         this.geneGps = geneGps;
+    }
+
+    /**
+     * @return the ontologyGps
+     */
+    public CompassGpsInterfaceDevice getOntologyGps() {
+        return ontologyGps;
+    }
+
+    /**
+     * @param ontologyGps the ontologyGps to set
+     */
+    public void setOntologyGps( CompassGpsInterfaceDevice ontologyGps ) {
+        this.ontologyGps = ontologyGps;
     }
 
 }

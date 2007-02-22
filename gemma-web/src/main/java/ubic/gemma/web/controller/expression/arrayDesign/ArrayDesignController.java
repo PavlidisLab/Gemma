@@ -373,7 +373,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             return showAll( request, response );
         }
 
-        List<ArrayDesign> searchResults = searchService.compassArrayDesignSearch( filter );
+        Collection<ArrayDesign> searchResults = searchService.compassArrayDesignSearch( filter );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );

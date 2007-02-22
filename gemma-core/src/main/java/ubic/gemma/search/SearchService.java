@@ -46,6 +46,7 @@ import org.compass.spring.web.mvc.CompassSearchResults;
 
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -71,6 +72,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="geneBean" ref="compassGene"
  * @spring.property name="eeBean" ref="compassExpression"
  * @spring.property name="arrayBean" ref="compassArray"
+ * @spring.property name="ontologyBean" ref="compassOntology"
  */
 public class SearchService {
 
@@ -84,25 +86,26 @@ public class SearchService {
     private Compass geneBean;
     private Compass eeBean;
     private Compass arrayBean;
-
+    private Compass ontologyBean;
 
     /**
-     * combines the compass style search, the db style search, and the compositeSequence search and returns 1 combined list with no duplicates.
+     * combines the compass style search, the db style search, and the compositeSequence search and returns 1 combined
+     * list with no duplicates.
      * 
      * @param searchString
      * @return
      * @throws Exception
      */
-    public List<Gene> geneSearch( String searchString ) throws Exception {
+    public Collection<Gene> geneSearch( String searchString ) throws Exception {
 
-        List<Gene> geneDbList = geneDbSearch( searchString );
-        List<Gene> geneCompassList = compassGeneSearch( searchString );
-        List<Gene> geneCsList = geneCompositeSequenceSearch(searchString);
+        Collection<Gene> geneDbList = geneDbSearch( searchString );
+        Collection<Gene> geneCompassList = compassGeneSearch( searchString );
+        Collection<Gene> geneCsList = geneCompositeSequenceSearch( searchString );
 
         // If either search has no results return the other list
-//        if ( geneDbList.isEmpty() ) return geneCompassList;
+        // if ( geneDbList.isEmpty() ) return geneCompassList;
 
-//        if ( geneCompassList.isEmpty() ) return geneDbList;
+        // if ( geneCompassList.isEmpty() ) return geneDbList;
 
         // Both searchs aren't empty at this point. so just check for duplicates
         List<Gene> combinedGeneList = new ArrayList<Gene>();
@@ -111,7 +114,7 @@ public class SearchService {
         for ( Gene gene : geneCompassList ) {
             if ( !geneDbList.contains( gene ) ) combinedGeneList.add( gene );
         }
-        
+
         for ( Gene gene : geneCsList ) {
             if ( !combinedGeneList.contains( gene ) ) combinedGeneList.add( gene );
         }
@@ -129,7 +132,7 @@ public class SearchService {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public List<Gene> geneDbSearch( String searchString ) throws Exception {
+    public Collection<Gene> geneDbSearch( String searchString ) throws Exception {
 
         // search by inexact symbol
         Set<Gene> geneSet = new HashSet<Gene>();
@@ -165,27 +168,24 @@ public class SearchService {
         return geneList;
 
     }
-    
+
     /**
-     * searchs the DB for genes that are matched by a given compositeSequence
-     * tables
+     * searchs the DB for genes that are matched by a given compositeSequence tables
      * 
      * @param searchString
      * @return
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public List<Gene> geneCompositeSequenceSearch( String searchString ) throws Exception {
-
+    public Collection<Gene> geneCompositeSequenceSearch( String searchString ) throws Exception {
 
         Set<Gene> geneSet = new HashSet<Gene>();
 
         // search by exact composite sequence name
         Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( searchString );
         for ( CompositeSequence sequence : matchedCs ) {
-            geneSet.addAll( compositeSequenceGeneMapperService.getGenesForCompositeSequence( sequence ));   
+            geneSet.addAll( compositeSequenceService.getGenes( sequence ) );
         }
-
 
         List<Gene> geneList = new ArrayList<Gene>( geneSet );
         Comparator<Describable> comparator = new DescribableComparator();
@@ -237,7 +237,7 @@ public class SearchService {
      * @param query
      * @return
      */
-    public List<Gene> compassGeneSearch( final String query ) {
+    public Collection<Gene> compassGeneSearch( final String query ) {
 
         CompassSearchResults searchResults;
 
@@ -257,9 +257,9 @@ public class SearchService {
      * @param anArray
      * @return
      */
-    protected List<Gene> convert2GeneList( CompassHit[] anArray ) {
+    protected Collection<Gene> convert2GeneList( CompassHit[] anArray ) {
 
-        ArrayList<Gene> converted = new ArrayList<Gene>( anArray.length );
+        Collection<Gene> converted = new HashSet<Gene>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
             converted.add( ( Gene ) anArray[i].getData() );
@@ -272,9 +272,9 @@ public class SearchService {
      * @param anArray
      * @return
      */
-    protected List<ExpressionExperiment> convert2ExpressionList( CompassHit[] anArray ) {
+    protected Collection<ExpressionExperiment> convert2ExpressionList( CompassHit[] anArray ) {
 
-        ArrayList<ExpressionExperiment> converted = new ArrayList<ExpressionExperiment>( anArray.length );
+        Collection<ExpressionExperiment> converted = new HashSet<ExpressionExperiment>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
             converted.add( ( ExpressionExperiment ) anArray[i].getData() );
@@ -289,7 +289,7 @@ public class SearchService {
      * @param query
      * @return
      */
-    public List<ExpressionExperiment> compassExpressionSearch( final String query ) {
+    public Collection<ExpressionExperiment> compassExpressionSearch( final String query ) {
 
         CompassSearchResults searchResults;
 
@@ -311,7 +311,7 @@ public class SearchService {
      * @param query
      * @return
      */
-    public List<ArrayDesign> compassArrayDesignSearch( final String query ) {
+    public Collection<ArrayDesign> compassArrayDesignSearch( final String query ) {
 
         CompassSearchResults searchResults;
 
@@ -328,15 +328,52 @@ public class SearchService {
     }
 
     /**
+     * Does a compass style search on ArrayDesigns
+     * 
+     * @param query
+     * @return
+     */
+    public Collection<OntologyEntry> compassOntologySearch( final String query ) {
+
+        CompassSearchResults searchResults;
+
+        CompassTemplate template = new CompassTemplate( ontologyBean );
+
+        searchResults = ( CompassSearchResults ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( query, session );
+                    }
+                } );
+
+        return convert2OntologyList( searchResults.getHits() );
+    }
+
+    /**
      * @param anArray
      * @return
      */
-    protected List<ArrayDesign> convert2ArrayDesignList( CompassHit[] anArray ) {
+    protected Collection<ArrayDesign> convert2ArrayDesignList( CompassHit[] anArray ) {
 
-        ArrayList<ArrayDesign> converted = new ArrayList<ArrayDesign>( anArray.length );
+        Collection<ArrayDesign> converted = new HashSet<ArrayDesign>( anArray.length );
 
         for ( int i = 0; i < anArray.length; i++ )
             converted.add( ( ArrayDesign ) anArray[i].getData() );
+
+        return converted;
+
+    }
+
+    /**
+     * @param anOntology
+     * @return
+     */
+    protected Collection<OntologyEntry> convert2OntologyList( CompassHit[] anOntology ) {
+
+        Collection<OntologyEntry> converted = new HashSet<OntologyEntry>( anOntology.length );
+
+        for ( int i = 0; i < anOntology.length; i++ )
+            converted.add( ( OntologyEntry ) anOntology[i].getData() );
 
         return converted;
 
@@ -416,11 +453,19 @@ public class SearchService {
     public void setArrayBean( Compass arrayBean ) {
         this.arrayBean = arrayBean;
     }
-    
+
+    /**
+     * @param ontologyBean the ontologyBean to set
+     */
+    public void setOntologyBean( Compass ontologyBean ) {
+        this.ontologyBean = ontologyBean;
+    }
+
     /**
      * @param compositeSequenceGeneMapperService the compositeSequenceGeneMapperService to set
      */
-    public void setCompositeSequenceGeneMapperService( CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+    public void setCompositeSequenceGeneMapperService(
+            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
         this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 

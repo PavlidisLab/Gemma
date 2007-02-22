@@ -31,6 +31,7 @@ import ubic.gemma.util.CompassUtils;
  * @spring.property name="expressionGps" ref="expressionGps"
  * @spring.property name="geneGps" ref="geneGps"
  * @spring.property name="arrayGps" ref="arrayGps"
+ * @spring.property name="ontologyGps" ref="ontologyGps"
  */
 public class IndexService {
     private Log log = LogFactory.getLog( this.getClass() );
@@ -38,6 +39,7 @@ public class IndexService {
     private CompassGpsInterfaceDevice expressionGps;
     private CompassGpsInterfaceDevice geneGps;
     private CompassGpsInterfaceDevice arrayGps;
+    private CompassGpsInterfaceDevice ontologyGps;
 
     /**
      * Indexes expression experiments, genes, and array designs. This is a convenience method for Quartz to schedule
@@ -48,6 +50,8 @@ public class IndexService {
         CompassUtils.rebuildCompassIndex( expressionGps );
         CompassUtils.rebuildCompassIndex( geneGps );
         CompassUtils.rebuildCompassIndex( arrayGps );
+        CompassUtils.rebuildCompassIndex( ontologyGps );
+
     }
 
     /**
@@ -72,6 +76,13 @@ public class IndexService {
     }
 
     /**
+     * Indexes Ontology Entries.
+     */
+    public void indexOntologyEntries() {
+        CompassUtils.rebuildCompassIndex( ontologyGps );
+    }
+
+    /**
      * @param expressionGps The expressionGps to set.
      */
     public void setExpressionGps( CompassGpsInterfaceDevice expressionGps ) {
@@ -91,4 +102,12 @@ public class IndexService {
     public void setGeneGps( CompassGpsInterfaceDevice geneGps ) {
         this.geneGps = geneGps;
     }
+
+    /**
+     * @param ontologyGps The ontologyGps to set.
+     */
+    public void setOntologyGps( CompassGpsInterfaceDevice ontologyGps ) {
+        this.ontologyGps = ontologyGps;
+    }
+
 }

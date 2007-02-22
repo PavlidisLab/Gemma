@@ -38,6 +38,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     private boolean indexEE = false;
     private boolean indexAD = false;
     private boolean indexG = false;
+    private boolean indexO = false;
 
     /*
      * (non-Javadoc)
@@ -60,6 +61,10 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         Option adOption = OptionBuilder.withArgName( "Array Design" ).withDescription(
                 "Use this option for indexing Array Designs" ).withLongOpt( "ArrayDesigns" ).create( 'a' );
         addOption( adOption );
+
+        Option ontologyOption = OptionBuilder.withArgName( "Ontology Entry" ).withDescription(
+                "Use this option for indexing Ontology Entries" ).withLongOpt( "Ontology" ).create( 'o' );
+        addOption( ontologyOption );
     }
 
     @Override
@@ -70,6 +75,8 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 'a' ) ) indexAD = true;
 
         if ( hasOption( 'g' ) ) indexG = true;
+
+        if ( hasOption( 'o' ) ) indexO = true;
 
     }
 
@@ -102,13 +109,14 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
             return err;
         }
         try {
-            if ( this.indexG )
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "gene index" );
+            if ( this.indexG ) rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "gene index" );
             if ( this.indexEE )
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ), "Expression Experiment index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ),
+                        "Expression Experiment index" );
             if ( this.indexAD )
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ),
-                        "Array Design index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ), "Array Design index" );
+            if ( this.indexO )
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "ontologyGps" ), "Ontology Index" );
 
         } catch ( Exception e ) {
             log.error( e );
@@ -122,7 +130,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         long time = System.currentTimeMillis();
 
         log.info( "Rebuilding " + whatIndexingMsg );
-        ///device.index();
+        // /device.index();
         CompassUtils.rebuildCompassIndex( device );
 
         time = System.currentTimeMillis() - time;

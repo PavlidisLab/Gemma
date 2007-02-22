@@ -18,8 +18,8 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,64 +34,58 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseFormController;
 
-/** 
+/**
  * @author joseph
  * @version $Id$
- * @spring.bean id="geneFinderController"  
+ * @spring.bean id="geneFinderController"
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="searchService" ref="searchService"
  */
 public class GeneFinderController extends BaseFormController {
-    
+
     private static Log log = LogFactory.getLog( GeneFinderController.class.getName() );
-    
+
     private SearchService searchService;
-    
-    
-    
-  
+
     @Override
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
         String searchString = request.getParameter( "searchString" );
-        
+
         // first check - searchString should allow searches of 3 characters or more ONLY
         // this is to prevent a huge wildcard search
-        if (!searchStringValidator( searchString )) {
+        if ( !searchStringValidator( searchString ) ) {
             this.saveMessage( request, "Must use at least three characters for search" );
             log.info( "User entered an invalid search" );
-            return new ModelAndView("geneFinder");
+            return new ModelAndView( "geneFinder" );
         }
-        
-//        Map params = request.getParameterMap();
-//
-//        String previousSearch = (String)request.getSession().getAttribute( "previousSearch");
-//        // check to see if the modelAndView is saved in the session
-//        // make sure that this is a pagination or sort (not a re-search)
-//        // the current search string and the previous search string should not be null
-//        // and the previous search should be the same as the current one.
-//        if ( (request.getSession().getAttribute( "modelAndView") != null) && 
-//                (params.size() > 1) &&
-//                (previousSearch != null) &&
-//                (previousSearch.equals( searchString ))
-//                ) {
-//            return (ModelAndView) request.getSession().getAttribute( "modelAndView");
-//        }
-        
 
-        List<Gene> geneResults = searchService.geneSearch( searchString );
-        
-              
-        ModelAndView mav = new ModelAndView("geneFinderList");
+        // Map params = request.getParameterMap();
+        //
+        // String previousSearch = (String)request.getSession().getAttribute( "previousSearch");
+        // // check to see if the modelAndView is saved in the session
+        // // make sure that this is a pagination or sort (not a re-search)
+        // // the current search string and the previous search string should not be null
+        // // and the previous search should be the same as the current one.
+        // if ( (request.getSession().getAttribute( "modelAndView") != null) &&
+        // (params.size() > 1) &&
+        // (previousSearch != null) &&
+        // (previousSearch.equals( searchString ))
+        // ) {
+        // return (ModelAndView) request.getSession().getAttribute( "modelAndView");
+        // }
+
+        Collection<Gene> geneResults = searchService.geneSearch( searchString );
+
+        ModelAndView mav = new ModelAndView( "geneFinderList" );
         mav.addObject( "searchParameter", searchString );
         mav.addObject( "numGeans", geneResults.size() );
         log.info( "Attempting gene search" );
         mav.addObject( "genes", geneResults );
-        
-                        
+
         return mav;
     }
 
@@ -106,7 +100,7 @@ public class GeneFinderController extends BaseFormController {
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
     }
-    
+
     /**
      * 
      */
@@ -115,24 +109,22 @@ public class GeneFinderController extends BaseFormController {
             Object command, BindException errors ) throws Exception {
         return this.onSubmit( request, response, command, errors );
     }
-    
-    
-    
-    
-    /* (non-Javadoc)
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
     @Override
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) throws Exception {
-        if (request.getParameter( "searchString" ) != null) {
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
+            throws Exception {
+        if ( request.getParameter( "searchString" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
-        
+
         return super.showForm( request, response, errors );
     }
-
-
-
 
     class GeneComparator implements Comparator<Gene> {
 
@@ -144,9 +136,9 @@ public class GeneFinderController extends BaseFormController {
         }
     }
 
-
     /**
      * Validates the query string
+     * 
      * @param query
      * @return
      */
@@ -158,7 +150,7 @@ public class GeneFinderController extends BaseFormController {
 
         return true;
     }
-    
+
     /**
      * @return the searchService
      */
@@ -172,6 +164,5 @@ public class GeneFinderController extends BaseFormController {
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
     }
-
 
 }

@@ -103,7 +103,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return showAll( request, response );
         }
 
-        List<ExpressionExperiment> searchResults = searchService.compassExpressionSearch( filter );
+        Collection<ExpressionExperiment> searchResults = searchService.compassExpressionSearch( filter );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results." );

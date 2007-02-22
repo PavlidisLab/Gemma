@@ -18,6 +18,7 @@ defined in the compass configuration context.
     <input type="submit" name="eeIndex" value="eeIndex"/>
     <input type="submit" name="geneIndex" value="geneIndex"/>
     <input type="submit" name="arrayIndex" value="arrayIndex"/>
+    <input type="submit" name="ontologyIndex" value="ontologyIndex"/>
     
 </form>
 

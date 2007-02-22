@@ -20,6 +20,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -71,16 +72,19 @@ public class GeneralSearchController extends BaseFormController {
         String searchString = request.getParameter( "searchString" );
         String[] advanced = request.getParameterValues( "advancedSelect" );
 
+        //TODO create a search command object replacing all this parsing junk
         boolean dataset = false;
         boolean gene = false;
         boolean array = false;
         boolean goID = false;
+        boolean ontology = false;
 
         if ((advanced == null) ||( advanced.length == 0 ) ){
             dataset = true;
             gene = true;
             array = true;
             goID = false;
+            ontology = false;
         }
         else{
             for ( String types : advanced ) {
@@ -91,6 +95,8 @@ public class GeneralSearchController extends BaseFormController {
                 if ( types.equalsIgnoreCase( "Array" ) ) array = true;
     
                 if ( types.equalsIgnoreCase( "GoID" ) ) goID = true;
+                
+                if (types.equalsIgnoreCase( "ontology" )) ontology = true;
             }
         }
         // first check - searchString should allow searches of 3 characters or more ONLY
@@ -149,6 +155,14 @@ public class GeneralSearchController extends BaseFormController {
             mav.addObject( "numGoGenes", ontolgyGenes.size() );
             
         }
+        
+        if (ontology){
+            Collection<OntologyEntry> ontolgyEntries = searchService.compassOntologySearch( searchString);
+            mav.addObject( "ontologyEntries", ontolgyEntries );           
+            mav.addObject( "numOntologyEntries", ontolgyEntries.size() );                      
+            
+        }
+    
         
         return mav;
     }
