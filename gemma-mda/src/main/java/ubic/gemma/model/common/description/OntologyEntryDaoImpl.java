@@ -157,7 +157,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
      * @return
      */
     private void getChildren( OntologyEntry start, Collection<OntologyEntry> addTo ) {
-        if (start == null)
+        if ((start == null) || (start.getAssociations() == null) || (start.getAssociations().isEmpty()))
             return;
         
         for ( OntologyEntry oe : start.getAssociations() ) {
