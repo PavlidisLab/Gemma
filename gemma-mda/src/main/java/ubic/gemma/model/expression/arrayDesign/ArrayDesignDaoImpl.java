@@ -1,5 +1,6 @@
 /*
- * The Gemma project.
+ 
+ *The Gemma project.
  * 
  * Copyright (c) 2006 University of British Columbia
  * 
@@ -27,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -908,5 +910,33 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
         return nativeQueryByIdReturnCollection( id, nativeQueryString );
     }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleFindByGoId(String)
+     */
+    @Override
+    protected Collection handleFindByGoId( String goId ) throws Exception {
+
+        if ( goId == null || goId.length() == 0) {
+            throw new IllegalArgumentException();
+        }
+
+        final String queryString= "select ad from ArrayDesignImpl ad inner join ad.compositeSequences as cs inner" +
+        " join cs.biologicalCharacteristic as bs inner join bs.bioSequence2GeneProduct as bs2gp, Gene2GOAssociationImpl g2o " +
+        " where bs2gp.geneProduct.id=g2o.gene.products.id and g2o.ontologyEntry.accession = :accession group by ad";
+        
+        
+        Query queryObject = super.getSession( false ).createQuery( queryString );
+        queryObject.setParameter( "accession", goId );
+        
+        return queryObject.list();
+        
+    }
+    
+    
+    
+    
 
 }

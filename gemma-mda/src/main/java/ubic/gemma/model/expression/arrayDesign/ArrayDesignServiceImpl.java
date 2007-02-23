@@ -378,4 +378,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().compositeSequenceWithoutGenes( arrayDesign );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleFindByGoId(String)
+     */
+    @Override
+    protected Collection handleFindByGoId( String goId ) throws Exception {
+        return this.getArrayDesignDao().findByGoId(goId);
+    }
+
 }

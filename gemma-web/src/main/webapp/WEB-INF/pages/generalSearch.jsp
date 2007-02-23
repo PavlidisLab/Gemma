@@ -61,17 +61,19 @@
 
 <a href="#" onclick="toggleDisable(); return toggleVisibility('advancedSearch')" >(Advanced Search)</a> 
 
-<br/>
+<br/> <br/>
 <div name="advancedSearch" style="display:none">
-
-	<select id="advancedSelect" name="advancedSelect"  multiple size=4 disabled="true"> 
+<h4>Select a search Mode:</h4>
+	<select id="advancedSelect" name="advancedSelect"  multiple size=5 disabled="true"> 
 		<option  value = "GoID">Find Genes by Gene Ontology Id </option>
+		<option  value ="ADbyGoID">Find Arrays by Gene Ontology Id </option>
 		<option  value = "ontology">Search Ontology Database </option>		
 		<option selected value = "Gene"> Search Gene Database </option>
 		<option selected value = "DataSet">Search DataSet Database </option>
 		<option selected value = "Array">Search Array Database</option>	
 	</select>
-
+<br/>
+<h4>Reduce Results by Taxon: </h4>
 				<spring:bind path="coexpressionSearchCommand.taxon">
 					<select id="advancedTaxon" name="${status.expression}" disabled="true">
 						<c:forEach items="${taxa}" var="taxon">
@@ -168,21 +170,39 @@
         </display:table>				
 				
 
-<c:if test="${numOntologyEntries > 0 }">
+<c:if test="${numOntologyList > 0 }">
 	<h3>
-	Your search for <b> <c:out value="${SearchString}"/>  </b> found   <b> <c:out value="${numOntologyEntries}" /> </b> Ontology Terms	
+	Your search for <b> <c:out value="${SearchString}"/>  </b> found   <b> <c:out value="${numOntologyList}" /> </b> Ontology Terms	
 	</h3>
 </c:if>
 
-<display:table name="ontologyEntries" class="list" requestURI=""
-	id="ontologyEntriesList" pagesize="10"
-	decorator="ubic.gemma.web.taglib.displaytag.OntologyWrapper">
-	<display:column property="accession" sortable="true" maxWords="20" />
-	<display:column property="value" sortable="true" maxWords="20" />
-	<display:column property="category" sortable="true" maxWords="20" />
-	<display:column property="description" sortable="true" maxWords="20" />
-	<display:setProperty name="basic.empty.showtable" value="false" />
-</display:table>
+	<display:table name="ontologyList" class="list" requestURI=""
+		id="ontologyList" pagesize="10"
+		decorator="ubic.gemma.web.taglib.displaytag.OntologyWrapper">
+		<display:column property="accession" sortable="true" maxWords="20" />
+		<display:column property="value" sortable="true" maxWords="20" />
+		<display:column property="category" sortable="true" maxWords="20" />
+		<display:column property="description" sortable="true" maxWords="20" />
+		<display:setProperty name="basic.empty.showtable" value="false" />
+	</display:table>
+			
+	<c:if test="${numGoADs != null}"> 
+		<h3>
+			The GO term <b> <c:out value="${SearchString}"/>  </b> is related to   <b> <c:out value="${numGoADs}" /> </b> Arrays
+		</h3> <br/>
+   </c:if>
+
+				<display:table name="goArrayList" sort="list" class="list" requestURI="" id="goArrayList"
+				pagesize="20" decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
+					<display:column property="name" sortable="true" href="arrays/showArrayDesign.html" paramId="id" paramProperty="id"
+						titleKey="arrayDesign.name" />
+					<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName" />
+					<display:column property="expressionExperimentCountLink" sortable="true" title="Expts" />
+					<authz:authorize ifAnyGranted="admin">
+						<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
+					</authz:authorize>
+					<display:setProperty name="basic.empty.showtable" value="false" />
+				</display:table>
 				
 				
 				
