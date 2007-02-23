@@ -37,7 +37,7 @@ public class OntologyWrapper extends TableDecorator {
     public String getAccession() {
         OntologyEntry oe = ( OntologyEntry ) getCurrentRowObject();
 
-        return "<a target='_blank' href='http://www.godatabase.org/cgi-bin/amigo/go.cgi?view=details&query="
+        return "<a target='_blank' href='http://amigo.geneontology.org/cgi-bin/amigo/go.cgi?view=details&query="
                 + oe.getAccession() + "'>" + oe.getAccession() + "</a>";
 
     }
