@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.logging.Log;
@@ -19,8 +20,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -110,6 +111,7 @@ public class ExpressionExperimentReportService {
     /**
      * generates a collection of value objects that contain summary information about links, biomaterials, and datavectors
      */
+    @SuppressWarnings("unchecked")
     public void generateSummaryObject(Long id) {
         Collection ids = new ArrayList<Long>();
         ids.add( id );
@@ -210,18 +212,40 @@ public class ExpressionExperimentReportService {
      * latest event (if any).
      * @return the filled out value objects
      */
+    @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection vos ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        for (  Object object : vos  ) {
+            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+            ids.add( Long.parseLong( eeVo.getId()  ));
+        }
+        // get the last event information
+        Map<Long,AuditEvent> linkAnalysisEvents = expressionExperimentService.getLastLinkAnalysis( ids );
+        Map<Long,AuditEvent> missingValueAnalysisEvents = expressionExperimentService.getLastMissingValueAnalysis( ids );
+        Map<Long,AuditEvent> rankComputationEvents = expressionExperimentService.getLastRankComputation( ids );
+        
+        // add in the last events of interest for all eeVos
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ExpressionExperimentValueObject cacheVo = retrieveValueObject( Long.parseLong( eeVo.getId() ) );
-            if ( cacheVo != null ) {
-                eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
-                eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
-                eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
-                eeVo.setDateCached( cacheVo.getDateCached() );
-                eeVo.setDateCreated( cacheVo.getDateCreated() );
-                eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
+            Long id  = Long.parseLong( eeVo.getId());
+            if (linkAnalysisEvents.containsKey( id ) ) {
+                AuditEvent event = linkAnalysisEvents.get( id );
+                if (event != null) {
+                    eeVo.setDateLinkAnalysis( event.getDate().toString());
+                }
             }
+            if (missingValueAnalysisEvents.containsKey( id ) ) {
+                AuditEvent event = missingValueAnalysisEvents.get( id );
+                if (event != null) {
+                    eeVo.setDateMissingValueAnalysis( ( event.getDate().toString() ));
+                }
+            }    
+            if (rankComputationEvents.containsKey( id ) ) {
+                AuditEvent event = rankComputationEvents.get( id );
+                if (event != null) {
+                    eeVo.setDateRankComputation( event.getDate().toString());
+                }
+            }   
         }
     }
     
@@ -257,6 +281,7 @@ public class ExpressionExperimentReportService {
      * @return the serialized value objects
      *
      */
+    @SuppressWarnings("unchecked")
     private Collection retrieveValueObjects(Collection ids) {
         Collection eeValueObjects = new ArrayList<ExpressionExperiment>();
 
@@ -264,17 +289,15 @@ public class ExpressionExperimentReportService {
             Long id = ( Long ) object;
 
             try {
-                File f = new File(HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "."
-                        + id);
-                if (f.exists()) {
-                FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "."
-                        + id );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject());
-                ois.close();
-                fis.close();
-                }
-                else {
+                File f = new File( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "." + id );
+                if ( f.exists() ) {
+                    FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY
+                            + "." + id );
+                    ObjectInputStream ois = new ObjectInputStream( fis );
+                    eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject() );
+                    ois.close();
+                    fis.close();
+                } else {
                     continue;
                 }
             } catch ( Throwable e ) {
@@ -286,7 +309,6 @@ public class ExpressionExperimentReportService {
     
     /**
      * @return the serialized value object
-     *
      */
     private ExpressionExperimentValueObject retrieveValueObject(long id) {
 
