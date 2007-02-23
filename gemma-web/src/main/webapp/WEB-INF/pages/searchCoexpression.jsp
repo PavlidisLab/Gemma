@@ -291,13 +291,15 @@ Results for
 
 <c:if test="${coexpressedGenes != null}">
 <c:if test="${numLinkedExpressionExperiments != 0}">
+
+<script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
 <!-- Toggles for the expand/hide datasetList table -->
-<span name="datasetList" onclick="return toggleVisibility('datasetList')">
+<span class="datasetList" onclick="return toggleVisibility('datasetList')">
 	<img src="/Gemma/images/chart_organisation_add.png" />
 </span>
-<span name="datasetList" style="display:none" onclick="return toggleVisibility('datasetList')">
+<span class="datasetList" style="display:none" onclick="return toggleVisibility('datasetList')">
 	<img src="/Gemma/images/chart_organisation_delete.png" />
 </span>
 </c:if>
@@ -310,7 +312,7 @@ Results for
 
 
 <br />
-<div name="datasetList" style="display:none">
+<div class="datasetList" style="display:none">
 	
 	<display:table pagesize="100" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">

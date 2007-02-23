@@ -33,7 +33,8 @@ function changeObjectVisibility(objectName, newVisibility) {
 }
 function toggleVisibility(objectName) {
 	// get the objects with the given name
-	var elements = document.getElementsByName(objectName);
+	var elements = document.getElementsByClassName(objectName);
+
 	for (var i = 0; i < elements.length; i++) {
     	// first get the object's stylesheet
     	var styleObject = elements[i].style;

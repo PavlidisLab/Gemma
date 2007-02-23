@@ -47,16 +47,16 @@ public class ArrayDesignWrapper extends TableDecorator {
 
         String arraySummary = "arraySummary_" + object.getId();
 
-        buf.append( "<span name=\"" + arraySummary + "\" onclick=\"return toggleVisibility('" + arraySummary + "')\">" );
+        buf.append( "<span class=\"" + arraySummary + "\" onclick=\"return toggleVisibility('" + arraySummary + "')\">" );
         buf.append( "<img src=\"/Gemma/images/chart_organisation_add.png\" /></span>" );
 
-        buf.append( "<span name=\"" + arraySummary + "\" style=\"display:none\" onclick=\"return toggleVisibility('"
+        buf.append( "<span class=\"" + arraySummary + "\" style=\"display:none\" onclick=\"return toggleVisibility('"
                 + arraySummary + "')\">" );
         buf.append( "<img src=\"/Gemma/images/chart_organisation_delete.png\" /></span>" );
 
         buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
-        buf.append( "<div name=\"" + arraySummary + "\" style=\"display:none\">" );
+        buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
         buf.append( object.getSummaryTable() );
         buf.append( "</div>" );
         return buf.toString();

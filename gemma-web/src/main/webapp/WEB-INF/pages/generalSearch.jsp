@@ -52,17 +52,17 @@
  	</script>
 
 	<!-- Toggles for the expand/hide datasetList table -->
-	<span name="advancedSearch"
+	<span class="advancedSearch"
 		onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
 		<img src="/Gemma/images/chart_organisation_add.png" /> </span>
-	<span name="advancedSearch" style="display:none" onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
+	<span class="advancedSearch" style="display:none" onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
 	<img src="/Gemma/images/chart_organisation_delete.png" />
 </span>		
 
 <a href="#" onclick="toggleDisable(); return toggleVisibility('advancedSearch')" >(Advanced Search)</a> 
 
 <br/> <br/>
-<div name="advancedSearch" style="display:none">
+<div class="advancedSearch" style="display:none">
 <h4>Select a search Mode:</h4>
 	<select id="advancedSelect" name="advancedSelect"  multiple size=5 disabled="true"> 
 		<option  value = "GoID">Find Genes by Gene Ontology Id </option>
