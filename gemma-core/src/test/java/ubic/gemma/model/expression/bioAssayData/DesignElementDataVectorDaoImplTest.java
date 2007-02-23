@@ -20,9 +20,17 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author joseph
@@ -30,8 +38,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     DesignElementDataVectorDao designElementDataVectorDao;
-
+    ExpressionExperimentService expressionExperimentService;
+    ExpressionExperiment newee = null;
     DesignElementDataVector dedv;
+    protected AbstractGeoService geoService;
 
     /**
      * @param designElementDataVectorDao the designElementDataVectorDao to set
@@ -44,6 +54,10 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         dedv = DesignElementDataVector.Factory.newInstance();
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+
+        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        geoService.setLoadPlatformOnly( false );
     }
 
     @Override
@@ -86,39 +100,43 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         assertNotNull( objects );
     }
 
-    // fixme: I've commented out this test as it needs the database to be in a correct state, have genes, have ee, and
-    // i'm not even sure what the output should be.
-    // This is another situation where a test db dump would be really handy.
+    protected void onTearDownAfterTransaction() throws Exception {
+        super.onTearDownAfterTransaction();
 
-    // public void testGetGeneCoexpressionPattern() {
-    // DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
-    // .getBean( "designElementDataVectorService" );
-    //
-    // ExpressionExperimentService eeSrv = ( ExpressionExperimentService ) this
-    // .getBean( "expressionExperimentService" );
-    // GeneService geneSrv = ( GeneService ) this.getBean( "geneService" );
-    // TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-    // QuantitationTypeService qtSrv = (QuantitationTypeService) this.getBean( "quantitationTypeService" );
-    //
-    // Taxon mouse = taxonSrv.findByCommonName( "mouse" );
-    //
-    // //Collection genes = geneSrv.getGenesByTaxon( mouse );
-    // Collection genes;
-    //        
-    // log.debug( "gene collection size: " + genes.size() );
-    // Collection expressionExperimentService = eeSrv.getByTaxon( mouse );
-    // // Collection qts = eeSrv.getQuantitationTypes( ( ExpressionExperiment )
-    // expressionExperimentService.iterator().next() );
-    // QuantitationType qt = QuantitationType.Factory.newInstance();
-    // //qt.setId( (long) 1 );
-    // qt.setName( "VALUE" );
-    // qt.setScale(ScaleType.LINEAR);
-    // qt.setRepresentation(PrimitiveType.DOUBLE);
-    // qt.setGeneralType(GeneralType.QUANTITATIVE);
-    // qt.setType(StandardQuantitationType.MEASUREDSIGNAL);
-    // qt = qtSrv.find(qt);
-    // dedvs.getGeneCoexpressionPattern( expressionExperimentService, genes, qt );
-    //
-    // }
+        if ( newee != null && newee.getId() != null ) {
+            expressionExperimentService.delete( newee );
+        }
 
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetGeneCoexpressionPattern() {
+
+        endTransaction();
+        try {
+            String path = ConfigUtils.getString( "gemma.home" );
+            assert path != null;
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE432" );
+            newee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
+
+        Collection<Gene> genes = new HashSet<Gene>();
+        Gene g = this.getTestPeristentGene();
+        genes.add( g );
+
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        ees.add( newee );
+
+        Map<DesignElementDataVector, Collection<Gene>> geneCoexpressionPattern = dedvs.getGeneCoexpressionPattern( ees,
+                genes );
+
+    }
 }
