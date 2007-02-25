@@ -730,7 +730,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // removed join from taxon as it is slowing down the system
         final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
-                + " ad.technologyType, taxon.commonName " + " from ArrayDesignImpl as ad left join ad.compositeSequences as cs left join cs.biologicalCharacteristic as bc left join bc.taxon as taxon" + " where ad.id in (:ids) "
+                + " ad.technologyType " + " from ArrayDesignImpl as ad " + " where ad.id in (:ids) "
                 + " group by ad order by ad.name";
 
         try {
@@ -744,8 +744,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setShortName( list.getString( 2 ) );
                 TechnologyType color = ( TechnologyType ) list.get( 3 );
                 v.setColor( color.getValue() );
-                
-                v.setTaxon( list.getString( 4 ) );
+                // v.setTaxon( list.getString( 3 ) );
 
                 // v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
                 v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
@@ -767,10 +766,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         // Map csCounts = this.getCompositeSequenceCountMap();
         Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
         // removed join from taxon as it is slowing down the system
-        
-
         final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
-                + " ad.technologyType, taxon.commonName " + " " + " from ArrayDesignImpl as ad left join ad.compositeSequences as cs left join cs.biologicalCharacteristic as bc left join bc.taxon as taxon " + " " + " group by ad order by ad.name";
+                + " ad.technologyType " + " " + " from ArrayDesignImpl as ad " + " " + " group by ad order by ad.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -785,8 +782,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     TechnologyType color = ( TechnologyType ) list.get( 3 );
                     if ( color != null ) v.setColor( color.getValue() );
-                                        
-                    v.setTaxon( list.getString( 4 ) );
+                    // v.setTaxon( list.getString( 3 ) );
 
                     // v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
@@ -910,7 +906,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
         return nativeQueryByIdReturnCollection( id, nativeQueryString );
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -919,24 +915,19 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Collection handleFindByGoId( String goId ) throws Exception {
 
-        if ( goId == null || goId.length() == 0) {
+        if ( goId == null || goId.length() == 0 ) {
             throw new IllegalArgumentException();
         }
 
-        final String queryString= "select ad from ArrayDesignImpl ad inner join ad.compositeSequences as cs inner" +
-        " join cs.biologicalCharacteristic as bs inner join bs.bioSequence2GeneProduct as bs2gp, Gene2GOAssociationImpl g2o " +
-        " where bs2gp.geneProduct.id=g2o.gene.products.id and g2o.ontologyEntry.accession = :accession group by ad";
-        
-        
+        final String queryString = "select ad from ArrayDesignImpl ad inner join ad.compositeSequences as cs inner"
+                + " join cs.biologicalCharacteristic as bs inner join bs.bioSequence2GeneProduct as bs2gp, Gene2GOAssociationImpl g2o "
+                + " where bs2gp.geneProduct.id=g2o.gene.products.id and g2o.ontologyEntry.accession = :accession group by ad";
+
         Query queryObject = super.getSession( false ).createQuery( queryString );
         queryObject.setParameter( "accession", goId );
-        
+
         return queryObject.list();
-        
+
     }
-    
-    
-    
-    
 
 }
