@@ -19,13 +19,9 @@
 package ubic.gemma.analysis.sequence;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,13 +32,13 @@ import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.ProbeAlignedRegionService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -60,9 +56,22 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * @version $Id$
  */
 public class ProbeMapper {
+
+    /**
+     * Sequence identity below which we throw hits away.
+     */
     public static final double DEFAULT_IDENTITY_THRESHOLD = 0.80;
-    public static final double DEFAULT_SCORE_THRESHOLD = 0.80;
+
+    /**
+     * Blat score threshold below which we do not consider hits. This reflects the fraction of aligned bases.
+     * 
+     * @see Blat for the use of a similar parameter, used to determine the retention of raw Blat results.
+     * @see BlatResult for how the score is computed.
+     */
+    public static final double DEFAULT_SCORE_THRESHOLD = 0.75;
+
     private Log log = LogFactory.getLog( ProbeMapper.class.getName() );
+
     private double identityThreshold = DEFAULT_IDENTITY_THRESHOLD;
     private double scoreThreshold = DEFAULT_SCORE_THRESHOLD;
     private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
@@ -80,16 +89,6 @@ public class ProbeMapper {
     }
 
     /**
-     * @param goldenPathDb
-     * @param blatResults
-     * @return
-     */
-    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
-            Collection<BlatResult> blatResults ) {
-        return this.processBlatResults( goldenPathDb, blatResults, false );
-    }
-
-    /**
      * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
      * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
      * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
@@ -98,12 +97,11 @@ public class ProbeMapper {
      * 
      * @param goldenPathDb
      * @param blatResults
-     * @param ignoreStrand ignore the strand when scoring alignments.
      * @return A map of sequence names to collections of blat associations for each sequence.
      * @throws IOException
      */
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
-            Collection<BlatResult> blatResults, boolean ignoreStrand ) {
+            Collection<BlatResult> blatResults ) {
 
         if ( log.isDebugEnabled() ) {
             log.debug( blatResults.size() + " Blat results to map " );
@@ -145,8 +143,7 @@ public class ProbeMapper {
                 }
 
                 // here's the key line!
-                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
-                        ignoreStrand );
+                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult );
 
                 if ( resultsForOneBlatResult != null && resultsForOneBlatResult.size() > 0 ) {
                     blatAssociationsForSequence.addAll( resultsForOneBlatResult );
@@ -172,7 +169,7 @@ public class ProbeMapper {
             if ( blatAssociationsForSequence.size() == 0 ) continue;
 
             // Another important step: fill in the specificity, remove duplicates
-            scoreResults( blatAssociationsForSequence );
+            BlatAssociationScorer.scoreResults( blatAssociationsForSequence );
 
             if ( log.isDebugEnabled() ) {
                 log.debug( blatAssociationsForSequence.size() + " associations for " + sequence
@@ -353,50 +350,6 @@ public class ProbeMapper {
     }
 
     /**
-     * From a collection of BlatAssociations from a single BioSequence, reduce redundancy, fill in the specificity and
-     * score and pick the one with the best scoring statistics.
-     * <p>
-     * This is a little complicated because a single sequence can yield many BlatResults to the same gene and/or gene
-     * product. We reduce the results down to a single (best) result for any given gene product. We also score
-     * specificity by the gene: if a sequence 'hits' multiple genes, then the specificity of the generated associations
-     * will be less than 1.
-     * 
-     * @param blatAssociations for a single sequence.
-     * @return the highest-scoring result (if there are ties this will be a random one)
-     * @throws IllegalArgumentException if the blatAssociations are from multiple biosequences.
-     */
-    public BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
-
-        /*
-         * Break results down by gene product, and throw out duplicates (only allow one result per gene product)
-         */
-
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProduct( blatAssociations );
-
-        BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
-
-        Map<Gene, Collection<BlatAssociation>> genes2Associations = organizeBlatAssociationsByGene( blatAssociations );
-
-        /*
-         * At this point there should be just one blatAssociation per gene product. However, all of these really might
-         * be for the same gene. It is only in the case of truly multiple genes that we flag a lower specificity.
-         */
-        if ( genes2Associations.size() == 1 ) {
-            return globalBest;
-        }
-
-        Collection<Gene> distinctGenes = getDistinctGenes( genes2Associations );
-
-        // TODO: adjust this to account for differences between scores.
-        for ( Gene gene : distinctGenes ) {
-            for ( BlatAssociation blatAssociation : genes2Associations.get( gene ) ) {
-                blatAssociation.setSpecificity( 1.0 / distinctGenes.size() );
-            }
-        }
-        return globalBest;
-    }
-
-    /**
      * @param blatScoreThreshold the blatScoreThreshold to set
      */
     public void setBlatScoreThreshold( double blatScoreThreshold ) {
@@ -420,138 +373,18 @@ public class ProbeMapper {
     }
 
     /**
-     * @param blatAssociation
-     * @return
-     */
-    private double computeScore( BlatAssociation blatAssociation ) {
-        BlatResult br = blatAssociation.getBlatResult();
-
-        assert br != null;
-
-        double blatScore = br.score();
-        double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
-        double score = computeScore( blatScore, overlap );
-
-        blatAssociation.setScore( score );
-        return score;
-    }
-
-    /**
-     * Are the genes really different?
-     */
-    private Collection<Gene> getDistinctGenes( Map<Gene, Collection<BlatAssociation>> associations ) {
-
-        // sort them so we detect multiple genes easily.
-        List<Gene> geneList = new ArrayList<Gene>();
-        geneList.addAll( associations.keySet() );
-        if ( associations.size() > 2 ) {
-            sortGenes( geneList );
-        }
-
-        Collection<Gene> distinctGenes = new HashSet<Gene>();
-        Gene lastGene = null;
-        distinctGenes.add( geneList.get( 0 ) );
-        for ( Gene gene : geneList ) {
-            assert gene != null;
-            if ( lastGene != null ) {
-
-                // int overlap = SequenceManipulation.computeOverlap( gene.getPhysicalLocation(), lastGene
-                // .getPhysicalLocation() );
-                // int length = gene.getPhysicalLocation().getNucleotideLength();
-                //
-                // if ( log.isDebugEnabled() )
-                // log.debug( "Overlap is " + overlap + "/" + length + " between " + gene + " and " + lastGene );
-
-                // if ( gene.getOfficialSymbol().equals( lastGene.getOfficialSymbol() ) ) {
-                // if ( overlap > 0 ) {
-                // // same gene.
-                // } else {
-                // // rare case where symbols are the same but not the same gene.
-                // distinctGenes.add( gene );
-                // }
-                // } else {
-                // // definitely not the same gene.
-                // distinctGenes.add( gene );
-                // }
-
-                if ( gene.equals( lastGene ) ) {
-                    log.debug( "" );
-                    log.debug( gene + " is equal to " + lastGene );
-                } else {
-                    distinctGenes.add( gene );
-                    log.debug( gene + " is not equal to " + lastGene );
-                }
-
-            }
-            lastGene = gene;
-        }
-
-        if ( log.isDebugEnabled() ) log.debug( distinctGenes.size() + " genes." );
-        return distinctGenes;
-    }
-
-    /**
-     * @param blatAssociations
-     * @return
-     */
-    private Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
-            Collection<BlatAssociation> blatAssociations ) {
-
-        Map<Gene, Collection<BlatAssociation>> genes = new HashMap<Gene, Collection<BlatAssociation>>();
-        for ( BlatAssociation blatAssociation : blatAssociations ) {
-            Gene gene = blatAssociation.getGeneProduct().getGene();
-            assert gene != null;
-            if ( !genes.containsKey( gene ) ) {
-                genes.put( gene, new HashSet<BlatAssociation>() );
-            }
-            genes.get( gene ).add( blatAssociation );
-        }
-        return genes;
-    }
-
-    /**
-     * @param blatAssociations
-     * @param geneProducts
-     * @return
-     */
-    private Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProduct(
-            Collection<BlatAssociation> blatAssociations ) {
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
-        Collection<BioSequence> sequences = new HashSet<BioSequence>();
-        for ( BlatAssociation blatAssociation : blatAssociations ) {
-            assert blatAssociation.getBioSequence() != null;
-            computeScore( blatAssociation );
-            sequences.add( blatAssociation.getBioSequence() );
-
-            if ( sequences.size() > 1 ) {
-                throw new IllegalArgumentException( "Blat associations must all be for the same query sequence" );
-            }
-
-            assert blatAssociation.getGeneProduct() != null;
-            GeneProduct geneProduct = blatAssociation.getGeneProduct();
-            if ( !geneProducts.containsKey( geneProduct ) ) {
-                geneProducts.put( geneProduct, new HashSet<BlatAssociation>() );
-            }
-            geneProducts.get( geneProduct ).add( blatAssociation );
-
-            blatAssociation.setSpecificity( 1.0 );
-        }
-
-        return geneProducts;
-    }
-
-    /**
-     * Process a single BlatResult.
+     * Process a single BlatResult, identifying gene products it maps to.
      * 
      * @param goldenPathDb
      * @param blatResult
-     * @param ignoreStrand If true, the strand is not used to evalute alignments.
-     * @return
+     * @return BlatAssociations between the queried biosequence and one or more gene products.
      */
     @SuppressWarnings("unchecked")
     private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
-            BlatResult blatResult, boolean ignoreStrand ) {
+            BlatResult blatResult ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
+
+        boolean ignoreStrand = determineStrandTreatment( blatResult );
 
         String strand = ignoreStrand == true ? null : blatResult.getStrand();
 
@@ -572,6 +405,29 @@ public class ProbeMapper {
             blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
         return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
 
+    }
+
+    /**
+     * It is assume that strand should only be used if the sequence type is AFFY_{PROBE,COLLAPSED,TARGET} or OLIGO. In
+     * all other cases (ESTs etc) the strand is ignored.
+     * 
+     * @param blatResult
+     * @return boolean indicating, essentially, if the sequence on the array is double-stranded.
+     */
+    private boolean determineStrandTreatment( BlatResult blatResult ) {
+        boolean ignoreStrand = true;
+
+        SequenceType type = blatResult.getQuerySequence().getType();
+        if ( type.equals( SequenceType.OLIGO ) ) {
+            ignoreStrand = false;
+        } else if ( type.equals( SequenceType.AFFY_COLLAPSED ) ) {
+            ignoreStrand = false;
+        } else if ( type.equals( SequenceType.AFFY_PROBE ) ) {
+            ignoreStrand = false;
+        } else if ( type.equals( SequenceType.AFFY_TARGET ) ) {
+            ignoreStrand = false;
+        }
+        return ignoreStrand;
     }
 
     /**
@@ -650,129 +506,6 @@ public class ProbeMapper {
         pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - blatResult.getTargetStart() ) ).intValue() );
         pl.setStrand( blatResult.getStrand() );
         return pl;
-    }
-
-    /**
-     * Now go over and compute scores and find the best one, for each gene product, removing all other hits (so there is
-     * just one per gene product
-     */
-    private BlatAssociation removeExtraHitsPerGeneProduct( Collection<BlatAssociation> blatAssociations,
-            Map<GeneProduct, Collection<BlatAssociation>> geneProduct2BlatAssociations ) {
-
-        double globalMaxScore = 0.0;
-        BlatAssociation globalBest = null;
-        for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
-            Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
-
-            double maxScore = 0.0;
-            BlatAssociation best = null;
-
-            // Find the best one. If there are ties it's arbitrary which one we pick.
-            for ( BlatAssociation blatAssociation : geneProductBlatAssociations ) {
-                double score = blatAssociation.getScore();
-                if ( score >= maxScore ) {
-                    maxScore = score;
-                    best = blatAssociation;
-                }
-            }
-
-            assert best != null;
-
-            // Remove the lower-scoring ones for this gene product
-            Collection<BlatAssociation> toRemove = new HashSet<BlatAssociation>();
-            for ( BlatAssociation blatAssociation : geneProductBlatAssociations ) {
-                if ( blatAssociation != best ) {
-                    toRemove.add( blatAssociation );
-                    if ( log.isDebugEnabled() ) log.debug( "Removing " + blatAssociation );
-                }
-            }
-
-            assert toRemove.size() < geneProductBlatAssociations.size();
-
-            for ( BlatAssociation association : toRemove ) {
-                blatAssociations.remove( association );
-            }
-
-            if ( best.getScore() > globalMaxScore ) {
-                globalMaxScore = best.getScore();
-                globalBest = best;
-            }
-
-        }
-        return globalBest;
-    }
-
-    /**
-     * @param geneList
-     */
-    private void sortGenes( List<Gene> geneList ) {
-        Collections.sort( geneList, new Comparator<Gene>() {
-            public int compare( Gene arg0, Gene arg1 ) {
-                return arg0.getOfficialSymbol().compareTo( arg1.getOfficialSymbol() );
-            }
-        } );
-
-    }
-
-    /**
-     * Compute a score we use to quantify the quality of a hit to a GeneProduct.
-     * <p>
-     * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
-     * 
-     * @param blatScore A value from 0-1 indicating alignment quality.
-     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
-     * @return
-     */
-    protected int computeScore( double blatScore, double overlap ) {
-        return ( int ) ( 1000 * blatScore * overlap );
-    }
-
-    /**
-     * FIXME not used as is. Compute a score to quantify the specificity of a hit to a Gene (not a GeneProduct!). A
-     * value between 0 and 1.
-     * <p>
-     * The criteria considered are: the number of equal or better hits, and the difference between this hit and the next
-     * worst hit.
-     * <p>
-     * If there are n identical or better hits (including this one), the specificity is 1/n.
-     * <p>
-     * If this is the best hit, then the specificity is (scoremax - nextscore)/scoremax.
-     * 
-     * @param scores A list in decreasing order. If it is not sorted you won't get the right results!
-     * @param score
-     * @return
-     */
-    protected Double computeSpecificity( List<Double> scores, double score ) {
-
-        if ( scores.size() == 1 ) {
-            return 1.0;
-        }
-
-        // algorithm: compute the number of scores which are equal or higher than this one.
-        int numBetter = 0;
-        int i = 0;
-        double nextBest = 0.0;
-        double total = 0.0;
-        for ( Double s : scores ) {
-
-            total += s;
-
-            if ( s >= score ) {
-                numBetter++; // this is guaranteed to be at least one
-            }
-            if ( s < score ) {
-                nextBest = s;
-                break;
-            }
-            i++;
-        }
-
-        if ( numBetter > 1 ) {
-            return 1.0 / numBetter;
-        }
-
-        return ( score - nextBest ) / score;
-
     }
 
     public void setProbeAlignedRegionService( ProbeAlignedRegionService probeAlignedRegionService ) {
