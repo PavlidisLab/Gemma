@@ -227,6 +227,10 @@ public class ExpressionExperimentReportService {
         // add in the last events of interest for all eeVos
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+            // preemptively fill in event dates with None
+            eeVo.setDateLinkAnalysis( "[None]" );
+            eeVo.setDateMissingValueAnalysis( "[None]" );
+            eeVo.setDateRankComputation( "[None]" );
             Long id  = Long.parseLong( eeVo.getId());
             if (linkAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = linkAnalysisEvents.get( id );
