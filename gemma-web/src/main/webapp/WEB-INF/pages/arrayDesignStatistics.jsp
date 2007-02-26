@@ -36,6 +36,8 @@ ${summaryString}
 		titleKey="arrayDesign.name" />
 	<display:column property="shortName" sortable="true"
 		titleKey="arrayDesign.shortName" />
+	<display:column property="taxon" sortable="true"
+		titleKey="arrayDesign.taxon" />
 	<display:column property="expressionExperimentCountLink"
 		sortable="true" title="Expts" />
 	<display:column property="summaryTable" title="Probe Summary" />

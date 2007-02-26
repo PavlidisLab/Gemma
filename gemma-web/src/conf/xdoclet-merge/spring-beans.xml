@@ -149,7 +149,7 @@
 <bean id="arrayDesignActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
-			<prop key="/arrays/showAllArrayDesigns.html">showAll</prop>
+			<prop key="/arrays/showAllArrayDesigns.html">showAllStats</prop>
 			<prop key="/arrays/showAllArrayDesignStatistics.html">showAllStats</prop>
 			<prop key="/arrays/deleteArrayDesign.html">delete</prop>
 			<prop key="/arrays/showArrayDesign.html">show</prop>

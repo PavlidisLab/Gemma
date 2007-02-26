@@ -730,7 +730,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // removed join from taxon as it is slowing down the system
         final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
-                + " ad.technologyType " + " from ArrayDesignImpl as ad " + " where ad.id in (:ids) "
+                + " ad.technologyType, taxon.commonName " + " from ArrayDesignImpl as ad inner join ad.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon as taxon " + " where ad.id in (:ids) "
                 + " group by ad order by ad.name";
 
         try {
@@ -767,7 +767,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
         // removed join from taxon as it is slowing down the system
         final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
-                + " ad.technologyType " + " " + " from ArrayDesignImpl as ad " + " " + " group by ad order by ad.name";
+                + " ad.technologyType, taxon.commonName " + " " + " from ArrayDesignImpl as ad inner join ad.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon as taxon " + " " + " group by ad order by ad.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -782,7 +782,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     TechnologyType color = ( TechnologyType ) list.get( 3 );
                     if ( color != null ) v.setColor( color.getValue() );
-                    // v.setTaxon( list.getString( 3 ) );
+                     v.setTaxon( list.getString( 4 ) );
 
                     // v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
