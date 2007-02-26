@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
-import ubic.gemma.loader.genome.BlatResultParser; 
+import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -182,29 +182,25 @@ public class ProbeMapperTest extends TestCase {
     }
 
     public void testComputeSpecificityA() throws Exception {
-        ProbeMapper pm = new ProbeMapper();
-        Double actual = pm.computeSpecificity( tester, 400 );
+        Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 0.5;
         assertEquals( expected, actual, 0.0001 );
     }
 
     public void testComputeSpecificityB() throws Exception {
-        ProbeMapper pm = new ProbeMapper();
-        Double actual = pm.computeSpecificity( tester, 200 );
+        Double actual = BlatAssociationScorer.computeSpecificity( tester, 200 );
         Double expected = 0.5;
         assertEquals( expected, actual, 0.0001 );
     }
 
     public void testComputeSpecificityC() throws Exception {
-        ProbeMapper pm = new ProbeMapper();
-        Double actual = pm.computeSpecificity( tester, 50 );
+        Double actual = BlatAssociationScorer.computeSpecificity( tester, 50 );
         Double expected = 0.25;
         assertEquals( expected, actual, 0.0001 );
     }
 
     public void testComputeSpecificityD() throws Exception {
-        ProbeMapper pm = new ProbeMapper();
-        Double actual = pm.computeSpecificity( tester, 395 );
+        Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 0.4936;
         assertEquals( expected, actual, 0.0001 );
     }
