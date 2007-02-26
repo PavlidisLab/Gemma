@@ -188,9 +188,8 @@ public class DesignElementDataVectorDaoImpl extends
      * @return
      * @throws Exception todo: still untested
      */
-    protected Map<DesignElementDataVector, Collection<Gene>> handleGetGeneCoexpressionPattern( Collection ees,
-            Collection genes ) throws Exception {
-        Map<DesignElementDataVector, Collection<Gene>> result = new HashMap<DesignElementDataVector, Collection<Gene>>();
+    protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
+        Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
         
         final String queryString = "select distinct dedv, gene from DesignElementDataVectorImpl dedv, GeneImpl as gene inner join gene.products gp,BlatAssociationImpl ba, CompositeSequenceImpl cs  where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and dedv.designElement=cs and dedv.quantitationType.isPreferred= true  and  gene in (:genes) and  dedv.expressionExperiment in (:ees)";
@@ -205,18 +204,18 @@ public class DesignElementDataVectorDaoImpl extends
             while ( results.next() ) {
                 DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
                 Gene g = ( Gene ) results.get( 1 );
-                if ( !result.containsKey( dedv ) ) {
-                    result.put( dedv, new HashSet<Gene>() );
+                if ( !geneMap.containsKey( dedv ) ) {
+                    geneMap.put( dedv, new HashSet<Gene>() );
                 }
 
-                result.get( dedv ).add( g );
+                geneMap.get( dedv ).add( g );
             }
             results.close();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
 
-        return result;
+        return geneMap;
     }
 
     /**

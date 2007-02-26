@@ -48,12 +48,12 @@ public class DesignElementDataVectorServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGeneCoexpressionPattern(java.util.Collection,
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetVectors(java.util.Collection,
      *      java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected Map handleGetGeneCoexpressionPattern( Collection ees, Collection genes ) throws Exception {
-        return this.getDesignElementDataVectorDao().getGeneCoexpressionPattern( ees, genes );
+    protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
+        return this.getDesignElementDataVectorDao().getVectors( ees, genes );
     }
 
     @Override

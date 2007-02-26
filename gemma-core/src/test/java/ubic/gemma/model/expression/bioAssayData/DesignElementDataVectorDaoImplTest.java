@@ -103,6 +103,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     protected void onTearDownAfterTransaction() throws Exception {
         super.onTearDownAfterTransaction();
 
+
         if ( newee != null && newee.getId() != null ) {
             expressionExperimentService.delete( newee );
         }
@@ -135,7 +136,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( newee );
 
-        Map<DesignElementDataVector, Collection<Gene>> geneCoexpressionPattern = dedvs.getGeneCoexpressionPattern( ees,
+        Map<DesignElementDataVector, Collection<Gene>> geneCoexpressionPattern = dedvs.getVectors( ees,
                 genes );
 
     }

@@ -256,7 +256,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
             count++;
             total--;
             if ( count == CHUNK_LIMIT || total == 0 ) {
-                geneMap.putAll( devService.getGeneCoexpressionPattern( allEE, genesInOneChunk ) );
+                geneMap.putAll( devService.getVectors( allEE, genesInOneChunk ) );
                 count = 0;
                 genesInOneChunk.clear();
                 log.info( "Analyzed " + count + " more genes..." );
