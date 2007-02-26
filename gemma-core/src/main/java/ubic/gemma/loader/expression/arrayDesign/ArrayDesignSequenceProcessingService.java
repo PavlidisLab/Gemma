@@ -320,6 +320,10 @@ public class ArrayDesignSequenceProcessingService {
         log.info( buf.toString() );
     }
 
+    /**
+     * @param numWithNoSequence
+     * @param compositeSequence
+     */
     private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
         if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
             log.warn( "More than " + 20 + " compositeSequences do not have"

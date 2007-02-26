@@ -58,8 +58,16 @@ public class Blat {
     public static final String SPACE_REPLACEMENT = "_____";
 
     private static final Log log = LogFactory.getLog( Blat.class );
-    public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.8;
-    public static final double STEPSIZE = 5;
+
+    /**
+     * This value is basically a threshold fraction of aligned bases in the query
+     * 
+     * @see BlatResult implementation for how the score is computed.
+     */
+    public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.7;
+
+    public static final double STEPSIZE = 7;
+
     private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
 
     private static String os = System.getProperty( "os.name" ).toLowerCase();

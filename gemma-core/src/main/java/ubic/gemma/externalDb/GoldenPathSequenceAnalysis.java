@@ -796,7 +796,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * Given a physical location, find how close it is to the 3' end of a gene it is in.
+     * Given a physical location, identify overlapping genes or predicted genes.
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)
      * @param queryStart The start base of the region to query (the start of the alignment to the genome)

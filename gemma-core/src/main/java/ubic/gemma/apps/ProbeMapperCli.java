@@ -34,8 +34,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.analysis.sequence.ProbeMapper;
-import ubic.gemma.externalDb.GoldenPathDumper;
+import ubic.gemma.analysis.sequence.BlatAssociationScorer;
+import ubic.gemma.analysis.sequence.ProbeMapper; 
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.genome.FastaParser;
@@ -220,7 +220,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         writeHeader( writer );
 
         for ( String probe : results.keySet() ) {
-            BlatAssociation best = probeMapper.scoreResults( results.get( probe ) );
+            BlatAssociation best = BlatAssociationScorer.scoreResults( results.get( probe ) );
             if ( best == null ) {
                 continue;
             }

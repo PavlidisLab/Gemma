@@ -1,5 +1,8 @@
 package ubic.gemma.apps;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
@@ -7,6 +10,8 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -28,8 +33,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     ArrayDesignProbeMapperService arrayDesignProbeMapperService;
-
-    private Boolean ignoreStrand = false;
+    private TaxonService taxonService;
+    private String taxonName;
+    private Taxon taxon;
 
     /*
      * (non-Javadoc)
@@ -40,11 +46,16 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option ignoreStrandOption = OptionBuilder.withArgName( "Ignore alignment strand" ).withDescription(
-                "Ignore the strand alignments are on (e.g., for cDNA arrays)" ).withLongOpt( "ignorestrand" ).create(
-                'i' );
 
-        addOption( ignoreStrandOption );
+        Option taxonOption = OptionBuilder
+                .hasArg()
+                .withArgName( "taxon" )
+                .withDescription(
+                        "Taxon common name (e.g., human); analysis will be run for all ArrayDesigns from that taxon (overrides -a)" )
+                .create( 't' );
+
+        addOption( taxonOption );
+
     }
 
     public static void main( String[] args ) {
@@ -64,17 +75,39 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Array design sequence BLAT", args );
+        Exception err = processCommandLine( "Array design mapping of probes to genes", args );
         if ( err != null ) return err;
 
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+        if ( this.taxon != null ) {
+            log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
+            Collection<String> errorObjects = new HashSet<String>();
+            Collection<String> persistedObjects = new HashSet<String>();
 
-        unlazifyArrayDesign( arrayDesign );
-
-        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, ignoreStrand );
-        audit( arrayDesign, "Run with 'ignoreStrand'=" + ignoreStrand );
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+            for ( ArrayDesign design : allArrayDesigns ) {
+                if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+                    log.info( "============== Start processing: " + design + " ==================" );
+                    try {
+                        arrayDesignProbeMapperService.processArrayDesign( design );
+                        persistedObjects.add( design.getName() );
+                        audit( design, "Part of a batch job" );
+                    } catch ( Exception e ) {
+                        errorObjects.add( design + ": " + e.getMessage() );
+                        log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+                        log.error( e, e );
+                    }
+                }
+            }
+            summarizeProcessing( errorObjects, persistedObjects );
+        } else {
+            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+            unlazifyArrayDesign( arrayDesign );
+            arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
+            audit( arrayDesign, "Run with default parameters" );
+        }
 
         return null;
     }
@@ -84,7 +117,16 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         super.processOptions();
         arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
-        this.ignoreStrand = this.hasOption( 'i' );
+
+        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
+        if ( this.hasOption( 't' ) ) {
+            this.taxonName = this.getOptionValue( 't' );
+            this.taxon = taxonService.findByCommonName( this.taxonName );
+            if ( taxon == null ) {
+                throw new IllegalArgumentException( "No taxon named " + taxonName );
+            }
+        }
     }
 
     /**

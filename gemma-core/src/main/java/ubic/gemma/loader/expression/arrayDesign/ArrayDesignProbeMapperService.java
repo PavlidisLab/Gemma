@@ -69,16 +69,11 @@ public class ArrayDesignProbeMapperService {
     private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
     private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
 
-    public void processArrayDesign( ArrayDesign arrayDesign ) {
-        this.processArrayDesign( arrayDesign, false );
-    }
-
     /**
      * @param arrayDesign
-     * @praam ignoreStrand if true, the strand alignments occur on will be ignored.
      */
     @SuppressWarnings("unchecked")
-    public void processArrayDesign( ArrayDesign arrayDesign, boolean ignoreStrand ) {
+    public void processArrayDesign( ArrayDesign arrayDesign ) {
 
         Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         GoldenPathSequenceAnalysis goldenPathDb;
@@ -107,7 +102,7 @@ public class ArrayDesignProbeMapperService {
             if ( blatResults == null || blatResults.isEmpty() ) continue;
 
             Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
-                    blatResults, ignoreStrand );
+                    blatResults );
 
             if ( log.isDebugEnabled() )
                 log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()

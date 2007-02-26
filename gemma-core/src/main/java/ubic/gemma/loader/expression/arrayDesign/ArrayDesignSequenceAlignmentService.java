@@ -86,14 +86,13 @@ public class ArrayDesignSequenceAlignmentService {
         // else if ( sequence.getLength() != null ) {
         // assert result.getQuerySequence().getLength().equals( sequence.getLength() ) : "Expected "
         // + sequence.getLength() + " got " + result.getQuerySequence().getLength() + " for " + sequence;
-        //        }
+        // }
     }
 
     /**
      * @param sequencesToBlat
-     * @param blat
      * @param taxon whose database will be queries
-     * @return
+     * @return Map of biosequences to collections of blat results.
      */
     private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
         Blat blat = new Blat();
