@@ -27,6 +27,12 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @author joseph
  */
 public class CompositeSequenceWrapper extends TableDecorator {
+
+    /*
+     * FIXME This should be factored out.
+     */
+    private static final String GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
+
     Log log = LogFactory.getLog( this.getClass() );
     static NumberFormat nf = NumberFormat.getNumberInstance();
 
@@ -42,7 +48,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
         retVal += " : ";
         retVal += blatResult.getTargetStart().toString() + "-";
         retVal += blatResult.getTargetEnd().toString();
-        retVal += "<a target='_blank' href='" + getGenomeBrowserLink( blatResult ) + "'>(browse)</a>";
+        retVal += "<a target='_blank' href='" + getGenomeBrowserLink( blatResult ) + "'>(view in genome browser)</a>";
         return retVal;
     }
 
@@ -78,6 +84,8 @@ public class CompositeSequenceWrapper extends TableDecorator {
         Taxon taxon = blatResult.getQuerySequence().getTaxon();
         String organism = taxon.getCommonName();
 
+        // String database = taxon.getExternalDatabase().getName();
+
         String database = "hg18";
         if ( organism.equalsIgnoreCase( "Human" ) ) {
             database = "hg18";
@@ -89,15 +97,20 @@ public class CompositeSequenceWrapper extends TableDecorator {
 
         // build position if the biosequence has an accession
         // otherwise point to location
-        String position = "Chr";
-        position += blatResult.getTargetChromosome().getName();
-        position += ":";
-        position += blatResult.getTargetStart().toString() + "-";
-        position += blatResult.getTargetEnd().toString();
+        // String position = "Chr";
+        // position += blatResult.getTargetChromosome().getName();
+        // position += ":";
+        // position += blatResult.getTargetStart().toString() + "-";
+        // position += blatResult.getTargetEnd().toString();
+        //
+        // // }
+        // String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=" + organism + "&db=" + database
+        // + "&position=" + position + "&pix=620";
 
-        // }
-        String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=" + organism + "&db=" + database
-                + "&position=" + position + "&pix=620";
+        String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
+                + "&hgt.customText=" + GEMMA_BASE_URL + "blatTrack.html?id=";
+        link += blatResult.getId();
+
         return link;
     }
 

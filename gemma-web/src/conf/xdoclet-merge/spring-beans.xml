@@ -73,6 +73,7 @@
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>
+			<prop key="/blatTrack.html">blatResultTrackController</prop>
 		</props>
 	</property>
 </bean>
@@ -257,7 +258,8 @@
 		</props>
 	</property>
 </bean>
-<bean id="geoRecordBrowserActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="geoRecordBrowserActions"
+	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/geoBrowser/showBatch.html">showBatch</prop>
