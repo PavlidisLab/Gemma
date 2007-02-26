@@ -30,11 +30,9 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -155,6 +153,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
                     log.info( "============== Start processing: " + design + " ==================" );
                     try {
+                        arrayDesignService.thaw( design );
                         arrayDesignSequenceAlignmentService.processArrayDesign( design );
                         persistedObjects.add( design.getName() );
                         audit( design, "Part of a batch job" );

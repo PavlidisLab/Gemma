@@ -91,6 +91,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
                     log.info( "============== Start processing: " + design + " ==================" );
                     try {
+                        arrayDesignService.thaw( design );
                         arrayDesignProbeMapperService.processArrayDesign( design );
                         persistedObjects.add( design.getName() );
                         audit( design, "Part of a batch job" );
