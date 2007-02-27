@@ -6,7 +6,6 @@ import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -14,7 +13,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.DateUtil;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -39,7 +37,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;
-    private String mDate = null;
 
     /*
      * (non-Javadoc)
@@ -59,15 +56,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .create( 't' );
 
         addOption( taxonOption );
-
-        Option dateOption = OptionBuilder
-                .hasArg()
-                .withArgName( "mdate" )
-                .withDescription(
-                        "Constrain to run only on array designs with blat results unmodified within mdate, such as '-7d' or '-1h'" )
-                .create( "mdate" );
-
-        addOption( dateOption );
 
     }
 
@@ -94,10 +82,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         Exception err = processCommandLine( "Array design mapping of probes to genes", args );
         if ( err != null ) return err;
 
-        Date skipIfLastRunLaterThan = null;
-        if ( StringUtils.isNotBlank( mDate ) ) {
-            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-        }
+        Date skipIfLastRunLaterThan = getLimitingDate();
 
         if ( this.taxon != null ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
@@ -111,7 +96,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                     if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
                         log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                        errorObjects.add( design + ": " + "Skipped because it was already run since "
+                        errorObjects.add( design + ": " + "Skipped because it was last run after "
                                 + skipIfLastRunLaterThan );
                         continue;
                     }

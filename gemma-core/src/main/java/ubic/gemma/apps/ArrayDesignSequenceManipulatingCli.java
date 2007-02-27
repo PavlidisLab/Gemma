@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -33,6 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.DateUtil;
 
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
@@ -56,6 +58,17 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
                 "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
+
+        Option dateOption = OptionBuilder
+                .hasArg()
+                .withArgName( "mdate" )
+                .withDescription(
+                        "Constrain to run only on array designs with analyses older than the given date. "
+                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                                + "If there is no record of when the analysis was last run, it will be run." ).create(
+                        "mdate" );
+
+        addOption( dateOption );
 
     }
 
@@ -108,18 +121,31 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     }
 
     /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     * @param eventClass
      * @return
      */
-    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign design,
+    protected Date getLimitingDate() {
+        Date skipIfLastRunLaterThan = null;
+        if ( StringUtils.isNotBlank( mDate ) ) {
+            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
+            log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
+        }
+        return skipIfLastRunLaterThan;
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param arrayDesign
+     * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
+     * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
+     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
+     */
+    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         if ( skipIfLastRunLaterThan == null ) return true;
-        auditTrailService.thaw( design );
+        auditTrailService.thaw( arrayDesign );
         List<AuditEvent> sequenceAnalysisEvents = new ArrayList<AuditEvent>();
 
-        for ( AuditEvent event : design.getAuditTrail().getEvents() ) {
+        for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
             if ( event == null ) continue;
             if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
                 sequenceAnalysisEvents.add( event );

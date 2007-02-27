@@ -37,7 +37,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.DateUtil;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -114,10 +113,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 args );
         if ( err != null ) return err;
 
-        Date skipIfLastRunLaterThan = null;
-        if ( StringUtils.isNotBlank( mDate ) ) {
-            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-        }
+        Date skipIfLastRunLaterThan = getLimitingDate();
 
         if ( StringUtils.isNotBlank( this.arrayDesignName ) ) {
 
@@ -145,7 +141,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 } else {
                     // Run blat from scratch.
                     persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign );
-                    audit( arrayDesign, "Based on a fresh alignment analysis" );
+                    audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
+                            + this.blatScoreThreshold );
                 }
                 log.info( "Persisted " + persistedResults.size() + " results" );
             } catch ( FileNotFoundException e ) {
@@ -166,7 +163,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                     if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
                         log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                        errorObjects.add( design + ": " + "Skipped because it was already run since "
+                        // not really an error, but nice to get notification.
+                        errorObjects.add( design + ": " + "Skipped because it was last run after "
                                 + skipIfLastRunLaterThan );
                         continue;
                     }
@@ -176,7 +174,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                         arrayDesignService.thaw( design );
                         arrayDesignSequenceAlignmentService.processArrayDesign( design );
                         persistedObjects.add( design.getName() );
-                        audit( design, "Part of a batch job" );
+                        audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
                     } catch ( Exception e ) {
                         errorObjects.add( design + ": " + e.getMessage() );
                         log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
