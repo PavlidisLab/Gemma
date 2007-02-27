@@ -39,9 +39,11 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getSummaryTable() {
         StringBuilder buf = new StringBuilder();
-        ArrayDesignValueObjectSummary object = ( ArrayDesignValueObjectSummary ) getCurrentRowObject();
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 
-        if ( object.getSummaryTable().startsWith( "No " ) ) {
+        // check if the summary numbers exist
+        // if they donn't, just return not available
+        if ( object.getNumProbeAlignments()  == null ) {
             return "[Not avail.]";
         }
 
@@ -57,7 +59,25 @@ public class ArrayDesignWrapper extends TableDecorator {
         buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
         buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
-        buf.append( object.getSummaryTable() );
+        
+        buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
+                + "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" + "Sequences" + "</td><td>"
+                + object.getNumProbeSequences() + "</td></tr>" + "<tr><td>" + "Alignments" + "</td>" + "<td>"
+                + object.getNumProbeAlignments() + "</td></tr></authz:authorize>" + "<tr><td>" + "To Gene(s)"
+                + "</td><td>" + object.getNumProbesToGenes() + "</td></tr>" +
+
+                "<tr><td>" + "&nbsp;&nbsp;To probe-aligned region(s)" + "</td><td>"
+                + object.getNumProbesToProbeAlignedRegions() + "</td></tr>" +
+
+                "<tr><td>" + "&nbsp;&nbsp;To predicted genes" + "</td><td>" + object.getNumProbesToPredictedGenes()
+                + "</td></tr>" +
+
+                "<tr><td>" + "&nbsp;&nbsp;To known genes" + "</td><td>" + object.getNumProbesToKnownGenes() + "</td></tr>" +
+
+                "<tr><td>" + "Unique genes represented" + "</td><td>" + object.getNumGenes() + "</td></tr>"
+                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + object.getDateCached() + ")" + "</td></tr>"
+                + "</table>" );
+        
         buf.append( "</div>" );
         return buf.toString();
     }

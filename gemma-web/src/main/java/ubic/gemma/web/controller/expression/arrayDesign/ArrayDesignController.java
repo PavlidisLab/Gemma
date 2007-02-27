@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,7 +42,6 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
-import ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignValueObjectSummary;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -159,7 +157,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             colorString = "No color";
         }
 
-        String summary = arrayDesignReportService.getArrayDesignReport( id );
+        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
 
         String[] eeIdList = new String[ee.size()];
         int i = 0;
@@ -193,13 +191,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         String sId = request.getParameter( "id" );
         Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>();
-        String summary = null;
-
+        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Arrays" );
             arrayDesigns.addAll( arrayDesignService.loadAllValueObjects() );
-            summary = arrayDesignReportService.getArrayDesignReport();
+            arrayDesignReportService.fillInValueObjects( arrayDesigns );
         }
 
         // if ids are specified, then display only those arrayDesigns
@@ -211,6 +208,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 ids.add( new Long( idList[i] ) );
             }
             arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) );
+        }
+        
+        for ( ArrayDesignValueObject ad : arrayDesigns ) {
+            ad.setLastSequenceAnalysis( arrayDesignReportService.getLastSequenceAnalysisEvent( ad.getId() ) );
+            ad.setLastGeneMapping( arrayDesignReportService.getLastGeneMappingEvent( ad.getId() ) );
+            ad.setLastSequenceUpdate( arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) );
         }
 
         Long numArrayDesigns = new Long( arrayDesigns.size() );
@@ -229,6 +232,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
+    
+    /*
     // @SuppressWarnings({ "unused", "unchecked" })
     @SuppressWarnings("unchecked")
     public ModelAndView showAllStats( HttpServletRequest request, HttpServletResponse response ) {
@@ -270,7 +275,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         return mav;
     }
-
+*/
     /**
      * @param request
      * @param response

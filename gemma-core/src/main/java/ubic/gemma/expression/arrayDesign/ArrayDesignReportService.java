@@ -21,10 +21,14 @@ package ubic.gemma.expression.arrayDesign;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +48,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpd
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -82,16 +87,30 @@ public class ArrayDesignReportService {
         generateAllArrayDesignReport();
         Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
         for ( ArrayDesignValueObject ad : ads ) {
-            generateArrayDesignReport( ad.getId() );
+            generateArrayDesignReport( ad );
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void generateArrayDesignReport(Long id) {
+        Collection<Long> ids = new ArrayList<Long>();
+        ids.add( id );
+        Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
+        if (adVo != null && adVo.size() > 0) {
+            generateArrayDesignReport(adVo.iterator().next());
         }
     }
 
-    public void generateArrayDesignReport( long id ) {
+    public void generateArrayDesignReport( ArrayDesignValueObject adVo ) {
 
-        ArrayDesign ad = arrayDesignService.load( id );
+        ArrayDesign ad = arrayDesignService.load( adVo.getId() );
         if ( ad == null ) return;
 
-        log.info( "Generating report for array design " + id + "\n" );
+        log.info( "Generating report for array design " + ad.getId()+ "\n" );
+        
+        // obtain time information (for timestamping)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
         long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
         long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
@@ -100,12 +119,22 @@ public class ArrayDesignReportService {
         long numCsProbeAlignedRegions = arrayDesignService.numCompositeSequenceWithProbeAlignedRegion( ad );
         long numCsPureGenes = numCsGenes - numCsPredictedGenes - numCsProbeAlignedRegions;
         long numGenes = arrayDesignService.numGenes( ad );
+        
+        adVo.setNumProbeSequences( Long.toString( numCsBioSequences) );
+        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults  ) );
+        adVo.setNumProbesToGenes( Long.toString( numCsGenes) );
+        adVo.setNumProbesToKnownGenes( Long.toString( numCsPureGenes ) );
+        adVo.setNumProbesToPredictedGenes( Long.toString( numCsPredictedGenes ));
+        adVo.setNumProbesToProbeAlignedRegions( Long.toString( numCsProbeAlignedRegions ) );
+        adVo.setNumGenes( Long.toString( numGenes ) );
+        adVo.setDateCached( timestamp );
 
-        String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes,
-                numCsPredictedGenes, numCsProbeAlignedRegions, numCsPureGenes );
+
+        //String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes,
+         //       numCsPredictedGenes, numCsProbeAlignedRegions, numCsPureGenes );
 
         // write into file
-        File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id );
+        /*File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id );
         f.delete();
         try {
             f.createNewFile();
@@ -117,27 +146,57 @@ public class ArrayDesignReportService {
             // cannot write to file. Just fail gracefully.
             log.error( "Cannot write to file." );
         }
+        */
+        
+        try {
+            // remove file first
+            File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + adVo.getId());
+            if (f.exists()){
+                f.delete();
+            }
+            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
+            ObjectOutputStream oos = new ObjectOutputStream( fos );
+            oos.writeObject( adVo );
+            oos.flush();
+            oos.close();
+        } catch ( Throwable e ) {
+            return;
+        }
     }
 
     public void generateAllArrayDesignReport() {
         log.info( "Generating report for all array designs\n" );
+        
+        // obtain time information (for timestamping)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
         long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences();
         long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults();
         long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes();
         long numGenes = arrayDesignService.numAllGenes();
 
-        String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes );
-        // write into file
-        File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
-        f.delete();
+        // create a surrogate ArrayDesignValue object to represent the total of all array designs
+        ArrayDesignValueObject adVo = new ArrayDesignValueObject();
+        adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
+        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
+        adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
+        adVo.setNumGenes( Long.toString(numGenes) );
+        adVo.setDateCached( timestamp );
+        
+        
         try {
-            f.createNewFile();
-            Writer writer = new FileWriter( f );
-            writer.write( report.toString() );
-            writer.flush();
-            writer.close();
-        } catch ( IOException e ) {
+            // remove file first
+            File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
+            if (f.exists()){
+                f.delete();
+            }
+            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
+            ObjectOutputStream oos = new ObjectOutputStream( fos );
+            oos.writeObject( adVo );
+            oos.flush();
+            oos.close();
+        } catch ( Throwable e ) {
             // cannot write to file. Just fail gracefully.
             log.error( "Cannot write to file." );
         }
@@ -243,8 +302,90 @@ public class ArrayDesignReportService {
 
         return analysisEventString;
     }
+    
+    /**
+     * Get a specific cached summary object
+     * @param id
+     * @return arrayDesignValueObject the specified summary object
+     */
+    public ArrayDesignValueObject getSummaryObject (Long id) {
+        ArrayDesignValueObject adVo = null;
+        try {
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
+                    + ARRAY_DESIGN_SUMMARY + "." + id );
+            if ( f.exists() ) {
+                FileInputStream fis = new FileInputStream( f );
+                ObjectInputStream ois = new ObjectInputStream( fis );
+                adVo = ( ArrayDesignValueObject ) ois.readObject();
+                ois.close();
+                fis.close();
+            } 
+        } catch ( Throwable e ) {
+            return null;
+        }
+        return adVo;
+    }
+    
+    /**
+     * Get the cached summary object that represents all array designs.
+     * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
+     */
+    public ArrayDesignValueObject getSummaryObject () {
+        ArrayDesignValueObject adVo = null;
+        try {
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
+                    + ARRAY_DESIGN_SUMMARY );
+            if ( f.exists() ) {
+                FileInputStream fis = new FileInputStream( f );
+                ObjectInputStream ois = new ObjectInputStream( fis );
+                adVo = ( ArrayDesignValueObject ) ois.readObject();
+                ois.close();
+                fis.close();
+            } 
+        } catch ( Throwable e ) {
+            return null;
+        }
+        return adVo;
+    }    
+    
+    /**
+     * Get the cached summary objects
+     * @param id
+     * @return arrayDesignValueObjects the specified summary object
+     */
+    public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids) {
+        Collection<ArrayDesignValueObject> adVos = new ArrayList<ArrayDesignValueObject>();
+        for ( Long id : ids ) {
+            ArrayDesignValueObject adVo = getSummaryObject(id);
+            if (adVo != null ) {
+                adVos.add( getSummaryObject(id) );
+            }
+        }
+        
+        return adVos;
+    }
+    
+    /**
+     * Fill in the probe summary statistics
+     * @param adVos
+     */
+    public void fillInValueObjects(Collection<ArrayDesignValueObject> adVos) {
+        for ( ArrayDesignValueObject origVo : adVos ) {
+            ArrayDesignValueObject cachedVo = getSummaryObject( origVo.getId() );
+            if ( cachedVo != null ) {
+                origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
+                origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
+                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
+                origVo.setNumProbesToKnownGenes( cachedVo.getNumProbesToKnownGenes() );
+                origVo.setNumProbesToPredictedGenes( cachedVo.getNumProbesToPredictedGenes() );
+                origVo.setNumProbesToProbeAlignedRegions( cachedVo.getNumProbesToProbeAlignedRegions() );
+                origVo.setNumGenes( cachedVo.getNumGenes() );
+                origVo.setDateCached( cachedVo.getDateCached() );
+            }
+        }
+    }
 
-    public java.lang.String getArrayDesignReport( Long id ) {
+ /*   public java.lang.String getArrayDesignReport( Long id ) {
         // read file into return string
 
         InputStream istr = null;
@@ -267,11 +408,11 @@ public class ArrayDesignReportService {
         }
         return report.toString();
     }
-
+*/
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignReportService#getArrayDesignReport()
      */
-    public java.lang.String getArrayDesignReport() {
+/*    public java.lang.String getArrayDesignReport() {
         // read file into return string
 
         InputStream istr = null;
@@ -293,7 +434,7 @@ public class ArrayDesignReportService {
             return "";
         }
         return report.toString();
-    }
+    }*/
 
     private void initDirectories() {
         // check to see if the home directory exists. If it doesn't, create it.

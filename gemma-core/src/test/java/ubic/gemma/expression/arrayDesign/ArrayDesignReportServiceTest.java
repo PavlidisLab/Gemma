@@ -61,7 +61,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
     public void testGenerateArrayDesignSequenceAnalysisEvent() {
         ArrayDesignReportService adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        adrs.generateArrayDesignReport( ad.getId() );
+
         String report = adrs.getLastSequenceAnalysisEvent( ad.getId() );
 
         log.info( report );
@@ -71,7 +71,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
     public void testGenerateArrayDesignSequenceUpdateEvent() {
         ArrayDesignReportService adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        adrs.generateArrayDesignReport( ad.getId() );
+
         String report = adrs.getLastSequenceUpdateEvent( ad.getId() );
 
         log.info( report );
@@ -81,7 +81,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
     public void testGenerateArrayDesignGeneMappingEvent() {
         ArrayDesignReportService adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        adrs.generateArrayDesignReport( ad.getId() );
+
         String report = adrs.getLastGeneMappingEvent( ad.getId() );
 
         log.info( report );
