@@ -78,6 +78,12 @@ public class ArrayDesignSequenceProcessingService {
      */
     private static final int MAX_VERSION_NUMBER = 10;
 
+    /**
+     * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off when retrieving
+     * sequences from BLAST databases.
+     */
+    private static final int POLY_AT_THRESHOLD = 5;
+
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
     private ArrayDesignService arrayDesignService;
@@ -269,9 +275,8 @@ public class ArrayDesignSequenceProcessingService {
     /**
      * @param arrayDesign
      * @param accessionsToFetch
-     * @param versionNumber
      */
-    private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, int versionNumber, boolean force ) {
+    private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, boolean force ) {
         Map<String, BioSequence> accessionsToFetch = new HashMap<String, BioSequence>();
         int sequenceProvided = 0;
         int noSequence = 0;
@@ -662,8 +667,7 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
             String blastDbHome, boolean force ) {
 
-        int versionNumber = 1;
-        Map<String, BioSequence> accessionsToFetch = initializeFetchList( arrayDesign, versionNumber, force );
+        Map<String, BioSequence> accessionsToFetch = initializeFetchList( arrayDesign, force );
 
         if ( accessionsToFetch.size() == 0 ) {
             log.info( "No accessions to fetch, no processing will be done" );
@@ -673,6 +677,7 @@ public class ArrayDesignSequenceProcessingService {
         Collection<String> notFound = accessionsToFetch.keySet();
         Collection<BioSequence> finalResult = new HashSet<BioSequence>();
 
+        int versionNumber = 1;
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
@@ -693,7 +698,10 @@ public class ArrayDesignSequenceProcessingService {
                 // remove the version number and increase it
                 BioSequence bs = accessionsToFetch.get( accession );
                 accessionsToFetch.remove( accession );
-                accession = accession.replaceFirst( "\\d$", Integer.toString( versionNumber ) );
+
+                // add or increase the version number.
+                accession = accession.replaceFirst( "\\.\\d+$", "" );
+                accession = accession + Integer.toString( versionNumber );
                 accessionsToFetch.put( accession, bs );
             }
             notFound = accessionsToFetch.keySet();
@@ -818,8 +826,10 @@ public class ArrayDesignSequenceProcessingService {
                 continue;
             }
 
+            newSequence = SequenceManipulation.stripPolyAorT( newSequence, POLY_AT_THRESHOLD );
+
             old.setSequence( newSequence );
-            old.setLength( new Long( sequence.getSequence().length() ) );
+            old.setLength( new Long( newSequence.length() ) );
             old.setIsApproximateLength( false );
             found.put( accession, old );
             accessionsToFetch.remove( accession );
