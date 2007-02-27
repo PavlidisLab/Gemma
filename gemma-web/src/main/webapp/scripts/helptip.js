@@ -61,6 +61,12 @@
 | Created 2001-09-27 | All changes are in the log above. | Updated 2002-12-02 |
 \----------------------------------------------------------------------------*/
 
+/*
+	Modfied for Gemma
+	
+	Version: $Id$
+*/
+
 function showHelpTip(e, sHtml, bHideSelects) {
 
 	// find anchor element
@@ -77,6 +83,32 @@ function showHelpTip(e, sHtml, bHideSelects) {
 
 	// create element and insert last into the body
 	helpTipHandler.createHelpTip(el, sHtml);
+	
+	// position tooltip
+	helpTipHandler.positionToolTip(e);
+
+	// add a listener to the blur event.
+	// When blurred remove tooltip and restore anchor
+	el.onblur = helpTipHandler.anchorBlur;
+	el.onkeydown = helpTipHandler.anchorKeyDown;
+}
+
+function showWideHelpTip(e, sHtml, bHideSelects) {
+
+	// find anchor element
+	var el = e.target || e.srcElement;
+	while (el.tagName != "A")
+		el = el.parentNode;
+	
+	// is there already a tooltip? If so, remove it
+	if (el._helpTip) {
+		helpTipHandler.hideHelpTip(el);
+	}
+
+	helpTipHandler.hideSelects = Boolean(bHideSelects);
+
+	// create element and insert last into the body
+	helpTipHandler.createWideHelpTip(el, sHtml);
 	
 	// position tooltip
 	helpTipHandler.positionToolTip(e);
@@ -112,9 +144,9 @@ var helpTipHandler = {
 			selects[i].runtimeStyle.visibility = bVisible ? "" : "hidden";	
 	},
 	
-	create:	function () {
+	create:	function (className) {
 		var d = document.createElement("DIV");
-		d.className = "helpTooltip";
+		d.className = className;
 		d.onmousedown = this.helpTipMouseDown;
 		d.onmouseup = this.helpTipMouseUp;
 		document.body.appendChild(d);		
@@ -123,7 +155,19 @@ var helpTipHandler = {
 	
 	createHelpTip:	function (el, sHtml) {
 		if (this.helpTip == null) {
-			this.create();
+			this.create("helpTooltip");
+		}
+
+		var d = this.helpTip;
+		d.innerHTML = sHtml;
+		d._boundAnchor = el;
+		el._helpTip = d;
+		return d;
+	},
+	
+	createWideHelpTip:	function (el, sHtml) {
+		if (this.helpTip == null) {
+			this.create("helpWideTooltip");
 		}
 
 		var d = this.helpTip;

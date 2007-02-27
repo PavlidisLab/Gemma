@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -42,12 +41,14 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
@@ -66,6 +67,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     ExpressionExperiment newee = null;
 
     ExpressionExperimentService expressionExperimentService;
+    DesignElementDataVectorService designElementDataVectorService;
     ArrayDesignService adService;
     Collection<ArrayDesign> ads;
     protected AbstractGeoService geoService;
@@ -122,7 +124,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         assertNotNull( ee );
         assertEquals( 200, ee.getDesignElementDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
-
+        designElementDataVectorService = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
@@ -130,7 +133,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     }
 
     /**
-     * For bug 553
+     * For bug 553. This uses three platforms.
      * 
      * @throws Exception
      */
@@ -151,6 +154,9 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
 
         expressionExperimentService.thaw( newee );
+        // make sure we really thaw them, so we can get the design element sequences.
+        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
+
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
         QuantitationType qt = quantitationTypes.iterator().next();
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
@@ -158,6 +164,11 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         assertEquals( 4, matrix.columns() );
     }
 
+    /**
+     * Used 4 related platforms.
+     * 
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE3193() throws Exception {
         endTransaction();
@@ -175,6 +186,10 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
 
         expressionExperimentService.thaw( newee );
+
+        // make sure we really thaw them, so we can get the design element sequences.
+        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
+
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
         QuantitationType qt = null;
         for ( QuantitationType qts : quantitationTypes ) {
@@ -184,9 +199,15 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             }
         }
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
-        assertEquals( 200, matrix.rows() );
+
+        // there are actually 200 if you do it by design element, but NNN if you do it by biosequence.
+
+        assertEquals( 145, matrix.rows() );
         // assertEquals( 34, matrix.columns() ); this depends quite a bit on how we match up the biomaterials and
         // bioassays. Currently I get 57.
+
+        log.info( matrix );
+
     }
 
     /**
@@ -210,6 +231,9 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
 
         expressionExperimentService.thaw( newee );
+        // make sure we really thaw them, so we can get the design element sequences.
+        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
+
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
         QuantitationType qt = null;
         for ( QuantitationType qts : quantitationTypes ) {
@@ -239,6 +263,9 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
 
         expressionExperimentService.thaw( newee );
+        // make sure we really thaw them, so we can get the design element sequences.
+        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
+
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
         QuantitationType qt = null;
         for ( QuantitationType qts : quantitationTypes ) {
@@ -250,6 +277,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
         assertEquals( 40, matrix.rows() ); // there would be 100 but there are lots of missing values.
         assertEquals( 11, matrix.columns() );
+
     }
 
     /**
@@ -414,13 +442,29 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         Collection<DesignElement> designElements = new LinkedHashSet<DesignElement>();
 
-        DesignElement de1 = CompositeSequence.Factory.newInstance();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "test ar" );
+
+        CompositeSequence de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
         de1.setDesignElementDataVectors( vectors1 );
 
-        DesignElement de2 = CompositeSequence.Factory.newInstance();
+        BioSequence bs1 = BioSequence.Factory.newInstance();
+        bs1.setName( "test1" );
+
+        de1.setBiologicalCharacteristic( bs1 );
+
+        de1.setArrayDesign( ad );
+
+        CompositeSequence de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
         de2.setDesignElementDataVectors( vectors2 );
+
+        BioSequence bs2 = BioSequence.Factory.newInstance();
+        bs2.setName( "test2" );
+
+        de2.setBiologicalCharacteristic( bs2 );
+        de2.setArrayDesign( ad );
 
         designElements.add( de1 );
         designElements.add( de2 );

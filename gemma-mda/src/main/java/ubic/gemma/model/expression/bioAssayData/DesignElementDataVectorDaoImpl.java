@@ -23,9 +23,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -191,29 +193,84 @@ public class DesignElementDataVectorDaoImpl extends
     protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
-        
-        final String queryString = "select distinct dedv, gene from DesignElementDataVectorImpl dedv, GeneImpl as gene inner join gene.products gp,BlatAssociationImpl ba, CompositeSequenceImpl cs  where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and dedv.designElement=cs and dedv.quantitationType.isPreferred= true  and  gene in (:genes) and  dedv.expressionExperiment in (:ees)";
-       
-        
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ees", ees );
-            queryObject.setParameterList( "genes", genes );
+        // first get the composite sequences
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene in (:genes)";
 
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( csQueryString );
+            queryObject.setParameterList( "genes", genes );
             ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( results.next() ) {
-                DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
+                CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
                 Gene g = ( Gene ) results.get( 1 );
-                if ( !geneMap.containsKey( dedv ) ) {
-                    geneMap.put( dedv, new HashSet<Gene>() );
+                if ( !cs2gene.containsKey( cs ) ) {
+                    cs2gene.put( cs, new HashSet<Gene>() );
                 }
 
-                geneMap.get( dedv ).add( g );
+                cs2gene.get( cs ).add( g );
             }
             results.close();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+        watch.stop();
+        log.info( "Got " + cs2gene.keySet().size() + " composite sequences for " + genes.size() + " genes in "
+                + watch.getTime() + "ms" );
+
+        watch.reset();
+        watch.start();
+        final String queryString;
+
+        if ( ees == null || ees.size() == 0 ) {
+            queryString = "select dedv.id from DesignElementDataVectorImpl dedv"
+                    + " where dedv.designElement in ( :cs)  and dedv.quantitationType.isPreferred = true";
+        } else {
+            queryString = "select dedv.id from DesignElementDataVectorImpl dedv"
+                    + " where dedv.designElement  = :cs and dedv.quantitationType.isPreferred = true"
+                    + " and dedv.expressionExperiment in (:ees)";
+        }
+        int count = 0;
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+
+        try {
+
+            if ( ees != null && ees.size() > 0 ) {
+                queryObject.setParameterList( "ees", ees );
+            }
+            queryObject.setParameterList( "cs", cs2gene.keySet() );
+
+            List results = queryObject.list();
+
+            log.info( "Query done in " + watch.getTime() + "ms" );
+
+            for ( Object object : results ) {
+
+                // DesignElementDataVector dedv = ( DesignElementDataVector ) object;
+
+                DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
+                dedv.setId( ( Long ) object );
+
+//                if ( !geneMap.containsKey( dedv ) ) {
+//                    geneMap.put( dedv, new HashSet<Gene>() );
+//                }
+//                for ( Gene g : cs2gene.get( dedv.getDesignElement() ) ) {
+//                    geneMap.get( dedv ).add( g );
+//                }
+                if ( count++ % 200 == 0 ) log.info( count + " vectors processed in " + watch.getTime() + "ms" );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        watch.stop();
+        log.info( "Got " + count + " DEDV for " + cs2gene.keySet().size() + " composite sequences in "
+                + watch.getTime() + "ms" );
 
         return geneMap;
     }
@@ -276,6 +333,7 @@ public class DesignElementDataVectorDaoImpl extends
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                int count = 0;
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
                     session.update( designElementDataVector );
@@ -285,6 +343,8 @@ public class DesignElementDataVectorDaoImpl extends
                         ba.getSamplesUsed().size();
                         ba.getDerivedDataFiles().size();
                     }
+
+                    if ( ++count % 2000 == 0 ) log.info( "Thawed " + count + " vectors" );
                 }
                 return null;
             }
