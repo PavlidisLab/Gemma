@@ -211,8 +211,23 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         int numStringencyPredictedGenes = 0;
         int numStringencyProbeAlignedRegions = 0;
         
+ 
+        
         for ( Long key : geneMap.keySet() ) {
             CoexpressionValueObject v = geneMap.get( key );
+            Collection<Long> allNonspecificEE = coexpressions.getNonSpecificExpressionExperiments(v.getGeneId());
+            //log.info( "All Non-specific EE's for gene " + v.getGeneId() + " : " + allNonspecificEE);
+            //log.info( "All EE's contributing for gene " + v.getGeneId() + " : " + v.getContributingExpressionExperiments());
+                    
+            //determine which EE's that contributed to this gene's coexpression were non-specific
+            Collection<Long> nonspecificEE = new HashSet<Long>();
+            for (Long id : v.getContributingExpressionExperiments()){
+                if(allNonspecificEE.contains( id ))
+                    nonspecificEE.add( id );                
+            }
+            v.setNonspecificEE( nonspecificEE );
+            //log.info( "Non-specific EE's contributing to gene " + v.getGeneId() + " coexpression: " + nonspecificEE);
+            //log.info( "=================");
             boolean added = false;
             if ( v.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
                 numGenes++;
@@ -254,6 +269,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     numStringencyProbeAlignedRegions++;    
                 }
             }
+            
             
         }
         // add count of pruned matches to coexpression data
@@ -403,7 +419,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param geneMap
      * @param scroll
      */
-    private void processCoexpQueryResult( Map<Long, CoexpressionValueObject> geneMap, ScrollableResults scroll ) {
+    private void processCoexpQueryResult( Map<Long, CoexpressionValueObject> geneMap, ScrollableResults scroll, CoexpressionCollectionValueObject coexpressions ) {
         CoexpressionValueObject vo;
         Long geneId = scroll.getLong( 0 );
         // check to see if geneId is already in the geneMap
@@ -431,6 +447,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Long probeID = scroll.getLong( 9 );
         vo.addScore( eeID, scroll.getDouble( 7 ), probeID );
         vo.addPValue( eeID, scroll.getDouble( 6 ), probeID );
+        
+        coexpressions.addSpecifityInfo( eeID, probeID, geneId );
         // }
 
     }
@@ -440,12 +458,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param queryObject
      */
     private void processCoexpQuery( int qn, Map<Long, CoexpressionValueObject> geneMap,
-            org.hibernate.Query queryObject ) {
+            org.hibernate.Query queryObject, CoexpressionCollectionValueObject coexpressions ) {
         log.info( "Waiting for query  " + qn + " result" );
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         log.info( "Query " + qn + " results ready" );
         while ( scroll.next() ) {
-            processCoexpQueryResult( geneMap, scroll );
+            processCoexpQueryResult( geneMap, scroll, coexpressions );
         }
 
     }
@@ -699,7 +717,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         String queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
                         Session session = getSessionFactory().openSession();
                         org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
-                        processCoexpQuery( 1, geneMap, queryObject );
+                        processCoexpQuery( 1, geneMap, queryObject, coexpressions );
                         session.close();
                         watch.stop();
                         Long elapsed = watch.getTime();
@@ -724,7 +742,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
                         Session session = getSessionFactory().openSession();
                         org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
-                        processCoexpQuery( 2, geneMap, queryObject );
+                        processCoexpQuery( 2, geneMap, queryObject,coexpressions );
                         session.close();
                         watch.stop();
                         Long elapsed = watch.getTime();
@@ -776,6 +794,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coexpressions.setPostProcessTime( elapsed );
             log.info( "Done postprocessing" );
             log.info( "Elapsed time for postprocessing: " + elapsed );
+            //log.info( "Non-Specific EEs: " + coexpressions. );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
