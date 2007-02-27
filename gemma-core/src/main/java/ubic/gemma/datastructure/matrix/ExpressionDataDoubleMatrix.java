@@ -34,10 +34,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -85,7 +83,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 quantitationTypes );
         vectorsToMatrix( selectedVectors );
     }
-
+    
+    
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
         init();
@@ -164,60 +163,24 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @return DoubleMatrixNamed
      */
     private DoubleMatrixNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), maxSize );
 
-        /*
-         * The number of rows in the matrix is equal to the number of BioSequences represented - not the number of
-         * vectors.
-         */
-        int numRows = this.rowDesignElementMapByInteger.keySet().size();
-
-        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
-
-        // initialize the matrix to -Infinity; this marks values that are not yet initialized.
+        // initialize the matrix to NaN
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setQuick( i, j, Double.NEGATIVE_INFINITY );
+                matrix.setQuick( i, j, Double.NaN );
             }
         }
-
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );
         }
-
         log.info( "Creating a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
 
         ByteArrayConverter bac = new ByteArrayConverter();
         int rowNum = 0;
         Collection<BioAssayDimension> seenDims = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
-
-            DesignElement designElement = vector.getDesignElement();
-            assert designElement != null : "No designelement for " + vector;
-
-            int currentRowNum;
-            int startIndex = 0;
-
-            Integer rowIndex = this.rowElementMap.get( designElement );
-
-            // Rows are indexed by the underlying sequence.
-            if ( !matrix.containsRowName( rowIndex ) ) {
-                log.debug( "Adding row " + rowIndex );
-                matrix.addRowName( rowIndex );
-                currentRowNum = rowNum;
-                rowNum++; // only add a new row if we are looking at a new sequence.
-            } else {
-                // we're adding on to the row.
-                // This has to index by an integer, not a sequence.
-                log.debug( "Adding on to row " + rowIndex );
-                currentRowNum = matrix.getRowIndexByName( rowIndex );
-                double[] row = matrix.getRowByName( rowIndex );
-                for ( startIndex = 0; startIndex < row.length; startIndex++ ) {
-                    double d = row[startIndex];
-                    if ( d == Double.NEGATIVE_INFINITY ) break;
-                }
-
-            }
-
+            matrix.addRowName( vector.getDesignElement() );
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
 
@@ -226,26 +189,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             seenDims.add( dimension );
             assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
                     + dimension.getBioAssays().size();
-
-            for ( int i = startIndex; i < vals.length; i++ ) {
+            for ( int i = 0; i < vals.length; i++ ) {
                 BioAssay bioAssay = it.next();
-                if ( vals[i] == Double.NEGATIVE_INFINITY ) {
-                    throw new IllegalArgumentException(
-                            "Whoops, data contains -infinity, which we use as a special value at row " + currentRowNum
-                                    + " col=" + i );
-                }
-                matrix.setQuick( currentRowNum, columnAssayMap.get( bioAssay ), vals[i] );
+                matrix.setQuick( rowNum, columnAssayMap.get( bioAssay ), vals[i] );
             }
 
+            rowNum++;
         }
         log.info( seenDims.size() + " bioAssayDimensions observed" );
-
-        // fill in remaining missing values.
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            for ( int j = 0; j < matrix.columns(); j++ ) {
-                if ( matrix.getQuick( i, j ) == Double.NEGATIVE_INFINITY ) matrix.setQuick( i, j, Double.NaN );
-            }
-        }
 
         return matrix;
     }
@@ -257,7 +208,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double get( DesignElement designElement, BioAssay bioAssay ) {
-        int i = matrix.getRowIndexByName( ( ( CompositeSequence ) designElement ).getBiologicalCharacteristic() );
+        int i = matrix.getRowIndexByName( designElement );
         int colNum = this.columnAssayMap.get( bioAssay );
         int j = matrix.getColIndexByName( colNum );
         log.debug( designElement + " = " + i + " " + bioAssay + " = " + j + " (colnum=" + colNum );
@@ -301,18 +252,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         if ( bioMaterial == null ) {
             throw new IllegalArgumentException( "Biomaterial cannot be null" );
         }
-        Integer columnIndex = this.columnBioMaterialMap.get( bioMaterial );
-        if ( columnIndex == null ) {
+        Integer i = this.columnBioMaterialMap.get( bioMaterial );
+        if ( i == null ) {
             throw new IllegalArgumentException( "No such biomaterial " + bioMaterial );
         }
-
-        Integer rowIndex = this.getRowIndex( designElement );
-        if ( rowIndex == null ) {
-            throw new IllegalArgumentException( "No such designElement " + designElement );
-        }
-
-        return ( Double ) this.matrix
-                .get( matrix.getRowIndexByName( rowIndex ), matrix.getColIndexByName( columnIndex ) );
+        return ( Double ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix.getColIndexByName( i ) );
     }
 
     /*
