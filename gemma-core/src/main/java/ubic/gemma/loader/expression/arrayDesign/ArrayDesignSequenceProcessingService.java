@@ -221,7 +221,6 @@ public class ArrayDesignSequenceProcessingService {
     @SuppressWarnings("unchecked")
     private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
             Collection<CompositeSequence> csBuffer ) {
-        // FIXME : this findOrCreate is slow on collections; it could be sped up.
         Collection<BioSequence> newOnes = bioSequenceService.findOrCreate( sequenceBuffer );
         bioSequences.addAll( newOnes );
         Iterator<CompositeSequence> csit = csBuffer.iterator();

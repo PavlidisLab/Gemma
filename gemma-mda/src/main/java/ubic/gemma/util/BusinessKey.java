@@ -128,6 +128,8 @@ public class BusinessKey {
         if ( bioSequence.getSequenceDatabaseEntry() != null ) {
             queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
                     Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
+        } else if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
+            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
         }
 
     }
