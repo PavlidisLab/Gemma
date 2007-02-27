@@ -18,12 +18,17 @@
  */
 package ubic.gemma.apps;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
@@ -41,6 +46,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
     AuditTrailService auditTrailService;
+
+    String mDate = null;
 
     @Override
     @SuppressWarnings("static-access")
@@ -82,6 +89,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         if ( this.hasOption( 'a' ) ) {
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
+        if ( hasOption( "mdate" ) ) {
+            this.mDate = this.getOptionValue( "mdate" );
+        }
+
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
@@ -94,6 +105,34 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         ae.setPerformer( UserDetailsServiceImpl.getCurrentUser() );
         ad.getAuditTrail().addEvent( ae );
         arrayDesignService.update( ad );
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     * @param eventClass
+     * @return
+     */
+    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign design,
+            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+        if ( skipIfLastRunLaterThan == null ) return true;
+        auditTrailService.thaw( design );
+        List<AuditEvent> sequenceAnalysisEvents = new ArrayList<AuditEvent>();
+
+        for ( AuditEvent event : design.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
+            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                sequenceAnalysisEvents.add( event );
+            }
+        }
+
+        if ( sequenceAnalysisEvents.size() == 0 ) {
+            return true; // always do it
+        } else {
+            // return true if the last time was older than the limit time.
+            AuditEvent lastEvent = sequenceAnalysisEvents.get( sequenceAnalysisEvents.size() - 1 );
+            return lastEvent.getDate().before( skipIfLastRunLaterThan );
+        }
     }
 
 }

@@ -1,10 +1,12 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -12,6 +14,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.util.DateUtil;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -36,6 +39,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;
+    private String mDate = null;
 
     /*
      * (non-Javadoc)
@@ -55,6 +59,15 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .create( 't' );
 
         addOption( taxonOption );
+
+        Option dateOption = OptionBuilder
+                .hasArg()
+                .withArgName( "mdate" )
+                .withDescription(
+                        "Constrain to run only on array designs with blat results unmodified within mdate, such as '-7d' or '-1h'" )
+                .create( "mdate" );
+
+        addOption( dateOption );
 
     }
 
@@ -81,6 +94,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         Exception err = processCommandLine( "Array design mapping of probes to genes", args );
         if ( err != null ) return err;
 
+        Date skipIfLastRunLaterThan = null;
+        if ( StringUtils.isNotBlank( mDate ) ) {
+            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
+        }
+
         if ( this.taxon != null ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
             Collection<String> errorObjects = new HashSet<String>();
@@ -88,7 +106,16 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
+
                 if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+
+                    if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
+                        log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                        errorObjects.add( design + ": " + "Skipped because it was already run since "
+                                + skipIfLastRunLaterThan );
+                        continue;
+                    }
+
                     log.info( "============== Start processing: " + design + " ==================" );
                     try {
                         arrayDesignService.thaw( design );
@@ -105,6 +132,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             summarizeProcessing( errorObjects, persistedObjects );
         } else {
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+
+            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
+                log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                return null;
+            }
+
             unlazifyArrayDesign( arrayDesign );
             arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
             audit( arrayDesign, "Run with default parameters" );
@@ -128,6 +161,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalArgumentException( "No taxon named " + taxonName );
             }
         }
+
+        if ( hasOption( "mdate" ) ) {
+            this.mDate = this.getOptionValue( "mdate" );
+        }
+
     }
 
     /**

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
@@ -36,6 +37,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.DateUtil;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -81,7 +83,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .withDescription(
                         "Taxon common name (e.g., human); blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .create( 't' );
-
         addOption( taxonOption );
 
         addOption( blatScoreThreshold );
@@ -113,9 +114,19 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 args );
         if ( err != null ) return err;
 
+        Date skipIfLastRunLaterThan = null;
+        if ( StringUtils.isNotBlank( mDate ) ) {
+            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
+        }
+
         if ( StringUtils.isNotBlank( this.arrayDesignName ) ) {
 
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+
+            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                return null;
+            }
 
             unlazifyArrayDesign( arrayDesign );
             Collection<BlatResult> persistedResults;
@@ -150,7 +161,16 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
+
                 if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+
+                    if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                        log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                        errorObjects.add( design + ": " + "Skipped because it was already run since "
+                                + skipIfLastRunLaterThan );
+                        continue;
+                    }
+
                     log.info( "============== Start processing: " + design + " ==================" );
                     try {
                         arrayDesignService.thaw( design );
@@ -212,6 +232,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         if ( hasOption( 's' ) ) {
             this.blatScoreThreshold = this.getDoubleOptionValue( 's' );
         }
+
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         if ( this.hasOption( 't' ) ) {
