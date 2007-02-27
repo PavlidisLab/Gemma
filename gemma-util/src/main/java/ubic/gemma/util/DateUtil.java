@@ -23,7 +23,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -185,4 +188,49 @@ public class DateUtil {
 
         return aDate;
     }
+
+    /**
+     * Turn a string like '-7d' into the date equivalent to "seven days ago". Supports 'd' for day, 'h' for hour, 'm'
+     * for minutes, "M" for months and "y" for years. Start with a '-' to indicate times in the past ('+' is not
+     * necessary for future). Values must be integers.
+     * 
+     * @param date to be added/subtracted to
+     * @param dateString
+     * @author Paul Pavlidis
+     * @return Date relative to 'now' as modified by the input date string.
+     */
+    public static Date getRelativeDate( Date date, String dateString ) {
+
+        if ( date == null ) throw new IllegalArgumentException( "Null date" );
+
+        Pattern pat = Pattern.compile( "([+-]?[0-9]+)([dmhMy])" );
+
+        Matcher match = pat.matcher( dateString );
+        boolean matches = match.matches();
+
+        if ( !matches ) {
+            throw new IllegalArgumentException( "Couldn't make sense of " + dateString
+                    + ", please use something like -7d or -8h" );
+        }
+
+        int amount = Integer.parseInt( match.group( 1 ).replace( "+", "" ) );
+        String unit = match.group( 2 );
+
+        if ( unit.equals( "h" ) ) {
+            return DateUtils.addHours( date, amount );
+        } else if ( unit.equals( "m" ) ) {
+            return DateUtils.addMinutes( date, amount );
+        } else if ( unit.equals( "d" ) ) {
+            return DateUtils.addDays( date, amount );
+        } else if ( unit.equals( "y" ) ) {
+            return DateUtils.addYears( date, amount );
+        } else if ( unit.equals( "M" ) ) {
+            return DateUtils.addMonths( date, amount );
+        } else {
+            throw new IllegalArgumentException( "Couldn't make sense of units in " + dateString
+                    + ", please use something like -7d or -8h" );
+        }
+
+    }
+
 }
