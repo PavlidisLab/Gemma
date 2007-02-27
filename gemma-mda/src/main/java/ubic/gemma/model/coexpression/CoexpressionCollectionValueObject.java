@@ -19,37 +19,50 @@
 package ubic.gemma.model.coexpression;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.GeneDaoImpl;
 
 /**
  * @author jsantos
  */
 public class CoexpressionCollectionValueObject {
+
+    private static Log log = LogFactory.getLog( CoexpressionCollectionValueObject.class.getName() );
+
     private int linkCount; // the total number of links for this specific coexpression
     private int positiveStringencyLinkCount; // the number of links for this coexpression that passed the stringency
     // requirements
     private int negativeStringencyLinkCount;
     private Collection<ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were
-    
+
     // the number of actual genes, predicted genes, and probe aligned regions in the query, unfiltered by stringency
     private int numGenes;
     private int numPredictedGenes;
     private int numProbeAlignedRegions;
-    
+
     // the number of actual genes, predicted genes, and probe aligned regions in the query, filtered by stringency
     private int numStringencyGenes;
     private int numStringencyPredictedGenes;
     private int numStringencyProbeAlignedRegions;
-    
+
     // involved in the query
     private Collection<CoexpressionValueObject> coexpressionData;
     private double firstQuerySeconds;
     private double secondQuerySeconds;
     private double postProcessSeconds;
     private double elapsedWallSeconds;
-    
+
+    private Map<Long, Map<Long, Collection<Long>>> crossHybridizingProbes;
+
+    // Map <expressionExperimentID, Map<probeId,<collection<geneID>>
 
     /**
      * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
@@ -77,13 +90,104 @@ public class CoexpressionCollectionValueObject {
         numGenes = 0;
         numPredictedGenes = 0;
         numProbeAlignedRegions = 0;
-        
+
         numStringencyGenes = 0;
         numStringencyProbeAlignedRegions = 0;
         numStringencyPredictedGenes = 0;
-        
+
         coexpressionData = new HashSet<CoexpressionValueObject>();
         expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
+        crossHybridizingProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
+    }
+
+    /**
+     * @param eeID
+     * @param probeID
+     * @param geneID
+     */
+    public void addSpecifityInfo( Long eeID, Long probeID, Long geneID ) {
+        if ( crossHybridizingProbes.containsKey( eeID ) ) {
+            Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
+            if ( probe2geneMap.containsKey( probeID ) )
+                probe2geneMap.get( probeID ).add( geneID );
+            else {
+                Collection<Long> genes = Collections.synchronizedSet( new HashSet<Long>() );
+                genes.add( geneID );
+                probe2geneMap.put( probeID, genes );
+            }
+        } else {
+            Map<Long, Collection<Long>> probe2geneMap = Collections
+                    .synchronizedMap( new HashMap<Long, Collection<Long>>() );
+            Collection<Long> genes = Collections.synchronizedSet( new HashSet<Long>() );
+            genes.add( geneID );
+            probe2geneMap.put( probeID, genes );
+            crossHybridizingProbes.put( eeID, probe2geneMap );
+
+        }
+    }
+
+    /**
+     * @return returns a collection expression experiment IDs that contained non-specific probes (probes that hit more
+     *         than 1 gene) Note: if a expression exp has two probes that hit the same gene. One probe is specific and
+     *         the other is not, this EE is considered specific and won't be returned in the list
+     */
+    public Collection<Long> getNonSpecificExpressionExperiments( Long geneID ) {
+
+        Collection<Long> nonSpecificEE = new HashSet<Long>();
+
+        for ( Long eeID : crossHybridizingProbes.keySet() ) {
+            Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
+           // log.info( "Non-specifity validaton for EE: " + eeID + " and gene: " + geneID);
+            
+            for ( Long probeID : probe2geneMap.keySet() ) {
+                Collection genes = probe2geneMap.get( probeID );
+
+                if ( !genes.contains( geneID ) ) continue;
+
+                if ( ( genes.size() == 1 ) ) {
+                    nonSpecificEE.remove( eeID );
+                    //log.info( "EE has specific probe: " + probeID + " for Gene: " + genes );
+                    break;
+                }
+                
+                nonSpecificEE.add( eeID );
+                //log.info( "EE has NON-specific probe: " + probeID + " for Gene: " + geneID + " in " + genes );
+            }
+
+        }
+
+        return nonSpecificEE;
+    }
+
+    /**
+     * @param eeID
+     * @returns a collection of Probe IDs for a given expression experiment that hybrydized to more than 1 gene
+     */
+    public Collection<Long> getNonSpecificProbes( Long eeID ) {
+        Collection<Long> nonSpecificProbes = new HashSet<Long>();
+
+        Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
+
+        for ( Long probeID : probe2geneMap.keySet() ) {
+            Collection genes = probe2geneMap.get( probeID );
+            if ( genes.size() > 1 ) nonSpecificProbes.add( eeID );
+        }
+
+        return nonSpecificProbes;
+    }
+
+    /**
+     * @param eeID
+     * @param probeID
+     * @return a collection of gene IDs or null if the eeID and probeID were not found
+     */
+    public Collection<Long> getNonSpecificGenes( Long eeID, Long probeID ) {
+
+        if ( crossHybridizingProbes.containsKey( eeID ) )
+            if ( crossHybridizingProbes.get( eeID ).containsKey( probeID ) )
+                return crossHybridizingProbes.get( eeID ).get( probeID );
+
+        return null;
     }
 
     /**
@@ -283,6 +387,11 @@ public class CoexpressionCollectionValueObject {
      */
     public void setNumStringencyProbeAlignedRegions( int numStringencyProbeAlignedRegions ) {
         this.numStringencyProbeAlignedRegions = numStringencyProbeAlignedRegions;
+    }
+
+    public int getNumberOfUsedExpressonExperiments() {
+        return crossHybridizingProbes.keySet().size();
+
     }
 
 }

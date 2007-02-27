@@ -277,6 +277,7 @@ public class CoexpressionSearchController extends BaseFormController {
             saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
 
+        Long numUsedExpressionExperiments = new Long(coexpressions.getNumberOfUsedExpressonExperiments());
         Long numPositiveCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
         Long numNegativeCoexpressedGenes = new Long( coexpressions.getNegativeStringencyLinkCount() );
         Long numGenes = new Long(coexpressions.getNumGenes());
@@ -291,10 +292,12 @@ public class CoexpressionSearchController extends BaseFormController {
         
         addStringencyInformation( stringency, coexpressions );
 
+        
         mav.addObject( "coexpressedGenes", coexpressedGenes );
         mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
         mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
         mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
+        mav.addObject("numUsedExpressionExperiments", numUsedExpressionExperiments);
         
         mav.addObject( "numGenes", numGenes );
         mav.addObject( "numPredictedGenes", numPredictedGenes);

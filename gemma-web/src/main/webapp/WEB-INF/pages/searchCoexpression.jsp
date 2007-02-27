@@ -304,7 +304,8 @@ Results for
 </span>
 </c:if>
 <b> 
-<c:out value="${numLinkedExpressionExperiments}" /> datasets appear in search results 
+<c:out value="${numUsedExpressionExperiments}" />  datasets had relevent coexpression data  <br />
+ &emsp;&nbsp;&nbsp;<c:out value="${numLinkedExpressionExperiments}" /> datasets met stringency criteria 
 <c:if test="${numLinkedExpressionExperiments != 0}">
 <a href="#" onclick="return toggleVisibility('datasetList')" >(details)</a> 
 </c:if>

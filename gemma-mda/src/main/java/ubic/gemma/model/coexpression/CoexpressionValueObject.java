@@ -40,6 +40,7 @@ public class CoexpressionValueObject {
     private Map<Long, Map<Long, Double>> negativeScores;
     private Map<Long, Map<Long, Double>> pValues;
     private Integer stringencyFilterValue;
+    private Collection<Long> nonspecificEE;
 
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
@@ -139,6 +140,7 @@ public class CoexpressionValueObject {
         pValues.get( eeID ).put( probeID, pValue );
 
     }
+    
 
     public Map<Long, Map<Long, Double>> getPValues() {
         return pValues;
@@ -240,6 +242,23 @@ public class CoexpressionValueObject {
             return null;
         }
     }
+    
+    /**
+     * @return a collectino of EEids that contributed to this genes positive expression
+     */
+    public Collection<Long> getEEContributing2PositiveLinks(){
+        return positiveScores.keySet();      
+    }
+    
+    
+    /**
+     * @return a collection of EE ids that contributed to this genes negative expression
+     */
+    public Collection<Long> getEEContributing2NegativeLinks(){
+        return negativeScores.keySet();
+        
+    }
+
 
     /**
      * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the filter 
@@ -285,5 +304,27 @@ public class CoexpressionValueObject {
      */
     public void setStringencyFilterValue( Integer stringencyFilterValue ) {
         this.stringencyFilterValue = stringencyFilterValue;
+    }
+
+    /**
+     * @return the nonspecificEE
+     */
+    public Collection<Long> getNonspecificEE() {
+        return nonspecificEE;
+    }
+
+    /**
+     * @param nonspecificEE the nonspecificEE to set
+     */
+    public void setNonspecificEE( Collection<Long> nonspecificEE ) {
+        this.nonspecificEE = nonspecificEE;
+    }
+    
+ 
+    /**
+     * @return the nonspecificEE
+     */
+    public Collection<Long> getContributingExpressionExperiments() {
+        return expressionExperimentValueObjects.keySet();
     }
 }
