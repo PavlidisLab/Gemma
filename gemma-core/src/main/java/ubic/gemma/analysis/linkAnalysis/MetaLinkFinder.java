@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -29,6 +30,9 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneImpl;
+import ubic.gemma.model.genome.PredictedGeneImpl;
+import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
 
@@ -47,7 +51,7 @@ public class MetaLinkFinder {
     private HashMap<Object, Set> probeToGenes = null;
     private Vector allEE = null;
     protected static final Log log = LogFactory.getLog( MetaLinkFinder.class );
-    private int bitNum = 0;
+    private int STRINGENCY = 2;
     
     public MetaLinkFinder(Probe2ProbeCoexpressionService ppService, DesignElementDataVectorService deService, ExpressionExperimentService eeService, GeneService geneService){
     	assert(ppService != null);
@@ -60,33 +64,15 @@ public class MetaLinkFinder {
     	this.eeService = eeService;
     }
  
-    /****distribute the expression experiments to the different classes of quantitation type.
-     *  The reason to do this is because the collection of expression experiment for Probe2Probe2
-     *  Query should share the same preferred quantitation type. The returned object is a map between
-     *  quantitation type and a set of expression experiment perferring this quantitation type.
-     * @return
-	 */    
-    private Map<QuantitationType, Collection> preprocess(Collection<ExpressionExperiment> ees){
-        Map eemap = new HashMap<QuantitationType, Collection>();
-        for(ExpressionExperiment ee:ees){
-            Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes(ee);
-            for (QuantitationType qt : eeQT) {
-                if(qt.getIsPreferred()){
-                    Collection<ExpressionExperiment> eeCollection = (Collection)eemap.get( qt );
-                    if(eeCollection == null){
-                    	log.info(" Get Quantitation Type : " + qt.getName()+ ":"+qt.getType());
-                        eeCollection = new HashSet<ExpressionExperiment>();
-                        eemap.put( qt, eeCollection );
-                    }
-                    eeCollection.add( ee );
-                    break;
-                }
-            }
-        }
-		return eemap;
-	}
     public void find(Taxon taxon){
-    	Collection <Gene> genes = geneService.getGenesByTaxon(taxon);
+    	Collection <Gene> allGenes = geneService.getGenesByTaxon(taxon);
+    	Collection <Gene> genes = new HashSet<Gene>();
+    	for(Gene gene:allGenes){
+    		if(!(gene instanceof PredictedGeneImpl) && !(gene instanceof ProbeAlignedRegionImpl)){
+    			genes.add(gene);
+			}
+    	}
+    	log.info("Get " + genes.size() + " genes");
     	if(genes == null || genes.size() == 0) return;
     	this.find(genes);
     }
@@ -101,23 +87,22 @@ public class MetaLinkFinder {
     	if(genes == null || ees == null ||  genes.size() == 0 || ees.size() == 0) return;
     	Collection <Gene> genesInTaxon = this.geneService.getGenesByTaxon(genes.iterator().next().getTaxon());
     	if(genesInTaxon == null || genesInTaxon.size() == 0) return;
-    	this.init(genes, ees, genesInTaxon);
-
-    	Map<QuantitationType, Collection> eeMap = preprocess(ees);
-        for(QuantitationType qt:eeMap.keySet()){
-            ees = eeMap.get( qt );
-            this.finder(genes, ees, qt);
-        }
-    }
-    private void finder(Collection<Gene> genes, Collection <ExpressionExperiment> ees, QuantitationType qt){
     	
-    	for(Gene gene:genes){
-    		Collection<DesignElementDataVector> p2plinks = ppService.findCoexpressionRelationships(gene,ees,qt);
-    		if(p2plinks == null || p2plinks.size() == 0) continue;
-    		log.info("Get "+ p2plinks.size() + " links for " + gene.getName());
-    		this.count(gene, p2plinks);
+    	Collection <Gene> coExpressedGenes = new HashSet<Gene>();
+    	for(Gene gene:genesInTaxon){
+    		if(!(gene instanceof PredictedGeneImpl) && !(gene instanceof ProbeAlignedRegionImpl)){
+    			coExpressedGenes.add(gene);
+			}
     	}
-
+    	this.init(genes, ees, coExpressedGenes);
+    	this.finder(genes);
+    }
+    private void finder(Collection<Gene> genes){
+    	for(Gene gene:genes){
+    		System.out.println(gene.getName());
+    		Map<Long, Collection<Long>> geneEEMap = geneService.getCoexpressedGeneMap(STRINGENCY, gene);
+			this.count(gene.getId(),geneEEMap);
+     	}
     }
     public Gene getRowGene(int i){
     	Object geneId = this.linkCount.getRowName(i);
@@ -165,8 +150,8 @@ public class MetaLinkFinder {
     }
     public void outputStat(){
     	int maxNum = 50;
-    	Vector count = new Vector(50);
-    	for(int i = 0; i < 50; i++)
+    	Vector count = new Vector(maxNum);
+    	for(int i = 0; i < maxNum; i++)
     		count.add(0);
     	for(int i = 0; i < this.linkCount.rows(); i++){
 	//		System.err.println(i);
@@ -187,43 +172,25 @@ public class MetaLinkFinder {
     		if(i%10 == 0) System.err.println("");
     	}
     }
-    private void count(Gene rowGene, Collection<DesignElementDataVector> p2plinks){
+    private void count(Long rowGeneId, Map <Long, Collection<Long>> geneEEsMap){
     	int rowIndex = -1, colIndex = -1, eeIndex = -1;
-    	rowIndex = this.linkCount.getRowIndexByName(rowGene.getId());
-    	
-    	if(this.probeToGenes.size() > 50000) this.probeToGenes.clear();
-    	Collection<DesignElementDataVector> probes = new HashSet<DesignElementDataVector>();
-    	for(DesignElementDataVector p2pIter:p2plinks){
-    		HashSet <Gene> pairedGenes = (HashSet)probeToGenes.get(p2pIter);
-    		if(pairedGenes == null)
-    			probes.add(p2pIter);
-    	}
-    	HashMap<Object, Set> tmpProbeToGenes = (HashMap)this.deService.getGenes(probes);
-    	this.probeToGenes.putAll(tmpProbeToGenes);
-    	
-    	//this.probeToGenes= (HashMap)this.deService.getGenes(p2plinks);
-    	Integer index = null;
-    	ExpressionExperiment ee = null;
-    	for(DesignElementDataVector p2pIter:p2plinks){
-    		ee = p2pIter.getExpressionExperiment();
-    		index = this.eeMap.get(ee.getId());
-    		if(index == null){
-    			log.info("Couldn't find the ee index for ee " + ee.getId());
+    	rowIndex = this.linkCount.getRowIndexByName(rowGeneId);
+    	for(Long colGeneId:geneEEsMap.keySet()){
+    		try{
+    			Integer index = null;
+    			Collection<Long> eeIds = geneEEsMap.get(colGeneId);
+    			colIndex = this.linkCount.getColIndexByName(colGeneId);
+    			for(Long eeId:eeIds){
+    				index = this.eeMap.get(eeId);
+    				if(index == null){
+    					log.info("Couldn't find the ee index for ee " + eeId);
+    					continue;
+    				}
+    				eeIndex = index.intValue();
+    				this.linkCount.set(rowIndex,colIndex,eeIndex);
+    			}
+    		}catch(Exception e){
     			continue;
-    		}
-    		eeIndex = index.intValue();
-    		
-    		HashSet <Gene> pairedGenes = (HashSet)probeToGenes.get(p2pIter);
-    		if(pairedGenes == null || pairedGenes.size() == 0){
-    			continue;
-    		}
-    		if(pairedGenes.contains(rowGene)){
-    			continue;
-    		}
-    		for(Gene colGene:pairedGenes){
-        		colIndex = this.linkCount.getColIndexByName(colGene.getId());
-        		if(colIndex >= 0 && colIndex < this.linkCount.columns())
-        			this.linkCount.set(rowIndex,colIndex,eeIndex);
     		}
     	}
     }
