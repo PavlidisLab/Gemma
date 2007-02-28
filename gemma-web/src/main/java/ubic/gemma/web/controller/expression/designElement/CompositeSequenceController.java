@@ -38,6 +38,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -45,11 +46,12 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @version $Id $
  * @spring.bean id="compositeSequenceController"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name="blatResultService" ref="blatResultService"
  * @spring.property name="methodNameResolver" ref="compositeSequenceActions"
  */
 public class CompositeSequenceController extends BaseMultiActionController {
     private CompositeSequenceService compositeSequenceService = null;
-
+    private BlatResultService blatResultService = null;
 
     /**
      * @param compositeSequenceService the compositeSequenceService to set
@@ -141,7 +143,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView showAbbreviated( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         Collection<Long> csIds = new ArrayList<Long>();
@@ -156,7 +158,10 @@ public class CompositeSequenceController extends BaseMultiActionController {
         
         CompositeSequence cs = compositeSequences.iterator().next();
         Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+        
+        
         Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult,BlatResultGeneSummary>();
+        
         for ( Object object : bs2gps ) {
             BioSequence2GeneProduct bs2gp = (BioSequence2GeneProduct) object;
             if (bs2gp instanceof BlatAssociation) {
@@ -175,6 +180,19 @@ public class CompositeSequenceController extends BaseMultiActionController {
                 }
             }
         }
+        
+        /*
+         * Pick up blat results that didn't map to genes.
+         */
+        Collection<BlatResult> allBlatResultsForCs = blatResultService.findByBioSequence(  cs.getBiologicalCharacteristic());
+        for ( BlatResult blatResult : allBlatResultsForCs ) {
+            if (!blatResults.containsKey( blatResult )) {
+                BlatResultGeneSummary summary = new BlatResultGeneSummary();
+                summary.setBlatResult( blatResult );
+                // no gene...
+                blatResults.put( blatResult, summary );
+            }
+        }
 
         if (AAUtils.isAjaxRequest(request)){
             AAUtils.addZonesToRefresh(request, "csTable");
@@ -184,6 +202,10 @@ public class CompositeSequenceController extends BaseMultiActionController {
         mav.addObject( "compositeSequence", cs );
         mav.addObject( "blatResults", blatResults );
         return mav;
+    }
+
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
     }
     
     

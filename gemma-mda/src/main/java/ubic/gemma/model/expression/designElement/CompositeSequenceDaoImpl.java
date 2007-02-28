@@ -176,16 +176,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
         long id = compositeSequence.getId();
 
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,"
-                + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
-                + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
-                + " from "
-                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
-                + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
-                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) " + "WHERE cs.ID = :id";
+        final String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
@@ -212,18 +203,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             if ( it.hasNext() ) buf.append( "," );
         }
 
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,"
-                + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
-                + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
-                + " from "
-                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
-                + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
-                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
-                + "WHERE cs.ID IN ("
-                + buf.toString() + ")";
+        final String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
         Collection retVal = nativeQuery( nativeQueryString );
         return retVal;
     }
@@ -240,20 +220,25 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
         long id = arrayDesign.getId();
 
-        final String nativeQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, bs2gp.BLAT_RESULT_FK,"
-                + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
-                + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
-                + " from "
-                + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
-                + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
-                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) "
-                + "WHERE cs.ARRAY_DESIGN_FK = :id";
+        final String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ARRAY_DESIGN_FK = :id";
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
+
+    /*
+     * Add your 'where' clause to this.
+     */
+    private static final String nativeBaseSummaryQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, ssr.ID,"
+            + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
+            + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
+            + " from "
+            + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
+            + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+            + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=bs.ID "
+            + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
+            + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+            + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+            + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) ";
 
     /*
      * (non-Javadoc)

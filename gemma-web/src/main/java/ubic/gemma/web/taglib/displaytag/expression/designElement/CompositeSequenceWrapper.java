@@ -95,18 +95,6 @@ public class CompositeSequenceWrapper extends TableDecorator {
             database = "mm8";
         }
 
-        // build position if the biosequence has an accession
-        // otherwise point to location
-        // String position = "Chr";
-        // position += blatResult.getTargetChromosome().getName();
-        // position += ":";
-        // position += blatResult.getTargetStart().toString() + "-";
-        // position += blatResult.getTargetEnd().toString();
-        //
-        // // }
-        // String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org=" + organism + "&db=" + database
-        // + "&position=" + position + "&pix=620";
-
         String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
                 + "&hgt.customText=" + GEMMA_BASE_URL + "blatTrack.html?id=";
         link += blatResult.getId();
@@ -117,6 +105,11 @@ public class CompositeSequenceWrapper extends TableDecorator {
     public String getGeneProducts() {
         BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
         Collection<GeneProduct> geneProducts = object.getGeneProducts();
+
+        if ( geneProducts == null || geneProducts.size() == 0 ) {
+            return "[none]";
+        }
+
         String retVal = "";
         for ( GeneProduct product : geneProducts ) {
             String ncbiLink = "";
@@ -131,7 +124,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
             String shortName = StringUtils.abbreviate( fullName, 20 );
             if ( product.getNcbiId() != null ) {
                 retVal += "&nbsp;&nbsp;<span title='" + fullName + "'>" + shortName
-                        + "</span><a target='_blank' href='" + ncbiLink + product.getNcbiId()
+                        + "</span>&nbsp;<a target='_blank' href='" + ncbiLink + product.getNcbiId()
                         + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a><br />";
             } else {
                 retVal += "&nbsp;&nbsp;<span title='" + fullName + "'>" + shortName + "</span><br />";
@@ -143,6 +136,11 @@ public class CompositeSequenceWrapper extends TableDecorator {
     public String getGenes() {
         BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
         Collection<GeneProduct> geneProducts = object.getGeneProducts();
+
+        if ( geneProducts == null || geneProducts.size() == 0 ) {
+            return "[none]";
+        }
+
         String retVal = "";
         for ( GeneProduct product : geneProducts ) {
             Collection<Gene> genes = object.getGenes( product );
@@ -153,13 +151,13 @@ public class CompositeSequenceWrapper extends TableDecorator {
                             + gene.getOfficialSymbol()
                             + "'>"
                             + shortName
-                            + "</span><a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
+                            + "</span>&nbsp;<a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
                             + gene.getNcbiId() + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a>"
                             + "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
                             + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><br />";
                 } else {
                     retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName + "</span>"
-                            + "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
+                            + "&nbsp;<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
                             + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><br />";
                 }
             }
