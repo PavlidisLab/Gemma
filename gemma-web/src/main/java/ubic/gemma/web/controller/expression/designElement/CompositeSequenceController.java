@@ -53,11 +53,67 @@ public class CompositeSequenceController extends BaseMultiActionController {
     private CompositeSequenceService compositeSequenceService = null;
     private BlatResultService blatResultService = null;
 
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+
     /**
      * @param compositeSequenceService the compositeSequenceService to set
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unchecked")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        CompositeSequence cs = getCompositeSequenceForId( request, id );
+        if ( cs == null ) {
+            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
+            return new ModelAndView( "mainMenu.html" );
+        }
+
+        Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
+
+        ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
+        mav.addObject( "compositeSequence", cs );
+        mav.addObject( "blatResults", blatResults );
+        return mav;
+    }
+
+    /**
+     * The difference between this and 'show' is the view, and this method is more ajax-aware.
+     * 
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ModelAndView showAbbreviated( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        CompositeSequence cs = getCompositeSequenceForId( request, id );
+        if ( cs == null ) {
+            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
+            return new ModelAndView( "mainMenu.html" );
+        }
+
+        Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
+
+        if ( AAUtils.isAjaxRequest( request ) ) {
+            AAUtils.addZonesToRefresh( request, "csTable" );
+        }
+
+        ModelAndView mav = new ModelAndView( "compositeSequence.detail.abbreviated" );
+        mav.addObject( "compositeSequence", cs );
+        mav.addObject( "blatResults", blatResults );
+        return mav;
     }
 
     /**
@@ -79,7 +135,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
         else {
             String[] idList = StringUtils.split( sId, ',' );
             Collection ids = new ArrayList<Long>();
-            
+
             for ( int i = 0; i < idList.length; i++ ) {
                 Long id = Long.parseLong( idList[i] );
                 ids.add( id );
@@ -91,122 +147,70 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
+     * @param cs
+     * @param blatResults
      */
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        Collection<Long> csIds = new ArrayList<Long>();
-        csIds.add( id );
-        
-        Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( csIds);
-        if ( compositeSequences.size() == 0 ) {
-            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
-            return new ModelAndView( "mainMenu.html" );
-        }
-        
-        
-        CompositeSequence cs = compositeSequences.iterator().next();
-        Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
-        Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult,BlatResultGeneSummary>();
-        for ( Object object : bs2gps ) {
-            BioSequence2GeneProduct bs2gp = (BioSequence2GeneProduct) object;
-            if (bs2gp instanceof BlatAssociation) {
-                BlatAssociation blatAssociation =  (BlatAssociation) bs2gp;
-                GeneProduct geneProduct = blatAssociation.getGeneProduct();
-                Gene gene = geneProduct.getGene();
-                BlatResult blatResult = blatAssociation.getBlatResult();
-                if (blatResults.containsKey( blatResult )) {
-                    blatResults.get( blatResult ).addGene( geneProduct, gene );
-                }
-                else {
-                    BlatResultGeneSummary summary = new BlatResultGeneSummary();
-                    summary.addGene( geneProduct, gene );
-                    summary.setBlatResult( blatResult );
-                    blatResults.put( blatResult, summary );
-                }
-            }
-        }
-        
-        ModelAndView mav = new ModelAndView("compositeSequence.detail");
-        mav.addObject( "compositeSequence", cs );
-        mav.addObject( "blatResults", blatResults );
-        return mav;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    @SuppressWarnings({ "unused", "unchecked" })
-    public ModelAndView showAbbreviated( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        Collection<Long> csIds = new ArrayList<Long>();
-        csIds.add( id );
-        
-        Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( csIds);
-        if ( compositeSequences.size() == 0 ) {
-            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
-            return new ModelAndView( "mainMenu.html" );
-        }
-        
-        
-        CompositeSequence cs = compositeSequences.iterator().next();
-        Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
-        
-        
-        Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult,BlatResultGeneSummary>();
-        
-        for ( Object object : bs2gps ) {
-            BioSequence2GeneProduct bs2gp = (BioSequence2GeneProduct) object;
-            if (bs2gp instanceof BlatAssociation) {
-                BlatAssociation blatAssociation =  (BlatAssociation) bs2gp;
-                GeneProduct geneProduct = blatAssociation.getGeneProduct();
-                Gene gene = geneProduct.getGene();
-                BlatResult blatResult = blatAssociation.getBlatResult();
-                if (blatResults.containsKey( blatResult )) {
-                    blatResults.get( blatResult ).addGene( geneProduct, gene );
-                }
-                else {
-                    BlatResultGeneSummary summary = new BlatResultGeneSummary();
-                    summary.addGene( geneProduct, gene );
-                    summary.setBlatResult( blatResult );
-                    blatResults.put( blatResult, summary );
-                }
-            }
-        }
-        
+    @SuppressWarnings("unchecked")
+    private void addBlatResultsLackingGenes( CompositeSequence cs, Map<BlatResult, BlatResultGeneSummary> blatResults ) {
         /*
          * Pick up blat results that didn't map to genes.
          */
-        Collection<BlatResult> allBlatResultsForCs = blatResultService.findByBioSequence(  cs.getBiologicalCharacteristic());
+        Collection<BlatResult> allBlatResultsForCs = blatResultService.findByBioSequence( cs
+                .getBiologicalCharacteristic() );
         for ( BlatResult blatResult : allBlatResultsForCs ) {
-            if (!blatResults.containsKey( blatResult )) {
+            if ( !blatResults.containsKey( blatResult ) ) {
                 BlatResultGeneSummary summary = new BlatResultGeneSummary();
                 summary.setBlatResult( blatResult );
                 // no gene...
                 blatResults.put( blatResult, summary );
             }
         }
+    }
 
-        if (AAUtils.isAjaxRequest(request)){
-            AAUtils.addZonesToRefresh(request, "csTable");
+    /**
+     * @param cs
+     * @return
+     */
+    private Map<BlatResult, BlatResultGeneSummary> getBlatMappingSummary( CompositeSequence cs ) {
+        Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+        Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult, BlatResultGeneSummary>();
+        for ( Object object : bs2gps ) {
+            BioSequence2GeneProduct bs2gp = ( BioSequence2GeneProduct ) object;
+            if ( bs2gp instanceof BlatAssociation ) {
+                BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
+                GeneProduct geneProduct = blatAssociation.getGeneProduct();
+                Gene gene = geneProduct.getGene();
+                BlatResult blatResult = blatAssociation.getBlatResult();
+                if ( blatResults.containsKey( blatResult ) ) {
+                    blatResults.get( blatResult ).addGene( geneProduct, gene );
+                } else {
+                    BlatResultGeneSummary summary = new BlatResultGeneSummary();
+                    summary.addGene( geneProduct, gene );
+                    summary.setBlatResult( blatResult );
+                    blatResults.put( blatResult, summary );
+                }
+            }
         }
-        
-        ModelAndView mav = new ModelAndView("compositeSequence.detail.abbreviated");
-        mav.addObject( "compositeSequence", cs );
-        mav.addObject( "blatResults", blatResults );
-        return mav;
+
+        addBlatResultsLackingGenes( cs, blatResults );
+        return blatResults;
     }
 
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
+    /**
+     * @param request
+     * @param id
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private CompositeSequence getCompositeSequenceForId( HttpServletRequest request, Long id ) {
+        Collection<Long> csIds = new ArrayList<Long>();
+        csIds.add( id );
+
+        Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( csIds );
+
+        if ( compositeSequences.size() == 0 ) return null;
+        CompositeSequence cs = compositeSequences.iterator().next();
+        return cs;
     }
-    
-    
+
 }

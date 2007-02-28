@@ -1,5 +1,20 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.web.taglib.displaytag.expression.designElement;
 
@@ -13,10 +28,9 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.analysis.sequence.BlatResultGeneSummary;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.web.util.LinkUtils;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -25,43 +39,20 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * for explanation of how this works.
  * 
  * @author joseph
+ * @version $Id$
  */
 public class CompositeSequenceWrapper extends TableDecorator {
 
-    /*
-     * FIXME This should be factored out.
-     */
-    private static final String GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
-
-    Log log = LogFactory.getLog( this.getClass() );
     static NumberFormat nf = NumberFormat.getNumberInstance();
-
     static {
         nf.setMaximumFractionDigits( 3 );
     }
 
-    public String getBlatResult() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
-        BlatResult blatResult = object.getBlatResult();
-        String retVal = "Chr. ";
-        retVal += blatResult.getTargetChromosome().getName();
-        retVal += " : ";
-        retVal += blatResult.getTargetStart().toString() + "-";
-        retVal += blatResult.getTargetEnd().toString();
-        retVal += "<a target='_blank' href='" + getGenomeBrowserLink( blatResult ) + "'>(view in genome browser)</a>";
-        return retVal;
-    }
+    Log log = LogFactory.getLog( this.getClass() );
 
-    public String getBlatScore() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
-        BlatResult blatResult = object.getBlatResult();
-        String retVal = "";
-        if ( blatResult.score() != null ) {
-            retVal += nf.format( blatResult.score() );
-        }
-        return retVal;
-    }
-
+    /**
+     * @return
+     */
     public String getBlatIdentity() {
         BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
         BlatResult blatResult = object.getBlatResult();
@@ -73,35 +64,37 @@ public class CompositeSequenceWrapper extends TableDecorator {
     }
 
     /**
-     * @param blatResult
-     * @return URL to the genome browser for the given blat result, or null if the URL cannot be formed correctly.
+     * @return
      */
-    private String getGenomeBrowserLink( BlatResult blatResult ) {
-
-        if ( ( blatResult.getQuerySequence() == null ) || ( blatResult.getQuerySequence().getTaxon() == null ) )
-            return null;
-
-        Taxon taxon = blatResult.getQuerySequence().getTaxon();
-        String organism = taxon.getCommonName();
-
-        // String database = taxon.getExternalDatabase().getName();
-
-        String database = "hg18";
-        if ( organism.equalsIgnoreCase( "Human" ) ) {
-            database = "hg18";
-        } else if ( organism.equalsIgnoreCase( "Rat" ) ) {
-            database = "rn4";
-        } else if ( organism.equalsIgnoreCase( "Mouse" ) ) {
-            database = "mm8";
-        }
-
-        String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
-                + "&hgt.customText=" + GEMMA_BASE_URL + "blatTrack.html?id=";
-        link += blatResult.getId();
-
-        return link;
+    public String getBlatResult() {
+        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        BlatResult blatResult = object.getBlatResult();
+        String retVal = "Chr. ";
+        retVal += blatResult.getTargetChromosome().getName();
+        retVal += " : ";
+        retVal += blatResult.getTargetStart().toString() + "-";
+        retVal += blatResult.getTargetEnd().toString();
+        retVal += "<a target='_blank' href='" + LinkUtils.getGenomeBrowserLink( blatResult ) + "'><img src=\""
+                + LinkUtils.UCSC_ICON + "\" alt=\"Genome browser view (opens in new window)\" /></a>";
+        return retVal;
     }
 
+    /**
+     * @return
+     */
+    public String getBlatScore() {
+        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        BlatResult blatResult = object.getBlatResult();
+        String retVal = "";
+        if ( blatResult.score() != null ) {
+            retVal += nf.format( blatResult.score() );
+        }
+        return retVal;
+    }
+
+    /**
+     * @return
+     */
     public String getGeneProducts() {
         BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
         Collection<GeneProduct> geneProducts = object.getGeneProducts();
@@ -112,20 +105,13 @@ public class CompositeSequenceWrapper extends TableDecorator {
 
         String retVal = "";
         for ( GeneProduct product : geneProducts ) {
-            String ncbiLink = "";
-            if ( product.getType() == GeneProductType.RNA ) {
-                ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=";
-            } else {
-                // assume protein
-                ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&cmd=search&term=";
-
-            }
+            String ncbiLink = LinkUtils.getNcbiUrl( product );
             String fullName = product.getName();
             String shortName = StringUtils.abbreviate( fullName, 20 );
             if ( product.getNcbiId() != null ) {
                 retVal += "&nbsp;&nbsp;<span title='" + fullName + "'>" + shortName
-                        + "</span>&nbsp;<a target='_blank' href='" + ncbiLink + product.getNcbiId()
-                        + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a><br />";
+                        + "</span>&nbsp;<a target='_blank' href='" + ncbiLink + "'><img height=10 width=10 src=\""
+                        + LinkUtils.NCBI_ICON + "\" alt=\"NCBI\" /></a><br />";
             } else {
                 retVal += "&nbsp;&nbsp;<span title='" + fullName + "'>" + shortName + "</span><br />";
             }
@@ -133,6 +119,9 @@ public class CompositeSequenceWrapper extends TableDecorator {
         return retVal;
     }
 
+    /**
+     * @return
+     */
     public String getGenes() {
         BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
         Collection<GeneProduct> geneProducts = object.getGeneProducts();
@@ -147,21 +136,17 @@ public class CompositeSequenceWrapper extends TableDecorator {
             for ( Gene gene : genes ) {
                 String shortName = StringUtils.abbreviate( gene.getOfficialSymbol(), 20 );
                 if ( gene.getNcbiId() != null ) {
-                    retVal += "<span title='"
-                            + gene.getOfficialSymbol()
-                            + "'>"
-                            + shortName
-                            + "</span>&nbsp;<a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
-                            + gene.getNcbiId() + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a>"
-                            + "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
-                            + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><br />";
+                    retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName
+                            + "</span>&nbsp;<a target='_blank' href=\"" + LinkUtils.getNcbiUrl( gene )
+                            + "\"><img height=10 width=10 src=\"" + LinkUtils.NCBI_ICON
+                            + "\" alt=\"NCBI\" /></a>&nbsp;" + LinkUtils.getGemmaGeneLink( gene ) + "<br />";
                 } else {
-                    retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName + "</span>"
-                            + "&nbsp;<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
-                            + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a><br />";
+                    retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName + "</span>" + "&nbsp;"
+                            + LinkUtils.getGemmaGeneLink( gene ) + "<br />";
                 }
             }
         }
         return retVal;
     }
+
 }
