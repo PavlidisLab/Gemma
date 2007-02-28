@@ -273,7 +273,8 @@ public class SecurityService {
      * @return String
      */
     public static String getPrincipalName() {
-        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Object obj = getPrincipal();
 
         String username = null;
         if ( obj instanceof UserDetails ) {
@@ -293,7 +294,7 @@ public class SecurityService {
      * @return Object
      */
     public static Object getPrincipal() {
-        return SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return getAuthentication().getPrincipal();
     }
 
     /**
@@ -302,7 +303,11 @@ public class SecurityService {
      * @return Authentication
      */
     public static Authentication getAuthentication() {
-        return SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if ( authentication == null ) throw new RuntimeException( "Null authentication object" );
+
+        return authentication;
     }
 
     /**
