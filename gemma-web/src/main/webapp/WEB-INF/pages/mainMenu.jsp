@@ -207,6 +207,9 @@
 			<a href="<c:url value="/securityManager.html"/>"> <fmt:message
 					key="menu.securityManager" /> </a>
 		</li>
+		<li>
+			<a href="<c:url value="/maintenanceMode.html" />">Manage maintenance mode</a>
+		</li>
 	</ul>
 
 	<h2>

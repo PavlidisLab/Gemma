@@ -74,6 +74,8 @@
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>
 			<prop key="/blatTrack.html">blatResultTrackController</prop>
+			<prop key="/maintenanceMode.html">maintenanceModeController</prop>
+			
 		</props>
 	</property>
 </bean>
