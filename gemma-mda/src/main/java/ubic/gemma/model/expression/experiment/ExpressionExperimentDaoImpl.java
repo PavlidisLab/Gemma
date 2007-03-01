@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
@@ -60,6 +61,8 @@ import ubic.gemma.util.BusinessKey;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
+
+
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
@@ -869,6 +872,26 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
     }
+    
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByExpressedGene(ubic.gemma.model.genome.Gene, java.lang.Double)
+     */
+    @Override
+    protected Collection handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindByGene( Gene gene ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
 
 
 }

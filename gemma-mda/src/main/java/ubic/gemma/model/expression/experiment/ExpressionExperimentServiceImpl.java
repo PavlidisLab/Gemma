@@ -36,6 +36,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -46,6 +47,22 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByExpressedGene(ubic.gemma.model.genome.Gene, double)
+     */
+    @Override
+    protected Collection handleFindByExpressedGene( Gene gene, double rank ) throws Exception {
+        return this.getExpressionExperimentDao().findByExpressedGene( gene, rank );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindByGene( Gene gene ) throws Exception {       
+        return this.getExpressionExperimentDao().findByGene( gene );
+    }
 
     /*
      * (non-Javadoc)

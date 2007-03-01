@@ -33,8 +33,10 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -177,5 +179,15 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         Taxon checkTaxon = eeService.getTaxon( list.iterator().next().getId() );
         assertEquals( taxon, checkTaxon );
 
+    }
+    
+    public void testFindByGene() throws Exception {
+        GeneService geneS = (GeneService) this.getBean( "geneService" );
+        Collection<Gene> genes = geneS.findByOfficialSymbol( "grin1" );
+        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+        .getBean( "expressionExperimentService" );
+        eeService.findByGene( genes.iterator().next() );
+
+        
     }
 }
