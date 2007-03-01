@@ -21,7 +21,15 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -384,6 +392,134 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected Collection handleFindByGoId( String goId ) throws Exception {
         return this.getArrayDesignDao().findByGoId(goId);
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastAnnotationFile(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastAnnotationFile( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not AnnotationFile events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignAnnotationFileEvent ) {
+                        if ( event == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastGeneMapping(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastGeneMapping( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not GeneMapping events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignGeneMappingEvent ) {
+                        if ( lastEvent == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceAnalysis(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastSequenceAnalysis( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not SequenceAnalysis events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignSequenceAnalysisEvent ) {
+                        if ( lastEvent == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceUpdate(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastSequenceUpdate( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not Sequence update events
+        Set<Long> keys = eventMap.keySet();
+        for ( Long key : keys ) {
+            Collection<AuditEvent> events = eventMap.get( key );
+            AuditEvent lastEvent = null;
+            if ( events == null ) {
+                lastEventMap.put( key, null );
+            } else {
+                for ( AuditEvent event : events ) {
+                    if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignSequenceUpdateEvent ) {
+                        if ( lastEvent == null ) {
+                            lastEvent = event;
+                            continue;
+                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
+                            lastEvent = event;
+                        }
+                    }
+                }
+                lastEventMap.put( key, lastEvent );
+            }
+        }
+        return lastEventMap;
     }
 
 }

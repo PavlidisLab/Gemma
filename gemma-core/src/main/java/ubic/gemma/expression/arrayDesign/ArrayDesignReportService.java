@@ -19,21 +19,16 @@
 
 package ubic.gemma.expression.arrayDesign;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.logging.Log;
@@ -48,7 +43,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpd
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -384,57 +378,53 @@ public class ArrayDesignReportService {
             }
         }
     }
-
- /*   public java.lang.String getArrayDesignReport( Long id ) {
-        // read file into return string
-
-        InputStream istr = null;
-        try {
-            istr = FileTools.getInputStreamFromPlainOrCompressedFile( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
-                    + ARRAY_DESIGN_SUMMARY + "." + id );
-        } catch ( Exception e ) {
-            return "No summary available";
-        }
-
-        BufferedReader reader = new BufferedReader( new InputStreamReader( istr ) );
-        StringBuffer report = new StringBuffer();
-        String str;
-        try {
-            while ( ( str = reader.readLine() ) != null ) {
-                report.append( str );
-            }
-        } catch ( IOException e ) {
-            return "";
-        }
-        return report.toString();
-    }
-*/
+    
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignReportService#getArrayDesignReport()
+     * Fill in event information
+     * @param adVos
      */
-/*    public java.lang.String getArrayDesignReport() {
-        // read file into return string
-
-        InputStream istr = null;
-        try {
-            istr = FileTools.getInputStreamFromPlainOrCompressedFile( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
-                    + ARRAY_DESIGN_SUMMARY );
-        } catch ( Exception e ) {
-            return "";
+    @SuppressWarnings("unchecked")
+    public void fillEventInformation(Collection<ArrayDesignValueObject> adVos) {
+        Collection<Long> ids = new ArrayList<Long>();
+        for (  Object object : adVos  ) {
+            ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
+            ids.add(  adVo.getId() );
         }
 
-        BufferedReader reader = new BufferedReader( new InputStreamReader( istr ) );
-        StringBuffer report = new StringBuffer();
-        String str;
-        try {
-            while ( ( str = reader.readLine() ) != null ) {
-                report.append( str );
+        Map<Long,AuditEvent> geneMappingEvents = arrayDesignService.getLastGeneMapping( ids );
+        Map<Long,AuditEvent> sequenceUpdateEvents = arrayDesignService.getLastSequenceUpdate( ids );
+        Map<Long,AuditEvent> sequenceAnalysisEvents = arrayDesignService.getLastSequenceAnalysis( ids );
+        
+        // fill in events for the value objects
+        for ( ArrayDesignValueObject adVo : adVos ) {
+            // preemptively fill in event dates with None
+            adVo.setLastGeneMapping( "[None]" );
+            adVo.setLastSequenceAnalysis(  "[None]" );
+            adVo.setLastSequenceUpdate( "[None]" );
+            
+            Long id = adVo.getId();
+            if (geneMappingEvents.containsKey( id ) ) {
+                AuditEvent event = geneMappingEvents.get( id );
+                if (event != null) {
+                    adVo.setLastGeneMapping( event.getDate().toString() );
+                }
             }
-        } catch ( IOException e ) {
-            return "";
+            
+            if (sequenceUpdateEvents.containsKey( id ) ) {
+                AuditEvent event = sequenceUpdateEvents.get( id );
+                if (event != null) {
+                    adVo.setLastSequenceUpdate( event.getDate().toString() );
+                }
+            }
+            
+            if (sequenceAnalysisEvents.containsKey( id ) ) {
+                AuditEvent event = sequenceAnalysisEvents.get( id );
+                if (event != null) {
+                    adVo.setLastSequenceAnalysis(  event.getDate().toString() );
+                }
+            }
         }
-        return report.toString();
-    }*/
+    }
 
     private void initDirectories() {
         // check to see if the home directory exists. If it doesn't, create it.
@@ -451,48 +441,6 @@ public class ArrayDesignReportService {
         FileTools.deleteFiles( files );
     }
 
-    private String generateReportString( long numCsBioSequences, long numCsBlatResults, long numCsGenes, long numGenes ) {
-        // obtain time information (for timestamping)
-        Date d = new Date( System.currentTimeMillis() );
-        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd hh:mm" );
-        // write into table format
-        StringBuffer s = new StringBuffer();
-        s.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" + "Probes with sequences" + "</td><td>"
-                + numCsBioSequences + "</td></tr>" + "<tr><td>" + "Probes with genome alignments" + "</td>" + "<td>"
-                + numCsBlatResults + "</td></tr></authz:authorize>" + "<tr><td>" + "Probes mapping to gene(s)"
-                + "</td><td>" + numCsGenes + "</td></tr>" + "<tr><td>" + "Unique genes represented" + "</td><td>"
-                + numGenes + "</td></tr>" + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + timestamp
-                + ")" + "</td></tr>" + "</table>" );
-        return s.toString();
-    }
-
-    private String generateReportString( long numCsBioSequences, long numCsBlatResults, long numCsGenes, long numGenes,
-            long numCsPredictedGenes, long numCsProbeAlignedRegions, long numCsPureGenes ) {
-        // obtain time information (for timestamping)
-        Date d = new Date( System.currentTimeMillis() );
-        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
-        // write into table format
-        StringBuffer s = new StringBuffer();
-        s.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" + "Probes with sequences" + "</td><td>"
-                + numCsBioSequences + "</td></tr>" + "<tr><td>" + "Probes with genome alignments" + "</td>" + "<td>"
-                + numCsBlatResults + "</td></tr></authz:authorize>" + "<tr><td>" + "Probes mapping to gene(s)"
-                + "</td><td>" + numCsGenes + "</td></tr>" +
-
-                "<tr><td>" + "&nbsp;&nbsp;Probes mapping to probe-aligned region(s)" + "</td><td>"
-                + numCsProbeAlignedRegions + "</td></tr>" +
-
-                "<tr><td>" + "&nbsp;&nbsp;Probes mapping to predicted genes" + "</td><td>" + numCsPredictedGenes
-                + "</td></tr>" +
-
-                "<tr><td>" + "&nbsp;&nbsp;Probes mapping to known genes" + "</td><td>" + numCsPureGenes + "</td></tr>" +
-
-                "<tr><td>" + "Unique genes represented" + "</td><td>" + numGenes + "</td></tr>"
-                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + timestamp + ")" + "</td></tr>"
-                + "</table>" );
-        return s.toString();
-    }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;

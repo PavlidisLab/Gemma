@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -34,6 +35,7 @@ import org.hibernate.ScrollableResults;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -765,14 +767,39 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         // get the composite sequence counts
         // Map csCounts = this.getCompositeSequenceCountMap();
         Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
-        // removed join from taxon as it is slowing down the system
-        final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
-                + " ad.technologyType, taxon.commonName " + " " + " from ArrayDesignImpl as ad inner join ad.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon as taxon " + " " + " group by ad order by ad.name";
 
-        try {
+        final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
+        + " ad.technologyType from ArrayDesignImpl as ad "
+        + " group by ad order by ad.name";
+        
+        // separated out composite sequence query to grab just one to make it easier to join to the taxon
+        final String csString = "select ad.id, cs.id from ArrayDesignImpl as ad inner join ad.compositeSequences as cs where cs.biologicalCharacteristic IS NOT NULL group by ad";
+        final String taxonString = "select cs.id, taxon.commonName from CompositeSequenceImpl as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon" +
+                "   WHERE cs.id in (:id) group by cs.id";
+        try {    
+            // do queries for representative compositeSequences so we can get taxon information easily
+           
+            Map<Long,Long> csToArray = new HashMap<Long,Long>();
+            Map<Long,String> arrayToTaxon = new HashMap<Long,String>();
+            org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString ); 
+            ScrollableResults csList = csQueryObject.scroll();
+            while (csList.next()) {
+                Long arrayId = csList.getLong( 0 );
+                Long csId = csList.getLong( 1 );
+                csToArray.put( csId, arrayId );
+            }
+            org.hibernate.Query taxonQueryObject = super.getSession( false ).createQuery( taxonString ); 
+            taxonQueryObject.setParameterList( "id", csToArray.keySet() );
+            ScrollableResults taxonList = taxonQueryObject.scroll();
+            while (taxonList.next()) {
+                Long csId = taxonList.getLong( 0 );
+                String taxon = taxonList.getString( 1 );
+                Long arrayId = csToArray.get( csId );    
+                arrayToTaxon.put( arrayId, taxon );
+            }
+           
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
             if ( list != null ) {
                 while ( list.next() ) {
                     ArrayDesignValueObject v = new ArrayDesignValueObject();
@@ -782,7 +809,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     TechnologyType color = ( TechnologyType ) list.get( 3 );
                     if ( color != null ) v.setColor( color.getValue() );
-                     v.setTaxon( list.getString( 4 ) );
+             
+                    v.setTaxon( arrayToTaxon.get( v.getId() ) );
 
                     // v.setDesignElementCount( (Long) csCounts.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
@@ -928,6 +956,45 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         return queryObject.list();
 
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetAuditEvents(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetAuditEvents( Collection ids ) throws Exception {
+        final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad inner join ad.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
+            + " where ad.id in (:ids) ";
+    try {
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        queryObject.setParameterList( "ids", ids );
+        ScrollableResults list = queryObject.scroll();
+        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
+        // process list of expression experiment ids that have events
+        while ( list.next() ) {
+            Long id = list.getLong( 0 );
+            AuditEvent event = ( AuditEvent ) list.get( 1 );
+
+            if ( eventMap.containsKey( id ) ) {
+                Collection<AuditEvent> events = eventMap.get( id );
+                events.add( event );
+            } else {
+                Collection<AuditEvent> events = new ArrayList<AuditEvent>();
+                events.add( event );
+                eventMap.put( id, events );
+            }
+        }
+        // add in the array design ids that do not have events. Set their values to null.
+        for ( Object object : ids ) {
+            Long id = ( Long ) object;
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, null );
+            }
+        }
+        return eventMap;
+    } catch ( org.hibernate.HibernateException ex ) {
+        throw super.convertHibernateAccessException( ex );
+    }
     }
 
 }

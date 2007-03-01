@@ -210,11 +210,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) );
         }
         
-        for ( ArrayDesignValueObject ad : arrayDesigns ) {
+        arrayDesignReportService.fillEventInformation( arrayDesigns );
+        
+      /*  for ( ArrayDesignValueObject ad : arrayDesigns ) {
+            
             ad.setLastSequenceAnalysis( arrayDesignReportService.getLastSequenceAnalysisEvent( ad.getId() ) );
             ad.setLastGeneMapping( arrayDesignReportService.getLastGeneMappingEvent( ad.getId() ) );
             ad.setLastSequenceUpdate( arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) );
-        }
+        }*/
 
         Long numArrayDesigns = new Long( arrayDesigns.size() );
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
