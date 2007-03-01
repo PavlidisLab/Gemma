@@ -347,7 +347,7 @@ public class ExpressionExperimentServiceImpl extends
             } else {
                 for ( AuditEvent event : events ) {
                     if ( event.getEventType() != null && event.getEventType() instanceof LinkAnalysisEvent ) {
-                        if ( event == null ) {
+                        if ( lastEvent == null ) {
                             lastEvent = event;
                             continue;
                         } else if ( lastEvent.getDate().before( event.getDate() ) ) {
@@ -378,7 +378,7 @@ public class ExpressionExperimentServiceImpl extends
             } else {
                 for ( AuditEvent event : events ) {
                     if ( event.getEventType() != null && event.getEventType() instanceof MissingValueAnalysisEvent ) {
-                        if ( event == null ) {
+                        if ( lastEvent == null ) {
                             lastEvent = event;
                             continue;
                         } else if ( lastEvent.getDate().before( event.getDate() ) ) {
@@ -409,7 +409,7 @@ public class ExpressionExperimentServiceImpl extends
             } else {
                 for ( AuditEvent event : events ) {
                     if ( event.getEventType() != null && event.getEventType() instanceof RankComputationEvent ) {
-                        if ( event == null ) {
+                        if ( lastEvent == null ) {
                             lastEvent = event;
                             continue;
                         } else if ( lastEvent.getDate().before( event.getDate() ) ) {
