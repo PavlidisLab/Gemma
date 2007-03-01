@@ -193,102 +193,73 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     @SuppressWarnings("unchecked")
-    private void collectMapInfo( Integer stringency, Map<Long, CoexpressionValueObject> geneMap,
+    private void postProcessing( Map<Long, CoexpressionValueObject> geneMap,
             CoexpressionCollectionValueObject coexpressions ) {
 
         // add count of original matches to coexpression data
         coexpressions.setLinkCount( geneMap.size() );
+
         // filter out stringency failures
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
         // count the number of genes, predictedGenes, and probeAlignedRegions, both filtered and unfiltered by
         // stringency
-        int numGenes = 0;
+        int numGenes = 0; // GeneImpl
         int numPredictedGenes = 0;
         int numProbeAlignedRegions = 0;
 
+        // counts
         int numStringencyGenes = 0;
         int numStringencyPredictedGenes = 0;
         int numStringencyProbeAlignedRegions = 0;
 
         for ( Long key : geneMap.keySet() ) {
             CoexpressionValueObject v = geneMap.get( key );
-            Collection<Long> allNonspecificEE = coexpressions.getNonSpecificExpressionExperiments( v.getGeneId() );
-            // log.info( "All Non-specific EE's for gene " + v.getGeneId() + " : " + allNonspecificEE);
-            // log.info( "All EE's contributing for gene " + v.getGeneId() + " : " +
-            // v.getContributingExpressionExperiments());
 
             // determine which EE's that contributed to this gene's coexpression were non-specific
-            Collection<Long> nonspecificEE = new HashSet<Long>();
-            for ( Long id : v.getContributingExpressionExperiments() ) {
-                if ( allNonspecificEE.contains( id ) ) nonspecificEE.add( id );
-            }
-            v.setNonspecificEE( nonspecificEE );
-    
+            Collection<Long> allNonspecificEE = coexpressions.getNonSpecificExpressionExperiments( v.getGeneId() );
+            Collection<Long> nonspecificEE = new HashSet<Long>(v.getExpressionExperiments());
+            nonspecificEE.retainAll( allNonspecificEE );
+            v.setNonspecificEE(nonspecificEE);
+
+            
             boolean added = false;
             if ( v.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
                 numGenes++;
-                // increment raw link counts for
-                if ( ( v.getPositiveLinkCount() >= stringency ) || ( v.getNegativeLinkCount() >= stringency ) ) {
-                    numStringencyGenes++;
-                }
-                
-                
-                //This should be fine as the EE's in the CoexpressionValueObject are the same ones in the coexpressionCollectionValueObject 
-                for(ExpressionExperimentValueObject eeVo: v.getExpressionExperimentValueObjects()){
-                    if ( eeVo.getRawCoexpressionLinkCount() == null )
-                        eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
-                    else
-                        eeVo.setRawCoexpressionLinkCount( eeVo.getRawCoexpressionLinkCount() + 1 );                    
-                }
-                
-                if ( v.getPositiveLinkCount() >= stringency ) {
 
+                incrementRawEEContributions(v.getExpressionExperiments(),coexpressions);
+                
+                if ( v.getPositiveLinkCount() != null ) {
+                    numStringencyGenes++;
                     positiveLinkCount++;
                     added = true;
                     // add in coexpressions that match stringency
                     coexpressions.getCoexpressionData().add( v );
                     // add in expression experiments that match stringency
                     // update the link count for that EE
-                    Collection<Long> contributingEEs = v.getEEContributing2PositiveLinks();
-                    for ( Long eeID : contributingEEs ) {
-                        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
-                        if ( eeVo.getCoexpressionLinkCount() == null )
-                            eeVo.setCoexpressionLinkCount( new Long( 1 ) );
-                        else
-                            eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
-                       
-                    }
+                    incrementEEContributions(v.getEEContributing2PositiveLinks(), coexpressions);
                 }
 
-                if ( v.getNegativeLinkCount() >= stringency ) {
+                if ( v.getNegativeLinkCount() != null ) {
                     negativeLinkCount++;
                     // add in expression experiments that match stringency
                     // update the link count for that EE
-                    Collection<Long> contributingEEs = v.getEEContributing2NegativeLinks();
-                    for ( Long eeID : contributingEEs ) {
-                        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
-                        if ( eeVo.getCoexpressionLinkCount() == null )
-                            eeVo.setCoexpressionLinkCount( new Long( 1 ) );
-                        else
-                            eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
-
-                    }
-                    
-                    if ( added ) continue; // no point in adding the same element twice
-                    // add in coexpressions that match stringency
+                    incrementEEContributions(v.getEEContributing2NegativeLinks(), coexpressions);
+ 
+                    if ( added ) continue; // no point in adding or counting the same element twice
                     coexpressions.getCoexpressionData().add( v );
-
+                    numStringencyGenes++;
 
                 }
+                
             } else if ( v.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
                 numPredictedGenes++;
-                if ( ( v.getPositiveLinkCount() >= stringency ) || ( v.getNegativeLinkCount() >= stringency ) ) {
+                if ( ( v.getPositiveLinkCount() != null ) || ( v.getNegativeLinkCount() != null ) ) {
                     numStringencyPredictedGenes++;
                 }
             } else if ( v.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
                 numProbeAlignedRegions++;
-                if ( ( v.getPositiveLinkCount() >= stringency ) || ( v.getNegativeLinkCount() >= stringency ) ) {
+                if ( ( v.getPositiveLinkCount() != null ) || ( v.getNegativeLinkCount() != null ) ) {
                     numStringencyProbeAlignedRegions++;
                 }
             }
@@ -307,6 +278,32 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coexpressions.setNumStringencyPredictedGenes( numStringencyPredictedGenes );
         coexpressions.setNumStringencyProbeAlignedRegions( numStringencyProbeAlignedRegions );
     }
+
+    private void incrementEEContributions(Collection<Long> contributingEEs, CoexpressionCollectionValueObject coexpressions) {
+        
+        for ( Long eeID : contributingEEs ) {
+            ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+            if ( eeVo.getCoexpressionLinkCount() == null )
+                eeVo.setCoexpressionLinkCount( new Long( 1 ) );
+            else
+                eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
+
+        }
+
+    }
+    
+    private void incrementRawEEContributions(Collection<Long> contributingEEs, CoexpressionCollectionValueObject coexpressions){
+        
+        for ( Long eeID : contributingEEs ) {
+            ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+            if ( eeVo.getRawCoexpressionLinkCount() == null )
+                eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
+            else
+                eeVo.setRawCoexpressionLinkCount( eeVo.getRawCoexpressionLinkCount() + 1 );
+        }
+
+    }
+    
 
     private void debug( List results ) {
 
@@ -456,6 +453,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             vo.setGeneName( scroll.getString( 1 ) );
             vo.setGeneOfficialName( scroll.getString( 2 ) );
             vo.setGeneType( scroll.getString( 10 ) );
+            vo.setStringencyFilterValue( coexpressions.getStringency() );
             geneMap.put( geneId, vo );
         }
 
@@ -727,6 +725,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 .synchronizedMap( new HashMap<Long, CoexpressionValueObject>() );
 
         final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
+        coexpressions.setStringency( stringency );
 
         try {
             final Collection<Long> eeIds = getEEIds( ees );
@@ -815,7 +814,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             StopWatch watch = new StopWatch();
             watch.start();
             log.info( "Starting postprocessing" );
-            collectMapInfo( stringency, geneMap, coexpressions );
+            postProcessing( geneMap, coexpressions );
 
             watch.stop();
             Long elapsed = watch.getTime();

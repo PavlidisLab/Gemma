@@ -19,6 +19,7 @@
 package ubic.gemma.model.coexpression;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,9 +50,9 @@ public class CoexpressionValueObject {
         geneName = "";
         geneId = null;
         geneOfficialName = null;
-        expressionExperimentValueObjects = new HashMap<Long, ExpressionExperimentValueObject>();
-        positiveScores = new HashMap<Long, Map<Long, Double>>();
-        negativeScores = new HashMap<Long, Map<Long, Double>>();
+        expressionExperimentValueObjects = Collections.synchronizedMap(  new HashMap<Long, ExpressionExperimentValueObject>());
+        positiveScores = Collections.synchronizedMap (new HashMap<Long, Map<Long, Double>>());
+        negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>());
         pValues = new HashMap<Long, Map<Long, Double>>();
         stringencyFilterValue = null;
     }
@@ -331,7 +332,7 @@ public class CoexpressionValueObject {
     /**
      * @return the nonspecificEE
      */
-    public Collection<Long> getContributingExpressionExperiments() {
+    public Collection<Long> getExpressionExperiments() {
         return expressionExperimentValueObjects.keySet();
     }
 }

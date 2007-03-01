@@ -74,7 +74,7 @@ public class CoexpressionWrapper extends TableDecorator {
             count += "<span class='positiveLink' >";
             count += positiveLinks.toString();
             
-           if ( !object.getContributingExpressionExperiments().isEmpty())
+           if ( !object.getExpressionExperiments().isEmpty())
             count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2PositiveLinks() );
            
             count += "</span>";
@@ -86,7 +86,7 @@ public class CoexpressionWrapper extends TableDecorator {
             }
             count += "<span class='negativeLink' >";
             count += negativeLinks.toString();
-            if ( !object.getContributingExpressionExperiments().isEmpty())
+            if ( !object.getExpressionExperiments().isEmpty())
                 count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2NegativeLinks() );
      
             

@@ -48,6 +48,7 @@ public class CoexpressionCollectionValueObject {
     private int numProbeAlignedRegions;
 
     // the number of actual genes, predicted genes, and probe aligned regions in the query, filtered by stringency
+    private int stringencyFilterValue;
     private int numStringencyGenes;
     private int numStringencyPredictedGenes;
     private int numStringencyProbeAlignedRegions;
@@ -427,47 +428,18 @@ public class CoexpressionCollectionValueObject {
             return eeVo.getCoexpressionLinkCount();
 
     }
-/*
-    public void calculateLinkCounts() {
 
-        for ( CoexpressionValueObject cvo : coexpressionData ) {
-            log.info("Gene: " + cvo.getGeneName());
-            
-            Collection<Long> ee4NegativeLinks = cvo.getEEContributing2NegativeLinks();
-            Collection<Long> ee4PositiveLinks = cvo.getEEContributing2PositiveLinks();
-            
-            if (cvo.getPositiveLinkCount() != null)
-                add2EEContributions(ee4PositiveLinks);
-            
-            if (cvo.getNegativeLinkCount() != null)
-                add2EEContributions(ee4NegativeLinks);           
-        }
+    /**
+     * @return the stringencyFilterValue
+     */
+    public int getStringency() {
+        return stringencyFilterValue;
     }
-    
-    public void calculateRawLinkCounts(){
-        for(Long eeID: expressionExperiments.keySet()){
-            ExpressionExperimentValueObject eeVo = expressionExperiments.get( eeID );
-        
-            if (crossHybridizingProbes.containsKey( eeID ))
-                eeVo.setRawCoexpressionLinkCount( new Long(crossHybridizingProbes.get( eeID ).size()));
-        }
+
+    /**
+     * @param stringencyFilterValue the stringencyFilterValue to set
+     */
+    public void setStringency( int stringency ) {
+        this.stringencyFilterValue = stringency;
     }
-    
-    private void add2EEContributions(Collection<Long> contributingEEs){
-        
-        for ( long eeID : contributingEEs ) {
-            log.info( "Adding contribution for: " + eeID );
-            if ( expressionExperiments.containsKey( eeID ) ) {
-                ExpressionExperimentValueObject eeVo = expressionExperiments.get( eeID );
-                if ( eeVo.getCoexpressionLinkCount() == null )
-                    eeVo.setCoexpressionLinkCount( new Long( 1 ) );
-                else
-                    eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
-            } else
-                log.warn( "Corrupt data: There is an expression experiment that contributes to the links that isn't in the CoexpressionCollectionValueObject list of contributors: "
-                                + eeID );
-        }
-  
-   }
-   */
 }

@@ -266,8 +266,6 @@ public class CoexpressionSearchController extends BaseFormController {
         for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
             eeIds.add( Long.parseLong( eeVo.getId() ) );
         }
-
-        addStringencyInformation( stringency, coexpressions );  //TODO this should be moved to the dao
         
         Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
         //add link count information to ee value objects
@@ -325,16 +323,6 @@ public class CoexpressionSearchController extends BaseFormController {
         return mav;
     }
 
-    /**
-     * @param stringency
-     * @param coexpressions
-     */
-    private void addStringencyInformation( Integer stringency, CoexpressionCollectionValueObject coexpressions ) {
-        // add in stringency filtering to the value objects
-        for ( CoexpressionValueObject vo : coexpressions.getCoexpressionData() ) {
-            vo.setStringencyFilterValue( stringency );
-        }
-    }
 
     private void addTimingInformation( HttpServletRequest request, CoexpressionCollectionValueObject coexpressions ) {
         NumberFormat nf = NumberFormat.getNumberInstance();
