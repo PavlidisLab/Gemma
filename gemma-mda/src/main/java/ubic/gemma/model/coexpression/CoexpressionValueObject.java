@@ -59,16 +59,29 @@ public class CoexpressionValueObject {
     /**
      * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene
      */
-    public Collection getExpressionExperimentValueObjects() {
+    public Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects() {
         return expressionExperimentValueObjects.values();
+    }
+
+    /**
+     * @param eeID expression experiment ID (long)
+     * @return null if the EEid is not part of the ee's that contribute to this genes coexpression returns the
+     *         EEValueObject if it does.
+     */
+    public ExpressionExperimentValueObject getExpressionExperimentValueObject( Long eeID ) {
+
+        if ( expressionExperimentValueObjects.containsKey( eeID ) )
+            return expressionExperimentValueObjects.get( eeID );
+
+        return null;
     }
 
     /**
      * @param expressionExperimentValueObjects the expressionExperimentValueObjects to set
      */
-    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject expressionExperimentValueObject ) {
-        this.expressionExperimentValueObjects.put( new Long( expressionExperimentValueObject.getId() ),
-                expressionExperimentValueObject );
+    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
+        if ( !expressionExperimentValueObjects.containsKey( Long.parseLong( eeVo.getId() ) ) )
+            this.expressionExperimentValueObjects.put( new Long( eeVo.getId() ), eeVo );
     }
 
     /**
@@ -140,7 +153,6 @@ public class CoexpressionValueObject {
         pValues.get( eeID ).put( probeID, pValue );
 
     }
-    
 
     public Map<Long, Map<Long, Double>> getPValues() {
         return pValues;
@@ -226,54 +238,50 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * Function to return the positive link counts. If the count equals or exceeds the stringency filter value or the filter 
-     * value is not set, return the count. If the count is below the filter value, return null.
+     * Function to return the positive link counts. If the count equals or exceeds the stringency filter value or the
+     * filter value is not set, return the count. If the count is below the filter value, return null.
+     * 
      * @return the positive link counts
      */
     public Integer getPositiveLinkCount() {
         Integer count = this.positiveScores.keySet().size();
-        if (stringencyFilterValue == null) {
+        if ( stringencyFilterValue == null ) {
             return count;
-        }
-        else if ( count >= stringencyFilterValue ) {
+        } else if ( count >= stringencyFilterValue ) {
             return count;
-        }
-        else {
+        } else {
             return null;
         }
     }
-    
+
     /**
      * @return a collectino of EEids that contributed to this genes positive expression
      */
-    public Collection<Long> getEEContributing2PositiveLinks(){
-        return positiveScores.keySet();      
+    public Collection<Long> getEEContributing2PositiveLinks() {
+        return positiveScores.keySet();
     }
-    
-    
+
     /**
      * @return a collection of EE ids that contributed to this genes negative expression
      */
-    public Collection<Long> getEEContributing2NegativeLinks(){
+    public Collection<Long> getEEContributing2NegativeLinks() {
         return negativeScores.keySet();
-        
+
     }
 
-
     /**
-     * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the filter 
-     * value is not set, return the count. If the count is below the filter value, return null.
+     * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the
+     * filter value is not set, return the count. If the count is below the filter value, return null.
+     * 
      * @return the negative link counts
      */
     public Integer getNegativeLinkCount() {
         Integer count = this.negativeScores.keySet().size();
-        if (stringencyFilterValue == null) {
+        if ( stringencyFilterValue == null ) {
             return count;
-        }
-        else if ( count >= stringencyFilterValue ) {
+        } else if ( count >= stringencyFilterValue ) {
             return count;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -319,8 +327,7 @@ public class CoexpressionValueObject {
     public void setNonspecificEE( Collection<Long> nonspecificEE ) {
         this.nonspecificEE = nonspecificEE;
     }
-    
- 
+
     /**
      * @return the nonspecificEE
      */

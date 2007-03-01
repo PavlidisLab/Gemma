@@ -304,8 +304,11 @@ Results for
 </span>
 </c:if>
 <b> 
-<c:out value="${numUsedExpressionExperiments}" />  datasets had relevent coexpression data  <br />
- &emsp;&nbsp;&nbsp;<c:out value="${numLinkedExpressionExperiments}" /> datasets met stringency criteria 
+
+<c:out value="${numUsedExpressionExperiments}" />  datasets had relevent coexpression data  
+<!--  <br /> &emsp;&nbsp;&nbsp;
+<c:out value="${numLinkedExpressionExperiments}" /> datasets met stringency criteria 
+  -->
 <c:if test="${numLinkedExpressionExperiments != 0}">
 <a href="#" onclick="return toggleVisibility('datasetList')" >(details)</a> 
 </c:if>
@@ -317,6 +320,11 @@ Results for
 	
 	<display:table pagesize="100" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+
+			<display:column property="rawCoexpressionLinkCount" sortable="true"  titleKey="expressionExperiment.rawLinkcount" />
+
+			<display:column property="coexpressionLinkCount" sortable="true"  titleKey="expressionExperiment.linkcount" />
+			
 
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 

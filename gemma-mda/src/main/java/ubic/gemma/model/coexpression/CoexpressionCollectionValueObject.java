@@ -28,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.GeneDaoImpl;
 
 /**
  * @author jsantos
@@ -41,7 +40,7 @@ public class CoexpressionCollectionValueObject {
     private int positiveStringencyLinkCount; // the number of links for this coexpression that passed the stringency
     // requirements
     private int negativeStringencyLinkCount;
-    private Collection<ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were
+    private Map<Long, ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were
 
     // the number of actual genes, predicted genes, and probe aligned regions in the query, unfiltered by stringency
     private int numGenes;
@@ -60,7 +59,9 @@ public class CoexpressionCollectionValueObject {
     private double postProcessSeconds;
     private double elapsedWallSeconds;
 
-    private Map<Long, Map<Long, Collection<Long>>> crossHybridizingProbes;
+    private Map<Long, Map<Long, Collection<Long>>> crossHybridizingProbes; // this is raw data before stringincy is
+
+    // applied
 
     // Map <expressionExperimentID, Map<probeId,<collection<geneID>>
 
@@ -96,7 +97,7 @@ public class CoexpressionCollectionValueObject {
         numStringencyPredictedGenes = 0;
 
         coexpressionData = new HashSet<CoexpressionValueObject>();
-        expressionExperiments = new HashSet<ExpressionExperimentValueObject>();
+        expressionExperiments = new HashMap<Long, ExpressionExperimentValueObject>();
         crossHybridizingProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
     }
 
@@ -137,8 +138,8 @@ public class CoexpressionCollectionValueObject {
 
         for ( Long eeID : crossHybridizingProbes.keySet() ) {
             Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
-           // log.info( "Non-specifity validaton for EE: " + eeID + " and gene: " + geneID);
-            
+            // log.info( "Non-specifity validaton for EE: " + eeID + " and gene: " + geneID);
+
             for ( Long probeID : probe2geneMap.keySet() ) {
                 Collection genes = probe2geneMap.get( probeID );
 
@@ -146,12 +147,12 @@ public class CoexpressionCollectionValueObject {
 
                 if ( ( genes.size() == 1 ) ) {
                     nonSpecificEE.remove( eeID );
-                    //log.info( "EE has specific probe: " + probeID + " for Gene: " + genes );
+                    // log.info( "EE has specific probe: " + probeID + " for Gene: " + genes );
                     break;
                 }
-                
+
                 nonSpecificEE.add( eeID );
-                //log.info( "EE has NON-specific probe: " + probeID + " for Gene: " + geneID + " in " + genes );
+                // log.info( "EE has NON-specific probe: " + probeID + " for Gene: " + geneID + " in " + genes );
             }
 
         }
@@ -250,14 +251,7 @@ public class CoexpressionCollectionValueObject {
      * @return the expressionExperiments that were searched for coexpression
      */
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
-        return expressionExperiments;
-    }
-
-    /**
-     * @param expressionExperiments the expressionExperiments to set
-     */
-    public void setExpressionExperiments( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
-        this.expressionExperiments = expressionExperiments;
+        return expressionExperiments.values();
     }
 
     /**
@@ -266,7 +260,21 @@ public class CoexpressionCollectionValueObject {
      * @param vo
      */
     public void addExpressionExperiment( ExpressionExperimentValueObject vo ) {
-        this.expressionExperiments.add( vo );
+        Long id = Long.parseLong( vo.getId() );
+        if (!expressionExperiments.containsKey( id ))
+            this.expressionExperiments.put( id , vo );
+    }
+    
+    /**
+     * @param eeID expressionExperiment ID
+     * @return an expressionexperimentValueObject or null if it isn't there
+     */
+    public ExpressionExperimentValueObject getExpressionExperiment(Long eeID){
+
+        if (expressionExperiments.containsKey( eeID ))
+            return this.expressionExperiments.get( eeID );
+        
+        return null;
     }
 
     /**
@@ -274,8 +282,9 @@ public class CoexpressionCollectionValueObject {
      * 
      * @param vo
      */
-    public void addExpressionExperiment( Collection<ExpressionExperimentValueObject> vos ) {
-        this.expressionExperiments.addAll( vos );
+    public void addExpressionExperiments( Collection<ExpressionExperimentValueObject> vos ) {
+        for ( ExpressionExperimentValueObject eeVo : vos )
+            addExpressionExperiment( eeVo );
     }
 
     public void setFirstQueryElapsedTime( Long elapsed ) {
@@ -394,4 +403,71 @@ public class CoexpressionCollectionValueObject {
 
     }
 
+    /**
+     * @param id
+     * @return an int representing the raw number of links a given ee contributed to the coexpression search
+     */
+    public Long getRawLinkCountForEE( Long id ) {
+
+        ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
+
+        if ( eeVo.getRawCoexpressionLinkCount() == null )
+            return ( long ) 0;
+        else
+            return eeVo.getRawCoexpressionLinkCount();
+    }
+
+    public Long getLinkCountForEE( Long id ) {
+
+        ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
+
+        if ( eeVo.getCoexpressionLinkCount() == null )
+            return ( long ) 0;
+        else
+            return eeVo.getCoexpressionLinkCount();
+
+    }
+/*
+    public void calculateLinkCounts() {
+
+        for ( CoexpressionValueObject cvo : coexpressionData ) {
+            log.info("Gene: " + cvo.getGeneName());
+            
+            Collection<Long> ee4NegativeLinks = cvo.getEEContributing2NegativeLinks();
+            Collection<Long> ee4PositiveLinks = cvo.getEEContributing2PositiveLinks();
+            
+            if (cvo.getPositiveLinkCount() != null)
+                add2EEContributions(ee4PositiveLinks);
+            
+            if (cvo.getNegativeLinkCount() != null)
+                add2EEContributions(ee4NegativeLinks);           
+        }
+    }
+    
+    public void calculateRawLinkCounts(){
+        for(Long eeID: expressionExperiments.keySet()){
+            ExpressionExperimentValueObject eeVo = expressionExperiments.get( eeID );
+        
+            if (crossHybridizingProbes.containsKey( eeID ))
+                eeVo.setRawCoexpressionLinkCount( new Long(crossHybridizingProbes.get( eeID ).size()));
+        }
+    }
+    
+    private void add2EEContributions(Collection<Long> contributingEEs){
+        
+        for ( long eeID : contributingEEs ) {
+            log.info( "Adding contribution for: " + eeID );
+            if ( expressionExperiments.containsKey( eeID ) ) {
+                ExpressionExperimentValueObject eeVo = expressionExperiments.get( eeID );
+                if ( eeVo.getCoexpressionLinkCount() == null )
+                    eeVo.setCoexpressionLinkCount( new Long( 1 ) );
+                else
+                    eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
+            } else
+                log.warn( "Corrupt data: There is an expression experiment that contributes to the links that isn't in the CoexpressionCollectionValueObject list of contributors: "
+                                + eeID );
+        }
+  
+   }
+   */
 }

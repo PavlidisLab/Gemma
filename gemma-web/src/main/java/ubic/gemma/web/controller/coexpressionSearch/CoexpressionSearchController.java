@@ -267,7 +267,17 @@ public class CoexpressionSearchController extends BaseFormController {
             eeIds.add( Long.parseLong( eeVo.getId() ) );
         }
 
+        addStringencyInformation( stringency, coexpressions );  //TODO this should be moved to the dao
+        
         Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
+        //add link count information to ee value objects
+        //coexpressions.calculateLinkCounts();
+        //coexpressions.calculateRawLinkCounts();
+        
+        for(ExpressionExperimentValueObject eeVo: eeVos){
+            eeVo.setCoexpressionLinkCount( new Long(coexpressions.getLinkCountForEE( Long.parseLong( eeVo.getId() ) )));
+            eeVo.setRawCoexpressionLinkCount( new Long(coexpressions.getRawLinkCountForEE( Long.parseLong( eeVo.getId() ) ) ) );
+        }
 
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
 
@@ -288,9 +298,7 @@ public class CoexpressionSearchController extends BaseFormController {
         Long numStringencyProbeAlignedRegions = new Long(coexpressions.getNumStringencyProbeAlignedRegions());
         Integer numMatchedLinks = coexpressions.getLinkCount();
 
-        addTimingInformation( request, coexpressions );
-        
-        addStringencyInformation( stringency, coexpressions );
+        addTimingInformation( request, coexpressions );              
 
         
         mav.addObject( "coexpressedGenes", coexpressedGenes );

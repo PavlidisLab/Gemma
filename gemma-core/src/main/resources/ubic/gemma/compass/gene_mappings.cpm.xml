@@ -21,10 +21,11 @@
     <id name="id" />
    
     <property name="name">
-      
+      <meta-data> name</meta-data>
     </property>
    
     <property name="description">
+    	<meta-data>description</meta-data>
     </property>
     
     <property name="officialName">
@@ -32,6 +33,7 @@
     </property>
 
     <property name="officialSymbol">
+    	<meta-data>official symbol</meta-data>
     </property>
 
     <property name="ncbiId">
