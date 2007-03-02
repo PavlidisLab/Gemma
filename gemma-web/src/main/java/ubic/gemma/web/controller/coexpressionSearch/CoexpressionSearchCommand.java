@@ -44,6 +44,8 @@ public class CoexpressionSearchCommand implements Serializable {
     
     private String exactSearch = "on";
     
+    private String geneIdSearch = "false";
+    
     public CoexpressionSearchCommand() {
         this.setTaxon( Taxon.Factory.newInstance() );
     }
@@ -130,5 +132,19 @@ public class CoexpressionSearchCommand implements Serializable {
      */
     public void setExactSearch( String exactSearch ) {
         this.exactSearch = exactSearch;
+    }
+
+    /**
+     * @return the geneIdSearch
+     */
+    public String getGeneIdSearch() {
+        return geneIdSearch;
+    }
+
+    /**
+     * @param geneIdSearch the geneIdSearch to set
+     */
+    public void setGeneIdSearch( String geneIdSearch ) {
+        this.geneIdSearch = geneIdSearch;
     }
 }

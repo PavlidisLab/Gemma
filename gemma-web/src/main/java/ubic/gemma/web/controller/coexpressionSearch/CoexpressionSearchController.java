@@ -144,8 +144,16 @@ public class CoexpressionSearchController extends BaseFormController {
         // none, do inexact search.
         if ( csc.getExactSearch() == null ) {
             genesFound = searchService.geneDbSearch( csc.getSearchString() );
-            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
-        } else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
+            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );    
+        } 
+        else if (csc.getGeneIdSearch().equalsIgnoreCase( "true" )) {
+            String geneId = csc.getSearchString();
+            Long id = Long.parseLong( geneId );
+            Collection<Long> ids = new ArrayList<Long>();
+            ids.add( id );
+            genesFound = geneService.load( ids );
+        }
+        else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
             genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
         } else {
             genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
@@ -198,7 +206,12 @@ public class CoexpressionSearchController extends BaseFormController {
             return mav;
         }
 
-        // At this point, only one gene has been found, find coexpressed genes
+        // At this point, only one gene has been found
+        // set command object to reflect this
+        csc.setSearchString( genesFound.iterator().next().getOfficialSymbol() );
+        csc.setGeneIdSearch( "false" );
+        
+        // find coexpressed genes
 
         // find expressionExperiments via lucene if the query is eestring-constrained
         Collection<ExpressionExperiment> ees;
@@ -385,10 +398,19 @@ public class CoexpressionSearchController extends BaseFormController {
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
                     csc.setEeSearchString( cookie.getString( "eeSearchString" ) );
-                    csc.setSearchString( cookie.getString( "searchString" ) );
+
                     csc.setStringency( cookie.getInt( "stringency" ) );
                     Taxon taxon = taxonService.findByScientificName( cookie.getString( "taxonScientificName" ) );
                     csc.setTaxon( taxon );
+                    
+
+                    
+
+                        // save the gene name. If the gene id is on, then convert the ID to a gene first
+                        String searchString =  cookie.getString( "searchString" );
+
+                      csc.setSearchString( searchString );
+                    
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     // that's okay, we just don't get a cookie.
@@ -411,8 +433,9 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( params.get( "eeSearchString" ) != null ) {
             csc.setEeSearchString( ( ( String[] ) params.get( "eeSearchString" ) )[0] );
         }
-        if ( params.get( "searchString" ) != null ) {
-            csc.setSearchString( ( ( String[] ) params.get( "searchString" ) )[0] );
+        if ( params.get( "geneIdSearch" ) != null ) {
+            String[] geneIdSearch = ( String[] ) params.get( "geneIdSearch" );
+            csc.setGeneIdSearch( geneIdSearch[0] );
         }
         if ( params.get( "stringency" ) != null ) {
             String[] stringency = ( String[] ) params.get( "stringency" );
@@ -423,6 +446,15 @@ public class CoexpressionSearchController extends BaseFormController {
             Taxon taxon = taxonService.findByScientificName( ( ( String[] ) params.get( "taxon" ) )[0] );
             csc.setTaxon( taxon );
         }
+        if ( params.get( "searchString" ) != null ) {
+
+            String searchString = ( ( String[] ) params.get( "searchString" ) )[0];
+
+
+            csc.setSearchString( searchString );
+
+        }
+
     }
 
     /*
@@ -476,7 +508,25 @@ public class CoexpressionSearchController extends BaseFormController {
             super( COOKIE_NAME );
 
             this.setProperty( "eeSearchString", command.getEeSearchString() );
-            this.setProperty( "searchString", command.getSearchString() );
+            
+            // save the gene name. If the gene id is on, then convert the ID to a gene first
+            if (!StringUtils.isBlank( command.getGeneIdSearch())) {
+                String geneId = command.getSearchString();
+                Long id;
+                try {
+                    id = Long.parseLong( geneId );
+                    Gene g = geneService.load( id );
+                    this.setProperty( "searchString", g.getOfficialSymbol() );
+                }
+                catch (NumberFormatException e) {
+                    this.setProperty( "searchString", command.getSearchString() );
+                }
+            }
+            else {
+                this.setProperty( "searchString", command.getSearchString() );
+            }
+            
+            
             this.setProperty( "stringency", command.getStringency() );
             this.setProperty( "taxonScientificName", command.getTaxon().getScientificName() );
 

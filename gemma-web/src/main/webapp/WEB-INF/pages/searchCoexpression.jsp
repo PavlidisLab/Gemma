@@ -162,13 +162,14 @@ Results for
 							var checkbox = document.getElementById('exactSearchCheckbox');
 							checkbox.checked='';
 							checkbox.style.display='inline';
-							document.getElementById('exactSearchLabel').style.display='inline';
+							document.getElementById('exactSearchLabel').style.display='inline';						
+							document.getElementById('geneIdSearch').value = 'false';
 						}
 						">
 							<option value="">[Select a gene or refine the search]</option>
 							<option value="Refine Search">[Refine Search]</option>
 							<c:forEach items="${genes}" var="gene">
-								<option value="${gene.officialSymbol}">
+								<option value="${gene.id}">
 									${gene.officialSymbol} : ${gene.officialName }
 								</option>
 							</c:forEach>
@@ -176,6 +177,9 @@ Results for
 						<input id="searchStringTextInput" disabled style="display:none" type="text" size=15
 							name="<c:out value="${status.expression}"/>"
 							value="${status.value}" />
+						<input id="geneIdSearch"  style="display:none" type="text" size=15
+							name="geneIdSearch"
+							value="true" />
 					</spring:bind>		
 					<spring:bind path="coexpressionSearchCommand.exactSearch">
 						<input style="display:none" id="exactSearchCheckbox" type="checkbox" name="${status.expression}" 
