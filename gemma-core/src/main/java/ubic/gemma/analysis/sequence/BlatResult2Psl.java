@@ -55,6 +55,8 @@ public class BlatResult2Psl {
         if ( blatResult.getTargetChromosome() != null && blatResult.getTargetChromosome().getSequence() != null
                 && blatResult.getTargetChromosome().getSequence().getLength() != null ) {
             buf.append( blatResult.getTargetChromosome().getSequence().getLength() + " " );
+        } else if ( blatResult.getTargetSequence() != null && blatResult.getTargetSequence().getLength() != null ) {
+            buf.append( blatResult.getTargetSequence().getLength() + " " );
         } else {
             buf.append( ( blatResult.getTargetEnd() + 1 ) + " " );// seems okay as long as more than the target end.
         }
