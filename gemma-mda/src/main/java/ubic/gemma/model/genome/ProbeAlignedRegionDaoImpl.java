@@ -71,7 +71,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
                 + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
                 + "and pl.chromosome = :chromosome ";
 
-        query = query + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
+        query = query + " and " + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
 
         if ( strand != null ) {
             query = query + " and pl.strand = :strand ";
