@@ -52,7 +52,8 @@ public class BlatResult2Psl {
         buf.append( blatResult.getQueryStart() + " " );
         buf.append( blatResult.getQueryEnd() + " " );
         buf.append( "chr" + blatResult.getTargetChromosome().getName() + " " );
-        if ( blatResult.getTargetChromosome().getSequence().getLength() != null ) {
+        if ( blatResult.getTargetChromosome() != null && blatResult.getTargetChromosome().getSequence() != null
+                && blatResult.getTargetChromosome().getSequence().getLength() != null ) {
             buf.append( blatResult.getTargetChromosome().getSequence().getLength() + " " );
         } else {
             buf.append( ( blatResult.getTargetEnd() + 1 ) + " " );// seems okay as long as more than the target end.
