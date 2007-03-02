@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.arrayDesign;
 
+import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
@@ -37,6 +40,42 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    public String getLastSequenceUpdateDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        Date dateObject = object.getLastSequenceUpdate();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+    
+    public String getLastSequenceAnalysisDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        Date dateObject = object.getLastSequenceAnalysis();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+    
+    public String getLastGeneMappingDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        Date dateObject = object.getLastGeneMapping();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+    
     public String getSummaryTable() {
         StringBuilder buf = new StringBuilder();
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();

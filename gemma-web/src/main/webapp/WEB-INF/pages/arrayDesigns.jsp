@@ -49,15 +49,12 @@ ${summaryString}
 		sortable="true" title="Expts" />
 	<display:column property="summaryTable" title="Probe Summary" />
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="lastSequenceUpdate" sortable="true"
-			title="Seq. Update" defaultorder="descending"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
-		<display:column property="lastSequenceAnalysis" sortable="true"
-			title="Seq. Analysis" defaultorder="descending"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
-		<display:column property="lastGeneMapping" sortable="true"
-			title="Gene mapping" defaultorder="descending"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
+		<display:column property="lastSequenceUpdateDate" sortable="true"
+			title="Seq. Update" defaultorder="descending"/>
+		<display:column property="lastSequenceAnalysisDate" sortable="true"
+			title="Seq. Analysis" defaultorder="descending" />
+		<display:column property="lastGeneMappingDate" sortable="true"
+			title="Gene mapping" defaultorder="descending" />
 		<display:column property="color" sortable="true"
 			titleKey="arrayDesign.technologyType" />
 		<display:column property="refreshReport" title="Refresh" />

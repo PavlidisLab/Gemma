@@ -398,29 +398,26 @@ public class ArrayDesignReportService {
         // fill in events for the value objects
         for ( ArrayDesignValueObject adVo : adVos ) {
             // preemptively fill in event dates with None
-            adVo.setLastGeneMapping( "[None]" );
-            adVo.setLastSequenceAnalysis(  "[None]" );
-            adVo.setLastSequenceUpdate( "[None]" );
             
             Long id = adVo.getId();
             if (geneMappingEvents.containsKey( id ) ) {
                 AuditEvent event = geneMappingEvents.get( id );
                 if (event != null) {
-                    adVo.setLastGeneMapping( event.getDate().toString() );
+                    adVo.setLastGeneMapping( event.getDate());
                 }
             }
             
             if (sequenceUpdateEvents.containsKey( id ) ) {
                 AuditEvent event = sequenceUpdateEvents.get( id );
                 if (event != null) {
-                    adVo.setLastSequenceUpdate( event.getDate().toString() );
+                    adVo.setLastSequenceUpdate( event.getDate() );
                 }
             }
             
             if (sequenceAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = sequenceAnalysisEvents.get( id );
                 if (event != null) {
-                    adVo.setLastSequenceAnalysis(  event.getDate().toString() );
+                    adVo.setLastSequenceAnalysis(  event.getDate() );
                 }
             }
         }
