@@ -112,7 +112,7 @@ public class GeneOntologyService implements InitializingBean {
                 }
                 ready.set( true );
                 running.set( false );
-                log.info( "Gene Ontology loaded" );
+                log.info( "Gene Ontology loaded, " + graph.getItems().size() + " items." );
             }
         } );
 
@@ -126,7 +126,7 @@ public class GeneOntologyService implements InitializingBean {
 
         Collection<OntologyEntry> children = ontologyEntryService.getChildren( item );
         if ( Math.random() < FRACTION_OF_LOAD_UPDATE_LOGGING && children.size() > 0 ) { // report only occasional
-                                                                                        // updates.
+            // updates.
             log.info( "Loading " + children.size() + " children of " + item + " (among others)..." );
         }
         if ( children == null || children.size() == 0 ) {
