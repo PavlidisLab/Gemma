@@ -109,6 +109,8 @@ public class AssayViewTag extends TagSupport {
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Map<BioMaterial, Map<ArrayDesign, Collection<BioAssay>>> bioAssayMap = new HashMap<BioMaterial, Map<ArrayDesign, Collection<BioAssay>>>();
         Set<ArrayDesign> designs = new HashSet<ArrayDesign>();
+        Map<ArrayDesign, Long> arrayMaterialCount = new HashMap<ArrayDesign,Long>();
+        
         // package all of this information into JSON for javascript dynamic retrieval
         Map<String,Collection<String>> assayToMaterial = new HashMap<String,Collection<String>>();
         for ( BioAssay assay : bioAssays ) {
@@ -134,13 +136,25 @@ public class AssayViewTag extends TagSupport {
                     assayList.add( assay );
                     assayMap.put( design, assayList );
                 }
+                // count the number of materials per array
+                if (arrayMaterialCount.containsKey( design ) ) {
+                    Long count = arrayMaterialCount.get( design );
+                    count++;
+                    arrayMaterialCount.put( design, count );
+                }
+                else {
+                    Long count = new Long(1);
+                    arrayMaterialCount.put( design, count );
+                }
             }
         }
+        int materialCount = bioAssayMap.keySet().size();
         buf.append( "<table class='list'><tr>" );
-        buf.append( "<th>BioMaterial</th>" );
+        buf.append( "<th>" + materialCount + " BioMaterials</th>" );
         // display arraydesigns
         for ( ArrayDesign design : designs ) {
-            buf.append( "<th>BioAssays on<br />" + "<a href='' title='" + design.getName() + "' onclick='return false;'>" + ( design.getShortName() == null ? design.getName() : design.getShortName()) + "</a></th>" );
+            Long count = arrayMaterialCount.get( design );
+            buf.append( "<th>" + count + " BioAssays on<br />" + "<a href='' title='" + design.getName() + "' onclick='return false;'>" + ( design.getShortName() == null ? design.getName() : design.getShortName()) + "</a></th>" );
         }
         buf.append( "</tr>" );
 
