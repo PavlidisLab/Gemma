@@ -43,11 +43,11 @@
 		title="Cached" />
 	<display:column property="dateCreatedNoTime" sortable="true"
 		title="Created" />
-	<display:column property="dateMissingValueAnalysis" sortable="true"
+	<display:column property="dateMissingValueAnalysisNoTime" sortable="true"
 		title="MV Analysis" />
-	<display:column property="dateRankComputation" sortable="true"
+	<display:column property="dateRankComputationNoTime" sortable="true"
 		title="Rank Computed" />
-	<display:column property="dateLinkAnalysis" sortable="true"
+	<display:column property="dateLinkAnalysisNoTime" sortable="true"
 		title="Link Analyzed" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="refreshReport" title="Refresh" />

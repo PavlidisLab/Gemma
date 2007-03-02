@@ -135,7 +135,7 @@ public class ExpressionExperimentReportService {
             if ( tempEe.getAuditTrail() != null ) {                
                 eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
             }
-            eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate().toString() );
+            eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
             
         }
     }
@@ -228,26 +228,24 @@ public class ExpressionExperimentReportService {
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
             // preemptively fill in event dates with None
-            eeVo.setDateLinkAnalysis( "[None]" );
-            eeVo.setDateMissingValueAnalysis( "[None]" );
-            eeVo.setDateRankComputation( "[None]" );
+
             Long id  = Long.parseLong( eeVo.getId());
             if (linkAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = linkAnalysisEvents.get( id );
                 if (event != null) {
-                    eeVo.setDateLinkAnalysis( event.getDate().toString());
+                    eeVo.setDateLinkAnalysis( event.getDate());
                 }
             }
             if (missingValueAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = missingValueAnalysisEvents.get( id );
                 if (event != null) {
-                    eeVo.setDateMissingValueAnalysis( ( event.getDate().toString() ));
+                    eeVo.setDateMissingValueAnalysis( ( event.getDate() ));
                 }
             }    
             if (rankComputationEvents.containsKey( id ) ) {
                 AuditEvent event = rankComputationEvents.get( id );
                 if (event != null) {
-                    eeVo.setDateRankComputation( event.getDate().toString());
+                    eeVo.setDateRankComputation( event.getDate());
                 }
             }   
         }

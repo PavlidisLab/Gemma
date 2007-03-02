@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.experiment;
 
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -80,14 +81,58 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDateLastUpdatedNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        if ( object.getDateLastUpdated() == null ) {
-            return "";
+        Date dateObject = object.getDateLastUpdated();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
-            if ( object.getDateLastUpdated().length() > 10 ) {
-                return object.getDateLastUpdated().substring( 0, 10 );
-            } else {
-                return object.getDateLastUpdated();
-            }
+            return "[None]";
+        }
+    }
+    
+    /**
+     * @return String
+     */
+    public String getDateMissingValueAnalysisNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        Date dateObject = object.getDateMissingValueAnalysis();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+    
+    /**
+     * @return String
+     */
+    public String getDateRankComputationNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        Date dateObject = object.getDateRankComputation();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+    
+    /**
+     * @return String
+     */
+    public String getDateLinkAnalysisNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        Date dateObject = object.getDateLinkAnalysis();
+        if ( dateObject != null ) {
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
         }
     }
 
