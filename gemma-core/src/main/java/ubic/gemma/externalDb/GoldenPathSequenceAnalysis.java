@@ -45,6 +45,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
+import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
 
 /**
@@ -92,6 +93,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             block.setChromosome( chromosome );
             block.setNucleotide( exonStart );
             block.setNucleotideLength( new Integer( exonSize ) );
+            block.setBin( SequenceBinUtils.binFromRange( ( int ) exonStart, ( int ) ( exonStart + exonSize ) ) );
             blocks.add( block );
         }
         return blocks;
@@ -287,7 +289,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotide( rs.getLong( 3 ) );
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
-
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), ( int ) rs.getInt( 4 ) ) );
                         PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                         genePl.setStrand( pl.getStrand() );
 
@@ -397,6 +399,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotide( rs.getLong( 3 ) );
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), ( int ) rs.getInt( 4 ) ) );
 
                         PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                         genePl.setStrand( pl.getStrand() );
@@ -458,6 +461,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
                 + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
 
+        // query = query + " and " + this.hAddBinToQuery( "kg", start, end );
+
         if ( strand != null ) {
             query = query + " AND strand = ? order by txStart ";
         } else {
@@ -485,6 +490,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + " FROM miRNA as wg WHERE "
                 + "((wg.chromStart >= ? AND wg.chromEnd <= ?) OR (wg.chromStart <= ? AND wg.chromEnd >= ?) OR "
                 + "(wg.chromStart >= ?  AND wg.chromStart <= ?) OR  (wg.chromEnd >= ? AND  wg.chromEnd <= ? )) and wg.chrom = ? ";
+
+        query = query + " and " + SequenceBinUtils.addBinToQuery( "wg", start, end );
 
         if ( strand != null ) {
             query = query + " AND strand = ? order by chromStart ";
@@ -573,6 +580,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
 
+        // query = query + " and " + this.hAddBinToQuery( "r", start, end );
+
         if ( strand != null ) {
             query = query + " AND r.strand = ? order by r.txStart ";
         } else {
@@ -601,6 +610,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
 
+        // query = query + " and " + this.hAddBinToQuery( "r", start, end );
+
         if ( strand != null ) {
             query = query + " AND r.strand = ? order by r.txStart ";
         } else {
@@ -624,6 +635,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
+
+        // query = query + " and " + this.hAddBinToQuery( "r", start, end );
 
         if ( strand != null ) {
             query = query + " AND r.strand = ? order by r.txStart ";
@@ -651,6 +664,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + " FROM all_mrna as mrna  WHERE "
                 + "((mrna.tStart > ? AND mrna.tEnd < ?) OR (mrna.tStart < ? AND mrna.tEnd > ?) OR "
                 + "(mrna.tStart > ?  AND mrna.tStart < ?) OR  (mrna.tEnd > ? AND  mrna.tEnd < ? )) and mrna.tName = ? ";
+
+        query = query + " and " + SequenceBinUtils.addBinToQuery( "mrna", regionStart, regionEnd );
 
         if ( strand != null ) {
             query = query + " and mrna.strand = ?";
@@ -684,6 +699,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotide( rs.getLong( 3 ) );
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), ( int ) rs.getInt( 4 ) ) );
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
@@ -777,6 +793,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
             exon.setNucleotide( new Long( exonStart ) );
             exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
+            exon.setBin( SequenceBinUtils.binFromRange( exonStart, exonEnd ) );
             exons.add( exon );
         }
 

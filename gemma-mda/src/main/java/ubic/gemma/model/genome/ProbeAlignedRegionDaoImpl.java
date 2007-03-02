@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * @see ubic.gemma.model.genome.ProbeAlignedRegion
@@ -70,6 +71,8 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
                 + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
                 + "and pl.chromosome = :chromosome ";
 
+        query = query + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
+
         if ( strand != null ) {
             query = query + " and pl.strand = :strand ";
         }
@@ -88,13 +91,15 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
         }
         return result;
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
         final String queryString = "select distinct gene from ProbeAlignedRegionImpl gene where gene.id = :id";
-        
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", geneValueObject.getId() );
@@ -102,7 +107,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
             if ( ( results == null ) || ( results.size() == 0 ) ) return null;
 
-            return (ProbeAlignedRegion) results.iterator().next();
+            return ( ProbeAlignedRegion ) results.iterator().next();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

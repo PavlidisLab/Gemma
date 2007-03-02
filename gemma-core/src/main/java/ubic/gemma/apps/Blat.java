@@ -20,6 +20,7 @@ package ubic.gemma.apps;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,9 +30,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -191,14 +197,14 @@ public class Blat {
     public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
-        File querySequenceFile = File.createTempFile( "pattern", ".fa" );
+        File querySequenceFile = File.createTempFile( b.getName(), ".fa" );
 
         BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
         out.write( ">" + b.getName() + "\n" + b.getSequence() );
         out.close();
         log.info( "Wrote sequence to " + querySequenceFile.getPath() );
 
-        String outputPath = getTmpPslFilePath();
+        String outputPath = getTmpPslFilePath( b.getName() );
 
         Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
@@ -306,7 +312,7 @@ public class Blat {
 
         log.info( "Wrote " + count + " sequences( " + repeats + " repeated items were skipped)." );
 
-        String outputPath = getTmpPslFilePath();
+        String outputPath = getTmpPslFilePath( "process" );
 
         Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
@@ -438,7 +444,25 @@ public class Blat {
         gscIn.start();
 
         try {
-            int exitVal = run.waitFor();
+
+            int exitVal = Integer.MIN_VALUE;
+
+            while ( exitVal == Integer.MIN_VALUE ) {
+                try {
+                    exitVal = run.exitValue();
+                } catch ( IllegalThreadStateException e ) {
+                    // okay, still waiting.
+                }
+                Thread.sleep( 60 * 1000 );
+                // I hope this is okay...
+                synchronized ( querySequenceFile ) {
+                    Long size = querySequenceFile.length();
+                    log.info( "BLAT output so far: " + size / 1024.0 + " kb" );
+                }
+
+            }
+
+            // int exitVal = run.waitFor();
 
             log.debug( "blat exit value=" + exitVal );
         } catch ( InterruptedException e ) {
@@ -474,8 +498,12 @@ public class Blat {
      * 
      * @throws IOException
      */
-    private String getTmpPslFilePath() throws IOException {
-        return File.createTempFile( "pattern", ".psl" ).getPath();
+    private String getTmpPslFilePath( String base ) throws IOException {
+        if ( StringUtils.isBlank( base ) ) {
+            return File.createTempFile( "pattern", ".psl" ).getPath();
+        } else {
+            return File.createTempFile( base, ".psl" ).getPath();
+        }
     }
 
     /**
@@ -535,11 +563,44 @@ public class Blat {
      * @param outputPath
      * @return processed results.
      */
-    private Collection<BlatResult> jniGfClientCall( File querySequenceFile, String outputPath, int portToUse )
-            throws IOException {
+    private Collection<BlatResult> jniGfClientCall( final File querySequenceFile, final String outputPath,
+            final int portToUse ) throws IOException {
         try {
             log.debug( "Starting blat run" );
-            this.GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
+
+            FutureTask<Boolean> blatThread = new FutureTask<Boolean>( new Callable<Boolean>() {
+                public Boolean call() throws FileNotFoundException, IOException {
+                    GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
+                    return true;
+                }
+            } );
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.execute( blatThread );
+            executor.shutdown();
+
+            // wait...
+            StopWatch overallWatch = new StopWatch();
+            overallWatch.start();
+
+            while ( !blatThread.isDone() ) {
+                try {
+                    Thread.sleep( 1000 * 60 );
+                } catch ( InterruptedException ie ) {
+                    throw new RuntimeException( ie );
+                }
+
+                synchronized ( querySequenceFile ) {
+                    Long size = querySequenceFile.length();
+                    log.info( "BLAT output so far: " + size / 1024.00 + " kb" );
+                }
+
+            }
+
+            overallWatch.stop();
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "Blat took a total of " + overallElapsed / ( 60.0 * 1000.0 ) + " minutes" );
+
         } catch ( UnsatisfiedLinkError e ) {
             log.error( e, e );
             log.info( "Falling back on exec()" );

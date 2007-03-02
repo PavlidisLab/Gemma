@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Simple parser for GFF format (version 2). See http://www.sanger.ac.uk/Software/formats/GFF/GFF_Spec.shtml.
@@ -134,6 +135,8 @@ public class GffParser extends BasicLineParser {
         location.setChromosome( chromosome );
         location.setNucleotide( start );
         location.setNucleotideLength( length );
+        location.setBin( SequenceBinUtils.binFromRange( location.getNucleotide().intValue(), location.getNucleotide().intValue()
+                + location.getNucleotideLength().intValue() ) );
         location.setStrand( strand );
 
         geneProduct.setPhysicalLocation( location );

@@ -44,6 +44,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Provides methods for mapping sequences to genes and gene products.
@@ -418,6 +419,9 @@ public class ProbeMapper {
         boolean ignoreStrand = true;
 
         SequenceType type = blatResult.getQuerySequence().getType();
+        if ( type == null ) {
+            return true;
+        }
         if ( type.equals( SequenceType.OLIGO ) ) {
             ignoreStrand = false;
         } else if ( type.equals( SequenceType.AFFY_COLLAPSED ) ) {
@@ -505,6 +509,9 @@ public class ProbeMapper {
         pl.setNucleotide( blatResult.getTargetStart() );
         pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - blatResult.getTargetStart() ) ).intValue() );
         pl.setStrand( blatResult.getStrand() );
+        pl.setBin( SequenceBinUtils.binFromRange( pl.getNucleotide().intValue(), pl.getNucleotide().intValue()
+                + pl.getNucleotideLength().intValue() ) );
+
         return pl;
     }
 

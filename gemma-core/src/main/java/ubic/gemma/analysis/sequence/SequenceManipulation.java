@@ -53,17 +53,15 @@ public class SequenceManipulation {
     }
 
     /**
-     * Remove a polyA or polyT tail from either end of the sequence. The entire tail is removed.
+     * Remove a 3' polyA or 5' polyT tail. The entire tail is removed.
      * 
      * @param sequence
      * @param thresholdLength to trigger removal.
      * @return
      */
     public static String stripPolyAorT( String sequence, int thresholdLength ) {
-        sequence = sequence.replaceAll( "^A{" + thresholdLength + ",}", "" );
         sequence = sequence.replaceAll( "A{" + thresholdLength + ",}$", "" );
-        sequence = sequence.replaceAll( "^T{" + thresholdLength + ",}", "" );
-        return sequence.replaceAll( "T{" + thresholdLength + ",}$", "" );
+        return sequence.replaceAll( "^T{" + thresholdLength + ",}", "" );
     }
 
     /**

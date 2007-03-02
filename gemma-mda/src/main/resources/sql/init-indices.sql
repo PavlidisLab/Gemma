@@ -9,3 +9,4 @@ alter table CHROMOSOME_FEATURE add index class (class);
 alter table CHROMOSOME_FEATURE add index type (TYPE);
 alter table GENE_ALIAS add index `alias` (`ALIAS`);
 alter table DESIGN_ELEMENT add index name (NAME);
+alter table PHYSICAL_LOCATION ADD INDEX BIN_KEY (BIN);

@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts.
@@ -218,6 +219,7 @@ public class NcbiGeneConverter implements Converter {
         if ( acc.getStartPosition() != null ) {
             pl.setNucleotide( acc.getStartPosition() );
             pl.setNucleotideLength( new Long( Math.abs( acc.getEndPosition() - acc.getStartPosition() ) ).intValue() );
+            pl.setBin( SequenceBinUtils.binFromRange( acc.getStartPosition().intValue(), acc.getEndPosition().intValue() ) );
         }
         return pl;
     }

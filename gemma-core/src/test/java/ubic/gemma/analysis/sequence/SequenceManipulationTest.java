@@ -30,7 +30,7 @@ public class SequenceManipulationTest extends TestCase {
 
         String expectedResult = "ATGCCCCCC";
 
-        String actualResult = SequenceManipulation.stripPolyAorT( expectedResult + "TTTTTTTTTTTTTTTTTTT", 10 );
+        String actualResult = SequenceManipulation.stripPolyAorT( expectedResult + "AAAAAAAAAAAAAAAAAA", 10 );
 
         assertEquals( expectedResult, actualResult );
 
@@ -38,9 +38,9 @@ public class SequenceManipulationTest extends TestCase {
 
     public void testStripPolyA() {
 
-        String expectedResult = "TGCCCCCC";
+        String expectedResult = "ATGCCCCCC";
 
-        String actualResult = SequenceManipulation.stripPolyAorT( "AAAAAAAAAAAAAA" + expectedResult, 10 );
+        String actualResult = SequenceManipulation.stripPolyAorT( "TTTTTTTTTTTTTTTTT" + expectedResult, 10 );
 
         assertEquals( expectedResult, actualResult );
 

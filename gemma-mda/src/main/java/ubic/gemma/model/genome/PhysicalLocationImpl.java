@@ -204,6 +204,65 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
             }
             return 0;
         }
-        return other.getNucleotideLength(); //The two locations are the same object.
+        return other.getNucleotideLength(); // The two locations are the same object.
     }
+
+    private static int _binFirstShift = 17; /* How much to shift to get to finest bin. */
+    private static int _binNextShift = 3; /* How much to shift to get to next larger bin. */
+
+    private static int binOffsetsExtended[] = { 4096 + 512 + 64 + 8 + 1, 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1, 0 };
+
+    private static int binOffsets[] = { 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1, 0 };
+    private static int BINRANGE_MAXEND_512M = ( 512 * 1024 * 1024 );
+    private static int _binOffsetOldToExtended = 4681;
+
+    private int binFromRangeStandard( int start, int end )
+
+    /*
+     * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
+     * segment, for each 8M segment, for each 64M segment, and for each chromosome (which is assumed to be less than
+     * 512M.) A range goes into the smallest bin it will fit in.
+     */
+    {
+        int startBin = start, endBin = end - 1, i;
+        startBin >>= _binFirstShift;
+        endBin >>= _binFirstShift;
+        for ( i = 0; i < binOffsets.length; ++i ) {
+            if ( startBin == endBin ) return binOffsets[i] + startBin;
+            startBin >>= _binNextShift;
+            endBin >>= _binNextShift;
+        }
+        throw new IllegalArgumentException( "start " + start + ", end " + end
+                + " out of range in findBin (max is 512M)" );
+    }
+
+    private int binFromRangeExtended( int start, int end )
+    /*
+     * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
+     * segment, for each 8M segment, for each 64M segment, for each 512M segment, and one top level bin for 4Gb. Note,
+     * since start and end are int's, the practical limit is up to 2Gb-1, and thus, only four result bins on the second
+     * level. A range goes into the smallest bin it will fit in.
+     */
+    {
+        int startBin = start, endBin = end - 1, i;
+        startBin >>= _binFirstShift;
+        endBin >>= _binFirstShift;
+        for ( i = 0; i < binOffsetsExtended.length; ++i ) {
+            if ( startBin == endBin ) return _binOffsetOldToExtended + binOffsetsExtended[i] + startBin;
+            startBin >>= _binNextShift;
+            endBin >>= _binNextShift;
+        }
+        throw new IllegalArgumentException( "start " + start + ", end " + end
+                + " out of range in findBin (max is 512M)" );
+    }
+
+    public int binFromRange( int start, int end )
+    /* return bin that this start-end segment is in */
+    {
+        if ( end <= BINRANGE_MAXEND_512M )
+            return binFromRangeStandard( start, end );
+        else
+            return binFromRangeExtended( start, end );
+    }
+
 }
