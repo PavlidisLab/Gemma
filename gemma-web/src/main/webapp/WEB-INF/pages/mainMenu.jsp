@@ -167,10 +167,6 @@
 				referenced in Gemma</a>
 		</li>
 		<li>
-			<a href="<c:url value="/arrays/showAllArrayDesignStatistics.html"/>">
-				Show Platform/Array Summaries </a>
-		</li>
-		<li>
 			<a
 				href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"/>">
 				Show Expression Experiment Link Summaries </a>

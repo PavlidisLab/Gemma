@@ -4,8 +4,48 @@
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
 <authz:authorize ifAnyGranted="admin">
-<c:if test="${summaryString != null }" >
-${summaryString}
+<c:if test="${summary != null }" >
+<table class='datasummary'>
+<tr> 
+	<td colspan=2 align=center>
+	</td>
+</tr>
+<authz:authorize ifAnyGranted="admin">
+<tr>
+	<td>Probes with sequences</td>
+	<td>${summary.numProbeSequences}</td>
+</tr>
+<tr>
+	<td>Probes with genome alignments</td>
+	<td>${summary.numProbeAlignments}</td>
+</tr>
+</authz:authorize>
+<tr>
+	<td>Probes mapping to gene(s)</td>
+	<td>${summary.numProbesToGenes}</td>
+</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Probes mapping to probe-aligned region(s)</td>
+		<td>${summary.numProbesToProbeAlignedRegions}</td>
+	</tr>
+    <tr>
+    	<td>&nbsp;&nbsp;Probes mapping to predicted genes</td>
+       	<td>${summary.numProbesToPredictedGenes}</td>
+    </tr>
+    <tr>
+       	<td>&nbsp;&nbsp;Probes mapping to known genes</td>
+       	<td>${summary.numProbesToKnownGenes }</td>
+    </tr>
+    <tr>
+    	<td>Unique genes represented</td>
+    	<td>${summary.numGenes}</td>
+    </tr>
+    <tr>
+       	<td colspan=2 align='center' class='small'>
+       		(as of ${summary.dateCached})
+       	</td>
+    </tr>
+</table>
 </c:if>
 </authz:authorize>
 

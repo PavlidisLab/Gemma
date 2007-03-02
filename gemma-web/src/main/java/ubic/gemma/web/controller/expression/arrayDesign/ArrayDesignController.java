@@ -223,7 +223,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", arrayDesigns );
         mav.addObject( "numArrayDesigns", numArrayDesigns );
-        mav.addObject( "summaryString", summary );
+        mav.addObject( "summary", summary );
 
         return mav;
     }
