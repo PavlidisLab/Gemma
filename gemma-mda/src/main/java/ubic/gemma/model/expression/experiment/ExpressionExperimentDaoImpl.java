@@ -37,6 +37,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -61,8 +62,6 @@ import ubic.gemma.util.BusinessKey;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
-
-
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
@@ -834,7 +833,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection)
      */
     @Override
@@ -872,26 +873,74 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByExpressedGene(ubic.gemma.model.genome.Gene, java.lang.Double)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByExpressedGene(ubic.gemma.model.genome.Gene,
+     *      java.lang.Double)
      */
     @Override
     protected Collection handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+  
+        final String queryString = "select distinct ee.ID as eeID FROM "
+            + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, DESIGN_ELEMENT_DATA_VECTOR dedv, EXPRESSION_EXPERIMENT ee "
+            + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK >= :rank";
+
+    Collection<Long> eeIds = null;
+
+    try {
+        org.hibernate.SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+        queryObject.setLong( "geneID", gene.getId() );
+        queryObject.setDouble( "rank", rank );
+        queryObject.addScalar( "eeID", new LongType() );
+        ScrollableResults results = queryObject.scroll();
+
+        eeIds = new HashSet<Long>();
+
+        // Post Processing
+        while ( results.next() )
+            eeIds.add( results.getLong( 0 ) );
+
+    } catch ( org.hibernate.HibernateException ex ) {
+        throw super.convertHibernateAccessException( ex );
     }
 
-    /* (non-Javadoc)
+    return eeIds;
+        
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
-    }
-    
 
+        final String queryString = "select distinct ee.ID as eeID FROM "
+                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, EXPRESSION_EXPERIMENT ee "
+                + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND ba.EXPRESSION_EXPERIMENT_FK = ee.ID and g2s.gene = :geneID";
+
+        Collection<Long> eeIds = null;
+
+        try {
+            org.hibernate.SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setLong( "geneID", gene.getId() );
+            queryObject.addScalar( "eeID", new LongType() );
+            ScrollableResults results = queryObject.scroll();
+
+            eeIds = new HashSet<Long>();
+
+            // Post Processing
+            while ( results.next() )
+                eeIds.add( results.getLong( 0 ) );
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return eeIds;
+    }
 
 }
