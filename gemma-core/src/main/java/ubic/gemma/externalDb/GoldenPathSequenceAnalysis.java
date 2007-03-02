@@ -464,9 +464,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // query = query + " and " + this.hAddBinToQuery( "kg", start, end );
 
         if ( strand != null ) {
-            query = query + " AND strand = ? order by txStart ";
-        } else {
-            query = query + " order by txStart ";
+            query = query + " AND strand = ? ";
         }
 
         return findGenesByQuery( start, end, searchChrom, strand, query );
@@ -494,9 +492,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         query = query + " and " + SequenceBinUtils.addBinToQuery( "wg", start, end );
 
         if ( strand != null ) {
-            query = query + " AND strand = ? order by chromStart ";
-        } else {
-            query = query + " order by chromStart ";
+            query = query + " AND strand = ? ";
         }
         return findGenesByQuery( start, end, searchChrom, strand, query );
     }
@@ -583,9 +579,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // query = query + " and " + this.hAddBinToQuery( "r", start, end );
 
         if ( strand != null ) {
-            query = query + " AND r.strand = ? order by r.txStart ";
-        } else {
-            query = query + " order by r.txStart ";
+            query = query + " AND r.strand = ?  ";
         }
         return findGenesByQuery( start, end, searchChrom, strand, query );
     }
@@ -599,6 +593,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findAcemblyGenesByLocation( String chromosome, Long start, Long end, String strand ) {
 
+        // only human has acembly genes. FIXME, if the situation changes this code will be invalid.
         if ( !TaxonUtility.isHuman( this.getTaxon() ) ) {
             return null;
         }
@@ -610,12 +605,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
 
-        // query = query + " and " + this.hAddBinToQuery( "r", start, end );
-
         if ( strand != null ) {
-            query = query + " AND r.strand = ? order by r.txStart ";
-        } else {
-            query = query + " order by r.txStart ";
+            query = query + " AND r.strand = ?  ";
         }
         return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "Acembly" );
     }
@@ -639,9 +630,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // query = query + " and " + this.hAddBinToQuery( "r", start, end );
 
         if ( strand != null ) {
-            query = query + " AND r.strand = ? order by r.txStart ";
-        } else {
-            query = query + " order by r.txStart ";
+            query = query + " AND r.strand = ?  ";
         }
         return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "NScan" );
 
@@ -670,7 +659,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         if ( strand != null ) {
             query = query + " and mrna.strand = ?";
         }
-        query = query + " order by mrna.tStart ";
 
         Object[] params = null;
 
