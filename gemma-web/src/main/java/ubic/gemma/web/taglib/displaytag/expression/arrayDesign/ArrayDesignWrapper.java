@@ -43,52 +43,68 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getLastSequenceUpdateDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         Date dateObject = object.getLastSequenceUpdate();
+
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
         }
     }
-    
+
+    private String formatIfRecent( boolean mostRecent, String shortDate ) {
+        shortDate = mostRecent ? "<strong>" + shortDate + "</strong>" : shortDate;
+        return shortDate;
+    }
+
     public String getLastSequenceAnalysisDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         Date dateObject = object.getLastSequenceAnalysis();
+
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
         }
     }
-    
+
     public String getLastGeneMappingDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         Date dateObject = object.getLastGeneMapping();
+
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
         }
     }
-    
+
     public String getSummaryTable() {
         StringBuilder buf = new StringBuilder();
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 
         // check if the summary numbers exist
         // if they donn't, just return not available
-        if ( object.getNumProbeAlignments()  == null ) {
+        if ( object.getNumProbeAlignments() == null ) {
             return "[Not avail.]";
         }
 
         String arraySummary = "arraySummary_" + object.getId();
 
-        buf.append( "<span class=\"" + arraySummary + "\" onclick=\"return toggleVisibility('" + arraySummary + "')\">" );
+        buf
+                .append( "<span class=\"" + arraySummary + "\" onclick=\"return toggleVisibility('" + arraySummary
+                        + "')\">" );
         buf.append( "<img src=\"/Gemma/images/chart_organisation_add.png\" /></span>" );
 
         buf.append( "<span class=\"" + arraySummary + "\" style=\"display:none\" onclick=\"return toggleVisibility('"
@@ -98,7 +114,7 @@ public class ArrayDesignWrapper extends TableDecorator {
         buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
         buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
-        
+
         buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
                 + "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" + "Sequences" + "</td><td>"
                 + object.getNumProbeSequences() + "</td></tr>" + "<tr><td>" + "Alignments" + "</td>" + "<td>"
@@ -111,12 +127,13 @@ public class ArrayDesignWrapper extends TableDecorator {
                 "<tr><td>" + "&nbsp;&nbsp;To predicted genes" + "</td><td>" + object.getNumProbesToPredictedGenes()
                 + "</td></tr>" +
 
-                "<tr><td>" + "&nbsp;&nbsp;To known genes" + "</td><td>" + object.getNumProbesToKnownGenes() + "</td></tr>" +
+                "<tr><td>" + "&nbsp;&nbsp;To known genes" + "</td><td>" + object.getNumProbesToKnownGenes()
+                + "</td></tr>" +
 
                 "<tr><td>" + "Unique genes represented" + "</td><td>" + object.getNumGenes() + "</td></tr>"
-                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + object.getDateCached() + ")" + "</td></tr>"
-                + "</table>" );
-        
+                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + object.getDateCached() + ")"
+                + "</td></tr>" + "</table>" );
+
         buf.append( "</div>" );
         return buf.toString();
     }
@@ -179,6 +196,24 @@ public class ArrayDesignWrapper extends TableDecorator {
             colorString = "No color";
         }
         return colorString;
+    }
+
+    /**
+     * @param dateObject
+     * @param object
+     * @return
+     */
+    private boolean determineIfMostRecent( Date dateObject, ArrayDesignValueObject object ) {
+        if ( dateObject == null ) return false;
+        Date seqDate = object.getLastSequenceUpdate();
+        Date analDate = object.getLastSequenceAnalysis();
+        Date mapDate = object.getLastGeneMapping();
+
+        if ( seqDate != null && dateObject.before( seqDate ) ) return false;
+        if ( analDate != null && dateObject.before( analDate ) ) return false;
+        if ( mapDate != null && dateObject.before( mapDate ) ) return false;
+
+        return true;
     }
 
 }
