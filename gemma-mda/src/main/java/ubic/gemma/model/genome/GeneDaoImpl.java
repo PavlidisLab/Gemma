@@ -216,13 +216,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         int count = 0;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Long key : geneMap.keySet() ) {
-            CoexpressionValueObject v = geneMap.get( key );
+
+        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments( geneMap.keySet() );
+
+        for ( Long geneId : geneMap.keySet() ) {
+            CoexpressionValueObject v = geneMap.get( geneId );
 
             // determine which EE's that contributed to this gene's coexpression were non-specific
-            Collection<Long> allNonspecificEE = coexpressions.getNonSpecificExpressionExperiments( v.getGeneId() );
+
             Collection<Long> nonspecificEE = new HashSet<Long>( v.getExpressionExperiments() );
-            nonspecificEE.retainAll( allNonspecificEE );
+            nonspecificEE.removeAll( allSpecificEE.get( geneId ) );
             v.setNonspecificEE( nonspecificEE );
 
             boolean added = false;
@@ -266,7 +269,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 }
             }
 
-            if ( ++count % 500 == 0 ) {
+            if ( ++count % 5000 == 0 ) {
                 log.info( "Post-processed " + count + " hits, " + timer.getTime() + " ms spent so far." );
             }
 
@@ -478,7 +481,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( eeVo == null ) {
             eeVo = new ExpressionExperimentValueObject();
-            eeVo.setId( eeID.toString() );
+            eeVo.setId( eeID );
             eeVo.setShortName( scroll.getString( 4 ) );
             eeVo.setName( scroll.getString( 5 ) );
             coexpressions.addExpressionExperiment( eeVo );

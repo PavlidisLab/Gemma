@@ -144,16 +144,14 @@ public class CoexpressionSearchController extends BaseFormController {
         // none, do inexact search.
         if ( csc.getExactSearch() == null ) {
             genesFound = searchService.geneDbSearch( csc.getSearchString() );
-            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );    
-        } 
-        else if (csc.getGeneIdSearch().equalsIgnoreCase( "true" )) {
+            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
+        } else if ( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
             String geneId = csc.getSearchString();
             Long id = Long.parseLong( geneId );
             Collection<Long> ids = new ArrayList<Long>();
             ids.add( id );
             genesFound = geneService.load( ids );
-        }
-        else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
+        } else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
             genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
         } else {
             genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
@@ -210,7 +208,7 @@ public class CoexpressionSearchController extends BaseFormController {
         // set command object to reflect this
         csc.setSearchString( genesFound.iterator().next().getOfficialSymbol() );
         csc.setGeneIdSearch( "false" );
-        
+
         // find coexpressed genes
 
         // find expressionExperiments via lucene if the query is eestring-constrained
@@ -228,26 +226,23 @@ public class CoexpressionSearchController extends BaseFormController {
 
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
-        
+
         if ( ees.size() > 0 ) {
             // if there are matches, fihter the expression experiments first by taxon
 
             Collection<ExpressionExperiment> eeToRemove = new HashSet<ExpressionExperiment>();
             for ( ExpressionExperiment ee : ees ) {
                 Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-                if ( t.getId().longValue() != csc.getTaxon().getId().longValue() )
-                    eeToRemove.add( ee );
-                
-                if (!possibleEEs.contains( ee.getId()))
-                        eeToRemove.add( ee );
+                if ( t.getId().longValue() != csc.getTaxon().getId().longValue() ) eeToRemove.add( ee );
+
+                if ( !possibleEEs.contains( ee.getId() ) ) eeToRemove.add( ee );
             }
             ees.removeAll( eeToRemove );
 
-        } else 
+        } else
             ees = expressionExperimentService.load( possibleEEs );
-        
-        numExpressionExperiments = ees.size();
 
+        numExpressionExperiments = ees.size();
 
         // stringency. Cannot be less than 1; set to one if it is
         Integer stringency = csc.getStringency();
@@ -275,7 +270,7 @@ public class CoexpressionSearchController extends BaseFormController {
         Collection<Long> eeIds = new HashSet<Long>();
         Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
         for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
-            eeIds.add( Long.parseLong( eeVo.getId() ) );
+            eeIds.add( eeVo.getId() );
         }
 
         Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
@@ -284,11 +279,8 @@ public class CoexpressionSearchController extends BaseFormController {
         // coexpressions.calculateRawLinkCounts();
 
         for ( ExpressionExperimentValueObject eeVo : eeVos ) {
-            eeVo
-                    .setCoexpressionLinkCount( new Long( coexpressions
-                            .getLinkCountForEE( Long.parseLong( eeVo.getId() ) ) ) );
-            eeVo.setRawCoexpressionLinkCount( new Long( coexpressions.getRawLinkCountForEE( Long.parseLong( eeVo
-                    .getId() ) ) ) );
+            eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
+            eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
         }
 
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
@@ -402,15 +394,12 @@ public class CoexpressionSearchController extends BaseFormController {
                     csc.setStringency( cookie.getInt( "stringency" ) );
                     Taxon taxon = taxonService.findByScientificName( cookie.getString( "taxonScientificName" ) );
                     csc.setTaxon( taxon );
-                    
 
-                    
+                    // save the gene name. If the gene id is on, then convert the ID to a gene first
+                    String searchString = cookie.getString( "searchString" );
 
-                        // save the gene name. If the gene id is on, then convert the ID to a gene first
-                        String searchString =  cookie.getString( "searchString" );
+                    csc.setSearchString( searchString );
 
-                      csc.setSearchString( searchString );
-                    
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     // that's okay, we just don't get a cookie.
@@ -449,7 +438,6 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( params.get( "searchString" ) != null ) {
 
             String searchString = ( ( String[] ) params.get( "searchString" ) )[0];
-
 
             csc.setSearchString( searchString );
 
@@ -508,25 +496,22 @@ public class CoexpressionSearchController extends BaseFormController {
             super( COOKIE_NAME );
 
             this.setProperty( "eeSearchString", command.getEeSearchString() );
-            
+
             // save the gene name. If the gene id is on, then convert the ID to a gene first
-            if (!StringUtils.isBlank( command.getGeneIdSearch())) {
+            if ( !StringUtils.isBlank( command.getGeneIdSearch() ) ) {
                 String geneId = command.getSearchString();
                 Long id;
                 try {
                     id = Long.parseLong( geneId );
                     Gene g = geneService.load( id );
                     this.setProperty( "searchString", g.getOfficialSymbol() );
-                }
-                catch (NumberFormatException e) {
+                } catch ( NumberFormatException e ) {
                     this.setProperty( "searchString", command.getSearchString() );
                 }
-            }
-            else {
+            } else {
                 this.setProperty( "searchString", command.getSearchString() );
             }
-            
-            
+
             this.setProperty( "stringency", command.getStringency() );
             this.setProperty( "taxonScientificName", command.getTaxon().getScientificName() );
 

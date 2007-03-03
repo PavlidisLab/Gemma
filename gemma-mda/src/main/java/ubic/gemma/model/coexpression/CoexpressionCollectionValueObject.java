@@ -129,36 +129,43 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return returns a collection expression experiment IDs that contained non-specific probes (probes that hit more
-     *         than 1 gene) Note: if a expression exp has two probes that hit the same gene. One probe is specific and
-     *         the other is not, this EE is considered specific and won't be returned in the list
+     * @param geneIDs The gene IDs to consider.
+     * @return returns map of genes to a collection of expression experiment IDs that contained <strong>specific</strong>
+     *         probes (probes that hit only 1 gene) for that gene.
+     *         <p>
+     *         If an expression exp has two (or more) probes that hit the same gene, and one probe is specific, even if
+     *         some of the other(s) are not this EE is considered specific and will still be returned.
      */
-    public Collection<Long> getNonSpecificExpressionExperiments( Long geneID ) {
+    public Map<Long, Collection<Long>> getSpecificExpressionExperiments( Collection<Long> geneIDs ) {
 
-        Collection<Long> nonSpecificEE = new HashSet<Long>();
+        Map<Long, Collection<Long>> specificEE = new HashMap<Long, Collection<Long>>();
 
         for ( Long eeID : crossHybridizingProbes.keySet() ) {
+
+            // this is a map for ALL the probes from this data set that came up.
             Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
-            // log.info( "Non-specifity validaton for EE: " + eeID + " and gene: " + geneID);
 
             for ( Long probeID : probe2geneMap.keySet() ) {
-                Collection genes = probe2geneMap.get( probeID );
 
-                if ( !genes.contains( geneID ) ) continue;
+                Collection<Long> genes = probe2geneMap.get( probeID );
+                Integer genecount = genes.size();
 
-                if ( ( genes.size() == 1 ) ) {
-                    nonSpecificEE.remove( eeID );
-                    // log.info( "EE has specific probe: " + probeID + " for Gene: " + genes );
-                    break;
+                for ( Long geneId : genes ) {
+
+                    if ( !specificEE.containsKey( geneId ) ) {
+                        specificEE.put( geneId, new HashSet<Long>() );
+                    }
+
+                    if ( genecount == 1 ) {
+                        specificEE.get( geneId ).add( eeID );
+                    }
                 }
 
-                nonSpecificEE.add( eeID );
-                // log.info( "EE has NON-specific probe: " + probeID + " for Gene: " + geneID + " in " + genes );
             }
 
         }
 
-        return nonSpecificEE;
+        return specificEE;
     }
 
     /**
@@ -261,20 +268,18 @@ public class CoexpressionCollectionValueObject {
      * @param vo
      */
     public void addExpressionExperiment( ExpressionExperimentValueObject vo ) {
-        Long id = Long.parseLong( vo.getId() );
-        if (!expressionExperiments.containsKey( id ))
-            this.expressionExperiments.put( id , vo );
+        Long id = vo.getId();
+        if ( !expressionExperiments.containsKey( id ) ) this.expressionExperiments.put( id, vo );
     }
-    
+
     /**
      * @param eeID expressionExperiment ID
      * @return an expressionexperimentValueObject or null if it isn't there
      */
-    public ExpressionExperimentValueObject getExpressionExperiment(Long eeID){
+    public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
 
-        if (expressionExperiments.containsKey( eeID ))
-            return this.expressionExperiments.get( eeID );
-        
+        if ( expressionExperiments.containsKey( eeID ) ) return this.expressionExperiments.get( eeID );
+
         return null;
     }
 

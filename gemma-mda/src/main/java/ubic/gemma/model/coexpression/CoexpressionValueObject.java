@@ -50,9 +50,10 @@ public class CoexpressionValueObject {
         geneName = "";
         geneId = null;
         geneOfficialName = null;
-        expressionExperimentValueObjects = Collections.synchronizedMap(  new HashMap<Long, ExpressionExperimentValueObject>());
-        positiveScores = Collections.synchronizedMap (new HashMap<Long, Map<Long, Double>>());
-        negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>());
+        expressionExperimentValueObjects = Collections
+                .synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
+        positiveScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
+        negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
         pValues = new HashMap<Long, Map<Long, Double>>();
         stringencyFilterValue = null;
     }
@@ -81,8 +82,8 @@ public class CoexpressionValueObject {
      * @param expressionExperimentValueObjects the expressionExperimentValueObjects to set
      */
     public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
-        if ( !expressionExperimentValueObjects.containsKey( Long.parseLong( eeVo.getId() ) ) )
-            this.expressionExperimentValueObjects.put( new Long( eeVo.getId() ), eeVo );
+        if ( !expressionExperimentValueObjects.containsKey( eeVo.getId() ) )
+            this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
     }
 
     /**

@@ -352,14 +352,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
             ExpressionExperimentValueObject expressionExperimentValueObject ) {
-        return ( ExpressionExperiment ) this.load( Long.parseLong( expressionExperimentValueObject.getId() ) );
+        return ( ExpressionExperiment ) this.load( expressionExperimentValueObject.getId() );
     }
 
     @Override
     public ExpressionExperimentValueObject toExpressionExperimentValueObject( final ExpressionExperiment entity ) {
         ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject();
 
-        vo.setId( entity.getId().toString() );
+        vo.setId( entity.getId() );
 
         if ( entity.getAccession() != null ) {
             vo.setAccession( entity.getAccession().getAccession() );
@@ -632,7 +632,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                v.setId( list.getLong( 0 ).toString() );
+                v.setId( list.getLong( 0 ) );
                 v.setName( list.getString( 1 ) );
                 v.setExternalDatabase( list.getString( 2 ) );
                 v.setExternalUri( list.getString( 3 ) );
@@ -688,7 +688,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                v.setId( list.getLong( 0 ).toString() );
+                v.setId( list.getLong( 0 ) );
                 v.setName( list.getString( 1 ) );
                 v.setExternalDatabase( list.getString( 2 ) );
                 v.setExternalUri( list.getString( 3 ) );
@@ -882,32 +882,32 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Collection handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
-  
+
         final String queryString = "select distinct ee.ID as eeID FROM "
-            + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, DESIGN_ELEMENT_DATA_VECTOR dedv, EXPRESSION_EXPERIMENT ee "
-            + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK >= :rank";
+                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, DESIGN_ELEMENT_DATA_VECTOR dedv, EXPRESSION_EXPERIMENT ee "
+                + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK >= :rank";
 
-    Collection<Long> eeIds = null;
+        Collection<Long> eeIds = null;
 
-    try {
-        org.hibernate.SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
-        queryObject.setLong( "geneID", gene.getId() );
-        queryObject.setDouble( "rank", rank );
-        queryObject.addScalar( "eeID", new LongType() );
-        ScrollableResults results = queryObject.scroll();
+        try {
+            org.hibernate.SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setLong( "geneID", gene.getId() );
+            queryObject.setDouble( "rank", rank );
+            queryObject.addScalar( "eeID", new LongType() );
+            ScrollableResults results = queryObject.scroll();
 
-        eeIds = new HashSet<Long>();
+            eeIds = new HashSet<Long>();
 
-        // Post Processing
-        while ( results.next() )
-            eeIds.add( results.getLong( 0 ) );
+            // Post Processing
+            while ( results.next() )
+                eeIds.add( results.getLong( 0 ) );
 
-    } catch ( org.hibernate.HibernateException ex ) {
-        throw super.convertHibernateAccessException( ex );
-    }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
 
-    return eeIds;
-        
+        return eeIds;
+
     }
 
     /*

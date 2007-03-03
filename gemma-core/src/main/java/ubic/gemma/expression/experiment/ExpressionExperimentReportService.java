@@ -36,142 +36,148 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ExpressionExperimentReportService {
     private Log log = LogFactory.getLog( this.getClass() );
-    
+
     private String EE_LINK_SUMMARY = "AllExpressionLinkSummary";
     private String EE_REPORT_DIR = "ExpressionExperimentReports";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private ExpressionExperimentService expressionExperimentService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private AuditTrailService auditTrailService;
+
     /**
      * @param auditTrailService the auditTrailService to set
      */
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;
     }
+
     /**
      * @return the probe2ProbeCoexpressionService
      */
     public Probe2ProbeCoexpressionService getProbe2ProbeCoexpressionService() {
         return probe2ProbeCoexpressionService;
     }
+
     /**
      * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
      */
     public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
         this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
+
     /**
      * @return the expressionExperimentService
      */
     public ExpressionExperimentService getExpressionExperimentService() {
         return expressionExperimentService;
     }
+
     /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
-    
+
     /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and datavectors
+     * generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors
      */
     public void generateSummaryObjects() {
-        initDirectories(true);
+        initDirectories( true );
         // first, load all expression experiment value objects
         // this will have no stats filled in
-        
+
         // for each expression experiment, load in stats
         Collection vos = expressionExperimentService.loadAllValueObjects();
         getStats( vos );
-        
+
         // save the collection
-        
-        saveValueObjects(vos);
+
+        saveValueObjects( vos );
     }
-    
+
     /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and datavectors
+     * generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors
      */
-    public void generateSummaryObjects(Collection ids) {
-        initDirectories(false);
+    public void generateSummaryObjects( Collection ids ) {
+        initDirectories( false );
         // first, load all expression experiment value objects
         // this will have no stats filled in
-        
+
         // for each expression experiment, load in stats
         Collection vos = expressionExperimentService.loadValueObjects( ids );
         getStats( vos );
-        
+
         // save the collection
-        
-        saveValueObjects(vos);
+
+        saveValueObjects( vos );
     }
-    
+
     /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and datavectors
+     * generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors
      */
     @SuppressWarnings("unchecked")
-    public void generateSummaryObject(Long id) {
+    public void generateSummaryObject( Long id ) {
         Collection ids = new ArrayList<Long>();
         ids.add( id );
-        
-        generateSummaryObjects(ids);
+
+        generateSummaryObjects( ids );
     }
-    
-    
+
     private void getStats( Collection vos ) {
         String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
         for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = (ExpressionExperimentValueObject) object;
-            ExpressionExperiment tempEe =  expressionExperimentService.findById( Long.parseLong( eeVo.getId() ) );
-           
+            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+            ExpressionExperiment tempEe = expressionExperimentService.findById( eeVo.getId() );
+
             eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
-            eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService.getPreferredDesignElementDataVectorCount( tempEe ) );
+            eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
+                    .getPreferredDesignElementDataVectorCount( tempEe ) );
             eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( tempEe ).longValue() );
             eeVo.setDateCached( timestamp );
 
             auditTrailService.thaw( tempEe.getAuditTrail() );
-            if ( tempEe.getAuditTrail() != null ) {                
+            if ( tempEe.getAuditTrail() != null ) {
                 eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
             }
             eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
-            
+
         }
     }
-    
 
-    
     /**
      * retrieves a collection of cached value objects containing summary information
+     * 
      * @return a collection of cached value objects
      */
     public Collection retrieveSummaryObjects() {
         return retrieveValueObjects();
     }
-    
+
     /**
      * retrieves a collection of cached value objects containing summary information
+     * 
      * @return a collection of cached value objects
      */
-    public Collection retrieveSummaryObjects(Collection ids) {
-        return retrieveValueObjects(ids);
+    public Collection retrieveSummaryObjects( Collection ids ) {
+        return retrieveValueObjects( ids );
     }
-    
+
     /**
-     * @param eeValueObjects the collection of Expression Experiment value objects to serialize 
-     * @return true if successful, false otherwise
-     * serialize value objects
+     * @param eeValueObjects the collection of Expression Experiment value objects to serialize
+     * @return true if successful, false otherwise serialize value objects
      */
-    private boolean saveValueObjects(Collection eeValueObjects) {   
+    private boolean saveValueObjects( Collection eeValueObjects ) {
         for ( Object object : eeValueObjects ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
 
             try {
                 // remove file first
-                File f = new File(HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY
-                        + "." + eeVo.getId());
-                if (f.exists()){
+                File f = new File( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "." + eeVo.getId() );
+                if ( f.exists() ) {
                     f.delete();
                 }
                 FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY
@@ -186,16 +192,15 @@ public class ExpressionExperimentReportService {
         }
         return true;
     }
-    
-    
+
     /**
-     * @return the filled out value objects
-     * fills the link statistics from the cache. If it is not in the cache, the values will be null. 
+     * @return the filled out value objects fills the link statistics from the cache. If it is not in the cache, the
+     *         values will be null.
      */
     public void fillLinkStatsFromCache( Collection vos ) {
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ExpressionExperimentValueObject cacheVo = retrieveValueObject( Long.parseLong( eeVo.getId() ) );
+            ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
@@ -206,54 +211,54 @@ public class ExpressionExperimentReportService {
             }
         }
     }
-    
+
     /**
-     * fills in event information from the database. This will only retrieve the
-     * latest event (if any).
+     * fills in event information from the database. This will only retrieve the latest event (if any).
+     * 
      * @return the filled out value objects
      */
     @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection vos ) {
         Collection<Long> ids = new ArrayList<Long>();
-        for (  Object object : vos  ) {
+        for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ids.add( Long.parseLong( eeVo.getId()  ));
+            ids.add( eeVo.getId() );
         }
         // get the last event information
-        Map<Long,AuditEvent> linkAnalysisEvents = expressionExperimentService.getLastLinkAnalysis( ids );
-        Map<Long,AuditEvent> missingValueAnalysisEvents = expressionExperimentService.getLastMissingValueAnalysis( ids );
-        Map<Long,AuditEvent> rankComputationEvents = expressionExperimentService.getLastRankComputation( ids );
-        
+        Map<Long, AuditEvent> linkAnalysisEvents = expressionExperimentService.getLastLinkAnalysis( ids );
+        Map<Long, AuditEvent> missingValueAnalysisEvents = expressionExperimentService
+                .getLastMissingValueAnalysis( ids );
+        Map<Long, AuditEvent> rankComputationEvents = expressionExperimentService.getLastRankComputation( ids );
+
         // add in the last events of interest for all eeVos
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
             // preemptively fill in event dates with None
 
-            Long id  = Long.parseLong( eeVo.getId());
-            if (linkAnalysisEvents.containsKey( id ) ) {
+            Long id = eeVo.getId();
+            if ( linkAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = linkAnalysisEvents.get( id );
-                if (event != null) {
-                    eeVo.setDateLinkAnalysis( event.getDate());
+                if ( event != null ) {
+                    eeVo.setDateLinkAnalysis( event.getDate() );
                 }
             }
-            if (missingValueAnalysisEvents.containsKey( id ) ) {
+            if ( missingValueAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = missingValueAnalysisEvents.get( id );
-                if (event != null) {
-                    eeVo.setDateMissingValueAnalysis( ( event.getDate() ));
+                if ( event != null ) {
+                    eeVo.setDateMissingValueAnalysis( ( event.getDate() ) );
                 }
-            }    
-            if (rankComputationEvents.containsKey( id ) ) {
+            }
+            if ( rankComputationEvents.containsKey( id ) ) {
                 AuditEvent event = rankComputationEvents.get( id );
-                if (event != null) {
-                    eeVo.setDateRankComputation( event.getDate());
+                if ( event != null ) {
+                    eeVo.setDateRankComputation( event.getDate() );
                 }
-            }   
+            }
         }
     }
-    
+
     /**
      * @return the serialized value objects
-     *
      */
     private Collection retrieveValueObjects() {
         Collection eeValueObjects = null;
@@ -278,13 +283,12 @@ public class ExpressionExperimentReportService {
         }
         return eeValueObjects;
     }
-    
+
     /**
      * @return the serialized value objects
-     *
      */
     @SuppressWarnings("unchecked")
-    private Collection retrieveValueObjects(Collection ids) {
+    private Collection retrieveValueObjects( Collection ids ) {
         Collection eeValueObjects = new ArrayList<ExpressionExperiment>();
 
         for ( Object object : ids ) {
@@ -308,11 +312,11 @@ public class ExpressionExperimentReportService {
         }
         return eeValueObjects;
     }
-    
+
     /**
      * @return the serialized value object
      */
-    private ExpressionExperimentValueObject retrieveValueObject(long id) {
+    private ExpressionExperimentValueObject retrieveValueObject( long id ) {
 
         ExpressionExperimentValueObject eeVo = null;
         try {
@@ -330,24 +334,22 @@ public class ExpressionExperimentReportService {
         }
         return eeVo;
     }
-    
-    
-    private void initDirectories(boolean deleteFiles) {
+
+    private void initDirectories( boolean deleteFiles ) {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + "/" + EE_REPORT_DIR );
-        File f = new File(HOME_DIR + "/" + EE_REPORT_DIR);
+        File f = new File( HOME_DIR + "/" + EE_REPORT_DIR );
         Collection<File> files = new ArrayList<File>();
         File[] fileArray = f.listFiles();
         for ( File file : fileArray ) {
             files.add( file );
         }
         // clear out all files
-        if (deleteFiles) {
+        if ( deleteFiles ) {
             FileTools.deleteFiles( files );
         }
     }
-    
-    
+
 }
