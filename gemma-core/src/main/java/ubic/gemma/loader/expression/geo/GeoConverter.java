@@ -829,6 +829,13 @@ public class GeoConverter implements Converter {
 
             BioSequence bs = createMinimalBioSequence( taxon );
 
+            boolean isRefseq = false;
+            if ( externalDb.getName().equals( "Genbank" ) && StringUtils.isNotBlank( externalAccession ) ) {
+                // http://www.ncbi.nlm.nih.gov/RefSeq/key.html#accessions : "RefSeq accession numbers can be
+                // distinguished from GenBank accessions by their prefix distinct format of [2 characters|underbar]"
+                isRefseq = externalAccession.matches( "^[A-Z]{2}_" );
+            }
+
             boolean isImage = false;
             if ( StringUtils.isNotBlank( cloneIdentifier ) ) {
                 bs.setName( cloneIdentifier );
@@ -844,11 +851,17 @@ public class GeoConverter implements Converter {
                 bs.setLength( new Long( bs.getSequence().length() ) );
                 bs.setType( SequenceType.DNA );
                 bs.setName( id + "_sequence" );
-                bs.setDescription( "Sequence provided by manufacturer, used in leiu of " + externalAccession );
-            } else if ( externalAccession != null && !isImage && externalDb != null ) {
+                bs.setDescription( "Sequence provided by manufacturer. "
+                        + ( externalAccession != null ? "Used in leiu of " + externalAccession
+                                : "No external accession provided" ) );
+            } else if ( externalAccession != null && !isRefseq && !isImage && externalDb != null ) {
                 /*
                  * We don't use this if we have an IMAGE clone because the accession might be wrong (e.g., for a
                  * Refseq). During persisting the IMAGE clone will be replaced with the 'real' thing.
+                 */
+
+                /*
+                 * We also don't store them if they are refseq ids, because refseq ids are not actually put on arrays.
                  */
 
                 DatabaseEntry dbe = createDatabaseEntry( externalDb, externalAccession, bs );
