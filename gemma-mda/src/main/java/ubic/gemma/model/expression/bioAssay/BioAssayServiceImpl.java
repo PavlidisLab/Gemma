@@ -129,7 +129,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         // this should not be necessary going forward
 
         // build regular expression - match only text before the first pipe
-        Pattern pattern = Pattern.compile( "^(.*?)|" );
+        Pattern pattern = Pattern.compile( "^(.+)|" );
         String bmName = bioMaterial.getName();
         Matcher matcher = pattern.matcher( bmName );
         if ( matcher.find() ) {
