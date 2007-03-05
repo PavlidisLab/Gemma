@@ -24,9 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-import org.hibernate.LockMode;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -35,7 +32,6 @@ import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -142,7 +138,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE611() throws Exception {
-        //endTransaction();
+        // endTransaction();
         ExpressionExperiment newee;
         try {
             String path = ConfigUtils.getString( "gemma.home" );
@@ -321,12 +317,11 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         /* test creating the ExpressionDataDoubleMatrix */
         QuantitationType quantitationType = QuantitationType.Factory.newInstance();
         quantitationType.setName( metaData.getQuantitationTypeName() );
-        quantitationType.setDescription( metaData.getQuantitationTypeDescription() );
-        quantitationType.setGeneralType( GeneralType.QUANTITATIVE );
-        quantitationType.setType( metaData.getType() );
-        quantitationType.setRepresentation( PrimitiveType.DOUBLE );
-        quantitationType.setScale( metaData.getScale() );
+        quantitationType.setIsPreferred( true );
+        quantitationType.setIsRatio( true );
         quantitationType.setIsBackground( false );
+        quantitationType.setIsBackgroundSubtracted( true );
+        quantitationType.setIsNormalized( true );
 
         Collection<DesignElementDataVector> designElementDataVectors = ee.getDesignElementDataVectors();
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
