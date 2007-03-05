@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +59,8 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
  * @version $Id$
  */
 public class Blat {
+
+    private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
 
     /**
      * Spaces in the sequence name will cause problems when converting back from the PSL format, so they are replaced.
@@ -447,20 +451,32 @@ public class Blat {
 
             int exitVal = Integer.MIN_VALUE;
 
+            // wait...
+            StopWatch overallWatch = new StopWatch();
+            overallWatch.start();
+
             while ( exitVal == Integer.MIN_VALUE ) {
                 try {
                     exitVal = run.exitValue();
                 } catch ( IllegalThreadStateException e ) {
                     // okay, still waiting.
                 }
-                Thread.sleep( 60 * 1000 );
+                Thread.sleep( BLAT_UPDATE_INTERVAL_MS );
                 // I hope this is okay...
-                synchronized ( querySequenceFile ) {
-                    Long size = querySequenceFile.length();
-                    log.info( "BLAT output so far: " + size / 1024.0 + " kb" );
+                synchronized ( outputPath ) {
+                    File outputFile = new File( outputPath );
+                    Long size = outputFile.length();
+                    NumberFormat nf = new DecimalFormat();
+                    nf.setMaximumFractionDigits( 2 );
+                    String minutes = getMinutesElapsed( overallWatch );
+                    log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes
+                            + " minutes elapsed)" );
                 }
-
             }
+
+            overallWatch.stop();
+            String minutes = getMinutesElapsed( overallWatch );
+            log.info( "Blat took a total of " + minutes + " minutes" );
 
             // int exitVal = run.waitFor();
 
@@ -499,10 +515,11 @@ public class Blat {
      * @throws IOException
      */
     private String getTmpPslFilePath( String base ) throws IOException {
+        File tmpdir = new File( ConfigUtils.getDownloadPath() );
         if ( StringUtils.isBlank( base ) ) {
-            return File.createTempFile( "pattern", ".psl" ).getPath();
+            return File.createTempFile( "pattern", ".psl", tmpdir ).getPath();
         } else {
-            return File.createTempFile( base, ".psl" ).getPath();
+            return File.createTempFile( base, ".psl", tmpdir ).getPath();
         }
     }
 
@@ -585,21 +602,26 @@ public class Blat {
 
             while ( !blatThread.isDone() ) {
                 try {
-                    Thread.sleep( 1000 * 60 );
+                    Thread.sleep( BLAT_UPDATE_INTERVAL_MS );
                 } catch ( InterruptedException ie ) {
                     throw new RuntimeException( ie );
                 }
 
-                synchronized ( querySequenceFile ) {
-                    Long size = querySequenceFile.length();
-                    log.info( "BLAT output so far: " + size / 1024.00 + " kb" );
+                synchronized ( outputPath ) {
+                    File outputFile = new File( outputPath );
+                    Long size = outputFile.length();
+                    NumberFormat nf = new DecimalFormat();
+                    nf.setMaximumFractionDigits( 2 );
+                    String minutes = getMinutesElapsed( overallWatch );
+                    log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes
+                            + " minutes elapsed)" );
                 }
 
             }
 
             overallWatch.stop();
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "Blat took a total of " + overallElapsed / ( 60.0 * 1000.0 ) + " minutes" );
+            String minutes = getMinutesElapsed( overallWatch );
+            log.info( "Blat took a total of " + minutes + " minutes" );
 
         } catch ( UnsatisfiedLinkError e ) {
             log.error( e, e );
@@ -607,6 +629,14 @@ public class Blat {
             this.execGfClient( querySequenceFile, outputPath, portToUse );
         }
         return this.processPsl( outputPath, null );
+    }
+
+    private String getMinutesElapsed( StopWatch overallWatch ) {
+        Long overallElapsed = overallWatch.getTime();
+        NumberFormat nf = new DecimalFormat();
+        nf.setMaximumFractionDigits( 2 );
+        String minutes = nf.format( overallElapsed / ( 60.0 * 1000.0 ) );
+        return minutes;
     }
 
     /**

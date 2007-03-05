@@ -42,6 +42,7 @@
 			<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
 			<prop key="/bioAssay/*">bioAssayController</prop>
 			<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
+			<prop key="/bioMaterial/editBioMaterial.html">bioMaterialFormController</prop>
 			<prop key="/bioMaterial/*">bioMaterialController</prop>
 			<prop key="/designElement/*">designElementController</prop>
 			<prop key="/compositeSequence/*">compositeSequenceController</prop>
@@ -352,6 +353,14 @@
 	</property>
 	<property name="formName">
 		<value>bioAssay</value>
+	</property>
+</bean>
+<bean id="bioMaterialValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+	<property name="validatorFactory">
+		<ref bean="validatorFactory" />
+	</property>
+	<property name="formName">
+		<value>bioMaterial</value>
 	</property>
 </bean>
 <bean id="expressionExperimentValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">

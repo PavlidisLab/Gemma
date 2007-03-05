@@ -29,13 +29,17 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import cern.jet.stat.Descriptive;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Base class for ExpressionDataMatrix implementations.
@@ -46,22 +50,37 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
     private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
-    protected LinkedHashSet<DesignElement> rowElements;
+    // protected LinkedHashSet<DesignElement> rowElements;
+
     protected Collection<BioAssayDimension> bioAssayDimensions;
+
+    // maps for bioassays/biomaterials/columns
     protected Map<BioAssay, Integer> columnAssayMap;
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
     protected Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
     protected Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
-    protected Map<DesignElement, Integer> rowDesignElementMap;
+
+    // maps for designelements/sequences/rows
+    protected Map<DesignElement, Integer> rowElementMap;
+    protected Map<BioSequence, Collection<Integer>> rowBioSequenceMap;
+    protected Map<Integer, Collection<DesignElement>> rowDesignElementMapByInteger;
+    protected Map<Integer, Collection<BioSequence>> rowBioSequencemapByInteger;
 
     protected void init() {
-        rowElements = new LinkedHashSet<DesignElement>();
-        rowDesignElementMap = new HashMap<DesignElement, Integer>();
+
         bioAssayDimensions = new HashSet<BioAssayDimension>();
+
+        // rowElements = new LinkedHashSet<DesignElement>(); // defunct.
+        rowElementMap = new LinkedHashMap<DesignElement, Integer>();
+        rowBioSequenceMap = new LinkedHashMap<BioSequence, Collection<Integer>>();
+        rowDesignElementMapByInteger = new LinkedHashMap<Integer, Collection<DesignElement>>();
+        rowBioSequencemapByInteger = new LinkedHashMap<Integer, Collection<BioSequence>>();
+
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
         columnBioMaterialMapByInteger = new LinkedHashMap<Integer, BioMaterial>();
         columnBioAssayMapByInteger = new LinkedHashMap<Integer, Collection<BioAssay>>();
+
     }
 
     /*
@@ -88,7 +107,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
      */
     public Collection<DesignElement> getRowElements() {
-        return this.rowElements;
+        return this.rowElementMap.keySet(); // FIXME this is no longer valid.
     }
 
     public int getColumnIndex( BioMaterial bioMaterial ) {
@@ -96,40 +115,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     public int getRowIndex( DesignElement designElement ) {
-        return rowDesignElementMap.get( designElement );
-    }
-
-    /**
-     * @param designElements
-     * @param quantitationType
-     * @return Collection<DesignElementDataVector>
-     */
-    protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElement> designElements,
-            QuantitationType quantitationType ) {
-        Collection<DesignElementDataVector> vectorsOfInterest = new HashSet<DesignElementDataVector>();
-        int i = 0;
-        for ( DesignElement designElement : designElements ) {
-            DesignElementDataVector vectorOfInterest = null;
-            Collection<DesignElementDataVector> vectors = designElement.getDesignElementDataVectors();
-            for ( DesignElementDataVector vector : vectors ) {
-                QuantitationType vectorQuantitationType = vector.getQuantitationType();
-                if ( vectorQuantitationType.equals( quantitationType ) ) {
-                    vectorOfInterest = vector;
-                    vectorsOfInterest.add( vectorOfInterest );
-                    rowElements.add( designElement );
-                    bioAssayDimensions.add( vector.getBioAssayDimension() );
-                    rowDesignElementMap.put( designElement, i );
-                    i++; // only increment if we actually added a row.
-                    break;
-                }
-            }
-            if ( vectorOfInterest == null ) {
-                log.warn( "Vector not found for quantitation type " + quantitationType.getType() + ".  Skipping ..." );
-                continue;
-            }
-
-        }
-        return vectorsOfInterest;
+        return rowElementMap.get( designElement );
     }
 
     /**
@@ -171,10 +157,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
-                rowElements.add( vector.getDesignElement() );
+                DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.add( vector.getBioAssayDimension() );
-                rowDesignElementMap.put( vector.getDesignElement(), i );
-                i++; // only increment if we actually added a row.
+                boolean addedRow = addToRowMaps( i, designElement );
+                if ( addedRow ) i++;
             }
         }
         return vectorsOfInterest;
@@ -196,10 +182,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             BioAssayDimension cand = vector.getBioAssayDimension();
             if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
                 vectorsOfInterest.add( vector );
-                rowElements.add( vector.getDesignElement() );
+                DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.add( vector.getBioAssayDimension() );
-                rowDesignElementMap.put( vector.getDesignElement(), i );
-                i++; // only increment if we actually added a row.
+                boolean addedRow = addToRowMaps( i, designElement );
+                if ( addedRow ) i++;
             }
         }
         return vectorsOfInterest;
@@ -245,10 +231,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 BioAssayDimension cand = vector.getBioAssayDimension();
                 if ( vectorQuantitationType.equals( soughtType ) && cand.equals( soughtDim ) ) {
                     vectorsOfInterest.add( vector );
-                    rowElements.add( vector.getDesignElement() );
-                    this.bioAssayDimensions.add( vector.getBioAssayDimension() );
-                    rowDesignElementMap.put( vector.getDesignElement(), j );
-                    j++; // only increment if we actually added a row.
+                    DesignElement designElement = vector.getDesignElement();
+                    bioAssayDimensions.add( vector.getBioAssayDimension() );
+                    boolean addedRow = addToRowMaps( j, designElement );
+                    if ( addedRow ) j++;
                 }
             }
         }
@@ -256,6 +242,122 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     /**
+     * Information needed to track row and biosequence &lt;--&gt; design element relations in the matrix.
+     * <p>
+     * Cases:
+     * <ol>
+     * <li>Sequence has already appeared
+     * <ol>
+     * <li>This is a repeat occurrence of this sequence on the same microarray. Action: add a row to the matrix, UNLESS
+     * there is a match on another microarray design, in which case use THAT row.
+     * <li>This is a new occurence of this sequence on this microarray, but has appeared on another. Action: don't add
+     * a new row to the matrix. Add the design Element to the map for the current row.
+     * </ol>
+     * <li>Sequence has not yet appeared. Action: add a row to the matrix. Create new map information for this sequence
+     * and row.
+     * </ol>
+     * 
+     * @param row The current row number to be used if a new row is added.
+     * @param designElement
+     * @return true if a new row element is added, false if we've encountered a biosequence that is already in the
+     *         matrix.
+     */
+    private boolean addToRowMaps( Integer row, DesignElement designElement ) {
+        // assert !rowBioSequencemapByInteger.containsKey( row ) : "Already have row " + row;
+        assert designElement instanceof CompositeSequence : "Got a " + designElement.getClass();
+
+        CompositeSequence cs = ( CompositeSequence ) designElement;
+        BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
+
+        if ( biologicalCharacteristic == null ) {
+            log.debug( "No sequence for " + designElement + ", using dummy" );
+            biologicalCharacteristic = getDummySequence( cs ); // this is guaranteed to be unique for this desgin
+            // element.
+        }
+
+        boolean isNew = false;
+
+        Integer actualRow = row;
+
+        log.debug( "Seeking row for " + designElement );
+
+        if ( rowBioSequenceMap.containsKey( biologicalCharacteristic ) ) {
+
+            log.debug( "Already have a row(s) for " + biologicalCharacteristic + ": "
+                    + rowBioSequenceMap.get( biologicalCharacteristic ) );
+
+            /*
+             * then add it to one of the existing rows for this sequence OR create a new row, if the existing row is for
+             * the SAME array design.
+             */
+
+            Collection<Integer> existingRowsForSequence = rowBioSequenceMap.get( biologicalCharacteristic );
+            boolean foundRowToAddTo = false;
+            for ( Integer candidateRowToAddTo : existingRowsForSequence ) {
+                log.debug( "Checking if we can add to row " + candidateRowToAddTo );
+                Collection<DesignElement> des = rowDesignElementMapByInteger.get( candidateRowToAddTo );
+
+                // First look for a row we can add it to.
+                for ( DesignElement element : des ) {
+                    log.debug( "Row " + candidateRowToAddTo + ": " + element + " uses same sequence, checking..." );
+                    if ( !element.getArrayDesign().equals( designElement.getArrayDesign() ) ) {
+                        // make sure there isn't already an entry in the CURRENT array design for that row.
+                        for ( DesignElement checkOnSameArray : rowDesignElementMapByInteger.get( candidateRowToAddTo ) ) {
+                            if ( !checkOnSameArray.getArrayDesign().equals( designElement.getArrayDesign() ) ) {
+                                log.debug( "Can add to row " + candidateRowToAddTo );
+                                actualRow = candidateRowToAddTo;
+                                foundRowToAddTo = true;
+                            } else {
+                                log.debug( "Can't add to row because it's on the same array" );
+                            }
+                        }
+
+                    } else {
+                        log.debug( "Element is on the same array as " + designElement + "("
+                                + designElement.getArrayDesign() + ")" );
+                    }
+                }
+            }
+
+            if ( !foundRowToAddTo ) {
+                log.debug( "Couldn't add " + designElement + " to an existing row." );
+                isNew = true;
+            }
+
+        } else {
+            log.debug( "No row for " + biologicalCharacteristic + " yet" );
+            rowBioSequenceMap.put( biologicalCharacteristic, new LinkedHashSet<Integer>() );
+            isNew = true;
+        }
+
+        log.debug( "Adding " + designElement + " to row " + actualRow );
+        if ( !rowBioSequencemapByInteger.containsKey( actualRow ) ) {
+            rowBioSequencemapByInteger.put( actualRow, new HashSet<BioSequence>() );
+            rowDesignElementMapByInteger.put( actualRow, new HashSet<DesignElement>() );
+        }
+
+        rowDesignElementMapByInteger.get( actualRow ).add( designElement );
+        rowBioSequenceMap.get( biologicalCharacteristic ).add( actualRow );
+        rowBioSequencemapByInteger.get( actualRow ).add( biologicalCharacteristic );
+        rowElementMap.put( designElement, actualRow );
+
+        return isNew;
+    }
+
+    /**
+     * @param designElement
+     * @return
+     */
+    protected BioSequence getDummySequence( CompositeSequence designElement ) {
+        BioSequence biologicalCharacteristic;
+        biologicalCharacteristic = BioSequence.Factory.newInstance();
+        biologicalCharacteristic.setName( "Dummy biosequence for " + designElement );
+        return biologicalCharacteristic;
+    }
+
+    /**
+     * Select vectors from a SINGLE bioassay dimension.
+     * 
      * @param vectors
      * @param bioAssayDimension
      * @param quantitationType
@@ -264,17 +366,17 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
             BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
-        int j = 0;
+        int i = 0;
 
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             BioAssayDimension cand = vector.getBioAssayDimension();
             if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
                 vectorsOfInterest.add( vector );
-                rowElements.add( vector.getDesignElement() );
-                this.bioAssayDimensions.add( vector.getBioAssayDimension() );
-                rowDesignElementMap.put( vector.getDesignElement(), j );
-                j++; // only increment if we actually added a row.
+                DesignElement designElement = vector.getDesignElement();
+                bioAssayDimensions.add( vector.getBioAssayDimension() );
+                boolean addedRow = addToRowMaps( i, designElement );
+                if ( addedRow ) i++;
             }
 
         }
@@ -291,10 +393,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *                                                                                                 ----------------
-     *                                                                                                 ******              -- only a few samples run on this platform
-     *                                                                                                   **********        -- ditto
-     *                                                                                                             ****    -- these samples were not run on any of the other platforms (rare but possible).
+     *                                                    ----------------
+     *                                                    ******              -- only a few samples run on this platform
+     *                                                      **********        -- ditto
+     *                                                                ****    -- these samples were not run on any of the other platforms (rare but possible).
      * </pre>
      * 
      * <p>
@@ -302,10 +404,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                                                 ----------------
-     *                                                                                                 ****************
-     *                                                                                                 ************
-     *                                                                                                 ********
+     *                                                    ----------------
+     *                                                    ****************
+     *                                                    ************
+     *                                                    ********
      * </pre>
      * 
      * <p>
@@ -313,8 +415,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                                                 -----------------
-     *                                                                                                 *****************
+     *                                                    -----------------
+     *                                                    *****************
      * </pre>
      * 
      * <p>
@@ -322,9 +424,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                                                                 -----------------
-     *                                                                                                 *****************
-     *                                                                                                 *****************
+     *                                                    -----------------
+     *                                                    *****************
+     *                                                    *****************
      * </pre>
      * 
      * <p>
@@ -405,8 +507,6 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     /**
      * Determine if the bioMaterial group has already been seen; this is necessary because it is possible to have
      * multiple bioassays use the same biomaterials.
-     * <p>
-     * FIXME this does not work.
      * 
      * @param bioMaterialGroups
      * @param candidateGroup

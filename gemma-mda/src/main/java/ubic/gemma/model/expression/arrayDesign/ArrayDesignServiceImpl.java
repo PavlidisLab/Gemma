@@ -39,9 +39,9 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
 
-
-
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -49,7 +49,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numCompositeSequenceWithPredictedGene( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -282,7 +284,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         this.getArrayDesignDao().deleteAlignmentData( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadAllValueObjects()
      */
     @Override
@@ -290,7 +294,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().loadAllValueObjects();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
@@ -298,7 +304,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().loadValueObjects( ids );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences()
      */
     @Override
@@ -306,7 +314,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults()
      */
     @Override
@@ -314,7 +324,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes()
      */
     @Override
@@ -322,7 +334,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllCompositeSequenceWithGenes();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences(java.util.Collection)
      */
     @Override
@@ -330,7 +344,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences( ids );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults(java.util.Collection)
      */
     @Override
@@ -338,7 +354,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults( ids );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes(java.util.Collection)
      */
     @Override
@@ -346,7 +364,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllCompositeSequenceWithGenes( ids );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes()
      */
     @Override
@@ -354,7 +374,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllGenes();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes(java.util.Collection)
      */
     @Override
@@ -362,7 +384,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().numAllGenes( ids );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -370,7 +394,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().compositeSequenceWithoutBioSequences( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -378,7 +404,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().compositeSequenceWithoutBlatResults( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -386,25 +414,35 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().compositeSequenceWithoutGenes( arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleFindByGoId(String)
      */
     @Override
     protected Collection handleFindByGoId( String goId ) throws Exception {
-        return this.getArrayDesignDao().findByGoId(goId);
+        return this.getArrayDesignDao().findByGoId( goId );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastAnnotationFile(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastAnnotationFile( Collection ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not AnnotationFile events
         Set<Long> keys = eventMap.keySet();
         for ( Long key : keys ) {
+
+            /*
+             * FIXME check if the subsuming array (if any) was updated more recently.
+             */
+
             Collection<AuditEvent> events = eventMap.get( key );
             AuditEvent lastEvent = null;
             if ( events == null ) {
@@ -426,7 +464,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastGeneMapping(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -437,6 +477,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         // remove all AuditEvents that are not GeneMapping events
         Set<Long> keys = eventMap.keySet();
         for ( Long key : keys ) {
+
+            /*
+             * FIXME check if the subsuming array (if any) was updated more recently.
+             */
+
             Collection<AuditEvent> events = eventMap.get( key );
             AuditEvent lastEvent = null;
             if ( events == null ) {
@@ -458,7 +503,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceAnalysis(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -469,13 +516,19 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> keys = eventMap.keySet();
         for ( Long key : keys ) {
+
+            /*
+             * FIXME check if the subsuming array (if any) was updated more recently.
+             */
+
             Collection<AuditEvent> events = eventMap.get( key );
             AuditEvent lastEvent = null;
             if ( events == null ) {
                 lastEventMap.put( key, null );
             } else {
                 for ( AuditEvent event : events ) {
-                    if ( event.getEventType() != null && event.getEventType() instanceof ArrayDesignSequenceAnalysisEvent ) {
+                    if ( event.getEventType() != null
+                            && event.getEventType() instanceof ArrayDesignSequenceAnalysisEvent ) {
                         if ( lastEvent == null ) {
                             lastEvent = event;
                             continue;
@@ -490,7 +543,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceUpdate(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -501,6 +556,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         // remove all AuditEvents that are not Sequence update events
         Set<Long> keys = eventMap.keySet();
         for ( Long key : keys ) {
+            
+            /*
+             * FIXME check if the subsuming array (if any) was updated more recently.
+             */
+            
             Collection<AuditEvent> events = eventMap.get( key );
             AuditEvent lastEvent = null;
             if ( events == null ) {
@@ -520,6 +580,18 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             }
         }
         return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleUpdateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
+            throws Exception {
+        return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
 }

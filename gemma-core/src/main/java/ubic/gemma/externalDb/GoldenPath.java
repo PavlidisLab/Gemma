@@ -142,7 +142,7 @@ public class GoldenPath {
         dataSource.setUsername( user );
         dataSource.setPassword( password );
 
-        // jt.setFetchSize( 1 );
+        jt.setFetchSize( 50 );
         jt.setDataSource( dataSource );
 
         try {

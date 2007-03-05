@@ -73,32 +73,26 @@
         <h3>
             <fmt:message key="treatments.title" />
         </h3>
-        <display:table name="bioMaterial.treatments" class="list" requestURI="" id="treatmentList"
-         pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
-            <display:column property="name" maxWords="20" />
-            <display:column property="description" maxWords="100" />
-            <display:column property="orderApplied" maxWords="100" />
+        <display:table name="bioMaterial.treatments"  defaultsort="1" class="list" requestURI="" id="treatmentList"
+         pagesize="30" decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
+            <display:column sortable="true"  property="name" maxWords="20" />
+            <display:column sortable="true"  property="description" maxWords="100" />
+            <display:column sortable="true"  property="orderApplied" maxWords="100" />
         </display:table>
         
         <h3>
             <fmt:message key="characteristics.title" />
         </h3>
-        <display:table name="bioMaterial.characteristics" class="list" requestURI="" id="characteristicList"
-        pagesize="10" >
-            <display:column property="category" maxWords="100" />
-            <display:column property="value" maxWords="100" />
+        <display:table name="bioMaterial.characteristics" defaultsort="1" class="list" requestURI="" id="characteristicList"
+        pagesize="30" >
+            <display:column sortable="true" property="category" maxWords="100" />
+            <display:column sortable="true"  property="value" maxWords="100" />
         </display:table>
 	    		
-        <br/>
-        
-        <br />
-
-        <hr />
-        <hr />
     
     <table>
-    <TR>
-    <TD COLSPAN="2">    
+    <tr>
+    <td COLSPAN="2">    
             <DIV align="left"><input type="button"
             onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
             value="Back"></DIV>
@@ -108,7 +102,7 @@
             <DIV align="left"><input type="button"
             onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=<%=bioMaterial.getId()%>'"
             value="Edit"></DIV>
-            </TD>
+            </td>
         </authz:acl>
-    </TR>
+    </tr>
     </table>

@@ -143,14 +143,20 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         if ( skipIfLastRunLaterThan == null ) return true;
         auditTrailService.thaw( arrayDesign );
-        List<AuditEvent> sequenceAnalysisEvents = new ArrayList<AuditEvent>();
 
-        for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue;
-            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
-                sequenceAnalysisEvents.add( event );
+        ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
+
+        if ( subsumingArrayDesign != null ) {
+            boolean needToRunSubsumer = needToRun( skipIfLastRunLaterThan, subsumingArrayDesign, eventClass );
+            if ( !needToRunSubsumer ) {
+                log
+                        .info( "Subsumer  " + subsumingArrayDesign + " was run more recently than "
+                                + skipIfLastRunLaterThan );
+                return false;
             }
         }
+
+        List<AuditEvent> sequenceAnalysisEvents = getEvents( arrayDesign, eventClass );
 
         if ( sequenceAnalysisEvents.size() == 0 ) {
             return true; // always do it
@@ -159,6 +165,23 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             AuditEvent lastEvent = sequenceAnalysisEvents.get( sequenceAnalysisEvents.size() - 1 );
             return lastEvent.getDate().before( skipIfLastRunLaterThan );
         }
+    }
+
+    /**
+     * @param arrayDesign
+     * @param eventClass
+     * @return
+     */
+    private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+        List<AuditEvent> sequenceAnalysisEvents = new ArrayList<AuditEvent>();
+
+        for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
+            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                sequenceAnalysisEvents.add( event );
+            }
+        }
+        return sequenceAnalysisEvents;
     }
 
 }

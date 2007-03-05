@@ -68,50 +68,49 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
     }
-    
+
     public void testGetExpressionExperimentsById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection ee = arrayDesignDao.getExpressionExperiments( ad );
-        assertNotNull(ee);
+        assertNotNull( ee );
     }
 
-    
     public void testNumBioSequencesById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         long num = arrayDesignDao.numBioSequences( ad );
-        assertNotNull(num);
+        assertNotNull( num );
     }
-    
+
     public void testNumBlatResultsById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         long num = arrayDesignDao.numBlatResults( ad );
-        assertNotNull(num);
+        assertNotNull( num );
     }
-    
+
     public void testNumGenesById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignDao.numGenes( ad);
-        assertNotNull(num);
+        long num = arrayDesignDao.numGenes( ad );
+        assertNotNull( num );
     }
-    
+
     public void testCompositeSequenceWithoutBioSequences() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection cs = arrayDesignDao.compositeSequenceWithoutBioSequences( ad );
-        assertNotNull(cs);  
+        assertNotNull( cs );
     }
-    
+
     public void testCompositeSequenceWithoutBlatResults() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection cs = arrayDesignDao.compositeSequenceWithoutBlatResults( ad );
-        assertNotNull(cs);  
+        assertNotNull( cs );
     }
-    
+
     public void testCompositeSequenceWithoutGenes() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection cs = arrayDesignDao.compositeSequenceWithoutGenes( ad );
-        assertNotNull(cs);  
+        assertNotNull( cs );
     }
-    
+
     public void testCascadeCreateCompositeSequences() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         flushSession(); // fails without this.
@@ -122,7 +121,6 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         assertNotNull( cs.getId() );
         assertNotNull( cs.getArrayDesign().getId() );
     }
-    
 
     public void testDelete() {
 
@@ -227,16 +225,79 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         Integer expectedValue = 3;
         assertEquals( expectedValue, actualValue );
     }
-    
+
     public void testCountAll() {
         long count = arrayDesignDao.countAll();
-        assertNotNull(count);
-        assertTrue(count > 0);
+        assertNotNull( count );
+        assertTrue( count > 0 );
     }
-    
+
     public void testLoadAllValueObjects() {
         Collection vos = arrayDesignDao.loadAllValueObjects();
-        assertNotNull(vos);
+        assertNotNull( vos );
+    }
+
+    public void testUpdateSubsumingStatus() throws Exception {
+        endTransaction();
+        ArrayDesign subsumer = this.getTestPersistentArrayDesign( 10, false );
+        flushAndClearSession();
+        ArrayDesign subsumee = this.getTestPersistentArrayDesign( 5, false );
+        flushAndClearSession();
+        boolean actualValue = arrayDesignDao.updateSubsumingStatus( subsumer, subsumee );
+        assertTrue( !actualValue );
+        actualValue = arrayDesignDao.updateSubsumingStatus( subsumee, subsumer );
+        assertTrue( !actualValue );
+    }
+
+    public void testUpdateSubsumingStatusTrue() throws Exception {
+        endTransaction();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "subsuming_arraydesign" );
+
+        // Create the composite Sequences
+        CompositeSequence c1 = CompositeSequence.Factory.newInstance();
+        c1.setName( "bar" );
+        Taxon tax = Taxon.Factory.newInstance();
+        tax.setScientificName( DEFAULT_TAXON );
+        BioSequence bs = BioSequence.Factory.newInstance( tax );
+        bs.setName( "fred" );
+        bs.setSequence( "CG" );
+        bs.setTaxon( tax );
+        c1.setBiologicalCharacteristic( bs );
+        ad.getCompositeSequences().add( c1 );
+
+        CompositeSequence c3 = CompositeSequence.Factory.newInstance();
+        c3.setName( "foo" );
+        tax.setScientificName( DEFAULT_TAXON );
+        BioSequence bsb = BioSequence.Factory.newInstance( tax );
+        bsb.setName( "barney" );
+        bsb.setSequence( "CAAAAG" );
+        bsb.setTaxon( tax );
+        c3.setBiologicalCharacteristic( bsb );
+        ad.getCompositeSequences().add( c3 );
+
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+
+        ArrayDesign subsumedArrayDesign = ArrayDesign.Factory.newInstance();
+        subsumedArrayDesign.setName( "subsumed_arraydesign" );
+
+        // Create the composite Sequences
+        CompositeSequence c2 = CompositeSequence.Factory.newInstance();
+        tax.setScientificName( DEFAULT_TAXON );
+        c2.setName( "bar" ); // same as one on other AD.
+        c2.setBiologicalCharacteristic( bs ); // same as one on other AD.
+        subsumedArrayDesign.getCompositeSequences().add( c2 );
+        c2.setArrayDesign( subsumedArrayDesign );
+
+        subsumedArrayDesign = ( ArrayDesign ) persisterHelper.persist( subsumedArrayDesign );
+
+        flushAndClearSession();
+
+        boolean actualValue = arrayDesignDao.updateSubsumingStatus( ad, subsumedArrayDesign );
+        assertTrue( actualValue );
+
+        actualValue = arrayDesignDao.updateSubsumingStatus( subsumedArrayDesign, ad );
+        assertTrue( !actualValue );
     }
 
     /**

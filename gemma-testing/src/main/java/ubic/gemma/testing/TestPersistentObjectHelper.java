@@ -150,7 +150,6 @@ public class TestPersistentObjectHelper {
                 vector.setQuantitationType( quantType );
                 vector.setBioAssayDimension( baDim );
                 vectors.add( vector );
-                cs.getDesignElementDataVectors().addAll( vectors );
             }
         }
         return vectors;

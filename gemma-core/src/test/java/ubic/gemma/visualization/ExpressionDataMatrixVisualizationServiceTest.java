@@ -132,12 +132,12 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         DesignElement de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
         vector1.setDesignElement( de1 ); // set this de on the vector
-        de1.setDesignElementDataVectors( vectors1 );
+        // de1.setDesignElementDataVectors( vectors1 );
 
         DesignElement de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
         vector2.setDesignElement( de2 ); // set this de on the vector
-        de2.setDesignElementDataVectors( vectors2 );
+        // de2.setDesignElementDataVectors( vectors2 );
 
         designElements.add( de1 );
         designElements.add( de2 );
@@ -149,7 +149,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         /* set the vectors on the expression experiment */
         ee.setDesignElementDataVectors( eeVectors );
 
-        expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, designElements, qt );
+        expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors, qt );
     }
 
     /**

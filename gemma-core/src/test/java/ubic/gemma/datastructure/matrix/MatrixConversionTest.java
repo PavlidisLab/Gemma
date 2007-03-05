@@ -134,7 +134,7 @@ public class MatrixConversionTest extends TestCase {
 
                 // we're only creating one vector here, but each design element can have more than one.
                 vectors.add( vector );
-                cs.getDesignElementDataVectors().add( vector );
+                // cs.getDesignElementDataVectors().add( vector );
             }
 
             for ( ; j < NUM_CS; j++ ) {
@@ -154,7 +154,7 @@ public class MatrixConversionTest extends TestCase {
 
                 // we're only creating one vector here, but each design element can have more than one.
                 vectors.add( vector );
-                cs.getDesignElementDataVectors().add( vector );
+                // cs.getDesignElementDataVectors().add( vector );
             }
         }
         return vectors;

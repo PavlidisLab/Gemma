@@ -93,12 +93,24 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         return this.getBioMaterialDao().loadAll();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().update( bioMaterial );
+    }
+
+    /**
+     * @param bioMaterial
+     * @return
+     * @throws Exception
+     */
+    @Override
+    protected BioMaterial handleCreate( BioMaterial bioMaterial ) throws Exception {
+        return ( BioMaterial ) this.getBioMaterialDao().create( bioMaterial );
     }
 
 }

@@ -329,15 +329,12 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
         for ( DesignElementDataVector designElementDataVector : designElementDataVectors ) {
             DesignElement de = designElementDataVector.getDesignElement();
-            Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
-            vectors.add( designElementDataVector ); // associate vectors with design elements in memory
-            de.setDesignElementDataVectors( vectors );
             designElements.add( de );
         }
 
         /* Constructor 1 */
-        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix( ee, designElements,
-                quantitationType );
+        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix(
+                designElementDataVectors, quantitationType );
 
         /* Assertions */
         DesignElement deToQuery = designElements.iterator().next();
@@ -447,7 +444,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         CompositeSequence de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
-        de1.setDesignElementDataVectors( vectors1 );
+        vector1.setDesignElement( de1 );
 
         BioSequence bs1 = BioSequence.Factory.newInstance();
         bs1.setName( "test1" );
@@ -458,13 +455,13 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         CompositeSequence de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
-        de2.setDesignElementDataVectors( vectors2 );
 
         BioSequence bs2 = BioSequence.Factory.newInstance();
         bs2.setName( "test2" );
 
         de2.setBiologicalCharacteristic( bs2 );
         de2.setArrayDesign( ad );
+        vector2.setDesignElement( de2 );
 
         designElements.add( de1 );
         designElements.add( de2 );
@@ -475,7 +472,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         ee.setDesignElementDataVectors( eeVectors );
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, designElements, qt );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors, qt );
 
         assertNotNull( expressionDataMatrix );
         assertEquals( expressionDataMatrix.rows(), 2 );

@@ -53,13 +53,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( selectedVectors );
     }
 
-    public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment,
-            Collection<DesignElement> designElements, QuantitationType quantitationType ) {
-        init();
-        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( designElements, quantitationType );
-        vectorsToMatrix( vectorsOfInterest );
-    }
-
     public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         init();
         Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationType );

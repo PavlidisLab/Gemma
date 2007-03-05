@@ -64,7 +64,13 @@
 			<properties>
 				<property name="hibernateDialect">org.hibernate.dialect.MySQLMyISAMDialect</property>
 				<property name="hibernateShowSql">false</property>
-				<property name="hibernateUseQueryCache">false</property>
+				<property name="hibernateUseQueryCache">true</property>
+                <property name="hibernateJdbcBatchSize">50</property>
+				<property name="hibernateJdbcFetchSize">50</property>
+				<property name="hibernateMaxFetchDepth">2</property>
+				<property name="hibernateDefaultBatchFetchSize">16</property>
+                <property name="hibernateJdbcBatchVersionedData">true</property>
+                <property name="hibernateJdbcUseStreamsForBinary">true</property>
 				<property name="hibernateQueryUseNamedParameters">true</property>
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
@@ -141,9 +147,6 @@
 				<property name="specificCollectionInterfaces">false</property>
 				<property name="associationEndCollectionIndexName">orderedCollectionIndex</property>
 				<property name="configuration">${maven.andromda.hibernate.configuration.dir}</property>
-				<property name="hibernateJdbcBatchSize">50</property>
-				<property name="hibernateMaxFetchDepth">2</property>
-				<property name="hibernateJdbcFetchSize">8</property>
 				<property name="hibernateEnableCache">true</property>
 				<property name="cache">${maven.andromda.hibernate.configuration.dir}</property>
 				<property name="hibernateEnableAssociationsCache">true</property>

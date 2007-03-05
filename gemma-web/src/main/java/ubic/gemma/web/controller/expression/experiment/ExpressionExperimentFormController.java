@@ -59,7 +59,6 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
@@ -79,6 +78,8 @@ import com.sdicons.json.model.JSONValue;
 import com.sdicons.json.parser.JSONParser;
 
 /**
+ * Handle editing of expression experiments.
+ * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="expressionExperimentFormController"
@@ -170,7 +171,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
         }
 
         if ( ee.getId() != null ) {
-            saveMessage( request, "object.editing", new Object[] { "Data set", ee.getId() }, "Editing" );
+            // FIXME this is throwing an exception, bug 794
+            // / saveMessage( request, "object.editing", new Object[] { "Data set", ee.getId() }, "Editing" );
         }
 
         return obj;
@@ -258,8 +260,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         updateAccession( request, expressionExperiment );
 
-        saveMessage( request, "object.saved", new Object[] { expressionExperiment.getClass().getSimpleName(),
-                expressionExperiment.getId() }, "Saved" );
+        // saveMessage( request, "object.saved", new Object[] { expressionExperiment.getClass().getSimpleName(),
+        // expressionExperiment.getId() }, "Saved" );
 
         return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
                 + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
@@ -337,8 +339,28 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 if ( oldBioMaterials.contains( newBioMaterialId ) ) {
                     continue;
                 } else {
-                    BioMaterial newMaterial = bioMaterialService.findById( newBioMaterialId );
+                    BioMaterial newMaterial;
+                    if ( newBioMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
+                        // model the new biomaterial after the old one for the bioassay (we're taking a guess here.)
+                        if ( bMats.size() > 1 ) {
+                            // log.warn("");
+                        }
+                        BioMaterial oldBioMaterial = bMats.iterator().next();
+                        newMaterial = BioMaterial.Factory.newInstance();
+                        newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
+                        newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
+                        newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
+                        newMaterial.setTreatments( oldBioMaterial.getTreatments() );
+                        newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
+                        newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
+                        newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
+                        newMaterial = bioMaterialService.create( newMaterial );
+                    } else {
+                        newMaterial = bioMaterialService.findById( newBioMaterialId );
+                    }
+
                     bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
+
                 }
             }
 
@@ -422,8 +444,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     revisedType.setDescription( newDescription );
                     revisedType.setName( newName );
                     revisedType.setIsNormalized( newisNormalized );
-   
-                    
+
                     qType.setIsBackgroundSubtracted( newisBkgSub );
                     qType.setIsBackground( newisBkg );
                     qType.setIsPreferred( newisPreferred );

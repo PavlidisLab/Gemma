@@ -33,7 +33,14 @@
                 <arg0 key="bioAssay.description"/>
             </field>
         </form>
-        
+        <form name="bioMaterial">
+            <field property="name" depends="required">
+                <arg0 key="bioMaterial.name"/>
+            </field>
+            <field property="description" depends="required">
+                <arg0 key="bioMaterial.description"/>
+            </field>
+        </form>
         <form name="expressionExperiment">
             <field property="name" depends="required">
                 <arg0 key="expressionExperiment.name"/>

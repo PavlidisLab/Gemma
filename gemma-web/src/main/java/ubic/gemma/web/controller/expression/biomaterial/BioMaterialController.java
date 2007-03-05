@@ -81,6 +81,12 @@ public class BioMaterialController extends BaseMultiActionController {
         request.setAttribute( "id", id );
         return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
     }
+    
+    
+    
+    
+    
+    
 
     /**
      * @param request

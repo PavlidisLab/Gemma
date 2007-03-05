@@ -94,7 +94,7 @@ public class CrudUtilsTest extends BaseSpringContextTest {
     private ArrayDesign getLittleArrayDesign() {
         ArrayDesign entity = ArrayDesign.Factory.newInstance();
         entity.setName( "foo" );
-        CompositeSequence cs = CompositeSequence.Factory.newInstance( "bar", "aha", null, null, null, entity, null );
+        CompositeSequence cs = CompositeSequence.Factory.newInstance( "bar", "aha", null, null, entity );
         BioSequence bs = BioSequence.Factory.newInstance( new Long( 10 ), "ATCGTCCC", Boolean.FALSE, Boolean.FALSE,
                 PolymerType.DNA, SequenceType.AFFY_PROBE, "fooby", "ooby", null, null, null );
         cs.setBiologicalCharacteristic( bs );
@@ -108,7 +108,7 @@ public class CrudUtilsTest extends BaseSpringContextTest {
     private ArrayDesign getLittleArrayDesignBidirectionalNotFilledIn() {
         ArrayDesign entity = ArrayDesign.Factory.newInstance();
         entity.setName( "foo" );
-        CompositeSequence cs = CompositeSequence.Factory.newInstance( "bar", "aha", null, null, null, null, null );
+        CompositeSequence cs = CompositeSequence.Factory.newInstance( "bar", "aha", null, null, null );
         BioSequence bs = BioSequence.Factory.newInstance( new Long( 10 ), "ATCGTCCC", Boolean.FALSE, Boolean.FALSE,
                 PolymerType.DNA, SequenceType.AFFY_PROBE, "fooby", "ooby", null, null, null );
         cs.setBiologicalCharacteristic( bs );

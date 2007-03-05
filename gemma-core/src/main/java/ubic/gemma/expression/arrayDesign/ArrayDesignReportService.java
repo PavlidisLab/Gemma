@@ -84,14 +84,14 @@ public class ArrayDesignReportService {
             generateArrayDesignReport( ad );
         }
     }
-    
+
     @SuppressWarnings("unchecked")
-    public void generateArrayDesignReport(Long id) {
+    public void generateArrayDesignReport( Long id ) {
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
-        if (adVo != null && adVo.size() > 0) {
-            generateArrayDesignReport(adVo.iterator().next());
+        if ( adVo != null && adVo.size() > 0 ) {
+            generateArrayDesignReport( adVo.iterator().next() );
         }
     }
 
@@ -100,8 +100,8 @@ public class ArrayDesignReportService {
         ArrayDesign ad = arrayDesignService.load( adVo.getId() );
         if ( ad == null ) return;
 
-        log.info( "Generating report for array design " + ad.getId()+ "\n" );
-        
+        log.info( "Generating report for array design " + ad.getId() + "\n" );
+
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
@@ -113,42 +113,36 @@ public class ArrayDesignReportService {
         long numCsProbeAlignedRegions = arrayDesignService.numCompositeSequenceWithProbeAlignedRegion( ad );
         long numCsPureGenes = numCsGenes - numCsPredictedGenes - numCsProbeAlignedRegions;
         long numGenes = arrayDesignService.numGenes( ad );
-        
-        adVo.setNumProbeSequences( Long.toString( numCsBioSequences) );
-        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults  ) );
-        adVo.setNumProbesToGenes( Long.toString( numCsGenes) );
+
+        adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
+        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
+        adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
         adVo.setNumProbesToKnownGenes( Long.toString( numCsPureGenes ) );
-        adVo.setNumProbesToPredictedGenes( Long.toString( numCsPredictedGenes ));
+        adVo.setNumProbesToPredictedGenes( Long.toString( numCsPredictedGenes ) );
         adVo.setNumProbesToProbeAlignedRegions( Long.toString( numCsProbeAlignedRegions ) );
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
-
-        //String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes,
-         //       numCsPredictedGenes, numCsProbeAlignedRegions, numCsPureGenes );
+        // String report = this.generateReportString( numCsBioSequences, numCsBlatResults, numCsGenes, numGenes,
+        // numCsPredictedGenes, numCsProbeAlignedRegions, numCsPureGenes );
 
         // write into file
-        /*File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id );
-        f.delete();
-        try {
-            f.createNewFile();
-            Writer writer = new FileWriter( f );
-            writer.write( report );
-            writer.flush();
-            writer.close();
-        } catch ( IOException e ) {
-            // cannot write to file. Just fail gracefully.
-            log.error( "Cannot write to file." );
-        }
-        */
-        
+        /*
+         * File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id );
+         * f.delete(); try { f.createNewFile(); Writer writer = new FileWriter( f ); writer.write( report );
+         * writer.flush(); writer.close(); } catch ( IOException e ) { // cannot write to file. Just fail gracefully.
+         * log.error( "Cannot write to file." ); }
+         */
+
         try {
             // remove file first
-            File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + adVo.getId());
-            if (f.exists()){
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "."
+                    + adVo.getId() );
+            if ( f.exists() ) {
                 f.delete();
             }
-            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
+            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
+                    + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( adVo );
             oos.flush();
@@ -160,7 +154,7 @@ public class ArrayDesignReportService {
 
     public void generateAllArrayDesignReport() {
         log.info( "Generating report for all array designs\n" );
-        
+
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
@@ -175,17 +169,17 @@ public class ArrayDesignReportService {
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
-        adVo.setNumGenes( Long.toString(numGenes) );
+        adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
-        
-        
+
         try {
             // remove file first
-            File f = new File(HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
-            if (f.exists()){
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
+            if ( f.exists() ) {
                 f.delete();
             }
-            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
+            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
+                    + ARRAY_DESIGN_SUMMARY );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( adVo );
             oos.flush();
@@ -296,74 +290,76 @@ public class ArrayDesignReportService {
 
         return analysisEventString;
     }
-    
+
     /**
      * Get a specific cached summary object
+     * 
      * @param id
      * @return arrayDesignValueObject the specified summary object
      */
-    public ArrayDesignValueObject getSummaryObject (Long id) {
+    public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
         try {
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
-                    + ARRAY_DESIGN_SUMMARY + "." + id );
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id );
             if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( f );
                 ObjectInputStream ois = new ObjectInputStream( fis );
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
                 ois.close();
                 fis.close();
-            } 
+            }
         } catch ( Throwable e ) {
             return null;
         }
         return adVo;
     }
-    
+
     /**
      * Get the cached summary object that represents all array designs.
+     * 
      * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
      */
-    public ArrayDesignValueObject getSummaryObject () {
+    public ArrayDesignValueObject getSummaryObject() {
         ArrayDesignValueObject adVo = null;
         try {
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
-                    + ARRAY_DESIGN_SUMMARY );
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
             if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( f );
                 ObjectInputStream ois = new ObjectInputStream( fis );
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
                 ois.close();
                 fis.close();
-            } 
+            }
         } catch ( Throwable e ) {
             return null;
         }
         return adVo;
-    }    
-    
+    }
+
     /**
      * Get the cached summary objects
+     * 
      * @param id
      * @return arrayDesignValueObjects the specified summary object
      */
-    public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids) {
+    public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids ) {
         Collection<ArrayDesignValueObject> adVos = new ArrayList<ArrayDesignValueObject>();
         for ( Long id : ids ) {
-            ArrayDesignValueObject adVo = getSummaryObject(id);
-            if (adVo != null ) {
-                adVos.add( getSummaryObject(id) );
+            ArrayDesignValueObject adVo = getSummaryObject( id );
+            if ( adVo != null ) {
+                adVos.add( getSummaryObject( id ) );
             }
         }
-        
+
         return adVos;
     }
-    
+
     /**
      * Fill in the probe summary statistics
+     * 
      * @param adVos
      */
-    public void fillInValueObjects(Collection<ArrayDesignValueObject> adVos) {
+    public void fillInValueObjects( Collection<ArrayDesignValueObject> adVos ) {
         for ( ArrayDesignValueObject origVo : adVos ) {
             ArrayDesignValueObject cachedVo = getSummaryObject( origVo.getId() );
             if ( cachedVo != null ) {
@@ -378,46 +374,47 @@ public class ArrayDesignReportService {
             }
         }
     }
-    
+
     /**
      * Fill in event information
+     * 
      * @param adVos
      */
     @SuppressWarnings("unchecked")
-    public void fillEventInformation(Collection<ArrayDesignValueObject> adVos) {
+    public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
         Collection<Long> ids = new ArrayList<Long>();
-        for (  Object object : adVos  ) {
+        for ( Object object : adVos ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
-            ids.add(  adVo.getId() );
+            ids.add( adVo.getId() );
         }
 
-        Map<Long,AuditEvent> geneMappingEvents = arrayDesignService.getLastGeneMapping( ids );
-        Map<Long,AuditEvent> sequenceUpdateEvents = arrayDesignService.getLastSequenceUpdate( ids );
-        Map<Long,AuditEvent> sequenceAnalysisEvents = arrayDesignService.getLastSequenceAnalysis( ids );
-        
+        Map<Long, AuditEvent> geneMappingEvents = arrayDesignService.getLastGeneMapping( ids );
+        Map<Long, AuditEvent> sequenceUpdateEvents = arrayDesignService.getLastSequenceUpdate( ids );
+        Map<Long, AuditEvent> sequenceAnalysisEvents = arrayDesignService.getLastSequenceAnalysis( ids );
+
         // fill in events for the value objects
         for ( ArrayDesignValueObject adVo : adVos ) {
             // preemptively fill in event dates with None
-            
+
             Long id = adVo.getId();
-            if (geneMappingEvents.containsKey( id ) ) {
+            if ( geneMappingEvents.containsKey( id ) ) {
                 AuditEvent event = geneMappingEvents.get( id );
-                if (event != null) {
-                    adVo.setLastGeneMapping( event.getDate());
+                if ( event != null ) {
+                    adVo.setLastGeneMapping( event.getDate() );
                 }
             }
-            
-            if (sequenceUpdateEvents.containsKey( id ) ) {
+
+            if ( sequenceUpdateEvents.containsKey( id ) ) {
                 AuditEvent event = sequenceUpdateEvents.get( id );
-                if (event != null) {
+                if ( event != null ) {
                     adVo.setLastSequenceUpdate( event.getDate() );
                 }
             }
-            
-            if (sequenceAnalysisEvents.containsKey( id ) ) {
+
+            if ( sequenceAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = sequenceAnalysisEvents.get( id );
-                if (event != null) {
-                    adVo.setLastSequenceAnalysis(  event.getDate() );
+                if ( event != null ) {
+                    adVo.setLastSequenceAnalysis( event.getDate() );
                 }
             }
         }
@@ -437,7 +434,6 @@ public class ArrayDesignReportService {
         // clear out all files
         FileTools.deleteFiles( files );
     }
-
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;

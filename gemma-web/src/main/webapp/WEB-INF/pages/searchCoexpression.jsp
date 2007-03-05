@@ -322,14 +322,13 @@ Results for
 <br />
 <div class="datasetList" style="display:none">
 	
-	<display:table pagesize="100" name="expressionExperiments" sort="list" class="list" requestURI="" id="expressionExperimentList"
+	<display:table pagesize="100" name="expressionExperiments" sort="list" defaultsort="2" class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-			<display:column property="rawCoexpressionLinkCount" sortable="true"  titleKey="expressionExperiment.rawLinkcount" />
+			<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"   titleKey="expressionExperiment.rawLinkcount" />
 
-			<display:column property="coexpressionLinkCount" sortable="true"  titleKey="expressionExperiment.linkcount" />
+			<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending" titleKey="expressionExperiment.linkcount" />
 			
-
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 
 			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
