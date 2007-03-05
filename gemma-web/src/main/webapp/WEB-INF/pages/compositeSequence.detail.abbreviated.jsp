@@ -205,38 +205,37 @@
 					</tr>
 					<tr>
 						<td valign="top">
-						<a class="helpLink" href="?"
+								<a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'Gemma\'s representation of the sequence on the array. For Affymetrix note that we \'collapse\' the sequences for the multiple probes into a single sequence that is used for alignments.'); return false"><img
 									src="/Gemma/images/help.png" /> </a>
-							<b> Sequence </b>
+						<b> Sequence </b>
 						</td>
 						<td>
+						<%
+						                if ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
+						                String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
+						                String formattedSequence = "";
+						                int nextIndex = 0;
+						                for ( int i = 0; i < sequence.length() - 80; i += 80 ) {
+						                    formattedSequence += sequence.substring( i, i + 80 );
+						                    formattedSequence += "<br />";
+						                    nextIndex = i + 80;
+						                }
+						                if ( ( sequence.length() % 80 ) != 0 ) {
+						                    formattedSequence += sequence.substring( nextIndex, sequence.length() );
+						                    formattedSequence += "<br />";
+						                }
+						%>
+						<div class="clob" style="height:30px;">
 							<%
-							                    if ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
-							                    String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
-							                    String formattedSequence = "";
-							                    int nextIndex = 0;
-							                    int lineLength = 60;
-							                    for ( int i = 0; i < sequence.length() - lineLength; i += lineLength ) {
-							                        formattedSequence += sequence.substring( i, i + lineLength );
-							                        formattedSequence += "<br />";
-							                        nextIndex = i + lineLength;
-							                    }
-							                    if ( ( sequence.length() % lineLength ) != 0 ) {
-							                        formattedSequence += sequence.substring( nextIndex, sequence.length() );
-							                        formattedSequence += "<br />";
-							                    }
+							out.print( formattedSequence );
 							%>
-							<div class="clob" style="height:30px;">
-								<%
-								out.print( formattedSequence );
-								%>
-							</div>
-							<%
-							                    } else {
-							                    out.print( "No sequence available" );
-							                }
-							%>
+						</div>
+						<%
+						                } else {
+						                out.print( "No sequence available" );
+						            }
+						%>
 						</td>
 					</tr>
 				</table>
