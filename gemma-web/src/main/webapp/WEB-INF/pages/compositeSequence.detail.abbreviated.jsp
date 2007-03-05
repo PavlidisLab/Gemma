@@ -69,6 +69,9 @@
 					</tr>
 					<tr>
 						<td valign="top">
+							<a class="helpLink" href="?"
+								onclick="showHelpTip(event, 'The taxon that this sequence belongs to.'); return false"><img
+									src="/Gemma/images/help.png" /> </a>
 							<b> Taxon </b>
 						</td>
 						<td>
@@ -81,6 +84,51 @@
 							                    } else {
 							                    out.print( "No taxon information available" );
 							                }
+							%>
+						</td>
+					</tr>
+					<tr>
+						<td valign="top">
+							<a class="helpLink" href="?"
+								onclick="showHelpTip(event, 'The type of this sequence in our system'); return false"><img
+									src="/Gemma/images/help.png" /> </a>
+							<b> Sequence Type </b>
+						</td>
+						<td>
+							<%
+							if ( compositeSequence.getBiologicalCharacteristic().getType() != null ) {
+			                    String type = null;
+			                    if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "EST" ) ) {
+			                        type = "EST";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "mRNA" ) ) {
+			                        type = "mRNA";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "WHOLE_CHROMOSOME" ) ) {
+			                        type = "Whole Chromosome";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "DNA" ) ) {
+			                        type = "DNA";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_COLLAPSED" ) ) {
+			                        type = "Collapsed Affymetrix Probe";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "OLIGO" ) ) {
+			                        type = "Oligo";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_TARGET" ) ) {
+			                        type = "Affymetrix Target";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_PROBE" ) ) {
+			                        type = "Affymetrix Probe";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "REFSEQ" ) ) {
+			                        type = "RefSeq";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "BAC" ) ) {
+			                        type = "BAC";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "WHOLE_GENOME" ) ) {
+			                        type = "Whole Genome";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "OTHER" ) ) {
+			                        type = "Other";
+			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "ORF" ) ) {
+			                        type = "ORF";
+			                    } 
+								out.print( type );
+							} else {
+								out.print( "No sequence type information available" );
+							}
 							%>
 						</td>
 					</tr>
