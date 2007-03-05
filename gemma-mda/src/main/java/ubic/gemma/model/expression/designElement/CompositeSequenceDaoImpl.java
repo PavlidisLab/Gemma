@@ -170,13 +170,18 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @Override
-    protected Collection handleGetRawSummary( CompositeSequence compositeSequence ) throws Exception {
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) throws Exception {
         if ( compositeSequence == null || compositeSequence.getId() == null ) {
             throw new IllegalArgumentException();
         }
         long id = compositeSequence.getId();
 
-        final String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
+        String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
+        
+        if (numResults != null && numResults != 0) {
+            nativeQueryString = nativeQueryString + " LIMIT " + numResults;
+        }
+        
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
@@ -189,7 +194,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetRawSummary( Collection compositeSequences ) throws Exception {
+    protected Collection handleGetRawSummary( Collection compositeSequences, Integer numResults ) throws Exception {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
         StringBuilder buf = new StringBuilder();
 
@@ -203,7 +208,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             if ( it.hasNext() ) buf.append( "," );
         }
 
-        final String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
+        String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
+        
+        if (numResults != null && numResults != 0) {
+            nativeQueryString = nativeQueryString + " LIMIT " + numResults;
+        }
+        
         Collection retVal = nativeQuery( nativeQueryString );
         return retVal;
     }
@@ -214,13 +224,16 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleGetRawSummary( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
 
-        final String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ARRAY_DESIGN_FK = :id";
+        String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ARRAY_DESIGN_FK = :id ";
+        if (numResults != null && numResults != 0) {
+            nativeQueryString = nativeQueryString + " LIMIT " + numResults;
+        }
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }

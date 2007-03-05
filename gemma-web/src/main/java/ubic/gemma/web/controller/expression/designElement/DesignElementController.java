@@ -127,7 +127,7 @@ public class DesignElementController extends BaseMultiActionController {
             // return showAll( request, response );
         } else {
             this.saveMessage( request, searchResults.size() + " probes matched your search." );
-            Collection rawSummaries = compositeSequenceService.getRawSummary( searchResults );
+            Collection rawSummaries = compositeSequenceService.getRawSummary( searchResults, 100 );
             compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );         
         }
 

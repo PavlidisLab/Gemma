@@ -103,6 +103,8 @@ public class CompositeSequenceController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
+        
+
 
         Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
 

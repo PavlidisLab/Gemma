@@ -35,6 +35,7 @@ import ubic.gemma.expression.arrayDesign.ArrayDesignReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchService;
@@ -50,6 +51,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.bean id="arrayDesignController" name="arrayDesignController"
  * @springproperty name="validator" ref="arrayDesignValidator"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
+ * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "arrayDesignReportService" ref="arrayDesignReportService"
  * @spring.property name = "arrayDesignMapResultService" ref="arrayDesignMapResultService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
@@ -64,6 +66,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private ArrayDesignService arrayDesignService = null;
     private ArrayDesignReportService arrayDesignReportService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
+    private CompositeSequenceService compositeSequenceService = null;
     private final String messageName = "Array design with name";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
 
@@ -93,7 +96,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
 
         ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );
-        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign );
+        
+        Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, 100 );
+        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );  
+        
+        //Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign );
 
         if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
             // / FIXME, return error or do something else intelligent.
@@ -503,5 +510,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
         this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
     }
 }

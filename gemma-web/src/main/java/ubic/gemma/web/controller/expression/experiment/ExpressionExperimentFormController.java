@@ -171,8 +171,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         }
 
         if ( ee.getId() != null ) {
-            // FIXME this is throwing an exception, bug 794
-            // / saveMessage( request, "object.editing", new Object[] { "Data set", ee.getId() }, "Editing" );
+            this.saveMessage( request, "Editing dataset" );
         }
 
         return obj;

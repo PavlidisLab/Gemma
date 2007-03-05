@@ -54,7 +54,8 @@
 			</tr>
 		</table>
 	</aa:zone>
-	
+	(this page only displays a maximum of 100 probes at a time).
+	<br />
 	<hr />
 	<a class="helpLink" href="?"
 	onclick="showWideHelpTip(event, 'Display of probe information for an entire microarray design or your search results. Columns are: <ul><li>Probe name: the manufacturer probe identifier. Click to view details.</li><li>Sequence name</li><li>#Hits: Number of distinct high-quality genome alignments for this sequence.</li><li>Genes that this probe is predicted to assay (count given by number in parentheses)</li></ul>'); return false"><img

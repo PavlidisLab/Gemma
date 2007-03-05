@@ -50,8 +50,8 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleGetRawSummary( ArrayDesign arrayDesign ) throws Exception {
-        return this.getCompositeSequenceDao().getRawSummary( arrayDesign );
+    protected Collection handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
+        return this.getCompositeSequenceDao().getRawSummary( arrayDesign,  numResults );
     }
 
     /**
@@ -204,13 +204,13 @@ public class CompositeSequenceServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetRawSummary( CompositeSequence compositeSequence ) throws Exception {
-        return this.getCompositeSequenceDao().getRawSummary( compositeSequence );
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) throws Exception {
+        return this.getCompositeSequenceDao().getRawSummary( compositeSequence, numResults );
     }
 
     @Override
-    protected Collection handleGetRawSummary( Collection compositeSequences ) throws Exception {
-        return this.getCompositeSequenceDao().getRawSummary( compositeSequences );
+    protected Collection handleGetRawSummary( Collection compositeSequences,  Integer numResults) throws Exception {
+        return this.getCompositeSequenceDao().getRawSummary( compositeSequences, numResults );
     }
 
     /*

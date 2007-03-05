@@ -94,7 +94,7 @@ public class ArrayDesignMapResultService {
      * @return
      */
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
-        Collection sequenceData = compositeSequenceService.getRawSummary( arrayDesign );
+        Collection sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
         return getSummaryMapValueObjects( sequenceData );
     }
 

@@ -92,7 +92,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
 
             for ( ArrayDesign design : ads ) {
                 log.info( i + " " + design );
-                Collection<Object[]> vals = compositeSequenceService.getRawSummary( design );
+                Collection<Object[]> vals = compositeSequenceService.getRawSummary( design, null );
                 log.info( "Got " + vals.size() + " reports" );
                 for ( Object[] objects : vals ) {
 
@@ -223,7 +223,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
 
             for ( ArrayDesign design : ads ) {
 
-                Collection<Object[]> vals = compositeSequenceService.getRawSummary( design );
+                Collection<Object[]> vals = compositeSequenceService.getRawSummary( design, null );
                 log.info( numEEs + " " + design + "Got " + vals.size() + " reports" );
 
                 for ( Object[] objects : vals ) {
