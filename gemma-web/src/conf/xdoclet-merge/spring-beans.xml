@@ -33,7 +33,6 @@
 			<prop key="/uploadFile.html">fileUploadController</prop>
 			<prop key="/selectFile.html">fileUploadController</prop>
 			<prop key="/users.html">userListController</prop>
-			<prop key="/activeUsers.html">userListController</prop>
 			<prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
 			<prop key="/bibRef/*">bibliographicReferenceController</prop>
 			<prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
@@ -109,7 +108,7 @@
 -->
 <!-- ==================================================== -->
 <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/flushCache.html /processProgress.html" />
+	name="/flushCache.html /processProgress.html /activeUsers.html" />
 <!-- ==================================================== -->
 <!-- Exception handler. -->
 <!-- ==================================================== -->
