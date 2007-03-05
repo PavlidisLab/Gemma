@@ -164,7 +164,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     }
 
     /**
-     * Used 4 related platforms.
+     * Used 4 related platforms. This is the Sorlie breast cancer data set (2001), and in their paper there are 85
+     * samples. However, because our system attempts to "match up" samples, we don't get the right answer.
      * 
      * @throws Exception
      */
@@ -199,9 +200,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee.getDesignElementDataVectors(), qt );
 
-        // there are actually 200 if you do it by design element, but NNN if you do it by biosequence.
-
-        assertEquals( 145, matrix.rows() );
+        // because many of the biosequences appear on multiple arrays, there are fewer rows than the 'original' 200.
+        assertEquals( 102, matrix.rows() );
         // assertEquals( 34, matrix.columns() ); this depends quite a bit on how we match up the biomaterials and
         // bioassays. Currently I get 57.
 
@@ -216,7 +216,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE483() throws Exception {
-        // endTransaction();
+        endTransaction();
         try {
             String path = ConfigUtils.getString( "gemma.home" );
             assert path != null;
@@ -236,19 +236,20 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
         QuantitationType qt = null;
         for ( QuantitationType qts : quantitationTypes ) {
-            if ( qts.getName().equals( "VALUE" ) ) {
+            if ( qts.getIsPreferred() ) {
                 qt = qts;
                 break;
             }
         }
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( ee, qt );
+        assert qt != null;
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee.getDesignElementDataVectors(), qt );
         assertEquals( 161, matrix.rows() );
         assertEquals( 8, matrix.columns() );
     }
 
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE432() throws Exception {
-        // endTransaction();
+        endTransaction();
         try {
             String path = ConfigUtils.getString( "gemma.home" );
             assert path != null;

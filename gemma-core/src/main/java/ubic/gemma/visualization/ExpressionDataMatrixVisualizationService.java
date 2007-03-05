@@ -44,6 +44,7 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.DoubleArrayList;
@@ -99,7 +100,7 @@ public class ExpressionDataMatrixVisualizationService {
             numProfiles = NUM_PROFILES_TO_DISPLAY;
         }
 
-        XYSeriesCollection xySeriesCollection = new XYSeriesCollection(); 
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         Iterator iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
             double[] data = ( double[] ) iter.next();
@@ -124,20 +125,16 @@ public class ExpressionDataMatrixVisualizationService {
     @SuppressWarnings("unchecked")
     private ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
 
-        Collection<DesignElement> rowElements = expressionDataMatrix.getRowElements();
-
         Collection<BioAssay> colElements = new LinkedHashSet<BioAssay>();
 
-        if ( expressionDataMatrix == null || rowElements.size() == 0 ) {
+        if ( expressionDataMatrix == null || expressionDataMatrix.rows() == 0 ) {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
         }
 
-        double[][] data = new double[rowElements.size()][];
-        int i = 0;
-        for ( DesignElement designElement : rowElements ) {
-            Double[] row = ( Double[] ) expressionDataMatrix.getRow( designElement );
+        double[][] data = new double[expressionDataMatrix.rows()][];
+        for ( int i = 0; i < expressionDataMatrix.rows(); i++ ) {
+            Double[] row = ( Double[] ) expressionDataMatrix.getRow( i );
             data[i] = ArrayUtils.toPrimitive( row );
-            i++;
         }
 
         for ( int j = 0; j < data[0].length; j++ ) {
@@ -145,7 +142,7 @@ public class ExpressionDataMatrixVisualizationService {
             colElements.add( bas.iterator().next() );// this is temporary.
         }
 
-        return createColorMatrix( data, rowElements, colElements );
+        return createColorMatrix( data, expressionDataMatrix.getRowElements(), colElements );
     }
 
     /**
@@ -154,7 +151,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @param colElements
      * @return ColorMatrix
      */
-    private ColorMatrix createColorMatrix( double[][] data, Collection<DesignElement> rowElements,
+    private ColorMatrix createColorMatrix( double[][] data, List<ExpressionDataMatrixRowElement> rowElements,
             Collection<BioAssay> colElements ) {
 
         assert rowElements != null && colElements != null : "Labels cannot be set";
@@ -163,8 +160,8 @@ public class ExpressionDataMatrixVisualizationService {
 
         List<String> colLabels = new ArrayList<String>();
 
-        for ( DesignElement de : rowElements ) {
-            rowLabels.add( de.getName() );
+        for ( ExpressionDataMatrixRowElement de : rowElements ) {
+            rowLabels.add( de.toString() );
         }
 
         for ( BioAssay ba : colElements ) {

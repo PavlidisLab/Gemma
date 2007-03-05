@@ -28,6 +28,7 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -67,6 +68,7 @@ public class MatrixConversionTest extends TestCase {
             // System.err.print( de.getName() );
             for ( int i = 0; i < res.length; i++ ) {
                 Double r = res[i];
+                assertNotNull( "No value for " + de + " at index " + i, r );
                 assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
                 // System.err.print( "\t" + r );
             }
@@ -84,7 +86,13 @@ public class MatrixConversionTest extends TestCase {
     public Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<QuantitationType> quantTypes ) {
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
 
-        List<CompositeSequence> sequences = getCompositeSequences();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "junk" );
+        List<CompositeSequence> sequences = getCompositeSequences( ad );
+
+        ArrayDesign adb = ArrayDesign.Factory.newInstance();
+        adb.setName( "bjunk" );
+        List<CompositeSequence> sequencesb = getCompositeSequences( ad );
 
         List<BioMaterial> bioMaterials = getBioMaterials(); // resused
 
@@ -99,6 +107,7 @@ public class MatrixConversionTest extends TestCase {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
                 ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
                 ba.getSamplesUsed().add( bmita.next() );
+                ba.setArrayDesignUsed( ad );
                 ba.setId( i );
                 baDimA.getBioAssays().add( ba );
             }
@@ -110,6 +119,7 @@ public class MatrixConversionTest extends TestCase {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
                 ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
                 ba.getSamplesUsed().add( bmitb.next() );
+                ba.setArrayDesignUsed( adb );
                 ba.setId( i );
                 baDimB.getBioAssays().add( ba );
             }
@@ -127,7 +137,7 @@ public class MatrixConversionTest extends TestCase {
                 byte[] bdata = bconverter.doubleArrayToBytes( data );
                 vector.setData( bdata );
 
-                CompositeSequence cs = sequences.get( ( int ) j );
+                CompositeSequence cs = sequencesb.get( ( int ) j );
                 vector.setDesignElement( cs );
                 vector.setQuantitationType( quantType );
                 vector.setBioAssayDimension( baDimA );
@@ -171,7 +181,7 @@ public class MatrixConversionTest extends TestCase {
         return bioMaterials;
     }
 
-    private List<CompositeSequence> getCompositeSequences() {
+    private List<CompositeSequence> getCompositeSequences( ArrayDesign ad ) {
         List<CompositeSequence> sequences = new ArrayList<CompositeSequence>();
         for ( long i = 0; i < NUM_CS; i++ ) {
 
@@ -181,6 +191,7 @@ public class MatrixConversionTest extends TestCase {
 
             compositeSequence.setName( RandomStringUtils.randomNumeric( 5 ) + "_testcs" );
             compositeSequence.setId( i );
+            compositeSequence.setArrayDesign( ad );
             sequences.add( compositeSequence );
         }
         return sequences;

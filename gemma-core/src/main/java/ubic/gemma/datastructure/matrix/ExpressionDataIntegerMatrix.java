@@ -10,6 +10,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * TODO - DOCUMENT ME
@@ -17,7 +18,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
+public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix { 
 
     private IntegerMatrix2DNamed matrix;
 
@@ -155,6 +156,16 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
 
     public Object get( int row, int column ) {
         return matrix.get( row, column );
+    }
+
+    public Object[] getRow( Integer index ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void set( BioSequence bioSequence, BioMaterial bioMaterial, Object value ) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

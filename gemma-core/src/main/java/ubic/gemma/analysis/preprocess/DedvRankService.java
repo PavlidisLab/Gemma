@@ -23,6 +23,7 @@ import java.util.Collection;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -105,8 +106,8 @@ public class DedvRankService {
     private IntArrayList getRanks( ExpressionDataDoubleMatrix intensities, Method method ) {
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
-        for ( DesignElement de : intensities.getRowElements() ) {
-            Double[] rowObj = intensities.getRow( de );
+        for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
+            Double[] rowObj = intensities.getRow( de.getIndex() );
             double valueForRank = Double.NaN;
             if ( rowObj != null ) {
                 DoubleArrayList row = new DoubleArrayList( rowObj.length );

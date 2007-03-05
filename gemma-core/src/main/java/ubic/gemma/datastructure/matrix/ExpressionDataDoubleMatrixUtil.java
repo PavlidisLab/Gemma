@@ -39,12 +39,13 @@ public class ExpressionDataDoubleMatrixUtil {
     public static void subtractMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
         checkConformant( a, b );
         int columns = a.columns();
-        for ( DesignElement el : a.getRowElements() ) {
+        for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
+            DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
                 BioMaterial bm = a.getBioMaterialForColumn( i );
-                double valA = a.get( el, bm );
-                double valB = b.get( el, bm );
-                a.set( el, bm, valA - valB );
+                double valA = a.get( del, bm );
+                double valB = b.get( del, bm );
+                a.set( del, bm, valA - valB );
             }
         }
     }
@@ -58,14 +59,15 @@ public class ExpressionDataDoubleMatrixUtil {
     public static void logTransformMatrix( ExpressionDataDoubleMatrix matrix ) {
         int columns = matrix.columns();
         double log2 = Math.log( LOGARITHM_BASE );
-        for ( DesignElement el : matrix.getRowElements() ) {
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
                 BioMaterial bm = matrix.getBioMaterialForColumn( i );
-                double valA = matrix.get( el, bm );
+                double valA = matrix.get( del, bm );
                 if ( valA <= 0 ) {
-                    matrix.set( el, bm, Double.NaN );
+                    matrix.set( del, bm, Double.NaN );
                 } else {
-                    matrix.set( el, bm, Math.log( valA ) / log2 );
+                    matrix.set( del, bm, Math.log( valA ) / log2 );
                 }
             }
         }
@@ -82,12 +84,13 @@ public class ExpressionDataDoubleMatrixUtil {
     public static void addMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
         checkConformant( a, b );
         int columns = a.columns();
-        for ( DesignElement el : a.getRowElements() ) {
+        for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
+            DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
                 BioMaterial bm = a.getBioMaterialForColumn( i );
-                double valA = a.get( el, bm );
-                double valB = b.get( el, bm );
-                a.set( el, bm, valA + valB );
+                double valA = a.get( del, bm );
+                double valB = b.get( del, bm );
+                a.set( del, bm, valA + valB );
             }
         }
     }
@@ -108,11 +111,12 @@ public class ExpressionDataDoubleMatrixUtil {
     public static void scalarDivideMatrix( ExpressionDataDoubleMatrix matrix, double dividend ) {
         if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
         int columns = matrix.columns();
-        for ( DesignElement el : matrix.getRowElements() ) {
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
                 BioMaterial bm = matrix.getBioMaterialForColumn( i );
-                double valA = matrix.get( el, bm );
-                matrix.set( el, bm, valA / dividend );
+                double valA = matrix.get( del, bm );
+                matrix.set( del, bm, valA / dividend );
 
             }
         }
@@ -128,12 +132,13 @@ public class ExpressionDataDoubleMatrixUtil {
     public static void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
         checkConformant( matrix, mask );
         int columns = matrix.columns();
-        for ( DesignElement el : matrix.getRowElements() ) {
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
                 BioMaterial bm = matrix.getBioMaterialForColumn( i );
-                boolean present = mask.get( el, bm );
+                boolean present = mask.get( del, bm );
                 if ( !present ) {
-                    matrix.set( el, bm, Double.NaN );
+                    matrix.set( del, bm, Double.NaN );
                 }
 
             }

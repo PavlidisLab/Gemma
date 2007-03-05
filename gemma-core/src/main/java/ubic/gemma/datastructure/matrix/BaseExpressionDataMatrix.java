@@ -18,8 +18,8 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -29,9 +29,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import cern.jet.stat.Descriptive;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -64,7 +63,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Map<DesignElement, Integer> rowElementMap;
     protected Map<BioSequence, Collection<Integer>> rowBioSequenceMap;
     protected Map<Integer, Collection<DesignElement>> rowDesignElementMapByInteger;
-    protected Map<Integer, Collection<BioSequence>> rowBioSequencemapByInteger;
+    protected Map<Integer, BioSequence> rowBioSequencemapByInteger;
 
     protected void init() {
 
@@ -74,7 +73,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         rowElementMap = new LinkedHashMap<DesignElement, Integer>();
         rowBioSequenceMap = new LinkedHashMap<BioSequence, Collection<Integer>>();
         rowDesignElementMapByInteger = new LinkedHashMap<Integer, Collection<DesignElement>>();
-        rowBioSequencemapByInteger = new LinkedHashMap<Integer, Collection<BioSequence>>();
+        rowBioSequencemapByInteger = new LinkedHashMap<Integer, BioSequence>();
 
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
@@ -104,10 +103,42 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#columns(ubic.gemma.model.expression.designElement.DesignElement)
+     */
+    public int columns( DesignElement el ) {
+        int j = 0;
+        ArrayDesign ad = el.getArrayDesign();
+        for ( int i = 0; i < columns(); i++ ) {
+            Collection<BioAssay> bioAssay = this.columnBioAssayMapByInteger.get( i );
+            for ( BioAssay assay : bioAssay ) {
+                if ( assay.getArrayDesignUsed().equals( ad ) ) {
+                    j++;
+                    break;
+                }
+            }
+        }
+        return j;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
      */
-    public Collection<DesignElement> getRowElements() {
-        return this.rowElementMap.keySet(); // FIXME this is no longer valid.
+    public List<ExpressionDataMatrixRowElement> getRowElements() {
+        List<ExpressionDataMatrixRowElement> retval = new ArrayList<ExpressionDataMatrixRowElement>();
+        for ( int i = 0; i < rows(); i++ ) {
+            retval.add( new ExpressionDataMatrixRowElement( this, i ) );
+        }
+        return retval;
+    }
+
+    public BioSequence getBioSequenceForRow( int index ) {
+        return this.rowBioSequencemapByInteger.get( index );
+    }
+
+    public Collection<DesignElement> getDesignElementsForRow( int index ) {
+        return this.rowDesignElementMapByInteger.get( index );
     }
 
     public int getColumnIndex( BioMaterial bioMaterial ) {
@@ -158,7 +189,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
-                bioAssayDimensions.add( vector.getBioAssayDimension() );
+                this.bioAssayDimensions.add( vector.getBioAssayDimension() );
                 boolean addedRow = addToRowMaps( i, designElement );
                 if ( addedRow ) i++;
             }
@@ -183,7 +214,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
-                bioAssayDimensions.add( vector.getBioAssayDimension() );
+                this.bioAssayDimensions.add( vector.getBioAssayDimension() );
                 boolean addedRow = addToRowMaps( i, designElement );
                 if ( addedRow ) i++;
             }
@@ -232,7 +263,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 if ( vectorQuantitationType.equals( soughtType ) && cand.equals( soughtDim ) ) {
                     vectorsOfInterest.add( vector );
                     DesignElement designElement = vector.getDesignElement();
-                    bioAssayDimensions.add( vector.getBioAssayDimension() );
+                    this.bioAssayDimensions.add( vector.getBioAssayDimension() );
                     boolean addedRow = addToRowMaps( j, designElement );
                     if ( addedRow ) j++;
                 }
@@ -332,13 +363,12 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
         log.debug( "Adding " + designElement + " to row " + actualRow );
         if ( !rowBioSequencemapByInteger.containsKey( actualRow ) ) {
-            rowBioSequencemapByInteger.put( actualRow, new HashSet<BioSequence>() );
             rowDesignElementMapByInteger.put( actualRow, new HashSet<DesignElement>() );
         }
 
         rowDesignElementMapByInteger.get( actualRow ).add( designElement );
         rowBioSequenceMap.get( biologicalCharacteristic ).add( actualRow );
-        rowBioSequencemapByInteger.get( actualRow ).add( biologicalCharacteristic );
+        rowBioSequencemapByInteger.put( actualRow, biologicalCharacteristic );
         rowElementMap.put( designElement, actualRow );
 
         return isNew;

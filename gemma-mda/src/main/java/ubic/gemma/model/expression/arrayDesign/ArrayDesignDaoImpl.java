@@ -454,7 +454,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 int i = 0;
                 for ( java.util.Iterator entityIterator = toBeRemoved.iterator(); entityIterator.hasNext(); ) {
                     session.delete( entityIterator.next() );
-                    if ( ++i % 1000 == 0 ) {
+                    if ( ++i % 5000 == 0 ) {
                         log.info( "Delete Progress: " + i + "/" + toBeRemoved.size() + "..." );
                         try {
                             Thread.sleep( 100 );

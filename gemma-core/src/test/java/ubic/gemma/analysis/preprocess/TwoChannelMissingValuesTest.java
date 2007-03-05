@@ -48,7 +48,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        endTransaction();
+        // endTransaction();
     }
 
     /**

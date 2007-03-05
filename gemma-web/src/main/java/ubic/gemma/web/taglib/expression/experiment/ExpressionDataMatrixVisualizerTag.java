@@ -21,6 +21,7 @@ package ubic.gemma.web.taglib.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
@@ -32,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -56,7 +58,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     // private String expressionDataMatrixVisualizationName = null;
 
     private ExpressionDataMatrix expressionDataMatrix = null;
-        
+
     /**
      * @jsp.attribute description="The object to visualize." required="true" rtexprvalue="true"
      * @param expressionDataMatrix
@@ -81,7 +83,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
-            Collection<DesignElement> compositeSequences = expressionDataMatrix.getRowElements();
+            // Collection<DesignElement> compositeSequences = expressionDataMatrix.getRowElements();
 
             StringBuilder buf = new StringBuilder();
 
@@ -96,40 +98,45 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "No data to display" );
             } else {
                 buf.append( "<table border=\"0\">" );
-                //buf.append( "<tr>" );
-                //buf.append( "<td>&nbsp;</td>" );
-                //buf.append( "<td align=\"left\">Probe Set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gene<br/><br/></td>" );
-                //buf.append( "</tr>" );
+                // buf.append( "<tr>" );
+                // buf.append( "<td>&nbsp;</td>" );
+                // buf.append( "<td align=\"left\" valign=\"bottom\" >Probe
+                // Set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gene<br/><br/></td>" );
+                // buf.append( "</tr>" );
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\" align='right'>" );
 
-                Double emHeight = EMSIZE * compositeSequences.size() + 8.5;
-                buf.append( "<img style='height : " + emHeight.toString() + "em;' src=\"visualizeDataMatrix.html?type=" + type + "&id=" + id + "\"border=1/>" );
+                Double emHeight = EMSIZE * expressionDataMatrix.rows() + 8.5;
+                buf.append( "<img style='height : " + emHeight.toString() + "em;' src=\"visualizeDataMatrix.html?type="
+                        + type + "&id=" + id + "\"border=1/>" );
 
                 buf.append( "</td>" );
 
-                buf.append("<td colspan='2' valign='bottom'>");
-                
-                buf.append( "<table border='0' cellpadding='0' cellspacing='0'><tbody><tr><th nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th><th nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th></tr></tbody></table>");
+                buf.append( "<td colspan='2' valign='bottom'>" );
+
+                buf
+                        .append( "<table border='0' cellpadding='0' cellspacing='0'><tbody><tr><th nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th><th nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th></tr></tbody></table>" );
                 buf.append( "</td>" );
-                buf.append("</tr>");
-                buf.append("<tr>");
-                
+                buf.append( "</tr>" );
+                buf.append( "<tr>" );
+
                 // plug in design elements into a guaranteed order list (we will need to guarantee order to
                 // build the table properly
-                ArrayList<DesignElement> designElements = new ArrayList<DesignElement>(compositeSequences);
+                List<ExpressionDataMatrixRowElement> designElements = expressionDataMatrix.getRowElements();
+
                 // print out the composite sequence name
                 buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
-                for (int i = 0; i < designElements.size(); i++) {
-                    buf.append( designElements.get( i ).getName() + "<br />\n");
+                for ( int i = 0; i < designElements.size(); i++ ) {
+                    buf.append( designElements.get( i ) + "<br />\n" );
                 }
                 buf.append( "</td>" );
                 // print out the gene associated with the cs
                 buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
                 for ( int i = 0; i < designElements.size(); i++ ) {
                     Collection associatedGenes = compositeSequenceGeneMapperService
-                            .getGenesForCompositeSequence( ( CompositeSequence ) designElements.get( i ) );
+                            .getGenesForCompositeSequence( ( CompositeSequence ) ( designElements.get( i )
+                                    .getDesignElements().iterator().next() ) );
                     if ( associatedGenes != null ) {
                         Iterator iter = associatedGenes.iterator();
                         // TODO only adding the first gene ... add others as well?
@@ -137,45 +144,17 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                             Gene gene = ( Gene ) iter.next();
                             String name = gene.getName();
                             if ( !StringUtils.isEmpty( name ) ) {
-                                buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
-                                                + name + "\">" + name + "</a>" );
-                            }
-                        }
-                    }          
-                    buf.append( "<br />" );
-                    //buf.append( designElements.get( i ).getName() + "<br />\n");
-                }
-                buf.append( "</td>" );    
-                
-                /*for ( DesignElement cs : compositeSequences ) {
-                    assert cs instanceof CompositeSequence;
-
-                    buf.append( cs.getName() );
-
-
-                    Collection associatedGenes = compositeSequenceGeneMapperService
-                            .getGenesForCompositeSequence( ( CompositeSequence ) cs );
-                    if ( associatedGenes != null ) {
-                        Iterator iter = associatedGenes.iterator();
-                        // TODO only adding the first gene ... add others as well?
-                        if ( iter.hasNext() ) {
-                            Gene gene = ( Gene ) iter.next();
-                            String name = gene.getName();
-                            if ( !StringUtils.isEmpty( name ) ) {
-                                buf.append( "&nbsp;&nbsp;&nbsp;" );
                                 buf
                                         .append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
                                                 + name + "\">" + name + "</a>" );
                             }
                         }
                     }
-
                     buf.append( "<br />" );
+                    // buf.append( designElements.get( i ).getName() + "<br />\n");
                 }
-                buf.append( "</td>" );*/
+                buf.append( "</td>" );
 
-                
-                
                 buf.append( "</tr>" );
                 buf.append( "</table>" );
             }

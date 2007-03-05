@@ -30,6 +30,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -62,14 +63,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 + "allows java constructs to inspect this class as a java bean." );
     }
 
-    /**
-     * @param dataVectors
-     * @param quantitationType
-     */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
-            QuantitationType quantitationType ) {
+            BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
         init();
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( quantitationType, dataVectors );
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimension,
+                quantitationType );
         vectorsToMatrix( selectedVectors );
     }
 
@@ -86,11 +84,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( selectedVectors );
     }
 
+    /**
+     * @param dataVectors
+     * @param quantitationType
+     */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
-            BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
+            QuantitationType quantitationType ) {
         init();
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimension,
-                quantitationType );
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( quantitationType, dataVectors );
         vectorsToMatrix( selectedVectors );
     }
 
@@ -107,6 +108,13 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( selectedVectors );
     }
 
+    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
+            Collection<QuantitationType> quantitationTypes ) {
+        init();
+        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationTypes );
+        vectorsToMatrix( vectorsOfInterest );
+    }
+
     /**
      * @param expressionExperiment
      * @param bioAssayDimensions A list of bioAssayDimensions to use.
@@ -118,13 +126,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
                 bioAssayDimensions );
         vectorsToMatrix( selectedVectors );
-    }
-
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
-            Collection<QuantitationType> quantitationTypes ) {
-        init();
-        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationTypes );
-        vectorsToMatrix( vectorsOfInterest );
     }
 
     /**
@@ -142,6 +143,271 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
     public int columns() {
         return matrix.columns();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     *      ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public Double get( DesignElement designElement, BioAssay bioAssay ) {
+        int i = matrix.getRowIndexByName( ( ( CompositeSequence ) designElement ).getBiologicalCharacteristic() );
+        int colNum = this.columnAssayMap.get( bioAssay );
+        int j = matrix.getColIndexByName( colNum );
+        log.debug( designElement + " = " + i + " " + bioAssay + " = " + j + " (colnum=" + colNum );
+        return this.matrix.get( i, j );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public Double get( DesignElement designElement, BioMaterial bioMaterial ) {
+        if ( bioMaterial == null ) {
+            throw new IllegalArgumentException( "Biomaterial cannot be null" );
+        }
+        Integer columnIndex = this.columnBioMaterialMap.get( bioMaterial );
+        if ( columnIndex == null ) {
+            throw new IllegalArgumentException( "No such biomaterial " + bioMaterial );
+        }
+
+        Integer rowIndex = this.getRowIndex( designElement );
+        if ( rowIndex == null ) {
+            throw new IllegalArgumentException( "No such designElement " + designElement );
+        }
+
+        return ( Double ) this.matrix
+                .get( matrix.getRowIndexByName( rowIndex ), matrix.getColIndexByName( columnIndex ) );
+    }
+
+    public Double get( int row, int column ) {
+        return matrix.get( row, column );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
+     */
+    public Double[][] get( List designElements, List bioAssays ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public Double[] getColumn( BioAssay bioAssay ) {
+        int index = this.columnAssayMap.get( bioAssay );
+
+        double[] rawResult = this.matrix.getColumn( index );
+        assert rawResult != null;
+        Double[] result = new Double[rawResult.length];
+        for ( int i = 0; i < rawResult.length; i++ ) {
+            result[i] = rawResult[i];
+        }
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
+     */
+    public Double[][] getColumns( List bioAssays ) {
+        // if ( bioAssays == null ) {
+        // return null;
+        // }
+        //
+        // List<BioAssay> assays = bioAssays;
+        //
+        // // Double[][] result = new Double[][assays.size()];
+        // for ( BioAssay assay : assays ) {
+        // Double[] columnResult = getColumn( assay );
+        // }
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
+     */
+    public Double[][] getMatrix() {
+
+        Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            Double[] row = ( Double[] ) matrix.getRowObj( i );
+            dMatrix[i] = row;
+        }
+
+        return dMatrix;
+    }
+
+    /**
+     * @return DoubleMatrixNamed
+     * @deprecated Supplied for backwards compatibility. Access to the data should be through the ExpressionDataMatrix
+     *             interface
+     */
+    public DoubleMatrixNamed getNamedMatrix() {
+        return this.matrix;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
+     */
+    public Double[] getRow( DesignElement designElement ) {
+
+        Integer row = this.rowElementMap.get( designElement );
+
+        if ( !this.matrix.containsRowName( row ) ) {
+            if ( log.isDebugEnabled() ) log.debug( "No row " + row );
+            return null;
+        }
+
+        double[] rawResult = this.matrix.getRowByName( row );
+        assert rawResult != null;
+        Double[] result = new Double[rawResult.length];
+        ArrayDesign ad = designElement.getArrayDesign();
+        for ( int i = 0; i < rawResult.length; i++ ) {
+            Collection<BioAssay> bioAssay = this.columnBioAssayMapByInteger.get( i );
+            for ( BioAssay assay : bioAssay ) {
+                if ( assay.getArrayDesignUsed().equals( ad ) ) {
+                    result[i] = rawResult[i];
+                    break;
+                }
+            }
+
+        }
+        return result;
+    }
+
+    public Double[] getRow( Integer index ) {
+        Double[] result = new Double[columns()];
+        double[] rawRow = matrix.getRow( index );
+        for ( int i = 0; i < result.length; i++ ) {
+            result[i] = rawRow[i];
+        }
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
+     */
+    @SuppressWarnings("unchecked")
+    public Double[][] getRows( List designElements ) {
+        if ( designElements == null ) {
+            return null;
+        }
+
+        List<DesignElement> elements = designElements;
+        Double[][] result = new Double[elements.size()][];
+        int i = 0;
+        for ( DesignElement element : elements ) {
+            Double[] rowResult = getRow( element );
+            result[i] = rowResult;
+            i++;
+        }
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#rows()
+     */
+    public int rows() {
+        return matrix.rows();
+    }
+
+    public void set( BioSequence bioSequence, BioMaterial bioMaterial, Object value ) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
+        assert value instanceof Double;
+        int row = this.getRowIndex( designElement );
+        int column = this.getColumnIndex( bioMaterial );
+        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+    }
+
+    public void set( int row, int column, Object value ) {
+        assert value instanceof Double;
+        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+    }
+
+    /**
+     * Sets the row of matrix to the input data.
+     * 
+     * @param rowIndex The row index of the data in the matrix to be replaced.
+     * @param data The input data.
+     */
+    public void setRow( int rowIndex, Double[] data ) {
+        if ( rowIndex > this.matrix.rows() ) {
+            throw new RuntimeException( "Specified row index " + rowIndex + " is larger than the matrix of size "
+                    + this.matrix.rows() + "." );
+        }
+
+        for ( int j = 0; j < data.length; j++ ) {
+            this.matrix.set( rowIndex, j, data[j] );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        int columns = this.columns();
+        int rows = this.rows();
+
+        StringBuffer buf = new StringBuffer();
+        buf.append( rows + " x " + columns + " matrix of double values, showing up to " + MAX_ROWS_TO_STRING
+                + " rows\n" );
+        int stop = 0;
+        buf.append( "Row\\Col" );
+        for ( int i = 0; i < columns; i++ ) {
+            buf.append( "\t" + this.getBioMaterialForColumn( i ) + ":" );
+            for ( BioAssay ba : this.getBioAssaysForColumn( i ) ) {
+                buf.append( ba + "," );
+            }
+        }
+        buf.append( "\n" );
+
+        for ( int j = 0; j < rows; j++ ) {
+
+            // print out the row label, which shows the composite sequences.
+            buf.append( this.getBioSequenceForRow( j ) + ":" );
+            for ( DesignElement de : this.rowDesignElementMapByInteger.get( j ) ) {
+                buf.append( de );
+                buf.append( "|" );
+            }
+
+            DesignElement de = this.rowDesignElementMapByInteger.get( j ).iterator().next();
+            for ( int i = 0; i < columns; i++ ) {
+                buf.append( "\t" + this.get( de, this.getBioMaterialForColumn( i ) ) );
+            }
+
+            buf.append( "\n" );
+            if ( stop > MAX_ROWS_TO_STRING ) {
+                buf.append( "...\n" );
+                break;
+            }
+            stop++;
+        }
+        return buf.toString();
     }
 
     /**
@@ -238,223 +504,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         return matrix;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     *      ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public Double get( DesignElement designElement, BioAssay bioAssay ) {
-        int i = matrix.getRowIndexByName( ( ( CompositeSequence ) designElement ).getBiologicalCharacteristic() );
-        int colNum = this.columnAssayMap.get( bioAssay );
-        int j = matrix.getColIndexByName( colNum );
-        log.debug( designElement + " = " + i + " " + bioAssay + " = " + j + " (colnum=" + colNum );
-        return this.matrix.get( i, j );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
-     */
-    public Double[][] get( List designElements, List bioAssays ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public Double[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-
-        double[] rawResult = this.matrix.getColumn( index );
-        assert rawResult != null;
-        Double[] result = new Double[rawResult.length];
-        for ( int i = 0; i < rawResult.length; i++ ) {
-            result[i] = rawResult[i];
-        }
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public Double get( DesignElement designElement, BioMaterial bioMaterial ) {
-        if ( bioMaterial == null ) {
-            throw new IllegalArgumentException( "Biomaterial cannot be null" );
-        }
-        Integer columnIndex = this.columnBioMaterialMap.get( bioMaterial );
-        if ( columnIndex == null ) {
-            throw new IllegalArgumentException( "No such biomaterial " + bioMaterial );
-        }
-
-        Integer rowIndex = this.getRowIndex( designElement );
-        if ( rowIndex == null ) {
-            throw new IllegalArgumentException( "No such designElement " + designElement );
-        }
-
-        return ( Double ) this.matrix
-                .get( matrix.getRowIndexByName( rowIndex ), matrix.getColIndexByName( columnIndex ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
-     */
-    public Double[][] getColumns( List bioAssays ) {
-        // if ( bioAssays == null ) {
-        // return null;
-        // }
-        //
-        // List<BioAssay> assays = bioAssays;
-        //
-        // // Double[][] result = new Double[][assays.size()];
-        // for ( BioAssay assay : assays ) {
-        // Double[] columnResult = getColumn( assay );
-        // }
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
-     */
-    public Double[][] getMatrix() {
-
-        Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            Double[] row = ( Double[] ) matrix.getRowObj( i );
-            dMatrix[i] = row;
-        }
-
-        return dMatrix;
-    }
-
-    /**
-     * @return DoubleMatrixNamed
-     * @deprecated Supplied for backwards compatibility. Access to the data should be through the ExpressionDataMatrix
-     *             interface
-     */
-    public DoubleMatrixNamed getNamedMatrix() {
-        return this.matrix;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
-     */
-    public Double[] getRow( DesignElement designElement ) {
-
-        Integer row = this.rowElementMap.get( designElement );
-
-        if ( !this.matrix.containsRowName( row ) ) {
-            if ( log.isDebugEnabled() ) log.debug( "No row " + row );
-            return null;
-        }
-
-        double[] rawResult = this.matrix.getRowByName( row );
-        assert rawResult != null;
-        Double[] result = new Double[rawResult.length];
-        for ( int i = 0; i < rawResult.length; i++ ) {
-            result[i] = rawResult[i];
-        }
-        return result;
-    }
-
-    /**
-     * Sets the row of matrix to the input data.
-     * 
-     * @param rowIndex The row index of the data in the matrix to be replaced.
-     * @param data The input data.
-     */
-    public void setRow( int rowIndex, Double[] data ) {
-        if ( rowIndex > this.matrix.rows() ) {
-            throw new RuntimeException( "Specified row index " + rowIndex + " is larger than the matrix of size "
-                    + this.matrix.rows() + "." );
-        }
-
-        for ( int j = 0; j < data.length; j++ ) {
-            this.matrix.set( rowIndex, j, data[j] );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
-     */
-    @SuppressWarnings("unchecked")
-    public Double[][] getRows( List designElements ) {
-        if ( designElements == null ) {
-            return null;
-        }
-
-        List<DesignElement> elements = designElements;
-        Double[][] result = new Double[elements.size()][];
-        int i = 0;
-        for ( DesignElement element : elements ) {
-            Double[] rowResult = getRow( element );
-            result[i] = rowResult;
-            i++;
-        }
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#rows()
-     */
-    public int rows() {
-        return matrix.rows();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        int columns = this.columns();
-        int rows = this.rows();
-
-        StringBuffer buf = new StringBuffer();
-        buf.append( rows + " x " + columns + " matrix of double values, showing up to " + MAX_ROWS_TO_STRING
-                + " rows\n" );
-        int stop = 0;
-        buf.append( "Row\\Col" );
-        for ( int i = 0; i < columns; i++ ) {
-            buf.append( "\t" + this.getBioMaterialForColumn( i ) + ":" );
-            for ( BioAssay ba : this.getBioAssaysForColumn( i ) ) {
-                buf.append( ba + "," );
-            }
-        }
-        buf.append( "\n" );
-        for ( DesignElement de : getRowElements() ) {
-            buf.append( de );
-            for ( int i = 0; i < columns; i++ ) {
-                buf.append( "\t" + this.get( de, this.getBioMaterialForColumn( i ) ) );
-            }
-            buf.append( "\n" );
-            if ( stop > MAX_ROWS_TO_STRING ) {
-                buf.append( "...\n" );
-                break;
-            }
-            stop++;
-        }
-        return buf.toString();
-    }
-
     /**
      * Convert {@link DesignElementDataVector}s into Double matrix.
      * 
@@ -470,22 +519,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
         this.matrix = createMatrix( vectors, maxSize );
 
-    }
-
-    public void set( int row, int column, Object value ) {
-        assert value instanceof Double;
-        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
-    }
-
-    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
-        assert value instanceof Double;
-        int row = this.getRowIndex( designElement );
-        int column = this.getColumnIndex( bioMaterial );
-        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
-    }
-
-    public Double get( int row, int column ) {
-        return matrix.get( row, column );
     }
 
 }

@@ -24,6 +24,7 @@ import java.util.List;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Represents a matrix of data from an expression experiment.
@@ -35,12 +36,21 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 public interface ExpressionDataMatrix<T> {
 
     /**
-     * Access a single row of the matrix.
+     * Return a row that 'came from' the given design element. NOTE that this might be only part of a row if the
+     * experiment includes data from multiple array designs!
      * 
      * @param designElement
-     * @return T[]
+     * @return
      */
     public T[] getRow( DesignElement designElement );
+
+    /**
+     * Access a single row of the matrix, by index.
+     * 
+     * @param index
+     * @return
+     */
+    public T[] getRow( Integer index );
 
     /**
      * Access a single column of the matrix.
@@ -87,11 +97,11 @@ public interface ExpressionDataMatrix<T> {
     /**
      * Set a value in the matrix
      * 
-     * @param designElement
+     * @param bioSequence
      * @param bioMaterial
      * @param value
      */
-    public void set( DesignElement designElement, BioMaterial bioMaterial, T value );
+    public void set( BioSequence bioSequence, BioMaterial bioMaterial, T value );
 
     /**
      * Access a submatrix
@@ -126,11 +136,9 @@ public interface ExpressionDataMatrix<T> {
     public T[][] getMatrix();
 
     /**
-     * Gets all the design elements in the matrix.
-     * 
-     * @return LinkedHashSet<DesignElement>
+     * @return list (in index order) of elements representing the row 'labels'.
      */
-    public Collection<DesignElement> getRowElements();
+    public List<ExpressionDataMatrixRowElement> getRowElements();
 
     /**
      * @param index
@@ -140,14 +148,37 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * @param index
+     * @return
+     */
+    public BioSequence getBioSequenceForRow( int index );
+
+    /**
+     * @param index
+     * @return
+     */
+    public Collection<DesignElement> getDesignElementsForRow( int index );
+
+    /**
+     * @param index
      * @return BioAssay
      */
     public Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
+     * Total number of columns.
+     * 
      * @return int
      */
     public int columns();
+
+    /**
+     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
+     * design.
+     * 
+     * @param el
+     * @return
+     */
+    public int columns( DesignElement el );
 
     /**
      * @return int
