@@ -24,6 +24,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
+import org.hibernate.LockMode;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -139,7 +142,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE611() throws Exception {
-        endTransaction();
+        //endTransaction();
         ExpressionExperiment newee;
         try {
             String path = ConfigUtils.getString( "gemma.home" );
@@ -171,7 +174,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE3193() throws Exception {
-        endTransaction();
+        // endTransaction();
         ExpressionExperiment newee;
         try {
             String path = ConfigUtils.getString( "gemma.home" );
@@ -198,7 +201,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
                 break;
             }
         }
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee.getDesignElementDataVectors(), qt );
 
         // there are actually 200 if you do it by design element, but NNN if you do it by biosequence.
 
@@ -217,7 +220,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE483() throws Exception {
-        endTransaction();
+        // endTransaction();
         try {
             String path = ConfigUtils.getString( "gemma.home" );
             assert path != null;
@@ -249,7 +252,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE432() throws Exception {
-        endTransaction();
+        // endTransaction();
         try {
             String path = ConfigUtils.getString( "gemma.home" );
             assert path != null;

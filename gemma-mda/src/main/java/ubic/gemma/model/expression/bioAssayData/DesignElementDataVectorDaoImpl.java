@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -256,12 +257,12 @@ public class DesignElementDataVectorDaoImpl extends
                 DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
                 dedv.setId( ( Long ) object );
 
-//                if ( !geneMap.containsKey( dedv ) ) {
-//                    geneMap.put( dedv, new HashSet<Gene>() );
-//                }
-//                for ( Gene g : cs2gene.get( dedv.getDesignElement() ) ) {
-//                    geneMap.get( dedv ).add( g );
-//                }
+                // if ( !geneMap.containsKey( dedv ) ) {
+                // geneMap.put( dedv, new HashSet<Gene>() );
+                // }
+                // for ( Gene g : cs2gene.get( dedv.getDesignElement() ) ) {
+                // geneMap.get( dedv ).add( g );
+                // }
                 if ( count++ % 200 == 0 ) log.info( count + " vectors processed in " + watch.getTime() + "ms" );
             }
         } catch ( org.hibernate.HibernateException ex ) {
@@ -311,17 +312,8 @@ public class DesignElementDataVectorDaoImpl extends
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( designElementDataVector, LockMode.READ );
-                designElementDataVector.getBioAssayDimension().getBioAssays().size();
-                session.update( ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
-                        .getBiologicalCharacteristic() );
-                ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getBiologicalCharacteristic()
-                        .getDescription();
-                for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-                    session.update( ba );
-                    ba.getSamplesUsed().size();
-                    ba.getDerivedDataFiles().size();
-                }
+                session.update( designElementDataVector );
+                thaw( session, designElementDataVector );
                 return null;
             }
         }, true );
@@ -336,20 +328,33 @@ public class DesignElementDataVectorDaoImpl extends
                 int count = 0;
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
-                    session.update( designElementDataVector );
-                    designElementDataVector.getBioAssayDimension().getBioAssays().size();
-                    for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-                        session.update( ba );
-                        ba.getSamplesUsed().size();
-                        ba.getDerivedDataFiles().size();
-                    }
-
+                    thaw( session, designElementDataVector );
                     if ( ++count % 2000 == 0 ) log.info( "Thawed " + count + " vectors" );
                 }
                 return null;
             }
+
         }, true );
 
+    }
+
+    /**
+     * @param session
+     * @param designElementDataVector
+     */
+    private void thaw( org.hibernate.Session session, DesignElementDataVector designElementDataVector ) {
+        session.update( designElementDataVector );
+        designElementDataVector.getBioAssayDimension().getBioAssays().size();
+        BioSequence biologicalCharacteristic = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
+                .getBiologicalCharacteristic();
+        if ( biologicalCharacteristic != null ) {
+            session.update( biologicalCharacteristic );
+        }
+        for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
+            session.update( ba );
+            ba.getSamplesUsed().size();
+            ba.getDerivedDataFiles().size();
+        }
     }
 
     @Override

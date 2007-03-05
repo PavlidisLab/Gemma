@@ -306,6 +306,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign == null ) return;
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
+
+        // FIXME could do this with a single query? It might be more efficient.
+        // /String queryString = "select cs,bs,geneProduct where ad = :arrayDesign";
+
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( arrayDesign );

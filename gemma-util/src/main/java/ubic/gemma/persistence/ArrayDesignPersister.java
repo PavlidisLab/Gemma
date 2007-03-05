@@ -117,12 +117,13 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             assert element.getId() != null;
             designElementCache.put( element.getName() + adName, element );
 
-            Collection<Reporter> reporters = ( ( CompositeSequence ) element ).getComponentReporters();
-            for ( DesignElement de : reporters ) {
-                assert de.getId() != null;
-                designElementCache.put( de.getName() + adName, de );
-
-            }
+            // We do not persist the reporters, so we don't want to even look here.
+            // Collection<Reporter> reporters = ( ( CompositeSequence ) element ).getComponentReporters();
+            // for ( DesignElement de : reporters ) {
+            // assert de.getId() != null;
+            // designElementCache.put( de.getName() + adName, de );
+            //
+            // }
 
         }
 
@@ -314,14 +315,15 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign.setCompositeSequences( c );
 
-        Map<String, Collection<Reporter>> csNameReporterMap = new HashMap<String, Collection<Reporter>>();
-        for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
-            if ( csNameReporterMap.containsKey( sequence.getName() ) ) {
-                throw new IllegalStateException( "Two composite sequences share a name " + sequence.getName() );
-            }
-            csNameReporterMap.put( sequence.getName(), sequence.getComponentReporters() );
-            sequence.setComponentReporters( null );
-        }
+        // Note: we don't persist the reporters, so this isn't needed.
+        // Map<String, Collection<Reporter>> csNameReporterMap = new HashMap<String, Collection<Reporter>>();
+        // for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
+        // if ( csNameReporterMap.containsKey( sequence.getName() ) ) {
+        // throw new IllegalStateException( "Two composite sequences share a name " + sequence.getName() );
+        // }
+        // csNameReporterMap.put( sequence.getName(), sequence.getComponentReporters() );
+        // sequence.setComponentReporters( null );
+        // }
 
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
@@ -329,15 +331,16 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesignService.update( arrayDesign );
 
-        // now have persistent CS
-        for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
-            sequence.setComponentReporters( csNameReporterMap.get( sequence.getName() ) );
-            for ( Reporter reporter : sequence.getComponentReporters() ) {
-                reporter.setCompositeSequence( sequence );
-            }
-        }
+        // Note: we don't persist the reporters, so this isn't needed.
+        // // now have persistent CS
+        // for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
+        // sequence.setComponentReporters( csNameReporterMap.get( sequence.getName() ) );
+        // for ( Reporter reporter : sequence.getComponentReporters() ) {
+        // reporter.setCompositeSequence( sequence );
+        // }
+        // }
 
-        arrayDesignService.update( arrayDesign );
+        // arrayDesignService.update( arrayDesign );
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
