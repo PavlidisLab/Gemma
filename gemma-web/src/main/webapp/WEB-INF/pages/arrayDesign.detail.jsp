@@ -236,7 +236,7 @@
 						<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Back">
 					</div>
 				</td>
-				<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
+			<authz:authorize ifAnyGranted="admin">
 					<td COLSPAN="2">
 						<div align="left">
 							<input type="button"
@@ -244,7 +244,7 @@
 								value="Edit">
 						</div>
 					</td>
-				</authz:acl>
+				</authz:authorize>
 			</tr>
 		</table>
 		

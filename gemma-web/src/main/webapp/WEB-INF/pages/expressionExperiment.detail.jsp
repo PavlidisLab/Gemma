@@ -337,7 +337,7 @@ if ( expressionExperiment.getName() != null ) {
 			</div>
 		</td>
 
-		<authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+		<authz:authorize ifAnyGranted="admin">
 			<td COLSPAN="2">
 				<div align="left">
 					<input type="button"
@@ -345,7 +345,7 @@ if ( expressionExperiment.getName() != null ) {
 						value="Edit">
 				</div>
 			</td>
-		</authz:acl>
+		</authz:authorize>
 
 		<authz:authorize ifAnyGranted="admin">
 			<td COLSPAN="2">
