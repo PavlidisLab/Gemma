@@ -60,7 +60,7 @@ public class GeneralSearchController extends BaseFormController {
     protected ArrayDesignService arrayDesignService;
     protected Gene2GOAssociationService gene2GOAssociationService;
     protected TaxonService taxonService;
-
+    
     @Override
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -69,7 +69,10 @@ public class GeneralSearchController extends BaseFormController {
         CoexpressionSearchCommand csc = ( CoexpressionSearchCommand ) command;
         String searchString = request.getParameter( "searchString" );
         String[] advanced = request.getParameterValues( "advancedSelect" );
-
+        Map test = request.getParameterMap();
+        ModelAndView mav = super.showForm( request, errors, getSuccessView() );
+        
+        
         // TODO create a search command object replacing all this parsing junk
         boolean dataset = false;
         boolean gene = false;
@@ -84,20 +87,43 @@ public class GeneralSearchController extends BaseFormController {
             array = true;
             goID = false;
             ontology = false;
-            goArray = false;
+            goArray = false;         
+            
+            mav.addObject( "searchDataset","DataSet" );
+            mav.addObject( "searchGene","Gene" );
+            mav.addObject( "searchArray","Array" );
+            
         } else {
             for ( String types : advanced ) {
-                if ( types.equalsIgnoreCase( "DataSet" ) ) dataset = true;
+                if ( types.equalsIgnoreCase( "DataSet" ) ){
+                    dataset = true;
+                    mav.addObject( "searchDataset","DataSet" );
+                }
 
-                if ( types.equalsIgnoreCase( "Gene" ) ) gene = true;
+                if ( types.equalsIgnoreCase( "Gene" ) ) {                    
+                    gene = true;
+                    mav.addObject( "searchGene","Gene" );
+                }
 
-                if ( types.equalsIgnoreCase( "Array" ) ) array = true;
+                if ( types.equalsIgnoreCase( "Array" ) ){
+                    array = true;
+                    mav.addObject( "searchArray","Array" );
+                }
 
-                if ( types.equalsIgnoreCase( "GoID" ) ) goID = true;
+                if ( types.equalsIgnoreCase( "GoID" ) ){
+                    goID = true;
+                    mav.addObject( "searchGoID","GoID" );
+                }
 
-                if ( types.equalsIgnoreCase( "ontology" ) ) ontology = true;
+                if ( types.equalsIgnoreCase( "ontology" ) ) {
+                    ontology = true;
+                    mav.addObject( "searchOntology","ontology" );
+                }
 
-                if ( types.equalsIgnoreCase( "ADbyGoID" ) ) goArray = true;
+                if ( types.equalsIgnoreCase( "ADbyGoID" ) ) {
+                    goArray = true;
+                    mav.addObject( "searchADbyGoID","ADbyGoID" );
+                }
             }
         }
         // first check - searchString should allow searches of 3 characters or more ONLY
@@ -109,11 +135,15 @@ public class GeneralSearchController extends BaseFormController {
             return super.showForm( request, errors, getSuccessView() );
         }
 
-        ModelAndView mav = super.showForm( request, errors, getSuccessView() );
         log.info( "Attempting general search" );
 
+        //Need this infor for the bookmarkable links
         mav.addObject( "SearchString", searchString );
-
+        if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )        
+            mav.addObject( "searchTaxon", csc.getTaxon().getScientificName() );
+       
+        
+        
         if ( gene ) {
             Collection<Gene> foundGenes = searchService.geneSearch( searchString );
             if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )
@@ -229,9 +259,13 @@ public class GeneralSearchController extends BaseFormController {
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
-        // if ( request.getParameter( "searchString" ) != null ) {
-        // return this.onSubmit( request, response, this.formBackingObject( request ), errors );
-        // }
+         if ( request.getParameter( "searchString" ) != null ) {
+             CoexpressionSearchCommand csc = (CoexpressionSearchCommand) this.formBackingObject( request );
+             String taxon = request.getParameter( "taxon" );
+             if (taxon != null)                 
+                 csc.setTaxon( taxonService.findByScientificName( taxon ));
+             return this.onSubmit( request, response, csc , errors );
+         }
 
         return super.showForm( request, response, errors );
     }

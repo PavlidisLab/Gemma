@@ -65,8 +65,7 @@
 <div class="advancedSearch" style="display:none">
 <h4>Select a search Mode:</h4>
 	<select id="advancedSelect" name="advancedSelect"  multiple size=5 disabled="true"> 
-		<option  value = "GoID">Find Genes by Gene Ontology Id </option>
-		<option  value ="ADbyGoID">Find Arrays by Gene Ontology Id </option>
+		<option  value = "GoID">Find Genes by Gene Ontology Id </option>s		
 		<option  value = "ontology">Search Ontology Database </option>		
 		<option selected value = "Gene"> Search Gene Database </option>
 		<option selected value = "DataSet">Search DataSet Database </option>
@@ -90,16 +89,15 @@
 </form>	
 		
 		<br/>
-	<c:if test="${numGenes != null}">
 
 	<h4>
 
-			<a href="/Gemma/searcher.html?searchString=<c:out value="${SearchString}"/> ">		
+			<a href="/Gemma/searcher.html?searchString=<c:out value="${SearchString}"/>&taxon=<c:out value="${searchTaxon}"/>&advancedSelect=<c:out value="${searchDataset}"/>&advancedSelect=<c:out value="${searchArray}"/>&advancedSelect=<c:out value="${searchGene}"/>&advancedSelect=<c:out value="${searchGene}"/>&advancedSelect=<c:out value="${searchGoID}"/>&advancedSelect=<c:out value="${searchOntology}"/> ">		
 				(Bookmarkable link)
 			</a>
 
 	</h4>
-
+	<c:if test="${numGenes != null}">
 		<h3>		
 			Your search for  <b> <c:out value="${SearchString}"/> </b> found  <b> <c:out value="${numGenes}" /> </b> Genes. 
 		</h3>	<br/> 
