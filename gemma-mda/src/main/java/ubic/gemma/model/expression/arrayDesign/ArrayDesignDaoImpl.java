@@ -308,7 +308,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         HibernateTemplate templ = this.getHibernateTemplate();
 
         // FIXME could do this with a single query? It might be more efficient.
-        // /String queryString = "select cs,bs,geneProduct where ad = :arrayDesign";
+        // String queryString = "select cs,bs,geneProduct,gene,bs2gp from ArrayDesignImpl ad, BioSequence2GeneProduct
+        // bs2gp inner join
+        // fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs where bs2gp.bioSequence=bs and
+        // ad = :arrayDesign";
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
