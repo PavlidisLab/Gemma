@@ -46,6 +46,9 @@ import ubic.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class ProteinLoaderCLI {
+
+    // TODO extend AbstractCLI
+
     protected static final Log log = LogFactory.getLog( ProteinLoaderCLI.class );
     protected static ManualAuthenticationProcessing manAuthentication = null;
     protected static BeanFactory ctx = null;
@@ -125,15 +128,15 @@ public class ProteinLoaderCLI {
             if ( cl.hasOption( 't' ) ) {
                 boolean isTest = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
                 if ( isTest )
-                    ctx = SpringContextUtil.getApplicationContext( true, false );
+                    ctx = SpringContextUtil.getApplicationContext( true, false, false );
                 else
-                    ctx = SpringContextUtil.getApplicationContext( false, false );
+                    ctx = SpringContextUtil.getApplicationContext( false, false, false );
 
                 cli = new ProteinLoaderCLI();
             }
             // if no ctx is set, default to test environment.
             else {
-                ctx = SpringContextUtil.getApplicationContext( true, false );
+                ctx = SpringContextUtil.getApplicationContext( true, false, false );
                 cli = new ProteinLoaderCLI();
             }
 
@@ -176,7 +179,7 @@ public class ProteinLoaderCLI {
     }
 
     public ProteinLoaderCLI() {
-        ctx = SpringContextUtil.getApplicationContext( false, false );
+        ctx = SpringContextUtil.getApplicationContext( false, false, false );
         geneDao = ( GeneDao ) ctx.getBean( "geneDao" );
         gpDao = ( GeneProductDao ) ctx.getBean( "geneProductDao" );
         // dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
