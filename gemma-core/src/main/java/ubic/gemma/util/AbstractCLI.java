@@ -191,10 +191,12 @@ public abstract class AbstractCLI {
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
                 "Set verbosity level (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
+        Option compassOffOpt = new Option( "compassOff", false, "Turn off compass indexing" );
 
         options.addOption( logOpt );
         options.addOption( helpOpt );
         options.addOption( testOpt );
+        options.addOption( compassOffOpt );
     }
 
     /**
