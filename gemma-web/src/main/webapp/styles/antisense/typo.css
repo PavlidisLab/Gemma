@@ -328,4 +328,12 @@
         margin: 1.5em 10px;
         border-bottom: 1px dotted black;
     }
+    
+     .datasummary td {
+    	font-size: 0.9em;
+    	margin: 0 0 0 0;
+    	padding: 1px;
+    }
+    
+    
 /* END TYPOGRAPHY */
