@@ -63,19 +63,14 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @author klc
  * @author paul
  * @version $Id$
- * @spring.bean id="searchService"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="geneProductService" ref="geneProductService"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
- * @spring.property name="geneBean" ref="compassGene"
- * @spring.property name="eeBean" ref="compassExpression"
- * @spring.property name="arrayBean" ref="compassArray"
- * @spring.property name="ontologyBean" ref="compassOntology"
  */
 public class SearchService {
 
+    /*
+     * SearchService has not been configured with xdoclet tags because we it needs to reside in
+     * applicationContext-compass.xml so we can choose whether or not to load this part of the application context at
+     * spring startup.
+     */
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
     private GeneService geneService;
@@ -205,6 +200,7 @@ public class SearchService {
      */
     @SuppressWarnings("unchecked")
     public List<CompositeSequence> compositeSequenceSearch( String searchString, ArrayDesign arrayDesign ) {
+
         List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
         if ( StringUtils.isBlank( searchString ) ) return allResults;
         Collection<CompositeSequence> nameMatch;

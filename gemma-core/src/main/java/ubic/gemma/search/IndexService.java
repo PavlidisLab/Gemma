@@ -27,13 +27,13 @@ import ubic.gemma.util.CompassUtils;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="indexService"
- * @spring.property name="expressionGps" ref="expressionGps"
- * @spring.property name="geneGps" ref="geneGps"
- * @spring.property name="arrayGps" ref="arrayGps"
- * @spring.property name="ontologyGps" ref="ontologyGps"
  */
 public class IndexService {
+    /*
+     * IndexService has not been configured with xdoclet tags because we it needs to reside in
+     * applicationContext-compass.xml so we can choose whether or not to load this part of the application context at
+     * spring startup.
+     */
     private Log log = LogFactory.getLog( this.getClass() );
 
     private CompassGpsInterfaceDevice expressionGps;
