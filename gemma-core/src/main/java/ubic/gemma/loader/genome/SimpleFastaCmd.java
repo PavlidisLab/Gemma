@@ -124,7 +124,7 @@ public class SimpleFastaCmd implements FastaCmd {
         Process pr = Runtime.getRuntime().exec( command, opts );
 
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
-        tmp.delete();
+     //   tmp.delete();
         return sequences;
 
     }

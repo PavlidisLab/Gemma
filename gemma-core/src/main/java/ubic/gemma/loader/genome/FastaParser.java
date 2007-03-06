@@ -20,6 +20,7 @@ package ubic.gemma.loader.genome;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,7 +33,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
- * FASTA sequence file parser. Results are in BioSequence objects.
+ * FASTA sequence file parser. Results are in BioSequence objects. Parsing a single record
  * 
  * @author pavlidis
  * @version $Id$
@@ -57,12 +58,9 @@ public class FastaParser extends RecordParser {
 
         Matcher matcher = pattern.matcher( record );
 
-        BioSequence bioSequence = BioSequence.Factory.newInstance();
+        Collection<BioSequence> bioSequences = parseHeader( matcher );
 
-        boolean keep = parseHeader( matcher, bioSequence );
-
-        if ( !keep ) {
-            log.info( "Skipping " + bioSequence );
+        if ( bioSequences.size() == 0 ) {
             return null;
         }
 
@@ -78,22 +76,25 @@ public class FastaParser extends RecordParser {
             return null;
         }
 
-        bioSequence.setLength( new Long( sequence.length() ) );
-        bioSequence.setIsApproximateLength( false );
-        bioSequence.setSequence( sequence.toString() );
-        return bioSequence;
+        for ( BioSequence bioSequence : bioSequences ) {
+            bioSequence.setLength( new Long( sequence.length() ) );
+            bioSequence.setIsApproximateLength( false );
+            bioSequence.setSequence( sequence.toString() );
+        }
+        return bioSequences;
 
     }
 
     /**
      * Recognizes Defline format as described at {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
-     * Our amendments: FIXME: recognize multi-line headers separated by ^A.
+     * Our amendments: FIXME: recognize multi-line headers separated by ^A.(used for redundant sequences)
      * <p>
      * FIXME: parsing of more obscure (to us) headers might not be complete.
      * 
      * @param bioSequence
      */
-    private boolean parseHeader( Matcher matcher, BioSequence bioSequence ) {
+    private Collection<BioSequence> parseHeader( Matcher matcher ) {
+        Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
         boolean gotSomething = matcher.find();
 
         if ( !gotSomething ) {
@@ -102,30 +103,39 @@ public class FastaParser extends RecordParser {
 
         String header = matcher.group( 1 );
 
-        bioSequence.setName( header );
+        String[] recordHeaders = StringUtils.split( header, '>' );
 
-        /*
-         * Look for either a '|' or a ':'. Allow for the possibility of ':' and then '|' occuring; use whichever comes
-         * first.
-         */
-        int firstPipe = header.indexOf( '|' );
-        int firstColon = header.indexOf( ':' );
+        boolean keep = false;
+        for ( String rheader : recordHeaders ) {
 
-        if ( firstPipe > 0 && ( firstColon < 0 || firstPipe < firstColon ) ) {
-            return parseDeflineHeader( bioSequence, header );
-        } else if ( firstColon > 0 ) {
-            return parseAffyHeader( bioSequence, header );
-        } else if ( header.matches( NIA_HEADER_REGEX ) ) {
-            return parseNIA( bioSequence, header );
-        } else {
+            BioSequence bioSequence = BioSequence.Factory.newInstance();
+            bioSequence.setName( rheader );
+
             /*
-             * This can happen if the input stream contains no FASTA records (which should be a survivable error)
+             * Look for either a '|' or a ':'. Allow for the possibility of ':' and then '|' occuring; use whichever
+             * comes first.
              */
-            if ( log.isDebugEnabled() ) log.debug( "FASTA header missing or in unrecognized format: " + header );
-            return false;
+            int firstPipe = rheader.indexOf( '|' );
+            int firstColon = rheader.indexOf( ':' );
 
+            if ( firstPipe > 0 && ( firstColon < 0 || firstPipe < firstColon ) ) {
+                keep = parseDeflineHeader( bioSequence, rheader );
+            } else if ( firstColon > 0 ) {
+                keep = parseAffyHeader( bioSequence, rheader );
+            } else if ( rheader.matches( NIA_HEADER_REGEX ) ) {
+                keep = parseNIA( bioSequence, rheader );
+            } else {
+                /*
+                 * This can happen if the input stream contains no FASTA records (which should be a survivable error)
+                 */
+                if ( log.isDebugEnabled() ) log.debug( "FASTA header missing or in unrecognized format: " + rheader );
+                keep = false;
+
+            }
+
+            if ( keep ) bioSequences.add( bioSequence );
         }
-
+        return bioSequences;
     }
 
     /**
@@ -209,8 +219,8 @@ public class FastaParser extends RecordParser {
 
         String firstTag = split[0];
 
-        assert firstTag.startsWith( ">" );
-        assert firstTag.length() > 1;
+        // assert firstTag.startsWith( ">" );
+        // assert firstTag.length() > 1;
         firstTag = StringUtils.removeStart( firstTag, ">" );
 
         // FIXME check for array lengths, throw illegal argument exceptions.
@@ -268,9 +278,10 @@ public class FastaParser extends RecordParser {
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void addResult( Object obj ) {
-        results.add( ( BioSequence ) obj );
+        results.addAll( ( Collection<BioSequence> ) obj );
 
     }
 
