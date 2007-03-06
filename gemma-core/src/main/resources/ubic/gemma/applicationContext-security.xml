@@ -166,6 +166,7 @@
                 /passwordHint.html*=admin,user
                 /editProfile.html*=admin,user
                 /users.html*=admin
+                /activeUsers.html*=admin
                 /clickstreams.jsp*=admin
                 /flushCache.*=admin
                 /reload.*=admin
