@@ -42,6 +42,8 @@ import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
+    private static final String COMPASS_OFF = "compassOff";
+
     protected BeanFactory ctx = null;
     PersisterHelper ph = null;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
@@ -61,8 +63,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * @param fileName
-     * @return Given a file name returns a collection of strings.
-     *  Each string represents one line of the file
+     * @return Given a file name returns a collection of strings. Each string represents one line of the file
      */
     protected Collection<String> processFile( String fileName ) {
 
@@ -85,7 +86,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         } catch ( IOException ioe ) {
             log.error( "At line: " + lineNumber + " an error occured processing " + fileName + ". \n Error is: " + ioe );
         }
-        
+
         return lines;
     }
 
@@ -140,13 +141,22 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     }
 
-    /** check if using test or production context */
+    /**
+     * check if using test or production contexts
+     */
     void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false );
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_OFF ), false );
+
         CompassUtils.deleteCompassLocks();
-        QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
+
+        if ( !hasOption( COMPASS_OFF ) ) {
+            QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
+        }
     }
 
+    /**
+     * @param ctx
+     */
     public void setCtx( BeanFactory ctx ) {
         this.ctx = ctx;
     }
@@ -199,22 +209,20 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             log.error( buf );
         }
     }
-    
+
     /**
-     * @param e
-     * Adds an exception to a cache.  this is usefull in the scenairo where we don't want the CLI to bomb on the exception
-     * but continue with its processing.  Granted if the exception is fatal then the CLI should terminate regardless.
-     * 
+     * @param e Adds an exception to a cache. this is usefull in the scenairo where we don't want the CLI to bomb on the
+     *        exception but continue with its processing. Granted if the exception is fatal then the CLI should
+     *        terminate regardless.
      */
-    protected void cacheException(Exception e){
+    protected void cacheException( Exception e ) {
         exceptionCache.add( e );
     }
-    
-    
-    protected void printExceptions(){
+
+    protected void printExceptions() {
         log.info( "Displaying cached error messages: " );
-        
-        for (Exception e: exceptionCache){
+
+        for ( Exception e : exceptionCache ) {
             log.info( e );
         }
     }
