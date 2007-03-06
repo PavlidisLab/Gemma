@@ -158,6 +158,31 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     @SuppressWarnings("unchecked")
+    public void testFetchAndLoadWithIdentifiers() throws Exception {
+        endTransaction();
+        String path = ConfigUtils.getString( "gemma.home" );
+        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+        geoService.setLoadPlatformOnly( true );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226" );
+        final ArrayDesign ad = ads.iterator().next();
+        arrayDesignService.thaw( ad );
+
+        InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
+        Collection<BioSequence> res = app.processArrayDesign( ad, f,
+                new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
+                        + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        assertNotNull( res );
+        for ( BioSequence sequence : res ) {
+            assertNotNull( sequence.getSequence() );
+        }
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            assert cs.getBiologicalCharacteristic() != null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public void testBig() throws Exception {
         // first load the GPL88 - small
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );

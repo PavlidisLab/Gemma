@@ -24,8 +24,6 @@ import java.util.HashSet;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.association.BioSequence2GeneProductService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -135,7 +133,9 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 for ( BioSequence toChange : seqs ) {
                     if ( log.isDebugEnabled() ) log.debug( "Processing " + toChange );
 
-                    assert this.equals( anchorSeq, toChange );
+                    if ( !this.equals( anchorSeq, toChange ) ) {
+                        throw new IllegalStateException( "Sequences weren't equal " + anchorSeq + " and " + toChange );
+                    }
 
                     // all composite sequences for bs2 will be switched to bs1.
                     Collection<CompositeSequence> usingDuplicatedSequence = css.findByBioSequence( toChange );
