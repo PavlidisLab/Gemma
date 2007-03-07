@@ -79,10 +79,17 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
             geneCount++;
 
         }
-        String fullGeneList = StringUtils.join( geneList, "," );
-        String shortGeneList = StringUtils.abbreviate( fullGeneList, 20 );
-        retVal.append( shortGeneList );
-        retVal.append( "(" + geneList.length + ")" );
+
+        if ( geneList.length > 0 ) {
+            String fullGeneList = StringUtils.join( geneList, "," );
+            String shortGeneList = StringUtils.abbreviate( fullGeneList, 20 );
+            retVal.append( shortGeneList );
+            if ( geneList.length > 1 ) {
+                retVal.append( "&nbsp;(" + geneList.length + ")" );
+            }
+        } else {
+            retVal.append( "&nbsp;-&nbsp;" );
+        }
         return retVal.toString();
 
     }
