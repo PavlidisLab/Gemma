@@ -406,7 +406,8 @@ public class GeoConverter implements Converter {
                     } else if ( pt.equals( PrimitiveType.CHAR ) ) {
                         if ( ( ( String ) rawValue ).length() != 1 ) {
                             throw new IllegalStateException( "Attempt to cast a string of length "
-                                    + ( ( String ) rawValue ).length() + " to a char" );
+                                    + ( ( String ) rawValue ).length() + " to a char: " + rawValue
+                                    + "(quantitation type =" + qt );
                         }
                         toConvert.add( ( Character ) ( ( String ) rawValue ).toCharArray()[0] );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
