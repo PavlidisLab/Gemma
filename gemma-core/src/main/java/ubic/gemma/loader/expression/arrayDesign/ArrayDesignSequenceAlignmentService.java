@@ -250,7 +250,8 @@ public class ArrayDesignSequenceAlignmentService {
         Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
         for ( BioSequence bs : results.keySet() ) {
             if ( nameMap.containsKey( bs.getName() ) ) {
-                throw new IllegalStateException( "All distinct sequences on the array must have unique names." );
+                throw new IllegalStateException( "All distinct sequences on the array must have unique names; found "
+                        + bs.getName() + " more than once." );
             }
             nameMap.put( bs.getName(), bs );
         }

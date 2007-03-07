@@ -31,6 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
@@ -50,6 +51,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     private String taxonName = null;
 
     private String idFile = null;
+
+    private String sequenceId = null;
 
     public static void main( String[] args ) {
         ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
@@ -93,6 +96,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         addOption( sequenceTypeOption );
 
+        addOption( OptionBuilder.hasArg().withArgName( "accession" ).withDescription( "A single accession to update" )
+                .withLongOpt( "sequence" ).create( 's' ) );
+
         Option forceOption = OptionBuilder.withArgName( "Force overwriting of existing sequences" ).withLongOpt(
                 "force" ).withDescription(
                 "If biosequences are encountered that already have sequences filled in, "
@@ -123,6 +129,10 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             this.sequenceFile = this.getOptionValue( 'f' );
         }
 
+        if ( this.hasOption( 's' ) ) {
+            this.sequenceId = this.getOptionValue( 's' );
+        }
+
         if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
         }
@@ -142,6 +152,16 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         try {
             Exception err = processCommandLine( "Sequence associator", args );
             if ( err != null ) return err;
+
+            // this is kind of an oddball function of this tool.
+            if ( this.hasOption( 's' ) ) {
+                BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
+                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null );
+                if ( updated != null ) {
+                    log.info( "Updated or created " + updated );
+                }
+                return null;
+            }
 
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 

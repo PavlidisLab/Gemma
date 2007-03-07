@@ -41,8 +41,6 @@ import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -106,7 +104,7 @@ public class ArrayDesignSequenceProcessingService {
         if ( sequence.getSequenceDatabaseEntry() != null ) {
             gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
         } else {
-            if ( log.isDebugEnabled() ) log.debug( "No sequence database entry for " + sequence.getName() );
+            if ( log.isTraceEnabled() ) log.trace( "No sequence database entry for " + sequence.getName() );
         }
     }
 
@@ -302,11 +300,10 @@ public class ArrayDesignSequenceProcessingService {
             String accession = getAccession( cs );
 
             if ( accession == null ) {
-                log.warn( "No accession for " + cs + ": " + bs );
+                if ( log.isDebugEnabled() ) log.debug( "No accession for " + cs + ": " + bs );
                 continue;
             }
 
-            // accession = addVersionNumber( accession, versionNumber ); // wild guess - we don't know the version.
             accessionsToFetch.put( accession, bs );
         }
         informAboutFetchListResults( arrayDesign, accessionsToFetch, sequenceProvided, noSequence );
@@ -645,6 +642,8 @@ public class ArrayDesignSequenceProcessingService {
         int numMatchedByProbeName = 0;
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
+            if ( log.isTraceEnabled() ) log.trace( "Looking for sequence for: " + compositeSequence.getName() );
+
             BioSequence match = null;
             if ( nameMap.containsKey( compositeSequence.getName() ) ) {
                 match = nameMap.get( compositeSequence.getName() );
@@ -666,8 +665,6 @@ public class ArrayDesignSequenceProcessingService {
                 compositeSequence.setBiologicalCharacteristic( match );
                 compositeSequence.setArrayDesign( arrayDesign );
             }
-
-            // addReporter( compositeSequence );
 
             if ( ++done % 1000 == 0 ) {
                 percent = updateProgress( total, done, percent );
@@ -729,6 +726,7 @@ public class ArrayDesignSequenceProcessingService {
             return null;
         }
 
+        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         Collection<String> notFound = accessionsToFetch.keySet();
         Collection<BioSequence> finalResult = new HashSet<BioSequence>();
 
@@ -736,7 +734,7 @@ public class ArrayDesignSequenceProcessingService {
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
-            Map<String, BioSequence> found = updateSequences( accessionsToFetch, retrievedSequences );
+            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon );
 
             finalResult.addAll( found.values() );
 
@@ -811,7 +809,7 @@ public class ArrayDesignSequenceProcessingService {
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
-            Map<String, BioSequence> found = findOrCreateSequences( accessionsToFetch, retrievedSequences, taxon );
+            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon );
 
             finalResult.addAll( retrievedSequences );
 
@@ -883,6 +881,29 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
+     * @param databaseNames
+     * @param blastDbHome
+     * @param accessionToFetch
+     * @return
+     */
+    private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch ) {
+        // search the databases.
+        FastaCmd fc = new SimpleFastaCmd();
+        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
+        for ( String dbname : databaseNames ) {
+            BioSequence moreBioSequence;
+            if ( blastDbHome != null ) {
+                moreBioSequence = fc.getByAccession( accessionToFetch, dbname, blastDbHome );
+            } else {
+                moreBioSequence = fc.getByAccession( accessionToFetch, dbname, null );
+            }
+            if ( moreBioSequence != null ) return moreBioSequence;
+        }
+        return null;
+
+    }
+
+    /**
      * @param arrayDesignService the arrayDesignService to set
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
@@ -921,91 +942,44 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * @param accessionsToFetch
-     * @param retrievedSequences
-     * @return
-     */
-    private Map<String, BioSequence> findOrCreateSequences( Collection<String> accessionsToFetch,
-            Collection<BioSequence> retrievedSequences, Taxon taxon ) {
-        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
-        ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance();
-        externalDatabase.setName( "Genbank" );
-
-        for ( BioSequence sequence : retrievedSequences ) {
-            String newSequence = sequence.getSequence();
-
-            if ( StringUtils.isBlank( newSequence ) ) {
-                log.warn( "Blank sequence for " + sequence );
-                continue;
-            }
-
-            String accession = sequence.getSequenceDatabaseEntry().getAccession();
-            newSequence = SequenceManipulation.stripPolyAorT( newSequence, POLY_AT_THRESHOLD );
-
-            BioSequence old = BioSequence.Factory.newInstance();
-            old.setSequence( newSequence );
-            old.setLength( new Long( newSequence.length() ) );
-            old.setIsApproximateLength( false );
-            old.setTaxon( taxon );
-            old.setName( accession );
-
-            DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance();
-            databaseEntry.setAccession( accession );
-
-            databaseEntry.setExternalDatabase( externalDatabase );
-
-            old = bioSequenceService.findOrCreate( old );
-
-            found.put( accession, old );
-            accessionsToFetch.remove( accession );
-
-        }
-
-        return found;
-    }
-
-    /**
-     * Copy sequences into the original versions, unless the sequence is already filled in.
+     * Copy sequences into the original versions, or create new sequences in the DB, as needed.
      * 
      * @param accessionsToFetch
      * @param retrievedSequences
      * @return Items that were found.
      */
-    private Map<String, BioSequence> updateSequences( Map<String, BioSequence> accessionsToFetch,
-            Collection<BioSequence> retrievedSequences ) {
+    private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
+            Collection<BioSequence> retrievedSequences, Taxon taxon ) {
 
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
-            String newSequence = sequence.getSequence();
-
-            if ( StringUtils.isBlank( newSequence ) ) {
-                log.warn( "Blank sequence for " + sequence );
-                continue;
-            }
-
+            sequence.setTaxon( taxon );
+            sequence = createOrUpdateSequence( sequence );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
-            BioSequence old = accessionsToFetch.get( accession );
-
-            if ( old == null ) {
-                log.warn( "accessionsToFetch did not contain " + accession );
-                continue;
-            }
-
-            if ( !StringUtils.isBlank( old.getSequence() ) ) {
-                log.warn( "Sequence entry for " + old + " is not empty, skipping." );
-                // no need to update
-                continue;
-            }
-
-            newSequence = SequenceManipulation.stripPolyAorT( newSequence, POLY_AT_THRESHOLD );
-
-            old.setSequence( newSequence );
-            old.setLength( new Long( newSequence.length() ) );
-            old.setIsApproximateLength( false );
-            found.put( accession, old );
+            found.put( accession, sequence );
             accessionsToFetch.remove( accession );
         }
-        bioSequenceService.update( found.values() );
+        return found;
+    }
+
+    /**
+     * Copy sequences into the original versions, or create new sequences in the DB, as needed.
+     * 
+     * @param accessionsToFetch
+     * @param retrievedSequences
+     * @return Items that were found.
+     */
+    private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
+            Collection<BioSequence> retrievedSequences, Taxon taxon ) {
+
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        for ( BioSequence sequence : retrievedSequences ) {
+            sequence.setTaxon( taxon );
+            sequence = createOrUpdateSequence( sequence );
+            String accession = sequence.getSequenceDatabaseEntry().getAccession();
+            found.put( accession, sequence );
+            accessionsToFetch.remove( accession );
+        }
         return found;
     }
 
@@ -1019,5 +993,55 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
         return warned;
+    }
+
+    /**
+     * Update a single sequence in the system.
+     * 
+     * @param sequenceId
+     * @param databaseNames
+     * @param blastDbHome
+     * @return persistent BioSequence.
+     */
+    public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome ) {
+        BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId );
+        if ( found == null ) return null;
+        return createOrUpdateSequence( found );
+
+    }
+
+    /**
+     * @param found a new (nonpersistent) biosequence that can be used to create a new entry or update an existing one
+     *        with the sequence. The sequence is strippe
+     * @return persistent BioSequence.
+     */
+    private BioSequence createOrUpdateSequence( BioSequence found ) {
+        stripPolyAorT( found );
+        BioSequence existing = bioSequenceService.findByAccession( found.getSequenceDatabaseEntry() );
+
+        if ( existing == null ) {
+            return ( BioSequence ) persisterHelper.persist( found );
+        } else {
+            if ( existing.getType() == null ) existing.setType( found.getType() ); // generic...
+            existing.setLength( found.getLength() );
+            existing.setSequence( found.getSequence() );
+            existing.setIsApproximateLength( found.getIsApproximateLength() );
+            bioSequenceService.update( existing );
+            return existing;
+        }
+    }
+
+    /**
+     * Strip polyA or polyT from sequence ends, update the length.
+     * 
+     * @param found
+     */
+    private void stripPolyAorT( BioSequence found ) {
+        String newSequence = found.getSequence();
+        newSequence = SequenceManipulation.stripPolyAorT( newSequence, POLY_AT_THRESHOLD );
+        found.setSequence( newSequence );
+        found.setLength( new Long( newSequence.length() ) );
+        found.setIsApproximateLength( false );
+
     }
 }

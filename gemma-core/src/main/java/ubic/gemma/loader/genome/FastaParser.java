@@ -141,6 +141,7 @@ public class FastaParser extends RecordParser {
     /**
      * <pre>
      *        Affymetrix targets or collapsed sequence     target:array:probeset;
+     *        Affymetrix "style" file                      target:probename
      *        Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
      *        Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
@@ -157,10 +158,15 @@ public class FastaParser extends RecordParser {
         if ( firstTag.equals( "probe" ) ) {
             bioSequence.setName( split[1] + ":" + split[2] + ":" + split[3] + ":" + split[4] );
         } else if ( firstTag.equals( "target" ) ) {
-            // split[1] = array name
+            // split[1] = array name or probe name
             // split[2] = probe name
-            String probeName = split[2]; // '.replaceFirst( ";", "" ); // Some files have this.
-            bioSequence.setName( split[1] + ":" + probeName );
+            if ( split.length > 2 ) {
+                String probeName = split[2];
+                bioSequence.setName( split[1] + ":" + probeName );
+            } else {
+                bioSequence.setName( split[1] );
+            }
+
         } else if ( firstTag.equals( "exemplar" ) ) {
             bioSequence.setName( split[1] + ":" + split[2] );
             bioSequence.setDescription( split[3] );

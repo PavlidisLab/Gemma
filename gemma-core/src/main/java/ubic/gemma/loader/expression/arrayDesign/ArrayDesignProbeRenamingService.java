@@ -67,7 +67,7 @@ public class ArrayDesignProbeRenamingService {
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             if ( old2new.containsKey( cs.getName() ) ) {
-                String descriptionAddendum = " [Renamed by Gemma from " + cs.getName() + " ]";
+                String descriptionAddendum = " [Renamed by Gemma from " + cs.getName() + "]";
                 if ( StringUtils.isNotBlank( cs.getDescription() ) ) {
                     cs.setDescription( cs.getDescription() + descriptionAddendum );
                 } else {
@@ -98,6 +98,7 @@ public class ArrayDesignProbeRenamingService {
         Map<String, String> old2new = new HashMap<String, String>();
         while ( ( line = br.readLine() ) != null ) {
             String[] fields = line.split( "\t" );
+            if ( fields.length < 2 ) continue;
             String probeName = fields[0];
             String seqAcc = fields[1];
 

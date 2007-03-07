@@ -65,6 +65,11 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         }
     }
 
+    BioSequenceService bss;
+    CompositeSequenceService css;
+    BlatResultService blatResultService;
+    BlatAssociationService blatAssociationService;
+
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -72,6 +77,10 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
             this.justTesting = true;
             log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
         }
+        bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+        css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+        blatResultService = ( BlatResultService ) this.getBean( "blatResultService" );
+        blatAssociationService = ( BlatAssociationService ) this.getBean( "blatAssociationService" );
     }
 
     @SuppressWarnings("unchecked")
@@ -80,12 +89,6 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         Exception err = processCommandLine( "Sequence cleanup", args );
         if ( err != null ) return err;
-
-        BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
-        CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
-        BlatResultService blatResultService = ( BlatResultService ) this.getBean( "blatResultService" );
-        BlatAssociationService blatAssociationService = ( BlatAssociationService ) this
-                .getBean( "blatAssociationService" );
 
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         if ( this.arrayDesignName != null ) {
@@ -97,6 +100,73 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         for ( ArrayDesign design : ads ) {
             log.info( design );
             unlazifyArrayDesign( design );
+
+            Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
+
+            for ( CompositeSequence cs : design.getCompositeSequences() ) {
+                if ( cs == null ) continue;
+                if ( cs.getBiologicalCharacteristic() == null ) continue;
+                bioSequences.add( cs.getBiologicalCharacteristic() );
+            }
+
+            // ///////////////////////////////
+            // First stage: fix biosequences that lack database entries, when there is one for another essentially
+            // identical sequence (and the name is the same as the accession)
+            for ( BioSequence sequence : bioSequences ) {
+
+                Collection<BioSequence> reps = bss.findByName( sequence.getName() );
+
+                if ( reps.size() == 1 ) continue;
+
+                // pass 1: find an anchor.
+                BioSequence anchor = null;
+                for ( BioSequence possibleAnchor : reps ) {
+                    if ( possibleAnchor.getSequenceDatabaseEntry() != null
+                            && possibleAnchor.getSequenceDatabaseEntry().getAccession().equals(
+                                    possibleAnchor.getName() ) ) {
+                        anchor = possibleAnchor;
+                    }
+
+                }
+
+                if ( anchor == null ) continue;
+                reps.remove( anchor );
+
+                log.info( "Examining duplicates of " + anchor );
+
+                for ( BioSequence rep : reps ) {
+                    if ( rep.getSequenceDatabaseEntry() != null ) {
+
+                        if ( rep.getSequenceDatabaseEntry().getAccession().equals(
+                                anchor.getSequenceDatabaseEntry().getAccession() ) ) {
+                            log.warn( anchor + " and " + rep + " have equivalent database entries for accession" );
+
+                            // they might have different names, but we don't care. One of them has to go.
+
+                        } else {
+                            log.warn( anchor + " and " + rep
+                                    + " have distinct database entries for accession: skipping" );
+                            continue;
+                        }
+
+                    }
+
+                    log.info( sequence + " has a potential replica: " + rep );
+
+                    // only do this if they have the same name
+                    // if ( !rep.getName().equals( anchor.getName() ) ) {
+                    // log.warn( rep + " and " + anchor + " have different names, skipping" );
+                    // continue;
+                    // }
+
+                    switchAndDeleteExtra( anchor, rep );
+
+                }
+            }
+
+            // ///////////////////////////////
+            // Second phase: make sure composite sequences don't refer to sequences that have duplicates based on name,
+            // using stricter equality criteria.
             for ( CompositeSequence cs : design.getCompositeSequences() ) {
 
                 BioSequence anchorSeq = cs.getBiologicalCharacteristic();
@@ -132,44 +202,10 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
                 for ( BioSequence toChange : seqs ) {
                     if ( log.isDebugEnabled() ) log.debug( "Processing " + toChange );
-
                     if ( !this.equals( anchorSeq, toChange ) ) {
                         throw new IllegalStateException( "Sequences weren't equal " + anchorSeq + " and " + toChange );
                     }
-
-                    // all composite sequences for bs2 will be switched to bs1.
-                    Collection<CompositeSequence> usingDuplicatedSequence = css.findByBioSequence( toChange );
-
-                    css.thaw( usingDuplicatedSequence );
-
-                    for ( CompositeSequence sequence : usingDuplicatedSequence ) {
-
-                        log.info( "Switching bioseq for " + sequence + " on " + sequence.getArrayDesign() + " from "
-                                + toChange + " to " + anchorSeq );
-                        if ( !justTesting ) sequence.setBiologicalCharacteristic( anchorSeq );
-                        if ( !justTesting ) css.update( sequence );
-
-                    }
-
-                    Collection<BlatResult> blatResults = blatResultService.findByBioSequence( toChange );
-
-                    for ( BlatResult br : blatResults ) {
-                        if ( !justTesting ) br.setQuerySequence( anchorSeq );
-                        if ( !justTesting ) blatResultService.update( br );
-                    }
-
-                    Collection<BlatAssociation> bs2gps = blatAssociationService.find( toChange );
-
-                    for ( BlatAssociation bs2gp : bs2gps ) {
-                        if ( !justTesting ) bs2gp.setBioSequence( anchorSeq );
-                        if ( !justTesting ) blatAssociationService.update( bs2gp );
-                    }
-
-                    /*
-                     * Remove the other sequence.
-                     */
-                    log.info( "Deleting unused duplicate sequence " + toChange );
-                    if ( !justTesting ) bss.remove( toChange );
+                    switchAndDeleteExtra( anchorSeq, toChange );
 
                     if ( ++i % 2000 == 0 ) {
                         log.info( "Processed " + i );
@@ -180,6 +216,44 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         return null;
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private void switchAndDeleteExtra( BioSequence keeper, BioSequence toRemove ) {
+
+        // all composite sequences for bs2 will be switched to bs1.
+        Collection<CompositeSequence> usingDuplicatedSequence = css.findByBioSequence( toRemove );
+
+        css.thaw( usingDuplicatedSequence );
+
+        for ( CompositeSequence sequence : usingDuplicatedSequence ) {
+
+            log.info( "Switching bioseq for " + sequence + " on " + sequence.getArrayDesign() + " from " + toRemove
+                    + " to " + keeper );
+            if ( !justTesting ) sequence.setBiologicalCharacteristic( keeper );
+            if ( !justTesting ) css.update( sequence );
+
+        }
+
+        Collection<BlatResult> blatResults = blatResultService.findByBioSequence( toRemove );
+
+        for ( BlatResult br : blatResults ) {
+            if ( !justTesting ) br.setQuerySequence( keeper );
+            if ( !justTesting ) blatResultService.update( br );
+        }
+
+        Collection<BlatAssociation> bs2gps = blatAssociationService.find( toRemove );
+
+        for ( BlatAssociation bs2gp : bs2gps ) {
+            if ( !justTesting ) bs2gp.setBioSequence( keeper );
+            if ( !justTesting ) blatAssociationService.update( bs2gp );
+        }
+
+        /*
+         * Remove the other sequence.
+         */
+        log.info( "Deleting unused duplicate sequence " + toRemove );
+        if ( !justTesting ) bss.remove( toRemove );
     }
 
     /**

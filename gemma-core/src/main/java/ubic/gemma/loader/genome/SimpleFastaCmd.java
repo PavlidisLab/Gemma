@@ -124,7 +124,7 @@ public class SimpleFastaCmd implements FastaCmd {
         Process pr = Runtime.getRuntime().exec( command, opts );
 
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
-     //   tmp.delete();
+        tmp.delete();
         return sequences;
 
     }
@@ -169,7 +169,7 @@ public class SimpleFastaCmd implements FastaCmd {
      */
     private BioSequence getSingle( Object key, String database, String blastHome ) throws IOException {
         if ( blastHome == null ) {
-            throw new IllegalArgumentException();
+            blastHome = blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
         String command = fastaCmdExecutable + " -d " + database + " -s " + key.toString();

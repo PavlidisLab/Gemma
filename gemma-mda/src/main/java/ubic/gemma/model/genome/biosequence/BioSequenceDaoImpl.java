@@ -199,10 +199,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + BioSequence.class.getName()
-                                    + "' was found when executing query" );
-                } else if ( results.size() == 1 ) {
+                    log.warn( "More than one instance of '" + BioSequence.class.getName()
+                            + "' was found when executing query" );
+
+                }
+                if ( results.size() > 1 ) {
                     result = results.iterator().next();
                 }
             }

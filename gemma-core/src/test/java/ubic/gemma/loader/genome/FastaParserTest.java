@@ -57,6 +57,19 @@ public class FastaParserTest extends TestCase {
             log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
         }
     }
+    
+    public void testParsecodelink() throws Exception {
+        InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/codelink.testsequence.txt" );
+        FastaParser p = new FastaParser();
+        p.parse( n );
+        Collection<BioSequence> actualResult = p.getResults();
+        assertTrue( actualResult != null );
+        assertEquals( 22, actualResult.size() );
+        for ( Object object : actualResult ) {
+            BioSequence b = ( BioSequence ) object;
+            log.info( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
+        }
+    }
 
     public void testParseDoubleHeader() throws Exception {
         InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/fastaDoubleHeader.txt" );
