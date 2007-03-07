@@ -178,7 +178,9 @@ public class MainMenuController extends BaseFormController {
         mav.addObject( "expressionExperimentCount", expressionExperimentCount );
 
         WhatsNew wn = getWhatsNewReport();
-        mav.addObject( "whatsNew", wn );
+        if (wn != null && wn.getDate() != null) {
+            mav.addObject( "whatsNew", wn );
+        }
         mav.addObject( "timeSpan", "In the past day" );
         return mav;
     }
