@@ -6,7 +6,7 @@
 /* NAV BAR AT THE TOP AND TWO COLUMNS OF CONTENT */
 div#content {
 	position: relative;
-	width: 900px;
+	width: 95%;
 	margin: 0 auto 10px auto;
 	padding: 0;
 	text-align: left;
@@ -14,13 +14,13 @@ div#content {
 
 div#main {
 	float: left;
-	width: 875px;
+	width: 95%;
 	display: inline;
 }
 
 div#main.home {
 	float: right;
-	width: 500px;
+	width: 60%;
 	display: inline;
 }
 
@@ -33,7 +33,7 @@ div#sub {
 
 div#sub.home {
 	float: left;
-	width: 350px;
+	width: 30%;
 	display: inline;
 }
 
