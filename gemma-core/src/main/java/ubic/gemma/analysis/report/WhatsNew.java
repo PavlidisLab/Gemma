@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.report;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -40,6 +41,13 @@ public class WhatsNew {
 
     public WhatsNew( Date date ) {
         this.date = date;
+        newObjects = new ArrayList<Auditable>();
+        updatedObjects = new ArrayList<Auditable>();
+    }
+    
+    public WhatsNew( ) {
+        newObjects = new ArrayList<Auditable>();
+        updatedObjects = new ArrayList<Auditable>();
     }
 
     /**
@@ -106,6 +114,38 @@ public class WhatsNew {
      */
     public void setNewObjects( Collection<Auditable> newObjects ) {
         this.newObjects = newObjects;
+    }
+    
+    /**
+     * adds a single auditable to the new object list
+     * @param newObject
+     */
+    public void addNewObjects (Auditable newObject) {
+        this.newObjects.add( newObject );
+    }
+    
+    /**
+     * adds a collection of auditables to the new object list
+     * @param newObjects
+     */
+    public void addNewObjects (Collection<Auditable> newObjects) {
+        this.newObjects.addAll( newObjects );
+    }
+    
+    /**
+     * adds a single auditable to the updated object list
+     * @param updatedObject
+     */
+    public void addUpdatedObjects (Auditable updatedObject) {
+        this.updatedObjects.add( updatedObject );
+    }
+    
+    /**
+     * adds a collection of auditables to the updated object list
+     * @param updatedObjects
+     */
+    public void addUpdatedObjects (Collection<Auditable> updatedObjects) {
+        this.updatedObjects.addAll( updatedObjects );
     }
 
     /**

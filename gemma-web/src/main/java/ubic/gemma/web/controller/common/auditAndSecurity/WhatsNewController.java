@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
@@ -66,6 +67,18 @@ public class WhatsNewController extends BaseMultiActionController {
         WhatsNew wn = whatsNewService.getReport( date );
         mav.addObject( "whatsnew", wn );
         mav.addObject( "timeSpan", "In the past day" );
+        return mav;
+    }
+    
+    public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
+        ModelAndView mav = new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addDays( date, -7 );
+        // save a report for a week's duration
+        whatsNewService.saveReport( date );
+
         return mav;
     }
 

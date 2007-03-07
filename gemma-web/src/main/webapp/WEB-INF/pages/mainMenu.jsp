@@ -206,6 +206,9 @@
 		<li>
 			<a href="<c:url value="/maintenanceMode.html" />">Manage maintenance mode</a>
 		</li>
+		<li>
+			<a href="<c:url value="/whatsnew/generateCache.html" />">Regenerate What's New Cache</a>
+		</li>
 	</ul>
 
 	<h2>

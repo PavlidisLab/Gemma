@@ -177,17 +177,14 @@ public class MainMenuController extends BaseFormController {
         mav.addObject( "taxonCount", taxonCount );
         mav.addObject( "expressionExperimentCount", expressionExperimentCount );
 
-        //WhatsNew wn = getWhatsNewReport();
-        //mav.addObject( "whatsNew", wn );
+        WhatsNew wn = getWhatsNewReport();
+        mav.addObject( "whatsNew", wn );
         mav.addObject( "timeSpan", "In the past day" );
         return mav;
     }
 
     private WhatsNew getWhatsNewReport() {
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addDays( date, -1 );
-        WhatsNew wn = whatsNewService.getReport( date );
+        WhatsNew wn = whatsNewService.retrieveReport();
         return wn;
     }
 

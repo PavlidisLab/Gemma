@@ -115,6 +115,7 @@
 	  		<ref local="indexTrigger"/>
 	  		<ref local="arrayDesignTrigger"/>
 	  		<ref local="expressionExperimentTrigger"/>
+	  		<ref local="whatsNewTrigger"/>
 		</list>
   	</property>
 </bean>
@@ -146,6 +147,15 @@
   	</property>
 </bean>
 
+<bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+  	<property name="jobDetail">
+		<ref bean="whatsNewJobDetail"/>
+  	</property>
+  	<property name="cronExpression">
+		<value>0 15 0 ? * *</value>
+  	</property>
+</bean>
+
 <bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	<property name="targetObject"><ref bean="indexService"/></property>
 	<property name="targetMethod"><value>indexAll</value></property>
@@ -159,5 +169,10 @@
 <bean id="expressionExperimentJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	<property name="targetObject"><ref bean="expressionExperimentReportService"/></property>
 	<property name="targetMethod"><value>generateSummaryObjects</value></property>
+</bean>
+
+<bean id="whatsNewJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<property name="targetObject"><ref bean="whatsNewService"/></property>
+	<property name="targetMethod"><value>generateWeeklyReport</value></property>
 </bean>
 </beans>
