@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,6 +32,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -52,9 +53,13 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BackgroundProcessingFormBindController;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
@@ -76,7 +81,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
-public class CoexpressionSearchController extends BaseFormController {
+public class CoexpressionSearchController extends BackgroundProcessingFormBindController {
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
     private int MAX_GENES_TO_RETURN = 50;
@@ -223,6 +228,7 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
+        csc.setSourceGene( sourceGene );
 
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
@@ -242,6 +248,7 @@ public class CoexpressionSearchController extends BaseFormController {
         } else
             ees = expressionExperimentService.load( possibleEEs );
 
+        csc.setToUseEE( ees );
         numExpressionExperiments = ees.size();
 
         // stringency. Cannot be less than 1; set to one if it is
@@ -253,86 +260,8 @@ public class CoexpressionSearchController extends BaseFormController {
         }
         csc.setStringency( stringency );
 
-        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
-                .getCoexpressedGenes( sourceGene, ees, stringency );
+        return startJob( command, request, response, errors );
 
-        StopWatch watch = new StopWatch();
-
-        watch.start();
-        // get all the coexpressed genes and sort them by dataset count
-        List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
-        coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
-
-        // sort coexpressed genes by dataset count
-        Collections.sort( coexpressedGenes, new CoexpressionComparator() );
-
-        // load expression experiment value objects
-        Collection<Long> eeIds = new HashSet<Long>();
-        Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
-        for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
-            eeIds.add( eeVo.getId() );
-        }
-
-        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
-        // add link count information to ee value objects
-        // coexpressions.calculateLinkCounts();
-        // coexpressions.calculateRawLinkCounts();
-
-        for ( ExpressionExperimentValueObject eeVo : eeVos ) {
-            eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
-            eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
-        }
-
-        ModelAndView mav = super.showForm( request, errors, getSuccessView() );
-
-        // no genes are coexpressed
-        // return error
-        if ( coexpressedGenes.size() == 0 ) {
-            saveMessage( request, "No genes are coexpressed with the given stringency." );
-        }
-
-        Long numUsedExpressionExperiments = new Long( coexpressions.getNumberOfUsedExpressonExperiments() );
-        Long numPositiveCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
-        Long numNegativeCoexpressedGenes = new Long( coexpressions.getNegativeStringencyLinkCount() );
-        Long numGenes = new Long( coexpressions.getNumGenes() );
-        Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
-        Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
-        Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
-        Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
-        Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
-        Integer numMatchedLinks = coexpressions.getLinkCount();
-
-        addTimingInformation( request, coexpressions );
-
-        mav.addObject( "coexpressedGenes", coexpressedGenes );
-        mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
-        mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
-        mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
-        mav.addObject( "numUsedExpressionExperiments", numUsedExpressionExperiments );
-
-        mav.addObject( "numGenes", numGenes );
-        mav.addObject( "numPredictedGenes", numPredictedGenes );
-        mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
-
-        mav.addObject( "numStringencyGenes", numStringencyGenes );
-        mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
-        mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
-
-        mav.addObject( "numMatchedLinks", numMatchedLinks );
-        mav.addObject( "sourceGene", sourceGene );
-        mav.addObject( "expressionExperiments", eeVos );
-        mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
-        Long elapsed = watch.getTime();
-        watch.stop();
-        log.info( "Processing after DAO call (elapsed time): " + elapsed );
-        return mav;
-    }
-
-    private void addTimingInformation( HttpServletRequest request, CoexpressionCollectionValueObject coexpressions ) {
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        nf.setMaximumFractionDigits( 2 );
-        saveMessage( request, nf.format( coexpressions.getElapsedWallSeconds() + coexpressions.getPostProcessSeconds() )
-                + " seconds elapsed" );
     }
 
     /**
@@ -451,10 +380,8 @@ public class CoexpressionSearchController extends BaseFormController {
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
-    @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
-        // if there are GET parameters, process them into the formBackingObject
         if ( request.getParameter( "searchString" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
@@ -488,6 +415,118 @@ public class CoexpressionSearchController extends BaseFormController {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            final HttpServletRequest request, final HttpServletResponse response, final Object command,
+            final MessageUtil messenger, final BindException errors ) {
+
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, response, command,
+                messenger, errors ) {
+
+            @SuppressWarnings("unchecked")
+            public ModelAndView call() throws Exception {
+
+                SecurityContextHolder.setContext( securityContext );
+                CoexpressionSearchCommand csc = ( CoexpressionSearchCommand ) command;
+
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Coexpression analysis for "
+                        + csc.getSourceGene().getOfficialSymbol() );
+
+                job.updateProgress( "Analyzing coexpresson for " + csc.getSourceGene().getOfficialSymbol() );
+                CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
+                        .getCoexpressedGenes( csc.getSourceGene(), csc.getToUseEE(), csc.getStringency() );
+
+                StopWatch watch = new StopWatch();
+
+                watch.start();
+                // get all the coexpressed genes and sort them by dataset count
+                List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
+                coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
+
+                // sort coexpressed genes by dataset count
+                Collections.sort( coexpressedGenes, new CoexpressionComparator() );
+
+                // load expression experiment value objects
+                Collection<Long> eeIds = new HashSet<Long>();
+                Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
+                for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
+                    eeIds.add( eeVo.getId() );
+                }
+
+                Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService
+                        .loadValueObjects( eeIds );
+                // add link count information to ee value objects
+                // coexpressions.calculateLinkCounts();
+                // coexpressions.calculateRawLinkCounts();
+
+                for ( ExpressionExperimentValueObject eeVo : eeVos ) {
+                    eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
+                    eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
+                }
+
+                // new ModelAndView(getSuccessView());
+
+                // no genes are coexpressed
+                // return error
+                if ( coexpressedGenes.size() == 0 ) {
+                    this.saveMessage( "No genes are coexpressed with the given stringency." );
+                }
+
+                Long numUsedExpressionExperiments = new Long( coexpressions.getNumberOfUsedExpressonExperiments() );
+                Long numPositiveCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
+                Long numNegativeCoexpressedGenes = new Long( coexpressions.getNegativeStringencyLinkCount() );
+                Long numGenes = new Long( coexpressions.getNumGenes() );
+                Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
+                Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
+                Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
+                Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
+                Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
+                Integer numMatchedLinks = coexpressions.getLinkCount();
+
+                // addTimingInformation( request, coexpressions );
+                job.updateProgress( "ending...." );
+                ProgressManager.destroyProgressJob( job );
+
+                // request.getParameterMap().remove( "searchString" );
+                // request.setAttribute( "inner", "inner" );
+                ModelAndView mav = new ModelAndView( getSuccessView() );
+                // mav.setViewName( getSuccessView() );
+
+                mav.addObject( "coexpressedGenes", coexpressedGenes );
+                mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
+                mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
+                mav.addObject( "numSearchedExpressionExperiments", csc.getToUseEE().size() );
+                mav.addObject( "numUsedExpressionExperiments", numUsedExpressionExperiments );
+
+                mav.addObject( "numGenes", numGenes );
+                mav.addObject( "numPredictedGenes", numPredictedGenes );
+                mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
+
+                mav.addObject( "numStringencyGenes", numStringencyGenes );
+                mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
+                mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
+
+                mav.addObject( "numMatchedLinks", numMatchedLinks );
+                mav.addObject( "sourceGene", csc.getSourceGene() );
+                mav.addObject( "expressionExperiments", eeVos );
+                mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
+
+                // binding objects
+                mav.addObject( "coexpressionSearchCommand", csc );
+                populateTaxonReferenceData( mav.getModel() );
+                mav.addAllObjects( errors.getModel() );
+
+                Long elapsed = watch.getTime();
+                watch.stop();
+                log.info( "Processing after DAO call (elapsed time): " + elapsed );
+
+                return mav;
+
+            }
+        };
     }
 
     class CoexpressionSearchCookie extends ConfigurationCookie {

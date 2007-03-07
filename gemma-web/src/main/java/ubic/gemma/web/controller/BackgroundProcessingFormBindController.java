@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,17 @@
  * limitations under the License.
  *
  */
+
 package ubic.gemma.web.controller;
 
 import java.util.concurrent.FutureTask;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -33,15 +36,12 @@ import ubic.gemma.web.util.MessageUtil;
  * Extends this when the controller needs to run a long task (show a progress bar). To use it, implement getRunner and
  * call startJob in your onSubmit method.
  * 
- * @author pavlidis
+ * @author klc
  * @version $Id$
  * @spring.property name="taskRunningService" ref="taskRunningService"
  */
-public abstract class BackgroundProcessingFormController extends BaseFormController {
 
-    /**
-     * 
-     */
+public abstract class BackgroundProcessingFormBindController extends BaseFormController {
 
     /**
      * Use this to access the task id in the request.
@@ -60,9 +60,10 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
     /**
      * @param command
      * @param request
-     * @returns a model and view 
-     *      */
-    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request ) {
+     * @returns a model and view
+     */
+    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request,
+            HttpServletResponse response, BindException errors ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -70,7 +71,8 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
 
         String taskId = TaskRunningService.generateTaskId();
 
-        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, command, this.getMessageUtil() );
+        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, response, command, this
+                .getMessageUtil(), errors );
 
         assert taskId != null;
         request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
@@ -90,6 +92,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * @return
      */
     protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger );
+            HttpServletRequest request, HttpServletResponse response, Object command, MessageUtil messenger,
+            BindException errors );
 
 }

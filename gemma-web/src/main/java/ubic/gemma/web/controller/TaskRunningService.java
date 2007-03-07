@@ -70,7 +70,7 @@ public class TaskRunningService {
      * @return
      */
     public synchronized Object checkResult( Object taskId ) throws Throwable {
-        log.debug( "entering" );
+        log.debug( "entering" );        
         if ( this.finishedTasks.containsKey( taskId ) ) {
             log.debug( "Job is finished" );
             return clearFinished( taskId );
@@ -84,7 +84,7 @@ public class TaskRunningService {
             log.debug( "Job is apparently still running?" );
             return null;
         } else {
-            throw new IllegalStateException( "Job isn't running, we don't know what happened to it." );
+            throw new IllegalStateException( "Job isn't running for " + taskId + " , we don't know what happened to it." );
         }
     }
 

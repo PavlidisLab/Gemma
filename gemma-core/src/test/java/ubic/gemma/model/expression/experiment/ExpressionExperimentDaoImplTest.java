@@ -33,10 +33,8 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -181,13 +179,15 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     }
     
-    public void testFindByGene() throws Exception {
-        GeneService geneS = (GeneService) this.getBean( "geneService" );
-        Collection<Gene> genes = geneS.findByOfficialSymbol( "grin1" );
-        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-        .getBean( "expressionExperimentService" );
-        eeService.findByGene( genes.iterator().next() );
-
-        
-    }
+    //Creating test data for this was difficult.  Needed to use a current data base for this test to work. 
+//    public void testFindByGene() throws Exception {
+//        GeneService geneS = (GeneService) this.getBean( "geneService" );
+//        Collection<Gene> genes = geneS.findByOfficialSymbol( "grin1" );
+//        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+//        .getBean( "expressionExperimentService" );
+//        Collection<Long> results = eeService.findByGene( genes.iterator().next());
+//        log.info( results );
+//        assertEquals(89, results.size() );
+//        
+//    }
 }

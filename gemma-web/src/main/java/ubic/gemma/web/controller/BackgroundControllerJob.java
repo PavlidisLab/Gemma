@@ -21,12 +21,14 @@ package ubic.gemma.web.controller;
 import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.validation.BindException;
 
 import ubic.gemma.web.util.MessageUtil;
 
@@ -35,10 +37,10 @@ import ubic.gemma.web.util.MessageUtil;
  * @version $Id$
  */
 /**
- * 
- *
  * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
+ * <p>
+ * Copyright (c) 2006 UBC Pavlab
+ * 
  * @author klc
  * @version $Id$
  */
@@ -54,6 +56,24 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
     private MessageUtil messageUtil;
 
     private HttpServletRequest request;
+    private BindException errors;
+    private HttpServletResponse response;
+
+    public HttpServletResponse getResponse() {
+        return response;
+    }
+
+    public void setResponse( HttpServletResponse response ) {
+        this.response = response;
+    }
+
+    public BindException getErrors() {
+        return errors;
+    }
+
+    public void setErrors( BindException errors ) {
+        this.errors = errors;
+    }
 
     /**
      * @return the request
@@ -68,8 +88,8 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
     public String getTaskId() {
         return this.taskId;
     }
-    
-    public void setTaskId(String taskId) {
+
+    public void setTaskId( String taskId ) {
         this.taskId = taskId;
     }
 
@@ -77,22 +97,28 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      * @param securityContext
      * @param command
      * @param jobDescription
-     * 
      */
     public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
             Object commandObj, MessageUtil messenger ) {
-        this(request, messenger);
-        this.taskId = taskId;      
+        this( request, messenger );
+        this.taskId = taskId;
         this.command = commandObj;
-        
+
     }
-    
-    public BackgroundControllerJob(HttpServletRequest request, MessageUtil msgUtil) {
+
+    public BackgroundControllerJob( HttpServletRequest request, MessageUtil msgUtil ) {
         super();
         this.securityContext = SecurityContextHolder.getContext();
         this.request = request;
         this.session = request.getSession();
         this.messageUtil = msgUtil;
+    }
+
+    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
+            HttpServletResponse response, Object commandObj, MessageUtil messenger, BindException errors ) {
+        this( taskId, parentSecurityContext, request, commandObj, messenger );
+
+        this.errors = errors;
     }
 
     /**
@@ -104,13 +130,11 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
         log.info( msg );
         this.messageUtil.saveMessage( session, msg );
     }
-    
-    
+
     /**
      * This should be called in the first line of the implementation of the call method.
-     *  
      */
     protected void init() {
-        SecurityContextHolder.setContext( securityContext );        
+        SecurityContextHolder.setContext( securityContext );
     }
 }

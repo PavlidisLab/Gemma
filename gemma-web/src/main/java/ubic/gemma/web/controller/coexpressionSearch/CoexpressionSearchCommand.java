@@ -19,7 +19,10 @@
 package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.io.Serializable;
+import java.util.Collection;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -46,6 +49,38 @@ public class CoexpressionSearchCommand implements Serializable {
     
     private String geneIdSearch = "false";
     
+    private Collection<ExpressionExperiment> toUseEE;
+    
+    private Gene sourceGene;
+    
+    /**
+     * @return the sourceGene
+     */
+    public Gene getSourceGene() {
+        return sourceGene;
+    }
+
+    /**
+     * @param sourceGene the sourceGene to set
+     */
+    public void setSourceGene( Gene sourceGene ) {
+        this.sourceGene = sourceGene;
+    }
+
+    /**
+     * @return the toUseEE
+     */
+    public Collection<ExpressionExperiment> getToUseEE() {
+        return toUseEE;
+    }
+
+    /**
+     * @param toUseEE the toUseEE to set
+     */
+    public void setToUseEE( Collection<ExpressionExperiment> toUseEE ) {
+        this.toUseEE = toUseEE;
+    }
+
     public CoexpressionSearchCommand() {
         this.setTaxon( Taxon.Factory.newInstance() );
     }
