@@ -23,6 +23,7 @@ package ubic.gemma.model.expression.designElement;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
@@ -256,6 +257,11 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected Collection handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
         return this.getCompositeSequenceDao().getGenes( compositeSequence );
+    }
+    
+    @Override
+    protected Map handleGetGenes( Collection sequences ) throws Exception {
+        return this.getCompositeSequenceDao().getGenes( sequences );
     }
 
 }

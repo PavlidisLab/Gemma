@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +40,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
  * @version $Id$
  */
 public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase {
+
 
     private static Log log = LogFactory.getLog( CompositeSequenceDaoImpl.class.getName() );
 
@@ -326,6 +328,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         return genes;
+    }
+    
+    @Override
+    protected Map handleGetGenes( Collection sequences ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /*
