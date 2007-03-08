@@ -52,10 +52,10 @@ public class CoexpressionWrapper extends TableDecorator {
     
     public String getGoOverlap(){
         CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
-        if (cvo.getGoOverlap() == null)
+        if ((cvo.getGoOverlap() == null) || cvo.getPossibleOverlap() == 0)
             return "Not available";
         
-        String overlap = "<b>" + cvo.getGoOverlap().size() + "</b> GO terms overlap: <br /> <span style = 'font-size:smaller'> ";        
+        String overlap = "<b>" + ((cvo.getGoOverlap().size())*100)/cvo.getPossibleOverlap() + "% </b> of GO term overlap: <br /> <span style = 'font-size:smaller'> ";        
         int i = 0;
         for(OntologyEntry oe: cvo.getGoOverlap()){
             if ( ++i % 5 == 0 ) {

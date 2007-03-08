@@ -43,6 +43,7 @@ public class CoexpressionValueObject {
     private Map<Long, Map<Long, Double>> pValues;
     private Integer stringencyFilterValue;
     private Collection<Long> nonspecificEE;
+    private int possibleOverlap;
     private Collection<OntologyEntry> goOverlap;
 
     // the expression experiments that this coexpression was involved in
@@ -58,6 +59,7 @@ public class CoexpressionValueObject {
         negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
         pValues = new HashMap<Long, Map<Long, Double>>();
         stringencyFilterValue = null;
+        possibleOverlap = 0;
     }
 
     /**
@@ -345,5 +347,13 @@ public class CoexpressionValueObject {
 
     public void setGoOverlap( Collection<OntologyEntry> goOverlap ) {
         this.goOverlap = goOverlap;
+    }
+
+    public int getPossibleOverlap() {
+        return possibleOverlap;
+    }
+
+    public void setPossibleOverlap( int possibleOverlap ) {
+        this.possibleOverlap = possibleOverlap;
     }
 }

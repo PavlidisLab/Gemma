@@ -240,12 +240,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
 
-        if ((possibleEEs == null) || (possibleEEs.isEmpty()) ){            
+        if ( ( possibleEEs == null ) || ( possibleEEs.isEmpty() ) ) {
             ModelAndView mav = super.showForm( request, errors, getFormView() );
-            saveMessage( request, "There are no " + csc.getTaxon().getScientificName() + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() );
+            saveMessage( request, "There are no " + csc.getTaxon().getScientificName()
+                    + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() );
             return mav;
         }
-        
+
         if ( ees.size() > 0 ) {
             // if there are matches, fihter the expression experiments first by taxon
 
@@ -257,13 +258,14 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 if ( !possibleEEs.contains( ee.getId() ) ) eeToRemove.add( ee );
             }
             ees.removeAll( eeToRemove );
-            
-            if  (ees.isEmpty() ){            
+
+            if ( ees.isEmpty() ) {
                 ModelAndView mav = super.showForm( request, errors, getFormView() );
-                saveMessage( request, "There are no " + csc.getTaxon().getScientificName() + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() + " matching search criteria " + csc.getEeSearchString());
+                saveMessage( request, "There are no " + csc.getTaxon().getScientificName()
+                        + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol()
+                        + " matching search criteria " + csc.getEeSearchString() );
                 return mav;
             }
-            
 
         } else
             ees = expressionExperimentService.load( possibleEEs );
@@ -462,6 +464,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 StopWatch watch = new StopWatch();
 
                 watch.start();
+                
                 // get all the coexpressed genes and sort them by dataset count
                 List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
                 coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
@@ -469,20 +472,37 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 // sort coexpressed genes by dataset count
                 Collections.sort( coexpressedGenes, new CoexpressionComparator() );
 
-                // calculate the goOverlap for the 1st 100 genes
+                StopWatch overlapWatch = new StopWatch();
+                overlapWatch.start();
+                log.info( "Calculating go overlap...." );
+                // calculate the goOverlap for the 1st 25 genes
                 int i = 0;
                 Collection<Long> overlapIds = new HashSet<Long>();
                 for ( CoexpressionValueObject cvo : coexpressedGenes ) {
                     i++;
                     if ( i >= 25 ) break;
-                    overlapIds.add( cvo.getGeneId() );                    
+                    overlapIds.add( cvo.getGeneId() );
                 }
-                if (!overlapIds.isEmpty()){
-                    Map<Long,Collection<OntologyEntry>> overlap = gene2GOAssociationService.calculateGoTermOverlap( csc.getSourceGene(), overlapIds );
-                    for ( CoexpressionValueObject cvo : coexpressedGenes ){
-                        cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );                    
+                
+                Map<Long, Collection<OntologyEntry>> overlap = gene2GOAssociationService.calculateGoTermOverlap( csc
+                        .getSourceGene(), overlapIds );
+                
+                Integer numSourceGeneGoTerms;
+                if ( overlap == null ) // query gene had no go terms
+                    numSourceGeneGoTerms = 0;
+                else {
+                    numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
+
+                    if ( overlap.keySet().size() > 1 ) {                       
+                        for ( CoexpressionValueObject cvo : coexpressedGenes ){
+                            cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
+                            cvo.setPossibleOverlap( numSourceGeneGoTerms );
+                        }
                     }
                 }
+                Long overlapTime = overlapWatch.getTime();
+                overlapWatch.stop();              
+                this.saveMessage("took " + overlapTime/1000 + "s to calculate GO overlap" );
                 
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();
@@ -543,6 +563,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 mav.addObject( "numStringencyGenes", numStringencyGenes );
                 mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
                 mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
+                mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
 
                 mav.addObject( "numMatchedLinks", numMatchedLinks );
                 mav.addObject( "sourceGene", csc.getSourceGene() );
@@ -559,7 +580,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 log.info( "Processing after DAO call (elapsed time): " + elapsed );
 
                 this.saveMessage( "Coexpression query took: " + coexpressions.getElapsedWallSeconds() );
-
+                
                 return mav;
 
             }

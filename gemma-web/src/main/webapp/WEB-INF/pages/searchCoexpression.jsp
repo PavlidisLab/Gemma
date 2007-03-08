@@ -16,7 +16,7 @@
 	</c:if>
 </spring:bind>
 
-<c:if test="${numCoexpressedGenes == null}">
+<c:if test="${coexpressedGenes == null}">
 	<title>Coexpression Search</title> 
 	<h2>
 		Search for coexpressed genes:
@@ -24,7 +24,7 @@
 </c:if>
 
 <c:if test="${coexpressedGenes != null}">
-<title>Coexpression search for <c:out value="${sourceGene.officialSymbol}" /> (<c:out value="${sourceGene.officialName}" />)</title>
+<title>Coexpression search for <c:out value="${sourceGene.officialSymbol}" /> (<c:out value="${sourceGene.officialName}" />) </title>
 <h2>
 Results for 
 	<a href="/Gemma/gene/showGene.html?id=<c:out value="${sourceGene.id}" />">
@@ -32,6 +32,8 @@ Results for
 	</a>
 
 	(<c:out value="${sourceGene.officialName}" />)
+	
+	with <c:out value="${numSourceGeneGoTerms}" /> GO Terms
 </h2>
 	<h4>
 
