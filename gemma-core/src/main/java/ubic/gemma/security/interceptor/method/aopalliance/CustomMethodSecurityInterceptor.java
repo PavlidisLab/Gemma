@@ -17,7 +17,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserImpl;
+import ubic.gemma.util.SecurityUtil;
 
 /**
  * A custom MethodInterceptor.
@@ -39,9 +39,11 @@ import ubic.gemma.model.common.auditAndSecurity.UserImpl;
  */
 public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor implements MethodInterceptor {
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     private static final String ADMINISTRATOR = "administrator";
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private static final String DEFAULT_QUARTZ_SCHEDULER = "DefaultQuartzScheduler";
 
     private UserDetailsService userDetailsService = null;
 
@@ -74,12 +76,10 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
 
         if ( authentication == null ) {
 
-            if ( StringUtils.contains( Thread.currentThread().getName(), "DefaultQuartzScheduler" ) ) {
+            if ( StringUtils.contains( Thread.currentThread().getName(), DEFAULT_QUARTZ_SCHEDULER ) ) {
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername( ADMINISTRATOR );
-                User user = new UserImpl();
-                user.setName( userDetails.getUsername() );
-                user.setPassword( userDetails.getPassword() );
+                User user = SecurityUtil.getUserFromUserDetails( userDetails );
 
                 GrantedAuthority[] authorities = userDetails.getAuthorities();
                 authentication = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
