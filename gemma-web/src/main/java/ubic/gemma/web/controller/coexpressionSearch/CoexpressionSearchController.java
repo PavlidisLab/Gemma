@@ -240,7 +240,12 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
 
-        if ( ees.size() > 0 ) {
+        if ((ees == null) || (ees.isEmpty()) ){            
+            ModelAndView mav = super.showForm( request, errors, getFormView() );
+            saveMessage( request, "There are no " + csc.getTaxon().getScientificName() + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() );
+            return mav;
+        }
+        else if ( ees.size() > 0 ) {
             // if there are matches, fihter the expression experiments first by taxon
 
             Collection<ExpressionExperiment> eeToRemove = new HashSet<ExpressionExperiment>();
