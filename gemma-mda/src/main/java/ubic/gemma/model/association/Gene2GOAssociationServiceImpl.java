@@ -46,6 +46,9 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         //nothing to do. 
         if ((masterOntos == null) || (masterOntos.isEmpty()) )
             return null;
+        if ((geneIds == null) || (geneIds.isEmpty()))
+            return null;
+        
         Collection<Gene> genes = this.getGeneService().load( geneIds );
         Map<Long,Collection<OntologyEntry>> overlap = new HashMap<Long,Collection<OntologyEntry>>();
         

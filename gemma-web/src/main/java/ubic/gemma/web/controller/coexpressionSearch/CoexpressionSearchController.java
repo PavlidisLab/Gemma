@@ -240,12 +240,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
 
-        if ((ees == null) || (ees.isEmpty()) ){            
+        if ((possibleEEs == null) || (possibleEEs.isEmpty()) ){            
             ModelAndView mav = super.showForm( request, errors, getFormView() );
             saveMessage( request, "There are no " + csc.getTaxon().getScientificName() + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() );
             return mav;
         }
-        else if ( ees.size() > 0 ) {
+        
+        if ( ees.size() > 0 ) {
             // if there are matches, fihter the expression experiments first by taxon
 
             Collection<ExpressionExperiment> eeToRemove = new HashSet<ExpressionExperiment>();
@@ -256,6 +257,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 if ( !possibleEEs.contains( ee.getId() ) ) eeToRemove.add( ee );
             }
             ees.removeAll( eeToRemove );
+            
+            if  (ees.isEmpty() ){            
+                ModelAndView mav = super.showForm( request, errors, getFormView() );
+                saveMessage( request, "There are no " + csc.getTaxon().getScientificName() + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() + " matching search criteria " + csc.getEeSearchString());
+                return mav;
+            }
+            
 
         } else
             ees = expressionExperimentService.load( possibleEEs );
@@ -469,12 +477,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                     if ( i >= 25 ) break;
                     overlapIds.add( cvo.getGeneId() );                    
                 }
-                
-                Map<Long,Collection<OntologyEntry>> overlap = gene2GOAssociationService.calculateGoTermOverlap( csc.getSourceGene(), overlapIds );
-                for ( CoexpressionValueObject cvo : coexpressedGenes ){
-                    cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );                    
+                if (!overlapIds.isEmpty()){
+                    Map<Long,Collection<OntologyEntry>> overlap = gene2GOAssociationService.calculateGoTermOverlap( csc.getSourceGene(), overlapIds );
+                    for ( CoexpressionValueObject cvo : coexpressedGenes ){
+                        cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );                    
+                    }
                 }
-
+                
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();
                 Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
