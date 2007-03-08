@@ -43,8 +43,10 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -79,6 +81,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name = "taxonService" ref="taxonService"
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name = "gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class CoexpressionSearchController extends BackgroundProcessingFormBindController {
@@ -93,6 +96,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
     private TaxonService taxonService = null;
     private SearchService searchService = null;
     private ExpressionExperimentService expressionExperimentService = null;
+    private Gene2GOAssociationService gene2GOAssociationService;
 
     public CoexpressionSearchController() {
         /*
@@ -166,13 +170,16 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
         }
         // filter genes by Taxon
+
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
-        for ( Gene gene : genesFound ) {
-            if ( gene.getTaxon().getId().longValue() != csc.getTaxon().getId().longValue() ) {
-                genesToRemove.add( gene );
+        if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) ) {
+            for ( Gene gene : genesFound ) {
+                if ( gene.getTaxon().getId().longValue() != csc.getTaxon().getId().longValue() ) {
+                    genesToRemove.add( gene );
+                }
             }
+            genesFound.removeAll( genesToRemove );
         }
-        genesFound.removeAll( genesToRemove );
 
         // if no genes found
         // return error
@@ -449,6 +456,20 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 // sort coexpressed genes by dataset count
                 Collections.sort( coexpressedGenes, new CoexpressionComparator() );
 
+                // calculate the goOverlap for the 1st 100 genes
+                int i = 0;
+                Collection<Long> overlapIds = new HashSet<Long>();
+                for ( CoexpressionValueObject cvo : coexpressedGenes ) {
+                    i++;
+                    if ( i >= 25 ) break;
+                    overlapIds.add( cvo.getGeneId() );                    
+                }
+                
+                Map<Long,Collection<OntologyEntry>> overlap = gene2GOAssociationService.calculateGoTermOverlap( csc.getSourceGene(), overlapIds );
+                for ( CoexpressionValueObject cvo : coexpressedGenes ){
+                    cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );                    
+                }
+
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();
                 Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
@@ -523,6 +544,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 watch.stop();
                 log.info( "Processing after DAO call (elapsed time): " + elapsed );
 
+                this.saveMessage( "Coexpression query took: " + coexpressions.getElapsedWallSeconds() );
+
                 return mav;
 
             }
@@ -579,5 +602,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 // return v2.getGeneId().compareTo( v1.getGeneId() );
             }
         }
+    }
+
+    public Gene2GOAssociationService getGene2GOAssociationService() {
+        return gene2GOAssociationService;
+    }
+
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
     }
 }

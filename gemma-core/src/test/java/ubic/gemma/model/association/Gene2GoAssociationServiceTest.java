@@ -4,6 +4,8 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
@@ -113,6 +115,15 @@ public class Gene2GoAssociationServiceTest extends BaseSpringContextTest {
         assertEquals(2,genes.size());
         for(Gene g: genes)
             assertEquals("test", g.getDescription());
+        
+    }
+    
+    public void testCalculateGoTermOverlap(){
+        Collection<Gene> genes = new HashSet<Gene>();
+        genes.add( test2Gene );
+        
+        Map<Gene, Collection<OntologyEntry>> ontos = gene2GoAssociationS.calculateGoTermOverlap( testGene,genes );
+        assertEquals( testOE, ontos.get( test2Gene).iterator().next() );
         
     }
 

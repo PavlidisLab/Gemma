@@ -356,6 +356,7 @@ Results for
 	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
 	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
 	<display:column property="linkCount" sortable="true" title="Links" />	
+	<display:column property="goOverlap" sortable="true" title="GO:Overlap" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 

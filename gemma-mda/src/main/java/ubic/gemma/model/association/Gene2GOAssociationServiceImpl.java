@@ -21,6 +21,9 @@ package ubic.gemma.model.association;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
@@ -29,9 +32,68 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociationService
  * @author klc
+ * 
  */
+
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
+    
+    @Override
+    protected Map handleCalculateGoTermOverlap( Gene masterGene, Collection geneIds ) throws Exception {
+        
+        Collection<OntologyEntry> masterOntos = getGOTerms( masterGene );
+        
+        //nothing to do. 
+        if ((masterOntos == null) || (masterOntos.isEmpty()) )
+            return null;
+        Collection<Gene> genes = this.getGeneService().load( geneIds );
+        Map<Long,Collection<OntologyEntry>> overlap = new HashMap<Long,Collection<OntologyEntry>>();
+        
+        for(Object obj: genes){
+            Gene gene = (Gene) obj;
+            Collection<OntologyEntry> comparisonOntos = getGOTerms(gene);
+            
+            if ((comparisonOntos == null) || (comparisonOntos.isEmpty())){
+                overlap.put( gene.getId(), null );
+                continue;
+            }
+            
+            overlap.put( gene.getId(), computerOverlap( masterOntos, comparisonOntos ));
+        }
+        
+        return overlap;
+    }
+    
+    /**
+     * @param Take a gene and return a set of all GO terms including the parents of each GO term
+     * @param geneOntologyTerms
+     */
+    private Collection<OntologyEntry> getGOTerms( Gene gene ) {
+
+        Collection<OntologyEntry> ontEntry = findByGene( gene );
+        Collection<OntologyEntry> allGOTermSet = new HashSet<OntologyEntry>(ontEntry);
+
+        if ( ( ontEntry == null ) || ontEntry.isEmpty() ) return null;
+
+
+        Map<OntologyEntry, Collection<OntologyEntry>> parentMap = this.getOntologyEntryService().getAllParents( ontEntry );
+
+        for ( OntologyEntry oe : parentMap.keySet() ) {
+            allGOTermSet.addAll( parentMap.get( oe ) ); // add the parents
+            allGOTermSet.add( oe ); // add the child
+        }
+
+        return allGOTermSet;
+    }
+    
+    private Collection<OntologyEntry> computerOverlap(Collection<OntologyEntry> masterOntos, Collection<OntologyEntry> comparisonOntos )
+    {
+        Collection<OntologyEntry> overlapTerms = new HashSet<OntologyEntry>(masterOntos);
+        overlapTerms.retainAll( comparisonOntos );
+   
+       return overlapTerms; 
+    }
+    
     /*
      * (non-Javadoc)
      * 

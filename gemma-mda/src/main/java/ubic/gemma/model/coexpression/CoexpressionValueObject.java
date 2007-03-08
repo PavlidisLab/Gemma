@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 public class CoexpressionValueObject {
@@ -42,6 +43,7 @@ public class CoexpressionValueObject {
     private Map<Long, Map<Long, Double>> pValues;
     private Integer stringencyFilterValue;
     private Collection<Long> nonspecificEE;
+    private Collection<OntologyEntry> goOverlap;
 
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
@@ -335,5 +337,13 @@ public class CoexpressionValueObject {
      */
     public Collection<Long> getExpressionExperiments() {
         return expressionExperimentValueObjects.keySet();
+    }
+
+    public Collection<OntologyEntry> getGoOverlap() {
+        return goOverlap;
+    }
+
+    public void setGoOverlap( Collection<OntologyEntry> goOverlap ) {
+        this.goOverlap = goOverlap;
     }
 }

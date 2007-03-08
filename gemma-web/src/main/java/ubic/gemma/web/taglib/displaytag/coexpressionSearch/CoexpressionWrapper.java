@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
@@ -47,6 +48,25 @@ public class CoexpressionWrapper extends TableDecorator {
         link.append( getCoexpressionLink(object, "<img src=\"/Gemma/images/logo/gemmaTiny.gif\" />")  );
 
         return link.toString();
+    }
+    
+    public String getGoOverlap(){
+        CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
+        if (cvo.getGoOverlap() == null)
+            return "Not available";
+        
+        String overlap = "<b>" + cvo.getGoOverlap().size() + "</b> GO terms overlap: <br /> <span style = 'font-size:smaller'> ";        
+        int i = 0;
+        for(OntologyEntry oe: cvo.getGoOverlap()){
+            if ( ++i % 5 == 0 ) {
+               overlap += "<br />";
+            }
+            overlap += oe.getAccession() + " ";            
+            
+        }
+        
+                        
+        return overlap + "</span>";
     }
     
     /**
