@@ -18,7 +18,11 @@
  */
 package ubic.gemma.util;
 
+import org.acegisecurity.userdetails.UserDetails;
 import org.hibernate.proxy.HibernateProxy;
+
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 
 /**
  * @author keshav
@@ -39,5 +43,17 @@ public class SecurityUtil {
         }
 
         return target;
+    }
+
+    /**
+     * @param userDetails
+     * @return {@link User}
+     */
+    public static User getUserFromUserDetails( UserDetails userDetails ) {
+        User user = new UserImpl();
+        user.setName( userDetails.getUsername() );
+        user.setPassword( userDetails.getPassword() );
+
+        return user;
     }
 }
