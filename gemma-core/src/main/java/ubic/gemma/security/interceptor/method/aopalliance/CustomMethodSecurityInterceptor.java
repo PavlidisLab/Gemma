@@ -1,13 +1,23 @@
 package ubic.gemma.security.interceptor.method.aopalliance;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.GrantedAuthority;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.intercept.AbstractSecurityInterceptor;
 import org.acegisecurity.intercept.InterceptorStatusToken;
 import org.acegisecurity.intercept.ObjectDefinitionSource;
 import org.acegisecurity.intercept.method.MethodDefinitionSource;
+import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.acegisecurity.userdetails.UserDetails;
+import org.acegisecurity.userdetails.UserDetailsService;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 
 /**
  * A custom MethodInterceptor.
@@ -27,14 +37,17 @@ import org.apache.commons.logging.LogFactory;
  * @author Ben Alex
  * @version $Id$
  */
-public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor implements MethodInterceptor {// ,
-    // ApplicationContextAware
-    // {
+public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor implements MethodInterceptor {
+
+    private static final String ADMINISTRATOR = "administrator";
+
     private Log log = LogFactory.getLog( this.getClass() );
+
+    private UserDetailsService userDetailsService = null;
+
     // ~ Instance fields
     // ================================================================================================
 
-    // private ApplicationContext ctx = null;//TODO add back for quartz check.
     private MethodDefinitionSource objectDefinitionSource;
 
     // ~ Methods
@@ -57,20 +70,22 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
      */
     public Object invoke( MethodInvocation mi ) throws Throwable {
 
-        // TODO Add back for quartz check. Also add "Spring awareness" back (ie. implements ApplicationContextAware).
-        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        //
-        // if ( authentication == null ) {
-        // if ( StringUtils.contains( Thread.currentThread().getName(), "DefaultQuartzScheduler" ) ) {
-        //
-        // User user = ( ( UserService ) ctx.getBean( "userService" ) ).findByUserName( "administrator" );
-        //
-        // GrantedAuthority authority = new GrantedAuthorityImpl( "admin" );
-        // GrantedAuthority[] authorities = { authority };
-        // authentication = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
-        // SecurityContextHolder.getContext().setAuthentication( authentication );
-        // }
-        // }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if ( authentication == null ) {
+
+            if ( StringUtils.contains( Thread.currentThread().getName(), "DefaultQuartzScheduler" ) ) {
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername( ADMINISTRATOR );
+                User user = new UserImpl();
+                user.setName( userDetails.getUsername() );
+                user.setPassword( userDetails.getPassword() );
+
+                GrantedAuthority[] authorities = userDetails.getAuthorities();
+                authentication = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
+                SecurityContextHolder.getContext().setAuthentication( authentication );
+            }
+        }
 
         Object result = null;
         InterceptorStatusToken token = super.beforeInvocation( mi );
@@ -92,8 +107,10 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
         this.objectDefinitionSource = newSource;
     }
 
-    // TODO add back for quartz check
-    // public void setApplicationContext( ApplicationContext ctx ) throws BeansException {
-    // this.ctx = ctx;
-    // }
+    /**
+     * @param userDetailsService
+     */
+    public void setUserDetailsService( UserDetailsService userDetailsService ) {
+        this.userDetailsService = userDetailsService;
+    }
 }
