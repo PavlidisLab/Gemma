@@ -98,6 +98,7 @@
 		<display:column property="color" sortable="true"
 			titleKey="arrayDesign.technologyType" />
 		<display:column property="refreshReport" title="Refresh" />
+		<display:column property="delete" sortable="false" titleKey="arrayDesign.delete" />
 	</authz:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
