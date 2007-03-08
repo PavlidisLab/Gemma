@@ -220,7 +220,11 @@
     <!-- ===================== AUTHORIZATION ==================== -->
     
     <!-- acegi serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. -->
+    <!--  <bean id="serviceSecurityInterceptor" class="org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor"> -->
     <bean id="serviceSecurityInterceptor" class="ubic.gemma.security.interceptor.method.aopalliance.CustomMethodSecurityInterceptor">
+    	<property name="userDetailsService">
+            <ref bean="userDetailsService"/>
+        </property>
         <property name="authenticationManager">
             <ref bean="authenticationManager"/>
         </property>
