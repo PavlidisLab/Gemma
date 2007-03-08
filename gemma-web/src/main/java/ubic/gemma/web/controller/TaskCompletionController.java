@@ -84,9 +84,14 @@ public class TaskCompletionController extends BaseFormController {
         ModelAndView returnedView;
         try {
             returnedView =  (ModelAndView) taskRunningService.checkResult( taskId );
-            return returnedView;
-//            returnedView.setView( new RedirectView(returnedView.getViewName()) );
-//            return returnedView;
+            if (returnedView == null){
+                this.saveMessage( request, "No task found with id: " + taskId );
+                return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
+            }
+              //
+            returnedView.setView( new RedirectView(returnedView.getViewName()) );
+              return returnedView;
+            
         } catch ( CancellationException e ) {
             log.debug( "Job was cancelled" );
             
@@ -94,7 +99,7 @@ public class TaskCompletionController extends BaseFormController {
         } catch ( Throwable e ) {
             log.debug( "Got an exception: " + e );
             if ( e instanceof Exception ) throw ( Exception ) e;
-            return null;
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
         
     }

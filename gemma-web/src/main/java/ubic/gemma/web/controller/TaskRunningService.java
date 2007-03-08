@@ -84,7 +84,9 @@ public class TaskRunningService {
             log.debug( "Job is apparently still running?" );
             return null;
         } else {
-            throw new IllegalStateException( "Job isn't running for " + taskId + " , we don't know what happened to it." );
+            //throw new IllegalStateException( "Job isn't running for " + taskId + " , we don't know what happened to it." );
+            log.debug( "Job isn't running for " + taskId + " , we don't know what happened to it." );
+            return null;
         }
     }
 
