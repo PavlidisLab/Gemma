@@ -76,7 +76,7 @@
 						</td>
 						<td>
 							<%
-							if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
+							if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
 							%>
 							${
 							compositeSequence.biologicalCharacteristic.taxon.scientificName}
@@ -96,7 +96,7 @@
 						</td>
 						<td>
 							<%
-							if ( compositeSequence.getBiologicalCharacteristic().getType() != null ) {
+							if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getType() != null ) {
 			                    String type = null;
 			                    if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "EST" ) ) {
 			                        type = "EST";
@@ -141,7 +141,7 @@
 						</td>
 						<td>
 							<%
-							if ( compositeSequence.getBiologicalCharacteristic().getName() != null ) {
+							if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getName() != null ) {
 							%>
 							${compositeSequence.biologicalCharacteristic.name }
 							<%
@@ -160,7 +160,7 @@
 						</td>
 						<td>
 							<%
-							                    if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
+							                    if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
 							                    String organism = compositeSequence.getBiologicalCharacteristic().getTaxon().getCommonName();
 							                    String database = "hg18";
 							                    if ( organism.equalsIgnoreCase( "Human" ) ) {
@@ -195,7 +195,7 @@
 						</td>
 						<td>
 							<%
-							                    if ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
+							                    if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
 							                    out.print( compositeSequence.getBiologicalCharacteristic().getSequence().length() );
 							                } else {
 							                    out.print( "No sequence available" );
@@ -212,7 +212,7 @@
 						</td>
 						<td>
 						<%
-						                if ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
+						                if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
 						                String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
 						                String formattedSequence = "";
 						                int nextIndex = 0;

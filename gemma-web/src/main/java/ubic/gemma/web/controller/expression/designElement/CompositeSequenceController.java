@@ -35,6 +35,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -174,8 +175,18 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @return
      */
     private Map<BlatResult, BlatResultGeneSummary> getBlatMappingSummary( CompositeSequence cs ) {
-        Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+        BioSequence bs = cs.getBiologicalCharacteristic();
         Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult, BlatResultGeneSummary>();
+        // if the biosequence does not exist, then return null
+        if (bs == null) {
+            return blatResults;
+        }
+        // if there is no bs2gp entry, then return null
+        if (bs.getBioSequence2GeneProduct() == null) {
+            return blatResults;
+        }
+        Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+
         for ( Object object : bs2gps ) {
             BioSequence2GeneProduct bs2gp = ( BioSequence2GeneProduct ) object;
             if ( bs2gp instanceof BlatAssociation ) {
