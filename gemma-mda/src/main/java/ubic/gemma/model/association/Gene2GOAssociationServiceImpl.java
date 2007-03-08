@@ -32,41 +32,43 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociationService
  * @author klc
- * 
  */
 
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
-    
     @Override
     protected Map handleCalculateGoTermOverlap( Gene masterGene, Collection geneIds ) throws Exception {
-        
+
+        if ( masterGene == null ) return null;
+
         Collection<OntologyEntry> masterOntos = getGOTerms( masterGene );
-        
-        //nothing to do. 
-        if ((masterOntos == null) || (masterOntos.isEmpty()) )
-            return null;
-        if ((geneIds == null) || (geneIds.isEmpty()))
-            return null;
-        
+
+        // nothing to do.
+        if ( ( masterOntos == null ) || ( masterOntos.isEmpty() ) ) return null;
+
+        Map<Long, Collection<OntologyEntry>> overlap = new HashMap<Long, Collection<OntologyEntry>>();
+        overlap.put( masterGene.getId(), masterOntos ); // include the master gene in the list. Clearly 100% overlap
+                                                        // with itself!
+
+        if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) return overlap;
+
         Collection<Gene> genes = this.getGeneService().load( geneIds );
-        Map<Long,Collection<OntologyEntry>> overlap = new HashMap<Long,Collection<OntologyEntry>>();
-        
-        for(Object obj: genes){
-            Gene gene = (Gene) obj;
-            Collection<OntologyEntry> comparisonOntos = getGOTerms(gene);
-            
-            if ((comparisonOntos == null) || (comparisonOntos.isEmpty())){
-                overlap.put( gene.getId(), null );
+
+        for ( Object obj : genes ) {
+            Gene gene = ( Gene ) obj;
+            Collection<OntologyEntry> comparisonOntos = getGOTerms( gene );
+
+            if ( ( comparisonOntos == null ) || ( comparisonOntos.isEmpty() ) ) {
+                overlap.put( gene.getId(), new HashSet<OntologyEntry>() );
                 continue;
             }
-            
-            overlap.put( gene.getId(), computerOverlap( masterOntos, comparisonOntos ));
+
+            overlap.put( gene.getId(), computerOverlap( masterOntos, comparisonOntos ) );
         }
-        
+
         return overlap;
     }
-    
+
     /**
      * @param Take a gene and return a set of all GO terms including the parents of each GO term
      * @param geneOntologyTerms
@@ -74,12 +76,12 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
     private Collection<OntologyEntry> getGOTerms( Gene gene ) {
 
         Collection<OntologyEntry> ontEntry = findByGene( gene );
-        Collection<OntologyEntry> allGOTermSet = new HashSet<OntologyEntry>(ontEntry);
+        Collection<OntologyEntry> allGOTermSet = new HashSet<OntologyEntry>( ontEntry );
 
         if ( ( ontEntry == null ) || ontEntry.isEmpty() ) return null;
 
-
-        Map<OntologyEntry, Collection<OntologyEntry>> parentMap = this.getOntologyEntryService().getAllParents( ontEntry );
+        Map<OntologyEntry, Collection<OntologyEntry>> parentMap = this.getOntologyEntryService().getAllParents(
+                ontEntry );
 
         for ( OntologyEntry oe : parentMap.keySet() ) {
             allGOTermSet.addAll( parentMap.get( oe ) ); // add the parents
@@ -88,15 +90,15 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
 
         return allGOTermSet;
     }
-    
-    private Collection<OntologyEntry> computerOverlap(Collection<OntologyEntry> masterOntos, Collection<OntologyEntry> comparisonOntos )
-    {
-        Collection<OntologyEntry> overlapTerms = new HashSet<OntologyEntry>(masterOntos);
+
+    private Collection<OntologyEntry> computerOverlap( Collection<OntologyEntry> masterOntos,
+            Collection<OntologyEntry> comparisonOntos ) {
+        Collection<OntologyEntry> overlapTerms = new HashSet<OntologyEntry>( masterOntos );
         overlapTerms.retainAll( comparisonOntos );
-   
-       return overlapTerms; 
+
+        return overlapTerms;
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -108,8 +110,8 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
 
         if ( searchOnto == null ) return new ArrayList();
-        
-        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );               
+
+        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
         searchOntologies.add( searchOnto );
 
         return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );

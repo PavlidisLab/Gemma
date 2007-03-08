@@ -88,8 +88,8 @@ public class TaskCompletionController extends BaseFormController {
                 this.saveMessage( request, "No task found with id: " + taskId );
                 return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
             }
-              //
-            returnedView.setView( new RedirectView(returnedView.getViewName()) );
+              
+            //returnedView.setView( new RedirectView(returnedView.getViewName()) );
               return returnedView;
             
         } catch ( CancellationException e ) {
