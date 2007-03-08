@@ -881,15 +881,15 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
+     * Search for a single accession
+     * 
      * @param databaseNames
      * @param blastDbHome
      * @param accessionToFetch
      * @return
      */
     private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch ) {
-        // search the databases.
         FastaCmd fc = new SimpleFastaCmd();
-        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
         for ( String dbname : databaseNames ) {
             BioSequence moreBioSequence;
             if ( blastDbHome != null ) {
