@@ -307,11 +307,24 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
 
-        // FIXME could do this with a single query? It might be more efficient.
-        // String queryString = "select cs,bs,geneProduct,gene,bs2gp from ArrayDesignImpl ad, BioSequence2GeneProduct
-        // bs2gp inner join
-        // fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs where bs2gp.bioSequence=bs and
-        // ad = :arrayDesign";
+//        // FIXME could do this with a single query? It might be more efficient.
+//        String queryString = "select ad,cs,bs,geneProduct,gene,bs2gp,dbentry,taxon from ArrayDesignImpl ad, BioSequence2GeneProductImpl "
+//                + "bs2gp left join fetch ad.compositeSequences cs left join "
+//                + "fetch cs.biologicalCharacteristic bs left join fetch bs.taxon taxon "
+//                + "left join fetch bs.sequenceDatabaseEntry dbentry "
+//                + "left join fetch bs2gp.geneProduct geneProduct inner join fetch geneProduct.gene gene  "
+//                + "where bs2gp.bioSequence=bs and  ad = :arrayDesign";
+//
+//        try {
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            queryObject.setFirstResult( 1 );
+//            queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
+//            // collection returned
+//            queryObject.setParameter( "arrayDesign", arrayDesign );
+//            queryObject.list();
+//        } catch ( org.hibernate.HibernateException ex ) {
+//            throw super.convertHibernateAccessException( ex );
+//        }
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {

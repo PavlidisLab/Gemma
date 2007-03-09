@@ -28,6 +28,24 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Represents a matrix of data from an expression experiment.
+ * <p>
+ * Expression data is rather complex, so we have to handle some messy cases.
+ * <p>
+ * The key problem is how to unambiguously identify rows and columns in the matrix. This is greatly complicated by the
+ * fact that experiments can combine data from multiple array designs in various ways.
+ * <p>
+ * Put it together, and the result is that there can be more than one BioAssay per column; the same BioMaterial can be
+ * used in multiple columns (supported implictly). There can also be more than on BioMaterial in one column (we don't
+ * support this yet either). The same BioSequence can be found in multiple rows. A row can contain data from more than
+ * one DesignElement.
+ * <p>
+ * There are a few constraints: a particular DesignElement can only be used once, in a single row. At the moment we do
+ * not directly support technical replicates, though this should be possible. A BioAssay can only appear in a single
+ * column.
+ * <p>
+ * For some operations a ExpressionDataMatrixRowElement object is offered, which encapsulates a combination of
+ * DesignElements, a BioSequence, and an index. The list of these can be useful for iterating over the rows of the
+ * matrix.
  * 
  * @author pavlidis
  * @author keshav
@@ -37,7 +55,8 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * Return a row that 'came from' the given design element. NOTE that this might be only part of a row if the
-     * experiment includes data from multiple array designs!
+     * experiment includes data from multiple array designs! This is different than the behavior of get(designElement,
+     * bioAssay). FIXME we might need to change this behavior and provide a getPartialRow or something.
      * 
      * @param designElement
      * @return
@@ -45,7 +64,7 @@ public interface ExpressionDataMatrix<T> {
     public T[] getRow( DesignElement designElement );
 
     /**
-     * Access a single row of the matrix, by index.
+     * Access a single row of the matrix, by index. A complete row is returned.
      * 
      * @param index
      * @return
@@ -61,7 +80,9 @@ public interface ExpressionDataMatrix<T> {
     public T[] getColumn( BioAssay bioAssay );
 
     /**
-     * Access a single value of the matrix.
+     * Access a single value of the matrix. Note that because there can be multiple bioassays per column and multiple
+     * designelements per row, it is possible for this method to retrieve a data that does not come from the bioassay
+     * and/or designelement arguments.
      * 
      * @param designElement
      * @param bioAssay
@@ -70,15 +91,8 @@ public interface ExpressionDataMatrix<T> {
     public T get( DesignElement designElement, BioAssay bioAssay );
 
     /**
-     * Access a single value of the matrix.
+     * Access a single value of the matrix. This is generally the easiest way to do it.
      * 
-     * @param designElement
-     * @param bioMaterial
-     * @return T
-     */
-    public T get( DesignElement designElement, BioMaterial bioMaterial );
-
-    /**
      * @param row
      * @param column
      * @return
@@ -93,15 +107,6 @@ public interface ExpressionDataMatrix<T> {
      * @param value
      */
     public void set( int row, int column, T value );
-
-    /**
-     * Set a value in the matrix
-     * 
-     * @param bioSequence
-     * @param bioMaterial
-     * @param value
-     */
-    public void set( BioSequence bioSequence, BioMaterial bioMaterial, T value );
 
     /**
      * Access a submatrix
@@ -142,11 +147,19 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * @param index
+     * @return
+     */
+    public ExpressionDataMatrixRowElement getRowElement( int index );
+
+    /**
+     * @param index
      * @return BioMaterial FIXME technically this can still be a collection. See bug 629
      */
     public BioMaterial getBioMaterialForColumn( int index );
 
     /**
+     * Given a row, identify the BioSequence
+     * 
      * @param index
      * @return
      */

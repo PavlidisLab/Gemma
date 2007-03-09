@@ -64,6 +64,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
         super.onSetUpInTransaction();
 
+        endTransaction();
         ee = this.getTestPersistentCompleteExpressionExperiment();
         ee.setName( EE_NAME );
 
@@ -125,6 +126,20 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     }
 
     @SuppressWarnings("unchecked")
+    public final void testGetDesignElementDataVectorsByQt() throws Exception {
+        QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
+        quantitationTypes.add( quantitationType );
+
+        log.info( "***********************" );
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors( ee,
+                quantitationTypes );
+        log.info( "***********************" );
+        assertEquals( 12, vectors.size() );
+
+    }
+
+    @SuppressWarnings("unchecked")
     public final void testGetSamplingOfVectors() throws Exception {
         QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
         Collection<DesignElementDataVector> vectors = expressionExperimentDao.getSamplingOfVectors( ee,
@@ -178,16 +193,16 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         assertEquals( taxon, checkTaxon );
 
     }
-    
-    //Creating test data for this was difficult.  Needed to use a current data base for this test to work. 
-//    public void testFindByGene() throws Exception {
-//        GeneService geneS = (GeneService) this.getBean( "geneService" );
-//        Collection<Gene> genes = geneS.findByOfficialSymbol( "grin1" );
-//        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-//        .getBean( "expressionExperimentService" );
-//        Collection<Long> results = eeService.findByGene( genes.iterator().next());
-//        log.info( results );
-//        assertEquals(89, results.size() );
-//        
-//    }
+
+    // Creating test data for this was difficult. Needed to use a current data base for this test to work.
+    // public void testFindByGene() throws Exception {
+    // GeneService geneS = (GeneService) this.getBean( "geneService" );
+    // Collection<Gene> genes = geneS.findByOfficialSymbol( "grin1" );
+    // ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+    // .getBean( "expressionExperimentService" );
+    // Collection<Long> results = eeService.findByGene( genes.iterator().next());
+    // log.info( results );
+    // assertEquals(89, results.size() );
+    //        
+    // }
 }

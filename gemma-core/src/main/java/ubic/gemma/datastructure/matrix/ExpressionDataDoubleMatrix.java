@@ -34,11 +34,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -108,6 +106,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( selectedVectors );
     }
 
+    /**
+     * @param expressionExperiment
+     * @param quantitationTypes
+     * @deprecated Use ExpressionDataMatrixBuilder instead.
+     */
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
             Collection<QuantitationType> quantitationTypes ) {
         init();
@@ -131,6 +134,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     /**
      * @param expressionExperiment
      * @param quantitationType
+     * @deprecated Use ExpressionDataMatrixBuilder instead, because you may need multiple quantitation types.
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         init();
@@ -159,30 +163,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         return this.matrix.get( i, j );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public Double get( DesignElement designElement, BioMaterial bioMaterial ) {
-        if ( bioMaterial == null ) {
-            throw new IllegalArgumentException( "Biomaterial cannot be null" );
-        }
-        Integer columnIndex = this.columnBioMaterialMap.get( bioMaterial );
-        if ( columnIndex == null ) {
-            throw new IllegalArgumentException( "No such biomaterial " + bioMaterial );
-        }
-
-        Integer rowIndex = this.getRowIndex( designElement );
-        if ( rowIndex == null ) {
-            throw new IllegalArgumentException( "No such designElement " + designElement );
-        }
-
-        return ( Double ) this.matrix
-                .get( matrix.getRowIndexByName( rowIndex ), matrix.getColIndexByName( columnIndex ) );
-    }
-
     public Double get( int row, int column ) {
         return matrix.get( row, column );
     }
@@ -193,8 +173,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
     public Double[][] get( List designElements, List bioAssays ) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
     /*
@@ -220,17 +199,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     public Double[][] getColumns( List bioAssays ) {
-        // if ( bioAssays == null ) {
-        // return null;
-        // }
-        //
-        // List<BioAssay> assays = bioAssays;
-        //
-        // // Double[][] result = new Double[][assays.size()];
-        // for ( BioAssay assay : assays ) {
-        // Double[] columnResult = getColumn( assay );
-        // }
-        return null;
+        throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
     /*
@@ -329,15 +298,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         return matrix.rows();
     }
 
-    public void set( BioSequence bioSequence, BioMaterial bioMaterial, Object value ) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
+    /**
+     * @param designElement
+     * @param bioMaterial
+     * @param value
+     */
+    public void set( DesignElement designElement, BioAssay bioAssay, Object value ) {
         assert value instanceof Double;
         int row = this.getRowIndex( designElement );
-        int column = this.getColumnIndex( bioMaterial );
+        int column = this.getColumnIndex( bioAssay );
         matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
     }
 
@@ -395,9 +364,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 buf.append( "|" );
             }
 
-            DesignElement de = this.rowDesignElementMapByInteger.get( j ).iterator().next();
             for ( int i = 0; i < columns; i++ ) {
-                buf.append( "\t" + this.get( de, this.getBioMaterialForColumn( i ) ) );
+                buf.append( "\t" + this.get( j, i ) );
             }
 
             buf.append( "\n" );
@@ -518,6 +486,42 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         int maxSize = setUpColumnElements();
 
         this.matrix = createMatrix( vectors, maxSize );
+
+    }
+
+    /**
+     * Create a matrix based on another one's selected rows.
+     * 
+     * @param sourceMatrix
+     * @param rowsToUse
+     */
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<Integer> rowsToUse ) {
+        init();
+        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
+        this.columnAssayMap = sourceMatrix.columnAssayMap;
+        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
+        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
+        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
+
+        this.matrix = DoubleMatrix2DNamedFactory.fastrow( rowsToUse.size(), sourceMatrix.columns() );
+
+        log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
+
+        int i = 0;
+        for ( Integer row : ( List<Integer> ) rowsToUse ) {
+            Collection<DesignElement> elsForRow = sourceMatrix.getDesignElementsForRow( row );
+            for ( DesignElement element : elsForRow ) {
+                boolean addedRow = super.addToRowMaps( i, element );
+                Double[] rowVals = sourceMatrix.getRow( row );
+                for ( int j = 0; j < rowVals.length; j++ ) {
+                    Double val = rowVals[j];
+                    set( i, j, val );
+                }
+                if ( addedRow ) { // I believe this should always be true in tihs 'copy' operation
+                    i++;
+                }
+            }
+        }
 
     }
 

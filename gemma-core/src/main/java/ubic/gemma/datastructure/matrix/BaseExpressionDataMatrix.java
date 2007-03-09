@@ -42,6 +42,9 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Base class for ExpressionDataMatrix implementations.
+ * <p>
+ * Implementation note: The underlying DoubleMatrixNamed is indexed by Integers, which are in turn mapped to BioAssays
+ * etc. held here. Thus the 'names' of the underlying matrix are just numbers.
  * 
  * @author pavlidis
  * @version $Id$
@@ -120,17 +123,30 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         return j;
     }
 
+    List<ExpressionDataMatrixRowElement> rowElements = null;
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
      */
     public List<ExpressionDataMatrixRowElement> getRowElements() {
-        List<ExpressionDataMatrixRowElement> retval = new ArrayList<ExpressionDataMatrixRowElement>();
-        for ( int i = 0; i < rows(); i++ ) {
-            retval.add( new ExpressionDataMatrixRowElement( this, i ) );
+        if ( this.rowElements == null ) {
+            rowElements = new ArrayList<ExpressionDataMatrixRowElement>();
+            for ( int i = 0; i < rows(); i++ ) {
+                rowElements.add( new ExpressionDataMatrixRowElement( this, i ) );
+            }
         }
-        return retval;
+        return this.rowElements;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElement(int)
+     */
+    public ExpressionDataMatrixRowElement getRowElement( int index ) {
+        return this.getRowElements().get( index );
     }
 
     public BioSequence getBioSequenceForRow( int index ) {
@@ -143,6 +159,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
     public int getColumnIndex( BioMaterial bioMaterial ) {
         return columnBioMaterialMap.get( bioMaterial );
+    }
+
+    public int getColumnIndex( BioAssay bioAssay ) {
+        return columnAssayMap.get( bioAssay );
     }
 
     public int getRowIndex( DesignElement designElement ) {
@@ -293,7 +313,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * @return true if a new row element is added, false if we've encountered a biosequence that is already in the
      *         matrix.
      */
-    private boolean addToRowMaps( Integer row, DesignElement designElement ) {
+    protected boolean addToRowMaps( Integer row, DesignElement designElement ) {
         // assert !rowBioSequencemapByInteger.containsKey( row ) : "Already have row " + row;
         assert designElement instanceof CompositeSequence : "Got a " + designElement.getClass();
 
@@ -301,7 +321,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
 
         if ( biologicalCharacteristic == null ) {
-            log.debug( "No sequence for " + designElement + ", using dummy" );
+            if ( log.isDebugEnabled() ) log.debug( "No sequence for " + designElement + ", using dummy" );
             biologicalCharacteristic = getDummySequence( cs ); // this is guaranteed to be unique for this desgin
             // element.
         }
@@ -310,12 +330,13 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
         Integer actualRow = row;
 
-        log.debug( "Seeking row for " + designElement );
+        if ( log.isDebugEnabled() ) log.debug( "Seeking row for " + designElement );
 
         if ( rowBioSequenceMap.containsKey( biologicalCharacteristic ) ) {
 
-            log.debug( "Already have a row(s) for " + biologicalCharacteristic + ": "
-                    + rowBioSequenceMap.get( biologicalCharacteristic ) );
+            if ( log.isDebugEnabled() )
+                log.debug( "Already have a row(s) for " + biologicalCharacteristic + ": "
+                        + rowBioSequenceMap.get( biologicalCharacteristic ) );
 
             /*
              * then add it to one of the existing rows for this sequence OR create a new row, if the existing row is for
@@ -325,43 +346,46 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             Collection<Integer> existingRowsForSequence = rowBioSequenceMap.get( biologicalCharacteristic );
             boolean foundRowToAddTo = false;
             for ( Integer candidateRowToAddTo : existingRowsForSequence ) {
-                log.debug( "Checking if we can add to row " + candidateRowToAddTo );
+                if ( log.isDebugEnabled() ) log.debug( "Checking if we can add to row " + candidateRowToAddTo );
                 Collection<DesignElement> des = rowDesignElementMapByInteger.get( candidateRowToAddTo );
 
                 // First look for a row we can add it to.
                 for ( DesignElement element : des ) {
-                    log.debug( "Row " + candidateRowToAddTo + ": " + element + " uses same sequence, checking..." );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Row " + candidateRowToAddTo + ": " + element + " uses same sequence, checking..." );
                     if ( !element.getArrayDesign().equals( designElement.getArrayDesign() ) ) {
                         // make sure there isn't already an entry in the CURRENT array design for that row.
                         for ( DesignElement checkOnSameArray : rowDesignElementMapByInteger.get( candidateRowToAddTo ) ) {
                             if ( !checkOnSameArray.getArrayDesign().equals( designElement.getArrayDesign() ) ) {
-                                log.debug( "Can add to row " + candidateRowToAddTo );
+                                if ( log.isDebugEnabled() ) log.debug( "Can add to row " + candidateRowToAddTo );
                                 actualRow = candidateRowToAddTo;
                                 foundRowToAddTo = true;
                             } else {
-                                log.debug( "Can't add to row because it's on the same array" );
+                                if ( log.isDebugEnabled() )
+                                    log.debug( "Can't add to row because it's on the same array" );
                             }
                         }
 
                     } else {
-                        log.debug( "Element is on the same array as " + designElement + "("
-                                + designElement.getArrayDesign() + ")" );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Element is on the same array as " + designElement + "("
+                                    + designElement.getArrayDesign() + ")" );
                     }
                 }
             }
 
             if ( !foundRowToAddTo ) {
-                log.debug( "Couldn't add " + designElement + " to an existing row." );
+                if ( log.isDebugEnabled() ) log.debug( "Couldn't add " + designElement + " to an existing row." );
                 isNew = true;
             }
 
         } else {
-            log.debug( "No row for " + biologicalCharacteristic + " yet" );
+            if ( log.isDebugEnabled() ) log.debug( "No row for " + biologicalCharacteristic + " yet" );
             rowBioSequenceMap.put( biologicalCharacteristic, new LinkedHashSet<Integer>() );
             isNew = true;
         }
 
-        log.debug( "Adding " + designElement + " to row " + actualRow );
+        if ( log.isDebugEnabled() ) log.debug( "Adding " + designElement + " to row " + actualRow );
         if ( !rowBioSequencemapByInteger.containsKey( actualRow ) ) {
             rowDesignElementMapByInteger.put( actualRow, new HashSet<DesignElement>() );
         }

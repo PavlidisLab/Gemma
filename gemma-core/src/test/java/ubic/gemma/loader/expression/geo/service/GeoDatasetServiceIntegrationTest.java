@@ -522,9 +522,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         ExpressionDataMatrixService edms = new ExpressionDataMatrixService();
 
-        edms
-                .setDesignElementDataVectorService( ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" ) );
-
         ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
 
         Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );
@@ -657,10 +654,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // it is important for this test that GSE3193 not already be in the database.
         ExpressionExperiment eeold = this.eeService.findByShortName( "GSE3193" );
-        if (eeold != null) {
+        if ( eeold != null ) {
             eeService.delete( eeold );
         }
-        
+
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService

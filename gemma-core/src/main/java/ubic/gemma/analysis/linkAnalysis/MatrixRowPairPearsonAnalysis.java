@@ -18,25 +18,24 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
-import hep.aida.IHistogram1D;
-import hep.aida.ref.Histogram1D;
-
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.NamedMatrix;
 import ubic.basecode.math.CorrelationStats;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.Gene;
 import cern.colt.bitvector.BitMatrix;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
@@ -56,12 +55,12 @@ import cern.colt.list.ObjectArrayList;
  * 
  * @author Paul Pavlidis
  * @version $Id$
- * @todo This should not be in baseCode
  */
 public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
 
+    private static final int NUM_BINS = 2048;
+    private static final int HALF_BIN = NUM_BINS / 2;
     private double storageThresholdValue = 0.5;
-    private IHistogram1D histogram = null;
     private CompressedSparseDoubleMatrix2DNamed C = null;
     private double[] rowMeans = null;
     private double[] rowSumSquaresSqrt = null;
@@ -72,18 +71,20 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private double lowerTailThreshold = 0.0;
     private double pValueThreshold = 0.0;
     private boolean histogramIsFilled = false;
-    private DoubleMatrixNamed dataMatrix = null;
-    private GeneAnnotations duplicateMap = null;
-    private Map probeToGeneMap = null;
-    private Map geneToProbeMap = null;
-    private DesignElementDataVectorService deService = null;
-    private GeneService geneService = null;
+    private Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
+    private Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
     private BitMatrix used = null;
     private int numMissing;
     private double globalTotal = 0.0; // used to store the running total of the matrix values.
     private double globalMean = 0.0; // mean of the entire distribution.
     private int numVals = 0; // number of values actually stored in the matrix
     protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
+    private ExpressionDataDoubleMatrix dataMatrix;
+    private boolean[] hasGenesCache;
+    private Map<Integer, DesignElement> rowMapCache = new HashMap<Integer, DesignElement>();
+
+    private int[] fastHistogram = new int[NUM_BINS];
+
     /**
      *
      */
@@ -98,17 +99,40 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         if ( size > 0 ) {
             C = DoubleMatrix2DNamedFactory.compressedsparse( size, size );
         }
-        histogram = new Histogram1D( "Correlation histogram", 2000, -1.0, 1.0 );
         keepers = new ObjectArrayList( 10000 );
     }
 
     /**
-     * @param dataMatrix DenseDoubleMatrix2DNamed
+     * @param
      */
-    public MatrixRowPairPearsonAnalysis( DoubleMatrixNamed dataMatrix ) {
+    public MatrixRowPairPearsonAnalysis( ExpressionDataDoubleMatrix dataMatrix ) {
         this( dataMatrix.rows() );
         this.dataMatrix = dataMatrix;
         this.numMissing = this.fillUsed();
+    }
+
+    /**
+     * Initialize caches.
+     */
+    private void init() {
+        List<ExpressionDataMatrixRowElement> rowElements = this.dataMatrix.getRowElements();
+        hasGenesCache = new boolean[rowElements.size()];
+
+        for ( ExpressionDataMatrixRowElement element : rowElements ) {
+
+            Collection<DesignElement> designElements = element.getDesignElements();
+            if ( designElements.size() > 1 ) {
+                throw new UnsupportedOperationException(
+                        "Sorry, don't know how to deal with rows that refer to more than one design element yet." );
+            }
+            DesignElement de = designElements.iterator().next();
+            rowMapCache.put( element.getIndex(), de );
+
+            Collection<Gene> geneIdSet = this.probeToGeneMap.get( de );
+            Integer i = element.getIndex();
+            hasGenesCache[i] = geneIdSet != null && geneIdSet.size() > 0;
+
+        }
     }
 
     /**
@@ -116,7 +140,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param tmts Values of the correlation that are deemed too small to store in the matrix. Setting this as high as
      *        possible can greatly reduce memory requirements, but can slow things down.
      */
-    public MatrixRowPairPearsonAnalysis( DoubleMatrixNamed dataMatrix, double tmts ) {
+    public MatrixRowPairPearsonAnalysis( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         this( dataMatrix );
         this.setStorageThresholdValue( tmts );
     }
@@ -177,11 +201,13 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     }
 
     /**
-     * @param k GroupMap
+     * 
      */
-    public void setDuplicateMap( Map m1, Map m2 ) {
-        this.geneToProbeMap = m1;
-        this.probeToGeneMap = m2;
+    public void setDuplicateMap( Map<CompositeSequence, Collection<Gene>> probeToGeneMap,
+            Map<Gene, Collection<CompositeSequence>> geneToProbeMap ) {
+        this.geneToProbeMap = geneToProbeMap;
+        this.probeToGeneMap = probeToGeneMap;
+        init();
     }
 
     /**
@@ -199,23 +225,15 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     }
 
     /**
-     * @return hep.aida.IHistogram1D
-     */
-    public IHistogram1D getHistogram() {
-        return histogram;
-    }
-
-    /**
-     * Read back the histogram as a DoubleArrayList of counts. Stupid that the IHistogram1D interface doesn't define
-     * this...
+     * Read back the histogram as a DoubleArrayList of counts.
      * 
      * @return cern.colt.list.DoubleArrayList
      * @todo - put this somewhere more generically useful!
      */
     public DoubleArrayList getHistogramArrayList() {
-        DoubleArrayList r = new DoubleArrayList( histogram.xAxis().bins() );
-        for ( int i = 0; i < histogram.xAxis().bins(); i++ ) {
-            r.add( histogram.binHeight( i ) );
+        DoubleArrayList r = new DoubleArrayList( fastHistogram.length );
+        for ( int i = 0; i < fastHistogram.length; i++ ) {
+            r.add( fastHistogram[i] );
         }
         return r;
     }
@@ -249,16 +267,14 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
         return sxy / ( rowSumSquaresSqrt[i] * rowSumSquaresSqrt[j] );
     }
-    
-    /***Skip the probes without blat association****/
-    private boolean blatValidation(Object probeA){
-    	if(this.probeToGeneMap != null){
-            Set <Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)probeA).getId());
-            if(geneIdSet != null)
-            	return true;
-    	}
-    	return false;
+
+    /**
+     * Skip the probes without blat association
+     */
+    private boolean blatValidation( ExpressionDataMatrixRowElement rowEl ) {
+        return hasGenesCache[rowEl.getIndex()];
     }
+
     /**
      * check if probeA and probeB are mapped to the same gene
      * 
@@ -267,33 +283,47 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param geneData GeneAnnotations
      * @return
      */
-    private boolean checkAssociation( Object probeA, Object probeB ) {
-        if ( this.probeToGeneMap == null || this.geneToProbeMap == null ) return false;
-        Set <Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)probeA).getId());
-        if(geneIdSet != null){
-        	for(Long geneId:geneIdSet){
-        		if( (( Set ) geneToProbeMap.get( geneId ) ).contains( ((DesignElement)probeB).getId() ))
-        				return true;;
-        	}
+    private boolean checkAssociation( ExpressionDataMatrixRowElement rowElA, ExpressionDataMatrixRowElement rowElB ) {
+        Collection<Gene> geneIdSet = getGenesForRow( rowElA );
+        if ( geneIdSet != null ) {
+            for ( Gene gene : geneIdSet ) {
+                if ( geneToProbeMap.get( gene ).contains( getProbeForRow( rowElB ) ) ) return true;
+            }
         }
-        
+
         return false;
+    }
+
+    /**
+     * @param rowElA
+     * @return
+     */
+    private Collection<Gene> getGenesForRow( ExpressionDataMatrixRowElement rowElA ) {
+        return this.probeToGeneMap.get( getProbeForRow( rowElA ) );
+    }
+
+    /**
+     * @param rowEl
+     * @return
+     */
+    private DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl ) {
+        return rowMapCache.get( rowEl );
+
     }
 
     /**
      * Check probe duplication in Gene Annotations
      * 
-     * @param String probId
+     * @param ExpressionDataMatrixRowElement rowEl
      * @param GeneAnnotations geneData
      */
-    private boolean checkDuplication(  Object probe ) {
+    private boolean checkDuplication( ExpressionDataMatrixRowElement rowEl ) {
         if ( this.probeToGeneMap == null || this.geneToProbeMap == null ) return false;
-        Set <Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)probe).getId());
-        if(geneIdSet != null){
-        	for(Long geneId:geneIdSet){
-        		if(( ( Set ) geneToProbeMap.get( geneId ) ).size() > 1)
-        			return true;
-        	}
+        Collection<Gene> geneIdSet = getGenesForRow( rowEl );
+        if ( geneIdSet != null ) {
+            for ( Gene geneId : geneIdSet ) {
+                if ( geneToProbeMap.get( geneId ).size() > 1 ) return true;
+            }
         }
         return false;
     }
@@ -308,6 +338,10 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private void calculateMetricsFast() {
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
+
+        if ( numrows == 0 ) {
+            throw new IllegalStateException( "No matrix rows" );
+        }
 
         boolean docalcs = this.needToCalculateMetrics();
 
@@ -325,15 +359,15 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
 
         /* for each vector, compare it to all other vectors, avoid repeating things */
-        Object itemA = null;
+        ExpressionDataMatrixRowElement itemA = null;
         double[] ival = null;
         boolean AhasDuplicates = false;
         int duplicateSkip = 0;
         for ( int i = 0; i < numrows; i++ ) {
-        	if(!this.blatValidation(this.dataMatrix.getRowName(i))) continue;
+            if ( !this.blatValidation( this.dataMatrix.getRowElements().get( i ) ) ) continue;
             if ( docalcs ) {
                 if ( this.probeToGeneMap != null && this.geneToProbeMap != null ) {
-                    itemA = this.dataMatrix.getRowName( i );
+                    itemA = this.dataMatrix.getRowElement( i );
                     // AhasDuplicates = ( ( Set ) probeToGeneMap.get( itemA ) ).size() > 0;
                     AhasDuplicates = checkDuplication( itemA );
                 }
@@ -341,13 +375,13 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             }
 
             for ( int j = i + 1; j < numrows; j++ ) {
-            	if(!this.blatValidation(this.dataMatrix.getRowName(j))) continue;
+                if ( !this.blatValidation( this.dataMatrix.getRowElements().get( j ) ) ) continue;
                 if ( !docalcs || C.getQuick( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it if we
                     // already have it. Just do the requisite checks.
                     keepCorrel( i, j, C.getQuick( i, j ), numcols );
                     continue;
                 }
-                if ( AhasDuplicates && this.checkAssociation( itemA, this.dataMatrix.getRowName( j ) ) ) {
+                if ( AhasDuplicates && this.checkAssociation( itemA, this.dataMatrix.getRowElement( j ) ) ) {
                     duplicateSkip++;
                     continue;
                 }
@@ -389,7 +423,6 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             usedB = new boolean[numrows][numcols];
             data = new double[numrows][numcols];
             for ( int i = 0; i < numrows; i++ ) { // first vector
-                double[] ival = this.dataMatrix.getRow( i );
                 for ( int j = 0; j < numcols; j++ ) { // second vector
                     usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
                     // slightly.
@@ -399,17 +432,17 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         }
 
         /* for each vector, compare it to all other vectors */
-        Object itemA = null;
+        ExpressionDataMatrixRowElement itemA = null;
         boolean AhasDuplicates = false;
         int duplicateSkip = 0;
         double[] ival = null;
         double syy, sxy, sxx, sx, sy, xj, yj;
         for ( int i = 0; i < numrows; i++ ) { // first vector
-        	if(!this.blatValidation(this.dataMatrix.getRowName(i))) continue;
+            if ( !this.blatValidation( this.dataMatrix.getRowElement( i ) ) ) continue;
             if ( docalcs ) {
                 rowStatistics();
                 if ( this.geneToProbeMap != null && this.probeToGeneMap != null ) {
-                    itemA = this.dataMatrix.getRowName( i );
+                    itemA = this.dataMatrix.getRowElement( i );
                     AhasDuplicates = this.checkDuplication( itemA );
                 }
                 ival = data[i];
@@ -418,7 +451,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             boolean thisRowHasMissing = hasMissing[i];
 
             for ( int j = i + 1; j < numrows; j++ ) { // second vector
-            	if(!this.blatValidation(this.dataMatrix.getRowName(j))) continue;
+                if ( !this.blatValidation( this.dataMatrix.getRowElement( j ) ) ) continue;
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !docalcs || C.getQuick( i, j ) != 0.0 ) {
@@ -427,7 +460,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                 }
 
                 /* skip duplicates */
-                if ( AhasDuplicates && this.checkAssociation( itemA, this.dataMatrix.getRowName( j ) ) ) {
+                if ( AhasDuplicates && this.checkAssociation( itemA, this.dataMatrix.getRowElement( j ) ) ) {
                     duplicateSkip++;
                     continue;
                 }
@@ -542,28 +575,34 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             // return ((Set)geneToProbeMap.get(geneId)).contains(probeB);
             double k = 1, m = 1;
             // String geneId = duplicateMap.getProbeGeneName(dataMatrix.getRowName(i));
-            Set<Long> geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)dataMatrix.getRowName( i )).getId() );
-            if(geneIdSet != null){
-            	for(Long geneId:geneIdSet){
-            		int tmpK = ( ( Set ) this.geneToProbeMap.get( geneId ) ).size() + 1;
-            		if(k < tmpK) k = tmpK;
-            	}
-            }
-            
-            geneIdSet = ( Set ) this.probeToGeneMap.get( ((DesignElement)dataMatrix.getRowName( j )).getId() );
-            if(geneIdSet != null){
-            	for(Long geneId:geneIdSet){
-            		int tmpM = ( ( Set ) this.geneToProbeMap.get( geneId ) ).size() + 1;
-            		if(m < tmpM) m = tmpM;
-            	}
+            Collection<Gene> geneIdSet = getGenesForRow( i );
+            if ( geneIdSet != null ) {
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( k < tmpK ) k = tmpK;
+                }
             }
 
-            
-            // geneId = duplicateMap.getProbeGeneName(dataMatrix.getRowName(j));
+            geneIdSet = getGenesForRow( j );
+            if ( geneIdSet != null ) {
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( m < tmpM ) m = tmpM;
+                }
+            }
+
             p = p * k * m;
         }
 
         return p;
+    }
+
+    /**
+     * @param j
+     * @return
+     */
+    private Collection<Gene> getGenesForRow( int j ) {
+        return this.probeToGeneMap.get( getProbeForRow( dataMatrix.getRowElement( j ) ) );
     }
 
     /**
@@ -621,14 +660,17 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private void setCorrel( int i, int j, double correl, int numused ) {
         double acorrel = Math.abs( correl );
 
-        // System.err.println(i + "\t" + j + "\t" + correl);
         if ( !histogramIsFilled ) {
             if ( useAbsoluteValue ) {
+                int bin = ( int ) ( ( 1.0 + acorrel ) * HALF_BIN );
+                fastHistogram[bin]++;
                 globalTotal += acorrel;
-                histogram.fill( acorrel );
+                // histogram.fill( acorrel ); // this is suprisingly slow due to zillions of calls to Math.floor.
             } else {
                 globalTotal += correl;
-                histogram.fill( correl );
+                int bin = ( int ) ( ( 1.0 + correl ) * HALF_BIN );
+                fastHistogram[bin]++;
+                // histogram.fill( correl );
             }
             numVals++;
         }
@@ -742,24 +784,11 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                 * ( numVals - 3 );
     }
 
-    // public static void main(String[] args) {
-    // DoubleMatrixReader m = new DoubleMatrixReader();
-    // DenseDoubleMatrix2DNamed mm;
-    // String filename = args[0];
-    // if (args.length > 0) {
-    // try {
-    // mm = (DenseDoubleMatrix2DNamed) m.read(filename);
-    // } catch (java.io.IOException e) {
-    // System.err.println("Cannot to open file " + filename);
-    // return;
-    // }
-    // MatrixRowPairPearsonAnalysis k = new MatrixRowPairPearsonAnalysis(mm);
-    // k.calculateMetrics();
-    // // HistogramWriter h = new HistogramWriter();
-    // // h.write(k.getHistogram(), System.err);
-    // } else {
-    // System.err.println(
-    // "Please specify data filename by passing it as program arguments");
-    // }
-    // }
+    public double getScoreInBin( int i ) {
+        // bin 2048 = correlation of 1.0 2048/1024 - 1 = 1
+        // bin 1024 = correlation of 0.0 1024/1024 - 1 = 0
+        // bin 0 = correlation of -1.0 : 0/1024 - 1 = -1
+        return ( ( double ) i / HALF_BIN ) - 1.0;
+    }
+
 }

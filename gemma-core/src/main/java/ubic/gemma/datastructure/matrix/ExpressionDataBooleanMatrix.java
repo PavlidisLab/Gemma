@@ -33,10 +33,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Matrix of booleans mapped from an ExpressionExperiment.
@@ -44,7 +42,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix { 
+public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
     private ObjectMatrix2DNamed matrix;
 
@@ -171,17 +169,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public Boolean get( DesignElement designElement, BioMaterial bioMaterial ) {
-        return ( Boolean ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
-                .getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
     public Boolean[][] get( List designElements, List bioAssays ) {
@@ -290,11 +277,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
         throw new UnsupportedOperationException();
     }
 
-    public void set( DesignElement designElement, BioMaterial bioMaterial, Object value ) {
-        // FIXME
-        throw new UnsupportedOperationException();
-    }
-
     public Object get( int row, int column ) {
         return matrix.get( row, column );
     }
@@ -302,12 +284,5 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     public Boolean[] getRow( Integer index ) {
         return ( Boolean[] ) matrix.getRow( index );
     }
-
-    public void set( BioSequence bioSequence, BioMaterial bioMaterial, Object value ) {
-        // TODO Auto-generated method stub
-
-    }
-
-    
 
 }

@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.designElement;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
@@ -114,6 +115,15 @@ public class CompositeSequenceDaoImplTest extends AbstractArrayDesignProcessingT
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );
         CompositeSequence cs = css.iterator().next();
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+        assertEquals( 1, genes.size() );
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testHandleGetGenesCompositeSequences() {
+
+        Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );
+
+        Map<CompositeSequence, Collection<Gene>> genes = compositeSequenceService.getGenes( css );
         assertEquals( 1, genes.size() );
     }
 

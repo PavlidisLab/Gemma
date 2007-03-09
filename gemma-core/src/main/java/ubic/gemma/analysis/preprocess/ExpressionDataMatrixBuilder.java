@@ -58,7 +58,7 @@ public class ExpressionDataMatrixBuilder {
     Collection<DesignElementDataVector> vectors;
 
     /**
-     * @param exp An expression experiment (does not need to be thawed first)
+     * @param collection of vectors. They should be thawed first.
      */
     public ExpressionDataMatrixBuilder( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) throw new IllegalArgumentException( "No vectors" );
@@ -125,7 +125,9 @@ public class ExpressionDataMatrixBuilder {
         Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
             ArrayDesign adUsed = arrayDesignForVector( vector );
-            if ( !dimMap.containsKey( adUsed ) ) dimMap.put( adUsed, vector.getBioAssayDimension() );
+            if ( !dimMap.containsKey( adUsed ) ) {
+                dimMap.put( adUsed, vector.getBioAssayDimension() );
+            }
             if ( arrayDesign == null || adUsed.equals( arrayDesign ) ) {
                 assert vector.getBioAssayDimension() != null;
                 dimensions.add( vector.getBioAssayDimension() );
@@ -452,6 +454,9 @@ public class ExpressionDataMatrixBuilder {
         Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
 
         Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        log.info( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
         for ( QuantitationType qType : eeQtTypes ) {
 
             String name = qType.getName();
@@ -473,6 +478,7 @@ public class ExpressionDataMatrixBuilder {
             } else if ( name.matches( "CH1D_MEAN" ) ) {
                 neededQtTypes.add( qType );
             } else if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
+                log.info( "Present/absent=" + qType );
                 neededQtTypes.add( qType );
             }
         }
@@ -481,7 +487,7 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @param allVectors
+     * @param arrayDesign (can be null to get all)
      */
     private QuantitationTypeData getQuantitationTypesNeeded( ArrayDesign arrayDesign ) {
 
@@ -595,6 +601,10 @@ public class ExpressionDataMatrixBuilder {
             return new ExpressionDataDoubleMatrix( vectors, dimensions, qTypes );
         }
         return null;
+    }
+
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
 }

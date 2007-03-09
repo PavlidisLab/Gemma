@@ -18,7 +18,7 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -40,12 +40,13 @@ public class ExpressionDataDoubleMatrixUtil {
         checkConformant( a, b );
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
+            int rowNum = el.getIndex();
             DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
-                BioMaterial bm = a.getBioMaterialForColumn( i );
+                BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
                 double valA = a.get( del, bm );
                 double valB = b.get( del, bm );
-                a.set( del, bm, valA - valB );
+                a.set( rowNum, i, valA - valB );
             }
         }
     }
@@ -62,7 +63,7 @@ public class ExpressionDataDoubleMatrixUtil {
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
-                BioMaterial bm = matrix.getBioMaterialForColumn( i );
+                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 double valA = matrix.get( del, bm );
                 if ( valA <= 0 ) {
                     matrix.set( del, bm, Double.NaN );
@@ -87,7 +88,7 @@ public class ExpressionDataDoubleMatrixUtil {
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
             DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
-                BioMaterial bm = a.getBioMaterialForColumn( i );
+                BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
                 double valA = a.get( del, bm );
                 double valB = b.get( del, bm );
                 a.set( del, bm, valA + valB );
@@ -114,7 +115,7 @@ public class ExpressionDataDoubleMatrixUtil {
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
-                BioMaterial bm = matrix.getBioMaterialForColumn( i );
+                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 double valA = matrix.get( del, bm );
                 matrix.set( del, bm, valA / dividend );
 
@@ -135,7 +136,7 @@ public class ExpressionDataDoubleMatrixUtil {
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             DesignElement del = el.getDesignElements().iterator().next();
             for ( int i = 0; i < columns; i++ ) {
-                BioMaterial bm = matrix.getBioMaterialForColumn( i );
+                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 boolean present = mask.get( del, bm );
                 if ( !present ) {
                     matrix.set( del, bm, Double.NaN );

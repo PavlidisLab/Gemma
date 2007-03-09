@@ -18,8 +18,7 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 
 /**
  * @author Paul Pavlidis
@@ -27,11 +26,11 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
  */
 public class MatrixRowPairAnalysisFactory {
 
-    public static MatrixRowPairPearsonAnalysis pearson( DoubleMatrixNamed dataMatrix, double tmts ) {
+    public static MatrixRowPairPearsonAnalysis pearson( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         return new MatrixRowPairPearsonAnalysis( dataMatrix, tmts );
     }
 
-    public static SpearmannMetrics spearmann( DenseDoubleMatrix2DNamed dataMatrix, double tmts ) {
+    public static SpearmannMetrics spearmann( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         // return new SpearmannMetrics(dataMatrix, tmts);
         return null;
     }

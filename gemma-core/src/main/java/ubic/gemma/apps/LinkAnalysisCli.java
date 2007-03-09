@@ -24,50 +24,47 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Vector;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.dataStructure.matrix.NamedMatrix;
-import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
-import ubic.basecode.datafilter.Filter;
-import ubic.basecode.datafilter.RowLevelFilter;
-import ubic.basecode.datafilter.RowMissingFilter;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter;
+import ubic.gemma.analysis.preprocess.filter.RowLevelFilter;
+import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
+import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
-import cern.colt.list.IntArrayList;
 
 /**
- * offline tools to conduct the link analysis
+ * Commandline tool to conduct the link analysis
  * 
  * @author xiangwan
  * @version $Id$
  */
 public class LinkAnalysisCli extends AbstractSpringAwareCLI {
+
+    /**
+     * Fewer rows than this, and we bail.
+     */
+    private static final int MINIMUM_ROWS_TO_BOTHER = 100;
 
     private static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
 
@@ -76,8 +73,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
 
     private static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
-
-    AuditTrailService auditTrailService;
 
     /**
      * How many samples a dataset has to have before we consider analyzing it.
@@ -112,100 +107,29 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
     private ExpressionExperimentService eeService = null;
 
-    private ExpressionDataMatrixService expressionDataMatrixService = null;
-
     private DesignElementDataVectorService vectorService = null;
 
     private LinkAnalysis linkAnalysis = new LinkAnalysis();
 
     private double tooSmallToKeep = DEFAULT_TOOSMALLTOKEEP;
+
     private boolean minPresentFractionIsSet = true;
     private boolean lowExpressionCutIsSet = true;
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
+    AuditTrailService auditTrailService;
 
     /**
-     * @param data
-     * @param eeDoubleMatrix
      * @param ee
-     * @return Filtered matrix
+     * @param filteredMatrix
+     * @param arrayDesign
+     * @return
      */
-    @SuppressWarnings("unchecked")
-    public NamedMatrix missingValueFilter( NamedMatrix data, ExpressionDataDoubleMatrix eeDoubleMatrix,
-            ExpressionExperiment ee ) {
-        List MTemp = new Vector();
-        List rowNames = new Vector();
-        int numRows = data.rows();
-        int numCols = data.columns();
-        IntArrayList present = new IntArrayList( numRows );
-        int minPresentCount = 0;
-        int kept = 0;
+    private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
 
-        if ( minPresentFractionIsSet ) {
-            minPresentCount = ( int ) Math.ceil( minPresentFraction * numCols );
-        } else
-            return data;
-
-        QuantitationType qtf = null;
-        Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes( ee );
-        for ( QuantitationType qt : eeQT ) {
-            StandardQuantitationType tmpQT = qt.getType();
-            if ( tmpQT == StandardQuantitationType.PRESENTABSENT ) qtf = qt;
-        }
-
-        // if there is no PRESENTABSENT, that's okay, we just look for missing data in the preferred QT.
-        ExpressionDataBooleanMatrix maskMatrix = null;
-        if ( qtf == null ) {
-            log.warn( "Expression Experiment " + ee.getShortName()
-                    + " doesn't have a PRESENTABSENT quantitation type, will only be able to use NANs for filtering" );
-        } else {
-            maskMatrix = new ExpressionDataBooleanMatrix( ee, qtf );
-            if ( maskMatrix == null ) {
-                log.error( "Error in getting boolean matrix for " + qtf );
-                return null;
-            }
-        }
-
-        /* first pass - determine how many missing values there are per row */
-        for ( int i = 0; i < numRows; i++ ) {
-            int missingCount = 0;
-            for ( int j = 0; j < numCols; j++ ) {
-                BioMaterial bioMaterial = eeDoubleMatrix.getBioMaterialForColumn( ( ( Integer ) data.getColName( j ) )
-                        .intValue() );
-
-                boolean isPresent = maskMatrix == null
-                        || maskMatrix.get( ( DesignElement ) data.getRowName( i ), bioMaterial ).booleanValue();
-
-                if ( !isPresent || Double.isNaN( ( ( DoubleMatrixNamed ) data ).get( i, j ) ) ) {
-                    missingCount++;
-                    data.set( i, j, Double.NaN );
-                }
-            }
-            present.add( missingCount );
-            if ( missingCount <= minPresentCount ) {
-                kept++;
-                MTemp.add( data.getRowObj( i ) );
-                rowNames.add( data.getRowName( i ) );
-            }
-        }
-
-        NamedMatrix returnval = DoubleMatrix2DNamedFactory.fastrow( MTemp.size(), numCols );
-
-        // Finally fill in the return value.
-        for ( int i = 0; i < MTemp.size(); i++ ) {
-            for ( int j = 0; j < numCols; j++ ) {
-                returnval.set( i, j, ( ( Object[] ) MTemp.get( i ) )[j] );
-            }
-        }
-        returnval.setColumnNames( data.getColNames() );
-        returnval.setRowNames( rowNames );
-
-        log.info( "There are " + kept + " rows after removing rows which have missed more than " + minPresentCount
-                + " values " );
-
-        return ( returnval );
-
+        AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
+        return affyProbeNameFilter.filter( matrix );
     }
 
     /**
@@ -213,37 +137,42 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private String analysis( ExpressionExperiment ee ) {
-        eeService.thaw( ee );
-        Collection<QuantitationType> qts = this.getPreferredQuantitationTypes( ee );
-        if ( qts.size() == 0 ) return ( "No usable quantitation type in " + ee.getShortName() );
+    private void process( ExpressionExperiment ee ) throws Exception {
 
-        log.info( "Load Data for  " + ee.getShortName() );
+        if ( this.hasOption( 'd' ) ) {
+            log.warn( "TEST MODE, Database will not be modified" );
+        }
 
-        ExpressionDataDoubleMatrix eeDoubleMatrix = ( ExpressionDataDoubleMatrix ) this.expressionDataMatrixService
-                .getMatrix( ee, qts );
+        checkForMixedTechnologies( ee );
+        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
+        if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
 
-        if ( eeDoubleMatrix.rows() == 0 ) return "No data found!";
+        log.info( "Loading vectors..." );
+        Collection<DesignElementDataVector> dataVectors = eeService.getDesignElementDataVectors( ee, qts );
+        vectorService.thaw( dataVectors );
 
-        if ( eeDoubleMatrix.rows() < 100 ) return ( "Most Probes are filtered out " + ee.getShortName() );
+        if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors " + ee.getShortName() );
+
+        log.info( "Getting expression data..." );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
+
+        ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
+
+        if ( eeDoubleMatrix.rows() == 0 ) throw new IllegalStateException( "No data found!" );
+
+        if ( eeDoubleMatrix.rows() < MINIMUM_ROWS_TO_BOTHER )
+            throw new IllegalArgumentException( "Most Probes are filtered out " + ee.getShortName() );
 
         if ( eeDoubleMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE )
-            return ( "No enough samples " + ee.getShortName() );
+            throw new IllegalArgumentException( "No enough samples " + ee.getShortName() );
 
-        DoubleMatrixNamed dataMatrix = eeDoubleMatrix.getNamedMatrix();
-        dataMatrix = this.filter( dataMatrix, eeDoubleMatrix, ee );
+        eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );
 
-        if ( dataMatrix == null ) return ( "No data matrix " + ee.getShortName() );
+        if ( eeDoubleMatrix == null )
+            throw new IllegalStateException( "Failed to get filtered data matrix " + ee.getShortName() );
 
-        this.linkAnalysis.setDataMatrix( dataMatrix );
-
-        /*
-         * FIXME this repeats the query that was just done inside getMatrix -- probably it can be avoided?
-         */
-        Collection<DesignElementDataVector> dataVectors = vectorService.find( ee, qts );
-        if ( dataVectors == null ) return ( "No data vector " + ee.getShortName() );
-
-        this.linkAnalysis.setDataVector( dataVectors );
+        this.linkAnalysis.setDataMatrix( eeDoubleMatrix );
+        this.linkAnalysis.setDataVectors( dataVectors ); // shouldn't have to do this.
         this.linkAnalysis.setTaxon( eeService.getTaxon( ee.getId() ) );
 
         /*
@@ -254,104 +183,129 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         this.linkAnalysis.setTooSmallToKeep( this.tooSmallToKeep );
 
         /*
-         * Delete old links for this expressionexperiment
-         */
-        log.info( "Deleting old links for " + ee );
-        Probe2ProbeCoexpressionService ppcs = ( Probe2ProbeCoexpressionService ) this
-                .getBean( "probe2ProbeCoexpressionService" );
-        ppcs.deleteLinks( ee );
-
-        /*
          * Start the analysis.
          */
         log.info( "Starting generating Raw Links for " + ee.getShortName() );
-        if ( this.linkAnalysis.analyze() == true ) {
-            log.info( "Successful Generating Raw Links for " + ee.getShortName() );
-        }
+        this.linkAnalysis.analyze();
+        log.info( "Generated Raw Links for " + ee.getShortName() );
 
-        return null;
     }
 
     /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = LinkAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<ArrayDesign> checkForMixedTechnologies( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            boolean containsTwoColor = false;
+            boolean containsOneColor = false;
+            for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+                if ( arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+                    containsOneColor = true;
+                }
+                if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+                    containsTwoColor = true;
+                }
+            }
+
+            if ( containsTwoColor && containsOneColor ) {
+                throw new UnsupportedOperationException(
+                        "Can't correctly handle expression experiments that combine different array technologies." );
+            }
+        }
+        return arrayDesignsUsed;
+    }
+
+    /**
+     * Apply filters as configured by the command line parameters and technology type.
+     * 
      * @param dataMatrix
      * @param eeDoubleMatrix
      * @param ee
      * @return
      */
-    private DoubleMatrixNamed filter( DoubleMatrixNamed dataMatrix, ExpressionDataDoubleMatrix eeDoubleMatrix,
-            ExpressionExperiment ee ) {
-        /* ******Check the array design technology to choose the filter*** */
-        DoubleMatrixNamed filteredMatrix = dataMatrix;
-        if ( filteredMatrix == null ) return filteredMatrix;
-        log.info( "Data set has " + filteredMatrix.rows() + " rows and " + filteredMatrix.columns() + " columns." );
-        ArrayDesign arrayDesign = ( ArrayDesign ) this.eeService.getArrayDesignsUsed( ee ).iterator().next();
-        TechnologyType techType = arrayDesign.getTechnologyType();
+    private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix,
+            ExpressionDataMatrixBuilder builder ) {
 
-        if ( minPresentFractionIsSet && techType.equals( TechnologyTypeEnum.TWOCOLOR )
-                || techType.equals( TechnologyType.DUALMODE ) ) {
-            /* Apply for two color missing value filtered */
-            /*
-             * log.info( "Filtering out genes that are missing too many values" ); RowMissingFilter x = new
-             * RowMissingFilter(); x.setMinPresentFraction( minPresentFraction );
-             */
-            filteredMatrix = ( DoubleMatrixNamed ) missingValueFilter( dataMatrix, eeDoubleMatrix, ee );
+        ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
+
+        boolean twoColor = isTwoColor( builder.getExpressionExperiment() );
+        if ( minPresentFractionIsSet && twoColor ) {
+            /* Apply two color missing value filter */
+            ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
+            filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
         }
 
-        if ( techType.equals( TechnologyTypeEnum.ONECOLOR ) ) {
-            if ( minPresentFractionIsSet ) {
-                log.info( "Filtering out genes that are missing too many values" );
-                RowMissingFilter rowMissingFilter = new RowMissingFilter();
-                rowMissingFilter.setMinPresentFraction( minPresentFraction );
-                filteredMatrix = ( DoubleMatrixNamed ) rowMissingFilter.filter( filteredMatrix );
-            }
+        if ( !twoColor ) {
 
-            if ( lowExpressionCutIsSet ) { // todo: make sure this works with ratiometric data. Make sure we don't do
-                // this
-                // as well as affy filtering.
-                log.info( "Filtering out genes with low expression for " + ee.getShortName() );
-                RowLevelFilter rowLevelFilter = new RowLevelFilter();
-                rowLevelFilter.setLowCut( this.lowExpressionCut );
-                rowLevelFilter.setHighCut( this.highExpressionCut );
-                rowLevelFilter.setRemoveAllNegative( true ); // todo: fix
-                rowLevelFilter.setUseAsFraction( true );
-                filteredMatrix = ( DoubleMatrixNamed ) rowLevelFilter.filter( filteredMatrix );
+            if ( minPresentFractionIsSet ) filteredMatrix = minPresentFilter( filteredMatrix, null );
 
-            }
-            if ( arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) { // FIXME, use Manufacturer instead
-                log.info( "Filtering by Affymetrix probe name for " + ee.getShortName() );
-                Filter affyProbeNameFilter = new AffymetrixProbeNameFilter( new int[] { 2 } );
-                filteredMatrix = ( DoubleMatrixNamed ) affyProbeNameFilter.filter( filteredMatrix );
-            }
+            if ( lowExpressionCutIsSet ) filteredMatrix = lowExpressionFilter( eeDoubleMatrix );
+
+            if ( usesAffymetrix( builder.getExpressionExperiment() ) )
+                filteredMatrix = affyControlProbeFilter( filteredMatrix );
         }
         return filteredMatrix;
     }
 
     /**
-     * *Use the one with the preferred set to TRUE*****
+     * Determine if the expression experiment uses two-color arrays. This is not guaranteed to give the right answer if
+     * the experiment uses both types of technologies.F
+     * 
+     * @param ee
+     * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<QuantitationType> getPreferredQuantitationTypes( ExpressionExperiment ee ) {
-        Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes( ee );
-        Collection<QuantitationType> preferredTypes = new HashSet<QuantitationType>();
-        for ( QuantitationType qt : eeQT ) {
-            if ( qt.getIsPreferred() ) {
-                StandardQuantitationType tmpQT = qt.getType();
-                if ( tmpQT != StandardQuantitationType.AMOUNT ) {
-                    log.warn( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
-                            + tmpQT.toString() );
-                }
-                preferredTypes.add( qt );
-            }
-            /*
-             * StandardQuantitationType tmpQT = qt.getType(); if (tmpQT == StandardQuantitationType.DERIVEDSIGNAL ||
-             * tmpQT == StandardQuantitationType.MEASUREDSIGNAL || tmpQT == StandardQuantitationType.RATIO) { qtf = qt;
-             * break; }
-             */
-        }
-        if ( preferredTypes.size() == 0 ) {
-            log.warn( "Expression Experiment " + ee.getShortName() + " doesn't have a preferred quantitation type" );
-        }
-        return preferredTypes;
+    private boolean isTwoColor( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
+
+        ArrayDesign arrayDesign = ( ArrayDesign ) arrayDesignsUsed.iterator().next();
+        TechnologyType techType = arrayDesign.getTechnologyType();
+        return techType.equals( TechnologyTypeEnum.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+    }
+
+    /**
+     * @param ee
+     * @param filteredMatrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setLowCut( this.lowExpressionCut );
+        rowLevelFilter.setHighCut( this.highExpressionCut );
+        rowLevelFilter.setRemoveAllNegative( true ); // todo: fix
+        rowLevelFilter.setUseAsFraction( true );
+        return rowLevelFilter.filter( matrix );
+    }
+
+    /**
+     * @param filteredMatrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix filteredMatrix,
+            ExpressionDataBooleanMatrix absentPresent ) {
+        log.info( "Filtering out genes that are missing too many values" );
+        RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
+        if ( absentPresent != null ) rowMissingFilter.setAbsentPresentCalls( absentPresent );
+        rowMissingFilter.setMinPresentFraction( minPresentFraction );
+        return ( ExpressionDataDoubleMatrix ) rowMissingFilter.filter( filteredMatrix );
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean usesAffymetrix( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
+        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
+        return arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" );
     }
 
     @SuppressWarnings("static-access")
@@ -377,13 +331,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 "The threshold for coefficient cache" ).withLongOpt( "cachecut" ).create( 'k' );
         addOption( tooSmallToKeep );
 
-        Option fwe = OptionBuilder.hasArg().withArgName( "Family Wise Error Ratio" ).withDescription(
+        Option fwe = OptionBuilder.hasArg().withArgName( "Family Wise Error Rate" ).withDescription(
                 "The setting for family wise error control" ).withLongOpt( "fwe" ).create( 'w' );
         addOption( fwe );
-
-        Option binSize = OptionBuilder.hasArg().withArgName( "Bin Size" ).withDescription(
-                "The Size of Bin for histogram" ).withLongOpt( "bin" ).create( 'b' );
-        addOption( binSize );
 
         Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
                 "The tolerance for accepting the gene with missing values, default=" + DEFAULT_MINPRESENT_FRACTION )
@@ -413,12 +363,11 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         }
         this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
-        this.expressionDataMatrixService = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
-
         this.vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
 
         ExpressionExperiment expressionExperiment = null;
         this.linkAnalysis.setDEService( vectorService );
+        this.linkAnalysis.setCsService( ( CompositeSequenceService ) this.getBean( "compositeSequenceService" ) );
         this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
                 .getBean( "probe2ProbeCoexpressionService" ) );
 
@@ -430,13 +379,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
                     try {
-                        String info = this.analysis( ee );
-                        if ( info == null ) {
-                            persistedObjects.add( ee.toString() );
-                            audit( expressionExperiment, "Part of run on all EEs" );
-                        } else {
-                            errorObjects.add( ee.getShortName() + " contains errors: " + info );
-                        }
+                        this.process( ee );
+                        persistedObjects.add( ee.toString() );
+                        audit( expressionExperiment, "Part of run on all EEs" );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
                         e.printStackTrace();
@@ -457,13 +402,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                             continue;
                         }
                         try {
-                            String info = this.analysis( expressionExperiment );
-                            if ( info == null ) {
-                                persistedObjects.add( expressionExperiment.toString() );
-                                audit( expressionExperiment, "From list in file: " + geneExpressionList );
-                            } else {
-                                errorObjects.add( expressionExperiment.getShortName() + " contains errors: " + info );
-                            }
+                            this.process( expressionExperiment );
+                            persistedObjects.add( expressionExperiment.toString() );
+                            audit( expressionExperiment, "From list in file: " + geneExpressionList );
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
                             e.printStackTrace();
@@ -482,20 +423,17 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 log.info( this.geneExpressionFile + " is not loaded yet!" );
                 return null;
             }
-            String info = this.analysis( expressionExperiment );
-            if ( info != null ) {
-                log.info( expressionExperiment + " contains errors: " + info );
+            try {
+                this.process( expressionExperiment );
+                audit( expressionExperiment, "From list in file: " + geneExpressionList );
+            } catch ( Exception e ) {
+                e.printStackTrace();
+                log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
+                        + " ********" );
             }
+
         }
         return null;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = LinkAnalysisEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     @Override
@@ -517,9 +455,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         }
         if ( hasOption( 'w' ) ) {
             this.linkAnalysis.setFwe( Double.parseDouble( getOptionValue( 'w' ) ) );
-        }
-        if ( hasOption( 'b' ) ) {
-            this.linkAnalysis.setBinSize( Double.parseDouble( getOptionValue( 'b' ) ) );
         }
 
         if ( hasOption( 'm' ) ) {

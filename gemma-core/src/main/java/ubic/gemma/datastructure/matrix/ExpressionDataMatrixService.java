@@ -30,8 +30,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="expressionDataMatrixService"
- * @spring.property name="designElementDataVectorService" ref = "designElementDataVectorService"
  */
 public class ExpressionDataMatrixService {
 
@@ -43,7 +41,9 @@ public class ExpressionDataMatrixService {
      * @param expExp
      * @param qt
      * @return
+     * @deprecated Use ExpressionDataMatrixBuilder instead.
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public ExpressionDataMatrix getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
         return new ExpressionDataDoubleMatrix( expExp, qt );
@@ -53,6 +53,7 @@ public class ExpressionDataMatrixService {
      * @param ee
      * @param qts
      * @return
+     * @deprecated Use ExpressionDataMatrixBuilder instead.
      */
     public ExpressionDataDoubleMatrix getMatrix( ExpressionExperiment ee, Collection<QuantitationType> qts ) {
         return new ExpressionDataDoubleMatrix( ee, qts );
@@ -62,18 +63,12 @@ public class ExpressionDataMatrixService {
      * @param expExp
      * @param designElements
      * @param qt
+     * @deprecated Use ExpressionDataMatrixBuilder instead.
      * @return
      */
     public ExpressionDataMatrix getMatrix( ExpressionExperiment expExp, Collection<DesignElement> designElements,
             QuantitationType qt ) {
         throw new UnsupportedOperationException( "not implemented yet" );
-    }
-
-    /**
-     * @param designElementDataVectorService The designElementDataVectorService to set.
-     */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
     }
 
 }

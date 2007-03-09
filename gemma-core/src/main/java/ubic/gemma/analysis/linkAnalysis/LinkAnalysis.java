@@ -19,13 +19,16 @@
 package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -33,9 +36,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
@@ -44,12 +47,15 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
-import corejava.Format;
 
 /**
  * @author xiangwan
@@ -61,40 +67,39 @@ public class LinkAnalysis {
     private MatrixRowPairAnalysis metricMatrix;
     private DoubleArrayList cdf;
     private ObjectArrayList keep;
-    private DoubleMatrixNamed dataMatrix = null;
+    private ExpressionDataDoubleMatrix dataMatrix = null;
     private Collection<DesignElementDataVector> dataVectors = null;
     private Probe2ProbeCoexpressionService ppService = null;
     private DesignElementDataVectorService deService = null;
-    private HashMap<Long, Set> probeToGeneMap = null;
-    private HashMap<Long, Set> geneToProbeMap = null;
-    private Map<Object, DesignElementDataVector> p2v = null;
+    private CompositeSequenceService csService = null;
+
+    private Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
+    private Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
+    private Map<CompositeSequence, DesignElementDataVector> p2v = null;
 
     private Taxon taxon = null;
     private int uniqueItems = 0;
     private double upperTailCut;
     private double lowerTailCut;
 
-    private Format form;
+    private NumberFormat form;
     private String metric = "pearson";
     private double tooSmallToKeep = 0.5;
     private boolean absoluteValue = false;
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
 
-    private double binSize = 0.01;
-
     private boolean useDB = true;
 
-    private String localHome = "c:";
-
     public LinkAnalysis() {
-        form = new Format( "%.4g" );
+        this.form = NumberFormat.getInstance();
+        if ( form instanceof DecimalFormat ) ( ( DecimalFormat ) form ).applyPattern( "00.###E0" );
     }
 
     /**
      * @return
      */
-    public boolean analyze() {
+    public boolean analyze() throws Exception {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
         assert this.ppService != null;
@@ -107,24 +112,46 @@ public class LinkAnalysis {
             log.info( "Couldn't find the map between probe and gene " );
             return false;
         }
+
         this.outputOptions();
         this.calculateDistribution();
-        /*
-         * HistogramWriter aa = new HistogramWriter(); try{ IHistogram1D h = this.metricMatrix.getHistogram();
-         * System.err.println("Total :" + h.allEntries()); System.err.println("Bins :" + h.xAxis().bins());
-         * FileOutputStream out = new FileOutputStream(new File("hist.txt")); aa.write(h, out); out.close();
-         * if(true)return true; }catch(Exception e){ e.printStackTrace(); return false; }
-         */
+        this.writeDistribution();
         this.getLinks();
         this.saveLinks();
         return true;
+    }
+
+    public void writeDistribution() throws IOException {
+
+        String path = "";
+
+        DoubleArrayList histogramArrayList = this.metricMatrix.getHistogramArrayList();
+
+        FileWriter out = new FileWriter( new File( path ) );
+
+        double d = -1.0;
+        double step = 2.0 / histogramArrayList.size();
+
+        out.write( "# Correlation distribution " );
+        out.write( "# date=" + Calendar.getInstance() );
+        out.write( "# exp=" + this.dataVectors.iterator().next().getExpressionExperiment() );
+        out.write( "Bin\tCount\n" );
+
+        for ( int i = 0; i < histogramArrayList.size(); i++ ) {
+            double v = histogramArrayList.get( i );
+            out.write( form.format( d ) + "\t" + ( int ) v + "\n" );
+            d += step;
+        }
+
+        out.close();
+
     }
 
     /**
      * 
      *
      */
-    public void chooseCutPoints() {
+    private void chooseCutPoints() {
 
         if ( cdfCut <= 0.0 ) {
             upperTailCut = 1.0;
@@ -150,7 +177,7 @@ public class LinkAnalysis {
             // histogram.
             for ( int i = 0; i < cdf.size(); i++ ) {
                 if ( 1.0 - cdf.get( i ) >= cdfTailCut ) {
-                    cdfLowerCutScore = metricMatrix.getHistogram().xAxis().binUpperEdge( i == cdf.size() ? i : i + 1 );
+                    cdfLowerCutScore = metricMatrix.getScoreInBin( i == cdf.size() ? i : i + 1 );
                     break;
                 }
             }
@@ -160,7 +187,7 @@ public class LinkAnalysis {
         // find the upper cut point.
         for ( int i = cdf.size() - 1; i >= 0; i-- ) {
             if ( cdf.get( i ) >= cdfTailCut ) {
-                cdfUpperCutScore = metricMatrix.getHistogram().xAxis().binLowerEdge( i );
+                cdfUpperCutScore = metricMatrix.getScoreInBin( i == cdf.size() ? i : i + 1 );
                 break;
             }
         }
@@ -197,59 +224,11 @@ public class LinkAnalysis {
 
     }
 
-    /**
-     * FIXME this can probably use newer methods that are faster.
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public int[] getProbeToGeneAnalysis() {
-        int[] stats = new int[10];
-
-        Object[] allVectors = this.dataVectors.toArray();
-        int ChunkNum = 1000;
-        int end = allVectors.length > ChunkNum ? ChunkNum : allVectors.length;
-        HashMap<Object, Set> probeToGeneAssociation = this.getProbeToGeneAssociation( 0, end );
-
-        log.info( " Starting the query to get the mapping between probe and gene " );
-
-        for ( int i = 0; i < allVectors.length; i++ ) {
-            if ( i >= end ) {
-                int start = end;
-                end = allVectors.length > end + ChunkNum ? end + ChunkNum : allVectors.length;
-                probeToGeneAssociation = this.getProbeToGeneAssociation( start, end );
-            }
-            DesignElementDataVector vector = ( DesignElementDataVector ) allVectors[i];
-
-            /* Initialize the map between probe and designElementDataVector */
-            Collection<Gene> geneSet = probeToGeneAssociation.get( vector );
-
-            if ( geneSet.size() >= 7 ) {
-                log.info( " Probe: " + vector.getDesignElement().getName() + "[" + vector.getDesignElement().getId()
-                        + "] " );
-                StringBuilder buf = new StringBuilder();
-                for ( Gene gene : geneSet ) {
-                    buf.append( gene.getName() + "[" + gene.getId() + "] " );
-                }
-                log.info( buf );
-            }
-
-            if ( geneSet != null && !geneSet.isEmpty() ) {
-                if ( geneSet.size() >= stats.length ) {
-                    stats[stats.length - 1]++;
-                } else
-                    stats[geneSet.size()]++;
-            } else
-                stats[0]++;
-        }
-        return stats;
-    }
-
-    public void outputOptions() {
+    private void outputOptions() {
         log.info( "Current Settings" );
         log.info( "AbsouteValue Setting:" + this.absoluteValue );
-        log.info( "BinSize:" + this.binSize );
         log.info( "cdfCut:" + this.cdfCut );
-        log.info( "catchCut:" + this.tooSmallToKeep );
+        log.info( "cacheCut:" + this.tooSmallToKeep );
         log.info( "Unique Items:" + this.uniqueItems );
         log.info( "fwe:" + this.fwe );
         log.info( "useDB:" + this.useDB );
@@ -259,21 +238,15 @@ public class LinkAnalysis {
         this.absoluteValue = true;
     }
 
-    public void setBinSize( double binSize ) {
-        this.binSize = binSize;
-    }
-
     public void setCdfCut( double cdfCut ) {
         this.cdfCut = cdfCut;
     }
 
-    public void setDataMatrix( DoubleMatrixNamed paraDataMatrix ) {
-        this.dataMatrix = null;
+    public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
         this.dataMatrix = paraDataMatrix;
     }
 
-    public void setDataVector( Collection<DesignElementDataVector> vectors ) {
-        this.dataVectors = null;
+    public void setDataVectors( Collection<DesignElementDataVector> vectors ) {
         this.dataVectors = vectors;
     }
 
@@ -283,10 +256,6 @@ public class LinkAnalysis {
 
     public void setFwe( double fwe ) {
         this.fwe = fwe;
-    }
-
-    public void setHomeDir( String paraLocalHome ) {
-        this.localHome = paraLocalHome;
     }
 
     public void setMetric( String metric ) {
@@ -312,38 +281,28 @@ public class LinkAnalysis {
     /**
      * @param paraFileName
      */
-    public void writeDataIntoFile( String paraFileName ) {
+    protected void writeDataIntoFile( String paraFileName ) throws IOException {
         BufferedWriter writer = null;
-        // FIXME : don't use hard-coded paths, use a config file instead.
-        try {
-            writer = new BufferedWriter( new FileWriter( this.localHome + "/TestResult/" + paraFileName ) );
-        } catch ( IOException e ) {
-            log.error( "File for output expression data " + this.localHome + "/TestResult/" + paraFileName
-                    + "could not be opened" );
+
+        writer = new BufferedWriter( new FileWriter( paraFileName ) );
+        int cols = this.dataMatrix.columns();
+        for ( int i = 0; i < cols; i++ ) {
+            writer.write( "\t" + this.dataMatrix.getBioMaterialForColumn( i ) );
         }
-        try {
-            int cols = this.dataMatrix.columns();
-            for ( int i = 0; i < cols; i++ ) {
-                writer.write( "\t" + this.dataMatrix.getColName( i ) );
-            }
+        writer.write( "\n" );
+        int rows = this.dataMatrix.rows();
+        for ( int i = 0; i < rows; i++ ) {
+            writer.write( this.dataMatrix.getRowElements().get( i ).toString() );
+            Double rowData[] = this.dataMatrix.getRow( i );
+            for ( int j = 0; j < rowData.length; j++ )
+                writer.write( "\t" + rowData[j] );
             writer.write( "\n" );
-            int rows = this.dataMatrix.rows();
-            for ( int i = 0; i < rows; i++ ) {
-                writer.write( this.dataMatrix.getRowName( i ).toString() );
-                double rowData[] = this.dataMatrix.getRow( i );
-                for ( int j = 0; j < rowData.length; j++ )
-                    writer.write( "\t" + rowData[j] );
-                writer.write( "\n" );
-            }
-            writer.close();
-        } catch ( IOException e ) {
-            log.error( "Error in write data into file" );
         }
+        writer.close();
     }
 
     /**
-     * 
-     *
+     * Compute the distribution of similarity metrics for the entire matrix.
      */
     private void calculateDistribution() {
         if ( metric.equals( "pearson" ) ) {
@@ -354,7 +313,7 @@ public class LinkAnalysis {
             // tooSmallToKeep);
         }
 
-        metricMatrix.setDuplicateMap( geneToProbeMap, probeToGeneMap );
+        metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
 
         metricMatrix.setUseAbsoluteValue( this.absoluteValue );
         metricMatrix.calculateMetrics();
@@ -376,116 +335,84 @@ public class LinkAnalysis {
     }
 
     /**
-     * @param start
-     * @param end
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private HashMap<Object, Set> getProbeToGeneAssociation( int start, int end ) // From start to end-1
-    {
-        Collection<DesignElementDataVector> someVectors = new HashSet<DesignElementDataVector>();
-        HashMap<Object, Set> returnAssocation = null;
-        Object[] allVectors = this.dataVectors.toArray();
-        for ( int i = start; i < end; i++ ) {
-            someVectors.add( ( DesignElementDataVector ) allVectors[i] );
-        }
-        returnAssocation = ( HashMap ) this.deService.getGenes( someVectors );
-        return returnAssocation;
-    }
-
-    /**
      * 
      *
      */
     @SuppressWarnings("unchecked")
     private void init() {
         int[] stats = new int[10];
-        this.p2v = new HashMap<Object, DesignElementDataVector>();
+        this.p2v = new HashMap<CompositeSequence, DesignElementDataVector>();
 
-        this.probeToGeneMap = new HashMap<Long, Set>();
-        this.geneToProbeMap = new HashMap<Long, Set>();
-
-        Object[] allVectors = this.dataVectors.toArray();
-        int ChunkNum = 1000;
-        int end = allVectors.length > ChunkNum ? ChunkNum : allVectors.length;
-        HashMap<Object, Set> probeToGeneAssociation = this.getProbeToGeneAssociation( 0, end );
+        this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
 
         StopWatch watch = new StopWatch();
         watch.start();
-        log.info( "Starting the query to get the mapping between probe and gene" );
 
-        this.uniqueItems = 0;
-        for ( int i = 0; i < allVectors.length; i++ ) {
-            if ( i >= end ) {
-                int start = end;
-                end = allVectors.length > end + ChunkNum ? end + ChunkNum : allVectors.length;
-                probeToGeneAssociation = this.getProbeToGeneAssociation( start, end );
-            }
-            DesignElementDataVector vector = ( DesignElementDataVector ) allVectors[i];
-
-            /** *Initialize the map between probe and gene n-1 mapping** */
-            Long probeId = new Long( vector.getDesignElement().getId() );
-
-            Collection<Gene> geneSet = probeToGeneAssociation.get( vector );
-            /*
-             * if(geneSet != null && geneSet.size() >= 7){ System.err.println("\n"); System.err.println(" Probe: " +
-             * vector.getDesignElement().getName()+ "[" + vector.getDesignElement().getId() + "] "); for(Gene
-             * gene:geneSet){ System.err.print(gene.getName() + "[" + gene.getId() + "] "); } }
-             */
-
-            Set<Long> geneIdSet = new HashSet();
-            if ( geneSet != null && !geneSet.isEmpty() ) {
-                /* add into the map between probe and designElementDataVector** */
-                p2v.put( vector.getDesignElement(), vector );
-
-                for ( Gene gene : geneSet ) {
-                    Long geneId = gene.getId();
-                    geneIdSet.add( geneId );
-                }
-                if ( geneSet.size() >= stats.length )
-                    stats[stats.length - 1]++;
-                else
-                    stats[geneSet.size()]++;
-            } else {
-                stats[0]++;
-                continue;
-            }
-
-            this.probeToGeneMap.put( probeId, geneIdSet );
-
-            /* Initialize the map between gene and probeSet 1-n mapping */
-            for ( Long geneId : geneIdSet ) {
-                Set probeSet = ( Set ) this.geneToProbeMap.get( geneId );
-                if ( probeSet == null ) {
-                    probeSet = new HashSet();
-                    this.geneToProbeMap.put( geneId, probeSet );
-                }
-                probeSet.add( probeId );
-            }
-            if ( i > 0 && i % 1000 == 0 ) log.debug( " " + i );
+        log.info( "Collecting probes..." );
+        Collection<CompositeSequence> probesForVectors = new HashSet<CompositeSequence>();
+        for ( DesignElementDataVector v : dataVectors ) {
+            CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
+            probesForVectors.add( cs );
+            p2v.put( cs, v );
         }
+
+        log.info( "Mapping probes to genes..." );
+        this.probeToGeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
+
+        probeToGeneMap = csService.getGenes( probesForVectors );
+
+        // populate geneToProbeMap and gather stats.
+        for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
+            Collection<Gene> genes = probeToGeneMap.get( cs );
+            for ( Gene g : genes ) {
+                if ( !geneToProbeMap.containsKey( g ) ) {
+                    geneToProbeMap.put( g, new HashSet<CompositeSequence>() );
+                }
+                this.geneToProbeMap.get( g ).add( cs );
+            }
+
+            if ( genes.size() >= stats.length ) {
+                stats[stats.length - 1]++;
+            } else {
+                stats[genes.size()]++;
+            }
+        }
+
         this.uniqueItems = this.geneToProbeMap.keySet().size();
         watch.stop();
         log.info( "Finished mapping in " + ( double ) watch.getTime() / 1000.0 + " seconds" );
         log.info( "Mapping Stats " + ArrayUtils.toString( stats ) );
         if ( this.uniqueItems == 0 ) return;
+
+        // estimate the correlation needed to reach significance.
         double scoreP = CorrelationStats.correlationForPvalue( this.fwe / this.uniqueItems, this.dataMatrix.columns() ) - 0.001;
         if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
     }
 
     /**
-     * 
-     *
+     * Persist the links to the database.
      */
     private void saveLinks() {
 
-        /** *******Find the dataVector for each probe first*** */
+        if ( !this.useDB ) {
+            return;
+        }
+
+        /*
+         * Delete old links for this expressionexperiment
+         */
+
+        ExpressionExperiment expressionExperiment = p2v.values().iterator().next().getExpressionExperiment();
+        log.info( "Deleting any old links for " + expressionExperiment );
+        ppService.deleteLinks( expressionExperiment );
+
+        /* *******Find the dataVector for each probe first*** */
         int c = dataMatrix.columns();
         int[] p1vAr = new int[keep.size()];
         int[] p2vAr = new int[keep.size()];
         int[] cbAr = new int[keep.size()];
         int[] pbAr = new int[keep.size()];
-        log.info( "Start submitting data to Gemd database." );
+        log.info( "Start submitting data to database." );
         StopWatch watch = new StopWatch();
         watch.start();
         Collection<Probe2ProbeCoexpression> p2plinks = new HashSet<Probe2ProbeCoexpression>();
@@ -493,48 +420,30 @@ public class LinkAnalysis {
             Link m = ( Link ) keep.get( i );
             double w = m.getWeight();
 
-            Object p1 = dataMatrix.getRowName( m.getx() );
-            Object p2 = dataMatrix.getRowName( m.gety() );
+            Collection<DesignElement> p1s = dataMatrix.getDesignElementsForRow( m.getx() );
+            Collection<DesignElement> p2s = dataMatrix.getDesignElementsForRow( m.gety() );
 
-            DesignElementDataVector v1 = ( DesignElementDataVector ) p2v.get( p1 );
-            DesignElementDataVector v2 = ( DesignElementDataVector ) p2v.get( p2 );
+            if ( p1s.size() > 1 || p2s.size() > 1 ) {
+                throw new UnsupportedOperationException(
+                        "Sorry, we don't know what to do when a row refers to more than one DesignElement." );
+            }
+
+            DesignElement p1 = p1s.iterator().next();
+            DesignElement p2 = p2s.iterator().next();
+
+            DesignElementDataVector v1 = p2v.get( p1 );
+            DesignElementDataVector v2 = p2v.get( p2 );
             p1vAr[i] = new Long( v1.getId() ).intValue();
             p2vAr[i] = new Long( v2.getId() ).intValue();
             cbAr[i] = CorrelationStats.correlAsByte( w );
             pbAr[i] = CorrelationStats.pvalueAsByte( w, c );
-            if ( this.useDB ) {
-                Probe2ProbeCoexpression ppCoexpression = null;
 
-                if ( taxon == null ) {
-                    throw new IllegalStateException( "Taxon cannot be null" );
-                }
+            persist( c, p2plinks, i, w, v1, v2 );
 
-                if ( TaxonUtility.isMouse( taxon ) ) {
-                    ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
-                } else if ( TaxonUtility.isRat( taxon ) ) {
-                    ppCoexpression = RatProbeCoExpression.Factory.newInstance();
-                } else if ( TaxonUtility.isHuman( taxon ) ) {
-                    ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
-                } else {
-                    ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
-                }
-
-                ppCoexpression.setFirstVector( v1 );
-                ppCoexpression.setSecondVector( v2 );
-                ppCoexpression.setScore( w );
-                ppCoexpression.setPvalue( CorrelationStats.pvalue( w, c ) );
-                ppCoexpression.setQuantitationType( v1.getQuantitationType() );
-                p2plinks.add( ppCoexpression );
-                if ( i % LINK_BATCH_SIZE == 0 ) {
-                    this.ppService.create( p2plinks );
-                    p2plinks.clear();
-                }
-
-                if ( i > 0 && i % 20000 == 0 ) {
-                    log.info( i + " links loaded" );
-                }
-
+            if ( i > 0 && i % 20000 == 0 ) {
+                log.info( i + " links loaded into the database" );
             }
+
         }
         if ( p2plinks.size() > 0 ) this.ppService.create( p2plinks );
         watch.stop();
@@ -545,6 +454,49 @@ public class LinkAnalysis {
          * p1vAr, p2vAr, cbAr, pbAr ); System.err.println( "Inserted " + rd + " links into the database" ); }
          */
 
+    }
+
+    /**
+     * @param c
+     * @param p2plinks
+     * @param i
+     * @param w
+     * @param v1
+     * @param v2
+     * @return
+     */
+    private Probe2ProbeCoexpression persist( int c, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
+            DesignElementDataVector v1, DesignElementDataVector v2 ) {
+        Probe2ProbeCoexpression ppCoexpression;
+        if ( taxon == null ) {
+            throw new IllegalStateException( "Taxon cannot be null" );
+        }
+
+        if ( TaxonUtility.isMouse( taxon ) ) {
+            ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
+        } else if ( TaxonUtility.isRat( taxon ) ) {
+            ppCoexpression = RatProbeCoExpression.Factory.newInstance();
+        } else if ( TaxonUtility.isHuman( taxon ) ) {
+            ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
+        } else {
+            ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
+        }
+
+        ppCoexpression.setFirstVector( v1 );
+        ppCoexpression.setSecondVector( v2 );
+        ppCoexpression.setScore( w );
+        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, c ) );
+        ppCoexpression.setQuantitationType( v1.getQuantitationType() );
+        p2plinks.add( ppCoexpression );
+        if ( i % LINK_BATCH_SIZE == 0 ) {
+            this.ppService.create( p2plinks );
+            p2plinks.clear();
+        }
+        return ppCoexpression;
+    }
+
+    public void setCsService( CompositeSequenceService csService ) {
+        this.csService = csService;
     }
 
 }

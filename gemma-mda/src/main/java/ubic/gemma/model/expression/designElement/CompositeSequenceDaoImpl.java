@@ -20,12 +20,17 @@
 package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -40,7 +45,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
  * @version $Id$
  */
 public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase {
-
 
     private static Log log = LogFactory.getLog( CompositeSequenceDaoImpl.class.getName() );
 
@@ -172,18 +176,19 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @Override
-    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) throws Exception {
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
+            throws Exception {
         if ( compositeSequence == null || compositeSequence.getId() == null ) {
             throw new IllegalArgumentException();
         }
         long id = compositeSequence.getId();
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
-        
-        if (numResults != null && numResults != 0) {
+
+        if ( numResults != null && numResults != 0 ) {
             nativeQueryString = nativeQueryString + " LIMIT " + numResults;
         }
-        
+
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
         return retVal;
     }
@@ -211,11 +216,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
-        
-        if (numResults != null && numResults != 0) {
+
+        if ( numResults != null && numResults != 0 ) {
             nativeQueryString = nativeQueryString + " LIMIT " + numResults;
         }
-        
+
         Collection retVal = nativeQuery( nativeQueryString );
         return retVal;
     }
@@ -233,7 +238,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         long id = arrayDesign.getId();
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ARRAY_DESIGN_FK = :id ";
-        if (numResults != null && numResults != 0) {
+        if ( numResults != null && numResults != 0 ) {
             nativeQueryString = nativeQueryString + " LIMIT " + numResults;
         }
         Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
@@ -329,11 +334,62 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         return genes;
     }
-    
+
+    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetGenes( Collection sequences ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection compositeSequences ) throws Exception {
+
+        final String queryString = "select distinct cs, gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs in (:cs)";
+
+        Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
+
+        // Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+
+        // // Note that batching it doesn't help performance all that much, if at all. But at least the query parsing
+        // stage
+        // // is faster ;)
+        // int BATCHSIZE = -1;
+        int count = 0;
+        // for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+        //
+        // batch.add( cs );
+        //
+        // if ( BATCHSIZE > 0 && batch.size() == BATCHSIZE ) {
+        // count = processCompositeSequenceBatch( queryString, returnVal, batch, count );
+        // batch.clear();
+        // }
+        // }
+
+        // if ( batch.size() > 0 ) {
+        count = processCompositeSequenceBatch( queryString, returnVal, compositeSequences, count );
+        // }
+        log.info( "Done, " + count + " result rows processed" );
+        return returnVal;
+    }
+
+    private int processCompositeSequenceBatch( final String queryString,
+            Map<CompositeSequence, Collection<Gene>> returnVal, Collection<CompositeSequence> batch, int count ) {
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "cs", batch );
+            List results = queryObject.list();
+
+            for ( Object[] objects : ( List<Object[]> ) results ) {
+                CompositeSequence c = ( CompositeSequence ) objects[0];
+                Gene g = ( Gene ) objects[1];
+                if ( !returnVal.containsKey( c ) ) {
+                    returnVal.put( c, new HashSet<Gene>() );
+                }
+                returnVal.get( c ).add( g );
+                if ( ++count % 2000 == 0 ) {
+                    log.info( count + " result rows processed" );
+                }
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return count;
     }
 
     /*

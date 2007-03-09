@@ -31,7 +31,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
@@ -154,22 +153,21 @@ public class DesignElementDataVectorDaoImpl extends
      * @param id
      * @return Collection
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenesById( long id ) throws Exception {
-        Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id = :id ";
+
+        final String queryString = "select distinct geneProduct.gene from BioSequence2GeneProductImpl as bs2gp inner join bs2gp.geneProduct as geneProduct, CompositeSequenceImpl cs, "
+                + " DesignElementDataVectorImpl dedv inner join dedv.designElement de"
+                + " where de.id=cs.id and cs.biologicalCharacteristic=bs2gp.bioSequence and dedv.id = :id ";
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", id );
-            genes = queryObject.list();
+            return queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return genes;
     }
 
     /**
@@ -189,7 +187,6 @@ public class DesignElementDataVectorDaoImpl extends
      * @param expressionExperimentService
      * @param qt
      * @return
-     * @throws Exception todo: still untested
      */
     protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
@@ -221,6 +218,12 @@ public class DesignElementDataVectorDaoImpl extends
             throw super.convertHibernateAccessException( ex );
         }
         watch.stop();
+
+        if ( cs2gene.keySet().size() == 0 ) {
+            log.warn( "No composite sequences found for genes" );
+            return geneMap;
+        }
+
         log.info( "Got " + cs2gene.keySet().size() + " composite sequences for " + genes.size() + " genes in "
                 + watch.getTime() + "ms" );
 
@@ -230,11 +233,11 @@ public class DesignElementDataVectorDaoImpl extends
 
         if ( ees == null || ees.size() == 0 ) {
             queryString = "select dedv.id from DesignElementDataVectorImpl dedv"
-                    + " where dedv.designElement in ( :cs)  and dedv.quantitationType.isPreferred = true";
+                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
         } else {
             queryString = "select dedv.id from DesignElementDataVectorImpl dedv"
-                    + " where dedv.designElement  = :cs and dedv.quantitationType.isPreferred = true"
-                    + " and dedv.expressionExperiment in (:ees)";
+                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
+                    + " and dedv.expressionExperiment in ( :ees )";
         }
         int count = 0;
         org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -329,8 +332,10 @@ public class DesignElementDataVectorDaoImpl extends
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
                     thaw( session, designElementDataVector );
-                    if ( ++count % 2000 == 0 ) log.info( "Thawed " + count + " vectors" );
+                    if ( ++count % 10000 == 0 ) log.info( "Thawed " + count + " vectors" );
                 }
+                session.clear();
+                log.info( "Done, thawed " + count + " vectors" );
                 return null;
             }
 
@@ -339,19 +344,27 @@ public class DesignElementDataVectorDaoImpl extends
     }
 
     /**
+     * Thaw a single vector.
+     * 
      * @param session
      * @param designElementDataVector
      */
     private void thaw( org.hibernate.Session session, DesignElementDataVector designElementDataVector ) {
         session.update( designElementDataVector );
-        designElementDataVector.getBioAssayDimension().getBioAssays().size();
-        BioSequence biologicalCharacteristic = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
+
+        // thaw the design element.
+        BioSequence seq = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
                 .getBiologicalCharacteristic();
-        if ( biologicalCharacteristic != null ) {
-            session.update( biologicalCharacteristic );
+        if ( seq != null ) {
+            session.update( seq );
+            seq.hashCode();
         }
+
+        // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
             session.update( ba );
+            session.update( ba.getArrayDesignUsed() );
+            ba.getArrayDesignUsed().hashCode();
             ba.getSamplesUsed().size();
             ba.getDerivedDataFiles().size();
         }
@@ -391,16 +404,16 @@ public class DesignElementDataVectorDaoImpl extends
      * @author jsantos
      */
     private class GetGeneCallbackHandler implements org.springframework.orm.hibernate3.HibernateCallback {
-        private Collection dataVectors;
+        private Collection<DesignElementDataVector> dataVectors;
 
-        public GetGeneCallbackHandler( Collection dataVectors ) {
+        public GetGeneCallbackHandler( Collection<DesignElementDataVector> dataVectors ) {
             this.dataVectors = dataVectors;
         }
 
         /**
          * @param dataVectors the dataVectors to set
          */
-        public void setDataVectors( Collection dataVectors ) {
+        public void setDataVectors( Collection<DesignElementDataVector> dataVectors ) {
             this.dataVectors = dataVectors;
         }
 
@@ -409,32 +422,33 @@ public class DesignElementDataVectorDaoImpl extends
          */
         public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
             /*
-             * Algorithm: for each 100 designElementDataVectors, do a query to get the associated genes. The results
+             * Algorithm: for each batch designElementDataVectors, do a query to get the associated genes. The results
              * will then be pushed into a map, associating the designElementDataVector with a collection of Genes.
              * Return the map.
              */
-            int MAX_COUNTER = 100;
+            int MAX_COUNTER = 500;
             Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
-            ArrayList<Long> idList = new ArrayList<Long>();
-            final String queryString = "select dedv, gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence, DesignElementDataVectorImpl dedv where gene.products.id=bs2gp.geneProduct.id "
-                    + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                    + " and compositeSequence.designElementDataVectors.id=dedv.id " + " and dedv.id in (:ids) ";
+            ArrayList<DesignElementDataVector> batch = new ArrayList<DesignElementDataVector>();
+            // note similar query in handleGetGenesById()
+            final String queryString = "select distinct dedv, geneProduct.gene from BlatAssociationImpl as bs2gp inner join bs2gp.geneProduct geneProduct, CompositeSequenceImpl cs, "
+                    + " DesignElementDataVectorImpl dedv inner join dedv.designElement de"
+                    + " where de.id=cs.id and cs.biologicalCharacteristic=bs2gp.bioSequence and dedv in (:ids) ";
 
-            Iterator iter = dataVectors.iterator();
+            Iterator<DesignElementDataVector> iter = dataVectors.iterator();
             int counter = 0;
-            // get up to the next 100 entries
+            // get up to the next N entries
             while ( iter.hasNext() ) {
 
                 counter = 0;
-                idList.clear();
+                batch.clear();
                 while ( ( counter < MAX_COUNTER ) && iter.hasNext() ) {
-                    idList.add( ( ( DesignElementDataVector ) iter.next() ).getId() );
+                    batch.add( iter.next() );
                     counter++;
                 }
 
                 org.hibernate.Query queryObject = session.createQuery( queryString );
-                queryObject.setParameterList( "ids", idList );
+                queryObject.setParameterList( "ids", batch );
                 // get results and push into hashmap.
 
                 ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -445,7 +459,7 @@ public class DesignElementDataVectorDaoImpl extends
                     // if the key does not exist, create and put hashset into the map
                     if ( geneMap.containsKey( dedv ) ) {
                         if ( !( ( Collection<Gene> ) geneMap.get( dedv ) ).add( g ) ) {
-                            log.debug( "Failed to add " + g.getName() + ";Duplicate" );
+                            if ( log.isDebugEnabled() ) log.debug( "Failed to add " + g.getName() + "; Duplicate" );
                         }
                     } else {
                         Collection<Gene> genes = new HashSet<Gene>();

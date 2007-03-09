@@ -51,11 +51,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -550,18 +548,17 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         assert quantitationType.getId() != null && expressionExperiment.getId() != null;
 
         // FIXME: this would be much faster done as a batch query (with "in") instead of once per design element.
-        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors as dev inner join dev.designElement as de "
-                + "inner join dev.quantitationType as qt where ee.id = :id and de.id = :deid and qt.id = :qtid";
+        // FIXME EE is not needed as a paramter because QT belongs to EE.
+        final String queryString = "select dev from DesignElementDataVectorImpl as dev inner join dev.designElement as de "
+                + " where de = :de and dev.quantitationType = :qt";
 
         Collection<DesignElementDataVector> vectors = new LinkedHashSet<DesignElementDataVector>();
         for ( DesignElement designElement : ( Collection<DesignElement> ) designElements ) {
             assert designElement.getId() != null;
             try {
                 org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-                queryObject.setParameter( "id", expressionExperiment.getId() );
-                queryObject.setParameter( "deid", designElement.getId() );
-                queryObject.setParameter( "qtid", quantitationType.getId() );
+                queryObject.setParameter( "de", designElement );
+                queryObject.setParameter( "qt", quantitationType );
                 List results = queryObject.list();
                 if ( results == null || results.size() == 0 ) continue;
                 if ( results.size() > 1 ) {
@@ -820,13 +817,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
             Collection quantitationTypes ) throws Exception {
-        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors as dev "
-                + "inner join dev.quantitationType as qt inner join fetch dev.bioAssayDimension bad inner join fetch bad.bioAssays bas "
-                + "inner join fetch bas.arrayDesignUsed inner join fetch bas.samplesUsed where ee = :ee and qt in (:qts) ";
+        // FIXME: the experiment is no longer necessary,as each QT is soley owned by one EE.
+        final String queryString = "select distinct dev from DesignElementDataVectorImpl dev inner join fetch dev.bioAssayDimension inner join fetch dev.designElement  where dev.quantitationType in (:qts) ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "ee", expressionExperiment );
             queryObject.setParameterList( "qts", quantitationTypes );
             List results = queryObject.list();
             return results;

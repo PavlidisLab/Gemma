@@ -250,7 +250,8 @@ public class TestPersistentObjectHelper {
 
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
-            quantitationTypes.add( getTestNonPersistentQuantitationType() );
+            QuantitationType q = getTestNonPersistentQuantitationType();
+            quantitationTypes.add( q );
         }
 
         vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysA, adA ) );

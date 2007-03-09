@@ -103,13 +103,16 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     protected void onTearDownAfterTransaction() throws Exception {
         super.onTearDownAfterTransaction();
 
-
         if ( newee != null && newee.getId() != null ) {
             expressionExperimentService.delete( newee );
         }
 
     }
 
+    /**
+     * FIXME This test fails because is uses the gene2cs table, which isn't populated in tests yet.
+     *
+     */
     @SuppressWarnings("unchecked")
     public void testGetGeneCoexpressionPattern() {
 
@@ -136,8 +139,9 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( newee );
 
-        Map<DesignElementDataVector, Collection<Gene>> geneCoexpressionPattern = dedvs.getVectors( ees,
-                genes );
+        Map<DesignElementDataVector, Collection<Gene>> geneCoexpressionPattern = dedvs.getVectors( ees, genes );
+
+        assertNotNull( geneCoexpressionPattern );
 
     }
 }

@@ -24,7 +24,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
- * Encapsulates information about the row 'label' for a ExpressionDataMatrix.
+ * Encapsulates information about the row 'label' for a ExpressionDataMatrix. Normal applications do not need to deal
+ * with this very much (I hope).
  * 
  * @author pavlidis
  * @version $Id$
@@ -37,6 +38,7 @@ public class ExpressionDataMatrixRowElement {
 
     private Integer index;
 
+    @SuppressWarnings("unchecked")
     public ExpressionDataMatrixRowElement( ExpressionDataMatrix matrix, int i ) {
         this.index = i;
         this.designElements = matrix.getDesignElementsForRow( i );
@@ -46,7 +48,7 @@ public class ExpressionDataMatrixRowElement {
     @Override
     public boolean equals( Object obj ) {
         if ( !( obj instanceof ExpressionDataMatrixRowElement ) ) return false;
-        return this.index.equals( ( ExpressionDataMatrixRowElement ) obj );
+        return this.index.equals( ( ( ExpressionDataMatrixRowElement ) obj ).getIndex() );
     }
 
     @Override

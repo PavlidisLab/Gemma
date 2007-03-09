@@ -25,15 +25,13 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.model.GeoSubset;
 
 /**
  * @author pavlidis
