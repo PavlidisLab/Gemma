@@ -18,21 +18,28 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.expression.experiment;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
+ * @author paul
+ * @version $Id$
  */
-public class ExpressionExperimentImpl
-    extends ubic.gemma.model.expression.experiment.ExpressionExperiment
-{
+public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experiment.ExpressionExperiment {
 
     /**
      * 
      */
     private static final long serialVersionUID = -1342753625018841735L;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.DescribableImpl#toString()
+     */
+    @Override
+    public String toString() {
+        return super.toString() + " (" + this.getShortName() + ")";
+    }
+
 }
