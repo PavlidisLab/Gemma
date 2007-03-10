@@ -366,6 +366,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         boolean itemAHasDuplicates = false;
         int duplicateSkip = 0;
         int count = 0;
+        int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) {
             itemA = this.dataMatrix.getRowElement( i );
             if ( !this.hasGene( itemA ) ) continue;
@@ -387,9 +388,11 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     continue;
                 }
                 setCorrel( i, j, correlFast( vectorA, data[j], i, j ), numcols );
+                ++numComputed;
             }
             if ( ++count % 2000 == 0 ) {
-                log.info( count + " rows done, " + duplicateSkip + " self-hits skipped, last row was " + itemA + " "
+                log.info( count + " rows done, " + numComputed + " correlations computed, " + duplicateSkip
+                        + " self-hits skipped, last row was " + itemA + " "
                         + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
@@ -436,6 +439,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         double[] vectorA = null;
         double syy, sxy, sxx, sx, sy, xj, yj;
         int count = 0;
+        int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) { // first vector
             itemA = this.dataMatrix.getRowElement( i );
             if ( !this.hasGene( itemA ) ) continue;
@@ -498,12 +502,13 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     double correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
                     setCorrel( i, j, correl, numused );
                 }
+                ++numComputed;
 
             }
             if ( ++count % 2000 == 0 ) {
-                log.info( count + " rows done, " + duplicateSkip + " self-hits skipped, last row was " + itemA + " "
+                log.info( count + " rows done, " + numComputed + " correlations computed, " + duplicateSkip
+                        + " self-hits skipped, last row was " + itemA + " "
                         + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
-
             }
         }
         finishMetrics( duplicateSkip );

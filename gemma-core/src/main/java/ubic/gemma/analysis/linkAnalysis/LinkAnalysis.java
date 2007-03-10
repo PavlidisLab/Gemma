@@ -122,6 +122,67 @@ public class LinkAnalysis {
         return true;
     }
 
+    /**
+     * Clear/null data so this object can be reused.
+     */
+    public void clear() {
+        this.dataMatrix = null;
+        this.dataVectors = null;
+        this.probeToGeneMap = null;
+        this.geneToProbeMap = null;
+        this.p2v = null;
+        this.uniqueGenesInDataset = 0;
+        this.metricMatrix = null;
+    }
+
+    public void setAbsoluteValue() {
+        this.absoluteValue = true;
+    }
+
+    public void setCdfCut( double cdfCut ) {
+        this.cdfCut = cdfCut;
+    }
+
+    public void setCsService( CompositeSequenceService csService ) {
+        this.csService = csService;
+    }
+
+    public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
+        this.dataMatrix = paraDataMatrix;
+    }
+
+    public void setDataVectors( Collection<DesignElementDataVector> vectors ) {
+        this.dataVectors = vectors;
+    }
+
+    public void setDEService( DesignElementDataVectorService deService ) {
+        this.deService = deService;
+    }
+
+    public void setFwe( double fwe ) {
+        this.fwe = fwe;
+    }
+
+    public void setMetric( String metric ) {
+        this.metric = metric;
+    }
+
+    public void setPPService( Probe2ProbeCoexpressionService ppService ) {
+        this.ppService = ppService;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
+    }
+
+    public void setTooSmallToKeep( double tooSmallToKeep ) {
+        this.tooSmallToKeep = tooSmallToKeep;
+    }
+
+    public void setUseDB( boolean value ) {
+        this.useDB = value;
+    }
+
     public void writeDistribution() throws IOException {
 
         ExpressionExperiment expressionExperiment = this.dataVectors.iterator().next().getExpressionExperiment();
@@ -147,7 +208,7 @@ public class LinkAnalysis {
         double step = 2.0 / histogramArrayList.size();
 
         out.write( "# Correlation distribution\n" );
-        out.write( "# date=" + ( new Date() ) );
+        out.write( "# date=" + ( new Date() ) + "\n" );
         out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
         out.write( "Bin\tCount\n" );
 
@@ -158,6 +219,26 @@ public class LinkAnalysis {
         }
 
         out.close();
+
+    }
+
+    /**
+     * Compute the distribution of similarity metrics for the entire matrix.
+     */
+    private void calculateDistribution() {
+        if ( metric.equals( "pearson" ) ) {
+            metricMatrix = MatrixRowPairAnalysisFactory.pearson( this.dataMatrix, this.tooSmallToKeep );
+        } else if ( metric.equals( "spearmann" ) ) {
+            throw new UnsupportedOperationException( "Spearmann not supported" );
+            // metricMatrix = MatrixRowPairAnalysisFactory.spearman(dataMatrix,
+            // tooSmallToKeep);
+        }
+
+        metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
+        metricMatrix.setUseAbsoluteValue( this.absoluteValue );
+        metricMatrix.calculateMetrics();
+        log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
+                + " values in the correlation matrix with values over " + this.tooSmallToKeep );
 
     }
 
@@ -237,103 +318,6 @@ public class LinkAnalysis {
 
     }
 
-    private void outputOptions() {
-        log.info( "Current Settings" );
-        log.info( "AbsouteValue Setting:" + this.absoluteValue );
-        log.info( "cdfCut:" + this.cdfCut );
-        log.info( "cacheCut:" + this.tooSmallToKeep );
-        log.info( "Unique Items:" + this.uniqueGenesInDataset );
-        log.info( "fwe:" + this.fwe );
-        log.info( "useDB:" + this.useDB );
-    }
-
-    public void setAbsoluteValue() {
-        this.absoluteValue = true;
-    }
-
-    public void setCdfCut( double cdfCut ) {
-        this.cdfCut = cdfCut;
-    }
-
-    public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
-        this.dataMatrix = paraDataMatrix;
-    }
-
-    public void setDataVectors( Collection<DesignElementDataVector> vectors ) {
-        this.dataVectors = vectors;
-    }
-
-    public void setDEService( DesignElementDataVectorService deService ) {
-        this.deService = deService;
-    }
-
-    public void setFwe( double fwe ) {
-        this.fwe = fwe;
-    }
-
-    public void setMetric( String metric ) {
-        this.metric = metric;
-    }
-
-    public void setPPService( Probe2ProbeCoexpressionService ppService ) {
-        this.ppService = ppService;
-    }
-
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
-    }
-
-    public void setTooSmallToKeep( double tooSmallToKeep ) {
-        this.tooSmallToKeep = tooSmallToKeep;
-    }
-
-    public void setUseDB( boolean value ) {
-        this.useDB = value;
-    }
-
-    /**
-     * @param paraFileName
-     */
-    protected void writeDataIntoFile( String paraFileName ) throws IOException {
-        BufferedWriter writer = null;
-
-        writer = new BufferedWriter( new FileWriter( paraFileName ) );
-        int cols = this.dataMatrix.columns();
-        for ( int i = 0; i < cols; i++ ) {
-            writer.write( "\t" + this.dataMatrix.getBioMaterialForColumn( i ) );
-        }
-        writer.write( "\n" );
-        int rows = this.dataMatrix.rows();
-        for ( int i = 0; i < rows; i++ ) {
-            writer.write( this.dataMatrix.getRowElements().get( i ).toString() );
-            Double rowData[] = this.dataMatrix.getRow( i );
-            for ( int j = 0; j < rowData.length; j++ )
-                writer.write( "\t" + rowData[j] );
-            writer.write( "\n" );
-        }
-        writer.close();
-    }
-
-    /**
-     * Compute the distribution of similarity metrics for the entire matrix.
-     */
-    private void calculateDistribution() {
-        if ( metric.equals( "pearson" ) ) {
-            metricMatrix = MatrixRowPairAnalysisFactory.pearson( this.dataMatrix, this.tooSmallToKeep );
-        } else if ( metric.equals( "spearmann" ) ) {
-            throw new UnsupportedOperationException( "Spearmann not supported" );
-            // metricMatrix = MatrixRowPairAnalysisFactory.spearman(dataMatrix,
-            // tooSmallToKeep);
-        }
-
-        metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
-        metricMatrix.setUseAbsoluteValue( this.absoluteValue );
-        metricMatrix.calculateMetrics();
-        log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
-                + " values in the correlation matrix with values over " + this.tooSmallToKeep );
-
-    }
-
     /**
      * Does the main computation and link selection.
      */
@@ -400,6 +384,55 @@ public class LinkAnalysis {
         if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
     }
 
+    private void outputOptions() {
+        log.info( "Current Settings" );
+        log.info( "AbsouteValue Setting:" + this.absoluteValue );
+        log.info( "cdfCut:" + this.cdfCut );
+        log.info( "cacheCut:" + this.tooSmallToKeep );
+        log.info( "Unique Items:" + this.uniqueGenesInDataset );
+        log.info( "fwe:" + this.fwe );
+        log.info( "useDB:" + this.useDB );
+    }
+
+    /**
+     * @param c
+     * @param p2plinks
+     * @param i
+     * @param w
+     * @param v1
+     * @param v2
+     * @return
+     */
+    private Probe2ProbeCoexpression persist( int c, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
+            DesignElementDataVector v1, DesignElementDataVector v2 ) {
+        Probe2ProbeCoexpression ppCoexpression;
+        if ( taxon == null ) {
+            throw new IllegalStateException( "Taxon cannot be null" );
+        }
+
+        if ( TaxonUtility.isMouse( taxon ) ) {
+            ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
+        } else if ( TaxonUtility.isRat( taxon ) ) {
+            ppCoexpression = RatProbeCoExpression.Factory.newInstance();
+        } else if ( TaxonUtility.isHuman( taxon ) ) {
+            ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
+        } else {
+            ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
+        }
+
+        ppCoexpression.setFirstVector( v1 );
+        ppCoexpression.setSecondVector( v2 );
+        ppCoexpression.setScore( w );
+        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, c ) );
+        ppCoexpression.setQuantitationType( v1.getQuantitationType() );
+        p2plinks.add( ppCoexpression );
+        if ( i % LINK_BATCH_SIZE == 0 ) {
+            this.ppService.create( p2plinks );
+            p2plinks.clear();
+        }
+        return ppCoexpression;
+    }
+
     /**
      * Persist the links to the database.
      */
@@ -457,46 +490,26 @@ public class LinkAnalysis {
     }
 
     /**
-     * @param c
-     * @param p2plinks
-     * @param i
-     * @param w
-     * @param v1
-     * @param v2
-     * @return
+     * @param paraFileName
      */
-    private Probe2ProbeCoexpression persist( int c, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
-            DesignElementDataVector v1, DesignElementDataVector v2 ) {
-        Probe2ProbeCoexpression ppCoexpression;
-        if ( taxon == null ) {
-            throw new IllegalStateException( "Taxon cannot be null" );
-        }
+    protected void writeDataIntoFile( String paraFileName ) throws IOException {
+        BufferedWriter writer = null;
 
-        if ( TaxonUtility.isMouse( taxon ) ) {
-            ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
-        } else if ( TaxonUtility.isRat( taxon ) ) {
-            ppCoexpression = RatProbeCoExpression.Factory.newInstance();
-        } else if ( TaxonUtility.isHuman( taxon ) ) {
-            ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
-        } else {
-            ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
+        writer = new BufferedWriter( new FileWriter( paraFileName ) );
+        int cols = this.dataMatrix.columns();
+        for ( int i = 0; i < cols; i++ ) {
+            writer.write( "\t" + this.dataMatrix.getBioMaterialForColumn( i ) );
         }
-
-        ppCoexpression.setFirstVector( v1 );
-        ppCoexpression.setSecondVector( v2 );
-        ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, c ) );
-        ppCoexpression.setQuantitationType( v1.getQuantitationType() );
-        p2plinks.add( ppCoexpression );
-        if ( i % LINK_BATCH_SIZE == 0 ) {
-            this.ppService.create( p2plinks );
-            p2plinks.clear();
+        writer.write( "\n" );
+        int rows = this.dataMatrix.rows();
+        for ( int i = 0; i < rows; i++ ) {
+            writer.write( this.dataMatrix.getRowElements().get( i ).toString() );
+            Double rowData[] = this.dataMatrix.getRow( i );
+            for ( int j = 0; j < rowData.length; j++ )
+                writer.write( "\t" + rowData[j] );
+            writer.write( "\n" );
         }
-        return ppCoexpression;
-    }
-
-    public void setCsService( CompositeSequenceService csService ) {
-        this.csService = csService;
+        writer.close();
     }
 
 }

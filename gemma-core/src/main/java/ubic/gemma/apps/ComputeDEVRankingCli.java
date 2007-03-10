@@ -34,6 +34,9 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -82,6 +85,16 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
 
     DedvRankService dedvRankservice;
 
+    private AuditTrailService auditTrailService;
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = RankComputationEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
     /**
      * 
      */
@@ -98,6 +111,7 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
             this.method = Method.valueOf( getOptionValue( 'm' ) );
         }
         dedvRankservice = ( DedvRankService ) this.getBean( "dedvRankService" );
+        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 
     /**
@@ -153,9 +167,9 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
             }
             processExperiment( errorObjects, persistedObjects, expressionExperiment );
         }
-        
+
         summarizeProcessing( errorObjects, persistedObjects );
-        
+
         return null;
     }
 
@@ -169,6 +183,7 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
         try {
             this.dedvRankservice.computeDevRankForExpressionExperiment( ee, method );
             persistedObjects.add( ee.toString() );
+            audit( ee, "" );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );

@@ -124,9 +124,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
-    AuditTrailService auditTrailService;
-
     private String mDate;
+
+    AuditTrailService auditTrailService;
 
     /**
      * @param ee
@@ -138,65 +138,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
         AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
         return affyProbeNameFilter.filter( matrix );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private void process( ExpressionExperiment ee ) throws Exception {
-
-        if ( this.hasOption( 'd' ) ) {
-            log.warn( "TEST MODE, Database will not be modified" );
-        }
-
-        checkForMixedTechnologies( ee );
-        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
-        if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
-
-        log.info( "Loading vectors..." );
-        Collection<DesignElementDataVector> dataVectors = eeService.getDesignElementDataVectors( ee, qts );
-        vectorService.thaw( dataVectors );
-
-        if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors " + ee.getShortName() );
-
-        log.info( "Getting expression data..." );
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
-
-        ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
-
-        if ( eeDoubleMatrix.rows() == 0 ) throw new IllegalStateException( "No data found!" );
-
-        if ( eeDoubleMatrix.rows() < MINIMUM_ROWS_TO_BOTHER )
-            throw new IllegalArgumentException( "Most Probes are filtered out " + ee.getShortName() );
-
-        if ( eeDoubleMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE )
-            throw new IllegalArgumentException( "No enough samples " + ee.getShortName() );
-
-        eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );
-
-        if ( eeDoubleMatrix == null )
-            throw new IllegalStateException( "Failed to get filtered data matrix " + ee.getShortName() );
-
-        this.linkAnalysis.setDataMatrix( eeDoubleMatrix );
-        this.linkAnalysis.setDataVectors( dataVectors ); // shouldn't have to do this.
-        this.linkAnalysis.setTaxon( eeService.getTaxon( ee.getId() ) );
-
-        /*
-         * this value will be optimized depending on the size of experiment in the analysis. So it need to be set as the
-         * given value before the analysis. Otherwise, the value in the previous experiment will be in effect for the
-         * current experiment.
-         */
-        this.linkAnalysis.setTooSmallToKeep( this.tooSmallToKeep );
-
-        /*
-         * Start the analysis.
-         */
-        log.info( "Starting generating Raw Links for " + ee.getShortName() );
-        this.linkAnalysis.analyze();
-        log.info( "Generated Raw Links for " + ee.getShortName() );
-
     }
 
     /**
@@ -266,6 +207,75 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         return filteredMatrix;
     }
 
+    private ExpressionDataDoubleMatrix filter( ExpressionExperiment ee, ExpressionDataMatrixBuilder builder,
+            ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        if ( eeDoubleMatrix.rows() == 0 ) throw new IllegalStateException( "No data found!" );
+
+        if ( eeDoubleMatrix.rows() < MINIMUM_ROWS_TO_BOTHER )
+            throw new IllegalArgumentException( "Most Probes are filtered out " + ee.getShortName() );
+
+        if ( eeDoubleMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE )
+            throw new IllegalArgumentException( "No enough samples " + ee.getShortName() );
+
+        eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );
+
+        if ( eeDoubleMatrix == null )
+            throw new IllegalStateException( "Failed to get filtered data matrix " + ee.getShortName() );
+        return eeDoubleMatrix;
+    }
+
+    /**
+     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
+     * 
+     * @param expressionExperiment
+     * @param eventClass
+     * @return
+     */
+    private List<AuditEvent> getEvents( ExpressionExperiment expressionExperiment,
+            Class<? extends ExpressionExperimentAnalysisEvent> eventClass ) {
+        List<AuditEvent> events = new ArrayList<AuditEvent>();
+
+        for ( AuditEvent event : expressionExperiment.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
+            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                events.add( event );
+            }
+        }
+        return events;
+    }
+
+    /**
+     * @param ee
+     * @param dataVectors
+     * @return
+     */
+    private ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee,
+            Collection<DesignElementDataVector> dataVectors ) {
+        log.info( "Getting expression data..." );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
+
+        ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
+
+        eeDoubleMatrix = filter( ee, builder, eeDoubleMatrix );
+        return eeDoubleMatrix;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<DesignElementDataVector> getVectors( ExpressionExperiment ee ) {
+        checkForMixedTechnologies( ee );
+        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
+        if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
+
+        log.info( "Loading vectors..." );
+        Collection<DesignElementDataVector> dataVectors = eeService.getDesignElementDataVectors( ee, qts );
+        vectorService.thaw( dataVectors );
+        return dataVectors;
+    }
+
     /**
      * Determine if the expression experiment uses two-color arrays. This is not guaranteed to give the right answer if
      * the experiment uses both types of technologies.F
@@ -307,6 +317,43 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         if ( absentPresent != null ) rowMissingFilter.setAbsentPresentCalls( absentPresent );
         rowMissingFilter.setMinPresentFraction( minPresentFraction );
         return ( ExpressionDataDoubleMatrix ) rowMissingFilter.filter( filteredMatrix );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private void process( ExpressionExperiment ee ) throws Exception {
+        linkAnalysis.clear();
+
+        if ( this.hasOption( 'd' ) ) {
+            log.warn( "TEST MODE, Database will not be modified" );
+        }
+
+        Collection<DesignElementDataVector> dataVectors = getVectors( ee );
+
+        if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors " + ee.getShortName() );
+
+        ExpressionDataDoubleMatrix eeDoubleMatrix = getFilteredMatrix( ee, dataVectors );
+
+        this.linkAnalysis.setDataMatrix( eeDoubleMatrix );
+        this.linkAnalysis.setDataVectors( dataVectors ); // shouldn't have to do this.
+        this.linkAnalysis.setTaxon( eeService.getTaxon( ee.getId() ) );
+
+        /*
+         * this value will be optimized depending on the size of experiment in the analysis. So it need to be set as the
+         * given value before the analysis. Otherwise, the value in the previous experiment will be in effect for the
+         * current experiment.
+         */
+        this.linkAnalysis.setTooSmallToKeep( this.tooSmallToKeep );
+
+        /*
+         * Start the analysis.
+         */
+        log.info( "Starting generating Raw Links for " + ee.getShortName() );
+        this.linkAnalysis.analyze();
+        log.info( "Generated Raw Links for " + ee.getShortName() );
+
     }
 
     @SuppressWarnings("unchecked")
@@ -388,7 +435,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
         this.vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
 
-        ExpressionExperiment expressionExperiment = null;
         this.linkAnalysis.setDEService( vectorService );
         this.linkAnalysis.setCsService( ( CompositeSequenceService ) this.getBean( "compositeSequenceService" ) );
         this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
@@ -410,7 +456,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                     try {
                         this.process( ee );
                         persistedObjects.add( ee.toString() );
-                        audit( expressionExperiment, "Part of run on all EEs" );
+                        audit( ee, "Part of run on all EEs" );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
                         e.printStackTrace();
@@ -424,7 +470,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                     String shortName = null;
                     while ( ( shortName = br.readLine() ) != null ) {
                         if ( StringUtils.isBlank( shortName ) ) continue;
-                        expressionExperiment = eeService.findByShortName( shortName );
+                        ExpressionExperiment expressionExperiment = eeService.findByShortName( shortName );
 
                         if ( expressionExperiment == null ) {
                             errorObjects.add( shortName + " is not found in the database! " );
@@ -454,7 +500,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             }
             summarizeProcessing( errorObjects, persistedObjects );
         } else {
-            expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
+            ExpressionExperiment expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
 
             if ( expressionExperiment == null ) {
                 log.info( this.geneExpressionFile + " is not loaded yet!" );
@@ -516,26 +562,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             AuditEvent lastEvent = sequenceAnalysisEvents.get( sequenceAnalysisEvents.size() - 1 );
             return lastEvent.getDate().before( skipIfLastRunLaterThan );
         }
-    }
-
-    /**
-     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
-     * 
-     * @param expressionExperiment
-     * @param eventClass
-     * @return
-     */
-    private List<AuditEvent> getEvents( ExpressionExperiment expressionExperiment,
-            Class<? extends ExpressionExperimentAnalysisEvent> eventClass ) {
-        List<AuditEvent> events = new ArrayList<AuditEvent>();
-
-        for ( AuditEvent event : expressionExperiment.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue;
-            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
-                events.add( event );
-            }
-        }
-        return events;
     }
 
     @Override
