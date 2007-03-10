@@ -39,14 +39,14 @@
 
 
 	<display:column property="assaysLink" sortable="true"
-		sortProperty="bioAssayCount" titleKey="bioAssays.title"
+		sortProperty="bioAssayCount" titleKey="bioAssays.title" defaultorder="descending"
 		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
 	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
 
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="dateCreatedNoTime" sortable="true"
+		<display:column property="dateCreatedNoTime" sortable="true" defaultorder="descending"
 			title="Created" />
 		<display:column property="edit" sortable="false" title="Edit" />
 		<display:column property="delete" sortable="false"

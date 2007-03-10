@@ -16,7 +16,8 @@
 <authz:authorize ifAnyGranted="admin">
 	<p>
 		<a
-			href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>" onclick="return confirm('Regenerate reports for all experiments?');">
+			href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>"
+			onclick="return confirm('Regenerate reports for all experiments?');">
 			Regenerate Expression Experiment Link Summaries </a>
 
 	</p>
@@ -33,22 +34,24 @@
 	<display:column property="shortName" sortable="true"
 		titleKey="expressionExperiment.shortName" />
 	<display:column property="coexpressionLinkCount" sortable="true"
-		titleKey="expressionExperiment.coexpressionLinkCount" />
+		titleKey="expressionExperiment.coexpressionLinkCount"
+		defaultorder="descending" />
 	<display:column property="preferredDesignElementDataVectorCount"
-		sortable="true"
+		sortable="true" defaultorder="descending"
 		titleKey="expressionExperiment.preferredDesignElementDataVectorCount" />
 	<display:column property="bioMaterialCount" sortable="true"
+		defaultorder="descending"
 		titleKey="expressionExperiment.bioMaterialCount" />
 	<display:column property="dateCachedNoTime" sortable="true"
-		title="Cached" />
+		defaultorder="descending" title="Cached" />
 	<display:column property="dateCreatedNoTime" sortable="true"
-		title="Created" />
-	<display:column property="dateMissingValueAnalysisNoTime" sortable="true"
-		title="MV Analysis" />
+		defaultorder="descending" title="Created" />
+	<display:column property="dateMissingValueAnalysisNoTime"
+		sortable="true" defaultorder="descending" title="MV Analysis" />
 	<display:column property="dateRankComputationNoTime" sortable="true"
-		title="Rank Computed" />
+		defaultorder="descending" title="Rank Computed" />
 	<display:column property="dateLinkAnalysisNoTime" sortable="true"
-		title="Link Analyzed" />
+		defaultorder="descending" title="Link Analyzed" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="refreshReport" title="Refresh" />
 	</authz:authorize>
