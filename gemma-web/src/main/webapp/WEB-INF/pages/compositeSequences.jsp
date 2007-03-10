@@ -12,7 +12,7 @@
 	id="compositeSequenceList" pagesize="20">
 	<display:column property="name" sortable="true"
 		titleKey="compositeSequence.name" maxWords="20"
-		href="/Gemma/showCompositeSequence.html" paramId="id" />
+		href="/Gemma/compositeSequence/showCompositeSequence.html" paramProperty="compositeSequence.id" />
 	<display:column property="arrayDesign.shortName" sortable="true"
 		title="Array Design" maxWords="20"
 		href="/Gemma/arrays/showArrayDesign.html" paramId="id"
