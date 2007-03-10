@@ -26,12 +26,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -338,11 +339,115 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @SuppressWarnings("unchecked")
     @Override
     protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection compositeSequences ) throws Exception {
-
-        final String queryString = "select distinct cs, gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
-                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs in (:cs)";
+        //
+        // final String queryString = "select distinct cs, gene from CompositeSequenceImpl cs, BioSequenceImpl bs,
+        // BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene "
+        // + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs
+        // in (:cs)";
 
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
+        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+            returnVal.put( cs, new HashSet<Gene>() );
+        }
+
+        // build the query for fetching the cs -> gene relation
+        final String nativeQuery = "select CS, GENE from GENE2CS WHERE CS IN ";
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( nativeQuery );
+        buf.append( "(" );
+        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+            buf.append( cs.getId() );
+            buf.append( "," );
+        }
+        buf.setCharAt( buf.length() - 1, ')' );
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( buf.toString() );
+        queryObject.addScalar( "cs", new LongType() );
+        queryObject.addScalar( "gene", new LongType() );
+
+        StopWatch watch = new StopWatch();
+        log.info( "Beginning query" );
+        watch.start();
+
+        List result = queryObject.list();
+
+        log.info( "Done with initial query in " + watch.getTime() + " ms, got " + result.size()
+                + " cs-to-gene mappings." );
+        watch.reset();
+        watch.start();
+
+        int count = 0;
+        Collection<Long> genesToFetch = new HashSet<Long>();
+        Map<Long, Collection<Long>> cs2geneIds = new HashMap<Long, Collection<Long>>();
+
+        for ( Object object : result ) {
+            Object[] ar = ( Object[] ) object;
+            Long cs = ( Long ) ar[0];
+            Long gene = ( Long ) ar[1];
+            if ( !cs2geneIds.containsKey( cs ) ) {
+                cs2geneIds.put( cs, new HashSet<Long>() );
+            }
+            cs2geneIds.get( cs ).add( gene );
+            genesToFetch.add( gene );
+        }
+
+        session.close();
+
+        // nothing found?
+        if ( genesToFetch.size() == 0 ) {
+            returnVal.clear();
+            return returnVal;
+        }
+
+        log.info( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size() + " genes." );
+        watch.reset();
+        watch.start();
+
+        // fetch the genes
+        Collection<Long> batch = new HashSet<Long>();
+        Collection<Gene> genes = new HashSet<Gene>();
+        String geneQuery = "select g from GeneImpl g where g.id in ( :gs )";
+
+        org.hibernate.Query geneQueryObject = super.getSession( false ).createQuery( geneQuery ).setFetchSize( 1000 );
+        int BATCH_SIZE = 10000;
+        for ( Long gene : genesToFetch ) {
+            batch.add( gene );
+            if ( batch.size() == BATCH_SIZE ) {
+                geneQueryObject.setParameterList( "gs", batch );
+                genes.addAll( geneQueryObject.list() );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            geneQueryObject.setParameterList( "gs", batch );
+            genes.addAll( geneQueryObject.list() );
+        }
+
+        log.info( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
+
+        Map<Long, Gene> geneIdMap = new HashMap<Long, Gene>();
+        for ( Gene g : ( Collection<Gene> ) genes ) {
+            Long id = g.getId();
+            geneIdMap.put( id, g );
+        }
+
+        // fill in the return value.
+        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+            Long csId = cs.getId();
+            assert csId != null;
+            Collection<Long> genesToAttach = cs2geneIds.get( csId );
+            if ( genesToAttach == null ) {
+                // this means there was no gene for that cs; we should delete it from the result
+                returnVal.remove( cs );
+                continue;
+            }
+            for ( Long geneId : genesToAttach ) {
+                returnVal.get( cs ).add( geneIdMap.get( geneId ) );
+            }
+            ++count;
+        }
 
         // Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
 
@@ -350,7 +455,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         // stage
         // // is faster ;)
         // int BATCHSIZE = -1;
-        int count = 0;
+        // 
         // for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
         //
         // batch.add( cs );
@@ -362,35 +467,36 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         // }
 
         // if ( batch.size() > 0 ) {
-        count = processCompositeSequenceBatch( queryString, returnVal, compositeSequences, count );
+        // count = processCompositeSequenceBatch( queryString, returnVal, compositeSequences, count );
         // }
-        log.info( "Done, " + count + " result rows processed" );
+        log.info( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences.size()
+                + " probes are associated with genes" );
         return returnVal;
     }
 
-    private int processCompositeSequenceBatch( final String queryString,
-            Map<CompositeSequence, Collection<Gene>> returnVal, Collection<CompositeSequence> batch, int count ) {
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "cs", batch );
-            List results = queryObject.list();
-
-            for ( Object[] objects : ( List<Object[]> ) results ) {
-                CompositeSequence c = ( CompositeSequence ) objects[0];
-                Gene g = ( Gene ) objects[1];
-                if ( !returnVal.containsKey( c ) ) {
-                    returnVal.put( c, new HashSet<Gene>() );
-                }
-                returnVal.get( c ).add( g );
-                if ( ++count % 2000 == 0 ) {
-                    log.info( count + " result rows processed" );
-                }
-            }
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return count;
-    }
+    // private int processCompositeSequenceBatch( final String queryString,
+    // Map<CompositeSequence, Collection<Gene>> returnVal, Collection<CompositeSequence> batch, int count ) {
+    // try {
+    // org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+    // queryObject.setParameterList( "cs", batch );
+    // List results = queryObject.list();
+    //
+    // for ( Object[] objects : ( List<Object[]> ) results ) {
+    // CompositeSequence c = ( CompositeSequence ) objects[0];
+    // Gene g = ( Gene ) objects[1];
+    // if ( !returnVal.containsKey( c ) ) {
+    // returnVal.put( c, new HashSet<Gene>() );
+    // }
+    // returnVal.get( c ).add( g );
+    // if ( ++count % 2000 == 0 ) {
+    // log.info( count + " result rows processed" );
+    // }
+    // }
+    // } catch ( org.hibernate.HibernateException ex ) {
+    // throw super.convertHibernateAccessException( ex );
+    // }
+    // return count;
+    // }
 
     /*
      * (non-Javadoc)

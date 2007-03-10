@@ -22,8 +22,11 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -39,8 +42,10 @@ import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -52,6 +57,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.DateUtil;
 
 /**
  * Commandline tool to conduct the link analysis
@@ -119,6 +125,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
     AuditTrailService auditTrailService;
+
+    private String mDate;
 
     /**
      * @param ee
@@ -352,6 +360,18 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         Option useDB = OptionBuilder.withDescription( "Don't save the results in the database (i.e., testing)" )
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
+
+        Option dateOption = OptionBuilder
+                .hasArg()
+                .withArgName( "mdate" )
+                .withDescription(
+                        "Constrain to run only on experiments with analyses older than the given date. "
+                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                                + "If there is no record of when the analysis was last run, it will be run." ).create(
+                        "mdate" );
+
+        addOption( dateOption );
+
     }
 
     @SuppressWarnings("unchecked")
@@ -361,6 +381,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
+
+        Date skipIfLastRunLaterThan = getLimitingDate();
+
         this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         this.vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
@@ -378,6 +401,12 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
+
+                    if ( !needToRun( skipIfLastRunLaterThan, ee, LinkAnalysisEvent.class ) ) {
+                        log.warn( ee + " was last run more recently than " + skipIfLastRunLaterThan );
+                        continue;
+                    }
+
                     try {
                         this.process( ee );
                         persistedObjects.add( ee.toString() );
@@ -401,6 +430,13 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                             errorObjects.add( shortName + " is not found in the database! " );
                             continue;
                         }
+
+                        if ( !needToRun( skipIfLastRunLaterThan, expressionExperiment, LinkAnalysisEvent.class ) ) {
+                            log.warn( expressionExperiment + " was last run more recently than "
+                                    + skipIfLastRunLaterThan );
+                            continue;
+                        }
+
                         try {
                             this.process( expressionExperiment );
                             persistedObjects.add( expressionExperiment.toString() );
@@ -419,10 +455,17 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             summarizeProcessing( errorObjects, persistedObjects );
         } else {
             expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
+
             if ( expressionExperiment == null ) {
                 log.info( this.geneExpressionFile + " is not loaded yet!" );
                 return null;
             }
+
+            if ( !needToRun( skipIfLastRunLaterThan, expressionExperiment, LinkAnalysisEvent.class ) ) {
+                log.warn( expressionExperiment + " was last run more recently than " + skipIfLastRunLaterThan );
+                return null;
+            }
+
             try {
                 this.process( expressionExperiment );
                 audit( expressionExperiment, "From list in file: " + geneExpressionList );
@@ -434,6 +477,65 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
         }
         return null;
+    }
+
+    /**
+     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
+     * 
+     * @return
+     */
+    protected Date getLimitingDate() {
+        Date skipIfLastRunLaterThan = null;
+        if ( StringUtils.isNotBlank( mDate ) ) {
+            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
+            log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
+        }
+        return skipIfLastRunLaterThan;
+    }
+
+    /**
+     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
+     * 
+     * @param skipIfLastRunLaterThan
+     * @param expressionExperiment
+     * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
+     * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
+     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
+     */
+    protected boolean needToRun( Date skipIfLastRunLaterThan, ExpressionExperiment expressionExperiment,
+            Class<? extends ExpressionExperimentAnalysisEvent> eventClass ) {
+        if ( skipIfLastRunLaterThan == null ) return true;
+        auditTrailService.thaw( expressionExperiment );
+
+        List<AuditEvent> sequenceAnalysisEvents = getEvents( expressionExperiment, eventClass );
+
+        if ( sequenceAnalysisEvents.size() == 0 ) {
+            return true; // always do it
+        } else {
+            // return true if the last time was older than the limit time.
+            AuditEvent lastEvent = sequenceAnalysisEvents.get( sequenceAnalysisEvents.size() - 1 );
+            return lastEvent.getDate().before( skipIfLastRunLaterThan );
+        }
+    }
+
+    /**
+     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
+     * 
+     * @param expressionExperiment
+     * @param eventClass
+     * @return
+     */
+    private List<AuditEvent> getEvents( ExpressionExperiment expressionExperiment,
+            Class<? extends ExpressionExperimentAnalysisEvent> eventClass ) {
+        List<AuditEvent> events = new ArrayList<AuditEvent>();
+
+        for ( AuditEvent event : expressionExperiment.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
+            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                events.add( event );
+            }
+        }
+        return events;
     }
 
     @Override
@@ -471,6 +573,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         }
         if ( hasOption( 'd' ) ) {
             this.linkAnalysis.setUseDB( false );
+        }
+
+        if ( hasOption( "mdate" ) ) {
+            this.mDate = this.getOptionValue( "mdate" );
         }
 
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );

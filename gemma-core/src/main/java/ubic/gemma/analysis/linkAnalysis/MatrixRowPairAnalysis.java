@@ -18,12 +18,12 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
-import hep.aida.IHistogram1D;
-
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
@@ -32,7 +32,6 @@ import cern.colt.list.ObjectArrayList;
  * @author Paul Pavlidis
  * @version $Id$
  */
-
 public interface MatrixRowPairAnalysis {
 
     public void calculateMetrics();
@@ -41,7 +40,7 @@ public interface MatrixRowPairAnalysis {
 
     public void setPValueThreshold( double k );
 
-    //public IHistogram1D getHistogram();
+    // public IHistogram1D getHistogram();
 
     /**
      * @param k GroupMap
@@ -60,5 +59,7 @@ public interface MatrixRowPairAnalysis {
     public DoubleArrayList getHistogramArrayList();
 
     public double getScoreInBin( int i );
+
+    public DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl );
 
 }

@@ -31,7 +31,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -49,12 +48,16 @@ import ubic.gemma.util.TaxonUtility;
 public class Probe2ProbeCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase {
 
+    private static final int LINK_DELETE_BATCH_SIZE = 100000;
+
     @Override
-    protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees ) throws Exception {
-      
+    protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees )
+            throws Exception {
+
         String p2pClassName;
-        Gene testG = (Gene) genes.iterator().next(); //todo:  check to make sure that all the given genes are of the same taxon throw exception
-        
+        Gene testG = ( Gene ) genes.iterator().next(); // todo: check to make sure that all the given genes are of the
+        // same taxon throw exception
+
         if ( TaxonUtility.isHuman( testG.getTaxon() ) )
             p2pClassName = "HumanProbeCoExpressionImpl";
         else if ( TaxonUtility.isMouse( testG.getTaxon() ) )
@@ -91,60 +94,54 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 + " and p2pc.secondVector.expressionExperiment.id in (:collectionOfEE)"
                 + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id in (:collectionOfGenes)";
 
-        Map<Gene,Collection<DesignElementDataVector>> results = new HashMap<Gene,Collection<DesignElementDataVector>>();
-        
+        Map<Gene, Collection<DesignElementDataVector>> results = new HashMap<Gene, Collection<DesignElementDataVector>>();
+
         try {
-            //Must transform collection of objects into a collection of ids
+            // Must transform collection of objects into a collection of ids
             Collection<Long> eeIds = new ArrayList<Long>();
             for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
                 ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
                 eeIds.add( e.getId() );
             }
-            
+
             Collection<Long> geneIds = new ArrayList<Long>();
-            for(Object obj: genes)
-                geneIds.add( ((Gene) obj).getId() );
-                
-            
-            
+            for ( Object obj : genes )
+                geneIds.add( ( ( Gene ) obj ).getId() );
 
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
             queryObject.setParameterList( "collectionOfEE", eeIds );
             queryObject.setParameterList( "collectionOfGenes", geneIds );
-            queryObject.setLong( "givenQtId", qt.getId() );            
-            ScrollableResults list1 = queryObject.scroll();                       
-            buildMap(results, list1 );
-            
+            queryObject.setLong( "givenQtId", qt.getId() );
+            ScrollableResults list1 = queryObject.scroll();
+            buildMap( results, list1 );
+
             // do query joining coexpressed genes through the secondVector to the firstVector
             queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
             queryObject.setParameterList( "collectionOfEE", eeIds );
             queryObject.setParameterList( "collectionOfGenes", geneIds );
             queryObject.setLong( "givenQtId", qt.getId() );
-            ScrollableResults list2 = queryObject.scroll();     
-            buildMap(results, list2 );
+            ScrollableResults list2 = queryObject.scroll();
+            buildMap( results, list2 );
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
         return results;
     }
-    
-    
+
     /**
      * @param toBuild
-     * @param list
-     * 
-     * builds the hasmap by adding toBuild the results stored in the list 
+     * @param list builds the hasmap by adding toBuild the results stored in the list
      */
-    private void buildMap(Map<Gene,Collection<DesignElementDataVector>> toBuild, ScrollableResults list){
+    private void buildMap( Map<Gene, Collection<DesignElementDataVector>> toBuild, ScrollableResults list ) {
 
         while ( list.next() ) {
-            Gene g = (Gene) list.get(0);
-            DesignElementDataVector dedv = (DesignElementDataVector) list.get(1);
-            
-            if (toBuild.containsKey( g ))
+            Gene g = ( Gene ) list.get( 0 );
+            DesignElementDataVector dedv = ( DesignElementDataVector ) list.get( 1 );
+
+            if ( toBuild.containsKey( g ) )
                 toBuild.get( g ).add( dedv );
-            else{
+            else {
                 Collection<DesignElementDataVector> dedvs = new HashSet<DesignElementDataVector>();
                 dedvs.add( dedv );
                 toBuild.put( g, dedvs );
@@ -253,37 +250,25 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                     + p2pClassName + " as pp where pp.firstVector" + " = dv and ee=:ee";
 
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setMaxResults( LINK_DELETE_BATCH_SIZE );
             queryObject.setParameter( "ee", ee );
 
-            final ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            // we query iteratively until there are no more links to get. This takes much less memory than doing it all
+            // at once.
+            while ( true ) {
+                final Collection results = queryObject.list();
 
-            Integer numDone = ( Integer ) this.getHibernateTemplate().execute(
-                    new org.springframework.orm.hibernate3.HibernateCallback() {
-                        public Object doInHibernate( org.hibernate.Session session )
-                                throws org.hibernate.HibernateException {
-                            int i = 0;
+                if ( results.size() == 0 ) break;
 
-                            while ( results.next() ) {
+                remove( results );
 
-                                Object o = results.get( 0 );
+                Integer numDone = results.size();
 
-                                session.delete( o );
-                                if ( ++i % 10000 == 0 ) {
-                                    log.info( "Delete Progress: " + i + " ..." );
-                                    session.flush();
-                                    session.clear();
-                                    try {
-                                        Thread.sleep( 100 );
-                                    } catch ( InterruptedException e ) {
-                                        //
-                                    }
-                                }
-                            }
-                            return i;
-                        }
-                    }, true );
+                totalDone += numDone;
 
-            totalDone += numDone;
+                log.info( "Delete link progress: " + totalDone + " ..." );
+            }
+
             if ( totalDone > 0 ) {
                 break;
             }
@@ -299,7 +284,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
-        
+
         // FIXME figure out the taxon instead of this iteration.
         String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
                 "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
@@ -324,7 +309,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                             "More than one instance of 'Integer" + "' was found when executing query --> '"
                                     + queryString + "'" );
                 } else if ( results.size() == 1 ) {
-                    result += (Integer) results.iterator().next();
+                    result += ( Integer ) results.iterator().next();
                 }
 
             }
