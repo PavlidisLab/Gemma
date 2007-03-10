@@ -9,7 +9,7 @@
 </h2>
 
 <display:table name="compositeSequences" class="list" requestURI=""
-	id="compositeSequenceList" pagesize="20">
+	id="compositeSequenceList" pagesize="100">
 	<display:column property="name" sortable="true"
 		titleKey="compositeSequence.name" maxWords="20"
 		href="/Gemma/compositeSequence/showCompositeSequence.html" paramProperty="compositeSequence.id" />
