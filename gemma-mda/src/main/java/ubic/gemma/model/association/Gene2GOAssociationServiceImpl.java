@@ -32,14 +32,17 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociationService
  * @author klc
+ * @version $Id$
  */
-
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleCalculateGoTermOverlap( Gene masterGene, Collection geneIds ) throws Exception {
+    protected Map<Long, Collection<OntologyEntry>> handleCalculateGoTermOverlap( Gene masterGene, Collection geneIds )
+            throws Exception {
 
         if ( masterGene == null ) return null;
+        if ( geneIds.size() == 0 ) return null;
 
         Collection<OntologyEntry> masterOntos = getGOTerms( masterGene );
 
@@ -48,7 +51,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
 
         Map<Long, Collection<OntologyEntry>> overlap = new HashMap<Long, Collection<OntologyEntry>>();
         overlap.put( masterGene.getId(), masterOntos ); // include the master gene in the list. Clearly 100% overlap
-                                                        // with itself!
+        // with itself!
 
         if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) return overlap;
 
@@ -73,6 +76,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
      * @param Take a gene and return a set of all GO terms including the parents of each GO term
      * @param geneOntologyTerms
      */
+    @SuppressWarnings("unchecked")
     private Collection<OntologyEntry> getGOTerms( Gene gene ) {
 
         Collection<OntologyEntry> ontEntry = findByGene( gene );
@@ -104,6 +108,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
      * 
      * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
 

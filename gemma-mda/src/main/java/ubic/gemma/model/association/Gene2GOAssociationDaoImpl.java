@@ -39,7 +39,9 @@ import ubic.gemma.util.BusinessKey;
  */
 public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene2GOAssociationDaoBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -58,38 +60,41 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return ontos;
     }
 
-    
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGOTerm(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindByGOTerm( Collection goTerms, Taxon taxon ) throws Exception {
-                       
+        Collection<String> goIDs = new HashSet<String>();
+        if ( goTerms.size() == 0 ) return goIDs;
+
         final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.accession in (:goIDs) and geneAss.gene.taxon = :taxon";
 
-        //need to turn the collection of goTerms into a collection of GOId's
-        Collection<String> goIDs = new HashSet<String>();
-        for(Object obj: goTerms){
-            OntologyEntry oe = (OntologyEntry) obj;
+        // need to turn the collection of goTerms into a collection of GOId's
+
+        for ( Object obj : goTerms ) {
+            OntologyEntry oe = ( OntologyEntry ) obj;
             goIDs.add( oe.getAccession() );
         }
 
         Collection<Gene> results;
-        
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "goIDs", goIDs );
             queryObject.setParameter( "taxon", taxon );
-            
+
             results = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
         return results;
-             
+
     }
-    
+
     /*
      * (non-Javadoc)
      * 
