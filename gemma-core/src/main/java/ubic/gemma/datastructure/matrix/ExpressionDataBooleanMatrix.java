@@ -72,6 +72,18 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( selectedVectors );
     }
 
+    /**
+     * @param vectors
+     * @param dimensions
+     * @param qtypes
+     */
+    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors,
+            List<BioAssayDimension> dimensions, List<QuantitationType> qtypes ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, dimensions, qtypes );
+        vectorsToMatrix( selectedVectors );
+    }
+
     public int columns() {
         return matrix.columns();
     }

@@ -145,7 +145,7 @@ public class ExpressionDataMatrixBuilder {
     public ExpressionDataBooleanMatrix getMissingValueData( ArrayDesign arrayDesign ) {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
         List<QuantitationType> qtypes = this.getMissingValueQTypes( arrayDesign );
-        return new ExpressionDataBooleanMatrix( expressionExperiment, dimensions, qtypes );
+        return new ExpressionDataBooleanMatrix( vectors, dimensions, qtypes );
     }
 
     /**

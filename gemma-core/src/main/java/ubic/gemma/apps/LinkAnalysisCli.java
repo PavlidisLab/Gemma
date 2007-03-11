@@ -293,30 +293,29 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param ee
-     * @param filteredMatrix
+     * @param matrix
      * @return
      */
     private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
         rowLevelFilter.setLowCut( this.lowExpressionCut );
         rowLevelFilter.setHighCut( this.highExpressionCut );
-        rowLevelFilter.setRemoveAllNegative( true ); // todo: fix
+        rowLevelFilter.setRemoveAllNegative( true );
         rowLevelFilter.setUseAsFraction( true );
         return rowLevelFilter.filter( matrix );
     }
 
     /**
-     * @param filteredMatrix
+     * @param matrix
      * @return
      */
-    private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix filteredMatrix,
+    private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix,
             ExpressionDataBooleanMatrix absentPresent ) {
         log.info( "Filtering out genes that are missing too many values" );
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
         if ( absentPresent != null ) rowMissingFilter.setAbsentPresentCalls( absentPresent );
         rowMissingFilter.setMinPresentFraction( minPresentFraction );
-        return ( ExpressionDataDoubleMatrix ) rowMissingFilter.filter( filteredMatrix );
+        return ( ExpressionDataDoubleMatrix ) rowMissingFilter.filter( matrix );
     }
 
     /**
@@ -330,9 +329,10 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             log.warn( "TEST MODE, Database will not be modified" );
         }
 
+        log.info( "Begin link processing: " + ee );
         Collection<DesignElementDataVector> dataVectors = getVectors( ee );
 
-        if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors " + ee.getShortName() );
+        if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors in " + ee );
 
         ExpressionDataDoubleMatrix eeDoubleMatrix = getFilteredMatrix( ee, dataVectors );
 
@@ -350,9 +350,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         /*
          * Start the analysis.
          */
-        log.info( "Starting generating Raw Links for " + ee.getShortName() );
+        log.info( "Starting generating Raw Links for " + ee );
         this.linkAnalysis.analyze();
-        log.info( "Generated Raw Links for " + ee.getShortName() );
+        log.info( "Done with processing of " + ee );
 
     }
 
