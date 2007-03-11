@@ -285,7 +285,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             taxon.setId( tId );
             // taxon = taxonService.find( taxon );
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getExpressionExperimentValueObjects( expressionExperimentService.getByTaxon( taxon ) );
+                    .getExpressionExperimentValueObjects( expressionExperimentService.findByTaxon( taxon ) );
 
             expressionExperiments.addAll( eeValObjectCol );
         }

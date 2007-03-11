@@ -709,11 +709,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
 
         Collection<ExpressionExperiment> ee = null;
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "

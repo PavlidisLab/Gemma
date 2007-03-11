@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,8 +26,6 @@ import java.util.Set;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
@@ -48,30 +45,35 @@ import ubic.gemma.model.genome.Taxon;
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByExpressedGene(ubic.gemma.model.genome.Gene, double)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByExpressedGene(ubic.gemma.model.genome.Gene,
+     *      double)
      */
     @Override
     protected Collection handleFindByExpressedGene( Gene gene, double rank ) throws Exception {
         return this.getExpressionExperimentDao().findByExpressedGene( gene, rank );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {       
+    protected Collection handleFindByGene( Gene gene ) throws Exception {
         return this.getExpressionExperimentDao().findByGene( gene );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetByTaxon(ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection handleGetByTaxon( Taxon taxon ) throws Exception {
-        return this.getExpressionExperimentDao().getByTaxon( taxon );
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        return this.getExpressionExperimentDao().findByTaxon( taxon );
     }
 
     /*
@@ -152,7 +154,7 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetAllExpressionExperiments()
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAll()
      */
     @Override
     protected Collection handleLoadAll() throws Exception {
@@ -172,10 +174,10 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleRead(java.lang.Long)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoad(java.lang.Long)
      */
     @Override
-    protected ExpressionExperiment handleRead( Long id ) throws Exception {
+    protected ExpressionExperiment handleLoad( Long id ) throws Exception {
         return ( ExpressionExperiment ) this.getExpressionExperimentDao().load( id );
     }
 
@@ -347,7 +349,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, quantitationTypes );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection)
      */
     @Override
@@ -378,7 +382,9 @@ public class ExpressionExperimentServiceImpl extends
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java.util.Collection)
      */
     @Override
@@ -409,7 +415,9 @@ public class ExpressionExperimentServiceImpl extends
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util.Collection)
      */
     @Override
