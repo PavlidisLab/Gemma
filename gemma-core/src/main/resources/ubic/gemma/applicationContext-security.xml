@@ -254,9 +254,9 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.delete=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByAccession=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.read=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.getByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user

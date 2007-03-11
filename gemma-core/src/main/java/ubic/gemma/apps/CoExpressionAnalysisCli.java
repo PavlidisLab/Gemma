@@ -179,7 +179,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
 
         Taxon taxon = getTaxon();
-        Collection<ExpressionExperiment> allEE = eeService.getByTaxon( taxon );
+        Collection<ExpressionExperiment> allEE = eeService.findByTaxon( taxon );
 
         // Collection <Gene> testGenes = getTestGenes(geneService,taxon);
         HashSet<String> geneNames = new HashSet<String>();

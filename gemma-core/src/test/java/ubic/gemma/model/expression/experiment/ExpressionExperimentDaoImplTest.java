@@ -187,7 +187,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
                 .getBean( "expressionExperimentService" );
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
-        Collection<ExpressionExperiment> list = expressionExperimentDao.getByTaxon( taxon );
+        Collection<ExpressionExperiment> list = expressionExperimentDao.findByTaxon( taxon );
         assertNotNull( list );
         Taxon checkTaxon = eeService.getTaxon( list.iterator().next().getId() );
         assertEquals( taxon, checkTaxon );
