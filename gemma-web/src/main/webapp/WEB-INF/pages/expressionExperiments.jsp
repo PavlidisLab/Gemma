@@ -15,7 +15,7 @@
 
 <h3>
 	Displaying
-	<b> <c:out value="${numExpressionExperiments}" /> </b> Datasets
+	<b> <c:out value="${numExpressionExperiments}" /> </b> datasets
 </h3>
 <a class="helpLink" href="?"
 	onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
@@ -33,21 +33,22 @@
 
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="arrayDesignLink" sortable="true"
-			title="Arrays"
+			defaultorder="descending" title="Arrays"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	</authz:authorize>
 
 
 	<display:column property="assaysLink" sortable="true"
-		sortProperty="bioAssayCount" titleKey="bioAssays.title" defaultorder="descending"
+		sortProperty="bioAssayCount" titleKey="bioAssays.title"
+		defaultorder="descending"
 		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
 	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
 
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="dateCreatedNoTime" sortable="true" defaultorder="descending"
-			title="Created" />
+		<display:column property="dateCreatedNoTime" sortable="true"
+			defaultorder="descending" title="Created" />
 		<display:column property="edit" sortable="false" title="Edit" />
 		<display:column property="delete" sortable="false"
 			titleKey="expressionExperiment.delete" />
