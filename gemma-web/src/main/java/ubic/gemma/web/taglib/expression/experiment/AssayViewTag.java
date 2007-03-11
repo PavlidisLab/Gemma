@@ -42,9 +42,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import com.sdicons.json.mapper.JSONMapper;
 import com.sdicons.json.mapper.MapperException;
-import com.sdicons.json.mapper.helper.impl.CollectionMapper;
 
 /**
+ * Used to display table of biomaterials and bioassays.
+ * 
  * @jsp.tag name="assayView" body-content="empty"
  * @author joseph
  * @version $Id $
@@ -58,7 +59,7 @@ public class AssayViewTag extends TagSupport {
     /**
      * How many 'extra' biomaterials to add to the editing table, so the user can assing bioassays to new biomaterials.
      */
-    private static final int NUM_EXTRA_BIOMATERIALS = 2;
+    private static final int NUM_EXTRA_BIOMATERIALS = 12;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
