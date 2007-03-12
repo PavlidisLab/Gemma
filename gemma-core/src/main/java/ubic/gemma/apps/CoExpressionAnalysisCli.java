@@ -67,13 +67,13 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
-    DesignElementDataVectorService devService;
-    ExpressionExperimentService eeService;
-    GeneService geneService;
+    private DesignElementDataVectorService devService;
+    private ExpressionExperimentService eeService;
+    private GeneService geneService;
     private String geneList = null;
     private String taxonName = null;
     private String outputFile = null;
-    private static String DIVIDOR = "-----";
+	private int stringency = 3;
 
     @SuppressWarnings("static-access")
     @Override
@@ -87,7 +87,10 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
                 "File for saving the corelation data" ).withLongOpt( "outFile" ).create( 'o' );
         addOption( outputFileOption );
-
+        Option stringencyFileOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
+        "The stringency for the number of co-expression link(Default 3)" )
+        .withLongOpt( "stringency" ).create( 's' );
+        addOption( stringencyFileOption );
     }
 
     /**
@@ -104,7 +107,9 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'o' ) ) {
             this.outputFile = getOptionValue( 'o' );
         }
-
+        if ( hasOption( 's' ) ) {
+            this.stringency = Integer.parseInt(getOptionValue( 's' ));
+        }
         devService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
@@ -164,6 +169,65 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
         return taxon;
     }
+	Collection<String> readQueryGenesFromFile(String fileName){
+		HashSet<String> targetGeneNames = new HashSet<String>();
+		try{
+			InputStream is = new FileInputStream( this.geneList );
+			BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+			String shortName = null;
+			while ( ( shortName = br.readLine() ) != null ) {
+				if ( StringUtils.isBlank( shortName ) ) continue;
+				targetGeneNames.add(shortName.trim());
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return targetGeneNames;
+	}
+	
+	Collection<Gene> getCoExpressedGenes(Collection<Gene> queryGenes){
+		HashSet<Gene> coExpressedGenes = new HashSet<Gene>();
+    	for(Gene gene:queryGenes){
+    		log.info("Get co-expressed genes for " + gene.getName());
+    		Map<Long, Collection<Long>> geneEEMap = geneService.getCoexpressedGeneMap(this.stringency, gene);
+    		coExpressedGenes.addAll(geneService.load(geneEEMap.keySet()));
+     	}
+
+		return coExpressedGenes;
+	}
+    /**
+     * Retrieve all the expression data for a bunch of genes in a bunch of expression experiments.
+     * 
+     * @param allEE
+     * @param queryGenes
+     * @return
+     */
+	Map<DesignElementDataVector, Collection<Gene>> getDevToGenesMap(Collection<Gene> allGenes, Collection<ExpressionExperiment> allEEs){
+    	Map<DesignElementDataVector, Collection<Gene>> devToGenesMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
+    	int count = 0;
+    	int CHUNK_LIMIT = 30;
+    	int total = allGenes.size();
+    	Collection<Gene> genesInOneChunk = new HashSet<Gene>();
+
+    	log.info("Start the Query for "+ allGenes.size() + " genes");
+        StopWatch qWatch = new StopWatch();
+        qWatch.start();
+    	for(Gene gene:allGenes){
+    		genesInOneChunk.add(gene);
+    		count++;
+    		total--;
+    		if(count == CHUNK_LIMIT || total == 0){
+    			devToGenesMap.putAll(devService.getVectors(allEEs, genesInOneChunk));
+    			count = 0;
+    			genesInOneChunk.clear();
+    			System.out.print(".");
+    		}
+    	}
+        qWatch.stop();
+        log.info("\nQuery takes " + qWatch.getTime() + " to get " + devToGenesMap.size() + " DEVs for " + allGenes.size() + " genes");
+        
+        return devToGenesMap;
+	}
 
     /*
      * (non-Javadoc)
@@ -180,50 +244,28 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
         Taxon taxon = getTaxon();
         Collection<ExpressionExperiment> allEE = eeService.findByTaxon( taxon );
-
-        // Collection <Gene> testGenes = getTestGenes(geneService,taxon);
-        HashSet<String> geneNames = new HashSet<String>();
-        HashSet<String> targetGeneNames = new HashSet<String>();
-        boolean targetGene = true;
-        /*
-         * I'm not too clear on the file format here, but I think you have 'genes' and 'target genes' in a list,
-         * separated by "-----". I'm not sure what the difference between 'gene' and 'target gene' is.
-         */
-        try {
-            InputStream is = new FileInputStream( this.geneList );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String shortName = null;
-            while ( ( shortName = br.readLine() ) != null ) {
-                if ( StringUtils.isBlank( shortName ) ) continue;
-                if ( shortName.trim().contains( DIVIDOR ) ) {
-                    targetGene = false;
-                    continue;
-                }
-                if ( targetGene ) {
-                    targetGeneNames.add( shortName.trim() );
-                } else {
-                    geneNames.add( shortName.trim() );
-                }
-            }
-        } catch ( Exception e ) {
-            return e;
-        }
-
-        Collection<Gene> genes = this.getGenes( geneService, geneNames.toArray(), taxon );
-        Collection<Gene> targetGenes = this.getGenes( geneService, targetGeneNames.toArray(), taxon );
-        HashSet<Gene> queryGenes = new HashSet<Gene>();
-        queryGenes.addAll( genes );
-        queryGenes.addAll( targetGenes );
+		//Collection <Gene> queryGenes = getTestGenes(geneService,taxon);
+		Collection<String> queryGeneNames = readQueryGenesFromFile(this.geneList);
+		if(queryGeneNames.size() == 0){
+			log.info( "No gene is read from the input file" );
+			return null;
+		}
+		Collection<Gene> queryGenes = this.getGenes(geneService, queryGeneNames.toArray(), taxon);
+		if(queryGenes.size() == 0){
+			log.info( "Can't load any of genes" + queryGeneNames );
+			return null;
+		}
+		Collection<Gene> coExpressedGenes = this.getCoExpressedGenes(queryGenes); 
+        HashSet<Gene> allGenes = new HashSet<Gene>();
+        allGenes.addAll(queryGenes);
+        allGenes.addAll(coExpressedGenes);
         log.info( "Start the Query for " + queryGenes.size() + " genes" );
+        Map<DesignElementDataVector, Collection<Gene>> devToGenesMap = getDevToGenesMap(allGenes, allEE);
+        GeneCoExpressionAnalysis coExperssion = new GeneCoExpressionAnalysis( (Set)queryGenes, (Set)coExpressedGenes, (Set)new HashSet(allEE));
 
-        Map<DesignElementDataVector, Collection<Gene>> geneMap = getExpressionData( allEE, queryGenes );
-
-        GeneCoExpressionAnalysis coExperssion = new GeneCoExpressionAnalysis( targetGenes, genes, allEE );
-
-        coExperssion.setDevToGenes( geneMap );
+        coExperssion.setDevToGenes( devToGenesMap );
         coExperssion.setExpressionExperimentService( eeService );
-        log.info( geneMap.size() );
-        coExperssion.analysis( ( Set ) geneMap.keySet() );
+        coExperssion.analysis( ( Set ) devToGenesMap.keySet() );
 
         try {
             makeClusterGrams( coExperssion );
@@ -232,39 +274,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
 
         return null;
-    }
-
-    /**
-     * Retrieve all the expression data for a bunch of genes in a bunch of expression experiments.
-     * 
-     * @param allEE
-     * @param queryGenes
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Map<DesignElementDataVector, Collection<Gene>> getExpressionData( Collection<ExpressionExperiment> allEE,
-            HashSet<Gene> queryGenes ) {
-        StopWatch qWatch = new StopWatch();
-        qWatch.start();
-        int count = 0;
-        int CHUNK_LIMIT = 30;
-        int total = queryGenes.size();
-        Collection<Gene> genesInOneChunk = new HashSet<Gene>();
-        Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
-        for ( Gene gene : queryGenes ) {
-            genesInOneChunk.add( gene );
-            count++;
-            total--;
-            if ( count == CHUNK_LIMIT || total == 0 ) {
-                geneMap.putAll( devService.getVectors( allEE, genesInOneChunk ) );
-                count = 0;
-                genesInOneChunk.clear();
-                log.info( "Analyzed " + count + " more genes..." );
-            }
-        }
-        qWatch.stop();
-        log.info( "Data retrieval took " + qWatch.getTime() );
-        return geneMap;
     }
 
     /**
