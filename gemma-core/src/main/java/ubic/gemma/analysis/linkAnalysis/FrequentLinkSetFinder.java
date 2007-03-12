@@ -2,6 +2,8 @@ package ubic.gemma.analysis.linkAnalysis;
 
 
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,81 +32,72 @@ public class FrequentLinkSetFinder {
 	    	this.element = element;
 	    }
 	}
-	private HashMap<TreeNode,Set> sameSiblings = null;
-    private GeneService geneService = null;
-    private ExpressionExperimentService eeService = null;
-    private CompressedNamedBitMatrix linkCount = null;
-    private Vector allEE = null;
     private int Threshold = 3;
     private TreeNode root = null;
-    private int shift = 100000;
-    private int minNumInSet = 8;
+    private int minLinksInSet = 8;
     public static int nodeNum = 0; 
     private int pruned = 0;
     private int merged = 0;
     private Vector candidatesNodes = null; //a linked list
-    public FrequentLinkSetFinder( CompressedNamedBitMatrix linkCount, int threshold, int minNumInSet) {
+    public FrequentLinkSetFinder( int threshold, int minLinksInSet) {
         super();
-        this.linkCount = linkCount;
         Threshold = threshold;
         root = new TreeNode(new Long(0xFFFFFFFFFFFFFFFFL));
         root.level = 0;
-        //shift = this.linkCount.rows() > this.linkCount.columns()?this.linkCount.rows():this.linkCount.columns();
-        this.minNumInSet = minNumInSet;
-        sameSiblings = new HashMap<TreeNode, Set>();
+        this.minLinksInSet = minLinksInSet;
         candidatesNodes = new Vector();
     }
 
-    private void travel(TreeNode rootNode, int expNum, int linkNum){
+    private void travel(TreeNode rootNode, int minExps, int minLinks){
     	TreeNode subNode = rootNode.firstChild;
     	while(subNode != null){
-    		if(countBits(subNode.mask) >= expNum){
-    			if(subNode.level >= linkNum){
-    				if(subNode.firstChild == null || (subNode.firstChild != null && countBits(subNode.firstChild.mask) < expNum)){
+    		if(MetaLinkFinder.countBits(subNode.mask) >= minExps){
+    			if(subNode.level >= minLinks){
+    				if(subNode.firstChild == null || (subNode.firstChild != null && MetaLinkFinder.countBits(subNode.firstChild.mask) < minExps)){
     					this.insertCandidatesNode(subNode);
     					return;
     				}
     			}
-    			travel(subNode, expNum, linkNum);
+    			travel(subNode, minExps, minLinks);
     		}
     		subNode = subNode.nextSibling;
     	}
     }
     private void expand(TreeNode rootNode){
         TreeNode subBranchRootNode = rootNode.firstChild;
-        
+        long[] childMask = new long[subBranchRootNode.mask.length];
         while( subBranchRootNode != null){
         	//if(((Long)subBranchRootNode.element).longValue() == 462718468 && ((Long)rootNode.element).longValue() == 904818468 && rootNode.level == 2)
             	//this.pruned = this.pruned;
             TreeNode iter = subBranchRootNode.nextSibling;
             while(iter != null){
-                long[] childMask = new long[iter.mask.length]; 
                 for(int i = 0; i < childMask.length; i++) childMask[i] = iter.mask[i];
-                boolean notCreatedNewOne = true;
+                boolean mergedCondition = true;
                 for(int i = 0; i < childMask.length; i++){
                 	if(childMask[i] != (childMask[i] & subBranchRootNode.mask[i])){
                 		childMask[i] = childMask[i] & subBranchRootNode.mask[i];
-                		notCreatedNewOne = false;
+                		mergedCondition = false;
                 	}
                 }
                 TreeNode nextOne = iter.nextSibling;
-                if(countBits(childMask) >= this.Threshold){
-                	TreeNode newFacedNode = null;
-                	if(notCreatedNewOne){
+                if(MetaLinkFinder.countBits(childMask) >= this.Threshold){
+                	TreeNode newCreatedNode = null;
+                	if(mergedCondition){
                 		iter.prevSibling.nextSibling = iter.nextSibling;
                 		if(iter.nextSibling != null)
                 			iter.nextSibling.prevSibling = iter.prevSibling;
-                		newFacedNode = iter;
-                		newFacedNode.prevSibling = newFacedNode.nextSibling = null;
+                		newCreatedNode = iter;
+                		newCreatedNode.prevSibling = newCreatedNode.nextSibling = null;
                 		merged = merged + 1;
                 	}else{
-                        newFacedNode = new TreeNode(iter.element);
-                        newFacedNode.mask = childMask;
+                		newCreatedNode = new TreeNode(iter.element);
+                		newCreatedNode.mask = new long[childMask.length];
+                		for(int i = 0; i < childMask.length; i++) newCreatedNode.mask[i] = childMask[i];
                         nodeNum++;
                         if(nodeNum%10000 == 0)
                         	System.err.println(nodeNum + " " +  merged);
                 	}
-                	this.addTreeNodeInOrder(subBranchRootNode, newFacedNode,false);
+                	this.addTreeNodeInOrder(subBranchRootNode, newCreatedNode, mergedCondition);
                 }
                 iter = nextOne;//Use nextOne to save in case the merging broke the links
             }
@@ -114,7 +107,7 @@ public class FrequentLinkSetFinder {
             }
             subBranchRootNode = subBranchRootNode.nextSibling;
             
-            if(tmpRecord.firstChild == null && tmpRecord.level <= this.minNumInSet){ //check the level and prune the nodes
+            if(tmpRecord.firstChild == null && tmpRecord.level <= this.minLinksInSet){ //check the level and prune the nodes
             	if(subBranchRootNode != null) subBranchRootNode.prevSibling = tmpRecord.prevSibling;
             	if( tmpRecord.parent.firstChild == tmpRecord){
         				tmpRecord.parent.firstChild = subBranchRootNode;
@@ -134,25 +127,16 @@ public class FrequentLinkSetFinder {
     	TreeNode iter = parent.firstChild;
     	childNode.parent = parent;
     	childNode.level = parent.level + 1;
+    	
     	if(iter == null){
     		parent.firstChild = childNode;
     		return;
     	}
-    	int childNodeBits = countBits(childNode.mask);
-    	while(iter != null){
-    		int iterNodeBits = countBits(iter.mask);
-    		if(iterNodeBits == childNodeBits){
-    			if(merged && compare(childNode.mask, iter.mask)){
-    				Set siblingSet = this.sameSiblings.get(iter);
-    				if(siblingSet == null){
-    					siblingSet = new HashSet<TreeNode>();
-    					this.sameSiblings.put(iter,siblingSet);
-    				}
-    				siblingSet.add(childNode);
-    				return;
-    			}
-    		}
-    		if(iterNodeBits < childNodeBits){
+    	
+    	int childNodeBits = MetaLinkFinder.countBits(childNode.mask);
+    	while(true){
+    		int iterNodeBits = MetaLinkFinder.countBits(iter.mask);
+    		if(iterNodeBits <= childNodeBits){
     			childNode.nextSibling = iter;
     			if(iter.prevSibling != null){
     				iter.prevSibling.nextSibling = childNode;
@@ -161,21 +145,24 @@ public class FrequentLinkSetFinder {
     				parent.firstChild = childNode;
     			}
     			iter.prevSibling = childNode;
-    			return;
+    			break;
     		}		
-    		if(iter.nextSibling == null) break;
-    		else iter = iter.nextSibling;
+    		
+    		if(iter.nextSibling == null) {
+    	    	iter.nextSibling = childNode;
+    	    	childNode.prevSibling = iter;
+    			break;
+    		}
+    		iter = iter.nextSibling;
     	}
-    	iter.nextSibling = childNode;
-    	childNode.prevSibling = iter;
     	return;
     }
     private void insertCandidatesNode(TreeNode oneNode){
-    	int bits = countBits(oneNode.mask);
+    	int bits = MetaLinkFinder.countBits(oneNode.mask);
     	int i;
     	for(i = 0; i < candidatesNodes.size(); i++){
     		TreeNode ele = (TreeNode)candidatesNodes.elementAt(i);
-    		if(ele.level < oneNode.level || (ele.level == oneNode.level && countBits(ele.mask) < bits)){
+    		if(ele.level < oneNode.level || (ele.level == oneNode.level && MetaLinkFinder.countBits(ele.mask) < bits)){
     			candidatesNodes.insertElementAt(oneNode, i);
     			break;
     		}
@@ -186,76 +173,89 @@ public class FrequentLinkSetFinder {
     	TreeNode iter = leafNode;
     	while(iter.parent != null){
     		long oneId = ((Long)iter.element).longValue();
-            int row = (int)(oneId/shift);
-            int col = (int)(oneId%shift);
-        	Object geneId = this.linkCount.getRowName(row);
-            String geneName1 = this.geneService.load(((Long)geneId).longValue()).getName();
-        	geneId = this.linkCount.getColName(col);
-            String geneName2 = this.geneService.load(((Long)geneId).longValue()).getName();
-            System.err.print(" ("+geneName1 + " " + geneName2+") ");
+            System.err.print(" ("+MetaLinkFinder.getLinkName(oneId)+") ");
     		//System.err.print(oneId + " ");
             iter = iter.parent;
     	}
     	for(int i = 0; i < leafNode.mask.length; i++){
     		for(int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++)
     			if((leafNode.mask[i]&(CompressedNamedBitMatrix.BIT1<<j)) != 0){
-    		    	Object eeId = this.allEE.elementAt(j+i*CompressedNamedBitMatrix.DOUBLE_LENGTH);
-    		    	ExpressionExperiment ee = this.eeService.findById((Long)eeId);
-    		    	System.err.print(ee.getShortName() + " ");
+    		    	System.err.print(MetaLinkFinder.getEEName(j+i*CompressedNamedBitMatrix.DOUBLE_LENGTH) + " ");
     			}
     	}
     	System.err.println("");
     }
-    public static int countBits(long[] mask){
-    	int bits = 0;
-    	for(int i = 0; i < mask.length; i++)
-    		bits = bits + CompressedNamedBitMatrix.countBits(mask[i]);
-    	return bits;
+    public void saveLinkMatrix(String outFile, int stringency){
+        try{
+            FileWriter out = new FileWriter(new File(outFile));
+            for(int i = 0; i < MetaLinkFinder.linkCount.rows(); i++){
+            	if(i%1000 == 0) System.err.println(i + " -> " + MetaLinkFinder.linkCount.rows());
+                for(int j = i+1; j < MetaLinkFinder.linkCount.columns(); j++){
+                    if(MetaLinkFinder.linkCount.bitCount( i, j ) >= this.Threshold){
+                        TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i, j));
+                        oneNode.mask = MetaLinkFinder.linkCount.getAllBits(i, j);
+                        nodeNum++;
+                        this.addTreeNodeInOrder(root, oneNode,true);
+                    }
+                }
+        	}
+            System.err.println("Initalized " + nodeNum + " nodes");
+            HashMap<Object,Integer> indexMap = new HashMap<Object, Integer>();
+            int index = 0;
+            TreeNode iter = root.firstChild;
+            while(iter != null){
+            	indexMap.put(iter.element, new Integer(index));
+            	index = index + 1;
+            	iter = iter.nextSibling;
+            }
+            TreeNode curNode = root.firstChild;
+            while(curNode != null){
+            	iter = curNode.nextSibling;
+            	int rowIndex = indexMap.get(curNode.element);
+            	if(rowIndex%5000 == 0) System.err.println(rowIndex);
+            	while(iter != null){
+            		int commonBits = MetaLinkFinder.overlapBits(curNode.mask, iter.mask);
+            		if(commonBits >= stringency){
+            			int colIndex = indexMap.get(iter.element);
+            			out.write( rowIndex + "\t"+colIndex+"\t" + commonBits + "\n" );
+            			out.write( colIndex + "\t"+rowIndex+"\t" + commonBits + "\n" );
+            		}
+            		iter = iter.nextSibling;
+            	}
+            	curNode = curNode.nextSibling;
+            }
+            out.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
-    private boolean compare(long[] mask1, long mask2[]){
-    	for(int i = 0; i < mask1.length; i++)
-    		if(mask1[i] != mask2[i]) return false;
-    	return true;
-    }
-
     public void find(){
-        for(int i = 0; i < this.linkCount.rows(); i++)
-            for(int j = i+1; j < this.linkCount.columns(); j++){
-            	if(!compare(this.linkCount.getAllBits( i, j ), this.linkCount.getAllBits( j,i )))
-            		System.err.println(i + "  " + j);
-                if(this.linkCount.bitCount( i, j ) >= this.Threshold){
-                    TreeNode oneNode = new TreeNode(new Long((long)i*(long)shift+ j) );
-                    oneNode.mask = this.linkCount.getAllBits(i, j);
+        for(int i = 0; i < MetaLinkFinder.linkCount.rows(); i++)
+            for(int j = i+1; j < MetaLinkFinder.linkCount.columns(); j++){
+                if(MetaLinkFinder.linkCount.bitCount( i, j ) >= this.Threshold){
+                    TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i, j) );
+                    oneNode.mask = MetaLinkFinder.linkCount.getAllBits(i, j);
                     nodeNum++;
-                    this.addTreeNodeInOrder(root, oneNode,false);
+                    this.addTreeNodeInOrder(root, oneNode,true);
                 }
             }
-        System.err.println(this.sameSiblings.size());
+        System.err.println("Initalized " + nodeNum + " nodes");
         this.expand( root);
-        this.travel(root, 9, 9);
+        this.travel(root, 17, 7);
         System.err.println(this.candidatesNodes.size()+ " " + ((TreeNode)candidatesNodes.elementAt(0)).level);
         this.outputPath((TreeNode)candidatesNodes.elementAt(0));
         int mostBits = 0;
         TreeNode nodeWithMostBits = null;
         for(int i = 0; i < candidatesNodes.size(); i++){
         	TreeNode node = (TreeNode)candidatesNodes.elementAt(i);
-        	if(countBits(node.mask) > mostBits){mostBits = countBits(node.mask);nodeWithMostBits = node;}
+        	if(MetaLinkFinder.countBits(node.mask) > mostBits){mostBits = MetaLinkFinder.countBits(node.mask);nodeWithMostBits = node;}
         }
         for(int i = 0; i < candidatesNodes.size(); i++){
         	TreeNode node = (TreeNode)candidatesNodes.elementAt(i);
-        	if(mostBits == countBits(node.mask)){System.err.println(node.level + " ");this.outputPath(node);}
+        	if(mostBits == MetaLinkFinder.countBits(node.mask)){System.err.println(node.level + " ");this.outputPath(node);}
         }
     }
     public void output(int num){
     	
-    }
-    public void setGeneService(GeneService geneService){
-    	this.geneService = geneService;
-    }
-    public void setEEService(ExpressionExperimentService eeService){
-    	this.eeService = eeService;
-    }
-    public void setEEIndex(java.util.Vector vector){
-    	this.allEE = vector;
     }
 }

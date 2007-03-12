@@ -29,6 +29,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
+import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -159,20 +160,13 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             MetaLinkFinder linkFinder = new MetaLinkFinder( p2pService, deService, eeService, geneService );
 
             Taxon taxon = this.getTaxon( "human" );
+            StopWatch watch = new StopWatch();
 
             // test();
             // linkFinder.fromFile( "test.File", "test.map");
             // linkFinder.toFile( "test1.File", "test1.map");
             // if(true)return null;
             if ( this.operWrite ) {
-                /*
-                 * Collection<ExpressionExperiment> expressionExperimentService = null; if(taxon != null)
-                 * expressionExperimentService = eeService.getByTaxon(taxon); else expressionExperimentService =
-                 * eeService.loadAll(); if(expressionExperimentService == null || expressionExperimentService.size() ==
-                 * 0){ log.info("No Expression Experiment is found"); return null; } else log.info("Found " +
-                 * expressionExperimentService.size() + " Expression Experiment");
-                 * linkFinder.find(this.getGenes(geneService), expressionExperimentService);
-                 */
                 linkFinder.find( taxon );
                 if ( !linkFinder.toFile( this.matrixFile, this.eeMapFile ) ) {
                     log.info( "Couldn't save the results into the files " );
@@ -180,22 +174,35 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 }
 
             } else {
+                watch.start();
                 if ( !linkFinder.fromFile( this.matrixFile, this.eeMapFile ) ) {
                     log.info( "Couldn't load the data from the files " );
                     return null;
                 }
+                watch.stop();
+                log.info( "Spend " + watch.getTime()/1000 + " to load the data matrix" );
             }
             System.err.println( "Finish Loading!" );
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( linkFinder.getCountMatrix(), 7, 7 );
-            freFinder.setGeneService( geneService );
-            freFinder.setEEService( eeService );
-            freFinder.setEEIndex( linkFinder.getEEIndex() );
+
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6, 6 );
+            LinkGraphClustering clustering = new LinkGraphClustering(6);
+            
+            watch.reset();
+            watch.start();
             try {
-                freFinder.find();
+                //freFinder.find();
+            	//freFinder.saveLinkMatrix("linkMatrix.txt", 6);
+            	clustering.run();
+            	//clustering.saveToFile("tree.tmp");
+            	clustering.readTreeFromFile("tree.tmp");
+            	//clustering.testSerilizable();
+            	clustering.selectClustersToSave();
             } catch ( Exception e ) {
                 e.printStackTrace();
-                System.err.println( "Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
             }
+            watch.stop();
+            log.info( "Spend " + watch.getTime()/1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
+            /*
             System.err.println( "Output some stats" );
             linkFinder.outputStat();
             BufferedReader bfr = new BufferedReader( new InputStreamReader( System.in ) );
@@ -223,7 +230,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 }
             } catch ( IOException ioe ) {
                 System.out.println( "IO error:" + ioe );
-            }
+            }*/
         } catch ( Exception e ) {
             log.error( e );
             return e;
