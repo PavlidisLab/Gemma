@@ -55,6 +55,24 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
     }
 
+    public String getIsSubsumed() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object.getIsSubsumed() ) {
+            return "<<";
+        } else {
+            return "";
+        }
+    }
+
+    public String getIsSubsumer() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object.getIsSubsumer() ) {
+            return ">>";
+        } else {
+            return "";
+        }
+    }
+
     private String formatIfRecent( boolean mostRecent, String shortDate ) {
         shortDate = mostRecent ? "<strong>" + shortDate + "</strong>" : shortDate;
         return shortDate;
@@ -149,7 +167,6 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
 
         return "0";
-
     }
 
     public String getDelete() {
@@ -167,15 +184,12 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getRefreshReport() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-
         if ( object == null ) {
             return "Array Design unavailable";
         }
-
         return "<form action=\"generateArrayDesignSummary.html?id=" + object.getId()
                 + "\" onSubmit=\"return confirm('Refresh report for " + object.getName()
                 + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" /></form>";
-
     }
 
     public String getColor() {

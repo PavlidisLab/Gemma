@@ -556,11 +556,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         // remove all AuditEvents that are not Sequence update events
         Set<Long> keys = eventMap.keySet();
         for ( Long key : keys ) {
-            
+
             /*
              * FIXME check if the subsuming array (if any) was updated more recently.
              */
-            
+
             Collection<AuditEvent> events = eventMap.get( key );
             AuditEvent lastEvent = null;
             if ( events == null ) {
@@ -592,6 +592,16 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
             throws Exception {
         return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
+    }
+
+    @Override
+    protected Map handleIsSubsumed( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().isSubsumed( ids );
+    }
+
+    @Override
+    protected Map handleIsSubsumer( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().isSubsumer( ids );
     }
 
 }

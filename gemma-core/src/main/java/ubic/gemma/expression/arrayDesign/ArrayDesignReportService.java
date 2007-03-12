@@ -106,6 +106,7 @@ public class ArrayDesignReportService {
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
+        long numProbes = arrayDesignService.getCompositeSequenceCount( ad );
         long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
         long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
         long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
@@ -114,6 +115,7 @@ public class ArrayDesignReportService {
         long numCsPureGenes = numCsGenes - numCsPredictedGenes - numCsProbeAlignedRegions;
         long numGenes = arrayDesignService.numGenes( ad );
 
+        adVo.setDesignElementCount( numProbes );
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
@@ -437,6 +439,28 @@ public class ArrayDesignReportService {
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        for ( Object object : valueObjects ) {
+            ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
+            ids.add( adVo.getId() );
+        }
+        Map<Long, Boolean> isSubsumed = arrayDesignService.isSubsumed( ids );
+        Map<Long, Boolean> hasSubsumees = arrayDesignService.isSubsumer( ids );
+
+        for ( ArrayDesignValueObject adVo : valueObjects ) {
+            Long id = adVo.getId();
+            if ( isSubsumed.containsKey( id ) ) {
+                adVo.setIsSubsumed( isSubsumed.get( id ) );
+            }
+            if ( hasSubsumees.containsKey( id ) ) {
+                adVo.setIsSubsumer( hasSubsumees.get( id ) );
+            }
+        }
+
     }
 
 }

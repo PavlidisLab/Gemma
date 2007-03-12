@@ -1074,4 +1074,62 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return true;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleIsSubsumed( final Collection ids ) throws Exception {
+        final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            ScrollableResults list = queryObject.scroll();
+            Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+            // process list of expression experiment ids that have events
+            while ( list.next() ) {
+                Long id = list.getLong( 0 );
+                ArrayDesign subsumer = ( ArrayDesign ) list.get( 1 );
+                if ( subsumer != null ) {
+                    eventMap.put( id, Boolean.TRUE );
+                }
+            }
+            for ( Long id : ( Collection<Long> ) ids ) {
+                if ( !eventMap.containsKey( id ) ) {
+                    eventMap.put( id, Boolean.FALSE );
+                }
+            }
+
+            return eventMap;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleIsSubsumer( Collection ids ) throws Exception {
+        final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            ScrollableResults list = queryObject.scroll();
+            Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+            // process list of expression experiment ids that have events
+            while ( list.next() ) {
+                Long id = list.getLong( 0 );
+                Integer subsumeeCount = ( Integer ) list.get( 1 );
+                if ( subsumeeCount != null && subsumeeCount > 0 ) {
+                    eventMap.put( id, Boolean.TRUE );
+                }
+            }
+            for ( Long id : ( Collection<Long> ) ids ) {
+                if ( !eventMap.containsKey( id ) ) {
+                    eventMap.put( id, Boolean.FALSE );
+                }
+            }
+
+            return eventMap;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
 }
