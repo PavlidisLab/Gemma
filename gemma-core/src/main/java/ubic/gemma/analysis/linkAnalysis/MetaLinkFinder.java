@@ -44,12 +44,15 @@ import ubic.gemma.model.genome.gene.GeneService;
 public class MetaLinkFinder {
     private Probe2ProbeCoexpressionService ppService = null;
     private DesignElementDataVectorService deService = null;
-    private GeneService geneService = null;
-    private ExpressionExperimentService eeService = null;
-    private CompressedNamedBitMatrix linkCount = null;
+    
+    private static GeneService geneService = null;
+    private static ExpressionExperimentService eeService = null;
+    private static Vector allEE = null;
+    private static int shift = 50000; //to encode two geneid into one long id
+    public static CompressedNamedBitMatrix linkCount = null;
+    
     private HashMap<Long, Integer> eeMap = null;
     private HashMap<Object, Set> probeToGenes = null;
-    private Vector allEE = null;
     protected static final Log log = LogFactory.getLog( MetaLinkFinder.class );
     private int STRINGENCY = 2;
     
@@ -60,8 +63,8 @@ public class MetaLinkFinder {
     	assert(eeService != null);
     	this.ppService = ppService;
     	this.deService = deService;
-    	this.geneService = geneService;
-    	this.eeService = eeService;
+    	MetaLinkFinder.geneService = geneService;
+    	MetaLinkFinder.eeService = eeService;
     }
  
     public void find(Taxon taxon){
@@ -79,13 +82,13 @@ public class MetaLinkFinder {
     public void find(Collection<Gene> genes){
     	if(genes == null || genes.size() == 0) return;
     	Taxon taxon = genes.iterator().next().getTaxon();
-    	Collection <ExpressionExperiment> ees = this.eeService.findByTaxon(taxon);
+    	Collection <ExpressionExperiment> ees = eeService.getByTaxon(taxon);
     	if(ees == null || ees.size() == 0) return;
     	this.find(genes, ees);
     }
     public void find(Collection<Gene> genes, Collection <ExpressionExperiment> ees){
     	if(genes == null || ees == null ||  genes.size() == 0 || ees.size() == 0) return;
-    	Collection <Gene> genesInTaxon = this.geneService.getGenesByTaxon(genes.iterator().next().getTaxon());
+    	Collection <Gene> genesInTaxon = geneService.getGenesByTaxon(genes.iterator().next().getTaxon());
     	if(genesInTaxon == null || genesInTaxon.size() == 0) return;
     	
     	Collection <Gene> coExpressedGenes = new HashSet<Gene>();
@@ -104,45 +107,28 @@ public class MetaLinkFinder {
 			this.count(gene.getId(),geneEEMap);
      	}
     }
-    public Gene getRowGene(int i){
-    	Object geneId = this.linkCount.getRowName(i);
-    	Gene gene = this.geneService.load(((Long)geneId).longValue());
-    	return gene;
-    }
-    
-    public Gene getColGene(int i){
-    	Object geneId = this.linkCount.getColName(i);
-    	Gene gene = this.geneService.load(((Long)geneId).longValue());
-    	return gene;
-    }
-    
-    public ExpressionExperiment getEE(int i){
-    	Object eeId = this.allEE.elementAt(i);
-    	ExpressionExperiment ee = this.eeService.findById((Long)eeId);
-    	return ee;
-    }
     public void output(Gene gene, int num){
-    	int row = this.linkCount.getRowIndexByName(gene.getId());
-    	if(row < 0 || row>= this.linkCount.rows()){
+    	int row = linkCount.getRowIndexByName(gene.getId());
+    	if(row < 0 || row>= linkCount.rows()){
     		log.info("No this Gene");
     		return;
     	}
-    	for(int col = 0; col < this.linkCount.columns(); col++)
-			if(this.linkCount.bitCount(row,col) >= num){
-				System.err.println(this.getColGene(col).getName() + " " + this.linkCount.bitCount(row,col));
+    	for(int col = 0; col < linkCount.columns(); col++)
+			if(linkCount.bitCount(row,col) >= num){
+				System.err.println(this.getColGene(col).getName() + " " + linkCount.bitCount(row,col));
     	}
     	System.err.println("=====================================================");
-    	for(int col = 0; col < this.linkCount.columns(); col++)
-			if(this.linkCount.bitCount(row,col) >= num){
+    	for(int col = 0; col <linkCount.columns(); col++)
+			if(linkCount.bitCount(row,col) >= num){
 				System.err.println(this.getColGene(col).getName());
     	}
     }
     public void output(int num){
     	int count = 0;
-    	for(int i = 0; i < this.linkCount.rows(); i++)
-    		for(int j = 0; j < this.linkCount.columns(); j++){
-    			if(this.linkCount.bitCount(i,j) >= num){
-    				System.err.println(this.getRowGene(i).getName() + "  " + this.getColGene(j).getName() + " " + this.linkCount.bitCount(i,j));
+    	for(int i = 0; i < linkCount.rows(); i++)
+    		for(int j = 0; j < linkCount.columns(); j++){
+    			if(linkCount.bitCount(i,j) >= num){
+    				System.err.println(this.getRowGene(i).getName() + "  " + this.getColGene(j).getName() + " " + linkCount.bitCount(i,j));
     				count++;
     			}
     		}
@@ -153,10 +139,10 @@ public class MetaLinkFinder {
     	Vector count = new Vector(maxNum);
     	for(int i = 0; i < maxNum; i++)
     		count.add(0);
-    	for(int i = 0; i < this.linkCount.rows(); i++){
+    	for(int i = 0; i < linkCount.rows(); i++){
 	//		System.err.println(i);
-    		for(int j = i+1; j < this.linkCount.columns(); j++){
-    			int num = this.linkCount.bitCount(i,j);
+    		for(int j = i+1; j <linkCount.columns(); j++){
+    			int num = linkCount.bitCount(i,j);
     			if(num == 0)continue;
     			if(num > maxNum){
     				for(;maxNum < num; maxNum++)
@@ -174,7 +160,7 @@ public class MetaLinkFinder {
     }
     private void count(Long rowGeneId, Map <Long, Collection<Long>> geneEEsMap){
     	int rowIndex = -1, colIndex = -1, eeIndex = -1;
-    	rowIndex = this.linkCount.getRowIndexByName(rowGeneId);
+    	rowIndex = linkCount.getRowIndexByName(rowGeneId);
     	for(Long colGeneId:geneEEsMap.keySet()){
     		try{
     			Integer index = null;
@@ -187,7 +173,7 @@ public class MetaLinkFinder {
     					continue;
     				}
     				eeIndex = index.intValue();
-    				this.linkCount.set(rowIndex,colIndex,eeIndex);
+    				linkCount.set(rowIndex,colIndex,eeIndex);
     			}
     		}catch(Exception e){
     			continue;
@@ -195,25 +181,26 @@ public class MetaLinkFinder {
     	}
     }
     private void init(Collection<Gene> genes, Collection <ExpressionExperiment> ees, Collection<Gene> genesInTaxon){
-    	this.linkCount = new CompressedNamedBitMatrix(genes.size(), genesInTaxon.size(), ees.size());
+    	linkCount = new CompressedNamedBitMatrix(genes.size(), genesInTaxon.size(), ees.size());
+    	shift = linkCount.rows() > linkCount.columns()?linkCount.rows():linkCount.columns();
     	this.probeToGenes = new HashMap<Object, Set>();
     	for(Gene geneIter:genes){
-    		this.linkCount.addRowName(geneIter.getId());
+    		linkCount.addRowName(geneIter.getId());
     	}
     	for(Gene geneIter:genesInTaxon){
-    		this.linkCount.addColumnName(geneIter.getId());
+    		linkCount.addColumnName(geneIter.getId());
     	}
-    	this.eeMap = new HashMap();
-    	this.allEE = new Vector();
+    	eeMap = new HashMap();
+    	allEE = new Vector();
     	int index = 0;
     	for(ExpressionExperiment eeIter:ees){
     		eeMap.put(eeIter.getId(), new Integer(index));
-    		this.allEE.add(eeIter.getId());
+    		allEE.add(eeIter.getId());
     		index++;
     	}
     }
     public boolean toFile(String matrixFile, String eeMapFile){
-        if(!this.linkCount.toFile( matrixFile )) return false;
+        if(!linkCount.toFile( matrixFile )) return false;
         try{
             FileWriter out = new FileWriter(new File(eeMapFile));
             for(Long index:this.eeMap.keySet()){
@@ -247,24 +234,24 @@ public class MetaLinkFinder {
                         log.info( "Data File Format Error for configuration " + row );
                         return false;
                     }
-                    this.linkCount = new CompressedNamedBitMatrix(Integer.valueOf( subItems[0] ),Integer.valueOf( subItems[1] ),Integer.valueOf( subItems[2] ));
+                    linkCount = new CompressedNamedBitMatrix(Integer.valueOf( subItems[0] ),Integer.valueOf( subItems[1] ),Integer.valueOf( subItems[2] ));
                     hasConfig = true;
                 } else if(!hasRowNames){
-                    if(subItems.length != this.linkCount.rows()){
+                    if(subItems.length != linkCount.rows()){
                         log.info( "Data File Format Error for Row Names " + row );
                         return false;
                     }
                     for( i = 0; i < subItems.length; i++)
-                        this.linkCount.addRowName( new Long(subItems[i].trim()) );
+                        linkCount.addRowName( new Long(subItems[i].trim()) );
                     hasRowNames = true;;
                 }
                 else if(!hasColNames){
-                    if(subItems.length != this.linkCount.columns()){
+                    if(subItems.length != linkCount.columns()){
                         log.info( "Data File Format Error for Col Names " + row );
                         return false;
                     }
                     for( i = 0; i < subItems.length; i++)
-                        this.linkCount.addColumnName( new Long(subItems[i].trim()) );
+                        linkCount.addColumnName( new Long(subItems[i].trim()) );
                     hasColNames = true;
                 } else{                    
                     int rowIndex = Integer.valueOf( subItems[0] );
@@ -272,7 +259,7 @@ public class MetaLinkFinder {
                     double values[] = new double[subItems.length - 2];
                     for( i = 2; i < subItems.length; i++)
                         values[i-2] = Double.longBitsToDouble(Long.parseLong(subItems[i],16));
-                    if(!this.linkCount.set( rowIndex, colIndex, values)){
+                    if(!linkCount.set( rowIndex, colIndex, values)){
                         log.info( "Data File Format Error for Data " + row );
                         return false;
                     }
@@ -305,13 +292,13 @@ public class MetaLinkFinder {
                 if(Integer.valueOf(subItems[1].trim()).intValue() > vectorSize)
                 	vectorSize =Integer.valueOf(subItems[1].trim()).intValue(); 
             }
-            this.allEE = new Vector(vectorSize+1);
+            allEE = new Vector(vectorSize+1);
             for(int i = 0; i < vectorSize+1; i++)
-            	this.allEE.addElement(new Long(i));
+            	allEE.addElement(new Long(i));
             
             for(Long iter:this.eeMap.keySet()){
             	int index = this.eeMap.get(iter).intValue();
-            	this.allEE.setElementAt(iter, index);
+            	allEE.setElementAt(iter, index);
             }
             log.info( "Got " + this.eeMap.size() + " in EE MAP" );
             in.close();
@@ -319,12 +306,89 @@ public class MetaLinkFinder {
             e.printStackTrace();
             return false;
         }
+        shift = linkCount.rows() > linkCount.columns()?linkCount.rows():linkCount.columns();
         return true;
     }
-    public CompressedNamedBitMatrix getCountMatrix(){
-        return this.linkCount;
+    public static ExpressionExperiment getEE(int i){
+    	Object eeId = allEE.elementAt(i);
+    	ExpressionExperiment ee = eeService.findById((Long)eeId);
+    	return ee;
     }
-    public Vector getEEIndex(){
-    	return this.allEE;
+    public static String getEEName(int i){
+    	return getEE(i).getShortName();
     }
+    public static Gene getRowGene(int i){
+    	Object geneId = linkCount.getRowName(i);
+    	Gene gene = geneService.load(((Long)geneId).longValue());
+    	return gene;
+    }
+    
+    public static Gene getColGene(int i){
+    	Object geneId = linkCount.getColName(i);
+    	Gene gene = geneService.load(((Long)geneId).longValue());
+    	return gene;
+    }
+    
+    public static String getLinkName(long id){
+        int row = (int)(id/shift);
+        int col = (int)(id%shift);
+        String geneName1 = getRowGene(row).getName();
+        String geneName2 = getColGene(col).getName();
+        return geneName1+"_"+geneName2;
+    }
+    public static boolean checkEEConfirmation(long id, int eeIndex){
+        int rows = (int)(id/shift);
+        int cols = (int)(id%shift);
+    	return MetaLinkFinder.linkCount.check(rows, cols, eeIndex);
+    }
+    public static Set getEENames(long[] mask){
+    	HashSet<String> returnedSet = new HashSet<String>();
+    	for(int i = 0; i < mask.length; i++){
+    		for(int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++)
+    			if((mask[i]&(CompressedNamedBitMatrix.BIT1<<j)) != 0){
+    				returnedSet.add(getEEName(j+i*CompressedNamedBitMatrix.DOUBLE_LENGTH));
+			}
+    	}
+    	return returnedSet;
+	}
+    public static long generateId(int row, int col){
+    	return (long)row*(long)shift+ col;
+    }
+    public static long[] AND(long[] mask1, long[] mask2){
+    	long res[] = new long[mask1.length];
+    	for(int i = 0; i < mask1.length; i++)
+    		res[i] = mask1[i]&mask2[i];
+    	return res;
+    }
+    public static long[] OR(long[] mask1, long[] mask2){
+    	long res[] = new long[mask1.length];
+    	for(int i = 0; i < mask1.length; i++)
+    		res[i] = mask1[i]|mask2[i];
+    	return res;
+    }
+    public static int overlapBits(long[] mask1, long[] mask2){
+    	int bits = 0;
+    	for(int i = 0; i < mask1.length; i++)
+    		bits = bits + Long.bitCount(mask1[i]&mask2[i]);
+    	return bits;
+    }
+    public static int countBits(long[] mask){
+    	int bits = 0;
+    	for(int i = 0; i < mask.length; i++)
+    		bits = bits + Long.bitCount(mask[i]);
+    	return bits;
+    }
+    public static boolean checkBits( long[] mask, int index ) {
+        int num = ( int ) ( index / CompressedNamedBitMatrix.DOUBLE_LENGTH );
+        int bit_index = index % CompressedNamedBitMatrix.DOUBLE_LENGTH;
+        long res = mask[num] & CompressedNamedBitMatrix.BIT1 << bit_index;
+        if ( res == 0 ) return false;
+        return true;
+    }
+    public static boolean compare(long[] mask1, long mask2[]){
+    	for(int i = 0; i < mask1.length; i++)
+    		if(mask1[i] != mask2[i]) return false;
+    	return true;
+    }
+
 }
