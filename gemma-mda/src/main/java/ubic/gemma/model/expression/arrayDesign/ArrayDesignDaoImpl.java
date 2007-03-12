@@ -1032,17 +1032,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         // FIXME this is very inefficient!
-        for ( CompositeSequence cs : candidateSubsumee.getCompositeSequences() ) {
+        for ( CompositeSequence subsumeeCs : candidateSubsumee.getCompositeSequences() ) {
             // check if candidateSubsumer contains an equivalent composite sequence.
-            BioSequence subsumeeSeq = cs.getBiologicalCharacteristic();
+            BioSequence subsumeeSeq = subsumeeCs.getBiologicalCharacteristic();
 
             boolean found = false;
             // note nested loop over composite sequences
             for ( CompositeSequence subsumerCs : candidateSubsumer.getCompositeSequences() ) {
-                if ( !subsumerCs.getName().equals( subsumerCs.getName() ) ) {
-                    continue;
-                }
-                BioSequence subsumerSeq = cs.getBiologicalCharacteristic();
+                // if ( !subsumeeCs.getName().equals( subsumerCs.getName() ) ) {
+                // continue;
+                //                }
+                BioSequence subsumerSeq = subsumerCs.getBiologicalCharacteristic();
                 if ( subsumerSeq != null && subsumeeSeq != null && !subsumerSeq.equals( subsumeeSeq ) ) {
                     continue;
                 }
@@ -1052,7 +1052,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             }
 
             if ( !found ) {
-                log.info( candidateSubsumer + " does not contain " + cs + " from " + candidateSubsumee );
+                log.info( candidateSubsumer + " does not contain " + subsumeeCs + " from " + candidateSubsumee );
                 return false;
             }
         }
