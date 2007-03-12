@@ -82,7 +82,7 @@ public class MetaLinkFinder {
     public void find(Collection<Gene> genes){
     	if(genes == null || genes.size() == 0) return;
     	Taxon taxon = genes.iterator().next().getTaxon();
-    	Collection <ExpressionExperiment> ees = eeService.getByTaxon(taxon);
+    	Collection <ExpressionExperiment> ees = eeService.findByTaxon(taxon);
     	if(ees == null || ees.size() == 0) return;
     	this.find(genes, ees);
     }
