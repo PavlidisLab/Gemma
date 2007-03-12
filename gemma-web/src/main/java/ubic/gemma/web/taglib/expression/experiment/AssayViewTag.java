@@ -48,7 +48,7 @@ import com.sdicons.json.mapper.MapperException;
  * 
  * @jsp.tag name="assayView" body-content="empty"
  * @author joseph
- * @version $Id $
+ * @version $Id$
  */
 public class AssayViewTag extends TagSupport {
     /**
@@ -213,7 +213,7 @@ public class AssayViewTag extends TagSupport {
                         String editAttributes = " align='left' class='dragItem' id='bioassay." + assay.getId()
                                 + "' material='" + material.getId() + "' assay='" + assay.getId() + "' arrayDesign='"
                                 + design.getId() + "'";
-                        if ( edit ) {
+                        if ( edit && designs.size() > 1 ) {
                             buf.append( "\n<td><div " + editAttributes + ">" + link + image );
                         } else {
                             buf.append( "\n<td ><div>" + link + "&nbsp;" );
@@ -269,6 +269,9 @@ public class AssayViewTag extends TagSupport {
      */
     private void addNovelBiomaterialSlots( StringBuilder buf, Set<ArrayDesign> designs,
             Map<String, Collection<String>> assayToMaterial, int count, int emptyCount ) {
+        if ( designs.size() == 1 ) {
+            return;
+        }
         for ( int i = 1; i <= NUM_EXTRA_BIOMATERIALS; i++ ) {
 
             if ( count % 2 == 0 ) {

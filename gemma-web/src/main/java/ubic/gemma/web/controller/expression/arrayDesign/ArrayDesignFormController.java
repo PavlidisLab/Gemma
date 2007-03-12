@@ -18,6 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,8 +33,10 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -142,6 +149,13 @@ public class ArrayDesignFormController extends BaseFormController {
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    @Override
+    protected Map referenceData( HttpServletRequest request ) throws Exception {
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
+        mapping.put( "technologyTypes", new ArrayList<String>( TechnologyType.literals() ) );
+        return mapping;
     }
 
 }
