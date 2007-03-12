@@ -22,7 +22,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.util.AbstractCLI.ErrorCode;
 
 /**
  * Test two array designs to see if one subsumes the other, and if so update their information.
@@ -77,7 +76,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         Boolean aSubsumeso = this.arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
 
         if ( !aSubsumeso ) {
-            // test other way around.
+            // test other way around, but only if first way failed (to avoid cycles)
             this.arrayDesignService.updateSubsumingStatus( otherArrayDesign, arrayDesign );
         }
 

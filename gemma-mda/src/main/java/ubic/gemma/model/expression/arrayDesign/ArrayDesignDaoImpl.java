@@ -307,24 +307,25 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
 
-//        // FIXME could do this with a single query? It might be more efficient.
-//        String queryString = "select ad,cs,bs,geneProduct,gene,bs2gp,dbentry,taxon from ArrayDesignImpl ad, BioSequence2GeneProductImpl "
-//                + "bs2gp left join fetch ad.compositeSequences cs left join "
-//                + "fetch cs.biologicalCharacteristic bs left join fetch bs.taxon taxon "
-//                + "left join fetch bs.sequenceDatabaseEntry dbentry "
-//                + "left join fetch bs2gp.geneProduct geneProduct inner join fetch geneProduct.gene gene  "
-//                + "where bs2gp.bioSequence=bs and  ad = :arrayDesign";
-//
-//        try {
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setFirstResult( 1 );
-//            queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
-//            // collection returned
-//            queryObject.setParameter( "arrayDesign", arrayDesign );
-//            queryObject.list();
-//        } catch ( org.hibernate.HibernateException ex ) {
-//            throw super.convertHibernateAccessException( ex );
-//        }
+        // // FIXME could do this with a single query? It might be more efficient.
+        // String queryString = "select ad,cs,bs,geneProduct,gene,bs2gp,dbentry,taxon from ArrayDesignImpl ad,
+        // BioSequence2GeneProductImpl "
+        // + "bs2gp left join fetch ad.compositeSequences cs left join "
+        // + "fetch cs.biologicalCharacteristic bs left join fetch bs.taxon taxon "
+        // + "left join fetch bs.sequenceDatabaseEntry dbentry "
+        // + "left join fetch bs2gp.geneProduct geneProduct inner join fetch geneProduct.gene gene "
+        // + "where bs2gp.bioSequence=bs and ad = :arrayDesign";
+        //
+        // try {
+        // org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        // queryObject.setFirstResult( 1 );
+        // queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
+        // // collection returned
+        // queryObject.setParameter( "arrayDesign", arrayDesign );
+        // queryObject.list();
+        // } catch ( org.hibernate.HibernateException ex ) {
+        // throw super.convertHibernateAccessException( ex );
+        // }
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -1025,11 +1026,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
             throws Exception {
 
-        this.thaw( candidateSubsumer );
-        this.thaw( candidateSubsumee );
-
         if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
-            log.info( "Subsumee has more sequences than subsumer" );
+            log.info( "Subsumee has more sequences than subsumer so cannot be subsumed" );
             return false;
         }
 
@@ -1045,7 +1043,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     continue;
                 }
                 BioSequence subsumerSeq = cs.getBiologicalCharacteristic();
-                if ( !subsumerSeq.equals( subsumeeSeq ) ) {
+                if ( subsumerSeq != null && subsumeeSeq != null && !subsumerSeq.equals( subsumeeSeq ) ) {
                     continue;
                 }
 
@@ -1059,11 +1057,19 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             }
         }
 
-        log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
+        if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
+            log.info( candidateSubsumee + " and " + candidateSubsumer + " are exactly equivalent" );
+        } else {
+            log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
+        }
         candidateSubsumer.getSubsumedArrayDesigns().add( candidateSubsumee );
         candidateSubsumee.setSubsumingArrayDesign( candidateSubsumer );
         this.update( candidateSubsumer );
+        this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().clear();
         this.update( candidateSubsumee );
+        this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().clear();
 
         return true;
     }
