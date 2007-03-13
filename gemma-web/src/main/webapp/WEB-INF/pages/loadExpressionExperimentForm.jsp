@@ -65,7 +65,7 @@
 						src="/Gemma/images/help.png" /> </a>
 			</th>
 			<td align="left">
-				<spring:bind path="command.supressMatching">
+				<spring:bind path="command.suppressMatching">
 					<input type="hidden" name="_<c:out value="${status.expression}"/>">
 					<input align="left" type="checkbox"
 						name="<c:out value="${status.expression}"/>" value="true"
