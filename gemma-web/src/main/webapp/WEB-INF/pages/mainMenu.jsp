@@ -115,7 +115,7 @@
 						<c:forEach items="${taxa}" var="taxon">
 							<spring:transform value="${taxon}" var="scientificName" />
 							<option value="${taxon.scientificName}"
-								<c:if test="${status.value == taxon}">selected </c:if>>
+								<c:if test="${previousTaxonName == taxon.scientificName}">selected </c:if>>
 								${taxon.scientificName}
 							</option>
 						</c:forEach>
@@ -139,7 +139,14 @@
 			</td>
 		</tr>
 	</table>
-
+	
+	<spring:bind path="coexpressionSearchCommand.stringency">
+		<input type="hidden"
+			name="<c:out value="${status.expression}"/>"
+			value="<c:out value="${previousStringency}"/>" 
+		/>
+	</spring:bind>
+	
 </form>
 
 

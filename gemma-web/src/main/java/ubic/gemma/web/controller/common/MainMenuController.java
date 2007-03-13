@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -49,6 +50,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
+import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
  * @author joseph
@@ -67,12 +69,13 @@ import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 public class MainMenuController extends BaseFormController {
     private static Log log = LogFactory.getLog( MainMenuController.class.getName() );
 
+    private static final String COEXPRESSION_COOKIE_NAME = "coexpressionSearchCookie";
+    
     private ExpressionExperimentService expressionExperimentService;
     private BioAssayService bioAssayService;
     private ArrayDesignService arrayDesignService;
     private TaxonService taxonService;
-
-    WhatsNewService whatsNewService;
+    private WhatsNewService whatsNewService;
 
     public void setWhatsNewService( WhatsNewService whatsNewService ) {
         this.whatsNewService = whatsNewService;
@@ -182,6 +185,14 @@ public class MainMenuController extends BaseFormController {
             mav.addObject( "whatsNew", wn );
         }
         mav.addObject( "timeSpan", "In the past day" );
+        
+        // load taxon from cookie (if it exists)
+        Taxon previousTaxon = loadTaxonFromCookie( request );
+        // load stringency from cookie (if it exists)
+        Long previousStringency = loadStringencyFromCookie (request);
+        mav.addObject( "previousTaxonName", previousTaxon.getScientificName() );
+        mav.addObject( "previousStringency", previousStringency );
+        
         return mav;
     }
 
@@ -230,5 +241,55 @@ public class MainMenuController extends BaseFormController {
         super.initBinder( request, binder );
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
+    
+    /**
+     * @param request
+     * @param csc
+     */
+    private Taxon loadTaxonFromCookie( HttpServletRequest request ) {
 
+        // cookies aren't all that important, if they're missing we just go on.
+        if ( request == null || request.getCookies() == null ) return null;
+
+        Taxon previousTaxon = null;
+        
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COEXPRESSION_COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    previousTaxon = taxonService.findByScientificName( cookie.getString( "taxonScientificName" ) );
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
+        return previousTaxon;
+    }
+
+    /**
+     * @param request
+     * @param csc
+     */
+    private Long loadStringencyFromCookie( HttpServletRequest request ) {
+
+        // cookies aren't all that important, if they're missing we just go on.
+        if ( request == null || request.getCookies() == null ) return null;
+
+        Long stringency = new Long(3);
+        
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COEXPRESSION_COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    stringency =  Long.parseLong( cookie.getString( "stringency" ) );
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
+        return stringency;
+    }
+    
 }
