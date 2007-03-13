@@ -471,7 +471,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
                 // sort coexpressed genes by dataset count
                 Collections.sort( coexpressedGenes, new CoexpressionComparator() );
-
+                /*  temporaly taken out as its to slow. 
                 StopWatch overlapWatch = new StopWatch();
                 overlapWatch.start();
                 log.info( "Calculating go overlap...." );
@@ -503,7 +503,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 Long overlapTime = overlapWatch.getTime();
                 overlapWatch.stop();              
                 this.saveMessage("took " + overlapTime/1000 + "s to calculate GO overlap" );
-                
+                */
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();
                 Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
@@ -563,7 +563,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 mav.addObject( "numStringencyGenes", numStringencyGenes );
                 mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
                 mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
-                mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
+                //mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
 
                 mav.addObject( "numMatchedLinks", numMatchedLinks );
                 mav.addObject( "sourceGene", csc.getSourceGene() );

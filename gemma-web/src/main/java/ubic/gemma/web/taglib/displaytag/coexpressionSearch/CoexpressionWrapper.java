@@ -95,7 +95,7 @@ public class CoexpressionWrapper extends TableDecorator {
             count += positiveLinks.toString();
             
            if ( !object.getExpressionExperiments().isEmpty())
-            count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2PositiveLinks() );
+            count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2PositiveLinks(), positiveLinks );
            
             count += "</span>";
         }
@@ -107,7 +107,7 @@ public class CoexpressionWrapper extends TableDecorator {
             count += "<span class='negativeLink' >";
             count += negativeLinks.toString();
             if ( !object.getExpressionExperiments().isEmpty())
-                count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2NegativeLinks() );
+                count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2NegativeLinks(), negativeLinks );
      
             
             count += "</span>";
@@ -115,7 +115,7 @@ public class CoexpressionWrapper extends TableDecorator {
         return count; 
     }
     
-    private String getNonSpecificString(Collection<Long> allNonSpecific, Collection<Long> contributingEE ){
+    private String getNonSpecificString(Collection<Long> allNonSpecific, Collection<Long> contributingEE, Integer numTotalLinks ){
         int nonSpecific = 0;
         String nonSpecificList = "";
         
@@ -129,7 +129,7 @@ public class CoexpressionWrapper extends TableDecorator {
         if (nonSpecific == 0)
             return "";
         
-        return "<i> <span style = 'font-size:smaller' title='" +  nonSpecificList + "' >  ( " + nonSpecific + " )  </span> </i>";
+        return "<i> <span style = 'font-size:smaller' title='" +  nonSpecificList + "' >  ( " + (numTotalLinks - nonSpecific) + " )  </span> </i>";
     }
     
     /**

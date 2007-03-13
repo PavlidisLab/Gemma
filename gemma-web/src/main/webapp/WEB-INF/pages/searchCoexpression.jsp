@@ -33,7 +33,7 @@ Results for
 
 	(<c:out value="${sourceGene.officialName}" />)
 	
-	with <c:out value="${numSourceGeneGoTerms}" /> GO Terms
+	<!-- with <c:out value="${numSourceGeneGoTerms}" /> GO Terms  -->
 </h2>
 	<h4>
 
@@ -349,6 +349,13 @@ Results for
 
 <br />
 	
+		
+		<script>
+			var text = '<Gemma:help helpFile="CoexpressionSearchSupportHelp.html"/>';
+			function doit(event) {showWideHelpTip(event,text); }
+		</script>
+			
+				
 	
 
 <display:table name="coexpressedGenes"
@@ -357,8 +364,9 @@ Results for
 	pagesize="200">
 	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
 	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
-	<display:column property="linkCount" sortable="true" title="Links" />	
-	<display:column property="goOverlap" sortable="true" title="GO:Overlap" />
+	<display:column property="linkCount" sortable="true" title="Support <a class='helpLink' name='?' href='' onclick='doit(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>" />	
+	<!--  display:column property="goOverlap" sortable="true" title="GO:Overlap" /> -->
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
