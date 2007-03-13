@@ -144,7 +144,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Cookie cookie = new CoexpressionSearchCookie( csc );
         response.addCookie( cookie );
 
-        Collection<Gene> genesFound;
+        Collection<Gene> genesFound = new HashSet<Gene>();
 
         // find the genes specified by the search
         // if there is no exact search specified, do an inexact search
@@ -152,20 +152,20 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
         // none, do inexact search.
         if ( csc.getExactSearch() == null ) {
-            genesFound = searchService.geneDbSearch( csc.getSearchString() );
+            genesFound.addAll(  searchService.geneDbSearch( csc.getSearchString() ) );
             genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
         } else if ( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
             String geneId = csc.getSearchString();
             Long id = Long.parseLong( geneId );
             Collection<Long> ids = new ArrayList<Long>();
             ids.add( id );
-            genesFound = geneService.load( ids );
+            genesFound.addAll(  geneService.load( ids ) );
         } else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
-            genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
+            genesFound.addAll(  geneService.findByOfficialSymbol( csc.getSearchString() ) );
         } else {
-            genesFound = geneService.findByOfficialSymbol( csc.getSearchString() );
+            genesFound.addAll( geneService.findByOfficialSymbol( csc.getSearchString() ) );
             if ( genesFound.size() == 0 ) {
-                genesFound = searchService.geneDbSearch( csc.getSearchString() );
+                genesFound.addAll( searchService.geneDbSearch( csc.getSearchString() ) );
                 genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
             }
         }
