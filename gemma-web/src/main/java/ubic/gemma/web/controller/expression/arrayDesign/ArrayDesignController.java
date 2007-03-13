@@ -393,7 +393,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             ArrayDesign arrayDesign = searchResults.iterator().next();
             this.saveMessage( request, "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
                     + ")" );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showDesign.html?id=" + arrayDesign.getId() ) );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) );
         } else {
             for ( ArrayDesign ad : searchResults )
                 list += ad.getId() + ",";
