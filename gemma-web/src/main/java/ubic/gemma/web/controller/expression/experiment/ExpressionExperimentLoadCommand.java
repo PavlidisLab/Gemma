@@ -37,6 +37,11 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     private boolean loadPlatformOnly;
 
+    /**
+     * Used to turn off 'bioassay to biomaterial' matching.
+     */
+    private boolean suppressMatching;
+
     private String accession;
 
     /**
@@ -81,6 +86,14 @@ public class ExpressionExperimentLoadCommand implements Serializable {
      */
     public void setLoadPlatformOnly( boolean loadPlatformOnly ) {
         this.loadPlatformOnly = loadPlatformOnly;
+    }
+
+    public boolean isSuppressMatching() {
+        return suppressMatching;
+    }
+
+    public void setSuppressMatching( boolean suppressMatching ) {
+        this.suppressMatching = suppressMatching;
     }
 
 }
