@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -54,6 +55,7 @@ import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  */
 public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
@@ -128,7 +130,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        geoService.setLoadPlatformOnly( false );
+
     }
 
     /**
@@ -145,8 +147,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE611" );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE611", false, true );
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
@@ -154,59 +156,14 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
-        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
 
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
-        QuantitationType qt = quantitationTypes.iterator().next();
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        Collection<DesignElementDataVector> designElementDataVectors = newee.getDesignElementDataVectors();
+        designElementDataVectorService.thaw( designElementDataVectors );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
+        ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
         assertEquals( 30, matrix.rows() );
         assertEquals( 4, matrix.columns() );
-    }
-
-    /**
-     * Used 4 related platforms. This is the Sorlie breast cancer data set (2001), and in their paper there are 85
-     * samples. However, because our system attempts to "match up" samples, we don't get the right answer.
-     * 
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    public void testMatrixConversionGSE3193() throws Exception {
-        // endTransaction();
-        ExpressionExperiment newee;
-        try {
-            String path = ConfigUtils.getString( "gemma.home" );
-            assert path != null;
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE3193" );
-            newee = results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
-        }
-
-        expressionExperimentService.thaw( newee );
-
-        // make sure we really thaw them, so we can get the design element sequences.
-        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
-
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
-        QuantitationType qt = null;
-        for ( QuantitationType qts : quantitationTypes ) {
-            if ( qts.getName().equals( "CH1I_MEAN" ) ) {
-                qt = qts;
-                break;
-            }
-        }
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee.getDesignElementDataVectors(), qt );
-
-        // because many of the biosequences appear on multiple arrays, there are fewer rows than the 'original' 200.
-        assertEquals( 102, matrix.rows() );
-        // assertEquals( 34, matrix.columns() ); this depends quite a bit on how we match up the biomaterials and
-        // bioassays. Currently I get 57.
-
-        log.info( matrix );
-
     }
 
     /**
@@ -222,8 +179,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE483Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE483" );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE483", false, true );
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
@@ -255,8 +212,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE432" );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE432", false, true );
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
@@ -264,17 +221,12 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
-        designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
 
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
-        QuantitationType qt = null;
-        for ( QuantitationType qts : quantitationTypes ) {
-            if ( qts.getName().equals( "VALUE" ) ) {
-                qt = qts;
-                break;
-            }
-        }
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
+        Collection<DesignElementDataVector> designElementDataVectors = newee.getDesignElementDataVectors();
+        designElementDataVectorService.thaw( designElementDataVectors );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
+        ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
         assertEquals( 40, matrix.rows() ); // there would be 100 but there are lots of missing values.
         assertEquals( 11, matrix.columns() );
 
@@ -344,24 +296,10 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             log.debug( row[i] );
         }
 
-        /* Get valid BioAssay from database */// TODO implement column
-        // BioAssayService bsService = ( BioAssayService ) this.getBean( "bioAssayService" );
-        // BioAssay ba = BioAssay.Factory.newInstance();
-        // ba.setName( "8.1" );
-        // BioAssay bioAssayFromDb = bsService.findOrCreate( ba );
-        //
-        /* Get column for bioassay '8.1' from ExpressionDataDoubleMatrix. */
-        // Double[] column = expressionDataDoubleMatrix.getColumn( bioAssayFromDb );
-        // assertNotNull( column );
-        /* Get the matrix */
         Double[][] dMatrix = expressionDataDoubleMatrix.getMatrix();
         assertEquals( dMatrix.length, 200 );
         assertEquals( dMatrix[0].length, 59 );
 
-        /* Constructor 2 */
-        // ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, quantitationType );
-        /* Constructor 3 */
-        // ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix(ee.getDesignElementDataVectors());
     }
 
     /**

@@ -94,6 +94,8 @@ public class DatasetCombiner {
      */
     private static final String ENTREZ_GEO_QUERY_URL_BASE = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=";
 
+    private boolean doSampleMatching = true;
+
     /**
      * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
      * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
@@ -103,7 +105,12 @@ public class DatasetCombiner {
      */
     private final double SIMILARITY_THRESHOLD = 0.5;
 
+    public DatasetCombiner( boolean doSampleMatching ) {
+        this.doSampleMatching = doSampleMatching;
+    }
+
     public DatasetCombiner() {
+        this.doSampleMatching = true;
     }
 
     private static Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
@@ -279,16 +286,11 @@ public class DatasetCombiner {
 
         result.setAccToTitleMap( accToTitle );
 
-        // // allocate matrix.
-        // double[][] matrix = new double[accToTitle.keySet().size()][accToTitle.keySet().size()];
-        // for ( int i = 0; i < matrix.length; i++ ) {
-        // Arrays.fill( matrix[i], -1.0 );
-        // }
-
         final List<String> sampleAccs = new ArrayList<String>( accToDataset.keySet() );
         assert sampleAccs.size() > 0;
 
-        if ( numDatasetsOrPlatforms <= 1 ) {
+        if ( numDatasetsOrPlatforms <= 1 || !this.doSampleMatching ) {
+            log.info( "Each bioassay will get a distinct biomaterial" );
             for ( String sample : sampleAccs ) {
                 result.addCorrespondence( sample, null );
             }
@@ -748,7 +750,7 @@ public class DatasetCombiner {
      * @param geoSeries
      * @return
      */
-    public Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {
+    public static Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {
         Map<GeoPlatform, List<GeoSample>> platformSamples = new HashMap<GeoPlatform, List<GeoSample>>();
 
         for ( GeoSample sample : geoSeries.getSamples() ) {

@@ -353,7 +353,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
                         newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
                         newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
-                        newMaterial = bioMaterialService.create( newMaterial );
+                        newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                     } else {
                         newMaterial = bioMaterialService.findById( newBioMaterialId );
                     }

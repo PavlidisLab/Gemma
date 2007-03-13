@@ -1031,7 +1031,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             return false;
         }
 
-        // FIXME this is very inefficient!
+        // this is very inefficient, but works well enough.
         for ( CompositeSequence subsumeeCs : candidateSubsumee.getCompositeSequences() ) {
             // check if candidateSubsumer contains an equivalent composite sequence.
             BioSequence subsumeeSeq = subsumeeCs.getBiologicalCharacteristic();
@@ -1041,7 +1041,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             for ( CompositeSequence subsumerCs : candidateSubsumer.getCompositeSequences() ) {
                 // if ( !subsumeeCs.getName().equals( subsumerCs.getName() ) ) {
                 // continue;
-                //                }
+                // }
                 BioSequence subsumerSeq = subsumerCs.getBiologicalCharacteristic();
                 if ( subsumerSeq != null && subsumeeSeq != null && !subsumerSeq.equals( subsumeeSeq ) ) {
                     continue;

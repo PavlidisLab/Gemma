@@ -37,6 +37,7 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -332,7 +333,10 @@ public class DesignElementDataVectorDaoImpl extends
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
                     thaw( session, designElementDataVector );
-                    if ( ++count % 10000 == 0 ) log.info( "Thawed " + count + " vectors" );
+                    session.clear();
+                    if ( ++count % 10000 == 0 ) {
+                        log.info( "Thawed " + count + " vectors" );
+                    }
                 }
                 session.clear();
                 log.info( "Done, thawed " + count + " vectors" );
@@ -359,6 +363,10 @@ public class DesignElementDataVectorDaoImpl extends
             session.update( seq );
             seq.hashCode();
         }
+        ArrayDesign arrayDesign = ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getArrayDesign();
+        session.update( arrayDesign );
+        arrayDesign.hashCode();
+        session.evict( arrayDesign );
 
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {

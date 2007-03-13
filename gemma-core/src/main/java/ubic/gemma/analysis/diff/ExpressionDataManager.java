@@ -72,7 +72,7 @@ public class ExpressionDataManager {
         // if you want to read the experiments from the geo repository
         // gds.setGenerator(new GeoDomainObjectGenerator());
 
-        experiment = ( ExpressionExperiment ) gds.fetchAndLoad( experimentName );
+        experiment = ( ExpressionExperiment ) gds.fetchAndLoad( experimentName, false, true );
         this.experimentName = experimentName;
     }
 

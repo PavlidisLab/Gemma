@@ -51,9 +51,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  */
 public class GeoDatasetService extends AbstractGeoService {
 
-    /**
-     * 
-     */
     private static final String GEO_DB_NAME = "GEO";
     ExpressionExperimentService expressionExperimentService;
     BioAssayService bioAssayService;
@@ -71,15 +68,16 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection fetchAndLoad( String geoAccession ) {
+    public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
         this.geoConverter.clear();
         geoDomainObjectGenerator.intialize();
-        geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
+        geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
+        geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching );
 
         Collection<DatabaseEntry> projectedAccessions = geoDomainObjectGenerator.getProjectedAccessions( geoAccession );
         checkForExisting( projectedAccessions );
 
-        if ( this.loadPlatformOnly ) {
+        if ( loadPlatformOnly ) {
             Collection<?> platforms = geoDomainObjectGenerator.generate( geoAccession );
             Collection<Object> arrayDesigns = geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
@@ -101,7 +99,7 @@ public class GeoDatasetService extends AbstractGeoService {
         GeoSeries series = ( GeoSeries ) obj;
         String seriesAccession = series.getGeoAccession();
 
-        confirmPlatformUniqueness( series );
+        confirmPlatformUniqueness( series, doSampleMatching );
 
         checkSamplesAreNew( series );
 
@@ -118,6 +116,35 @@ public class GeoDatasetService extends AbstractGeoService {
         log.info( "Persisted " + seriesAccession );
         this.geoConverter.clear();
         return persistedResult;
+    }
+
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param projectedAccessions
+     */
+    private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
+        if ( projectedAccessions == null || projectedAccessions.size() == 0 ) {
+            return; // that's okay, it might have been a GPL.
+        }
+        for ( DatabaseEntry entry : projectedAccessions ) {
+            ExpressionExperiment existing = expressionExperimentService.findByAccession( entry );
+            if ( existing != null ) {
+                String message = "There is already an expression experiment that matches " + entry.getAccession()
+                        + ", " + existing.getName();
+                log.info( message );
+                throw new AlreadyExistsInSystemException( message, existing );
+            }
+        }
     }
 
     /**
@@ -187,67 +214,6 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * @param result
-     */
-    private void getPubMedInfo( Collection<ExpressionExperiment> result ) {
-        for ( ExpressionExperiment experiment : result ) {
-            BibliographicReference pubmed = experiment.getPrimaryPublication();
-            if ( pubmed == null ) continue;
-            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-            pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
-            if ( pubmed == null ) continue;
-            experiment.setPrimaryPublication( pubmed );
-
-        }
-    }
-
-    /**
-     * Check if all the data sets are on different platforms. This is a rare case in GEO. When it happens we merge the
-     * datasets.
-     */
-    private void confirmPlatformUniqueness( GeoSeries series ) {
-        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
-        for ( GeoDataset dataset : series.getDatasets() ) {
-            platforms.add( dataset.getPlatform() );
-        }
-        if ( platforms.size() == series.getDatasets().size() ) {
-            return;
-        }
-        Collection<GeoDataset> collapsed = potentiallyCombineDatasets( series.getDatasets() );
-        series.setDataSets( collapsed );
-        DatasetCombiner combiner = new DatasetCombiner();
-        GeoSampleCorrespondence corr = combiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( corr );
-    }
-
-    /**
-     * Combine data sets that use the same platform into one.
-     * 
-     * @param datasets, some of which will be combined.
-     */
-    private Collection<GeoDataset> potentiallyCombineDatasets( Collection<GeoDataset> datasets ) {
-        if ( datasets.size() == 1 ) return datasets;
-        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<GeoPlatform, Collection<GeoDataset>>();
-        for ( GeoDataset dataset : datasets ) {
-            GeoPlatform platform = dataset.getPlatform();
-            if ( !seenPlatforms.containsKey( platform ) ) {
-                seenPlatforms.put( platform, new HashSet<GeoDataset>() );
-            }
-            seenPlatforms.get( platform ).add( dataset );
-        }
-
-        Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
-        for ( GeoPlatform platform : seenPlatforms.keySet() ) {
-            if ( seenPlatforms.get( platform ).size() > 1 ) {
-                GeoDataset combined = combineDatasets( seenPlatforms.get( platform ) );
-                finishedDatasets.add( combined );
-            }
-        }
-        return finishedDatasets;
-
-    }
-
-    /**
      * @param datasets all of which must use the same platform.
      * @return one data set, which contains all the samples and subsets.
      */
@@ -282,32 +248,69 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * @param projectedAccessions
+     * Check if all the data sets are on different platforms. This is a rare case in GEO. When it happens we merge the
+     * datasets.
      */
-    private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
-        if ( projectedAccessions == null || projectedAccessions.size() == 0 ) {
-            return; // that's okay, it might have been a GPL.
+    private void confirmPlatformUniqueness( GeoSeries series, boolean doSampleMatching ) {
+        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+        for ( GeoDataset dataset : series.getDatasets() ) {
+            platforms.add( dataset.getPlatform() );
         }
-        for ( DatabaseEntry entry : projectedAccessions ) {
-            ExpressionExperiment existing = expressionExperimentService.findByAccession( entry );
-            if ( existing != null ) {
-                String message = "There is already an expression experiment that matches " + entry.getAccession()
-                        + ", " + existing.getName();
-                log.info( message );
-                throw new AlreadyExistsInSystemException( message, existing );
+        if ( platforms.size() == series.getDatasets().size() ) {
+            return;
+        }
+        Collection<GeoDataset> collapsed = potentiallyCombineDatasets( series.getDatasets() );
+        series.setDataSets( collapsed );
+        DatasetCombiner combiner = new DatasetCombiner( doSampleMatching );
+        GeoSampleCorrespondence corr = combiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( corr );
+    }
+
+    /**
+     * @param result
+     */
+    private void getPubMedInfo( Collection<ExpressionExperiment> result ) {
+        for ( ExpressionExperiment experiment : result ) {
+            BibliographicReference pubmed = experiment.getPrimaryPublication();
+            if ( pubmed == null ) continue;
+            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+            try {
+                pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
+            } catch ( Exception e ) {
+                log.warn( "Filed to get data from pubmed, continuing without it." );
+                log.error( e, e );
             }
+            if ( pubmed == null ) continue;
+            experiment.setPrimaryPublication( pubmed );
+
         }
     }
 
     /**
-     * @param expressionExperimentService the expressionExperimentService to set
+     * Combine data sets that use the same platform into one.
+     * 
+     * @param datasets, some of which will be combined.
      */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+    private Collection<GeoDataset> potentiallyCombineDatasets( Collection<GeoDataset> datasets ) {
+        if ( datasets.size() == 1 ) return datasets;
+        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<GeoPlatform, Collection<GeoDataset>>();
+        for ( GeoDataset dataset : datasets ) {
+            GeoPlatform platform = dataset.getPlatform();
+            if ( !seenPlatforms.containsKey( platform ) ) {
+                seenPlatforms.put( platform, new HashSet<GeoDataset>() );
+            }
+            seenPlatforms.get( platform ).add( dataset );
+        }
 
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
+        Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
+        for ( GeoPlatform platform : seenPlatforms.keySet() ) {
+            if ( seenPlatforms.get( platform ).size() > 1 ) {
+                GeoDataset combined = combineDatasets( seenPlatforms.get( platform ) );
+                finishedDatasets.add( combined );
+            }
+        }
+        return finishedDatasets;
+
     }
 
 }

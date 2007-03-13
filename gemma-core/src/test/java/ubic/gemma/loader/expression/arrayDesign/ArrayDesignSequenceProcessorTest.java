@@ -144,8 +144,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
-        geoService.setLoadPlatformOnly( true );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226" );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
         Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
@@ -164,8 +163,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
-        geoService.setLoadPlatformOnly( true );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226" );
+
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
 
@@ -187,8 +186,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         // first load the GPL88 - small
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        geoService.setLoadPlatformOnly( true );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88" );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
 

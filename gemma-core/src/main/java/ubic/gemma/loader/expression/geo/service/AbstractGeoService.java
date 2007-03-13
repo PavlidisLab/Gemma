@@ -42,13 +42,34 @@ public abstract class AbstractGeoService {
     protected PersisterHelper persisterHelper;
     protected ArrayDesignService arrayDesignService;
     protected GeoConverter geoConverter;
-    protected boolean loadPlatformOnly = false;
+
+    /**
+     * @param geoAccession
+     * @return
+     */
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+
+    /**
+     * This is supplied to allow clients to check that the generator has been set correctly.
+     * 
+     * @return
+     */
+    public GeoDomainObjectGenerator getGeoDomainObjectGenerator() {
+        return this.geoDomainObjectGenerator;
+    }
 
     /**
      * @param arrayDesignService the arrayDesignService to set
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param geoConv to set
+     */
+    public void setGeoConverter( GeoConverter geoConverter ) {
+        this.geoConverter = geoConverter;
     }
 
     /**
@@ -61,35 +82,9 @@ public abstract class AbstractGeoService {
     }
 
     /**
-     * This is supplied to allow clients to check that the generator has been set correctly.
-     * 
-     * @return
-     */
-    public GeoDomainObjectGenerator getGeoDomainObjectGenerator() {
-        return this.geoDomainObjectGenerator;
-    }
-
-    /**
      * @param expressionLoader
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * @param geoConv to set
-     */
-    public void setGeoConverter( GeoConverter geoConverter ) {
-        this.geoConverter = geoConverter;
-    }
-
-    /**
-     * @param geoAccession
-     * @return
-     */
-    public abstract Collection<?> fetchAndLoad( String geoAccession );
-
-    public void setLoadPlatformOnly( boolean b ) {
-        this.loadPlatformOnly = b;
     }
 }

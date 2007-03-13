@@ -44,7 +44,7 @@ public class GeoPlatform extends GeoData {
      * Store information on the platform here. Map of designElements to other information. This has to be lists so the
      * values "line up".
      */
-    private Map<String, List<String>> data = new HashMap<String, List<String>>();
+    private Map<String, List<String>> platformInformation = new HashMap<String, List<String>>();
 
     private Collection<String> catalogNumbers = new HashSet<String>();
 
@@ -99,8 +99,10 @@ public class GeoPlatform extends GeoData {
      * @return
      */
     public List<String> getColumnData( String columnName ) {
-        assert data.size() != 0;
-        return data.get( columnName );
+        assert platformInformation.size() != 0 : this + " has no platformInformation at all!";
+        assert platformInformation.containsKey( columnName ) : this + " has no platformInformation for '" + columnName
+                + "'";
+        return platformInformation.get( columnName );
     }
 
     /**
@@ -120,9 +122,9 @@ public class GeoPlatform extends GeoData {
      * @param value
      */
     public void addToColumnData( String columnName, String value ) {
-        if ( !data.containsKey( columnName ) ) {
+        if ( !platformInformation.containsKey( columnName ) ) {
             if ( log.isDebugEnabled() ) log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
-            data.put( columnName, new ArrayList<String>() );
+            platformInformation.put( columnName, new ArrayList<String>() );
         }
 
         // don't add values twice. Occurs in corrupt files.

@@ -18,8 +18,13 @@
  */
 package ubic.gemma.apps;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -36,14 +41,15 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         tester.doWork( args );
     }
 
-    private String otherArrayDesigName;
+    private Collection<String> otherArrayDesigNames;
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
         Option otherArrayDesignOption = OptionBuilder.isRequired().hasArg().withArgName( "Other array design" )
-                .withDescription( "A second array design name (or short name)" ).withLongOpt( "other" ).create( 'o' );
+                .withDescription( "Short name(s) of arrays to compare to the first one, comma-delimited" ).withLongOpt(
+                        "other" ).create( 'o' );
 
         addOption( otherArrayDesignOption );
     }
@@ -58,35 +64,46 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         }
 
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-        ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + arrayDesignName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-
-        if ( otherArrayDesign == null ) {
-            log.error( "No arrayDesign " + otherArrayDesigName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-
         unlazifyArrayDesign( arrayDesign );
-        unlazifyArrayDesign( otherArrayDesign );
 
-        Boolean aSubsumeso = this.arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
+        for ( String otherArrayDesigName : otherArrayDesigNames ) {
+            ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
 
-        if ( !aSubsumeso ) {
-            // test other way around, but only if first way failed (to avoid cycles)
-            this.arrayDesignService.updateSubsumingStatus( otherArrayDesign, arrayDesign );
+            if ( arrayDesign.equals( otherArrayDesign ) ) {
+                continue;
+            }
+
+            if ( arrayDesign == null ) {
+                log.error( "No arrayDesign " + arrayDesignName + " found" );
+                bail( ErrorCode.INVALID_OPTION );
+            }
+
+            if ( otherArrayDesign == null ) {
+                log.error( "No arrayDesign " + otherArrayDesigName + " found" );
+                bail( ErrorCode.INVALID_OPTION );
+            }
+
+            unlazifyArrayDesign( otherArrayDesign );
+
+            Boolean aSubsumeso = this.arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
+
+            if ( !aSubsumeso ) {
+                // test other way around, but only if first way failed (to avoid cycles)
+                this.arrayDesignService.updateSubsumingStatus( otherArrayDesign, arrayDesign );
+            }
         }
-
         return null;
     }
 
     protected void processOptions() {
         super.processOptions();
         if ( this.hasOption( 'o' ) ) {
-            this.otherArrayDesigName = getOptionValue( 'o' );
+            String otherArrayDesigName = getOptionValue( 'o' );
+            String[] names = StringUtils.split( otherArrayDesigName, ',' );
+            this.otherArrayDesigNames = new HashSet<String>();
+            for ( String string : names ) {
+                this.otherArrayDesigNames.add( string );
+            }
         }
     }
 

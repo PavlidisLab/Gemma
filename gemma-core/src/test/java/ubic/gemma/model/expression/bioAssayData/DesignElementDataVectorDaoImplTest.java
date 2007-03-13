@@ -57,7 +57,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        geoService.setLoadPlatformOnly( false );
+
     }
 
     @Override
@@ -111,7 +111,6 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
 
     /**
      * FIXME This test fails because is uses the gene2cs table, which isn't populated in tests yet.
-     *
      */
     @SuppressWarnings("unchecked")
     public void testGetGeneCoexpressionPattern() {
@@ -122,8 +121,8 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE432" );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE432", false, true );
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();

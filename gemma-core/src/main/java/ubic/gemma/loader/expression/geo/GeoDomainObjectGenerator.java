@@ -58,6 +58,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     private boolean processPlatformsOnly;
 
+    private boolean doSampleMatching = true;
+
+    public void setDoSampleMatching( boolean doSampleMatching ) {
+        this.doSampleMatching = doSampleMatching;
+    }
+
     /**
      * 
      *
@@ -130,14 +136,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             }
             log.info( geoAccession + " corresponds to " + seriesAccessions );
             for ( String seriesAccession : seriesAccessions ) {
-                GeoSeries series = processSeries( seriesAccession );
+                GeoSeries series = processSeries( seriesAccession, this.doSampleMatching );
                 result.add( series );
             }
         } else if ( geoAccession.startsWith( "GSE" ) ) {
             if ( processPlatformsOnly ) {
                 return processSeriesPlatforms( geoAccession ); // FIXME, this is ugly.
             }
-            GeoSeries series = processSeries( geoAccession );
+            GeoSeries series = processSeries( geoAccession, this.doSampleMatching );
             result.add( series );
             return result;
         } else {
@@ -190,8 +196,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * Download and parse a GEO series.
      * 
      * @param seriesAccession
+     * @param doSampleMatching Whether we should attempt to match the samples. In some cases we might know that this is
+     *        not a good idea.
      */
-    private GeoSeries processSeries( String seriesAccession ) {
+    private GeoSeries processSeries( String seriesAccession, boolean doSampleMatching ) {
 
         Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
 
@@ -217,6 +225,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get(
                 seriesAccession );
 
+        if ( series == null ) {
+            throw new RuntimeException( "No series was parsed for " + seriesAccession );
+        }
+
         // FIXME put this back...or something.
         // Raw data files have been added to series object as a path (during parsing).
         // processRawData( series )
@@ -225,10 +237,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             log.info( "Processing " + dataSetAccession );
             processDataSet( series, dataSetAccession );
         }
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        DatasetCombiner datasetCombiner = new DatasetCombiner( doSampleMatching );
+
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         assert correspondence != null;
         series.setSampleCorrespondence( correspondence );
+
         return series;
     }
 

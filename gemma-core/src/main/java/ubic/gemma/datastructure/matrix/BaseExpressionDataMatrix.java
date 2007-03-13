@@ -68,8 +68,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Map<Integer, Collection<DesignElement>> rowDesignElementMapByInteger;
     protected Map<Integer, BioSequence> rowBioSequencemapByInteger;
 
-    protected void init() {
+    private Collection<QuantitationType> quantitationTypes;
 
+    protected void init() {
+        quantitationTypes = new HashSet<QuantitationType>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
 
         // rowElements = new LinkedHashSet<DesignElement>(); // defunct.
@@ -178,6 +180,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             Collection<QuantitationType> quantitationTypes ) {
         Collection<DesignElementDataVector> selected = new HashSet<DesignElementDataVector>();
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        this.quantitationTypes.addAll( quantitationTypes );
         for ( QuantitationType type : quantitationTypes ) {
             selected.addAll( this.selectVectors( type, vectors ) );
         }
@@ -203,6 +206,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
             Collection<DesignElementDataVector> vectors ) {
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        this.quantitationTypes.add( quantitationType );
         int i = 0;
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
@@ -227,6 +231,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
+        this.quantitationTypes.add( quantitationType );
         int i = 0;
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
@@ -256,7 +261,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                     "Must have the same number of quantitation types and bioassay dimensions" );
 
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
-
+        this.quantitationTypes.addAll( quantitationTypes );
         Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( vectors, soughtBioAssayDimensions,
                 quantitationTypes );
 
@@ -271,12 +276,16 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      */
     protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
+        this.quantitationTypes.addAll( quantitationTypes );
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
-        int j = 0;
-        for ( int i = 0; i < quantitationTypes.size(); i++ ) {
-            QuantitationType soughtType = quantitationTypes.get( i );
-            BioAssayDimension soughtDim = bioAssayDimensions.get( i );
+        int rowIndex = 0;
+        for ( int qTypeIndex = 0; qTypeIndex < quantitationTypes.size(); qTypeIndex++ ) {
+            QuantitationType soughtType = quantitationTypes.get( qTypeIndex );
+            BioAssayDimension soughtDim = bioAssayDimensions.get( qTypeIndex );
             assert soughtType != null && soughtDim != null;
+            if ( log.isDebugEnabled() )
+                log.debug( "Seeking vectors for " + soughtType + " / " + soughtDim + "("
+                        + soughtDim.getBioAssays().size() + " bioassays)" );
             for ( DesignElementDataVector vector : vectors ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 BioAssayDimension cand = vector.getBioAssayDimension();
@@ -284,11 +293,12 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                     vectorsOfInterest.add( vector );
                     DesignElement designElement = vector.getDesignElement();
                     this.bioAssayDimensions.add( vector.getBioAssayDimension() );
-                    boolean addedRow = addToRowMaps( j, designElement );
-                    if ( addedRow ) j++;
+                    boolean addedRow = addToRowMaps( rowIndex, designElement );
+                    if ( addedRow ) rowIndex++;
                 }
             }
         }
+        log.info( "Selected " + vectorsOfInterest.size() + " vectors" );
         return vectorsOfInterest;
     }
 
@@ -419,6 +429,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      */
     protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
             BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
+        this.quantitationTypes.add( quantitationType );
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         int i = 0;
 
@@ -447,10 +458,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * assume there is just a single biomaterial dimension.
      * 
      * <pre>
-     *                                                    ----------------
-     *                                                    ******              -- only a few samples run on this platform
-     *                                                      **********        -- ditto
-     *                                                                ****    -- these samples were not run on any of the other platforms (rare but possible).
+     * ---------------
+     * *****              -- only a few samples run on this platform
+     *  **********        -- ditto
+     *            ****    -- these samples were not run on any of the other platforms .
      * </pre>
      * 
      * <p>
@@ -458,10 +469,10 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                    ----------------
-     *                                                    ****************
-     *                                                    ************
-     *                                                    ********
+     * ---------------
+     * ***************
+     * ***********
+     * *******
      * </pre>
      * 
      * <p>
@@ -469,8 +480,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                    -----------------
-     *                                                    *****************
+     * ----------------
+     * ****************
      * </pre>
      * 
      * <p>
@@ -478,14 +489,24 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
      * </p>
      * 
      * <pre>
-     *                                                    -----------------
-     *                                                    *****************
-     *                                                    *****************
+     * ----------------
+     * ****************
+     * ****************
      * </pre>
      * 
      * <p>
-     * Clearly the first case is the only challenge. Because there can be limited or no overlap between the bioassay
-     * dimensions,we cannot assume the dimensions of the matrix will be defined by the longest bioassaydimension.
+     * Every sample was run on a different array design:
+     * 
+     * <pre>
+     * -----------------------
+     * ******
+     *       *********
+     *                ********
+     * </pre>
+     * 
+     * <p>
+     * Because there can be limited or no overlap between the bioassay dimensions,we cannot assume the dimensions of the
+     * matrix will be defined by the longest bioassaydimension.
      * </p>
      * 
      * @return int
@@ -501,19 +522,21 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
         Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
-            log.debug( "Processing: " + dimension );
+            log.debug( "Processing: " + dimension + " with " + dimension.getBioAssays().size() + " assays" );
             for ( BioAssay ba : dimension.getBioAssays() ) {
-                log.debug( " Processing " + ba );
+                log.debug( "      " + ba );
                 Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
 
-                log.debug( " .... " + bioMaterials );
+                // log.debug( " .... " + bioMaterials );
                 if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
-                    log.debug( "New group " + bioMaterials );
+                    // log.debug( "New group " + bioMaterials );
                     bioMaterialGroups.add( bioMaterials );
+                } else {
+                    // log.debug( "Part of existing group" );
                 }
 
                 for ( BioMaterial material : bioMaterials ) {
-                    log.debug( "  Processing " + material );
+                    log.debug( "           " + material );
                     if ( !bioMaterialMap.containsKey( material ) ) {
                         bioMaterialMap.put( material, new HashSet<BioAssay>() );
                     }
@@ -522,9 +545,11 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             }
         }
 
+        log.info( bioMaterialGroups.size() + " biomaterialGroups" );
         int column = 0;
         for ( Collection<BioMaterial> bms : bioMaterialGroups ) {
             for ( BioMaterial bioMaterial : bms ) {
+                log.debug( "Column " + column + " **--->>>> " + bms );
                 for ( BioAssay assay : bioMaterialMap.get( bioMaterial ) ) {
                     if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
                         int columnIndex = columnBioMaterialMap.get( bioMaterial );
@@ -580,8 +605,6 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                     }
                 }
                 if ( !contained ) {
-                    // if ( !existingGroup.contains( candidateMember ) ) { // for some reason this does not work.
-                    // log.debug( existingGroup + " does not contain " + candidateMember );
                     alreadyIn = false; // try the next group.
                     break;
                 }
@@ -591,5 +614,46 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         return false;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimension()
+     */
+    public BioAssayDimension getBioAssayDimension() {
+        if ( this.bioAssayDimensions.size() == 1 ) return this.bioAssayDimensions.iterator().next();
+
+        List<BioAssay> bioAssays = new ArrayList<BioAssay>();
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+
+        // determine how many bioassaydimensions there are that have distinct biomaterials.
+
+        bad.setDescription( "Generated from data matrix. " );
+        //
+        for ( int i = 0; i < this.columns(); i++ ) {
+            Collection<BioAssay> bas = this.getBioAssaysForColumn( i );
+            if ( bas.size() == 1 ) {
+                BioAssay ba = bas.iterator().next();
+                bad.setName( bad.getName() + ba.getName() + "," );
+                bioAssays.add( ba );
+            } else {
+                throw new IllegalArgumentException(
+                        "Sorry, can't create a single bioassaydimension for this dataset, there are multiple bioassays per biomaterial." );
+            }
+        }
+
+        bad.setBioAssays( bioAssays );
+
+        return bad;
+    }
+
     protected abstract void vectorsToMatrix( Collection<DesignElementDataVector> vectors );
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getQuantitationTypes()
+     */
+    public Collection<QuantitationType> getQuantitationTypes() {
+        return quantitationTypes;
+    }
 }

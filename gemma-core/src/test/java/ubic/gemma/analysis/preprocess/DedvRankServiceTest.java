@@ -49,8 +49,8 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "gds999short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GDS999" );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GDS999", false, true );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) e.getData();
@@ -63,7 +63,6 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
     @Override
     protected void init() {
         geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-        geoService.setLoadPlatformOnly( false );
 
     }
 

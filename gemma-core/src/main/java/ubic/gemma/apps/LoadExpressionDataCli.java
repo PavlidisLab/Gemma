@@ -107,7 +107,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
             GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            geoService.setLoadPlatformOnly( platformOnly );
 
             if ( accessions == null && accessionFile == null ) {
                 return new IllegalArgumentException(
@@ -127,7 +126,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                     }
 
                     if ( platformOnly ) {
-                        Collection designs = geoService.fetchAndLoad( accession );
+                        Collection designs = geoService.fetchAndLoad( accession, false, true );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             persistedObjects.add( ( ( Describable ) object ).getName()
@@ -172,7 +171,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private void processAccession( Collection<String> errorObjects, Collection<String> persistedObjects,
             GeoDatasetService geoService, String accession ) {
         try {
-            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession );
+            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, true );
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
                 persistedObjects.add( ( ( Describable ) object ).getName() + " ("

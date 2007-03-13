@@ -21,7 +21,9 @@ package ubic.gemma.datastructure.matrix;
 import java.util.Collection;
 import java.util.List;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -178,6 +180,15 @@ public interface ExpressionDataMatrix<T> {
     public Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
+     * Produce a BioAssayDimension representing the matrix columns. This is not guaranteed to be a persistent instance,
+     * and may in fact be created by merging two bioassaydimensions from two array designs.
+     * 
+     * @param matrix
+     * @return
+     */
+    public BioAssayDimension getBioAssayDimension();
+
+    /**
      * Total number of columns.
      * 
      * @return int
@@ -197,5 +208,12 @@ public interface ExpressionDataMatrix<T> {
      * @return int
      */
     public int rows();
+
+    /**
+     * Return the quantitation types for this matrix. Often (usually) there will be just one.
+     * 
+     * @return
+     */
+    public Collection<QuantitationType> getQuantitationTypes();
 
 }

@@ -528,8 +528,7 @@ public class GeoConverter implements Converter {
         /*
          * Tricky thing is that series contains data from multiple platforms.
          */
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        Map<GeoPlatform, List<GeoSample>> platformSamples = datasetCombiner.getPlatformSampleMap( geoSeries );
+        Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( geoSeries );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             List<GeoSample> samples = platformSamples.get( platform );
@@ -774,7 +773,11 @@ public class GeoConverter implements Converter {
 
         List<String> identifiers = platform.getColumnData( identifier );
         List<String> descriptions = platform.getColumnData( descriptionColumn );
-        List<String> sequences = platform.getColumnData( sequenceColumn );
+
+        List<String> sequences = null;
+        if ( sequenceColumn != null ) {
+            sequences = platform.getColumnData( sequenceColumn );
+        }
         List<String> cloneIdentifiers = platform.getColumnData( "CLONE_ID" );
 
         List<List<String>> externalRefs = null;
@@ -1119,7 +1122,7 @@ public class GeoConverter implements Converter {
         /*
          * NOTE - according to GEO (http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html) "variable information is
          * optional and does not appear in Series records or downloads, but will be used to assemble corresponding GEO
-         * DataSet records" If we would get that informatio we would pass it into this method as
+         * DataSet records" If we would get that information we would pass it into this method as
          * expExp.getExperimentalDesign().getExperimentalFactors().
          */
 
@@ -1267,7 +1270,9 @@ public class GeoConverter implements Converter {
 
         if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
-                assert sample.getPlatforms().size() == 1;
+                assert sample.getPlatforms().size() > 0 : sample + " has no platform";
+                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
+                        + sample.getPlatforms().toArray();
                 String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
                 if ( organisms.get( organism ) == null ) {
                     organisms.put( organism, new HashSet<GeoData>() );

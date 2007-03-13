@@ -31,10 +31,12 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -67,7 +69,7 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @param arrayDesign
+     * @param arrayDesign can be null
      * @return
      */
     public ExpressionDataDoubleMatrix getBackgroundChannelA( ArrayDesign arrayDesign ) {
@@ -82,11 +84,14 @@ public class ExpressionDataMatrixBuilder {
             if ( qType != null ) qTypes.add( qType );
         }
 
-        return makeMatrix( dimensions, qTypes );
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( dimensions, qTypes );
+        }
+        return null;
     }
 
     /**
-     * @param arrayDesign
+     * @param arrayDesign can be null
      * @return
      */
     public ExpressionDataDoubleMatrix getBackgroundChannelB( ArrayDesign arrayDesign ) {
@@ -101,7 +106,10 @@ public class ExpressionDataMatrixBuilder {
             if ( qType != null ) qTypes.add( qType );
         }
 
-        return makeMatrix( dimensions, qTypes );
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( dimensions, qTypes );
+        }
+        return null;
     }
 
     /**
@@ -158,6 +166,7 @@ public class ExpressionDataMatrixBuilder {
     /**
      * arrayDesign The array design to consider; this can be null to get results for all the array designs used.
      * 
+     * @param arrayDesign, which can be null.
      * @return Collection of vectors with the 'preferred' quantitation type, for the array design selected.
      */
     public Collection<DesignElementDataVector> getPreferredDataVectors( ArrayDesign arrayDesign ) {
@@ -191,6 +200,10 @@ public class ExpressionDataMatrixBuilder {
             throw new IllegalStateException( "Could not find a 'preferred' quantitation type for " + arrayDesign
                     + " in " + this.expressionExperiment );
         }
+
+        log.info( qtypes.size() + " preferred quantitation types" );
+        log.info( dimensions.size() + " bioassay dimensions" );
+        log.info( vectors.size() + " vectors" );
 
         return new ExpressionDataDoubleMatrix( vectors, dimensions, qtypes );
     }
@@ -258,7 +271,10 @@ public class ExpressionDataMatrixBuilder {
             if ( qType != null ) qTypes.add( qType );
         }
 
-        return makeMatrix( dimensions, qTypes );
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( dimensions, qTypes );
+        }
+        return null;
     }
 
     /**
@@ -288,7 +304,10 @@ public class ExpressionDataMatrixBuilder {
             if ( signalChannelA != null ) qTypes.add( signalChannelA );
         }
 
-        return makeMatrix( dimensions, qTypes );
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( dimensions, qTypes );
+        }
+        return null;
     }
 
     /**
@@ -349,11 +368,15 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * FIXME it is possible for this to be multiple.
+     * 
      * @param vector
      * @return
      */
     public ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
-        ArrayDesign adUsed = vector.getBioAssayDimension().getBioAssays().iterator().next().getArrayDesignUsed();
+        Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
+        if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for " + vector );
+        ArrayDesign adUsed = bioAssays.iterator().next().getArrayDesignUsed();
         return adUsed;
     }
 

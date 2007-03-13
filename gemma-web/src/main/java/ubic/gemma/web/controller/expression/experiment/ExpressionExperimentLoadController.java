@@ -63,7 +63,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        return  startJob( command, request );
+        return startJob( command, request );
     }
 
     /**
@@ -116,7 +116,7 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 accesionNum = StringUtils.strip( accesionNum );
                 accesionNum = StringUtils.upperCase( accesionNum );
 
-                 log.info( "Loading " + accesionNum );
+                log.info( "Loading " + accesionNum );
 
                 if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                     geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -124,15 +124,13 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
                 if ( ( ( ExpressionExperimentLoadCommand ) command ).isLoadPlatformOnly() ) {
                     job.updateProgress( "Loading platforms only." );
-                    geoDatasetService.setLoadPlatformOnly( true );
-                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum );
+                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true, true );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     // FIXME just show the ones loaded.
                     model.put( "arrayDesigns", arrayDesigns );
 
                 } else {
-                    geoDatasetService.setLoadPlatformOnly( false );
-                    Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum );
+                    Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false, true );
                     if ( result.size() == 1 ) {
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
@@ -145,7 +143,8 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 }
 
                 ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html"), model );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ), model );
             }
         };
     }
