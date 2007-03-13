@@ -106,11 +106,12 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
 
                 SecurityContextHolder.setContext( securityContext );
                 Map<Object, Object> model = new HashMap<Object, Object>();
-                String accesionNum = ( ( ExpressionExperimentLoadCommand ) command ).getAccession();
+                ExpressionExperimentLoadCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadCommand ) command );
+
+                String accesionNum = expressionExperimentLoadCommand.getAccession();
 
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Loading "
-                        + ( ( ExpressionExperimentLoadCommand ) command ).getAccession() );
+                        .getAuthentication().getName(), "Loading " + expressionExperimentLoadCommand.getAccession() );
 
                 // put the accession number in a safer form
                 accesionNum = StringUtils.strip( accesionNum );
@@ -122,29 +123,49 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                     geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
                 }
 
-                if ( ( ( ExpressionExperimentLoadCommand ) command ).isLoadPlatformOnly() ) {
+                boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+                String list = "";
+                if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
                     job.updateProgress( "Loading platforms only." );
-                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true, true );
+                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true,
+                            doSampleMatching );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
-                    // FIXME just show the ones loaded.
                     model.put( "arrayDesigns", arrayDesigns );
+                    ProgressManager.destroyProgressJob( job );
+
+                    if ( arrayDesigns.size() == 1 ) {
+                        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
+                                + arrayDesigns.iterator().next().getId() ) );
+                    } else {
+                        for ( ArrayDesign ad : arrayDesigns )
+                            list += ad.getId() + ",";
+                        return new ModelAndView(
+                                new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
+                    }
 
                 } else {
-                    Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false, true );
+                    Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
+                            doSampleMatching );
                     if ( result.size() == 1 ) {
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
                         model.put( "expressionExperiment", loaded );
+                        ProgressManager.destroyProgressJob( job );
+                        return new ModelAndView( new RedirectView(
+                                "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                        + result.iterator().next().getId() ) );
                     } else {
-                        // FIXME should show just the loaded ones.
-                        model.put( "expressionExeriments", result );
+                        // model.put( "expressionExeriments", result );
                         this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
+                        ProgressManager.destroyProgressJob( job );
+                        for ( ExpressionExperiment ee : result )
+                            list += ee.getId() + ",";
+                        return new ModelAndView( new RedirectView(
+                                "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
                     }
+
                 }
 
-                ProgressManager.destroyProgressJob( job );
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ), model );
             }
         };
     }
