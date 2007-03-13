@@ -343,7 +343,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
 
         return "<form action=\"deleteExpressionExperiment.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirmMessage('Expression experiment " + object.getName()
+                + "\" onSubmit=\"return confirmDelete('Expression experiment " + object.getName()
                 + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
 
     }
