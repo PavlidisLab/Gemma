@@ -191,12 +191,13 @@ public abstract class AbstractCLI {
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
                 "Set verbosity level (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
-        Option compassOffOpt = new Option( "compassOff", false, "Turn off compass indexing" );
+        Option compassOnOpt = new Option( "compassOn", false,
+                "Turn on compass indexing (Does not turn on index mirroring)" );
 
         options.addOption( logOpt );
         options.addOption( helpOpt );
         options.addOption( testOpt );
-        options.addOption( compassOffOpt );
+        options.addOption( compassOnOpt );
     }
 
     /**
@@ -456,7 +457,7 @@ public abstract class AbstractCLI {
         /* INTERROGATION STAGE */
         if ( commandLine.hasOption( 'h' ) ) {
             printHelp( commandName );
-            return new Exception( "Asked for help" );
+            return new Exception( "Help selected" );
         }
 
         processStandardOptions();

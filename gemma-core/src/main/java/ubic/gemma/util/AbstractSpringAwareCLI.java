@@ -42,7 +42,7 @@ import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
-    private static final String COMPASS_OFF = "compassOff";
+    private static final String COMPASS_ON = "compassOn";
 
     protected BeanFactory ctx = null;
     PersisterHelper ph = null;
@@ -145,11 +145,12 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * check if using test or production contexts
      */
     void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_OFF ), false );
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ), false );
 
         CompassUtils.deleteCompassLocks();
 
-        if ( !hasOption( COMPASS_OFF ) ) {
+        /* if compass is on, turn off the quartz scheduler for CLIs */
+        if ( hasOption( COMPASS_ON ) ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
         }
     }
