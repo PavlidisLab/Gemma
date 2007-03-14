@@ -70,7 +70,7 @@ public class MainMenuController extends BaseFormController {
     private static Log log = LogFactory.getLog( MainMenuController.class.getName() );
 
     private static final String COEXPRESSION_COOKIE_NAME = "coexpressionSearchCookie";
-    
+
     private ExpressionExperimentService expressionExperimentService;
     private BioAssayService bioAssayService;
     private ArrayDesignService arrayDesignService;
@@ -181,18 +181,19 @@ public class MainMenuController extends BaseFormController {
         mav.addObject( "expressionExperimentCount", expressionExperimentCount );
 
         WhatsNew wn = getWhatsNewReport();
-        if (wn != null && wn.getDate() != null) {
+        if ( wn != null && wn.getDate() != null ) {
             mav.addObject( "whatsNew", wn );
         }
         mav.addObject( "timeSpan", "In the past day" );
-        
+
         // load taxon from cookie (if it exists)
         Taxon previousTaxon = loadTaxonFromCookie( request );
+        if ( previousTaxon != null ) mav.addObject( "previousTaxonName", previousTaxon.getScientificName() );
+
         // load stringency from cookie (if it exists)
-        Long previousStringency = loadStringencyFromCookie (request);
-        mav.addObject( "previousTaxonName", previousTaxon.getScientificName() );
-        mav.addObject( "previousStringency", previousStringency );
-        
+        Long previousStringency = loadStringencyFromCookie( request );
+        if ( previousStringency != null ) mav.addObject( "previousStringency", previousStringency );
+
         return mav;
     }
 
@@ -241,7 +242,7 @@ public class MainMenuController extends BaseFormController {
         super.initBinder( request, binder );
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
-    
+
     /**
      * @param request
      * @param csc
@@ -252,7 +253,7 @@ public class MainMenuController extends BaseFormController {
         if ( request == null || request.getCookies() == null ) return null;
 
         Taxon previousTaxon = null;
-        
+
         for ( Cookie cook : request.getCookies() ) {
             if ( cook.getName().equals( COEXPRESSION_COOKIE_NAME ) ) {
                 try {
@@ -276,13 +277,13 @@ public class MainMenuController extends BaseFormController {
         // cookies aren't all that important, if they're missing we just go on.
         if ( request == null || request.getCookies() == null ) return null;
 
-        Long stringency = new Long(3);
-        
+        Long stringency = new Long( 3 );
+
         for ( Cookie cook : request.getCookies() ) {
             if ( cook.getName().equals( COEXPRESSION_COOKIE_NAME ) ) {
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    stringency =  Long.parseLong( cookie.getString( "stringency" ) );
+                    stringency = Long.parseLong( cookie.getString( "stringency" ) );
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     // that's okay, we just don't get a cookie.
@@ -291,5 +292,5 @@ public class MainMenuController extends BaseFormController {
         }
         return stringency;
     }
-    
+
 }
