@@ -42,9 +42,9 @@ public class SpringContextUtil {
      * @param testing If true, it will get a test configured-BeanFactory
      * @return BeanFactory
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean compassOff, boolean isWebApp ) {
+    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean isWebApp ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations( testing, compassOff, isWebApp );
+            String[] paths = getConfigLocations( testing, compassOn, isWebApp );
             ctx = new ClassPathXmlApplicationContext( paths );
             if ( ctx != null ) {
                 log.info( "Got context" );
@@ -70,11 +70,11 @@ public class SpringContextUtil {
      * @param testing - if true, it will use the test configuration.
      * @return
      */
-    public static String[] getConfigLocations( boolean testing, boolean compassOff, boolean isWebapp ) {
+    public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean isWebapp ) {
         if ( testing ) {
-            return getTestConfigLocations( compassOff, isWebapp );
+            return getTestConfigLocations( compassOn, isWebapp );
         }
-        return getStandardConfigLocations( compassOff, isWebapp );
+        return getStandardConfigLocations( compassOn, isWebapp );
 
     }
 
@@ -87,23 +87,6 @@ public class SpringContextUtil {
             throw new RuntimeException( "You must set 'gemma.home' in your build.properties" );
         }
         return gemmaHome;
-    }
-
-    /**
-     * @param compassOff
-     * @param isWebapp
-     * @return
-     */
-    private static String[] getStandardConfigLocations( boolean compassOff, boolean isWebapp ) {
-        List<String> paths = new ArrayList<String>();
-        paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
-
-        if ( !compassOff ) {
-            paths.add( "classpath*:ubic/gemma/compass.xml" );
-            paths.add( "classpath*:ubic/gemma/applicationContext-compass.xml" );
-        }
-        addCommonConfig( isWebapp, paths );
-        return paths.toArray( new String[] {} );
     }
 
     /**
@@ -127,20 +110,34 @@ public class SpringContextUtil {
     }
 
     /**
-     * @param compassOff
+     * @param compassOn
      * @param isWebapp
      * @return
      */
-    private static String[] getTestConfigLocations( boolean compassOff, boolean isWebapp ) {
+    private static String[] getStandardConfigLocations( boolean compassOn, boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
-        paths.add( "classpath*:ubic/gemma/localTestDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
 
-        if ( !compassOff ) {
-            paths.add( "classpath*:ubic/gemma/compasstest.xml" );
-            paths.add( "classpath*:ubic/gemma/applicationContext-compass.xml" );
+        if ( compassOn ) {
+            CompassUtils.turnOnCompass( false, paths );
         }
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }
 
+    /**
+     * @param compassOn
+     * @param isWebapp
+     * @return
+     */
+    private static String[] getTestConfigLocations( boolean compassOn, boolean isWebapp ) {
+        List<String> paths = new ArrayList<String>();
+        paths.add( "classpath*:ubic/gemma/localTestDataSource.xml" );
+
+        if ( compassOn ) {
+            CompassUtils.turnOnCompass( true, paths );
+        }
+        addCommonConfig( isWebapp, paths );
+        return paths.toArray( new String[] {} );
+    }
 }
