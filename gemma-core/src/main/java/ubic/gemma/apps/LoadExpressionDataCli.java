@@ -72,6 +72,9 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         addOption( platformOnlyOption );
     }
 
+    /**
+     * @param args
+     */
     public static void main( String[] args ) {
         LoadExpressionDataCli p = new LoadExpressionDataCli();
         StopWatch watch = new StopWatch();
