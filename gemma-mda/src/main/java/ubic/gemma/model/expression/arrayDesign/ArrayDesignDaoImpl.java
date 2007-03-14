@@ -307,25 +307,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
 
-        // // FIXME could do this with a single query? It might be more efficient.
-        // String queryString = "select ad,cs,bs,geneProduct,gene,bs2gp,dbentry,taxon from ArrayDesignImpl ad,
-        // BioSequence2GeneProductImpl "
-        // + "bs2gp left join fetch ad.compositeSequences cs left join "
-        // + "fetch cs.biologicalCharacteristic bs left join fetch bs.taxon taxon "
-        // + "left join fetch bs.sequenceDatabaseEntry dbentry "
-        // + "left join fetch bs2gp.geneProduct geneProduct inner join fetch geneProduct.gene gene "
-        // + "where bs2gp.bioSequence=bs and ad = :arrayDesign";
-        //
-        // try {
-        // org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-        // queryObject.setFirstResult( 1 );
-        // queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
-        // // collection returned
-        // queryObject.setParameter( "arrayDesign", arrayDesign );
-        // queryObject.list();
-        // } catch ( org.hibernate.HibernateException ex ) {
-        // throw super.convertHibernateAccessException( ex );
-        // }
+        // FIXME could do this with a single query? It might be more efficient.
+         //String queryString = "select cs,bs,geneProduct,gene,bs2gp from ArrayDesignImpl ad, BioSequence2GeneProductImpl bs2gp inner join " +
+         //" fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs where bs2gp.bioSequence=bs and " + 
+         //" ad.id = :id";
+        
+        final String queryString = "select bioC.taxon from ArrayDesignImpl as arrayD inner join arrayD.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon where arrayD.id = :id";
+
+        //ArrayDesign loadedArrayDesign = ( ArrayDesign ) queryByIdReturnObject( arrayDesign.getId(), queryString );
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -358,6 +347,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         if ( bs2gp == null ) {
                             continue;
                         }
+                        
                         GeneProduct geneProduct = bs2gp.getGeneProduct();
                         if ( geneProduct != null && geneProduct.getGene() != null ) {
                             Gene g = geneProduct.getGene();
@@ -1130,6 +1120,30 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
+     */
+    @Override
+    protected ArrayDesign handleLoadFully( Long id ) throws Exception {
+
+        String queryString = "select ad from ArrayDesignImpl ad inner join " +
+        " fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs " +
+        " inner join fetch bs.taxon " +
+        " inner join fetch ad.auditTrail auditTrail " +
+        " left join fetch auditTrail.events events " +
+        " left join fetch ad.localFiles " +
+        " left join fetch ad.externalReferences " +
+        " left join fetch ad.subsumedArrayDesigns " +
+        " left join fetch bs.bioSequence2GeneProduct bs2gp " +
+        " left join fetch bs2gp.geneProduct gp " +
+        " left join fetch gp.gene gene " +
+        " left join fetch gene.aliases " +
+        " where  " + 
+        " ad.id = :id";
+       
+        return ( ArrayDesign ) queryByIdReturnObject( id, queryString );
     }
 
 }
