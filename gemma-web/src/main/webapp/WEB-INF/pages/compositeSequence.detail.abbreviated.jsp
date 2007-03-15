@@ -2,8 +2,7 @@
 <jsp:useBean id="compositeSequence" scope="request"
 	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<title><fmt:message key="compositeSequence.title" />
-</title>
+<title><fmt:message key="compositeSequence.title" /></title>
 <script type="text/javascript"
 	src="<c:url value="/scripts/scrolltable.js"/>"></script>
 <link rel="stylesheet" type="text/css"
@@ -76,7 +75,8 @@
 						</td>
 						<td>
 							<%
-							if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
+							                        if ( compositeSequence.getBiologicalCharacteristic() != null
+							                        && compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
 							%>
 							${
 							compositeSequence.biologicalCharacteristic.taxon.scientificName}
@@ -95,41 +95,23 @@
 							<b> Sequence Type </b>
 						</td>
 						<td>
-							<%
-							if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getType() != null ) {
-			                    String type = null;
-			                    if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "EST" ) ) {
-			                        type = "EST";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "mRNA" ) ) {
-			                        type = "mRNA";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "WHOLE_CHROMOSOME" ) ) {
-			                        type = "Whole Chromosome";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "DNA" ) ) {
-			                        type = "DNA";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_COLLAPSED" ) ) {
-			                        type = "Collapsed Affymetrix Probe";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "OLIGO" ) ) {
-			                        type = "Oligo";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_TARGET" ) ) {
-			                        type = "Affymetrix Target";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_PROBE" ) ) {
-			                        type = "Affymetrix Probe";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "REFSEQ" ) ) {
-			                        type = "RefSeq";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "BAC" ) ) {
-			                        type = "BAC";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "WHOLE_GENOME" ) ) {
-			                        type = "Whole Genome";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "OTHER" ) ) {
-			                        type = "Other";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "ORF" ) ) {
-			                        type = "ORF";
-			                    } 
-								out.print( type );
-							} else {
-								out.print( "No sequence type information available" );
-							}
-							%>
+
+							<c:choose>
+								<c:when
+									test="${compositeSequence.biologicalCharacteristic != null }">
+									<spring:bind
+										path="compositeSequence.biologicalCharacteristic.type">
+										<spring:transform
+											value="${compositeSequence.biologicalCharacteristic.type}">
+										</spring:transform>
+									</spring:bind>
+								</c:when>
+								<c:otherwise>
+									<%="[Not available]"%>
+								</c:otherwise>
+							</c:choose>
+
+
 						</td>
 					</tr>
 					<tr>
@@ -141,7 +123,8 @@
 						</td>
 						<td>
 							<%
-							if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getName() != null ) {
+							                        if ( compositeSequence.getBiologicalCharacteristic() != null
+							                        && compositeSequence.getBiologicalCharacteristic().getName() != null ) {
 							%>
 							${compositeSequence.biologicalCharacteristic.name }
 							<%
@@ -160,7 +143,8 @@
 						</td>
 						<td>
 							<%
-							                    if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
+							                        if ( compositeSequence.getBiologicalCharacteristic() != null
+							                        && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
 							                    String organism = compositeSequence.getBiologicalCharacteristic().getTaxon().getCommonName();
 							                    String database = "hg18";
 							                    if ( organism.equalsIgnoreCase( "Human" ) ) {
@@ -188,14 +172,15 @@
 					</tr>
 					<tr>
 						<td valign="top">
-						<a class="helpLink" href="?"
+							<a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'Number of bases in the sequence'); return false"><img
 									src="/Gemma/images/help.png" /> </a>
 							<b> Sequence length </b>
 						</td>
 						<td>
 							<%
-							                    if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
+							                        if ( compositeSequence.getBiologicalCharacteristic() != null
+							                        && compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
 							                    out.print( compositeSequence.getBiologicalCharacteristic().getSequence().length() );
 							                } else {
 							                    out.print( "No sequence available" );
@@ -205,37 +190,28 @@
 					</tr>
 					<tr>
 						<td valign="top">
-								<a class="helpLink" href="?"
+							<a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'Gemma\'s representation of the sequence on the array. For Affymetrix note that we \'collapse\' the sequences for the multiple probes into a single sequence that is used for alignments.'); return false"><img
 									src="/Gemma/images/help.png" /> </a>
-						<b> Sequence </b>
+							<b> Sequence </b>
 						</td>
 						<td>
-						<%
-						                if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
-						                String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
-						                String formattedSequence = "";
-						                int nextIndex = 0;
-						                for ( int i = 0; i < sequence.length() - 80; i += 80 ) {
-						                    formattedSequence += sequence.substring( i, i + 80 );
-						                    formattedSequence += "<br />";
-						                    nextIndex = i + 80;
-						                }
-						                if ( ( sequence.length() % 80 ) != 0 ) {
-						                    formattedSequence += sequence.substring( nextIndex, sequence.length() );
-						                    formattedSequence += "<br />";
-						                }
-						%>
-						<div class="clob" style="height:30px;">
 							<%
-							out.print( formattedSequence );
+							                        if ( compositeSequence.getBiologicalCharacteristic() != null
+							                        && compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
+							                    String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
+							                    String formattedSequence = org.apache.commons.lang.WordUtils.wrap( sequence, 80, "<br />", true );
 							%>
-						</div>
-						<%
-						                } else {
-						                out.print( "No sequence available" );
-						            }
-						%>
+							<div class="clob" style="height:30px;">
+								<%
+								out.print( formattedSequence );
+								%>
+							</div>
+							<%
+							                    } else {
+							                    out.print( "No sequence available" );
+							                }
+							%>
 						</td>
 					</tr>
 				</table>
@@ -243,10 +219,10 @@
 		</tr>
 		<tr>
 			<td>
-			<a class="helpLink" href="?"
-						onclick="showWideHelpTip(event, 'Details of genomic alignments for this sequence. A sequence can have multiple alignments. The columns are:<ul><li>Alignment: the genomic location of the alignment. A link to view the alignment in the UCSC browser is provided.</li>				<li>S: The alignment score, primarily reflecting the fraction of the sequence that is aligned (0-1.0, higher is better)</li><li>I: Percent sequence identity in the aligned region</li>	<li>Gene Products: A list of the transcripts that overlap with the aligned region. A link out to NCBI is provided</li><li>Genes: The corresponding gene for each transcript. Links are provided to NCBI and Gemma</li>	</ul>'); return false"><img
-							src="/Gemma/images/help.png" /> </a>
-				<div id="tableContainer" class="tableContainer">		
+				<a class="helpLink" href="?"
+					onclick="showWideHelpTip(event, 'Details of genomic alignments for this sequence. A sequence can have multiple alignments. The columns are:<ul><li>Alignment: the genomic location of the alignment. A link to view the alignment in the UCSC browser is provided.</li>				<li>S: The alignment score, primarily reflecting the fraction of the sequence that is aligned (0-1.0, higher is better)</li><li>I: Percent sequence identity in the aligned region</li>	<li>Gene Products: A list of the transcripts that overlap with the aligned region. A link out to NCBI is provided</li><li>Genes: The corresponding gene for each transcript. Links are provided to NCBI and Gemma</li>	</ul>'); return false"><img
+						src="/Gemma/images/help.png" /> </a>
+				<div id="tableContainer" class="tableContainer">
 					<script type="text/javascript">
  			initBodyTag();
  		</script>

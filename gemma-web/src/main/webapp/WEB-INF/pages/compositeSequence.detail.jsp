@@ -67,51 +67,33 @@
 						%>
 					</td>
 				</tr>
-					<tr>
-						<td valign="top">
-							<b> Sequence Type </b>
-							<a class="helpLink" href="?"
-								onclick="showHelpTip(event, 'The type of this sequence in our system'); return false"><img
-									src="/Gemma/images/help.png" /> </a>
-						</td>
-						<td>
-							<%
-							if ( compositeSequence.getBiologicalCharacteristic().getType() != null ) {
-			                    String type = null;
-			                    if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "EST" ) ) {
-			                        type = "EST";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "mRNA" ) ) {
-			                        type = "mRNA";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "WHOLE_CHROMOSOME" ) ) {
-			                        type = "Whole Chromosome";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "DNA" ) ) {
-			                        type = "DNA";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_COLLAPSED" ) ) {
-			                        type = "Collapsed Affymetrix Probe";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "OLIGO" ) ) {
-			                        type = "Oligo";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_TARGET" ) ) {
-			                        type = "Affymetrix Target";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "AFFY_PROBE" ) ) {
-			                        type = "Affymetrix Probe";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "REFSEQ" ) ) {
-			                        type = "RefSeq";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "BAC" ) ) {
-			                        type = "BAC";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "WHOLE_GENOME" ) ) {
-			                        type = "Whole Genome";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "OTHER" ) ) {
-			                        type = "Other";
-			                    } else if ( compositeSequence.getBiologicalCharacteristic().getType().getValue().equalsIgnoreCase( "ORF" ) ) {
-			                        type = "ORF";
-			                    } 
-								out.print( type );
-							} else {
-								out.print( "No sequence type information available" );
-							}
-							%>
-						</td>
-					</tr>
+				<tr>
+					<td valign="top">
+						<b> Sequence Type </b>
+						<a class="helpLink" href="?"
+							onclick="showHelpTip(event, 'The type of this sequence as recorded in our system'); return false"><img
+								src="/Gemma/images/help.png" /> </a>
+					</td>
+					<td>
+
+						<c:choose>
+							<c:when
+								test="${compositeSequence.biologicalCharacteristic != null }">
+								<spring:bind
+									path="compositeSequence.biologicalCharacteristic.type">
+									<spring:transform
+										value="${compositeSequence.biologicalCharacteristic.type}">
+									</spring:transform>
+								</spring:bind>
+							</c:when>
+							<c:otherwise>
+								<%="[Not available]"%>
+							</c:otherwise>
+						</c:choose>
+
+
+					</td>
+				</tr>
 				<tr>
 					<td valign="top">
 						<b> Sequence name <a class="helpLink" href="?"
@@ -186,17 +168,7 @@
 						<%
 						                if ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) {
 						                String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
-						                String formattedSequence = "";
-						                int nextIndex = 0;
-						                for ( int i = 0; i < sequence.length() - 80; i += 80 ) {
-						                    formattedSequence += sequence.substring( i, i + 80 );
-						                    formattedSequence += "<br />";
-						                    nextIndex = i + 80;
-						                }
-						                if ( ( sequence.length() % 80 ) != 0 ) {
-						                    formattedSequence += sequence.substring( nextIndex, sequence.length() );
-						                    formattedSequence += "<br />";
-						                }
+						                String formattedSequence = org.apache.commons.lang.WordUtils.wrap( sequence, 80, "<br />", true );
 						%>
 						<div class="clob">
 							<%
@@ -224,8 +196,10 @@
 				class="scrollTable">
 				<display:column property="blatResult" sortable="true"
 					title="Alignment" />
-				<display:column property="blatScore" sortable="true" title="S" />
-				<display:column property="blatIdentity" sortable="true" title="I" />
+				<display:column property="blatScore" sortable="true" title="S"
+					defaultorder="descending" />
+				<display:column property="blatIdentity" sortable="true" title="I"
+					defaultorder="descending" />
 				<display:column property="geneProducts" title="GeneProducts" />
 				<display:column property="genes" title="Genes" />
 				<display:setProperty name="basic.empty.showtable" value="true" />

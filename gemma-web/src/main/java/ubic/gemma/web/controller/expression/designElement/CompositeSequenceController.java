@@ -23,11 +23,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.ajaxanywhere.AAUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.BlatResultGeneSummary;
@@ -36,15 +38,17 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 
 /**
  * @author joseph
- * @version $Id $
+ * @version $Id$
  * @spring.bean id="compositeSequenceController"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="blatResultService" ref="blatResultService"
@@ -104,8 +108,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        
-
 
         Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
 
@@ -178,11 +180,11 @@ public class CompositeSequenceController extends BaseMultiActionController {
         BioSequence bs = cs.getBiologicalCharacteristic();
         Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult, BlatResultGeneSummary>();
         // if the biosequence does not exist, then return null
-        if (bs == null) {
+        if ( bs == null ) {
             return blatResults;
         }
         // if there is no bs2gp entry, then return null
-        if (bs.getBioSequence2GeneProduct() == null) {
+        if ( bs.getBioSequence2GeneProduct() == null ) {
             return blatResults;
         }
         Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
@@ -224,6 +226,12 @@ public class CompositeSequenceController extends BaseMultiActionController {
         if ( compositeSequences.size() == 0 ) return null;
         CompositeSequence cs = compositeSequences.iterator().next();
         return cs;
+    }
+
+    @Override
+    protected void initBinder( ServletRequest request, ServletRequestDataBinder binder ) throws Exception {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
 }
