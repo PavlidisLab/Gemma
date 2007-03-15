@@ -217,7 +217,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments( geneMap.keySet() );
+        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments( );
 
         for ( Long geneId : geneMap.keySet() ) {
             CoexpressionValueObject v = geneMap.get( geneId );

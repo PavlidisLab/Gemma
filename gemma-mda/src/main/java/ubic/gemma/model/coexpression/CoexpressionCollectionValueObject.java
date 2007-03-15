@@ -136,7 +136,7 @@ public class CoexpressionCollectionValueObject {
      *         If an expression exp has two (or more) probes that hit the same gene, and one probe is specific, even if
      *         some of the other(s) are not this EE is considered specific and will still be returned.
      */
-    public Map<Long, Collection<Long>> getSpecificExpressionExperiments( Collection<Long> geneIDs ) {
+    public Map<Long, Collection<Long>> getSpecificExpressionExperiments(  ) {
 
         Map<Long, Collection<Long>> specificEE = new HashMap<Long, Collection<Long>>();
 
