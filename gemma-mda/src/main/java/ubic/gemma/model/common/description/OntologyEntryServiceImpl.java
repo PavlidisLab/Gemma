@@ -97,6 +97,17 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleLoadAll()
+     */
+ 
+    @Override
+    protected Collection handleLoadAll( ) throws Exception {
+        return this.getOntologyEntryDao().loadAll( );
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.OntologyEntryServiceBasee#handleFind(ubic.gemma.model.common.description.OntologyEntry)
      */
     @Override
