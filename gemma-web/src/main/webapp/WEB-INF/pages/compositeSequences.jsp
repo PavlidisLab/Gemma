@@ -1,8 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
-<title><fmt:message key="compositeSequences.title" />
-</title>
+<title><fmt:message key="compositeSequences.title" /></title>
 
 <h2>
 	<fmt:message key="compositeSequences.title" />
@@ -12,7 +11,8 @@
 	id="compositeSequenceList" pagesize="100">
 	<display:column property="name" sortable="true"
 		titleKey="compositeSequence.name" maxWords="20"
-		href="/Gemma/compositeSequence/showCompositeSequence.html" paramProperty="compositeSequence.id" />
+		href="/Gemma/compositeSequence/showCompositeSequence.html"
+		paramProperty="id" />
 	<display:column property="arrayDesign.shortName" sortable="true"
 		title="Array Design" maxWords="20"
 		href="/Gemma/arrays/showArrayDesign.html" paramId="id"
