@@ -42,8 +42,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.description.OntologyEntry;
@@ -81,7 +81,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name = "taxonService" ref="taxonService"
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "gene2GOAssociationService" ref="gene2GOAssociationService"
+ * @spring.property name = "geneOntologyService" ref="geneOntologyService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class CoexpressionSearchController extends BackgroundProcessingFormBindController {
@@ -91,12 +91,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
     private int DEFAULT_STRINGENCY = 3;
 
     private static final String COOKIE_NAME = "coexpressionSearchCookie";
+    private static final int MAX_OVERLAP = 40;
 
     private GeneService geneService = null;
     private TaxonService taxonService = null;
     private SearchService searchService = null;
     private ExpressionExperimentService expressionExperimentService = null;
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private GeneOntologyService geneOntologyService;
 
     public CoexpressionSearchController() {
         /*
@@ -152,16 +153,16 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
         // none, do inexact search.
         if ( csc.getExactSearch() == null ) {
-            genesFound.addAll(  searchService.geneDbSearch( csc.getSearchString() ) );
+            genesFound.addAll( searchService.geneDbSearch( csc.getSearchString() ) );
             genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
         } else if ( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
             String geneId = csc.getSearchString();
             Long id = Long.parseLong( geneId );
             Collection<Long> ids = new ArrayList<Long>();
             ids.add( id );
-            genesFound.addAll(  geneService.load( ids ) );
+            genesFound.addAll( geneService.load( ids ) );
         } else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
-            genesFound.addAll(  geneService.findByOfficialSymbol( csc.getSearchString() ) );
+            genesFound.addAll( geneService.findByOfficialSymbol( csc.getSearchString() ) );
         } else {
             genesFound.addAll( geneService.findByOfficialSymbol( csc.getSearchString() ) );
             if ( genesFound.size() == 0 ) {
@@ -172,7 +173,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // filter genes by Taxon
 
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
-        if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) ) {
+        if ( !( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) && ( csc.getTaxon() != null )
+                && ( csc.getTaxon().getId() != null ) ) {
             for ( Gene gene : genesFound ) {
                 if ( gene.getTaxon().getId().longValue() != csc.getTaxon().getId().longValue() ) {
                     genesToRemove.add( gene );
@@ -282,7 +284,122 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
         csc.setStringency( stringency );
 
-        return startJob( command, request, response, errors );
+        // ===================================================================================
+        // Taking out progress for the mean time while we figure out the back button problem
+        // return startJob( command, request, response, errors );
+        // ===================================================================================
+        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
+                .getCoexpressedGenes( csc.getSourceGene(), csc.getToUseEE(), csc.getStringency() );
+
+        StopWatch watch = new StopWatch();
+
+        watch.start();
+
+        // get all the coexpressed genes and sort them by dataset count
+        List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
+        coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
+
+        // sort coexpressed genes by dataset count
+        Collections.sort( coexpressedGenes, new CoexpressionComparator() );
+
+        StopWatch overlapWatch = new StopWatch();
+        overlapWatch.start();
+        log.info( "Calculating go overlap...." );
+        // calculate the goOverlap for the 1st 25 genes
+        Collection<Long> overlapIds = new HashSet<Long>();
+        int i = 0;
+        for ( CoexpressionValueObject cvo : coexpressedGenes ) {
+            overlapIds.add( cvo.getGeneId() );
+            if ( i++ > MAX_OVERLAP ) break;
+        }
+
+        Map<Long, Collection<OntologyEntry>> overlap = geneOntologyService.calculateGoTermOverlap( csc.getSourceGene(),
+                overlapIds );
+
+        Integer numSourceGeneGoTerms;
+        if ( overlap == null ) // query gene had no go terms
+            numSourceGeneGoTerms = 0;
+        else {
+            numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
+
+            if ( overlap.keySet().size() > 1 ) {
+                for ( CoexpressionValueObject cvo : coexpressedGenes ) {
+                    cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
+                    cvo.setPossibleOverlap( numSourceGeneGoTerms );
+                }
+            }
+        }
+        Long overlapTime = overlapWatch.getTime();
+        overlapWatch.stop();
+        log.info( "took " + overlapTime / 1000 + "s to calculate GO overlap" );
+
+        // load expression experiment value objects
+        Collection<Long> eeIds = new HashSet<Long>();
+        Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
+        for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
+            eeIds.add( eeVo.getId() );
+        }
+
+        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
+
+        for ( ExpressionExperimentValueObject eeVo : eeVos ) {
+            eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
+            eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
+        }
+
+        // new ModelAndView(getSuccessView());
+
+        // no genes are coexpressed
+        // return error
+        if ( coexpressedGenes.size() == 0 ) {
+            this.saveMessage( request, "No genes are coexpressed with the given stringency." );
+        }
+
+        Long numUsedExpressionExperiments = new Long( coexpressions.getNumberOfUsedExpressonExperiments() );
+        Long numPositiveCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
+        Long numNegativeCoexpressedGenes = new Long( coexpressions.getNegativeStringencyLinkCount() );
+        Long numGenes = new Long( coexpressions.getNumGenes() );
+        Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
+        Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
+        Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
+        Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
+        Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
+        Integer numMatchedLinks = coexpressions.getLinkCount();
+
+        ModelAndView mav = super.showForm( request, response, errors );
+
+        mav.addObject( "coexpressedGenes", coexpressedGenes );
+        mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
+        mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
+        mav.addObject( "numSearchedExpressionExperiments", csc.getToUseEE().size() );
+        mav.addObject( "numUsedExpressionExperiments", numUsedExpressionExperiments );
+
+        mav.addObject( "numGenes", numGenes );
+        mav.addObject( "numPredictedGenes", numPredictedGenes );
+        mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
+
+        mav.addObject( "numStringencyGenes", numStringencyGenes );
+        mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
+        mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
+        mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
+
+        mav.addObject( "numMatchedLinks", numMatchedLinks );
+        mav.addObject( "sourceGene", csc.getSourceGene() );
+        mav.addObject( "expressionExperiments", eeVos );
+        mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
+
+        // binding objects
+        mav.addObject( "coexpressionSearchCommand", csc );
+        populateTaxonReferenceData( mav.getModel() );
+        mav.addAllObjects( errors.getModel() );
+
+        Long elapsed = watch.getTime();
+        watch.stop();
+        log.info( "Processing after DAO call (elapsed time): " + elapsed );
+
+        this.saveMessage( request, "Coexpression query took: " + coexpressions.getElapsedWallSeconds() );
+
+        return mav;
 
     }
 
@@ -464,14 +581,14 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 StopWatch watch = new StopWatch();
 
                 watch.start();
-                
+
                 // get all the coexpressed genes and sort them by dataset count
                 List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
                 coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
 
                 // sort coexpressed genes by dataset count
                 Collections.sort( coexpressedGenes, new CoexpressionComparator() );
-                /*  temporaly taken out as its to slow. 
+
                 StopWatch overlapWatch = new StopWatch();
                 overlapWatch.start();
                 log.info( "Calculating go overlap...." );
@@ -483,27 +600,27 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                     if ( i >= 25 ) break;
                     overlapIds.add( cvo.getGeneId() );
                 }
-                
-                Map<Long, Collection<OntologyEntry>> overlap = gene2GOAssociationService.calculateGoTermOverlap( csc
+
+                Map<Long, Collection<OntologyEntry>> overlap = geneOntologyService.calculateGoTermOverlap( csc
                         .getSourceGene(), overlapIds );
-                
+
                 Integer numSourceGeneGoTerms;
                 if ( overlap == null ) // query gene had no go terms
                     numSourceGeneGoTerms = 0;
                 else {
                     numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
 
-                    if ( overlap.keySet().size() > 1 ) {                       
-                        for ( CoexpressionValueObject cvo : coexpressedGenes ){
+                    if ( overlap.keySet().size() > 1 ) {
+                        for ( CoexpressionValueObject cvo : coexpressedGenes ) {
                             cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
                             cvo.setPossibleOverlap( numSourceGeneGoTerms );
                         }
                     }
                 }
                 Long overlapTime = overlapWatch.getTime();
-                overlapWatch.stop();              
-                this.saveMessage("took " + overlapTime/1000 + "s to calculate GO overlap" );
-                */
+                overlapWatch.stop();
+                this.saveMessage( "took " + overlapTime / 1000 + "s to calculate GO overlap" );
+
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();
                 Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
@@ -563,7 +680,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 mav.addObject( "numStringencyGenes", numStringencyGenes );
                 mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
                 mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
-                //mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
+                // mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
 
                 mav.addObject( "numMatchedLinks", numMatchedLinks );
                 mav.addObject( "sourceGene", csc.getSourceGene() );
@@ -580,7 +697,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 log.info( "Processing after DAO call (elapsed time): " + elapsed );
 
                 this.saveMessage( "Coexpression query took: " + coexpressions.getElapsedWallSeconds() );
-                
+
                 return mav;
 
             }
@@ -639,11 +756,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
     }
 
-    public Gene2GOAssociationService getGene2GOAssociationService() {
-        return gene2GOAssociationService;
-    }
-
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
     }
 }

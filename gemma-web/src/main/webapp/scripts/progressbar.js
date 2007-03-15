@@ -35,11 +35,13 @@ function updateIndeterminateProgress(data){
    if (previousMessage != data.description) {
 		previousMessage = data.description
 		
-		document.getElementById("progressTextArea").innerHTML += data.description + "<br />";	
-   	document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
+		document.getElementById("progressTextArea").innerHTML +=  "<br />" + data.description;	
+   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 	}
-	
-
+	else{
+		document.getElementById("progressTextArea").innerHTML += ".";	
+   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;	
+	}
 }
 
 function redirect(url) {

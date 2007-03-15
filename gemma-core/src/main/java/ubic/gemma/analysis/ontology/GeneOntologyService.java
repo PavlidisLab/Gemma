@@ -1,5 +1,5 @@
 /*
- * The Gemma project
+
  * 
  * Copyright (c) 2007 University of British Columbia
  * 
@@ -19,7 +19,9 @@
 package ubic.gemma.analysis.ontology;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
@@ -28,8 +30,11 @@ import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.dataStructure.graph.DirectedGraph;
 import ubic.basecode.dataStructure.graph.DirectedGraphNode;
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.description.OntologyEntryService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -40,17 +45,18 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  * @spring.bean id="geneOntologyService"
  * @spring.property name="ontologyEntryService" ref="ontologyEntryService"
+ * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
+ * @spring.property name="geneService" ref="geneService"
  */
 public class GeneOntologyService implements InitializingBean {
-
-    /**
-     * Report only this fraction (on average) of term loading events.
-     */
-    private static final double FRACTION_OF_LOAD_UPDATE_LOGGING = 0.0002;
 
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
 
     private OntologyEntryService ontologyEntryService;
+
+    private Gene2GOAssociationService gene2GOAssociationService;
+
+    private GeneService geneService;
 
     private DirectedGraph graph = null;
 
@@ -75,36 +81,40 @@ public class GeneOntologyService implements InitializingBean {
 
     }
 
-    /**
-     * This is made protected so it can be tested.
-     */
-    protected void init() {
+    protected synchronized void init() {
+
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
+
         // if loading ontologies is disabled in the configuration, return
         if ( !loadOntology ) {
             return;
         }
 
-        final OntologyEntry root = ontologyEntryService.findByAccession( "all" );
-        if ( root == null ) {
-            log.warn( "Could not locate root of GO" );
-            return;
-        }
-        if ( !root.getExternalDatabase().getName().equals( "GO" ) ) {
-            log.warn( "Could not locate root of GO (got something else instead: " + root + ")" );
-            return;
-        }
+        if ( running.get() ) return;
+        running.set( true );
+        // Need to pause while gemma's context loads
 
         graph = new DirectedGraph();
+
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
-                if ( running.get() ) return;
-                running.set( true );
+
                 ready.set( false );
                 log.info( "Loading Gene Ontology..." );
                 try {
-                    graph.addNode( new DirectedGraphNode( root, root, graph ) );
-                    addChildrenOf( root );
+
+                    Collection<OntologyEntry> all = ontologyEntryService.loadAll();
+
+                    for ( OntologyEntry oe : all ) {
+                        Collection<OntologyEntry> children = ontologyEntryService.getChildren( oe ); // thaw
+                        graph.addNode( new DirectedGraphNode( oe, oe, graph ) );
+                        for ( OntologyEntry child : children ) {
+                            graph.addChildTo( oe, child );
+                        }
+
+                        log.debug( "Adding " + oe + " to graph with: " + graph.getItems().size() );
+
+                    }
                 } catch ( Exception e ) {
                     log.error( e, e );
                     ready.set( false );
@@ -118,26 +128,6 @@ public class GeneOntologyService implements InitializingBean {
 
         loadThread.start();
 
-    }
-
-    @SuppressWarnings("unchecked")
-    private void addChildrenOf( OntologyEntry item ) {
-        if ( item == null ) return;
-
-        Collection<OntologyEntry> children = ontologyEntryService.getChildren( item );
-        if ( Math.random() < FRACTION_OF_LOAD_UPDATE_LOGGING && children.size() > 0 ) { // report only occasional
-            // updates.
-            log.info( "Loading " + children.size() + " children of " + item + " (among others)..." );
-        }
-        if ( children == null || children.size() == 0 ) {
-            log.debug( item + " has no children" );
-            return;
-        }
-        for ( OntologyEntry entry : children ) {
-            log.debug( "Adding " + entry );
-            graph.addChildTo( item, entry, entry );
-            addChildrenOf( entry );
-        }
     }
 
     /**
@@ -295,8 +285,81 @@ public class GeneOntologyService implements InitializingBean {
         return returnVal;
     }
 
+    public Map<Long, Collection<OntologyEntry>> calculateGoTermOverlap( Gene masterGene, Collection geneIds )
+            throws Exception {
+
+        if ( masterGene == null ) return null;
+        if ( geneIds.size() == 0 ) return null;
+
+        Collection<OntologyEntry> masterOntos = getGOTerms( masterGene );
+
+        // nothing to do.
+        if ( ( masterOntos == null ) || ( masterOntos.isEmpty() ) ) return null;
+
+        Map<Long, Collection<OntologyEntry>> overlap = new HashMap<Long, Collection<OntologyEntry>>();
+        overlap.put( masterGene.getId(), masterOntos ); // include the master gene in the list. Clearly 100% overlap
+        // with itself!
+
+        if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) return overlap;
+
+        Collection<Gene> genes = this.geneService.load( geneIds );
+
+        for ( Object obj : genes ) {
+            Gene gene = ( Gene ) obj;
+            Collection<OntologyEntry> comparisonOntos = getGOTerms( gene );
+
+            if ( ( comparisonOntos == null ) || ( comparisonOntos.isEmpty() ) ) {
+                overlap.put( gene.getId(), new HashSet<OntologyEntry>() );
+                continue;
+            }
+
+            overlap.put( gene.getId(), computerOverlap( masterOntos, comparisonOntos ) );
+        }
+
+        return overlap;
+    }
+
+    /**
+     * @param Take a gene and return a set of all GO terms including the parents of each GO term
+     * @param geneOntologyTerms
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<OntologyEntry> getGOTerms( Gene gene ) {
+
+        Collection<OntologyEntry> ontEntry = gene2GOAssociationService.findByGene( gene );
+        Collection<OntologyEntry> allGOTermSet = new HashSet<OntologyEntry>( ontEntry );
+
+        if ( ( ontEntry == null ) || ontEntry.isEmpty() ) return null;
+
+        allGOTermSet = getAllParents( ontEntry );
+
+        return allGOTermSet;
+    }
+
+    private Collection<OntologyEntry> computerOverlap( Collection<OntologyEntry> masterOntos,
+            Collection<OntologyEntry> comparisonOntos ) {
+        Collection<OntologyEntry> overlapTerms = new HashSet<OntologyEntry>( masterOntos );
+        overlapTerms.retainAll( comparisonOntos );
+
+        return overlapTerms;
+    }
+
     public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
         this.ontologyEntryService = ontologyEntryService;
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    /**
+     * @param geneService the geneService to set
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
 }
