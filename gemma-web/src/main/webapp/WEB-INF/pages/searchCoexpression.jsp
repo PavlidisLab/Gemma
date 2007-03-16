@@ -30,8 +30,7 @@ Results for
 	<a href="/Gemma/gene/showGene.html?id=<c:out value="${sourceGene.id}" />">
 		<c:out value="${sourceGene.officialSymbol}" /> 
 	</a>
-
-	(<c:out value="${sourceGene.officialName}" />)
+	(<c:out value="${sourceGene.officialName}" />) <br />
 	with <c:out value="${numSourceGeneGoTerms}" /> GO Terms 
 </h2>
 	<h4>

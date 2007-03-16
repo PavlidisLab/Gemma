@@ -51,7 +51,7 @@ public class CoexpressionWrapper extends TableDecorator {
 
     public String getGoOverlap() {
         CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
-        if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "Not available";
+        if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "-";
 
         String overlap =  "" + ( ( cvo.getGoOverlap().size() ) * 100 ) / cvo.getPossibleOverlap() + "";
         /*
