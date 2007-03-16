@@ -30,13 +30,11 @@ import ubic.gemma.model.genome.Gene;
  * <p>
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
- *
+ * 
  * @author jsantos
  * @version $Id $
- *  
  */
 public class GeneWrapper extends TableDecorator {
-
 
     Log log = LogFactory.getLog( this.getClass() );
 
@@ -47,38 +45,40 @@ public class GeneWrapper extends TableDecorator {
         Gene object = ( Gene ) getCurrentRowObject();
         return object.getTaxon().getScientificName();
     }
-    
+
     public String getAccession() {
-        DatabaseEntry object = (DatabaseEntry) getCurrentRowObject();
+        DatabaseEntry object = ( DatabaseEntry ) getCurrentRowObject();
         String accession = "";
-        if (object.getAccession() != null) {
+        if ( object.getAccession() != null ) {
             accession += object.getAccession();
-            if (object.getAccessionVersion() != null) {
+            if ( object.getAccessionVersion() != null ) {
                 accession += object.getAccessionVersion();
             }
         }
         return accession;
     }
-    
+
     public String getNcbiLink() {
         Gene object = ( Gene ) getCurrentRowObject();
-        String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" +
-                object.getNcbiId() + "'>(ncbi)</a>";
+
+        if ( object.getNcbiId() == null ) return "";
+
+        String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
+                + object.getNcbiId() + "'>(ncbi)</a>";
         return ncbiLink;
     }
-    
+
     public String getGemmaLink() {
         Gene object = ( Gene ) getCurrentRowObject();
-        String gemmaLink = "<a href='/Gemma/gene/showGene.html?id=" +
-                object.getId() + "'>(gemma)</a>";
+        String gemmaLink = "<a href='/Gemma/gene/showGene.html?id=" + object.getId() + "'>(gemma)</a>";
         return gemmaLink;
     }
-    
+
     public String getNameLink() {
         Gene object = ( Gene ) getCurrentRowObject();
         String nameLink = object.getName() + getGemmaLink() + getNcbiLink();
-        
+
         return nameLink;
     }
-    
+
 }
