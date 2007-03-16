@@ -118,13 +118,5 @@ public class Gene2GoAssociationServiceTest extends BaseSpringContextTest {
         
     }
     
-    public void testCalculateGoTermOverlap(){
-        Collection<Gene> genes = new HashSet<Gene>();
-        genes.add( test2Gene );
-        
-        Map<Gene, Collection<OntologyEntry>> ontos = gene2GoAssociationS.calculateGoTermOverlap( testGene,genes );
-        assertEquals( testOE, ontos.get( test2Gene).iterator().next() );
-        
-    }
 
 }
