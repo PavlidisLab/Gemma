@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -51,6 +52,8 @@ import ubic.gemma.util.ConfigUtils;
 public class GeneOntologyService implements InitializingBean {
 
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
+
+    private static final String GO_DATABASE_NAME = "GO";
 
     private OntologyEntryService ontologyEntryService;
 
@@ -100,14 +103,26 @@ public class GeneOntologyService implements InitializingBean {
             public void run() {
 
                 ready.set( false );
+                
                 log.info( "Loading Gene Ontology..." );
+                StopWatch loadTime = new StopWatch();
+                loadTime.start();
+                
                 try {
 
                     Collection<OntologyEntry> all = ontologyEntryService.loadAll();
 
                     for ( OntologyEntry oe : all ) {
+                        // Make sure that we only load go ontologies
+                        if ( ( oe.getExternalDatabase() == null ) || ( oe.getExternalDatabase().getName() == null )
+                                || !( oe.getExternalDatabase().getName().equalsIgnoreCase( GO_DATABASE_NAME ) ) ){
+                            log.info( "Skipping Ontology Entry '" + oe.getAccession() + "' .Doesn't have an external database named GO");
+                            continue;
+                        }
+                        
                         Collection<OntologyEntry> children = ontologyEntryService.getChildren( oe ); // thaw
                         graph.addNode( new DirectedGraphNode( oe, oe, graph ) );
+                        // Add the children
                         for ( OntologyEntry child : children ) {
                             graph.addChildTo( oe, child );
                         }
@@ -120,14 +135,29 @@ public class GeneOntologyService implements InitializingBean {
                     ready.set( false );
                     running.set( false );
                 }
+                
                 ready.set( true );
                 running.set( false );
-                log.info( "Gene Ontology loaded, " + graph.getItems().size() + " items." );
+                               
+                loadTime.stop();                
+                log.info( "Gene Ontology loaded, " + graph.getItems().size() + " items in " + loadTime.getTime()/1000 + "s" );
             }
         } );
 
         loadThread.start();
 
+    }
+    
+    /**
+     * Used for determining if the Gene Ontology has finished loading into memory yet
+     * Although calls like getParents, getChildren will still work (its much faster once the
+     * gene ontologies have been preloaded into memory.
+     * 
+     * @returns  boolean 
+     */
+    public synchronized boolean isGeneOntologyLoaded(){
+        
+        return ready.get();
     }
 
     /**
@@ -285,6 +315,18 @@ public class GeneOntologyService implements InitializingBean {
         return returnVal;
     }
 
+    /**
+     * @param masterGene
+     * @param geneIds
+     * @returns Map<Gene,Collection<OntologyEntries>>
+     * @throws Exception
+     *         <p>
+     *         Given a master Gene, and a collection of gene ids calculates the go term overlap for each pair of
+     *         masterGene and gene in the given collection. Returns a Map<Gene,Collection<OntologyEntries>>. The key
+     *         is the gene (from the [masterGene,gene] pair) and the values are a collection of the overlapping ontology
+     *         entries.
+     *         </p>
+     */
     public Map<Long, Collection<OntologyEntry>> calculateGoTermOverlap( Gene masterGene, Collection geneIds )
             throws Exception {
 
