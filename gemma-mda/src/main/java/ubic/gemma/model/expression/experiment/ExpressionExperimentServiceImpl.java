@@ -29,6 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -446,6 +447,14 @@ public class ExpressionExperimentServiceImpl extends
             }
         }
         return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    @Override
+    protected Collection handleFindByBibliographicReference( BibliographicReference bibRef ) throws Exception {
+        return this.getExpressionExperimentDao().findByBibliographicReference( bibRef.getId() );
     }
 
 }

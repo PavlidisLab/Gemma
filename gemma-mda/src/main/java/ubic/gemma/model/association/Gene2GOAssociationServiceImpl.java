@@ -21,9 +21,6 @@ package ubic.gemma.model.association;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
