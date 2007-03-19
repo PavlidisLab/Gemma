@@ -63,7 +63,6 @@ import ubic.gemma.util.BusinessKey;
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
 
- 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
     /*
@@ -939,8 +938,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         return eeIds;
     }
-    
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -948,21 +946,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Collection handleFindByBibliographicReference( Long bibRefID ) throws Exception {
-//       final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee " +
-//            "WHERE ee.primaryPublication.ID = :bibID OR ee.otherRelevantPublications = :bibID";
-//       
-//       try {
-//           org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//           queryObject.setParameter( "bibID", bibRefID );
-//
-//           return queryObject.list();
-//       } catch ( org.hibernate.HibernateException ex ) {
-//           throw super.convertHibernateAccessException( ex );
-//       }
-//   }
-        //TODO implement me!
-        return null;
-    }
+        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
+                + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
 
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "bibID", bibRefID );
+
+            Collection results =  queryObject.list();
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
 }

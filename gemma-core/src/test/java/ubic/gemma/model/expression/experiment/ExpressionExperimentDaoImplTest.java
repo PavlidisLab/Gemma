@@ -27,6 +27,8 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -55,6 +57,8 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     ExternalDatabase ed;
     String accession;
     String contactName;
+    BibliographicReference primary;
+    BibliographicReference other;
 
     /**
      * @exception Exception
@@ -75,8 +79,26 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
         Contact c = this.getTestPersistentContact();
         this.contactName = c.getName();
-
         ee.setOwner( c );
+
+        // Creating the bibReference association doesn't work like this
+        // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
+        // .getBean( "bibliographicReferenceService" );
+        // primary = BibliographicReference.Factory.newInstance();
+        // primary.setPubAccession( accessionEntry );
+        // primary.setTitle( "Primary" );
+        // primary = bibRefService.create( primary );
+        //        
+        // ee.setPrimaryPublication( primary );
+        //        
+        // other = BibliographicReference.Factory.newInstance();
+        // other.setPubAccession( accessionEntry );
+        // other.setTitle( "other" );
+        // other = bibRefService.create( other );
+        //        
+        // Collection<BibliographicReference> others = new HashSet<BibliographicReference>();
+        // others.add( other );
+        // ee.setOtherRelevantPublications( others ) ;
 
         expressionExperimentDao.update( ee );
         expressionExperimentDao.thaw( ee );
@@ -205,4 +227,20 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     // assertEquals(89, results.size() );
     //        
     // }
+
+    // This test uses the DB
+    // public void testFindByBibliographicReference(){
+    // ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+    // .getBean( "expressionExperimentService" );
+    // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
+    // .getBean( "bibliographicReferenceService" );
+    //        
+    // BibliographicReference bibRef = bibRefService.load( new Long(111 ));
+    //
+    // Collection<ExpressionExperiment> foundEEs = eeService.findByBibliographicReference( bibRef );
+    // assertEquals(1,foundEEs.size());
+    // assertEquals(new Long(8), (Long) foundEEs.iterator().next().getId());
+    //       
+    // }
+
 }
