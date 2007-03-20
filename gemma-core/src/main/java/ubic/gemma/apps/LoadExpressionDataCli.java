@@ -49,6 +49,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private String accessionFile = null;
     private String accessions = null;
     private boolean platformOnly = false;
+    private boolean doMatching = true;
 
     /*
      * (non-Javadoc)
@@ -70,6 +71,11 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" ).withDescription(
                 "Load platforms (array designs) only" ).withLongOpt( "platforms" ).create( 'y' );
         addOption( platformOnlyOption );
+
+        Option noBioAssayMatching = OptionBuilder.withDescription( "Do not try to match samples across platforms" )
+                .withLongOpt( "nomatch" ).create( 'n' );
+
+        addOption( noBioAssayMatching );
     }
 
     /**
@@ -129,7 +135,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                     }
 
                     if ( platformOnly ) {
-                        Collection designs = geoService.fetchAndLoad( accession, false, true );
+                        Collection designs = geoService.fetchAndLoad( accession, true, true );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             persistedObjects.add( ( ( Describable ) object ).getName()
@@ -174,7 +180,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private void processAccession( Collection<String> errorObjects, Collection<String> persistedObjects,
             GeoDatasetService geoService, String accession ) {
         try {
-            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, true );
+            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching );
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
                 persistedObjects.add( ( ( Describable ) object ).getName() + " ("
@@ -200,6 +206,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         if ( hasOption( 'y' ) ) {
             platformOnly = true;
+        }
+
+        if ( hasOption( 'n' ) ) {
+            doMatching = false;
         }
     }
 
