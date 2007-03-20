@@ -17,8 +17,7 @@
 </spring:bind>
 
 
-<title><fmt:message key="mainMenu.title" />
-</title>
+<title><fmt:message key="mainMenu.title" /></title>
 <table class="datasummary">
 	<tr>
 		<td colspan=2>
@@ -38,11 +37,11 @@
 	<c:forEach var="taxon" items="${ taxonCount }">
 		<tr>
 			<td>
-				&emsp;			
-				<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />">
-					<c:out value="${ taxon.key.scientificName}" />
-				</a>
-				
+				&emsp;
+				<a
+					href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />">
+					<c:out value="${ taxon.key.scientificName}" /> </a>
+
 			</td>
 			<td align="right">
 				<c:out value="${ taxon.value}" />
@@ -139,14 +138,12 @@
 			</td>
 		</tr>
 	</table>
-	
+
 	<spring:bind path="coexpressionSearchCommand.stringency">
-		<input type="hidden"
-			name="<c:out value="${status.expression}"/>"
-			value="<c:out value="${previousStringency}"/>" 
-		/>
+		<input type="hidden" name="<c:out value="${status.expression}"/>"
+			value="<c:out value="${previousStringency}"/>" />
 	</spring:bind>
-	
+
 </form>
 
 
@@ -192,9 +189,6 @@
 				Load expression data from a tabbed file</a>
 		</li>
 		<li>
-			<a href="<c:url value="/addTestData.html"/>">Add test data </a>
-		</li>
-		<li>
 			<a href="<c:url value="/uploadFile.html"/>"> <fmt:message
 					key="menu.selectFile" /> </a>
 		</li>
@@ -211,10 +205,12 @@
 					key="menu.securityManager" /> </a>
 		</li>
 		<li>
-			<a href="<c:url value="/maintenanceMode.html" />">Manage maintenance mode</a>
+			<a href="<c:url value="/maintenanceMode.html" />">Manage
+				maintenance mode</a>
 		</li>
 		<li>
-			<a href="<c:url value="/whatsnew/generateCache.html" />">Regenerate What's New Cache</a>
+			<a href="<c:url value="/whatsnew/generateCache.html" />">Regenerate
+				What's New Cache</a>
 		</li>
 	</ul>
 
