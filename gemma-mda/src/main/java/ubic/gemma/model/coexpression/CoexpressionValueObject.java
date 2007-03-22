@@ -26,17 +26,20 @@ import java.util.Map;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+/**
+ * 
+ * @author klc
+ *
+ * The coexpressionValueObject is used for storing the results of each gene that is coexpressed with the query gene.  
+ * Keeps track of specificity, pValues, Scores, goTerms, overlap, stringency value.
+ * This object is threadsafe.
+ */
 public class CoexpressionValueObject {
 
     private String geneName;
     private Long geneId;
     private String geneOfficialName;
     private String geneType;
-
-    @Deprecated
-    private Double pValue;
-    @Deprecated
-    private Double score;
 
     private Map<Long, Map<Long, Double>> positiveScores;
     private Map<Long, Map<Long, Double>> negativeScores;
@@ -132,26 +135,6 @@ public class CoexpressionValueObject {
         this.geneOfficialName = geneOfficialName;
     }
 
-    @Deprecated
-    public Double getPValue() {
-        return pValue;
-    }
-
-    @Deprecated
-    public void setPValue( Double value ) {
-        pValue = value;
-    }
-
-    @Deprecated
-    public Double getScore() {
-        return score;
-    }
-
-    @Deprecated
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
     public void addPValue( Long eeID, Double pValue, Long probeID ) {
 
         if ( !pValues.containsKey( eeID ) ) pValues.put( eeID, new HashMap<Long, Double>() );
@@ -200,10 +183,12 @@ public class CoexpressionValueObject {
         double mean = 0;
         int size = 0;
 
-        for ( Map<Long, Double> scores : positiveScores.values() ) {
-            for ( Double score : scores.values() ) {
-                mean += score;
-                size++;
+        synchronized ( positiveScores ) {
+            for ( Map<Long, Double> scores : positiveScores.values() ) {
+                for ( Double score : scores.values() ) {
+                    mean += score;
+                    size++;
+                }
             }
         }
         return mean / size;
@@ -217,10 +202,12 @@ public class CoexpressionValueObject {
         double mean = 0;
         int size = 0;
 
-        for ( Map<Long, Double> scores : negativeScores.values() ) {
-            for ( Double score : scores.values() ) {
-                mean += score;
-                size++;
+        synchronized ( negativeScores ) {
+            for ( Map<Long, Double> scores : negativeScores.values() ) {
+                for ( Double score : scores.values() ) {
+                    mean += score;
+                    size++;
+                }
             }
         }
         return mean / size;
@@ -234,10 +221,12 @@ public class CoexpressionValueObject {
         double mean = 0;
         int size = 0;
 
-        for ( Map<Long, Double> scores : pValues.values() ) {
-            for ( Double score : scores.values() ) {
-                mean += score;
-                size++;
+        synchronized ( pValues ) {
+            for ( Map<Long, Double> scores : pValues.values() ) {
+                for ( Double score : scores.values() ) {
+                    mean += score;
+                    size++;
+                }
             }
         }
         return mean / size;
