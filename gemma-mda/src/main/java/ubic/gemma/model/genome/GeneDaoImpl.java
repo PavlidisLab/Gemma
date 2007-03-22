@@ -217,62 +217,64 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments( );
+        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments();
 
-        for ( Long geneId : geneMap.keySet() ) {
-            CoexpressionValueObject v = geneMap.get( geneId );
+        synchronized ( geneMap ) {
+            for ( Long geneId : geneMap.keySet() ) {
+                CoexpressionValueObject coExValObj = geneMap.get( geneId );
 
-            // determine which EE's that contributed to this gene's coexpression were non-specific
+                // determine which EE's that contributed to this gene's coexpression were non-specific
 
-            Collection<Long> nonspecificEE = new HashSet<Long>( v.getExpressionExperiments() );
-            nonspecificEE.removeAll( allSpecificEE.get( geneId ) );
-            v.setNonspecificEE( nonspecificEE );
+                Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
+                nonspecificEE.removeAll( allSpecificEE.get( geneId ) );
+                coExValObj.setNonspecificEE( nonspecificEE );
 
-            boolean added = false;
-            if ( v.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
-                numGenes++;
+                boolean added = false;
+                if ( coExValObj.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
+                    numGenes++;
 
-                incrementRawEEContributions( v.getExpressionExperiments(), coexpressions );
+                    incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions );
 
-                if ( v.getPositiveLinkCount() != null ) {
-                    numStringencyGenes++;
-                    positiveLinkCount++;
-                    added = true;
-                    // add in coexpressions that match stringency
-                    coexpressions.getCoexpressionData().add( v );
-                    // add in expression experiments that match stringency
-                    // update the link count for that EE
-                    incrementEEContributions( v.getEEContributing2PositiveLinks(), coexpressions );
+                    if ( coExValObj.getPositiveLinkCount() != null ) {
+                        numStringencyGenes++;
+                        positiveLinkCount++;
+                        added = true;
+                        // add in coexpressions that match stringency
+                        coexpressions.getCoexpressionData().add( coExValObj );
+                        // add in expression experiments that match stringency
+                        // update the link count for that EE
+                        incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions );
+                    }
+
+                    if ( coExValObj.getNegativeLinkCount() != null ) {
+                        negativeLinkCount++;
+                        // add in expression experiments that match stringency
+                        // update the link count for that EE
+                        incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions );
+
+                        if ( added ) continue; // no point in adding or counting the same element twice
+                        coexpressions.getCoexpressionData().add( coExValObj );
+                        numStringencyGenes++;
+
+                    }
+
+                } else if ( coExValObj.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
+                    numPredictedGenes++;
+                    if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
+                        numStringencyPredictedGenes++;
+                    }
+                } else if ( coExValObj.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
+                    numProbeAlignedRegions++;
+                    if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
+                        numStringencyProbeAlignedRegions++;
+                    }
                 }
 
-                if ( v.getNegativeLinkCount() != null ) {
-                    negativeLinkCount++;
-                    // add in expression experiments that match stringency
-                    // update the link count for that EE
-                    incrementEEContributions( v.getEEContributing2NegativeLinks(), coexpressions );
-
-                    if ( added ) continue; // no point in adding or counting the same element twice
-                    coexpressions.getCoexpressionData().add( v );
-                    numStringencyGenes++;
-
+                if ( ++count % 5000 == 0 ) {
+                    log.info( "Post-processed " + count + " hits, " + timer.getTime() + " ms spent so far." );
                 }
 
-            } else if ( v.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
-                numPredictedGenes++;
-                if ( ( v.getPositiveLinkCount() != null ) || ( v.getNegativeLinkCount() != null ) ) {
-                    numStringencyPredictedGenes++;
-                }
-            } else if ( v.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
-                numProbeAlignedRegions++;
-                if ( ( v.getPositiveLinkCount() != null ) || ( v.getNegativeLinkCount() != null ) ) {
-                    numStringencyProbeAlignedRegions++;
-                }
             }
-
-            if ( ++count % 5000 == 0 ) {
-                log.info( "Post-processed " + count + " hits, " + timer.getTime() + " ms spent so far." );
-            }
-
         }
         // add count of pruned matches to coexpression data
         coexpressions.setPositiveStringencyLinkCount( positiveLinkCount );
@@ -297,6 +299,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+            if ( eeVo == null ) {
+                log.warn( "Looked for " + eeID + " but not in coexpressions object" );
+                continue;
+            }
             if ( eeVo.getCoexpressionLinkCount() == null )
                 eeVo.setCoexpressionLinkCount( new Long( 1 ) );
             else
@@ -315,6 +321,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+            if ( eeVo == null ) {
+                log.warn( "Looked for " + eeID + " but not in coexpressions object" );
+                continue;
+            }
             if ( eeVo.getRawCoexpressionLinkCount() == null )
                 eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
             else
@@ -381,42 +391,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return "OTHER_PROBE_CO_EXPRESSION";
     }
 
-    /**
-     * @param p2pClassName
-     * @param optional collection of ExpressionExperiments on which to limit the search.
-     * @param in either "firstVector" or "secondVector"
-     * @param out whatever "a" isn't.
-     * @return
-     */
-    @SuppressWarnings("unused")
-    @Deprecated
-    private String getQueryString( String p2pClassName, String in, String out ) {
-        String queryStringFirstVector =
-        // return values
-        "select distinct coGene.id, coGene.name, coGene.officialName,p2pc."
-                + out
-                + ".expressionExperiment.id, p2pc."
-                + out
-                + ".expressionExperiment.shortName, p2pc."
-                + out
-                + ".expressionExperiment.name"
-                // source tables
-                + " from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                // join table
-                + p2pClassName
-                + " as p2pc,"
-                // target tables
-                + " GeneImpl as coGene,BioSequence2GeneProductImpl as coBs2gp, CompositeSequenceImpl as coCompositeSequence"
-                + " where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc." + out + ".id "
-                + " and coCompositeSequence.designElementDataVectors.id=p2pc." + in + ".id "
-                + " and coCompositeSequence.biologicalCharacteristic=coBs2gp.bioSequence "
-                + " and coGene.products.id=coBs2gp.geneProduct.id "
-                + " and gene.id = :id and coGene.taxon.id = :taxonId";
-
-        return queryStringFirstVector;
-    }
+    
 
     /**
      * @param p2pClassName
