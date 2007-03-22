@@ -1,3 +1,7 @@
+
+# author keshav
+# version $Id$
+
 These classes act as a starting point for using gigaspaces.  That is, they have been tested and serve the purpose of the
 Master sending a task to a space, the Worker executing it, and the Master obtaining the results.
 
