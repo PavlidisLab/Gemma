@@ -191,5 +191,7 @@
 	<classpathentry kind="var" path="M2_REPO/spring/spring-modules-javaspaces/0.8/spring-modules-javaspaces-0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jini/jini-core/2.1/jini-core-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jini/jini-ext/2.1/jini-ext-2.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces/0.8/JSpaces-0.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces-dl/0.8/JSpaces-dl-0.8.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
