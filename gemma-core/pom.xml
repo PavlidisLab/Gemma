@@ -276,7 +276,6 @@
 			<version>2.1</version>
 			<type>jar</type>
 		</dependency>
-		<!-- Needed if running the Gigaspaces Master from within Gemma
 		<dependency>
 			<groupId>javaspaces</groupId>
 			<artifactId>JSpaces-dl</artifactId>
@@ -289,7 +288,6 @@
 			<version>0.8</version>
 			<type>jar</type>
 		</dependency>
-		 -->
 		<dependency>
 			<groupId>velocity</groupId>
 			<artifactId>velocity</artifactId>
