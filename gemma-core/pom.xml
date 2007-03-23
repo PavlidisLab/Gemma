@@ -258,6 +258,39 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
+			<groupId>spring</groupId>
+			<artifactId>spring-modules-javaspaces</artifactId>
+			<version>0.8</version>
+			<type>jar</type>
+		</dependency>
+		<!-- Needed by org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate -->
+		<dependency>
+			<groupId>jini</groupId>
+			<artifactId>jini-core</artifactId>
+			<version>2.1</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>jini</groupId>
+			<artifactId>jini-ext</artifactId>
+			<version>2.1</version>
+			<type>jar</type>
+		</dependency>
+		<!-- Needed if running the Gigaspaces Master from within Gemma
+		<dependency>
+			<groupId>javaspaces</groupId>
+			<artifactId>JSpaces-dl</artifactId>
+			<version>0.8</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>javaspaces</groupId>
+			<artifactId>JSpaces</artifactId>
+			<version>0.8</version>
+			<type>jar</type>
+		</dependency>
+		 -->
+		<dependency>
 			<groupId>velocity</groupId>
 			<artifactId>velocity</artifactId>
 			<version>1.4</version>
