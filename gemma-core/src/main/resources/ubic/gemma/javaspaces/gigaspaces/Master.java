@@ -55,7 +55,7 @@ public class Master {
     }
 
     protected void init() throws Exception {
-        applicationContext = new ClassPathXmlApplicationContext( "ubic/gemma/applicationContext-gigaspaces.xml" );
+        applicationContext = new ClassPathXmlApplicationContext( "ubic/gemma/gigaspaces.xml" );
         template = ( GigaSpacesTemplate ) applicationContext.getBean( "gigaspacesTemplate" );
     }
 
