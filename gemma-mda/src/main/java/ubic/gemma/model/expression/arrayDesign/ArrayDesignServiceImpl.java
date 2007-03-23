@@ -604,12 +604,19 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().isSubsumer( ids );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadFully(java.lang.Long)
      */
     @Override
     protected ArrayDesign handleLoadFully( Long id ) throws Exception {
         return this.getArrayDesignDao().loadFully( id );
+    }
+
+    @Override
+    protected void handleThawLite( ArrayDesign arrayDesign ) throws Exception {
+        this.getArrayDesignDao().thawLite( arrayDesign );
     }
 
 }

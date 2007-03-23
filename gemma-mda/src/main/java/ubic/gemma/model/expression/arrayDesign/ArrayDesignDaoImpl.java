@@ -25,8 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
@@ -303,30 +306,43 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected void handleThaw( final ArrayDesign arrayDesign ) throws Exception {
+        this.thaw( arrayDesign, true );
+    }
+
+    @Override
+    protected void handleThawLite( final ArrayDesign arrayDesign ) throws Exception {
+        this.thaw( arrayDesign, false );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param deep Whether to thaw the biosequence associations (genes).
+     * @throws Exception
+     */
+    private void thaw( final ArrayDesign arrayDesign, final boolean deep ) throws Exception {
         if ( arrayDesign == null ) return;
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
 
-        // FIXME could do this with a single query? It might be more efficient.
-         //String queryString = "select cs,bs,geneProduct,gene,bs2gp from ArrayDesignImpl ad, BioSequence2GeneProductImpl bs2gp inner join " +
-         //" fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs where bs2gp.bioSequence=bs and " + 
-         //" ad.id = :id";
-        
-        final String queryString = "select bioC.taxon from ArrayDesignImpl as arrayD inner join arrayD.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon where arrayD.id = :id";
-
-        //ArrayDesign loadedArrayDesign = ( ArrayDesign ) queryByIdReturnObject( arrayDesign.getId(), queryString );
+        templ.setFetchSize( 500 );
+        log.info( "Fetch size for thaw is " + templ.getFetchSize() );
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.setCacheMode( CacheMode.IGNORE );
                 session.update( arrayDesign );
+                StopWatch timer = new StopWatch();
                 log.info( "Thawing " + arrayDesign + " ..." );
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
-                arrayDesign.getLocalFiles().size();
-                arrayDesign.getExternalReferences().size();
-                arrayDesign.getSubsumedArrayDesigns().size();
-                arrayDesign.getAuditTrail().getEvents().size();
 
+                timer.start();
+                log.info( "... thaw composite sequences ..." );
                 int numToDo = arrayDesign.getCompositeSequences().size();
+                log.info( "Done in " + timer.getTime() + " ms; now thaw " + numToDo
+                        + " composite sequence associations ..." );
+
+                timer.reset();
+                timer.start();
 
                 int i = 0;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
@@ -339,27 +355,29 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     bs.getTaxon();
 
-                    if ( bs.getBioSequence2GeneProduct() == null ) {
-                        continue;
-                    }
-
-                    for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                        if ( bs2gp == null ) {
+                    if ( deep ) {
+                        if ( bs.getBioSequence2GeneProduct() == null ) {
                             continue;
                         }
-                        
-                        GeneProduct geneProduct = bs2gp.getGeneProduct();
-                        if ( geneProduct != null && geneProduct.getGene() != null ) {
-                            Gene g = geneProduct.getGene();
-                            g.getAliases().size();
-                            session.evict( g );
-                            session.evict( geneProduct );
-                        }
 
+                        for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                            if ( bs2gp == null ) {
+                                continue;
+                            }
+                            GeneProduct geneProduct = bs2gp.getGeneProduct();
+                            if ( geneProduct != null && geneProduct.getGene() != null ) {
+                                Gene g = geneProduct.getGene();
+                                g.getAliases().size();
+                                session.evict( g );
+                                session.evict( geneProduct );
+                            }
+
+                        }
                     }
 
                     if ( ++i % 2000 == 0 ) {
-                        log.info( "Thaw progress: " + i + "/" + numToDo + "..." );
+                        log.info( "CS assoc thaw progress: " + i + "/" + numToDo + " ... (" + timer.getTime()
+                                + " ms elapsed)" );
                         try {
                             Thread.sleep( 10 );
                         } catch ( InterruptedException e ) {
@@ -370,7 +388,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
                     session.evict( bs );
                 }
+                log.info( "CS assoc thaw done (" + timer.getTime() + " ms elapsed)" );
+                arrayDesign.getSubsumedArrayDesigns().size();
+                arrayDesign.getLocalFiles().size();
+                arrayDesign.getExternalReferences().size();
+                arrayDesign.getAuditTrail().getEvents().size();
+
                 session.clear();
+
                 return null;
             }
         }, true );
@@ -448,6 +473,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "inner join cs.biologicalCharacteristic bs, BlatAssociationImpl ba "
                 + "where ba.bioSequence = bs and ad=:arrayDesign";
         org.hibernate.Query queryObject = super.getSession( false ).createQuery( sequenceQueryString );
+        queryObject.setFetchSize( 1000 );
         queryObject.setParameter( "arrayDesign", arrayDesign );
         final Collection<BlatAssociation> toBeRemoved = queryObject.list();
 
@@ -709,7 +735,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         } else {
             log.info( "Have " + toBeRemoved.size() + " BlatAssociations to remove for " + arrayDesign
                     + "(they have to be removed to make way for new alignment data)" );
-            this.getHibernateTemplate().deleteAll( toBeRemoved );
+            deleteInBatches( toBeRemoved );
         }
 
         final String sequenceQueryString = "select br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
@@ -723,9 +749,27 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             log.info( "No old alignments to be removed for " + arrayDesign );
         } else {
             log.info( "Have " + toBeRemoved.size() + " BlatResults to remove for " + arrayDesign );
-            this.getHibernateTemplate().deleteAll( toBeRemoved );
+            deleteInBatches( toBeRemoved );
             log.info( "Done deleting." );
         }
+    }
+
+    /**
+     * Efficiently delete objects.
+     * 
+     * @param toBeRemoved
+     */
+    private void deleteInBatches( Collection toBeRemoved ) {
+        Collection<Object> batch = new ArrayList<Object>();
+        int BATCH_SIZE = 10000;
+        for ( Object result : toBeRemoved ) {
+            batch.add( result );
+            if ( batch.size() == BATCH_SIZE ) {
+                this.getHibernateTemplate().deleteAll( batch );
+                batch.clear();
+            }
+        }
+        if ( batch.size() > 0 ) this.getHibernateTemplate().deleteAll( batch );
     }
 
     @Override
@@ -794,13 +838,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
             Map<Long, Long> csToArray = new HashMap<Long, Long>();
             Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+
             org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
+            csQueryObject.setCacheable( true );
+            csQueryObject.setCacheMode( CacheMode.NORMAL );
             ScrollableResults csList = csQueryObject.scroll();
             while ( csList.next() ) {
                 Long arrayId = csList.getLong( 0 );
                 Long csId = csList.getLong( 1 );
                 csToArray.put( csId, arrayId );
             }
+
             org.hibernate.Query taxonQueryObject = super.getSession( false ).createQuery( taxonString );
             taxonQueryObject.setParameterList( "id", csToArray.keySet() );
             ScrollableResults taxonList = taxonQueryObject.scroll();
@@ -1016,39 +1064,58 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
             throws Exception {
 
+        // Technically, size does not automatically disqualify, because we only consider BioSequences that actually have
+        // sequences in
+        // them.
         if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
-            log.info( "Subsumee has more sequences than subsumer so cannot be subsumed" );
-            return false;
+            log.info( "Subsumee has more sequences than subsumer so probably cannot be subsumed ... checking anyway" );
+            // return false;
         }
 
-        // this is very inefficient, but works well enough.
+        // this is very inefficient, on big designs it can be a bit slow.
+        int count = 0;
         for ( CompositeSequence subsumeeCs : candidateSubsumee.getCompositeSequences() ) {
-            // check if candidateSubsumer contains an equivalent composite sequence.
             BioSequence subsumeeSeq = subsumeeCs.getBiologicalCharacteristic();
 
+            // ignore cases that have no BioSequence...
+            if ( subsumeeSeq == null ) continue;
+
+            // ignore cases that lack a sequence in the BioSequence.
+            if ( StringUtils.isBlank( subsumeeSeq.getSequence() ) && subsumeeSeq.getSequenceDatabaseEntry() == null ) {
+                if ( log.isDebugEnabled() ) log.debug( "No sequence info in " + subsumeeSeq );
+                continue;
+            }
+
             boolean found = false;
-            // note nested loop over composite sequences
             for ( CompositeSequence subsumerCs : candidateSubsumer.getCompositeSequences() ) {
-                // if ( !subsumeeCs.getName().equals( subsumerCs.getName() ) ) {
-                // continue;
-                // }
                 BioSequence subsumerSeq = subsumerCs.getBiologicalCharacteristic();
-                if ( subsumerSeq != null && subsumeeSeq != null && !subsumerSeq.equals( subsumeeSeq ) ) {
+
+                if ( subsumerSeq == null ) continue;
+
+                if ( StringUtils.isBlank( subsumerSeq.getSequence() ) && subsumerSeq.getSequenceDatabaseEntry() == null ) {
+                    if ( log.isDebugEnabled() ) log.debug( "No sequence info in " + subsumerSeq );
                     continue;
                 }
 
-                found = true;
-                break;
+                if ( subsumerSeq.equals( subsumeeSeq ) ) {
+                    found = true;
+                    break;
+                }
             }
 
             if ( !found ) {
-                log.info( candidateSubsumer + " does not contain " + subsumeeCs + " from " + candidateSubsumee );
+                log.info( candidateSubsumer + " does not contain " + subsumeeCs.getBiologicalCharacteristic()
+                        + " from " + candidateSubsumee );
                 return false;
+            }
+            if ( ++count % 2000 == 0 ) {
+                log.info( "Tested " + count + " probes" );
             }
         }
 
-        if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
-            log.info( candidateSubsumee + " and " + candidateSubsumer + " are exactly equivalent" );
+        // if we got this far, then we definitely have a subsuming situtation.
+        if ( candidateSubsumee.getCompositeSequences().size() == candidateSubsumer.getCompositeSequences().size() ) {
+            log.info( candidateSubsumee + " and " + candidateSubsumer + " are apparently exactly equivalent" );
         } else {
             log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
         }
@@ -1122,27 +1189,22 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
      */
     @Override
     protected ArrayDesign handleLoadFully( Long id ) throws Exception {
 
-        String queryString = "select ad from ArrayDesignImpl ad inner join " +
-        " fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs " +
-        " inner join fetch bs.taxon " +
-        " inner join fetch ad.auditTrail auditTrail " +
-        " left join fetch auditTrail.events events " +
-        " left join fetch ad.localFiles " +
-        " left join fetch ad.externalReferences " +
-        " left join fetch ad.subsumedArrayDesigns " +
-        " left join fetch bs.bioSequence2GeneProduct bs2gp " +
-        " left join fetch bs2gp.geneProduct gp " +
-        " left join fetch gp.gene gene " +
-        " left join fetch gene.aliases " +
-        " where  " + 
-        " ad.id = :id";
-       
+        String queryString = "select ad from ArrayDesignImpl ad inner join "
+                + " fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs "
+                + " inner join fetch bs.taxon " + " inner join fetch ad.auditTrail auditTrail "
+                + " left join fetch auditTrail.events events " + " left join fetch ad.localFiles "
+                + " left join fetch ad.externalReferences " + " left join fetch ad.subsumedArrayDesigns "
+                + " left join fetch bs.bioSequence2GeneProduct bs2gp " + " left join fetch bs2gp.geneProduct gp "
+                + " left join fetch gp.gene gene " + " left join fetch gene.aliases " + " where  " + " ad.id = :id";
+
         return ( ArrayDesign ) queryByIdReturnObject( id, queryString );
     }
 
