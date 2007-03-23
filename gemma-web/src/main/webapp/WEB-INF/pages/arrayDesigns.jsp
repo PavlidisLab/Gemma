@@ -109,7 +109,7 @@
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
 <display:table name="arrayDesigns" sort="list" class="list"
-	requestURI="" id="arrayDesignList" pagesize="30"
+	requestURI="" id="arrayDesignList" pagesize="50"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 	<display:column property="name" sortable="true"
 		href="showArrayDesign.html" paramId="id" paramProperty="id"
