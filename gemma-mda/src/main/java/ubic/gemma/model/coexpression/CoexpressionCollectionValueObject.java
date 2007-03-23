@@ -31,10 +31,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * @author jsantos, klc
- * 
- * The coexpressioncollectionValueObject is used for storing the results of a coexpression search. 
- *  The object is thread safe.
+ * @author jsantos, klc The coexpressioncollectionValueObject is used for storing the results of a coexpression search.
+ *         The object is thread safe.
  */
 public class CoexpressionCollectionValueObject {
 
@@ -102,7 +100,7 @@ public class CoexpressionCollectionValueObject {
 
         numStringencyGenes = 0;
         numStringencyProbeAlignedRegions = 0;
-        numStringencyPredictedGenes = 0;
+        numStringencyPredictedGenes = 0;        
 
         coexpressionData = Collections.synchronizedSet( new HashSet<CoexpressionValueObject>() );
         predictedCoexpressionData = Collections.synchronizedSet( new HashSet<CoexpressionValueObject>() );
@@ -561,6 +559,10 @@ public class CoexpressionCollectionValueObject {
                     Collection<Long> genes = probe2genes.get( probeID );
                     for ( Gene g : probe2GeneMap.get( probeID ) )
                         genes.add( g.getId() );
+
+                    if ( ( genes.size() == 1 ) && ( genes.iterator().next() == queryGene.getId() ) ) {
+                        getExpressionExperiment( eeID ).setSpecific( true );
+                    }
                 }
             }
         }

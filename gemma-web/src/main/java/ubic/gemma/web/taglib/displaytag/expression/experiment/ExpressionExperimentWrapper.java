@@ -90,7 +90,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "[None]";
         }
     }
-    
+
     /**
      * @return String
      */
@@ -105,7 +105,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "[None]";
         }
     }
-    
+
     /**
      * @return String
      */
@@ -120,7 +120,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "[None]";
         }
     }
-    
+
     /**
      * @return String
      */
@@ -280,8 +280,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
-
 
     /**
      * @return View for background status of the QTs
@@ -360,7 +358,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
                 + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" title='Refresh Report'/></form>";
 
     }
-    
+
     public String getEdit() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
 
@@ -372,4 +370,16 @@ public class ExpressionExperimentWrapper extends TableDecorator {
                 + "'\"" + " value='Edit'>";
 
     }
+
+    public String getSpecific() {
+        
+        ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( eeVo == null ) return "Expression Experiment unavailable";
+
+        if (eeVo.isSpecific())
+            return "yes";
+        
+        return "no";
+    }
+
 }

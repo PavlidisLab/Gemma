@@ -194,7 +194,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @SuppressWarnings("unchecked")
     private void postProcessing( Map<Long, CoexpressionValueObject> geneMap,
-            CoexpressionCollectionValueObject coexpressions ) {
+            CoexpressionCollectionValueObject coexpressions ) throws Exception {
 
         // add count of original matches to coexpression data
         coexpressions.setLinkCount( geneMap.size() );
@@ -213,20 +213,25 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         int numStringencyPredictedGenes = 0;
         int numStringencyProbeAlignedRegions = 0;
 
-        int count = 0;
         StopWatch timer = new StopWatch();
         timer.start();
 
         Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments();
+
+        Map<Long, Collection<Gene>> querySpecificity = getGenes( coexpressions.getQueryGeneProbes() );
+        coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
+        Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
 
         synchronized ( geneMap ) {
             for ( Long geneId : geneMap.keySet() ) {
                 CoexpressionValueObject coExValObj = geneMap.get( geneId );
 
                 // determine which EE's that contributed to this gene's coexpression were non-specific
-
+                // an ee is specific iff the ee is specific for the query gene and the target gene.
                 Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
-                nonspecificEE.removeAll( allSpecificEE.get( geneId ) );
+                Collection<Long> specificEE = new HashSet(allSpecificEE.get( geneId ));     //get the EE's that are specific for the target gene
+                specificEE.retainAll( allQuerySpecificEE );                                 //get the EE's that are specific for both the target and the query gene
+                nonspecificEE.removeAll( specificEE );                                      
                 coExValObj.setNonspecificEE( nonspecificEE );
 
                 boolean added = false;
@@ -262,16 +267,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     numPredictedGenes++;
                     if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
                         numStringencyPredictedGenes++;
+                        coexpressions.getPredictedCoexpressionData().add( coExValObj );
                     }
                 } else if ( coExValObj.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
                     numProbeAlignedRegions++;
                     if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
                         numStringencyProbeAlignedRegions++;
+                        coexpressions.getAlignedCoexpressionData().add( coExValObj );
                     }
-                }
-
-                if ( ++count % 5000 == 0 ) {
-                    log.info( "Post-processed " + count + " hits, " + timer.getTime() + " ms spent so far." );
+                } else {
+                    log
+                            .warn( "Coexpression is of unknown type. Not gene, probealignedRegion or predictedGene.  Official name: "
+                                    + coExValObj.getGeneOfficialName() );
                 }
 
             }
@@ -299,6 +306,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+
             if ( eeVo == null ) {
                 log.warn( "Looked for " + eeID + " but not in coexpressions object" );
                 continue;
@@ -321,6 +329,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+
             if ( eeVo == null ) {
                 log.warn( "Looked for " + eeID + " but not in coexpressions object" );
                 continue;
@@ -391,8 +400,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return "OTHER_PROBE_CO_EXPRESSION";
     }
 
-    
-
     /**
      * @param p2pClassName
      * @param in
@@ -437,7 +444,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Long geneId = scroll.getLong( 0 );
         // check to see if geneId is already in the geneMap
 
-        // synchronized ( geneMap ) {
         if ( geneMap.containsKey( geneId ) ) {
             vo = geneMap.get( geneId );
         } else {
@@ -469,7 +475,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         vo.addPValue( eeID, scroll.getDouble( 6 ), probeID );
 
         coexpressions.addSpecifityInfo( eeID, probeID, geneId );
-
+        coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 8 ) );
     }
 
     /**
@@ -719,6 +725,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
         coexpressions.setStringency( stringency );
+        coexpressions.setQueryGene( gene );
 
         try {
             final Collection<Long> eeIds = getEEIds( ees );
@@ -935,4 +942,122 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         return genes;
     }
+
+    // This method has been duplicated from CompositeSequenceService
+    // It actually belongs here, as it returns a Map CS to genes.
+    // TODO unify this duplication
+    private Map<Long, Collection<Gene>> getGenes( Collection<Long> csIds ) throws Exception {
+
+        if ( ( csIds == null ) || ( csIds.size() == 0 ) ) {
+            log.debug( "getGenes given null or empty set" );
+            return null;
+        }
+        Map<Long, Collection<Gene>> returnVal = new HashMap<Long, Collection<Gene>>();
+        for ( Long csID : csIds ) {
+            returnVal.put( csID, new HashSet<Gene>() );
+        }
+
+        // build the query for fetching the cs -> gene relation
+        final String nativeQuery = "select CS, GENE from GENE2CS WHERE CS IN ";
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( nativeQuery );
+        buf.append( "(" );
+        for ( Long csID : csIds ) {
+            buf.append( csID );
+            buf.append( "," );
+        }
+        buf.setCharAt( buf.length() - 1, ')' );
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( buf.toString() );
+        queryObject.addScalar( "cs", new LongType() );
+        queryObject.addScalar( "gene", new LongType() );
+
+        StopWatch watch = new StopWatch();
+        log.debug( "Beginning query" );
+        watch.start();
+
+        List result = queryObject.list();
+
+        log.debug( "Done with initial query in " + watch.getTime() + " ms, got " + result.size()
+                + " cs-to-gene mappings." );
+        watch.reset();
+        watch.start();
+
+        int count = 0;
+        Collection<Long> genesToFetch = new HashSet<Long>();
+        Map<Long, Collection<Long>> cs2geneIds = new HashMap<Long, Collection<Long>>();
+
+        for ( Object object : result ) {
+            Object[] ar = ( Object[] ) object;
+            Long cs = ( Long ) ar[0];
+            Long gene = ( Long ) ar[1];
+            if ( !cs2geneIds.containsKey( cs ) ) {
+                cs2geneIds.put( cs, new HashSet<Long>() );
+            }
+            cs2geneIds.get( cs ).add( gene );
+            genesToFetch.add( gene );
+        }
+
+        session.close();
+
+        // nothing found?
+        if ( genesToFetch.size() == 0 ) {
+            returnVal.clear();
+            return returnVal;
+        }
+
+        log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size() + " genes." );
+        watch.reset();
+        watch.start();
+
+        // fetch the genes
+        Collection<Long> batch = new HashSet<Long>();
+        Collection<Gene> genes = new HashSet<Gene>();
+        String geneQuery = "select g from GeneImpl g where g.id in ( :gs )";
+
+        org.hibernate.Query geneQueryObject = super.getSession( false ).createQuery( geneQuery ).setFetchSize( 1000 );
+        int BATCH_SIZE = 10000;
+        for ( Long gene : genesToFetch ) {
+            batch.add( gene );
+            if ( batch.size() == BATCH_SIZE ) {
+                geneQueryObject.setParameterList( "gs", batch );
+                genes.addAll( geneQueryObject.list() );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            geneQueryObject.setParameterList( "gs", batch );
+            genes.addAll( geneQueryObject.list() );
+        }
+
+        log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
+
+        Map<Long, Gene> geneIdMap = new HashMap<Long, Gene>();
+        for ( Gene g : ( Collection<Gene> ) genes ) {
+            Long id = g.getId();
+            geneIdMap.put( id, g );
+        }
+
+        // fill in the return value.
+        for ( Long csId : csIds ) {
+            assert csId != null;
+            Collection<Long> genesToAttach = cs2geneIds.get( csId );
+            if ( genesToAttach == null ) {
+                // this means there was no gene for that cs; we should delete it from the result
+                returnVal.remove( csId );
+                continue;
+            }
+            for ( Long geneId : genesToAttach ) {
+                returnVal.get( csId ).add( geneIdMap.get( geneId ) );
+            }
+            ++count;
+        }
+
+        log.debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + csIds.size()
+                + " probes are associated with genes" );
+        return returnVal;
+    }
+
 }

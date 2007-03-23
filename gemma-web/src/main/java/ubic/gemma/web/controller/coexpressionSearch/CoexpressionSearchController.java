@@ -345,6 +345,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         for ( ExpressionExperimentValueObject eeVo : eeVos ) {
             eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
             eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
+            eeVo.setSpecific( coexpressions.getExpressionExperiment( eeVo.getId() ).isSpecific() );
         }
 
         // new ModelAndView(getSuccessView());
