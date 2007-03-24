@@ -109,14 +109,15 @@ Details for
 
 			</td>
 		</tr>
-		<tr >
+		<tr>
 			<script>
 		var text = '<Gemma:help helpFile="sequenceAnalysisHelp.html"/>';
 		function doit(event) {showWideHelpTip(event,text); }
 		</script>
 			<td colspan="2">
-				<a class="helpLink" name="?" href="" onclick="doit(event);return false;">
-					<img src="/Gemma/images/help.png" /> </a>
+				<a class="helpLink" name="?" href=""
+					onclick="doit(event);return false;"> <img
+						src="/Gemma/images/help.png" /> </a>
 				<%--"<Gemma:help helpFile='sequenceAnalysisHelp.html'/>" --%>
 			</td>
 		</tr>
@@ -232,7 +233,7 @@ Details for
 		<td class="label">
 			Subsumes
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Array designs that this one \'covers\' -- it contains all the same probes.'); return false"><img
+				onclick="showHelpTip(event, 'Array designs that this one \'covers\' -- it contains all the same sequences.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
@@ -242,14 +243,33 @@ Details for
 		<td class="label">
 			Subsumed by
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Array designs that \'covers\' this one. '); return false"><img
+				onclick="showHelpTip(event, 'Array design that \'covers\' this one. '); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
 			<Gemma:arrayDesignGrouping subsumer="${subsumer }" />
 	</tr>
 
-
+	<tr>
+		<td class="label">
+			Merger of
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Array designs that were merged to create this one.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+		<td>
+			<Gemma:arrayDesignGrouping subsumees="${mergees }" />
+	</tr>
+	<tr>
+		<td class="label">
+			Merged into
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Array design this one is merged into.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+		<td>
+			<Gemma:arrayDesignGrouping subsumer="${merger }" />
+	</tr>
 
 	<table>
 		<tr>

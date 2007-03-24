@@ -55,6 +55,28 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
     }
 
+    public String getShortName() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        String result = object.getShortName();
+        if ( object.getIsMerged() ) {
+            result = result
+                    + "&nbsp;<img src=\"/Gemma/images/icons/chart_pie.png\" height=\"16\" width=\"16\" alt=\"Created by merge\" />";
+        }
+        if ( object.getIsMergee() ) {
+            result = result
+                    + "&nbsp;<img src=\"/Gemma/images/icons/arrow_join.png\" height=\"16\" width=\"16\" alt=\"Part of a merge\"  />";
+        }
+        if ( object.getIsSubsumer() ) {
+            result = result
+                    + "&nbsp;<img src=\"/Gemma/images/icons/sitemap.png\" height=\"16\" width=\"16\" alt=\"Subsumer\"  />";
+        }
+        if ( object.getIsSubsumed() ) {
+            result = result
+                    + "&nbsp;<img src=\"/Gemma/images/icons/contrast_high.png\" height=\"16\" width=\"16\" alt=\"Sequences are subsumed by another\"  />";
+        }
+        return result;
+    }
+
     public String getIsSubsumed() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( object.getIsSubsumed() ) {
@@ -68,6 +90,24 @@ public class ArrayDesignWrapper extends TableDecorator {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( object.getIsSubsumer() ) {
             return ">>";
+        } else {
+            return "";
+        }
+    }
+
+    public String getIsMerged() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object.getIsMerged() ) {
+            return "[";
+        } else {
+            return "";
+        }
+    }
+
+    public String getIsMergee() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object.getIsMergee() ) {
+            return "]";
         } else {
             return "";
         }

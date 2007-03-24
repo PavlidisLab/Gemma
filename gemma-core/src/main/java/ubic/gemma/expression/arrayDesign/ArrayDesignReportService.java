@@ -450,6 +450,8 @@ public class ArrayDesignReportService {
         }
         Map<Long, Boolean> isSubsumed = arrayDesignService.isSubsumed( ids );
         Map<Long, Boolean> hasSubsumees = arrayDesignService.isSubsumer( ids );
+        Map<Long, Boolean> isMergee = arrayDesignService.isMergee( ids );
+        Map<Long, Boolean> isMerged = arrayDesignService.isMerged( ids );
 
         for ( ArrayDesignValueObject adVo : valueObjects ) {
             Long id = adVo.getId();
@@ -458,6 +460,12 @@ public class ArrayDesignReportService {
             }
             if ( hasSubsumees.containsKey( id ) ) {
                 adVo.setIsSubsumer( hasSubsumees.get( id ) );
+            }
+            if ( isMergee.containsKey( id ) ) {
+                adVo.setIsMergee( isMergee.get( id ) );
+            }
+            if ( isMerged.containsKey( id ) ) {
+                adVo.setIsMerged( isMerged.get( id ) );
             }
         }
 

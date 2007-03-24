@@ -121,8 +121,6 @@
 	<display:column property="expressionExperimentCountLink"
 		sortable="true" title="Expts" />
 	<display:column property="summaryTable" title="Probe Summary" />
-	<display:column property="isSubsumed" title="" sortable="false" />
-		<display:column property="isSubsumer" title="" sortable="false"  />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="lastSequenceUpdateDate" sortable="true"
 			title="Seq. Update" defaultorder="descending" />

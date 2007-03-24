@@ -163,8 +163,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
         ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
 
+        Collection<ArrayDesign> mergees = arrayDesign.getMergees();
+        ArrayDesign merger = arrayDesign.getMergedInto();
+
         mav.addObject( "subsumer", subsumer );
         mav.addObject( "subsumees", subsumees );
+        mav.addObject( "merger", merger );
+        mav.addObject( "mergees", mergees );
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "numCompositeSequences", numCompositeSequences );
