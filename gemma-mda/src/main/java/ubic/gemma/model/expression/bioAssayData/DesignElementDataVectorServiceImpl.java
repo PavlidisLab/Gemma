@@ -155,4 +155,14 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getDesignElementDataVectorDao().find( expressionExperiment, quantitationTypes );
     }
 
+    @Override
+    protected Collection handleCreate( Collection vectors ) throws Exception {
+        return this.getDesignElementDataVectorDao().create( vectors );
+    }
+
+    @Override
+    protected void handleRemove( Collection vectors ) throws Exception {
+        this.getDesignElementDataVectorDao().remove( vectors );
+    }
+
 }
