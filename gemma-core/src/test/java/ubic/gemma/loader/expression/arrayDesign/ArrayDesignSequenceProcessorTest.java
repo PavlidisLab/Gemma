@@ -171,7 +171,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
         Collection<BioSequence> res = app.processArrayDesign( ad, f,
                 new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                        + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+                        + "/gemma-core/src/test/resources/data/loader/genome/blast", true );
         assertNotNull( res );
         for ( BioSequence sequence : res ) {
             assertNotNull( sequence.getSequence() );

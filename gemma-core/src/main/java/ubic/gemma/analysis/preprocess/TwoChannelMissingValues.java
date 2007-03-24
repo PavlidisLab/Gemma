@@ -33,6 +33,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -106,6 +107,14 @@ public class TwoChannelMissingValues {
          * must be associated with the correct BioAssayDimension.
          */
         for ( BioAssayDimension bioAssayDimension : dims ) {
+            Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
+            Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+            for ( BioAssay ba : bioAssays ) {
+                ads.add( ba.getArrayDesignUsed() );
+            }
+            if ( ads.size() > 1 ) {
+                throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
+            }
             ArrayDesign ades = bioAssayDimension.getBioAssays().iterator().next().getArrayDesignUsed();
             ExpressionDataDoubleMatrix preferredData = builder.getPreferredData( ades );
             ExpressionDataDoubleMatrix bkgDataA = builder.getBackgroundChannelA( ades );

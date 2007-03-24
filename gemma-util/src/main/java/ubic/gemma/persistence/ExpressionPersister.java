@@ -392,10 +392,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
-        log.info( "Persisting " + entity );
-
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
+
+        log.info( "Persisting " + entity );
 
         ExpressionExperiment existing = expressionExperimentService.findByName( entity.getName() );
         if ( existing != null ) {

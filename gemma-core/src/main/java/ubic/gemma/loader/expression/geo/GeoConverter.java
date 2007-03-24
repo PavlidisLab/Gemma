@@ -400,8 +400,7 @@ public class GeoConverter implements Converter {
                 try {
                     if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                         toConvert.add( Double.parseDouble( ( String ) rawValue ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) || pt.equals( PrimitiveType.STRINGARRAY ) ) {
-                        // FIXME BUG 741 - converter makes it a tabbed string, which is a no-no.
+                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
                         toConvert.add( ( String ) rawValue );
                     } else if ( pt.equals( PrimitiveType.CHAR ) ) {
                         if ( ( ( String ) rawValue ).length() != 1 ) {
@@ -414,7 +413,6 @@ public class GeoConverter implements Converter {
                         toConvert.add( Integer.parseInt( ( String ) rawValue ) );
                     } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
                         toConvert.add( Boolean.parseBoolean( ( String ) rawValue ) );
-
                     } else {
                         throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
                     }

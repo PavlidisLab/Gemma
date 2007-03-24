@@ -21,6 +21,8 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author pavlidis
@@ -34,14 +36,18 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
      */
     private static final long serialVersionUID = -8157023595754885730L;
 
+    private static Log log = LogFactory.getLog( BlatResultImpl.class.getName() );
+
     /**
-     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches.
+     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches. We also do not count repeat
+     * matches at all.
      * 
      * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
      * @see ubic.gemma.model.sequence.sequenceAnalysis.BlatResult#score()
      */
     @Override
     public Double score() {
+
         long length;
         if ( this.getQuerySequence() == null ) {
             throw new IllegalArgumentException( "Sequence cannot be null" );
@@ -58,16 +64,37 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         }
 
         assert length > 0;
+
+        long matches = this.getMatches();
+
+        /*
+         * This can happen if the sequence in our system was polyA/T trimmed, which we don't do any more, but there are
+         * remnants.
+         */
+        if ( this.getMatches() > length ) {
+            log.warn( "Blat result for " + this.getQuerySequence()
+                    + " More matches than sequence length (polyA trimmed?) " + this.getMatches() + " > " + length );
+            matches = length;
+        }
+
         /*
          * return sizeMul * (psl->match + ( psl->repMatch>>1)) - sizeMul * psl->misMatch - psl->qNumInsert -
          * psl->tNumInsert; Note that: "Currently the program does not distinguish between matches and repMatches.
          * repMatches is always zero." (http://genome.ucsc.edu/goldenPath/help/blatSpec.html)
          */
-        double score = ( double ) ( this.getMatches() - this.getQueryGapCount() - this.getTargetGapCount() )
-                / ( double ) length;
-        assert score >= 0.0 && score <= 1.0 : "Score was " + score + "; matches=" + this.getMatches() + " queryGaps="
-                + this.getQueryGapCount() + " targetGaps=" + this.getTargetGapCount() + " length=" + length
-                + " sequence=" + this.getQuerySequence() + " id=" + this.getId();
+        double score = ( double ) ( matches - this.getQueryGapCount() - this.getTargetGapCount() ) / ( double ) length;
+
+        // because of repeat matches, score _can_ be negative in some situations (typically, lots of gaps).
+        if ( score < 0.0 && this.getRepMatches() == 0 ) {
+            throw new IllegalStateException( "Score was " + score + "; matches=" + matches + " repMatches="
+                    + this.getRepMatches() + " queryGaps=" + this.getQueryGapCount() + " targetGaps="
+                    + this.getTargetGapCount() + " length=" + length + " sequence=" + this.getQuerySequence() + " id="
+                    + this.getId() );
+        }
+
+        assert score <= 1.0 : "Score was " + score + "; matches=" + matches + " repMatches=" + this.getRepMatches()
+                + " queryGaps=" + this.getQueryGapCount() + " targetGaps=" + this.getTargetGapCount() + " length="
+                + length + " sequence=" + this.getQuerySequence() + " id=" + this.getId();
 
         return score;
     }

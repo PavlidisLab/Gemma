@@ -67,6 +67,116 @@ public class ArrayDesignSequenceAlignmentService {
     BioSequenceService bioSequenceService;
 
     /**
+     * @param ad
+     */
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad ) {
+
+        log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
+
+        Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
+
+        Collection<BlatResult> allResults = new HashSet<BlatResult>();
+
+        Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, taxon );
+
+        log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
+
+        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
+        for ( BioSequence bs : results.keySet() ) {
+            if ( nameMap.containsKey( bs.getName() ) ) {
+                throw new IllegalStateException( "All distinct sequences on the array must have unique names; found "
+                        + bs.getName() + " more than once." );
+            }
+            nameMap.put( bs.getName(), bs );
+        }
+
+        int noresults = 0;
+        int count = 0;
+        for ( BioSequence sequence : sequencesToBlat ) {
+            if ( sequence == null ) {
+                log.warn( "Null sequence!" );
+                continue;
+            }
+            Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
+            if ( brs == null ) {
+                ++noresults;
+                continue;
+            }
+            for ( BlatResult result : brs ) {
+                result.setQuerySequence( sequence ); // must do this to replace
+                // placeholder instance.
+            }
+            allResults.addAll( persistBlatResults( brs ) );
+
+            if ( ++count % 2000 == 0 ) {
+                log.info( "Checked results for " + count + " queries, " + allResults.size() + " blat results so far." );
+            }
+
+        }
+
+        log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+
+        return allResults;
+
+    }
+
+    /**
+     * @param ad
+     * @param rawBlatResults, assumed to be from alignments to the genome for the array design (that is, we don't
+     *        consider aligning mouse to human). Typically these would have been read in from a file.
+     * @return persisted BlatResults.
+     */
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults ) {
+
+        log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
+
+        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
+        Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+
+        ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
+
+        for ( BlatResult result : rawBlatResults ) {
+            result.getQuerySequence().setTaxon( taxon );
+            result.setSearchedDatabase( searchedDatabase );
+            result.getTargetChromosome().setTaxon( taxon );
+            result.getTargetChromosome().getSequence().setTaxon( taxon );
+        }
+
+        Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<BioSequence, Collection<BlatResult>>();
+        getGoldenPathAlignments( sequencesToBlat, taxon, goldenPathAlignments );
+        for ( BioSequence sequence : goldenPathAlignments.keySet() ) {
+            rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
+        }
+
+        return persistBlatResults( rawBlatResults );
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    /**
+     * @param blatResultService the blatResultService to set
+     */
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
      * If necessary, copy the sequence length information over from the blat result to the given sequence. This is often
      * needed when we get the blat results from golden path.
      * 
@@ -76,17 +186,12 @@ public class ArrayDesignSequenceAlignmentService {
     private void copyLengthInformation( BioSequence sequence, BlatResult result ) {
         if ( result.getQuerySequence() != null && result.getQuerySequence().getLength() == null ) {
             long length = result.getQuerySequence().getLength();
-            sequence.setLength( length );
+            if ( sequence.getLength() == null ) sequence.setLength( length );
             sequence.setIsApproximateLength( false );
             sequence.setDescription( StringUtil.append( sequence.getDescription(),
                     "Length information from GoldenPath annotations.", " -- " ) );
             bioSequenceService.update( sequence );
         }
-        // this is sometimes not true in made-up tests.
-        // else if ( sequence.getLength() != null ) {
-        // assert result.getQuerySequence().getLength().equals( sequence.getLength() ) : "Expected "
-        // + sequence.getLength() + " got " + result.getQuerySequence().getLength() + " for " + sequence;
-        // }
     }
 
     /**
@@ -228,115 +333,5 @@ public class ArrayDesignSequenceAlignmentService {
             br.getTargetChromosome().getSequence().setTaxon( taxon );
         }
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
-    }
-
-    /**
-     * @param ad
-     */
-    public Collection<BlatResult> processArrayDesign( ArrayDesign ad ) {
-
-        log.info( "Looking for old results to remove..." );
-        arrayDesignService.deleteAlignmentData( ad );
-
-        Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
-
-        Collection<BlatResult> allResults = new HashSet<BlatResult>();
-
-        Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, taxon );
-
-        log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
-
-        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
-        for ( BioSequence bs : results.keySet() ) {
-            if ( nameMap.containsKey( bs.getName() ) ) {
-                throw new IllegalStateException( "All distinct sequences on the array must have unique names; found "
-                        + bs.getName() + " more than once." );
-            }
-            nameMap.put( bs.getName(), bs );
-        }
-
-        int noresults = 0;
-        int count = 0;
-        for ( BioSequence sequence : sequencesToBlat ) {
-            if ( sequence == null ) {
-                log.warn( "Null sequence!" );
-                continue;
-            }
-            Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
-            if ( brs == null ) {
-                ++noresults;
-                continue;
-            }
-            for ( BlatResult result : brs ) {
-                result.setQuerySequence( sequence ); // must do this to replace
-                // placeholder instance.
-            }
-            allResults.addAll( persistBlatResults( brs ) );
-
-            if ( ++count % 2000 == 0 ) {
-                log.info( "Checked results for " + count + " queries, " + allResults.size() + " blat results so far." );
-            }
-
-        }
-
-        log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
-
-        return allResults;
-
-    }
-
-    /**
-     * @param ad
-     * @param rawBlatResults, assumed to be from alignments to the genome for the array design (that is, we don't
-     *        consider aligning mouse to human). Typically these would have been read in from a file.
-     * @return persisted BlatResults.
-     */
-    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults ) {
-
-        log.info( "Looking for old results to remove..." );
-        arrayDesignService.deleteAlignmentData( ad );
-
-        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
-        Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-
-        ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
-
-        for ( BlatResult result : rawBlatResults ) {
-            result.getQuerySequence().setTaxon( taxon );
-            result.setSearchedDatabase( searchedDatabase );
-            result.getTargetChromosome().setTaxon( taxon );
-            result.getTargetChromosome().getSequence().setTaxon( taxon );
-        }
-
-        Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<BioSequence, Collection<BlatResult>>();
-        getGoldenPathAlignments( sequencesToBlat, taxon, goldenPathAlignments );
-        for ( BioSequence sequence : goldenPathAlignments.keySet() ) {
-            rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
-        }
-
-        return persistBlatResults( rawBlatResults );
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param blatResultService the blatResultService to set
-     */
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
     }
 }

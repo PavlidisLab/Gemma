@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -463,6 +464,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( expressionExperiment );
+                Hibernate.initialize( expressionExperiment );
                 expressionExperiment.getBioAssays().size();
                 thawPrimaryReference( expressionExperiment, session );
                 if ( expressionExperiment.getAccession() != null )
@@ -470,6 +472,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
+                    Hibernate.initialize( ba.getArrayDesignUsed() );
                 }
                 for ( QuantitationType type : expressionExperiment.getQuantitationTypes() ) {
                     session.update( type );
@@ -953,7 +956,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "bibID", bibRefID );
 
-            Collection results =  queryObject.list();
+            Collection results = queryObject.list();
             return results;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

@@ -123,7 +123,8 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             Collection<DesignElement> designElements = element.getDesignElements();
             if ( designElements.size() > 1 ) {
                 throw new UnsupportedOperationException(
-                        "Sorry, don't know how to deal with rows that refer to more than one design element yet." );
+                        "Sorry, don't know how to deal with rows that refer to more than one design element yet. Current row: "
+                                + element );
             }
             DesignElement de = designElements.iterator().next();
             rowMapCache.put( element, de );
@@ -662,15 +663,18 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private void setCorrel( int i, int j, double correl, int numused ) {
         double acorrel = Math.abs( correl );
 
+        // it is possible, due to roundoff, to overflow the bins.
+        int lastBinIndex = fastHistogram.length - 1;
+
         if ( !histogramIsFilled ) {
             if ( useAbsoluteValue ) {
-                int bin = ( int ) ( ( 1.0 + acorrel ) * HALF_BIN );
+                int bin = Math.min( ( int ) ( ( 1.0 + acorrel ) * HALF_BIN ), lastBinIndex );
                 fastHistogram[bin]++;
                 globalTotal += acorrel;
                 // histogram.fill( acorrel ); // this is suprisingly slow due to zillions of calls to Math.floor.
             } else {
                 globalTotal += correl;
-                int bin = ( int ) ( ( 1.0 + correl ) * HALF_BIN );
+                int bin = Math.min( ( int ) ( ( 1.0 + correl ) * HALF_BIN ), lastBinIndex );
                 fastHistogram[bin]++;
                 // histogram.fill( correl );
             }

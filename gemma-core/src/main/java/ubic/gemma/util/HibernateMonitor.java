@@ -54,15 +54,29 @@ public class HibernateMonitor {
         StringBuilder buf = new StringBuilder();
         buf.append( "\n--------------- Hibernate stats -----------------------\n" );
 
+        long flushes = stats.getFlushCount();
+        long trans = stats.getTransactionCount();
+        long prep = stats.getPrepareStatementCount();
+        long open = stats.getSessionOpenCount();
+        long close = stats.getSessionCloseCount();
+
+        buf.append( open + " sessions opened\n" );
+        buf.append( close + " sessions closed\n" );
+        buf.append( prep + " statements prepared\n" );
+        buf.append( trans + " transactions completed\n" );
+        buf.append( flushes + " flushes\n" );
+
         if ( queryCacheHitCount + queryCacheMissCount > 0 ) {
-            buf.append( "Hibernate query cache hit ratio:" + queryCacheHitRatio );
+            buf.append( "Query cache hit ratio:" + queryCacheHitRatio );
         }
 
         long secCacheHits = stats.getSecondLevelCacheHitCount();
         long secCacheMiss = stats.getSecondLevelCacheMissCount();
         long secCachePut = stats.getSecondLevelCachePutCount();
 
-        buf.append( "2'Cache summary: " + secCacheHits + " hits; " + secCacheMiss + " miss; " + secCachePut + " put\n" );
+        buf
+                .append( "2' Cache summary: " + secCacheHits + " hits; " + secCacheMiss + " miss; " + secCachePut
+                        + " put\n" );
 
         String[] regions = stats.getSecondLevelCacheRegionNames();
         for ( String string : regions ) {
@@ -71,10 +85,14 @@ public class HibernateMonitor {
             long missCount = secondLevelCacheStatistics.getMissCount();
             long putCount = secondLevelCacheStatistics.getPutCount();
             if ( hitCount > 0 || missCount > 0 || putCount > 0 ) {
-                buf.append( "2' cache stats for " + string + ": " + hitCount + " hits; " + missCount + " misses; "
-                        + putCount + " puts" + "\n" );
+                try {
+                    String shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
+                    buf.append( "    " + shortName + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
+                            + " puts" + "\n" );
+                } catch ( ClassNotFoundException e ) {
+                    log.error( e, e );
+                }
             }
-
         }
 
         String[] collectionRoleNames = stats.getCollectionRoleNames();
@@ -97,7 +115,7 @@ public class HibernateMonitor {
                 String shortName;
                 try {
                     shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                    buf.append( shortName + " changed " + changes + " times\n" );
+                    buf.append( shortName + " changed " + changes + " \n" );
                 } catch ( ClassNotFoundException e ) {
                     log.error( e, e );
                 }
@@ -107,7 +125,7 @@ public class HibernateMonitor {
                 String shortName;
                 try {
                     shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                    buf.append( shortName + " read " + reads + " times\n" );
+                    buf.append( shortName + " read " + reads + " \n" );
                 } catch ( ClassNotFoundException e ) {
                     log.error( e, e );
                 }
@@ -115,7 +133,7 @@ public class HibernateMonitor {
 
         }
 
-        buf.append( "------------------------------------------------\n" );
+        buf.append( "----------------------------------------------------------\n" );
         log.info( buf );
 
     }

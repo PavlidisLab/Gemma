@@ -62,14 +62,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '" + BioSequence.class.getName()
                                     + "' was found when executing query" );
-                    // Iterator it = results.iterator();
-                    // result = it.next(); // arbitrarily pick the first one.
-                    //
-                    // for ( ; it.hasNext(); ) {
-                    // BioSequence bs = ( BioSequence ) it.next();
-                    // if ( log.isInfoEnabled() ) log.info( "Removing " + bs + ", duplicate of " + result );
-                    // this.remove( bs );
-                    // }
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -202,10 +194,18 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     log.warn( "More than one instance of '" + BioSequence.class.getName()
                             + "' was found when executing query" );
 
+                    // favor the one with name matching the accession.
+                    for ( Object object : results ) {
+                        BioSequence bs = ( BioSequence ) object;
+                        if ( bs.getName().equals( databaseEntry.getAccession() ) ) {
+                            return bs;
+                        }
+                    }
+
                 }
-                if ( results.size() > 1 ) {
-                    result = results.iterator().next();
-                }
+
+                // if we get here, with multiples, we are just picking an arbitrary one.
+                result = results.iterator().next();
             }
             return ( BioSequence ) result;
         } catch ( org.hibernate.HibernateException ex ) {

@@ -60,7 +60,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.DateUtil;
 
 /**
- * Commandline tool to conduct the link analysis
+ * Commandline tool to conduct link analysis
  * 
  * @author xiangwan
  * @version $Id$
@@ -312,8 +312,21 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix,
             ExpressionDataBooleanMatrix absentPresent ) {
         log.info( "Filtering out genes that are missing too many values" );
+
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
-        if ( absentPresent != null ) rowMissingFilter.setAbsentPresentCalls( absentPresent );
+        if ( absentPresent != null ) {
+            if ( absentPresent.rows() != matrix.rows() ) {
+                throw new IllegalArgumentException( "Missing value matrix has " + absentPresent.rows() + " rows (!="
+                        + matrix.rows() + ")" );
+            }
+
+            if ( absentPresent.columns() != matrix.columns() ) {
+                throw new IllegalArgumentException( "Missing value matrix has " + absentPresent.columns()
+                        + " columns (!=" + matrix.columns() + ")" );
+            }
+
+            rowMissingFilter.setAbsentPresentCalls( absentPresent );
+        }
         rowMissingFilter.setMinPresentFraction( minPresentFraction );
         return ( ExpressionDataDoubleMatrix ) rowMissingFilter.filter( matrix );
     }

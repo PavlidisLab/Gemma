@@ -64,6 +64,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
         init();
+        this.bioAssayDimensions.addAll( bioAssayDimensions );
+        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimension,
                 quantitationType );
         vectorsToMatrix( selectedVectors );
@@ -77,6 +79,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
+        this.bioAssayDimensions.addAll( bioAssayDimensions );
+        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimensions,
                 quantitationTypes );
         vectorsToMatrix( selectedVectors );
@@ -85,6 +89,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     /**
      * @param dataVectors
      * @param quantitationType
+     * @deprecated Use ExpressionDataMatrixBuilder instead.
      */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
@@ -101,6 +106,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension,
             QuantitationType quantitationType ) {
         init();
+        this.bioAssayDimensions.add( bioAssayDimension );
+        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationType,
                 bioAssayDimension );
         vectorsToMatrix( selectedVectors );
@@ -126,23 +133,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
+        this.bioAssayDimensions.addAll( bioAssayDimensions );
+        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
                 bioAssayDimensions );
         vectorsToMatrix( selectedVectors );
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param quantitationType
-     * @deprecated Use ExpressionDataMatrixBuilder instead, because you may need multiple quantitation types.
-     */
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        init();
-        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationType );
-        if ( vectorsOfInterest.size() == 0 ) {
-            throw new IllegalArgumentException( "No vectors for " + quantitationType );
-        }
-        this.vectorsToMatrix( vectorsOfInterest );
     }
 
     public int columns() {

@@ -21,10 +21,10 @@ package ubic.gemma.datastructure.matrix;
 import java.util.Collection;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.preprocess.VectorMergingService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -47,6 +47,9 @@ public class ExpressionDataMatrixVectorMergingTest extends BaseSpringContextTest
     /**
      * Used 4 related platforms. This is the Sorlie breast cancer data set (2001), altered to be simpler for us to
      * interpret test results. This is a key test case!
+     * <p>
+     * This test has problems running in a transaction, it works best if the data gets loaded once and then reused each
+     * time you run the test (the test isn't about loading the data).
      * 
      * @throws Exception
      */
@@ -87,7 +90,13 @@ public class ExpressionDataMatrixVectorMergingTest extends BaseSpringContextTest
 
         assertEquals( 17, combinedBad.getBioAssays().size() );
 
-        log.info( matrix );
+        VectorMergingService mergingService = ( VectorMergingService ) this.getBean( "vectorMergingService" );
+
+        mergingService.mergeVectors( newee );
+
+        expressionExperimentService.thaw( newee );
+
+        assertEquals( 20, newee.getDesignElementDataVectors().size() );
 
     }
 

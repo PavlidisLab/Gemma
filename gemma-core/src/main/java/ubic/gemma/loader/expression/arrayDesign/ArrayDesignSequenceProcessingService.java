@@ -80,12 +80,6 @@ public class ArrayDesignSequenceProcessingService {
      */
     private static final int MAX_VERSION_NUMBER = 10;
 
-    /**
-     * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off when retrieving
-     * sequences from BLAST databases.
-     */
-    private static final int POLY_AT_THRESHOLD = 5;
-
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
     private ArrayDesignService arrayDesignService;
@@ -734,7 +728,7 @@ public class ArrayDesignSequenceProcessingService {
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
-            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon );
+            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
 
             finalResult.addAll( found.values() );
 
@@ -782,11 +776,13 @@ public class ArrayDesignSequenceProcessingService {
      *        accession, delimited by tab. Sequences will be fetch from BLAST databases.
      * @param databaseNames
      * @param blastDbHome
+     * @param force If true, if an existing BioSequence that matches is found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      * @return
      * @throws IOException
      */
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome ) throws IOException {
+            String[] databaseNames, String blastDbHome, boolean force ) throws IOException {
         checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = parseAccessionFile( sequenceIdentifierFile );
@@ -806,10 +802,12 @@ public class ArrayDesignSequenceProcessingService {
         }
 
         int versionNumber = 1;
+        int numSwitched = 0;
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
-            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon );
+            // map of accessions to sequence.
+            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
 
             finalResult.addAll( retrievedSequences );
 
@@ -838,6 +836,8 @@ public class ArrayDesignSequenceProcessingService {
                 String probeName = cs.getName();
                 String acc = probe2acc.get( probeName );
                 if ( found.containsKey( acc ) ) {
+                    numSwitched++;
+                    log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
                     cs.setBiologicalCharacteristic( found.get( acc ) );
                 }
             }
@@ -848,6 +848,8 @@ public class ArrayDesignSequenceProcessingService {
         if ( !notFound.isEmpty() ) {
             logMissingSequences( arrayDesign, notFound );
         }
+
+        log.info( numSwitched + " composite sequences had their biologicalCharacteristics changed" );
 
         return finalResult;
 
@@ -946,15 +948,17 @@ public class ArrayDesignSequenceProcessingService {
      * 
      * @param accessionsToFetch
      * @param retrievedSequences
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
-            Collection<BioSequence> retrievedSequences, Taxon taxon ) {
+            Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
 
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
             sequence.setTaxon( taxon );
-            sequence = createOrUpdateSequence( sequence );
+            sequence = createOrUpdateSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
@@ -967,15 +971,18 @@ public class ArrayDesignSequenceProcessingService {
      * 
      * @param accessionsToFetch
      * @param retrievedSequences
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
-            Collection<BioSequence> retrievedSequences, Taxon taxon ) {
+            Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
 
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
+            if ( log.isDebugEnabled() ) log.debug( "Processing retrieved sequence: " + sequence );
             sequence.setTaxon( taxon );
-            sequence = createOrUpdateSequence( sequence );
+            sequence = createOrUpdateSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
@@ -983,6 +990,12 @@ public class ArrayDesignSequenceProcessingService {
         return found;
     }
 
+    /**
+     * @param noSequence
+     * @param warned
+     * @param cs
+     * @return
+     */
     private boolean warnAboutMissingSequence( int noSequence, boolean warned, CompositeSequence cs ) {
         if ( !warned ) {
             if ( noSequence < 20 ) {
@@ -1001,47 +1014,68 @@ public class ArrayDesignSequenceProcessingService {
      * @param sequenceId
      * @param databaseNames
      * @param blastDbHome
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
-    public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome ) {
+    public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
+            boolean force ) {
         BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId );
         if ( found == null ) return null;
-        return createOrUpdateSequence( found );
+        return createOrUpdateSequence( found, force );
 
     }
 
     /**
      * @param found a new (nonpersistent) biosequence that can be used to create a new entry or update an existing one
-     *        with the sequence. The sequence is strippe
+     *        with the sequence.
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
-    private BioSequence createOrUpdateSequence( BioSequence found ) {
-        stripPolyAorT( found );
+    private BioSequence createOrUpdateSequence( BioSequence found, boolean force ) {
+        assert found != null;
         BioSequence existing = bioSequenceService.findByAccession( found.getSequenceDatabaseEntry() );
 
         if ( existing == null ) {
-            return ( BioSequence ) persisterHelper.persist( found );
+            if ( log.isDebugEnabled() ) log.debug( "Find (or creating) new sequence " + found );
+            BioSequence bs = bioSequenceService.find( found ); // there still might be a match.
+            if ( bs == null ) {
+                existing = bioSequenceService.create( found );
+                return updateExistingWithSequenceData( found, existing, force );
+            } else {
+                return bs;
+            }
         } else {
-            if ( existing.getType() == null ) existing.setType( found.getType() ); // generic...
-            existing.setLength( found.getLength() );
-            existing.setSequence( found.getSequence() );
-            existing.setIsApproximateLength( found.getIsApproximateLength() );
-            bioSequenceService.update( existing );
-            return existing;
+            return updateExistingWithSequenceData( found, existing, force );
         }
     }
 
     /**
-     * Strip polyA or polyT from sequence ends, update the length.
-     * 
      * @param found
+     * @param existing
+     * @return
      */
-    private void stripPolyAorT( BioSequence found ) {
-        String newSequence = found.getSequence();
-        newSequence = SequenceManipulation.stripPolyAorT( newSequence, POLY_AT_THRESHOLD );
-        found.setSequence( newSequence );
-        found.setLength( new Long( newSequence.length() ) );
-        found.setIsApproximateLength( false );
+    private BioSequence updateExistingWithSequenceData( BioSequence found, BioSequence existing, boolean force ) {
+        assert found != null;
+        assert existing != null;
 
+        if ( force || existing.getSequence() == null ) {
+            if ( existing.getType() == null ) existing.setType( found.getType() ); // generic...
+            existing.setLength( found.getLength() );
+            assert found.getSequence() != null;
+
+            // existing.setName( found.getName() );
+            existing.setSequence( found.getSequence() );
+            existing.setIsApproximateLength( found.getIsApproximateLength() );
+
+            bioSequenceService.update( existing );
+            if ( log.isDebugEnabled() )
+                log.debug( "Updated " + existing + " with sequence "
+                        + StringUtils.abbreviate( existing.getSequence(), 20 ) );
+        }
+
+        return existing;
     }
+
 }

@@ -216,4 +216,11 @@ public interface ExpressionDataMatrix<T> {
      */
     public Collection<QuantitationType> getQuantitationTypes();
 
+    /**
+     * Establish whether this matrix should try to "line up" vectors based on sequences.
+     * 
+     * @param b
+     */
+    public void setAllowVectorMerge( boolean b );
+
 }

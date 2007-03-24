@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -153,6 +152,7 @@ public class ExpressionDataMatrixBuilder {
     public ExpressionDataBooleanMatrix getMissingValueData( ArrayDesign arrayDesign ) {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
         List<QuantitationType> qtypes = this.getMissingValueQTypes( arrayDesign );
+        if ( qtypes.size() == 0 ) return null;
         return new ExpressionDataBooleanMatrix( vectors, dimensions, qtypes );
     }
 
@@ -255,6 +255,26 @@ public class ExpressionDataMatrixBuilder {
             return getSignalChannelA( arrayDesign );
         }
 
+    }
+
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getBkgSubChannelA( ArrayDesign arrayDesign ) {
+        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
+        List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
+
+        for ( BioAssayDimension dimension : dimensions ) {
+            QuantitationType qType = dat.getBkgSubChannelA( dimension );
+            if ( qType != null ) qTypes.add( qType );
+        }
+
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( dimensions, qTypes );
+        }
+        return null;
     }
 
     /**
@@ -368,15 +388,20 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * FIXME it is possible for this to be multiple.
-     * 
      * @param vector
      * @return
      */
     public ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
         Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
         if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for " + vector );
-        ArrayDesign adUsed = bioAssays.iterator().next().getArrayDesignUsed();
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( BioAssay ba : bioAssays ) {
+            ads.add( ba.getArrayDesignUsed() );
+        }
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
+        }
+        ArrayDesign adUsed = ads.iterator().next();
         return adUsed;
     }
 
@@ -385,7 +410,7 @@ public class ExpressionDataMatrixBuilder {
      * @param signalChannelB
      * @param backgroundChannelA
      * @param bkgSubChannelA
-     * @return
+     * @return true if channelA needs reconstruction
      */
     private boolean checkChannelA( QuantitationType signalChannelA, QuantitationType signalChannelB,
             QuantitationType backgroundChannelA, QuantitationType bkgSubChannelA ) {
@@ -565,7 +590,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     private static boolean isBackgroundChannelA( String name ) {
-        return name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
+        return name.equals( "CH1A_MEDIAN" ) || name.equals( "CH1_BKD" )
                 || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
                 || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )

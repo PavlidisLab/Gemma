@@ -156,7 +156,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             // this is kind of an oddball function of this tool.
             if ( this.hasOption( 's' ) ) {
                 BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null );
+                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
                 if ( updated != null ) {
                     log.info( "Updated or created " + updated );
                 }
@@ -222,7 +222,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 log.info( "Processing ArrayDesign..." );
 
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs, new String[] { "nt",
-                        "est_others", "est_human", "est_mouse" }, null );
+                        "est_others", "est_human", "est_mouse" }, null, force );
 
                 audit( arrayDesign, "Sequences identifiers from file: " + idFile );
             } else {

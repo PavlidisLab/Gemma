@@ -46,19 +46,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
     private ObjectMatrix2DNamed matrix;
 
-    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> dataVectors,
-            QuantitationType quantitationType ) {
-        init();
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( quantitationType, dataVectors );
-        vectorsToMatrix( selectedVectors );
-    }
-
-    public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        init();
-        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationType );
-        this.vectorsToMatrix( vectorsOfInterest );
-    }
-
     /**
      * @param expressionExperiment
      * @param bioAssayDimensions A list of bioAssayDimensions to use.
@@ -67,6 +54,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment,
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
+        this.bioAssayDimensions.addAll( bioAssayDimensions );
+        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
                 bioAssayDimensions );
         vectorsToMatrix( selectedVectors );
@@ -80,6 +69,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors,
             List<BioAssayDimension> dimensions, List<QuantitationType> qtypes ) {
         init();
+        this.bioAssayDimensions.addAll( dimensions );
+        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, dimensions, qtypes );
         vectorsToMatrix( selectedVectors );
     }
@@ -285,7 +276,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
     }
 
     public void set( int row, int column, Object value ) {
-        // FIXME
         throw new UnsupportedOperationException();
     }
 

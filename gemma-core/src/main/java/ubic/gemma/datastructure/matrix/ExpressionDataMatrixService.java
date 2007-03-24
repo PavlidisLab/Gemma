@@ -36,20 +36,6 @@ public class ExpressionDataMatrixService {
     DesignElementDataVectorService designElementDataVectorService;
 
     /**
-     * WARNING this method may not yield the expected results if the experiment contains more than one array design.
-     * 
-     * @param expExp
-     * @param qt
-     * @return
-     * @deprecated Use ExpressionDataMatrixBuilder instead.
-     */
-    @Deprecated
-    @SuppressWarnings("unchecked")
-    public ExpressionDataMatrix getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
-        return new ExpressionDataDoubleMatrix( expExp, qt );
-    }
-
-    /**
      * @param ee
      * @param qts
      * @return

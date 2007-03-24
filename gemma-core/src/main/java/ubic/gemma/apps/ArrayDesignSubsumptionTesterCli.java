@@ -19,13 +19,14 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -41,7 +42,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         tester.doWork( args );
     }
 
-    private Collection<String> otherArrayDesigNames;
+    private Collection<String> otherArrayDesignNames;
 
     @SuppressWarnings("static-access")
     @Override
@@ -66,7 +67,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
         unlazifyArrayDesign( arrayDesign );
 
-        for ( String otherArrayDesigName : otherArrayDesigNames ) {
+        for ( String otherArrayDesigName : otherArrayDesignNames ) {
             ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
@@ -91,8 +92,17 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 // test other way around, but only if first way failed (to avoid cycles)
                 this.arrayDesignService.updateSubsumingStatus( otherArrayDesign, arrayDesign );
             }
+            audit( arrayDesign, "Tested to see if it is subsumed by " + arrayDesignName );
         }
+
+        audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );
+
         return null;
+    }
+
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignSubsumeCheckEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
     protected void processOptions() {
@@ -100,9 +110,9 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         if ( this.hasOption( 'o' ) ) {
             String otherArrayDesigName = getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesigName, ',' );
-            this.otherArrayDesigNames = new HashSet<String>();
+            this.otherArrayDesignNames = new HashSet<String>();
             for ( String string : names ) {
-                this.otherArrayDesigNames.add( string );
+                this.otherArrayDesignNames.add( string );
             }
         }
     }

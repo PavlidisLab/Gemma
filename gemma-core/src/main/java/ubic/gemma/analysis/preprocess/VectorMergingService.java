@@ -20,19 +20,27 @@ package ubic.gemma.analysis.preprocess;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
@@ -44,12 +52,15 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
  * <li>Generate a merged ExpressionDataMatrix for each of the (important) quantitation types.</li>
  * <li>Create a merged BioAssayDimension</li>
  * <li>Persist the new vectors, which are now tied to a <em>single DesignElement</em>. This is, strictly speaking,
- * incorrect, but because the design elements used in the vector all point to the same sequence, there is no problem in
- * analyzing this. However, there is a potential loss of information.
+ * incorrect, but because the design elements used in the vector all point to the same sequence, there is no major
+ * problem in analyzing this. However, there is a potential loss of information.
  * </ol>
  * <p>
- * The last persisting step is not handled by this class.
  * 
+ * @spring.bean id="vectorMergingService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @author pavlidis
  * @version $Id$
  * @see ExpressionDataMatrixBuilder
@@ -58,76 +69,235 @@ public class VectorMergingService {
 
     private static Log log = LogFactory.getLog( VectorMergingService.class.getName() );
 
-    /**
-     * @param builder
-     * @return collection of designElementDataVectors for persisting, which will be empty if problems were encountered.
-     */
-    public Collection<DesignElementDataVector> mergeVectors( ExpressionDataMatrixBuilder builder ) {
+    private ExpressionExperimentService expressionExperimentService;
 
-        ExpressionDataDoubleMatrix matrix;
-        Collection<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
+    private DesignElementDataVectorService designElementDataVectorService;
 
-        matrix = builder.getPreferredData();
-        makeVectors( builder, matrix, vectors );
-
-        matrix = builder.getBackgroundChannelA( null );
-        makeVectors( builder, matrix, vectors );
-
-        matrix = builder.getBackgroundChannelB( null );
-        makeVectors( builder, matrix, vectors );
-
-        matrix = builder.getSignalChannelA( null );
-        makeVectors( builder, matrix, vectors );
-
-        matrix = builder.getSignalChannelB( null );
-        makeVectors( builder, matrix, vectors );
-
-        ExpressionDataBooleanMatrix bmatrix = builder.getMissingValueData( null );
-        makeVectors( builder, bmatrix, vectors );
-
-        return vectors;
-
-    }
+    private ArrayDesignService arrayDesignService;
 
     /**
-     * @param builder
-     * @param matrix
-     * @param vectors
+     * @param expExp
      */
     @SuppressWarnings("unchecked")
-    private void makeVectors( ExpressionDataMatrixBuilder builder, ExpressionDataMatrix matrix,
-            Collection<DesignElementDataVector> vectors ) {
+    public void mergeVectors( ExpressionExperiment expExp ) {
 
-        if ( matrix == null ) return;
+        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
 
-        ByteArrayConverter bac = new ByteArrayConverter();
+        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
 
-        BioAssayDimension bad = null;
-        try {
-            bad = matrix.getBioAssayDimension();
-        } catch ( IllegalArgumentException e ) {
-            return;
+        if ( arrayDesigns.size() > 1 ) {
+            throw new IllegalArgumentException( "Cannot cope with more than one platform" );
         }
 
-        Collection<QuantitationType> quantitationTypes = matrix.getQuantitationTypes();
-        if ( quantitationTypes.size() > 1 ) {
-            log.error( "More than one quantitationType for matrix" );
-            return;
+        ArrayDesign arrayDesign = arrayDesigns.iterator().next();
+        arrayDesignService.thawLite( arrayDesign );
+
+        log.info( qts.size() + " quantitation types" );
+        for ( QuantitationType type : qts ) {
+
+            log.info( "Processing " + type );
+
+            Collection<DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( expExp, type );
+
+            LinkedHashSet<BioAssayDimension> bioAds = new LinkedHashSet<BioAssayDimension>();
+
+            Map<DesignElement, Collection<DesignElementDataVector>> deVMap = new HashMap<DesignElement, Collection<DesignElementDataVector>>();
+            for ( DesignElementDataVector vector : oldVectors ) {
+                bioAds.add( vector.getBioAssayDimension() );
+                if ( !deVMap.containsKey( vector.getDesignElement() ) ) {
+                    deVMap.put( vector.getDesignElement(), new HashSet<DesignElementDataVector>() );
+                }
+                deVMap.get( vector.getDesignElement() ).add( vector );
+            }
+
+            if ( bioAds.size() == 1 ) {
+                log.info( "No merging needed for " + type + " (only one bioassaydimension already)" );
+                continue;
+            }
+
+            // define a new bioAd.
+            BioAssayDimension newBioAd = combineBioAssayDimensions( bioAds );
+            int totalBioAssays = newBioAd.getBioAssays().size();
+
+            ByteArrayConverter converter = new ByteArrayConverter();
+            Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
+            for ( DesignElement de : deVMap.keySet() ) {
+
+                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                vector.setBioAssayDimension( newBioAd );
+                vector.setDesignElement( de );
+                vector.setQuantitationType( type );
+                vector.setExpressionExperiment( expExp );
+
+                // merge the data in the right right order please!
+                Collection<DesignElementDataVector> dedvs = deVMap.get( de );
+
+                List<Object> data = new ArrayList<Object>();
+                // these ugly nested loops are to ENSURE that we get the vector reconstructed properly.
+                for ( BioAssayDimension bioAd : bioAds ) {
+                    boolean found = false;
+                    for ( DesignElementDataVector oldV : dedvs ) {
+                        if ( oldV.getBioAssayDimension().equals( bioAd ) ) {
+
+                            byte[] rawDat = oldV.getData();
+
+                            if ( type.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
+                                boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
+                                for ( boolean b : convertedDat ) {
+                                    data.add( new Boolean( b ) );
+                                }
+                            } else if ( type.getRepresentation().equals( PrimitiveType.CHAR ) ) {
+                                char[] convertedDat = converter.byteArrayToChars( rawDat );
+                                for ( char b : convertedDat ) {
+                                    data.add( new Character( b ) );
+                                }
+                            } else if ( type.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                                double[] convertedDat = converter.byteArrayToDoubles( rawDat );
+                                for ( double b : convertedDat ) {
+                                    data.add( new Double( b ) );
+                                }
+                            } else if ( type.getRepresentation().equals( PrimitiveType.INT ) ) {
+                                int[] convertedDat = converter.byteArrayToInts( rawDat );
+                                for ( int b : convertedDat ) {
+                                    data.add( new Integer( b ) );
+                                }
+                            } else if ( type.getRepresentation().equals( PrimitiveType.LONG ) ) {
+                                long[] convertedDat = converter.byteArrayToLongs( rawDat );
+                                for ( long b : convertedDat ) {
+                                    data.add( new Long( b ) );
+                                }
+                            } else if ( type.getRepresentation().equals( PrimitiveType.STRING ) ) {
+                                String[] convertedDat = converter.byteArrayToStrings( rawDat );
+                                for ( String b : convertedDat ) {
+                                    data.add( b );
+                                }
+                            } else {
+                                throw new UnsupportedOperationException( "Don't know how to handle "
+                                        + type.getRepresentation() );
+                            }
+
+                            found = true;
+                            break;
+                        }
+                    }
+                    if ( !found ) {
+                        throw new IllegalStateException( "Whoops, no data for " + de + " / " + type + " / " + bioAd );
+                    }
+                }
+
+                if ( data.size() != totalBioAssays ) {
+                    throw new IllegalStateException( "Wrong number of values for " + de + " / " + type + ", expected "
+                            + totalBioAssays + ", got " + data.size() );
+                }
+                byte[] newDataAr = converter.toBytes( data );
+
+                vector.setData( newDataAr );
+
+                newVectors.add( vector );
+            }
+
+            print( newVectors );
+
+            log.info( "Creating " + newVectors.size() + " new vectors for " + type );
+            // designElementDataVectorService.create( newVectors );
+            //
+            log.info( "Removing " + oldVectors.size() + " old vectors for " + type );
+            // designElementDataVectorService.remove( oldVectors );
+
+            // FIXME can remove the old BioAssayDimensions, too.
+
         }
 
-        QuantitationType qt = quantitationTypes.iterator().next();
-
-        for ( ExpressionDataMatrixRowElement el : ( List<ExpressionDataMatrixRowElement> ) matrix.getRowElements() ) {
-            matrix.getRow( el.getIndex() );
-            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-            vector.setBioAssayDimension( bad );
-            vector.setDesignElement( el.getDesignElements().iterator().next() );
-            vector.setExpressionExperiment( builder.getExpressionExperiment() );
-            vector.setQuantitationType( qt );
-            byte[] data = bac.toBytes( matrix.getRow( el.getIndex() ) );
-            vector.setData( data );
-            vectors.add( vector );
-        }
     }
 
+    /**
+     * Just for debugging.
+     * 
+     * @param newVectors
+     */
+    private void print( Collection<DesignElementDataVector> newVectors ) {
+        StringBuilder buf = new StringBuilder();
+        ByteArrayConverter conv = new ByteArrayConverter();
+        for ( DesignElementDataVector vector : newVectors ) {
+            buf.append( vector.getDesignElement() );
+            QuantitationType qtype = vector.getQuantitationType();
+            if ( qtype.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                double[] vals = conv.byteArrayToDoubles( vector.getData() );
+                for ( double d : vals ) {
+                    buf.append( "\t" + d );
+                }
+            } else if ( qtype.getRepresentation().equals( PrimitiveType.INT ) ) {
+                int[] vals = conv.byteArrayToInts( vector.getData() );
+                for ( int i : vals ) {
+                    buf.append( "\t" + i );
+                }
+            } else if ( qtype.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
+                boolean[] vals = conv.byteArrayToBooleans( vector.getData() );
+                for ( boolean d : vals ) {
+                    buf.append( "\t" + d );
+                }
+            } else if ( qtype.getRepresentation().equals( PrimitiveType.STRING ) ) {
+                String[] vals = conv.byteArrayToStrings( vector.getData() );
+                for ( String d : vals ) {
+                    buf.append( "\t" + d );
+                }
+
+            }
+            buf.append( "\n" );
+        }
+
+        log.info( "\n" + buf );
+    }
+
+    /**
+     * @param bioAds
+     * @return
+     */
+    private BioAssayDimension combineBioAssayDimensions( LinkedHashSet<BioAssayDimension> bioAds ) {
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        bad.setName( "" );
+        bad.setDescription( "Generated by the merger of " + bioAds.size() + " dimensions: " );
+
+        List<BioAssay> bioAssays = new ArrayList<BioAssay>();
+
+        for ( BioAssayDimension bioAd : bioAds ) {
+            bioAssays.addAll( bioAd.getBioAssays() );
+            bad.setName( bad.getName() + bioAd.getName() + " " );
+            bad.setDescription( bad.getDescription() + bioAd.getName() + " " );
+        }
+
+        bad.setBioAssays( bioAssays );
+
+        return bad;
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * FIXME Code copied from ExpressionExperimentPlatformSwitchService
+     * 
+     * @param expExp
+     * @param type
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<DesignElementDataVector> getVectorsForOneQuantitationType( ExpressionExperiment expExp,
+            QuantitationType type ) {
+        Collection<QuantitationType> oneType = new HashSet<QuantitationType>();
+        oneType.add( type );
+        Collection<DesignElementDataVector> vectorsForQt = expressionExperimentService.getDesignElementDataVectors(
+                expExp, oneType );
+        designElementDataVectorService.thaw( vectorsForQt );
+        return vectorsForQt;
+    }
 }

@@ -384,6 +384,10 @@ public class LinkAnalysis {
         if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
     }
 
+    /**
+     * 
+     *
+     */
     private void outputOptions() {
         log.info( "Current Settings" );
         log.info( "AbsouteValue Setting:" + this.absoluteValue );
@@ -452,10 +456,6 @@ public class LinkAnalysis {
 
         /* *******Find the dataVector for each probe first*** */
         int c = dataMatrix.columns();
-        // int[] p1vAr = new int[keep.size()];
-        // int[] p2vAr = new int[keep.size()];
-        // int[] cbAr = new int[keep.size()];
-        // int[] pbAr = new int[keep.size()];
 
         log.info( "Start submitting data to database." );
         StopWatch watch = new StopWatch();
@@ -481,12 +481,6 @@ public class LinkAnalysis {
         if ( p2plinks.size() > 0 ) this.ppService.create( p2plinks );
         watch.stop();
         log.info( "Seconds to insert " + this.keep.size() + " links:" + ( double ) watch.getTime() / 1000.0 );
-        /**
-         * System.err.println( "Ready to submit to tmm database." ); if(this.useDB) { LinkInserter li = new
-         * LinkInserter( this.dbManager.getDbHandle() ); int dataSetId = 0; int rd = li.insertBulkLink( dataSetId,
-         * p1vAr, p2vAr, cbAr, pbAr ); System.err.println( "Inserted " + rd + " links into the database" ); }
-         */
-
     }
 
     /**

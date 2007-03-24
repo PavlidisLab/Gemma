@@ -43,6 +43,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -191,6 +192,11 @@ public class Blat {
     }
 
     /**
+     * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off prior to analysis.
+     */
+    private static final int POLY_AT_THRESHOLD = 5;
+
+    /**
      * Run a BLAT search using the gfClient.
      * 
      * @param b
@@ -204,7 +210,8 @@ public class Blat {
         File querySequenceFile = File.createTempFile( b.getName(), ".fa" );
 
         BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
-        out.write( ">" + b.getName() + "\n" + b.getSequence() );
+        String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
+        out.write( ">" + b.getName() + "\n" + trimmed );
         out.close();
         log.info( "Wrote sequence to " + querySequenceFile.getPath() );
 
