@@ -366,7 +366,6 @@ public class DesignElementDataVectorDaoImpl extends
         ArrayDesign arrayDesign = ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getArrayDesign();
         session.update( arrayDesign );
         arrayDesign.hashCode();
-        session.evict( arrayDesign );
 
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
