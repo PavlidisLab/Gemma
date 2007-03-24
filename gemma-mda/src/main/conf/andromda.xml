@@ -67,8 +67,8 @@
 				<property name="hibernateUseQueryCache">true</property>
 				<property name="hibernateJdbcBatchSize">50</property>
 				<property name="hibernateJdbcFetchSize">50</property>
-				<property name="hibernateMaxFetchDepth">2</property>
-				<property name="hibernateDefaultBatchFetchSize">16</property>
+				<property name="hibernateMaxFetchDepth">3</property>
+				<property name="hibernateDefaultBatchFetchSize">500</property>
 				<property name="hibernateJdbcBatchVersionedData">true</property>
 				<property name="hibernateJdbcUseStreamsForBinary">true</property>
 				<property name="hibernateQueryUseNamedParameters">true</property>
@@ -127,8 +127,6 @@
 					file:${project.basedir}/src/main/conf/HibernateTypeMappings.xml
 				</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
-				<property name="hibernateUseQueryCache">true</property>
-				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
 				<property name="entities">${maven.andromda.core.generated.dir}</property>
 				<property name="entity-impls">${maven.andromda.core.manual.dir}</property>
