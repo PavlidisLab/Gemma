@@ -604,6 +604,16 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().isSubsumer( ids );
     }
 
+    @Override
+    protected Map handleIsMergee( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().isMergee( ids );
+    }
+
+    @Override
+    protected Map handleIsMerged( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().isMerged( ids );
+    }
+
     /*
      * (non-Javadoc)
      * 
