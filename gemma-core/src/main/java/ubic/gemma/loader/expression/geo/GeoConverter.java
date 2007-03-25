@@ -2077,7 +2077,7 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * /** Deal with missing values, identified by nulls or number format exceptions.
+     * Deal with missing values, identified by nulls or number format exceptions.
      * 
      * @param toConvert
      * @param pt
@@ -2092,7 +2092,7 @@ public class GeoConverter implements Converter {
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
             toConvert.add( false );
         } else {
-            throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+            throw new UnsupportedOperationException( "Missing values in data vectors of type " + pt + " not supported" );
         }
     }
 

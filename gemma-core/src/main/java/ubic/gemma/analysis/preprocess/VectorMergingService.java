@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -61,6 +62,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @author pavlidis
  * @version $Id$
  * @see ExpressionDataMatrixBuilder
@@ -74,6 +76,12 @@ public class VectorMergingService {
     private DesignElementDataVectorService designElementDataVectorService;
 
     private ArrayDesignService arrayDesignService;
+
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+        this.bioAssayDimensionService = bioAssayDimensionService;
+    }
 
     /**
      * @param expExp
@@ -99,24 +107,24 @@ public class VectorMergingService {
 
             Collection<DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( expExp, type );
 
-            LinkedHashSet<BioAssayDimension> bioAds = new LinkedHashSet<BioAssayDimension>();
+            LinkedHashSet<BioAssayDimension> oldBioAssayDims = new LinkedHashSet<BioAssayDimension>();
 
             Map<DesignElement, Collection<DesignElementDataVector>> deVMap = new HashMap<DesignElement, Collection<DesignElementDataVector>>();
             for ( DesignElementDataVector vector : oldVectors ) {
-                bioAds.add( vector.getBioAssayDimension() );
+                oldBioAssayDims.add( vector.getBioAssayDimension() );
                 if ( !deVMap.containsKey( vector.getDesignElement() ) ) {
                     deVMap.put( vector.getDesignElement(), new HashSet<DesignElementDataVector>() );
                 }
                 deVMap.get( vector.getDesignElement() ).add( vector );
             }
 
-            if ( bioAds.size() == 1 ) {
+            if ( oldBioAssayDims.size() == 1 ) {
                 log.info( "No merging needed for " + type + " (only one bioassaydimension already)" );
                 continue;
             }
 
             // define a new bioAd.
-            BioAssayDimension newBioAd = combineBioAssayDimensions( bioAds );
+            BioAssayDimension newBioAd = combineBioAssayDimensions( oldBioAssayDims );
             int totalBioAssays = newBioAd.getBioAssays().size();
 
             ByteArrayConverter converter = new ByteArrayConverter();
@@ -133,55 +141,72 @@ public class VectorMergingService {
                 Collection<DesignElementDataVector> dedvs = deVMap.get( de );
 
                 List<Object> data = new ArrayList<Object>();
-                // these ugly nested loops are to ENSURE that we get the vector reconstructed properly.
-                for ( BioAssayDimension bioAd : bioAds ) {
+                // these ugly nested loops are to ENSURE that we get the vector reconstructed properly. For each of the
+                // old bioassayDimensions, find the designelementdatavector that uses it. If there isn't one, fill in
+                // the values for that dimension with missing data.
+                for ( BioAssayDimension oldDim : oldBioAssayDims ) {
                     boolean found = false;
+                    PrimitiveType representation = type.getRepresentation();
                     for ( DesignElementDataVector oldV : dedvs ) {
-                        if ( oldV.getBioAssayDimension().equals( bioAd ) ) {
-
+                        if ( oldV.getBioAssayDimension().equals( oldDim ) ) {
+                            found = true;
                             byte[] rawDat = oldV.getData();
 
-                            if ( type.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
+                            if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
                                 boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
                                 for ( boolean b : convertedDat ) {
                                     data.add( new Boolean( b ) );
                                 }
-                            } else if ( type.getRepresentation().equals( PrimitiveType.CHAR ) ) {
+                            } else if ( representation.equals( PrimitiveType.CHAR ) ) {
                                 char[] convertedDat = converter.byteArrayToChars( rawDat );
                                 for ( char b : convertedDat ) {
                                     data.add( new Character( b ) );
                                 }
-                            } else if ( type.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                            } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
                                 double[] convertedDat = converter.byteArrayToDoubles( rawDat );
                                 for ( double b : convertedDat ) {
                                     data.add( new Double( b ) );
                                 }
-                            } else if ( type.getRepresentation().equals( PrimitiveType.INT ) ) {
+                            } else if ( representation.equals( PrimitiveType.INT ) ) {
                                 int[] convertedDat = converter.byteArrayToInts( rawDat );
                                 for ( int b : convertedDat ) {
                                     data.add( new Integer( b ) );
                                 }
-                            } else if ( type.getRepresentation().equals( PrimitiveType.LONG ) ) {
+                            } else if ( representation.equals( PrimitiveType.LONG ) ) {
                                 long[] convertedDat = converter.byteArrayToLongs( rawDat );
                                 for ( long b : convertedDat ) {
                                     data.add( new Long( b ) );
                                 }
-                            } else if ( type.getRepresentation().equals( PrimitiveType.STRING ) ) {
+                            } else if ( representation.equals( PrimitiveType.STRING ) ) {
                                 String[] convertedDat = converter.byteArrayToStrings( rawDat );
                                 for ( String b : convertedDat ) {
                                     data.add( b );
                                 }
                             } else {
-                                throw new UnsupportedOperationException( "Don't know how to handle "
-                                        + type.getRepresentation() );
+                                throw new UnsupportedOperationException( "Don't know how to handle " + representation );
                             }
 
-                            found = true;
                             break;
                         }
                     }
                     if ( !found ) {
-                        throw new IllegalStateException( "Whoops, no data for " + de + " / " + type + " / " + bioAd );
+                        int nullsNeeded = oldDim.getBioAssays().size();
+                        for ( int i = 0; i < nullsNeeded; i++ ) {
+                            // FIXME this code taken from GeoConverter
+                            if ( representation.equals( PrimitiveType.DOUBLE ) ) {
+                                data.add( Double.NaN );
+                            } else if ( representation.equals( PrimitiveType.STRING ) ) {
+                                data.add( "" );
+                            } else if ( representation.equals( PrimitiveType.INT ) ) {
+                                data.add( 0 );
+                            } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
+                                data.add( false );
+                            } else {
+                                throw new UnsupportedOperationException( "Missing values in data vectors of type "
+                                        + representation + " not supported" );
+                            }
+
+                        }
                     }
                 }
 
@@ -189,20 +214,20 @@ public class VectorMergingService {
                     throw new IllegalStateException( "Wrong number of values for " + de + " / " + type + ", expected "
                             + totalBioAssays + ", got " + data.size() );
                 }
-                byte[] newDataAr = converter.toBytes( data );
+                byte[] newDataAr = converter.toBytes( data.toArray() );
 
                 vector.setData( newDataAr );
 
                 newVectors.add( vector );
             }
 
-            print( newVectors );
+            // print( newVectors );
 
             log.info( "Creating " + newVectors.size() + " new vectors for " + type );
-            // designElementDataVectorService.create( newVectors );
-            //
+            designElementDataVectorService.create( newVectors );
+
             log.info( "Removing " + oldVectors.size() + " old vectors for " + type );
-            // designElementDataVectorService.remove( oldVectors );
+            designElementDataVectorService.remove( oldVectors );
 
             // FIXME can remove the old BioAssayDimensions, too.
 
@@ -215,6 +240,7 @@ public class VectorMergingService {
      * 
      * @param newVectors
      */
+    @SuppressWarnings("unused")
     private void print( Collection<DesignElementDataVector> newVectors ) {
         StringBuilder buf = new StringBuilder();
         ByteArrayConverter conv = new ByteArrayConverter();
@@ -268,7 +294,7 @@ public class VectorMergingService {
 
         bad.setBioAssays( bioAssays );
 
-        return bad;
+        return bioAssayDimensionService.create( bad );
     }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
