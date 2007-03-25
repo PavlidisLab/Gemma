@@ -44,4 +44,14 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
         return this.getBioAssayDimensionDao().findDesignElementDataVectors( bioAssayDimension.getId() );
     }
 
+    @Override
+    protected void handleRemove( BioAssayDimension bioAssayDimension ) throws Exception {
+        this.getBioAssayDimensionDao().remove( bioAssayDimension );
+    }
+
+    @Override
+    protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) throws Exception {
+        return ( BioAssayDimension ) this.getBioAssayDimensionDao().create( bioAssayDimension );
+    }
+
 }
