@@ -160,7 +160,7 @@
 			<ref bean="hibernateStatsJobDetail" />
 		</property>
 		<property name="repeatInterval">
-			<value>15000</value>
+			<value>60000</value>
 		</property>
 	</bean>
 	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">

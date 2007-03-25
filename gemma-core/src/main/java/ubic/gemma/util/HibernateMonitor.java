@@ -90,7 +90,8 @@ public class HibernateMonitor {
                     buf.append( "    " + shortName + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
                             + " puts" + "\n" );
                 } catch ( ClassNotFoundException e ) {
-                    log.error( e, e );
+                    buf.append( "    " + string + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
+                            + " puts" + "\n" );
                 }
             }
         }
