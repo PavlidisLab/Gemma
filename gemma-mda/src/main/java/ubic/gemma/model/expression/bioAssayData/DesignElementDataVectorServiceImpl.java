@@ -165,4 +165,9 @@ public class DesignElementDataVectorServiceImpl extends
         this.getDesignElementDataVectorDao().remove( vectors );
     }
 
+    @Override
+    protected Collection handleFind( QuantitationType quantitationType ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( quantitationType );
+    }
+
 }

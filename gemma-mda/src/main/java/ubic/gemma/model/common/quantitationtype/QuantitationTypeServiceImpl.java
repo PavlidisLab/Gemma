@@ -18,9 +18,9 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.util.Collection;
+
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
@@ -66,6 +66,11 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     @Override
     protected QuantitationType handleFindOrCreate( QuantitationType quantitationType ) throws Exception {
         return this.getQuantitationTypeDao().findOrCreate( quantitationType );
+    }
+
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getQuantitationTypeDao().loadAll();
     }
 
 }
