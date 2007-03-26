@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,25 +15,23 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
+import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.PredictedGeneImpl;
 import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
+import cern.colt.list.ObjectArrayList;
 
 /**
  * @author xwan
@@ -42,11 +39,10 @@ import ubic.gemma.model.genome.gene.GeneService;
  *
  */
 public class MetaLinkFinder {
-    private Probe2ProbeCoexpressionService ppService = null;
-    private DesignElementDataVectorService deService = null;
-    
+    private static GeneOntologyService geneOntologyService = null;
     private static GeneService geneService = null;
     private static ExpressionExperimentService eeService = null;
+    
     private static Vector allEE = null;
     private static int shift = 50000; //to encode two geneid into one long id
     public static CompressedNamedBitMatrix linkCount = null;
@@ -56,15 +52,7 @@ public class MetaLinkFinder {
     protected static final Log log = LogFactory.getLog( MetaLinkFinder.class );
     private int STRINGENCY = 2;
     
-    public MetaLinkFinder(Probe2ProbeCoexpressionService ppService, DesignElementDataVectorService deService, ExpressionExperimentService eeService, GeneService geneService){
-    	assert(ppService != null);
-    	assert(deService != null);
-    	assert(geneService != null);
-    	assert(eeService != null);
-    	this.ppService = ppService;
-    	this.deService = deService;
-    	MetaLinkFinder.geneService = geneService;
-    	MetaLinkFinder.eeService = eeService;
+    public MetaLinkFinder(){
     }
  
     public void find(Taxon taxon){
@@ -101,13 +89,17 @@ public class MetaLinkFinder {
     	this.finder(genes);
     }
     private void finder(Collection<Gene> genes){
+    	int i = 1;
     	for(Gene gene:genes){
-    		System.out.println(gene.getName());
-    		Map<Long, Collection<Long>> geneEEMap = geneService.getCoexpressedGeneMap(STRINGENCY, gene);
+    		System.out.println(i+"/"+genes.size()+"\t"+gene.getName());
+    		//Get the gene->eeIds map
+    		CoexpressionCollectionValueObject coexpressed = (CoexpressionCollectionValueObject)geneService.getCoexpressedGenes(gene, null, STRINGENCY);
+    		Map<Long, Collection<Long>> geneEEMap = coexpressed.getSpecificExpressionExperiments();
 			this.count(gene.getId(),geneEEMap);
+			i++;
      	}
     }
-    public void output(Gene gene, int num){
+    public static void output(Gene gene, int num){
     	int row = linkCount.getRowIndexByName(gene.getId());
     	if(row < 0 || row>= linkCount.rows()){
     		log.info("No this Gene");
@@ -115,26 +107,26 @@ public class MetaLinkFinder {
     	}
     	for(int col = 0; col < linkCount.columns(); col++)
 			if(linkCount.bitCount(row,col) >= num){
-				System.err.println(this.getColGene(col).getName() + " " + linkCount.bitCount(row,col));
+				System.err.println(getColGene(col).getName() + " " + linkCount.bitCount(row,col));
     	}
     	System.err.println("=====================================================");
     	for(int col = 0; col <linkCount.columns(); col++)
 			if(linkCount.bitCount(row,col) >= num){
-				System.err.println(this.getColGene(col).getName());
+				System.err.println(getColGene(col).getName());
     	}
     }
-    public void output(int num){
+    public static void output(int num){
     	int count = 0;
     	for(int i = 0; i < linkCount.rows(); i++)
     		for(int j = 0; j < linkCount.columns(); j++){
     			if(linkCount.bitCount(i,j) >= num){
-    				System.err.println(this.getRowGene(i).getName() + "  " + this.getColGene(j).getName() + " " + linkCount.bitCount(i,j));
+    				System.err.println(getRowGene(i).getName() + "  " + getColGene(j).getName() + " " + linkCount.bitCount(i,j));
     				count++;
     			}
     		}
     	System.err.println("Total Links " + count);
     }
-    public void outputStat(){
+    public static void outputStat(){
     	int maxNum = 50;
     	Vector count = new Vector(maxNum);
     	for(int i = 0; i < maxNum; i++)
@@ -309,6 +301,44 @@ public class MetaLinkFinder {
         shift = linkCount.rows() > linkCount.columns()?linkCount.rows():linkCount.columns();
         return true;
     }
+    public void saveLinkMatrix(String outFile, int stringency){
+        try{
+        	ObjectArrayList nodes = new ObjectArrayList();
+        	
+            FileWriter out = new FileWriter(new File(outFile));
+            for(int i = 0; i < MetaLinkFinder.linkCount.rows(); i++){
+            	if(i%1000 == 0) System.err.println(i + " -> " + MetaLinkFinder.linkCount.rows());
+                for(int j = i+1; j < MetaLinkFinder.linkCount.columns(); j++){
+                    if(MetaLinkFinder.linkCount.bitCount( i, j ) >= stringency){
+                        TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i, j), MetaLinkFinder.linkCount.getAllBits(i, j), null);
+                        nodes.add(oneNode);
+                    }
+                }
+        	}
+            for(int rowIndex = 0; rowIndex < nodes.size(); rowIndex++){
+            	TreeNode rowNode = (TreeNode)nodes.getQuick(rowIndex);
+            	for(int colIndex = rowIndex + 1; colIndex < nodes.size(); colIndex++){
+                	TreeNode colNode = (TreeNode)nodes.getQuick(colIndex);
+            		int commonBits = MetaLinkFinder.overlapBits(rowNode.mask, colNode.mask);
+            		if(commonBits >= stringency){
+            			out.write( rowIndex + "\t"+colIndex+"\t" + commonBits + "\n" );
+            			out.write( colIndex + "\t"+rowIndex+"\t" + commonBits + "\n" );
+            		}
+            	}
+
+            }
+            out.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    public static Gene getGene( String geneName, Taxon taxon ) {
+        Gene gene = Gene.Factory.newInstance();
+        gene.setOfficialSymbol( geneName.trim() );
+        gene.setTaxon( taxon );
+        gene = geneService.find( gene );
+        return gene;
+    }
     public static ExpressionExperiment getEE(int i){
     	Object eeId = allEE.elementAt(i);
     	ExpressionExperiment ee = eeService.findById((Long)eeId);
@@ -334,7 +364,8 @@ public class MetaLinkFinder {
         int col = (int)(id%shift);
         String geneName1 = getRowGene(row).getName();
         String geneName2 = getColGene(col).getName();
-        return geneName1+"_"+geneName2;
+        while(!MetaLinkFinder.geneOntologyService.isGeneOntologyLoaded());
+        return geneName1+"_"+geneName2 + "_"+computeGOOverlap(getRowGene(row),getColGene(col));
     }
     public static boolean checkEEConfirmation(long id, int eeIndex){
         int rows = (int)(id/shift);
@@ -390,5 +421,40 @@ public class MetaLinkFinder {
     		if(mask1[i] != mask2[i]) return false;
     	return true;
     }
+    public static int computeGOOverlap(Gene gene1, Gene gene2){
+    	int res = 0;
+    	Collection<Long> geneIds = new HashSet<Long>();
+    	geneIds.add(gene2.getId());
+    	try{
+    		Map<Long, Collection<OntologyEntry>> overlapMap = MetaLinkFinder.geneOntologyService.calculateGoTermOverlap(gene1, geneIds);
+    		if(overlapMap != null){
+    			Collection<OntologyEntry> overlapGOTerms = overlapMap.get(gene2.getId()); 
+    			if(overlapGOTerms != null) res = overlapGOTerms.size();
+    		}
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		res = 0;
+    	}
+    	return res;
+    }
+    public static int computeGOOverlap(long id1, long id2){
+    	Gene gene1 = MetaLinkFinder.geneService.load(id1);
+    	Gene gene2 = MetaLinkFinder.geneService.load(id2);
+    	return computeGOOverlap(gene1, gene2);
+    }
+    public static int computeGOOverlap(long packedId){
+        int row = (int)(packedId/shift);
+        int col = (int)(packedId%shift);
+        return computeGOOverlap(getRowGene(row),getColGene(col));
+    }
+	public void setEeService(ExpressionExperimentService eeService) {
+		MetaLinkFinder.eeService = eeService;
+	}
+	public void setGeneService(GeneService geneService) {
+		MetaLinkFinder.geneService = geneService;
+	}
 
+	public void setGeneOntologyService(GeneOntologyService geneOntologyService) {
+		MetaLinkFinder.geneOntologyService = geneOntologyService;
+	}
 }

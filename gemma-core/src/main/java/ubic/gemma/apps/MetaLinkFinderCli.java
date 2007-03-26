@@ -27,10 +27,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import cern.colt.list.ObjectArrayList;
+
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
+import ubic.gemma.analysis.linkAnalysis.TreeNode;
+import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -51,39 +55,47 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
      * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
-    private ExpressionExperimentService eeService;
-    private boolean operRead = false;
-    private boolean operWrite = false;
-    private String matrixFile = null, eeMapFile = null;
+    private boolean writeClusteringTree = false;
+    private boolean writeLinkMatrix = false;
+    private String matrixFile = null, eeMapFile = null, treeFile = null;
+    private Taxon taxon = null;
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option write = OptionBuilder.withDescription( "If Saving the link into File" ).withLongOpt( "write" ).create(
-                'w' );
-        addOption( write );
-        Option read = OptionBuilder.withDescription( "If Saving the link into File" ).withLongOpt( "read" )
-                .create( 'r' );
-        addOption( read );
+        Option writeLinkMatrix = OptionBuilder.withDescription( "If generating the new link matrix, Otherwise reading the link matrix from file" ).withLongOpt( "linkMatrix" ).create(
+                'l' );
+        addOption( writeLinkMatrix );
+        Option writeTree = OptionBuilder.withDescription( "If generating the new clustering tree, Otherwise reading the tree from file" ).withLongOpt( "clusteringTree" )
+                .create( 'c' );
+        addOption( writeTree );
         Option matrixFile = OptionBuilder.hasArg().withArgName( "Bit Matrixfile" ).isRequired().withDescription(
-                "The file for savming bit matrix" ).withLongOpt( "matrixfile" ).create( 'm' );
+                "The file for saving bit matrix" ).withLongOpt( "matrixfile" ).create( 'm' );
         addOption( matrixFile );
 
         Option mapFile = OptionBuilder.hasArg().withArgName( "Expression Experiment Map File" ).isRequired()
-                .withDescription( "The File for Savming the Expression Experiment Mapping" ).withLongOpt( "mapfile" )
+                .withDescription( "The File for Saving the Expression Experiment Mapping" ).withLongOpt( "mapfile" )
                 .create( 'e' );
         addOption( mapFile );
+        
+        Option treeFile = OptionBuilder.hasArg().withArgName( "Clustering Tree File" ).isRequired().withDescription(
+        "The file for saving clustering tree" ).withLongOpt( "treefile" ).create( 't' );
+        addOption( treeFile );
+
+        Option specie = OptionBuilder.hasArg().withArgName( "The name of specie" ).isRequired().withDescription(
+        "The name of specie" ).withLongOpt( "specie" ).create( 's' );
+        addOption( specie );
 
     }
 
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'w' ) ) {
-            this.operWrite = true;
+        if ( hasOption( 'l' ) ) {
+            this.writeLinkMatrix = true;
         }
 
-        if ( hasOption( 'r' ) ) {
-            this.operRead = true;
+        if ( hasOption( 'c' ) ) {
+            this.writeClusteringTree = true;
         }
 
         if ( hasOption( 'm' ) ) {
@@ -93,15 +105,17 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'e' ) ) {
             this.eeMapFile = getOptionValue( 'e' );
         }
+        
+        if ( hasOption( 't' ) ) {
+            this.treeFile = getOptionValue( 't' );
+        }
+        if ( hasOption( 's' ) ) {
+            String specieName = getOptionValue( 's' );
+            taxon = this.getTaxon( specieName );
+        }
     }
 
-    private Gene getGene( GeneService geneService, String geneName, Taxon taxon ) {
-        Gene gene = Gene.Factory.newInstance();
-        gene.setOfficialSymbol( geneName.trim() );
-        gene.setTaxon( taxon );
-        gene = geneService.find( gene );
-        return gene;
-    }
+
 
     private Taxon getTaxon( String name ) {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -134,7 +148,34 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         matrix.set( 20, 10, 24 );
         matrix.toFile( "test.File" );
     }
-
+    void interactiveQuery(){
+        BufferedReader bfr = new BufferedReader( new InputStreamReader( System.in ) );
+        String geneName;
+        int count = 0;
+        try {
+            // Hit CTRL-Z on PC's to send EOF, CTRL-D on Unix
+            while ( true ) {
+                // Read a character from keyboard
+                System.out.println( "The Gene ID: (Press CTRL-Z or CTRL-D to Stop)" );
+                System.out.print( ">" );
+                geneName = bfr.readLine();
+                if ( geneName == null ) break;
+                System.out.print( "The Stringency:" );
+                String tmp = bfr.readLine();
+                if ( tmp == null ) break;
+                count = Integer.valueOf( tmp.trim() ).intValue();
+                // Gene gene = geneService.load(Long.valueOf(geneName).longValue());
+                Gene gene = MetaLinkFinder.getGene( geneName, taxon );
+                if ( gene != null ) {
+                    System.out.println( "Got " + geneName + " " + count );
+                    MetaLinkFinder.output( gene, count );
+                } else
+                    System.out.println( "Gene doesn't exist" );
+            }
+        } catch ( IOException ioe ) {
+            System.out.println( "IO error:" + ioe );
+        }
+    }
     /*
      * (non-Javadoc)
      * 
@@ -147,34 +188,31 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             return err;
         }
         try {
-            Probe2ProbeCoexpressionService p2pService = ( Probe2ProbeCoexpressionService ) this
-                    .getBean( "probe2ProbeCoexpressionService" );
-
-            DesignElementDataVectorService deService = ( DesignElementDataVectorService ) this
-                    .getBean( "designElementDataVectorService" );
-
-            eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
+        	ExpressionExperimentService eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
             GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+            GeneOntologyService geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
 
-            MetaLinkFinder linkFinder = new MetaLinkFinder( p2pService, deService, eeService, geneService );
-
-            Taxon taxon = this.getTaxon( "human" );
+            MetaLinkFinder linkFinder = new MetaLinkFinder();
+            linkFinder.setEeService(eeService);
+            linkFinder.setGeneService(geneService);
+            linkFinder.setGeneOntologyService(geneOntologyService);
+            if(taxon == null){
+            	return new Exception("The input specie couldn't be found");
+            }
+            
             StopWatch watch = new StopWatch();
 
-            // test();
-            // linkFinder.fromFile( "test.File", "test.map");
-            // linkFinder.toFile( "test1.File", "test1.map");
-            // if(true)return null;
-            if ( this.operWrite ) {
+            // load the link matrix
+            if ( this.writeLinkMatrix ) {
+            	watch.start();
                 linkFinder.find( taxon );
                 if ( !linkFinder.toFile( this.matrixFile, this.eeMapFile ) ) {
                     log.info( "Couldn't save the results into the files " );
                     return null;
                 }
-
+                log.info( "Spend " + watch.getTime()/1000 + " to generate link matrix" );
             } else {
-                watch.start();
+            	watch.start();
                 if ( !linkFinder.fromFile( this.matrixFile, this.eeMapFile ) ) {
                     log.info( "Couldn't load the data from the files " );
                     return null;
@@ -183,54 +221,34 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 log.info( "Spend " + watch.getTime()/1000 + " to load the data matrix" );
             }
             System.err.println( "Finish Loading!" );
-
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6, 6 );
-            LinkGraphClustering clustering = new LinkGraphClustering(6);
-            
             watch.reset();
             watch.start();
-            try {
-                //freFinder.find();
-            	//freFinder.saveLinkMatrix("linkMatrix.txt", 6);
+
+            LinkGraphClustering clustering = new LinkGraphClustering(6);
+        	//clustering.testSerilizable();
+            if(this.writeClusteringTree){
             	clustering.run();
-            	//clustering.saveToFile("tree.tmp");
-            	clustering.readTreeFromFile("tree.tmp");
-            	//clustering.testSerilizable();
-            	clustering.selectClustersToSave();
-            } catch ( Exception e ) {
-                e.printStackTrace();
+            	clustering.saveToFile( this.treeFile );
+            }else{
+            	clustering.readTreeFromFile( this.treeFile );
             }
+            clustering.selectClustersToSave();
+
+            //Select clusters for frequent linkset finder
+            TreeNode testNode = clustering.selectClusterWithMaximalBits(6);
+            testNode = clustering.selectMaximalCluster();
+            ObjectArrayList leafNodes = new ObjectArrayList();
+            clustering.collectTreeNodes(leafNodes, new ObjectArrayList(), testNode);
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6, 6 );
+            freFinder.find(leafNodes);
             watch.stop();
             log.info( "Spend " + watch.getTime()/1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
             /*
+            MetaLinkFinder.saveLinkMatrix("linkMatrix.txt", 6);
             System.err.println( "Output some stats" );
-            linkFinder.outputStat();
-            BufferedReader bfr = new BufferedReader( new InputStreamReader( System.in ) );
-            String geneName;
-            int count = 0;
-            try {
-                // Hit CTRL-Z on PC's to send EOF, CTRL-D on Unix
-                while ( true ) {
-                    // Read a character from keyboard
-                    System.out.println( "The Gene ID: (Press CTRL-Z or CTRL-D to Stop)" );
-                    System.out.print( ">" );
-                    geneName = bfr.readLine();
-                    if ( geneName == null ) break;
-                    System.out.print( "The Stringency:" );
-                    String tmp = bfr.readLine();
-                    if ( tmp == null ) break;
-                    count = Integer.valueOf( tmp.trim() ).intValue();
-                    // Gene gene = geneService.load(Long.valueOf(geneName).longValue());
-                    Gene gene = this.getGene( geneService, geneName, taxon );
-                    if ( gene != null ) {
-                        System.out.println( "Got " + geneName + " " + count );
-                        linkFinder.output( gene, count );
-                    } else
-                        System.out.println( "Gene doesn't exist" );
-                }
-            } catch ( IOException ioe ) {
-                System.out.println( "IO error:" + ioe );
-            }*/
+            MetaLinkFinder.outputStat();
+            interactiveQuery();
+            */
         } catch ( Exception e ) {
             log.error( e );
             return e;

@@ -53,9 +53,9 @@ public class LinkGraphClustering{
     
     private TreeNode mergeNodes(TreeNode nodeForMerging){
     	TreeNode closestNode = nodeForMerging.closestNode;
-    	TreeNode[] childNodes = new TreeNode[2];
-    	childNodes[0] = nodeForMerging;
-    	childNodes[1] = closestNode;
+    	ObjectArrayList childNodes = new ObjectArrayList();
+    	childNodes.add(nodeForMerging);
+    	childNodes.add(closestNode);
     	long mask[] = MetaLinkFinder.AND(nodeForMerging.mask, closestNode.mask);
     	TreeNode parent = new TreeNode(0, mask, childNodes);
     	parent.setClosestNode(fake);
@@ -102,42 +102,6 @@ public class LinkGraphClustering{
     	}
     	return index;
     }
-    private int clustering(){
-    	int indexOfNodeForMerging = this.findMergeNode();
-    	TreeNode nodeForMerging = (TreeNode)this.eligibleNodes.get(indexOfNodeForMerging);
-    	TreeNode parent = mergeNodes(nodeForMerging);
-    	if(nodeForMerging.commonBits == 0) return 0;
-    	TreeNode pairedNode  = nodeForMerging.closestNode;
-    	Integer indexOfPairedNode = -1;
-    	
-    	ObjectArrayList allAffectedNodes = new ObjectArrayList();;
-    	for(int i = 0; i < this.eligibleNodes.size(); i++){
-    		TreeNode curNode = (TreeNode)this.eligibleNodes.get(i);
-    		if(curNode.equals(nodeForMerging)) continue;
-    		if(curNode.equals(pairedNode)){
-    			indexOfPairedNode = i;
-    			continue;
-    		}
-    		if(curNode.closestNode.equals(nodeForMerging) || curNode.closestNode.equals(pairedNode))
-    			allAffectedNodes.add(curNode);
-    	}
-    	//remove child nodes
-    	closedNodes.add(this.eligibleNodes.get(indexOfNodeForMerging));
-    	closedNodes.add(this.eligibleNodes.get(indexOfPairedNode));
-    	if(indexOfNodeForMerging > indexOfPairedNode){
-    		this.eligibleNodes.remove(indexOfNodeForMerging);
-    		this.eligibleNodes.remove(indexOfPairedNode);
-    	}else{
-    		this.eligibleNodes.remove(indexOfPairedNode);
-    		this.eligibleNodes.remove(indexOfNodeForMerging);
-    	}
-    	this.eligibleNodes.add(parent);
-    	this.eligibleNodes.sort();
-    	allAffectedNodes.add(parent);
-    	allAffectedNodes.sort();
-    	this.update(allAffectedNodes);
-    	return parent.maskBits;
-    }
     public void saveToFile(String fileName){
     	try {
     		/* Create a file to write the serialized tree to. */
@@ -155,16 +119,16 @@ public class LinkGraphClustering{
     public void collectTreeNodes(ObjectArrayList leafNodes, ObjectArrayList internalNodes, TreeNode root){
     	assert(leafNodes != null && internalNodes != null);
     	//dept first search for leaf node order
-    	Stack<TreeNode> stack = new Stack<TreeNode>();
+    	Stack<Object> stack = new Stack<Object>();
     	stack.push(root);
     	while(!stack.empty()){
-    		TreeNode iter = stack.pop();
+    		TreeNode iter = (TreeNode)stack.pop();
     		if(iter.child == null) //leaf node
     			leafNodes.add(iter);
     		else{
     			internalNodes.add(iter);
-    			stack.push(iter.child[1]);
-    			stack.push(iter.child[0]);
+    			stack.push(iter.child.getQuick(1));
+    			stack.push(iter.child.getQuick(0));
     		}
     	}
 
@@ -188,7 +152,7 @@ public class LinkGraphClustering{
     	*/
     	return;
     }
-    TreeNode selectMaximalCluster(){
+    public TreeNode selectMaximalCluster(){
     	TreeNode res = (TreeNode)this.eligibleNodes.get(0);
     	int level = res.level;
     	for(int i = 1; i < this.eligibleNodes.size(); i++){
@@ -200,7 +164,7 @@ public class LinkGraphClustering{
     	}
     	return res;
     }
-    TreeNode selectClusterWithMaximalBits(int level){
+    public TreeNode selectClusterWithMaximalBits(int level){
     	for(int i = 0; i < this.eligibleNodes.size(); i++){
     		TreeNode oneNode = (TreeNode)this.eligibleNodes.get(i);
     		if(oneNode.child != null){
@@ -291,8 +255,8 @@ public class LinkGraphClustering{
     		for(int i = internalNodes.size() - 1; i >= 0; i--){
     			TreeNode oneNode = (TreeNode)internalNodes.get(i);
     			String parent = nodeNames.get(oneNode);
-    			String leftChild = nodeNames.get(oneNode.child[0]);
-    			String rightChild = nodeNames.get(oneNode.child[1]);
+    			String leftChild = nodeNames.get(oneNode.child.getQuick(0));
+    			String rightChild = nodeNames.get(oneNode.child.getQuick(1));
     			int bits = MetaLinkFinder.countBits(oneNode.mask);
     			gtrOut.write(parent+"\t"+leftChild+"\t"+rightChild+"\t"+(double)bits/(((double)maximalCommonBits)+0.0001)+"\n");
     			/*
@@ -385,4 +349,41 @@ public class LinkGraphClustering{
     	System.err.println();
     	System.err.println("Total Updates = " + this.nodeUpdates);
     }
+    private int clustering(){
+    	int indexOfNodeForMerging = this.findMergeNode();
+    	TreeNode nodeForMerging = (TreeNode)this.eligibleNodes.get(indexOfNodeForMerging);
+    	TreeNode parent = mergeNodes(nodeForMerging);
+    	if(nodeForMerging.commonBits < this.Threshold) return nodeForMerging.commonBits;
+    	TreeNode pairedNode  = nodeForMerging.closestNode;
+    	Integer indexOfPairedNode = -1;
+    	
+    	ObjectArrayList allAffectedNodes = new ObjectArrayList();;
+    	for(int i = 0; i < this.eligibleNodes.size(); i++){
+    		TreeNode curNode = (TreeNode)this.eligibleNodes.get(i);
+    		if(curNode.equals(nodeForMerging)) continue;
+    		if(curNode.equals(pairedNode)){
+    			indexOfPairedNode = i;
+    			continue;
+    		}
+    		if(curNode.closestNode.equals(nodeForMerging) || curNode.closestNode.equals(pairedNode))
+    			allAffectedNodes.add(curNode);
+    	}
+    	//remove child nodes
+    	closedNodes.add(this.eligibleNodes.get(indexOfNodeForMerging));
+    	closedNodes.add(this.eligibleNodes.get(indexOfPairedNode));
+    	if(indexOfNodeForMerging > indexOfPairedNode){
+    		this.eligibleNodes.remove(indexOfNodeForMerging);
+    		this.eligibleNodes.remove(indexOfPairedNode);
+    	}else{
+    		this.eligibleNodes.remove(indexOfPairedNode);
+    		this.eligibleNodes.remove(indexOfNodeForMerging);
+    	}
+    	this.eligibleNodes.add(parent);
+    	this.eligibleNodes.sort();
+    	allAffectedNodes.add(parent);
+    	allAffectedNodes.sort();
+    	this.update(allAffectedNodes);
+    	return parent.maskBits;
+    }
+
 }

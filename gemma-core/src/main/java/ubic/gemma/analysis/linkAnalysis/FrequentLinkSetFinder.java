@@ -1,25 +1,8 @@
 package ubic.gemma.analysis.linkAnalysis;
-
-
-
-import java.io.File;
-import java.io.FileWriter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Vector;
-
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
-
-import ubic.basecode.dataStructure.Visitable;
+import cern.colt.list.ObjectArrayList;
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
-
 public class FrequentLinkSetFinder {
+	/*
 	private class TreeNode {
 	    public Object element = null;
 	    public TreeNode firstChild = null;
@@ -32,37 +15,86 @@ public class FrequentLinkSetFinder {
 	    	this.element = element;
 	    }
 	}
+	*/
     private int Threshold = 3;
     private TreeNode root = null;
     private int minLinksInSet = 8;
     public static int nodeNum = 0; 
     private int pruned = 0;
     private int merged = 0;
-    private Vector candidatesNodes = null; //a linked list
+    private ObjectArrayList candidatesNodes = null; //a linked list
     public FrequentLinkSetFinder( int threshold, int minLinksInSet) {
         super();
         Threshold = threshold;
-        root = new TreeNode(new Long(0xFFFFFFFFFFFFFFFFL));
+        int num = ( int ) ( MetaLinkFinder.linkCount.getBitNum() / CompressedNamedBitMatrix.DOUBLE_LENGTH ) + 1;
+        root = new TreeNode(0, new long[num], null);
         root.level = 0;
         this.minLinksInSet = minLinksInSet;
-        candidatesNodes = new Vector();
+        candidatesNodes = new ObjectArrayList();
     }
 
     private void travel(TreeNode rootNode, int minExps, int minLinks){
-    	TreeNode subNode = rootNode.firstChild;
-    	while(subNode != null){
-    		if(MetaLinkFinder.countBits(subNode.mask) >= minExps){
-    			if(subNode.level >= minLinks){
-    				if(subNode.firstChild == null || (subNode.firstChild != null && MetaLinkFinder.countBits(subNode.firstChild.mask) < minExps)){
-    					this.insertCandidatesNode(subNode);
-    					return;
-    				}
-    			}
-    			travel(subNode, minExps, minLinks);
+    	if(rootNode.child == null || (rootNode.child != null &&  MetaLinkFinder.countBits(((TreeNode)rootNode.child.getQuick(0)).mask) < minExps)){
+    		if(rootNode.level >= minLinks)
+    			this.insertCandidatesNode(rootNode);
+    		return;
+    	}
+    	for(int i = 0; i <rootNode.child.size(); i++){
+    		TreeNode childNode = (TreeNode)rootNode.child.getQuick(i);
+    		if(MetaLinkFinder.countBits(childNode.mask) >= minExps){
+    			travel(childNode, minExps, minLinks);
+    		}else{
+        		if(rootNode.level >= minLinks)
+        			this.insertCandidatesNode(rootNode);
     		}
-    		subNode = subNode.nextSibling;
     	}
     }
+    private void expand(TreeNode rootNode, ObjectArrayList siblings, int rootNodeIndex){
+    	if(rootNode.id == 0) { System.err.println("Logic Error");System.exit(0);}
+    	long[] childMask = new long[rootNode.mask.length];
+    	ObjectArrayList child = new ObjectArrayList();
+    	int index = rootNodeIndex + 1;
+    	while(index < siblings.size()){
+    		TreeNode iter = (TreeNode)siblings.getQuick(index);
+            for(int i = 0; i < childMask.length; i++) childMask[i] = iter.mask[i];
+            boolean mergedCondition = true;
+            for(int i = 0; i < childMask.length; i++){
+            	if(childMask[i] != (childMask[i] & rootNode.mask[i])){
+            		childMask[i] = childMask[i] & rootNode.mask[i];
+            		mergedCondition = false;
+            	}
+            }
+            if(MetaLinkFinder.countBits(childMask) >= this.Threshold){
+            	if(mergedCondition){
+            		siblings.remove(index);
+            		child.add(iter);
+            		iter.setLevel( rootNode.level + 1 );
+            		iter.setParent( rootNode );
+            		merged = merged + 1;
+            	}else{
+            		long mask[] = new long[childMask.length];
+            		for(int i = 0; i < childMask.length; i++) mask[i] = childMask[i];
+            		TreeNode newCreatedNode = new TreeNode(iter.id, mask, null);
+            		newCreatedNode.setParent(rootNode);
+            		newCreatedNode.setLevel(rootNode.level + 1);
+            		child.add(newCreatedNode);
+                    nodeNum++;
+                    if(nodeNum%10000 == 0)
+                    	System.err.println(nodeNum + " " +  merged);
+                    index++;
+            	}
+            }
+    	}
+    	if(child.size() > 0){
+    		child.sort();
+    		rootNode.setChild(child);
+            for(int i = 0; i < rootNode.child.size() - 1; i++){
+            	TreeNode iter = (TreeNode)rootNode.child.getQuick(i);
+            	this.expand(iter, rootNode.child, i);
+            }
+    	}
+    }
+    /*
     private void expand(TreeNode rootNode){
         TreeNode subBranchRootNode = rootNode.firstChild;
         long[] childMask = new long[subBranchRootNode.mask.length];
@@ -157,7 +189,10 @@ public class FrequentLinkSetFinder {
     	}
     	return;
     }
+    */
     private void insertCandidatesNode(TreeNode oneNode){
+    	candidatesNodes.add(oneNode);
+    	/*
     	int bits = MetaLinkFinder.countBits(oneNode.mask);
     	int i;
     	for(i = 0; i < candidatesNodes.size(); i++){
@@ -168,12 +203,23 @@ public class FrequentLinkSetFinder {
     		}
     	}
     	if(i == candidatesNodes.size()) candidatesNodes.add(oneNode);
+    	*/
     }
     public void outputPath(TreeNode leafNode){
     	TreeNode iter = leafNode;
+    	System.err.print(leafNode.maskBits+"\t");
+    	for(int i = 0; i < leafNode.mask.length; i++){
+    		for(int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++)
+    			if((leafNode.mask[i]&(CompressedNamedBitMatrix.BIT1<<j)) != 0){
+    		    	System.err.print("1");
+    			}else{
+    				System.err.print("0");
+    			}
+    	}
+    	System.err.print("\t");
+
     	while(iter.parent != null){
-    		long oneId = ((Long)iter.element).longValue();
-            System.err.print(" ("+MetaLinkFinder.getLinkName(oneId)+") ");
+           System.err.print(" ("+MetaLinkFinder.getLinkName(iter.id)+") ");
     		//System.err.print(oneId + " ");
             iter = iter.parent;
     	}
@@ -185,76 +231,44 @@ public class FrequentLinkSetFinder {
     	}
     	System.err.println("");
     }
-    public void saveLinkMatrix(String outFile, int stringency){
-        try{
-            FileWriter out = new FileWriter(new File(outFile));
-            for(int i = 0; i < MetaLinkFinder.linkCount.rows(); i++){
-            	if(i%1000 == 0) System.err.println(i + " -> " + MetaLinkFinder.linkCount.rows());
-                for(int j = i+1; j < MetaLinkFinder.linkCount.columns(); j++){
-                    if(MetaLinkFinder.linkCount.bitCount( i, j ) >= this.Threshold){
-                        TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i, j));
-                        oneNode.mask = MetaLinkFinder.linkCount.getAllBits(i, j);
-                        nodeNum++;
-                        this.addTreeNodeInOrder(root, oneNode,true);
-                    }
-                }
-        	}
-            System.err.println("Initalized " + nodeNum + " nodes");
-            HashMap<Object,Integer> indexMap = new HashMap<Object, Integer>();
-            int index = 0;
-            TreeNode iter = root.firstChild;
-            while(iter != null){
-            	indexMap.put(iter.element, new Integer(index));
-            	index = index + 1;
-            	iter = iter.nextSibling;
-            }
-            TreeNode curNode = root.firstChild;
-            while(curNode != null){
-            	iter = curNode.nextSibling;
-            	int rowIndex = indexMap.get(curNode.element);
-            	if(rowIndex%5000 == 0) System.err.println(rowIndex);
-            	while(iter != null){
-            		int commonBits = MetaLinkFinder.overlapBits(curNode.mask, iter.mask);
-            		if(commonBits >= stringency){
-            			int colIndex = indexMap.get(iter.element);
-            			out.write( rowIndex + "\t"+colIndex+"\t" + commonBits + "\n" );
-            			out.write( colIndex + "\t"+rowIndex+"\t" + commonBits + "\n" );
-            		}
-            		iter = iter.nextSibling;
-            	}
-            	curNode = curNode.nextSibling;
-            }
-            out.close();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-    public void find(){
+    private ObjectArrayList getValidNodes(){
+    	ObjectArrayList validNodes = new ObjectArrayList();
         for(int i = 0; i < MetaLinkFinder.linkCount.rows(); i++)
             for(int j = i+1; j < MetaLinkFinder.linkCount.columns(); j++){
                 if(MetaLinkFinder.linkCount.bitCount( i, j ) >= this.Threshold){
-                    TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i, j) );
-                    oneNode.mask = MetaLinkFinder.linkCount.getAllBits(i, j);
-                    nodeNum++;
-                    this.addTreeNodeInOrder(root, oneNode,true);
+                	TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i, j), MetaLinkFinder.linkCount.getAllBits(i, j), null);
+                	oneNode.mask = MetaLinkFinder.linkCount.getAllBits(i, j);
+                	validNodes.add(oneNode);
                 }
             }
+        return validNodes;
+    }
+    public void find(){
+    	find(this.getValidNodes());
+    }
+    public void find(ObjectArrayList validNodes){
+    	validNodes.sort();
+    	root.setChild(validNodes);
+    	nodeNum =  nodeNum +validNodes.size();
         System.err.println("Initalized " + nodeNum + " nodes");
-        this.expand( root);
-        this.travel(root, 17, 7);
-        System.err.println(this.candidatesNodes.size()+ " " + ((TreeNode)candidatesNodes.elementAt(0)).level);
-        this.outputPath((TreeNode)candidatesNodes.elementAt(0));
-        int mostBits = 0;
-        TreeNode nodeWithMostBits = null;
-        for(int i = 0; i < candidatesNodes.size(); i++){
-        	TreeNode node = (TreeNode)candidatesNodes.elementAt(i);
-        	if(MetaLinkFinder.countBits(node.mask) > mostBits){mostBits = MetaLinkFinder.countBits(node.mask);nodeWithMostBits = node;}
+ //       for(int i = 0; i < validNodes.size(); i++){
+  //      	TreeNode iter = (TreeNode)validNodes.getQuick(i);
+  //      	System.err.println(iter.id + " ------>" + MetaLinkFinder.getLinkName(iter.id));
+  //      }
+        
+        for(int i = 0; i < root.child.size() - 1; i++){
+        	TreeNode iter = (TreeNode)root.child.getQuick(i);
+        	iter.setParent(root);
+        	this.expand(iter, root.child, i);
         }
-        for(int i = 0; i < candidatesNodes.size(); i++){
-        	TreeNode node = (TreeNode)candidatesNodes.elementAt(i);
-        	if(mostBits == MetaLinkFinder.countBits(node.mask)){System.err.println(node.level + " ");this.outputPath(node);}
+        this.travel(root, 7, 7);
+        this.candidatesNodes.sort();
+         for(int i = 0; i < candidatesNodes.size(); i++){
+        	TreeNode node = (TreeNode)candidatesNodes.getQuick(i);
+        	this.outputPath(node);
         }
     }
+
     public void output(int num){
     	
     }

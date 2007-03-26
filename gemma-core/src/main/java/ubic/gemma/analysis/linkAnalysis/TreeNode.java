@@ -2,6 +2,8 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.Serializable;
 
+import cern.colt.list.ObjectArrayList;
+
 
 public class TreeNode implements Comparable<TreeNode>, Serializable {
 	/**
@@ -18,12 +20,12 @@ public class TreeNode implements Comparable<TreeNode>, Serializable {
 	public long [] mask;
 	public TreeNode closestNode = null;
 	public Integer commonBits = 0;
-	public TreeNode child[];
+	public ObjectArrayList child;
 	public TreeNode parent = null;
 	public Integer level = 0;
-	public Integer order = 0;
+	public Integer order = 0; //for tree generation
 
-    public TreeNode(long id, long[] mask, TreeNode child[] ) {
+    public TreeNode(long id, long[] mask, ObjectArrayList child) {
     	this.id = id;
     	this.child = child;
     	this.mask = mask;
@@ -61,6 +63,9 @@ public class TreeNode implements Comparable<TreeNode>, Serializable {
     }
     public void setParent(TreeNode parent){
     	this.parent = parent;
+    }
+    public void setChild(ObjectArrayList child){
+    	this.child = child;
     }
     public void setLevel(int level){
      	this.level = level;

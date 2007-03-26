@@ -115,14 +115,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         geneService = ( GeneService ) this.getBean( "geneService" );
     }
 
-    private Collection<Gene> getTestGenes( GeneService geneService, Taxon taxon ) {
-        String geneNames[] = { "RPL8", "BC071678", "c1orf151", "RPS18", "PCOLCE2", "RPS14", "BC072682", "Ak130913" };
-
-        // String geneNames[] = {"RPS18", "BC071678"};
-
-        return this.getGenes( geneService, geneNames, taxon );
-    }
-
     /**
      * @param geneService
      * @param geneNames
@@ -244,7 +236,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
         Taxon taxon = getTaxon();
         Collection<ExpressionExperiment> allEE = eeService.findByTaxon( taxon );
-		//Collection <Gene> queryGenes = getTestGenes(geneService,taxon);
 		Collection<String> queryGeneNames = readQueryGenesFromFile(this.geneList);
 		if(queryGeneNames.size() == 0){
 			log.info( "No gene is read from the input file" );
