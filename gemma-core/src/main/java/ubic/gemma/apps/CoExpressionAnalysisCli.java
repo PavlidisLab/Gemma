@@ -48,6 +48,7 @@ import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.reader.StringMatrixReader;
 import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -67,7 +68,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
-    private DesignElementDataVectorService devService;
+    private DesignElementDataVectorService dedvService;
     private ExpressionExperimentService eeService;
     private GeneService geneService;
     private String geneList = null;
@@ -110,7 +111,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         if ( hasOption( 's' ) ) {
             this.stringency = Integer.parseInt(getOptionValue( 's' ));
         }
-        devService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
+        dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
     }
@@ -179,12 +180,19 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 	
 	Collection<Gene> getCoExpressedGenes(Collection<Gene> queryGenes){
 		HashSet<Gene> coExpressedGenes = new HashSet<Gene>();
+		Collection<Long> geneIds = new HashSet<Long>();
     	for(Gene gene:queryGenes){
     		log.info("Get co-expressed genes for " + gene.getName());
-    		Map<Long, Collection<Long>> geneEEMap = geneService.getCoexpressedGeneMap(this.stringency, gene);
-    		coExpressedGenes.addAll(geneService.load(geneEEMap.keySet()));
+    		CoexpressionCollectionValueObject coexpressed = (CoexpressionCollectionValueObject)geneService.getCoexpressedGenes(gene, null, this.stringency);
+    		Map<Long, Collection<Long>> geneEEMap = coexpressed.getSpecificExpressionExperiments();
+    		for(Long geneId:geneEEMap.keySet()){
+    			Collection<Long> ees = geneEEMap.get(geneId);
+    			if(ees.size() >= this.stringency) geneIds.add(geneId);
+    		}
      	}
-
+    	log.info(" Got " + geneIds.size() + " genes for the CoExpression analysis");
+    	if(geneIds.size() > 0)
+    		coExpressedGenes.addAll(geneService.load(geneIds));
 		return coExpressedGenes;
 	}
     /**
@@ -194,8 +202,8 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @param queryGenes
      * @return
      */
-	Map<DesignElementDataVector, Collection<Gene>> getDevToGenesMap(Collection<Gene> allGenes, Collection<ExpressionExperiment> allEEs){
-    	Map<DesignElementDataVector, Collection<Gene>> devToGenesMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
+	Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMap(Collection<Gene> allGenes, Collection<ExpressionExperiment> allEEs){
+    	Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
     	int count = 0;
     	int CHUNK_LIMIT = 30;
     	int total = allGenes.size();
@@ -209,16 +217,16 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     		count++;
     		total--;
     		if(count == CHUNK_LIMIT || total == 0){
-    			devToGenesMap.putAll(devService.getVectors(allEEs, genesInOneChunk));
+    			dedv2genes.putAll(dedvService.getVectors(allEEs, genesInOneChunk));
     			count = 0;
     			genesInOneChunk.clear();
     			System.out.print(".");
     		}
     	}
         qWatch.stop();
-        log.info("\nQuery takes " + qWatch.getTime() + " to get " + devToGenesMap.size() + " DEVs for " + allGenes.size() + " genes");
+        log.info("\nQuery takes " + qWatch.getTime() + " to get " + dedv2genes.size() + " DEDVs for " + allGenes.size() + " genes");
         
-        return devToGenesMap;
+        return dedv2genes;
 	}
 
     /*
@@ -251,12 +259,13 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         allGenes.addAll(queryGenes);
         allGenes.addAll(coExpressedGenes);
         log.info( "Start the Query for " + queryGenes.size() + " genes" );
-        Map<DesignElementDataVector, Collection<Gene>> devToGenesMap = getDevToGenesMap(allGenes, allEE);
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = getDedv2GenesMap(allGenes, allEE);
+        if(dedv2genes.size() == 0 || queryGenes.size() == 0 || coExpressedGenes.size() == 0 || allEE.size() == 0) return null;
         GeneCoExpressionAnalysis coExperssion = new GeneCoExpressionAnalysis( (Set)queryGenes, (Set)coExpressedGenes, (Set)new HashSet(allEE));
 
-        coExperssion.setDevToGenes( devToGenesMap );
+        coExperssion.setDedv2Genes(dedv2genes);
         coExperssion.setExpressionExperimentService( eeService );
-        coExperssion.analysis( ( Set ) devToGenesMap.keySet() );
+        coExperssion.analysis( ( Set ) dedv2genes.keySet() );
 
         try {
             makeClusterGrams( coExperssion );
