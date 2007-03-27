@@ -190,7 +190,7 @@ public class DesignElementDataVectorDaoImpl extends
      * @return
      */
     protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
-        Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
         // first get the composite sequences
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
@@ -222,21 +222,21 @@ public class DesignElementDataVectorDaoImpl extends
 
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
-            return geneMap;
+            return dedv2genes;
         }
 
         log.info( "Got " + cs2gene.keySet().size() + " composite sequences for " + genes.size() + " genes in "
                 + watch.getTime() + "ms" );
-
         watch.reset();
+        
+        //Second, get designElementDataVectors for each compositeSequence and then fill the dedv2genes
         watch.start();
         final String queryString;
-
         if ( ees == null || ees.size() == 0 ) {
-            queryString = "select dedv.id from DesignElementDataVectorImpl dedv"
+            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
                     + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
         } else {
-            queryString = "select dedv.id from DesignElementDataVectorImpl dedv"
+            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
                     + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
                     + " and dedv.expressionExperiment in ( :ees )";
         }
@@ -250,34 +250,31 @@ public class DesignElementDataVectorDaoImpl extends
             }
             queryObject.setParameterList( "cs", cs2gene.keySet() );
 
-            List results = queryObject.list();
-
+            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             log.info( "Query done in " + watch.getTime() + "ms" );
-
-            for ( Object object : results ) {
-
-                // DesignElementDataVector dedv = ( DesignElementDataVector ) object;
-
-                DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
-                dedv.setId( ( Long ) object );
-
-                // if ( !geneMap.containsKey( dedv ) ) {
-                // geneMap.put( dedv, new HashSet<Gene>() );
-                // }
-                // for ( Gene g : cs2gene.get( dedv.getDesignElement() ) ) {
-                // geneMap.get( dedv ).add( g );
-                // }
-                if ( count++ % 200 == 0 ) log.info( count + " vectors processed in " + watch.getTime() + "ms" );
+            
+            while ( results.next() ) {
+            	DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
+                CompositeSequence cs = ( CompositeSequence ) results.get( 1 );
+                Collection<Gene> associatedGenes = cs2gene.get(cs);
+                if ( !dedv2genes.containsKey( dedv ) ) {
+                    dedv2genes.put(dedv, associatedGenes);
+                }else{
+                	Collection<Gene> mappedGenes = dedv2genes.get(dedv);
+                	mappedGenes.addAll(associatedGenes);
+                }
             }
+            results.close();
+
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
 
         watch.stop();
-        log.info( "Got " + count + " DEDV for " + cs2gene.keySet().size() + " composite sequences in "
+        log.info( "Got " + dedv2genes.keySet() + " DEDV for " + cs2gene.keySet().size() + " composite sequences in "
                 + watch.getTime() + "ms" );
 
-        return geneMap;
+        return dedv2genes;
     }
 
     /**
