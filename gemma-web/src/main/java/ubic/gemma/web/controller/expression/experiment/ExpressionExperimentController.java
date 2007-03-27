@@ -33,7 +33,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.expression.experiment.ExpressionExperimentReportService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,7 +56,6 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.bean id="expressionExperimentController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
- * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name = "expressionExperimentReportService" ref="expressionExperimentReportService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
@@ -66,18 +64,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
-    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
     private ExpressionExperimentReportService expressionExperimentReportService = null;
     private SearchService searchService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
-
-    /**
-     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
-     */
-    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
-        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
-    }
 
     /**
      * @param expressionExperimentService
@@ -185,7 +175,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     private ModelAndView redirectToList( HttpServletRequest request ) {
-        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment " } );
+        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
 

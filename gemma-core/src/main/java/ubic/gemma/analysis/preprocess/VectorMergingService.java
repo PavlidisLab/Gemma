@@ -87,7 +87,7 @@ public class VectorMergingService {
      * @param expExp
      */
     @SuppressWarnings("unchecked")
-    public void mergeVectors( ExpressionExperiment expExp ) {
+    public void mergeVectors( ExpressionExperiment expExp, Long dimId ) {
 
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
 
@@ -124,7 +124,17 @@ public class VectorMergingService {
             }
 
             // define a new bioAd.
-            BioAssayDimension newBioAd = combineBioAssayDimensions( oldBioAssayDims );
+            BioAssayDimension newBioAd;
+            if ( dimId != null ) {
+                newBioAd = bioAssayDimensionService.load( dimId );
+                if ( newBioAd == null ) {
+                    throw new IllegalArgumentException( "No bioAssayDimension with id " + dimId );
+                }
+                log.info( "Using existing bioassaydimension" );
+            } else {
+                newBioAd = combineBioAssayDimensions( oldBioAssayDims );
+            }
+
             int totalBioAssays = newBioAd.getBioAssays().size();
 
             ByteArrayConverter converter = new ByteArrayConverter();
@@ -145,6 +155,7 @@ public class VectorMergingService {
                 // old bioassayDimensions, find the designelementdatavector that uses it. If there isn't one, fill in
                 // the values for that dimension with missing data.
                 for ( BioAssayDimension oldDim : oldBioAssayDims ) {
+                    if ( oldDim.equals( newBioAd ) ) continue;
                     boolean found = false;
                     PrimitiveType representation = type.getRepresentation();
                     for ( DesignElementDataVector oldV : dedvs ) {
@@ -203,7 +214,7 @@ public class VectorMergingService {
                                 data.add( false );
                             } else {
                                 throw new UnsupportedOperationException( "Missing values in data vectors of type "
-                                        + representation + " not supported" );
+                                        + representation + " not supported (when processing " + de );
                             }
 
                         }
@@ -325,5 +336,10 @@ public class VectorMergingService {
                 expExp, oneType );
         designElementDataVectorService.thaw( vectorsForQt );
         return vectorsForQt;
+    }
+
+    public void mergeVectors( ExpressionExperiment expressionExperiment ) {
+        this.mergeVectors( expressionExperiment, null );
+
     }
 }

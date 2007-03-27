@@ -18,6 +18,9 @@
  */
 package ubic.gemma.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.analysis.preprocess.VectorMergingService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -29,6 +32,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class VectorMergingCli extends ExpressionExperimentManipulatingCli {
 
     DesignElementDataVectorService vectorService;
+
+    Long dimId = null;
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        Option dimOption = OptionBuilder.hasArg().withArgName( "Dimension ID" ).withDescription(
+                "ID of pre-existing BioAssayDimension to use (instead of creating a new one)" ).withLongOpt( "dim" )
+                .create( 'd' );
+
+        addOption( dimOption );
+
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -45,7 +62,11 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCli {
 
         VectorMergingService mergingService = ( VectorMergingService ) this.getBean( "vectorMergingService" );
 
-        mergingService.mergeVectors( expressionExperiment );
+        if ( this.dimId != null ) {
+            mergingService.mergeVectors( expressionExperiment, dimId );
+        } else {
+            mergingService.mergeVectors( expressionExperiment );
+        }
 
         return null;
     }
@@ -61,4 +82,11 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCli {
         }
     }
 
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'd' ) ) {
+            this.dimId = new Long( this.getIntegerOptionValue( 'd' ) );
+        }
+    }
 }

@@ -100,8 +100,9 @@ public class GeoPlatform extends GeoData {
      */
     public List<String> getColumnData( String columnName ) {
         assert platformInformation.size() != 0 : this + " has no platformInformation at all!";
-        assert platformInformation.containsKey( columnName ) : this + " has no platformInformation for '" + columnName
-                + "'";
+        // assert platformInformation.containsKey( columnName ) : this + " has no platformInformation for '" +
+        // columnName
+        // + "'";
         return platformInformation.get( columnName );
     }
 

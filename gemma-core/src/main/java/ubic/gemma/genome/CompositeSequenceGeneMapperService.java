@@ -19,20 +19,17 @@
 package ubic.gemma.genome;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
@@ -101,22 +98,10 @@ public class CompositeSequenceGeneMapperService {
     /**
      * @param compositeSequence
      * @return Collection<Gene>
-     * @deprecated use CompositeSequenceService.getGenes instead.
      */
+    @SuppressWarnings("unchecked")
     public Collection<Gene> getGenesForCompositeSequence( CompositeSequence compositeSequence ) {
-        Collection<Gene> genes = null;
-
-        if ( compositeSequence.getBiologicalCharacteristic() != null ) {
-            genes = new HashSet<Gene>();
-            for ( BioSequence2GeneProduct bs2gp : compositeSequence.getBiologicalCharacteristic()
-                    .getBioSequence2GeneProduct() ) {
-                if ( bs2gp != null ) {
-                    GeneProduct geneProduct = bs2gp.getGeneProduct();
-                    if ( geneProduct != null ) genes.add( geneProduct.getGene() );
-                }
-            }
-        }
-        return genes;
+        return compositeSequenceService.getGenes( compositeSequence );
     }
 
     /**
@@ -134,9 +119,8 @@ public class CompositeSequenceGeneMapperService {
      * @return Collection<CompositeSequence>
      */
     @SuppressWarnings("unchecked")
-    public Collection<CompositeSequence> getCompositeSequencesByGeneId( Gene gene, ArrayDesign arrayDesign ) {
-        // TODO change name to getCompositeSequenceByGene(Gene gene)
-        return this.geneDao.getCompositeSequencesById( gene, arrayDesign );
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
+        return this.geneDao.getCompositeSequences( gene, arrayDesign );
     }
 
     /**

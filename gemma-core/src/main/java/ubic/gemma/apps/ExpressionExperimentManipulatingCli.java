@@ -38,10 +38,10 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
 
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Expression experiment" ).withDescription(
+        Option expOption = OptionBuilder.hasArg().withArgName( "Expression experiment" ).withDescription(
                 "Expression experiment short name" ).withLongOpt( "experiment" ).create( 'e' );
 
-        addOption( arrayDesignOption );
+        addOption( expOption );
 
     }
 

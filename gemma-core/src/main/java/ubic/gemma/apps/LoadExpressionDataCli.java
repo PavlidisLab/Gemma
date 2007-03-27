@@ -33,8 +33,11 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -50,6 +53,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private String accessions = null;
     private boolean platformOnly = false;
     private boolean doMatching = true;
+    private boolean force = false;
+    private ExpressionExperimentService eeService;
 
     /*
      * (non-Javadoc)
@@ -76,6 +81,11 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 .withLongOpt( "nomatch" ).create( 'n' );
 
         addOption( noBioAssayMatching );
+
+        Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
+                .withLongOpt( "force" ).create( "force" );
+
+        addOption( forceOption );
     }
 
     /**
@@ -180,7 +190,13 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private void processAccession( Collection<String> errorObjects, Collection<String> persistedObjects,
             GeoDatasetService geoService, String accession ) {
         try {
+
+            if ( force ) {
+                removeIfExists( accession );
+            }
+
             Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching );
+
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
                 persistedObjects.add( ( ( Describable ) object ).getName() + " ("
@@ -190,6 +206,25 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             errorObjects.add( accession + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
             log.error( e, e );
+        }
+    }
+
+    /**
+     * Delete previous version of the experiment.
+     * 
+     * @param accession
+     */
+    private void removeIfExists( String accession ) {
+        DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
+        acDbe.setAccession( accession );
+        ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
+        geo.setName( "GEO" );
+        acDbe.setExternalDatabase( geo );
+        ExpressionExperiment existing = eeService.findByAccession( acDbe );
+
+        if ( existing != null ) {
+            log.info( "Deleting existing version of " + accession );
+            eeService.delete( existing );
         }
     }
 
@@ -211,6 +246,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'n' ) ) {
             doMatching = false;
         }
+
+        if ( hasOption( "force" ) ) {
+            force = true;
+        }
+
+        this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
     }
 
 }

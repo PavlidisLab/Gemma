@@ -272,79 +272,106 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             public Object doInHibernate( Session session ) throws HibernateException {
 
                 log.info( "Loading data for deletion..." );
-                ExpressionExperiment toDeletePers = ( ExpressionExperiment ) session.merge( toDelete );
+                session.update( toDelete );
 
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-
-                Collection<DesignElementDataVector> designElementDataVectors = toDeletePers
-                        .getDesignElementDataVectors();
+                Collection<DesignElementDataVector> designElementDataVectors = toDelete.getDesignElementDataVectors();
 
                 int count = 0;
-                AuditTrail at; // reused a couple times to delete the audit trails
-
                 log.info( "Removing  Design Element Data Vectors." );
                 for ( DesignElementDataVector dv : designElementDataVectors ) {
                     BioAssayDimension dim = dv.getBioAssayDimension();
                     dims.add( dim );
                     session.delete( dv );
-                    // would it be faster to delete in a batch?
-                    if ( ++count % 5000 == 0 ) log.info( count + " design Element data vectors deleted" );
+                    if ( ++count % 20000 == 0 ) log.info( count + " design Element data vectors deleted" );
 
                 }
-
+                toDelete.getDesignElementDataVectors().clear();
+                session.flush();
+                session.clear();
+                session.update( toDelete );
+                toDelete.getBioAssayDataVectors().size();
+                
                 log.info( "Removing BioAssay Dimensions." );
                 for ( BioAssayDimension dim : dims ) {
                     session.delete( dim );
                 }
 
-                // Delete BioMaterials
-                for ( BioAssay ba : toDeletePers.getBioAssays() ) {
-
-                    // fixme this needs to be here for lazy loading issues. Even though the AD isn't getting removed.
-                    // Not happy about this at all. but what to do?
+                Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
+                for ( BioAssay ba : toDelete.getBioAssays() ) {
                     ba.getArrayDesignUsed().getCompositeSequences().size();
 
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        session.delete( bm );
-                    }
                     // delete references to files on disk
                     for ( LocalFile lf : ba.getDerivedDataFiles() ) {
-                        for ( LocalFile sf : lf.getSourceFiles() )
+                        for ( LocalFile sf : lf.getSourceFiles() ) {
                             session.delete( sf );
+                        }
+                        lf.getSourceFiles().clear();
                         session.delete( lf );
                     }
                     // Delete raw data files
                     if ( ba.getRawDataFile() != null ) session.delete( ba.getRawDataFile() );
 
                     // remove the bioassay audit trail
-                    at = ba.getAuditTrail();
-                    if ( at != null ) {
-                        for ( AuditEvent event : at.getEvents() )
-                            session.delete( event );
-                        session.delete( at );
+                    // AuditTrail at = ba.getAuditTrail();
+                    // ba.setAuditTrail( null );
+                    // if ( at != null ) {
+                    // for ( AuditEvent event : at.getEvents() ) {
+                    // session.delete( event );
+                    // }
+                    // at.getEvents().clear();
+                    // session.delete( at );
+                    // }
+
+                    Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
+                    bioMaterialsToDelete.addAll( biomaterials );
+                    for ( BioMaterial bm : biomaterials ) {
+                        bm.getBioAssaysUsedIn().clear();
+                        session.saveOrUpdate( bm );
                     }
-
+                    biomaterials.clear();
+                    session.update( ba );
+                    session.delete( ba );
                     log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
-
                 }
+
+                for ( ExpressionExperimentSubSet subset : toDelete.getSubsets() ) {
+                    session.delete( subset );
+                }
+                toDelete.getSubsets().clear();
+
+                for ( BioMaterial bm : bioMaterialsToDelete ) {
+                    session.delete( bm );
+                }
+
+                // session.flush();
 
                 // Delete investigators
-                for ( Contact ct : toDeletePers.getInvestigators() ) {
-                    session.delete( ct );
-                }
+                // for ( Contact ct : toDelete.getInvestigators() ) {
+                // session.delete( ct );
+                // }
 
                 // Remove audit information for ee from the db. We might want to keep this but......
-                at = toDeletePers.getAuditTrail();
-                if ( at != null ) {
-                    for ( AuditEvent event : at.getEvents() )
-                        session.delete( event );
+                // AuditTrail at = toDelete.getAuditTrail();
+                // if ( at != null ) {
+                // for ( AuditEvent event : at.getEvents() ) {
+                // session.delete( event );
+                // }
+                // at.getEvents().clear();
 
-                    session.delete( at );
-                }
+                // session.delete( at );
+                // }
 
-                session.delete( toDeletePers );
+                // session.clear();
+                session.delete( toDelete );
                 session.flush();
                 session.clear();
+
+                // for ( BioMaterial bm : bioMaterialsToDelete ) {
+                // session.delete( bm );
+                // }
+                // session.flush();
+
                 return null;
             }
         }, true );

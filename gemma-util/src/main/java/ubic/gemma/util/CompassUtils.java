@@ -52,14 +52,13 @@ public class CompassUtils {
                 .suffixFileFilter( "lock" ), null );
 
         if ( lockFiles.size() == 0 ) {
-            log.info( "Compass lock files do not exist." );
+            log.debug( "Compass lock files do not exist." );
             return;
         }
 
         for ( File file : lockFiles ) {
-            log.warn( "removing file " + file );
-            // FileUtils.forceDeleteOnExit( file ); //delete on jvm term.
-            file.delete(); // delete right away, not on jvm termination (not forcing).
+            log.debug( "Removing compass lock file " + file );
+            file.delete();
         }
     }
 

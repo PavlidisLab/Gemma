@@ -109,7 +109,13 @@ public class GeoValues {
     }
 
     /**
-     * Store a value. It is assumed that quantitationTypes and designElements have unique names.
+     * Store a value. It is assumed that designElements have unique names.
+     * <p>
+     * Note what happens if data is MISSING for a given designElement/quantitationType/sample combination. This can
+     * happen (typically all the quantitation types for a designelement in a given sample). This method will NOT be
+     * called. When the next sample is processed, the new data will be added onto the end in the wrong place. Then the
+     * data in the vectors stored here will be incorrect. Thus the GEO parser has to ensure that each vector is
+     * 'completed' before moving to the next sample.
      * 
      * @param sample
      * @param quantitationTypeIndex The column number for the quantitation type, needed because the names of the
@@ -117,10 +123,9 @@ public class GeoValues {
      *        column contains the design element name (ID_REF), the first quantitation type should be numbered 0. This
      *        is almost always a good way to match values across samples, there is a single (pathological?) case where
      *        the order isn't the same for two samples.
-     * @param quantitationTypeName The name of the quantitationType. This cannot be reliably used to identify
-     *        quantitation types because the names vary from sample to sample (sometimes).
+     * @param quantitationTypeIndex Identifies the quantitation type.
      * @param designElement
-     * @param value
+     * @param value The data point to be stored.
      */
     public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
 
@@ -156,17 +161,38 @@ public class GeoValues {
         }
 
         qtMap.get( designElement ).add( value );
+
+        /*
+         * This is the check to make sure we aren't missing any data for any samples. This is an exception rather than
+         * assertion because it's conceivable that some funky GEO file will trip us up.
+         */
+        if ( qtMap.get( designElement ).size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
+            throw new IllegalStateException(
+                    "There must be some data missing because the number of samples doesn't match the number of values collected for "
+                            + designElement + " on " + platform + " quant.type # " + quantitationTypeIndex
+                            + " current sample=" + sample );
+        }
+
         if ( log.isTraceEnabled() ) {
             log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex
                     + " de=" + designElement + " value=" + value );
         }
 
-        assert qtMap.get( designElement ).size() == sampleQtMap.size() : "Duplicate quantitation type name in series? "
-                + "While processing data for " + sample + ": Number of samples " + sampleQtMap.size()
-                + " for designElement=" + designElement + " quantType=" + quantitationTypeIndex
-                + " does not equal length of vector "
-                + data.get( platform ).get( quantitationTypeIndex ).get( designElement ).size();
+        // assert qtMap.get( designElement ).size() == sampleQtMap.size() : "Duplicate quantitation type name in series?
+        // "
+        // + "While processing data for " + sample + ": Number of samples " + sampleQtMap.size()
+        // + " for designElement=" + designElement + " quantType=" + quantitationTypeIndex
+        // + " does not equal length of vector "
+        // + data.get( platform ).get( quantitationTypeIndex ).get( designElement ).size();
 
+    }
+
+    /**
+     * @param samplePlatform
+     * @return Collection of Objects representing the quantitation types for the given platform.
+     */
+    public Collection<Object> getQuantitationTypes( GeoPlatform samplePlatform ) {
+        return this.data.get( samplePlatform ).keySet();
     }
 
     /**
@@ -187,7 +213,7 @@ public class GeoValues {
 
     /**
      * Get the indices of the data for a set of samples - this can be used to get a slice of the data. This is
-     * inefficient but shouldn't need to be called very often.
+     * inefficient but shouldn't need to be called all that frequently.
      * 
      * @param platform
      * @param neededSamples, must be from the same platform. If we don't have data for a given sample, the index
@@ -200,19 +226,6 @@ public class GeoValues {
         if ( sampleDimensions.get( platform ).get( quantitationType ) == null ) {
             return null; // filtered out?
         }
-
-        // this assertion assumes that all the data
-        // assert neededSamples.size() <= sampleDimensions.get( platform ).get( quantitationType ).size() : "Requested
-        // data for "
-        // + neededSamples.size()
-        // + " samples quantType="
-        // + quantitationType
-        // + " platform="
-        // + platform
-        // + " but only know about "
-        // + sampleDimensions.get( platform ).get( quantitationType ).size()
-        // + " "
-        // + sampleDimensions.get( platform ).get( quantitationType );
 
         List<Integer> result = new ArrayList<Integer>();
         for ( GeoSample sample : neededSamples ) {
@@ -268,8 +281,23 @@ public class GeoValues {
             if ( i == null ) {
                 result.add( null );
             } else {
-                assert rawvals.get( i ) != null : "No entry for index " + i;
-                result.add( rawvals.get( i ) );
+
+                /*
+                 * There can be values missing if some data are missing for some samples. For example, on GSE1004,
+                 * sample GSM15832 was run on HG-U95V1 while the rest are on HG-U95V2, so a few probes are missing data.
+                 */
+
+                if ( rawvals.size() < ( i + 1 ) ) {
+                    throw new IllegalStateException( "Data out of bounds index=" + i + "(" + designElement + " on "
+                            + platform + " quant.type # " + quantitationType + ")" );
+                }
+                Object value = rawvals.get( i );
+                if ( value == null ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "No data for index " + i + "(" + designElement + " on " + platform
+                                + " quant.type # " + quantitationType + ")" );
+                }
+                result.add( value );
             }
         }
         return result;

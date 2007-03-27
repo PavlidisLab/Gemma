@@ -61,7 +61,8 @@ public class DesignElementController extends BaseMultiActionController {
     /**
      * @param compositeSequenceGeneMapperService the compositeSequenceGeneMapperService to set
      */
-    public void setCompositeSequenceGeneMapperService( CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+    public void setCompositeSequenceGeneMapperService(
+            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
         this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 
@@ -87,7 +88,6 @@ public class DesignElementController extends BaseMultiActionController {
         if ( StringUtils.isBlank( filter ) ) {
             this.saveMessage( request, "No search critera provided" );
             // return showAll( request, response );
-
         }
 
         /*
@@ -105,21 +105,20 @@ public class DesignElementController extends BaseMultiActionController {
         // if there have been any genes returned, find the compositeSequences associated with the genes
         if ( geneResults != null && geneResults.size() > 0 ) {
             for ( Gene gene : geneResults ) {
-                
-                if (arrayDesign == null) {
-                Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService
-                        .getCompositeSequencesByGeneId( gene.getId() );
-                    searchResults.addAll( geneCs );
-                }
-                else {
+
+                if ( arrayDesign == null ) {
                     Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService
-                    .getCompositeSequencesByGeneId( gene, arrayDesign );
+                            .getCompositeSequencesByGeneId( gene.getId() );
+                    searchResults.addAll( geneCs );
+                } else {
+                    Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService.getCompositeSequences(
+                            gene, arrayDesign );
                     searchResults.addAll( geneCs );
                 }
-                
+
             }
         }
-        
+
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );
@@ -128,7 +127,7 @@ public class DesignElementController extends BaseMultiActionController {
         } else {
             this.saveMessage( request, searchResults.size() + " probes matched your search." );
             Collection rawSummaries = compositeSequenceService.getRawSummary( searchResults, 100 );
-            compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );         
+            compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
         }
 
         ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );

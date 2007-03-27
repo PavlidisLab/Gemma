@@ -56,9 +56,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 public interface ExpressionDataMatrix<T> {
 
     /**
-     * Return a row that 'came from' the given design element. NOTE that this might be only part of a row if the
-     * experiment includes data from multiple array designs! This is different than the behavior of get(designElement,
-     * bioAssay). FIXME we might need to change this behavior and provide a getPartialRow or something.
+     * Return a row that 'came from' the given design element.
      * 
      * @param designElement
      * @return

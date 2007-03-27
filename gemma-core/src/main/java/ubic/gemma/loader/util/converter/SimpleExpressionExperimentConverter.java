@@ -148,9 +148,7 @@ public class SimpleExpressionExperimentConverter {
      * @param dataCol
      */
     private Collection<String[]> prepareRawData( Collection<String[]> dataCol ) {
-        // FIXME this will be slow.
-
-        Collection<String[]> rawDataCol = new ArrayList();
+        Collection<String[]> rawDataCol = new ArrayList<String[]>();
         rowNames = new String[dataCol.size()];
         int i = 0;
         log.info( "Row names are: " );

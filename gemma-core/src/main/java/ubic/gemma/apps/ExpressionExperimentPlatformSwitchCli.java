@@ -49,7 +49,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
         serv.assignArrayDesignTo( ee );
 
-        AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditEventService" );
+        AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
         auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
 

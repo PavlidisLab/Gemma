@@ -554,6 +554,9 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * For data coming from a single platform, create vectors.
+     * 
+     * @param values A GeoValues object holding the parsed results.
      * @param expExp
      * @param datasetSamples
      * @param geoPlatform
@@ -764,6 +767,10 @@ public class GeoConverter implements Converter {
 
         // convert the design element information.
         String identifier = determinePlatformIdentifier( platform );
+        if ( identifier == null ) {
+            throw new IllegalStateException( "Cannot determine the platform design element id column." );
+        }
+
         Collection<String> externalReferences = determinePlatformExternalReferenceIdentifier( platform );
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
         String sequenceColumn = determinePlatformSequenceColumn( platform );
@@ -776,20 +783,22 @@ public class GeoConverter implements Converter {
         if ( sequenceColumn != null ) {
             sequences = platform.getColumnData( sequenceColumn );
         }
+
+        /*
+         * This is a very commonly found column name in files, it seems standard in GEO. If we don't find it, it's okay.
+         */
         List<String> cloneIdentifiers = platform.getColumnData( "CLONE_ID" );
+        assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
 
         List<List<String>> externalRefs = null;
         if ( externalReferences != null ) {
             externalRefs = platform.getColumnData( externalReferences );
         }
 
-        assert identifier != null;
-
         if ( externalRefs != null ) {
             assert externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
                     + externalRefs.iterator().next().size() + " != " + identifiers.size();
         }
-        assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Converting " + identifiers.size() + " probe identifiers on GEO platform "

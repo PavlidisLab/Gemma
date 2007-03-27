@@ -637,6 +637,8 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
+    private Collection<String> processedDesignElements = new HashSet<String>();
+
     /**
      * @param line
      */
@@ -651,6 +653,20 @@ public class GeoFamilyParser implements Parser {
                 inPlatform = false;
                 inSeries = false;
             } else if ( startsWithIgnoreCase( line, "^SAMPLE" ) ) {
+
+                if ( currentSampleAccession != null ) {
+
+                    GeoSample currentSample = this.results.getSampleMap().get( currentSampleAccession );
+                    assert currentSample != null;
+                    if ( currentSample.getPlatforms().size() > 1 ) {
+                        log.warn( "Can't check for data completeness when sample uses more than one platform." );
+                    } else {
+
+                        addMissingData( currentSample );
+                    }
+                }
+
+                processedDesignElements.clear();
                 inSample = true;
                 inSubset = false;
                 inDataset = false;
@@ -729,6 +745,40 @@ public class GeoFamilyParser implements Parser {
             }
         } else {
             parseRegularLine( line );
+        }
+    }
+
+    /**
+     * Check to make sure data has been added for all the design elements. This is necessary where the data for some
+     * design elements is omitted. This can happen if there is some variability between the samples in terms of what
+     * design elements they have. This has to be called IMMEDIATELY after the data for the sample is read in, so the
+     * values get added in the right place.
+     * <p>
+     * This works by going over all the design elements for the GeoPlatform, and finding places where the sample has no
+     * data.
+     * 
+     * @param currentSample
+     */
+    private void addMissingData( GeoSample currentSample ) {
+        GeoPlatform samplePlatform = currentSample.getPlatforms().iterator().next();
+        assert samplePlatform != null;
+        Collection<String> designElementNames = samplePlatform.getColumnData( "ID_REF" );
+        if ( designElementNames == null )
+            throw new IllegalStateException( samplePlatform + " did not have 'ID_REF' column" );
+
+        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
+
+        Collection<Object> qTypeIndexes = values.getQuantitationTypes( samplePlatform );
+
+        for ( String el : designElementNames ) {
+            if ( !processedDesignElements.contains( el ) ) {
+                // put it in as missing data.
+                log.info( "Adding data missing from sample=" + currentSample + " for probe=" + el + " on "
+                        + samplePlatform );
+                for ( Object qt : qTypeIndexes ) {
+                    values.addValue( currentSample, ( Integer ) qt, el, null );
+                }
+            }
         }
     }
 
@@ -956,7 +1006,7 @@ public class GeoFamilyParser implements Parser {
         assert tokens != null;
 
         /*
-         * This can happen in some files -- we have to ignore it.
+         * This can happen in some files that are mildly corrupted. -- we have to ignore it.
          */
         if ( tokens.length <= 1 ) {
             log.error( "Parse error, sample data line has too few elements (" + tokens.length + "), line was '" + line
@@ -975,11 +1025,12 @@ public class GeoFamilyParser implements Parser {
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
 
         for ( int i = 1; i < tokens.length; i++ ) {
-            String token = tokens[i];
-            // String quantitationType = results.getSampleMap().get( currentSampleAccession ).getColumnNames().get( i );
-            values.addValue( sample, i - 1, designElement, token );
+            String value = tokens[i];
+            int quantitationTypeIndex = i - 1;
+            values.addValue( sample, quantitationTypeIndex, designElement, value );
             if ( log.isTraceEnabled() ) {
-                log.trace( "Adding: " + token + " to  quantitationType " + ( i - 1 ) + " for " + designElement );
+                log.trace( "Adding: " + value + " to  quantitationType " + ( quantitationTypeIndex ) + " for "
+                        + designElement );
             }
         }
 

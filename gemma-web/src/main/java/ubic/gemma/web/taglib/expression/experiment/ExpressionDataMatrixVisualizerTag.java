@@ -18,12 +18,10 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -36,7 +34,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -51,6 +48,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
+    
     private double EMSIZE = .825;
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
