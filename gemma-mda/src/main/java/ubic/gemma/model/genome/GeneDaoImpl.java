@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -77,12 +78,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene,
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetCompositeSequencesById( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+    protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
         Collection<CompositeSequence> compSeq = null;
         final String queryString = "select distinct compositeSequence from GeneImpl as gene,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as compositeSequence where gene.products.id=bs2gp.geneProduct.id "
@@ -222,67 +223,69 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
         Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
 
-        synchronized ( geneMap ) {
-            for ( Long geneId : geneMap.keySet() ) {
-                CoexpressionValueObject coExValObj = geneMap.get( geneId );
+        for ( Long geneId : geneMap.keySet() ) {
+            CoexpressionValueObject coExValObj = geneMap.get( geneId );
 
-                // determine which EE's that contributed to this gene's coexpression were non-specific
-                // an ee is specific iff the ee is specific for the query gene and the target gene.
-                Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
-                Collection<Long> specificEE = new HashSet(allSpecificEE.get( geneId ));     //get the EE's that are specific for the target gene
-                specificEE.retainAll( allQuerySpecificEE );                                 //get the EE's that are specific for both the target and the query gene
-                nonspecificEE.removeAll( specificEE );                                      
-                coExValObj.setNonspecificEE( nonspecificEE );
+            // determine which EE's that contributed to this gene's coexpression were non-specific
+            // an ee is specific iff the ee is specific for the query gene and the target gene.
+            Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
+            Collection<Long> specificEE = new HashSet( allSpecificEE.get( geneId ) ); // get the EE's that are
+            // specific for the target
+            // gene
+            specificEE.retainAll( allQuerySpecificEE ); // get the EE's that are specific for both the target and
+            // the query gene
+            nonspecificEE.removeAll( specificEE );
+            coExValObj.setNonspecificEE( nonspecificEE );
 
-                boolean added = false;
-                if ( coExValObj.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
-                    numGenes++;
+            boolean added = false;
+            if ( coExValObj.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
+                numGenes++;
 
-                    incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions );
+                incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions );
 
-                    if ( coExValObj.getPositiveLinkCount() != null ) {
-                        numStringencyGenes++;
-                        positiveLinkCount++;
-                        added = true;
-                        // add in coexpressions that match stringency
-                        coexpressions.getCoexpressionData().add( coExValObj );
-                        // add in expression experiments that match stringency
-                        // update the link count for that EE
-                        incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions );
-                    }
-
-                    if ( coExValObj.getNegativeLinkCount() != null ) {
-                        negativeLinkCount++;
-                        // add in expression experiments that match stringency
-                        // update the link count for that EE
-                        incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions );
-
-                        if ( added ) continue; // no point in adding or counting the same element twice
-                        coexpressions.getCoexpressionData().add( coExValObj );
-                        numStringencyGenes++;
-
-                    }
-
-                } else if ( coExValObj.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
-                    numPredictedGenes++;
-                    if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                        numStringencyPredictedGenes++;
-                        coexpressions.getPredictedCoexpressionData().add( coExValObj );
-                    }
-                } else if ( coExValObj.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
-                    numProbeAlignedRegions++;
-                    if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                        numStringencyProbeAlignedRegions++;
-                        coexpressions.getAlignedCoexpressionData().add( coExValObj );
-                    }
-                } else {
-                    log
-                            .warn( "Coexpression is of unknown type. Not gene, probealignedRegion or predictedGene.  Official name: "
-                                    + coExValObj.getGeneOfficialName() );
+                if ( coExValObj.getPositiveLinkCount() != null ) {
+                    numStringencyGenes++;
+                    positiveLinkCount++;
+                    added = true;
+                    // add in coexpressions that match stringency
+                    coexpressions.getCoexpressionData().add( coExValObj );
+                    // add in expression experiments that match stringency
+                    // update the link count for that EE
+                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions );
                 }
 
+                if ( coExValObj.getNegativeLinkCount() != null ) {
+                    negativeLinkCount++;
+                    // add in expression experiments that match stringency
+                    // update the link count for that EE
+                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions );
+
+                    if ( added ) continue; // no point in adding or counting the same element twice
+                    coexpressions.getCoexpressionData().add( coExValObj );
+                    numStringencyGenes++;
+
+                }
+
+            } else if ( coExValObj.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
+                numPredictedGenes++;
+                if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
+                    numStringencyPredictedGenes++;
+                    coexpressions.getPredictedCoexpressionData().add( coExValObj );
+                }
+            } else if ( coExValObj.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
+                numProbeAlignedRegions++;
+                if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
+                    numStringencyProbeAlignedRegions++;
+                    coexpressions.getAlignedCoexpressionData().add( coExValObj );
+                }
+            } else {
+                log
+                        .warn( "Coexpression is of unknown type. Not gene, probealignedRegion or predictedGene.  Official name: "
+                                + coExValObj.getGeneOfficialName() );
             }
+
         }
+
         // add count of pruned matches to coexpression data
         coexpressions.setPositiveStringencyLinkCount( positiveLinkCount );
         coexpressions.setNegativeStringencyLinkCount( negativeLinkCount );
@@ -720,8 +723,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         final String p2pClassName = getP2PClassName( givenG );
 
-        final Map<Long, CoexpressionValueObject> geneMap = Collections
-                .synchronizedMap( new HashMap<Long, CoexpressionValueObject>() );
+        final Map<Long, CoexpressionValueObject> geneMap = new ConcurrentHashMap<Long, CoexpressionValueObject>();
 
         final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
         coexpressions.setStringency( stringency );
@@ -946,6 +948,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     // This method has been duplicated from CompositeSequenceService
     // It actually belongs here, as it returns a Map CS to genes.
     // TODO unify this duplication
+    @SuppressWarnings("unchecked")
     private Map<Long, Collection<Gene>> getGenes( Collection<Long> csIds ) throws Exception {
 
         if ( ( csIds == null ) || ( csIds.size() == 0 ) ) {

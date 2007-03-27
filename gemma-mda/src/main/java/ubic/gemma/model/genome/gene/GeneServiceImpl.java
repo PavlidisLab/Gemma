@@ -23,9 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -42,8 +39,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
         return this.getGeneDao().getCoexpressedGeneMap( stringincy, gene );
     }
-
-    private Log log = LogFactory.getLog( GeneServiceImpl.class );
 
     /*
      * (non-Javadoc)
@@ -247,12 +242,15 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getMicroRnaByTaxon( taxon );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleGetCompositeSequencesById( Gene gene, ArrayDesign arrayDesign ) throws Exception {
-        return this.getGeneDao().getCompositeSequencesById( gene, arrayDesign );
+    protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+        return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
     }
 
 }
