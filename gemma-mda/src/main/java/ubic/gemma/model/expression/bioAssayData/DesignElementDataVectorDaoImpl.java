@@ -271,7 +271,7 @@ public class DesignElementDataVectorDaoImpl extends
         }
 
         watch.stop();
-        log.info( "Got " + dedv2genes.keySet() + " DEDV for " + cs2gene.keySet().size() + " composite sequences in "
+        log.info( "Got " + dedv2genes.keySet().size() + " DEDV for " + cs2gene.keySet().size() + " composite sequences in "
                 + watch.getTime() + "ms" );
 
         return dedv2genes;
