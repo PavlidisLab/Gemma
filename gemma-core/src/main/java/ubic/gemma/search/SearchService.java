@@ -131,7 +131,7 @@ public class SearchService {
     public Collection<Gene> geneDbSearch( String searchString ) throws Exception {
 
         searchString = searchString.trim();
-        
+
         // search by inexact symbol
         Set<Gene> geneSet = new HashSet<Gene>();
         Set<Gene> geneMatch = new HashSet<Gene>();
@@ -308,8 +308,7 @@ public class SearchService {
     }
 
     /**
-     * combines the compass style search, and the compositeSequence search and returns a collection
-     *  with no duplicates.
+     * combines the compass style search, and the compositeSequence search and returns a collection with no duplicates.
      * 
      * @param searchString
      * @return a hashset of arraydesigns
@@ -337,7 +336,7 @@ public class SearchService {
      */
     @SuppressWarnings("unchecked")
     public Collection<ArrayDesign> arrayDesignCompositeSequenceSearch( String searchString ) throws Exception {
-        
+
         searchString = searchString.trim();
         Set<ArrayDesign> adSet = new HashSet<ArrayDesign>();
 
@@ -357,7 +356,7 @@ public class SearchService {
      * @param query
      * @return
      */
-    public Collection<ArrayDesign> compassArrayDesignSearch(  String searchString ) {
+    public Collection<ArrayDesign> compassArrayDesignSearch( String searchString ) {
 
         final String query = searchString.trim();
         CompassSearchResults searchResults;

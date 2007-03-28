@@ -285,14 +285,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection findByName ( String name ) {
+    public Collection findByName( String name ) {
         Collection<CompositeSequence> compositeSequences = null;
-        final String queryString = "select distinct cs from CompositeSequenceImpl"
-                + " cs where cs.name = :id";
+        final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";
         try {
-            log.info("Query Name: " + name );
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            //queryObject.setParameter( "id", name );
+            log.info( "Query Name: " + name );
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );          
             queryObject.setString( "id", name );
             compositeSequences = queryObject.list();
 
@@ -302,7 +300,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         return compositeSequences;
     }
 
-    
     @SuppressWarnings("unchecked")
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
