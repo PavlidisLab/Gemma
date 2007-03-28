@@ -99,4 +99,36 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             throw super.convertHibernateAccessException( ex );
         }
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleCopy(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    protected BioMaterial handleCopy( final BioMaterial bioMaterial ) throws Exception {
+        
+        BioMaterial newMaterial = (BioMaterial) this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            
+        public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+            session.evict( bioMaterial );
+                BioMaterial newMaterial = BioMaterial.Factory.newInstance();
+                newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
+                newMaterial.setMaterialType( bioMaterial.getMaterialType() );
+                newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
+                newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
+                
+                newMaterial.setTreatments( bioMaterial.getTreatments() );
+                newMaterial.setFactorValues( bioMaterial.getFactorValues() );
+                
+                newMaterial.setName( "Modeled after " + bioMaterial.getName() );
+                newMaterial = findOrCreate( newMaterial );
+                return newMaterial;
+            }
+        }, true );
+        
+
+            
+            
+            return newMaterial;
+
+    }
 }
