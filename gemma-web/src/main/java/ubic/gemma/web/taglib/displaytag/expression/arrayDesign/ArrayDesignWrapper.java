@@ -60,29 +60,29 @@ public class ArrayDesignWrapper extends TableDecorator {
         String result = object.getShortName();
 
         if ( result == null ) result = "--";
-        
-        if ( (object.getIsMerged() != null) && (object.getIsMerged() )) {
+
+        if ( ( object.getIsMerged() != null ) && ( object.getIsMerged() ) ) {
             result = result
-                    + "&nbsp;<img src=\"/Gemma/images/icons/chart_pie.png\" height=\"16\" width=\"16\" alt=\"Created by merge\" />";
+                    + "&nbsp;<img title='merged' src=\"/Gemma/images/icons/chart_pie.png\" height=\"16\" width=\"16\" alt=\"Created by merge\" />";
         }
-        if (( object.getIsMergee() != null ) && ( object.getIsMergee() )) {
+        if ( ( object.getIsMergee() != null ) && ( object.getIsMergee() ) ) {
             result = result
-                    + "&nbsp;<img src=\"/Gemma/images/icons/arrow_join.png\" height=\"16\" width=\"16\" alt=\"Part of a merge\"  />";
+                    + "&nbsp;<img  title='mergee' src=\"/Gemma/images/icons/arrow_join.png\" height=\"16\" width=\"16\" alt=\"Part of a merge\"  />";
         }
-        if ((object.getIsSubsumer() != null) && ( object.getIsSubsumer() )) {
+        if ( ( object.getIsSubsumer() != null ) && ( object.getIsSubsumer() ) ) {
             result = result
-                    + "&nbsp;<img src=\"/Gemma/images/icons/sitemap.png\" height=\"16\" width=\"16\" alt=\"Subsumer\"  />";
+                    + "&nbsp;<img title='subsumer' src=\"/Gemma/images/icons/sitemap.png\" height=\"16\" width=\"16\" alt=\"Subsumer\"  />";
         }
-        if ((object.getIsSubsumed() != null) && ( object.getIsSubsumed() )) {
+        if ( ( object.getIsSubsumed() != null ) && ( object.getIsSubsumed() ) ) {
             result = result
-                    + "&nbsp;<img src=\"/Gemma/images/icons/contrast_high.png\" height=\"16\" width=\"16\" alt=\"Sequences are subsumed by another\"  />";
+                    + "&nbsp;<img title='subsumed' src=\"/Gemma/images/icons/contrast_high.png\" height=\"16\" width=\"16\" alt=\"Sequences are subsumed by another\"  />";
         }
         return result;
     }
 
     public String getIsSubsumed() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ((object.getIsSubsumed() != null) && ( object.getIsSubsumed() )) {
+        if ( ( object.getIsSubsumed() != null ) && ( object.getIsSubsumed() ) ) {
             return "<<";
         } else {
             return "";
@@ -91,7 +91,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsSubsumer() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ((object.getIsSubsumer() != null) && ( object.getIsSubsumer() )) {
+        if ( ( object.getIsSubsumer() != null ) && ( object.getIsSubsumer() ) ) {
             return ">>";
         } else {
             return "";
@@ -100,7 +100,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsMerged() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( (object.getIsMerged() != null) && (object.getIsMerged() )) {
+        if ( ( object.getIsMerged() != null ) && ( object.getIsMerged() ) ) {
             return "[";
         } else {
             return "";
@@ -109,7 +109,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsMergee() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if(( object.getIsMergee() != null ) && ( object.getIsMergee() )) {
+        if ( ( object.getIsMergee() != null ) && ( object.getIsMergee() ) ) {
             return "]";
         } else {
             return "";
