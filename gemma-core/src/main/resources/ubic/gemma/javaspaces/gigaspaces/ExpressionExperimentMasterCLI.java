@@ -35,6 +35,11 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
 
     private GigaSpacesTemplate template;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     */
     @Override
     protected void buildOptions() {
         // TODO Auto-generated method stub
@@ -45,7 +50,7 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "\nWelcome to the Spring GigaSpaces based Master Worker remote example!\n" );
+        log.info( "\nRunning GigaSpaces Master ... \n" );
         ExpressionExperimentMasterCLI p = new ExpressionExperimentMasterCLI();
         try {
             Exception ex = p.doWork( args );
@@ -103,7 +108,8 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
 
             Result res = proxy.execute( ee );
             long wt = stopwatch.stop().getElapsedTime();
-            System.out.println( "Submitted Job " + res.getTaskID() + " with " + " in " + wt + " ms" );
+            log.info( "Submitted Job " + res.getTaskID() + " in " + wt + " ms.  Result expression experiment id is "
+                    + res.getAnswer() );
 
         }
     }

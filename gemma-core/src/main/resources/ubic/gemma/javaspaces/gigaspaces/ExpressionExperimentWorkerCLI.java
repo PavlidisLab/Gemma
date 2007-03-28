@@ -40,6 +40,11 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
 
     private Thread itbThread;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     */
     @Override
     protected void buildOptions() {
         // TODO Auto-generated method stub
@@ -60,7 +65,7 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "\nWelcome to Spring GigaSpaces Worker remote Example!\n" );
+        log.info( "\nRunning GigaSpaces Worker To Handling Expression Experiments ... \n" );
         ExpressionExperimentWorkerCLI p = new ExpressionExperimentWorkerCLI();
         try {
             Exception ex = p.doWork( args );
