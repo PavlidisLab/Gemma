@@ -118,6 +118,11 @@ public class GeoFamilyParser implements Parser {
     private boolean processPlatformsOnly;
 
     /*
+     * Elements seen for the 'current sample'.
+     */
+    private Collection<String> processedDesignElements = new HashSet<String>();
+
+    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
@@ -217,10 +222,83 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * @param accession
+     * @param string
+     */
+    public void sampleTypeSet( String accession, String string ) {
+        GeoSample sample = results.getSampleMap().get( accession );
+        if ( string.equalsIgnoreCase( "cDNA" ) ) {
+            sample.setType( "RNA" );
+        } else if ( string.equalsIgnoreCase( "RNA" ) ) {
+            sample.setType( "RNA" );
+        } else if ( string.equalsIgnoreCase( "genomic" ) ) {
+            sample.setType( "genomic" );
+        } else if ( string.equalsIgnoreCase( "protein" ) ) {
+            sample.setType( "protein" );
+        } else if ( string.equalsIgnoreCase( "mixed" ) ) {
+            sample.setType( "mixed" );
+        } else if ( string.equalsIgnoreCase( "SAGE" ) ) {
+            sample.setType( "SAGE" );
+        } else if ( string.equalsIgnoreCase( "MPSS" ) ) {
+            sample.setType( "MPSS" );
+        } else if ( string.equalsIgnoreCase( "SARST" ) ) {
+            sample.setType( "protein" );
+        } else {
+            throw new IllegalArgumentException( "Unknown sample type " + string );
+        }
+    }
+
+    /**
      * @param b
      */
     public void setProcessPlatformsOnly( boolean b ) {
         this.processPlatformsOnly = b;
+    }
+
+    /**
+     * Check to make sure data has been added for all the design elements. This is necessary where the data for some
+     * design elements is omitted. This can happen if there is some variability between the samples in terms of what
+     * design elements they have. This has to be called IMMEDIATELY after the data for the sample is read in, so the
+     * values get added in the right place.
+     * <p>
+     * This works by going over all the design elements for the GeoPlatform, and finding places where the sample has no
+     * data.
+     * 
+     * @param currentSample
+     */
+    private void addMissingData( GeoSample currentSample ) {
+
+        GeoPlatform samplePlatform = currentSample.getPlatforms().iterator().next();
+        assert samplePlatform != null;
+        Collection<String> designElementNames = samplePlatform.getColumnData( samplePlatform.getIdColumnName() );
+        if ( designElementNames == null )
+            throw new IllegalStateException( samplePlatform + " did not have recognizable id column" );
+
+        if ( log.isDebugEnabled() )
+            log.debug( "Checking " + currentSample + " for missing design elements on " + samplePlatform );
+
+        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
+
+        Collection<Object> qTypeIndexes = values.getQuantitationTypes( samplePlatform );
+
+        int countMissing = 0;
+        String lastMissingValue = null;
+        for ( String el : designElementNames ) {
+            if ( !processedDesignElements.contains( el ) ) {
+                countMissing++;
+                lastMissingValue = el;
+                for ( Object qt : qTypeIndexes ) {
+                    values.addValue( currentSample, ( Integer ) qt, el, "" );
+                }
+                if ( log.isDebugEnabled() )
+                    log.debug( "Added data missing from sample=" + currentSample + " for probe=" + el + " on "
+                            + samplePlatform );
+            }
+        }
+        if ( countMissing > 0 ) {
+            log.info( "Added data missing for " + countMissing + " probes for sample=" + currentSample + "  on "
+                    + samplePlatform + "; last probe with missing data was " + lastMissingValue );
+        }
     }
 
     /**
@@ -355,6 +433,7 @@ public class GeoFamilyParser implements Parser {
         haveReadSampleDataHeader = false;
         String line = "";
         parsedLines = 0;
+        processedDesignElements.clear();
 
         try {
 
@@ -475,6 +554,21 @@ public class GeoFamilyParser implements Parser {
             }
         }
         throw new IllegalArgumentException( "Wrong kind of string: " + line );
+    }
+
+    /**
+     * @param series
+     * @param value
+     */
+    private void lastUpdateDateSet( Object object, String value ) {
+
+        if ( object instanceof GeoPlatform )
+            ( ( GeoPlatform ) object ).setLastUpdateDate( value );
+
+        else if ( object instanceof GeoSeries )
+            ( ( GeoSeries ) object ).setLastUpdateDate( value );
+
+        else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setLastUpdateDate( value );
     }
 
     /**
@@ -637,8 +731,6 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
-    private Collection<String> processedDesignElements = new HashSet<String>();
-
     /**
      * @param line
      */
@@ -661,7 +753,6 @@ public class GeoFamilyParser implements Parser {
                     if ( currentSample.getPlatforms().size() > 1 ) {
                         log.warn( "Can't check for data completeness when sample uses more than one platform." );
                     } else {
-
                         addMissingData( currentSample );
                     }
                 }
@@ -745,40 +836,6 @@ public class GeoFamilyParser implements Parser {
             }
         } else {
             parseRegularLine( line );
-        }
-    }
-
-    /**
-     * Check to make sure data has been added for all the design elements. This is necessary where the data for some
-     * design elements is omitted. This can happen if there is some variability between the samples in terms of what
-     * design elements they have. This has to be called IMMEDIATELY after the data for the sample is read in, so the
-     * values get added in the right place.
-     * <p>
-     * This works by going over all the design elements for the GeoPlatform, and finding places where the sample has no
-     * data.
-     * 
-     * @param currentSample
-     */
-    private void addMissingData( GeoSample currentSample ) {
-        GeoPlatform samplePlatform = currentSample.getPlatforms().iterator().next();
-        assert samplePlatform != null;
-        Collection<String> designElementNames = samplePlatform.getColumnData( "ID_REF" );
-        if ( designElementNames == null )
-            throw new IllegalStateException( samplePlatform + " did not have 'ID_REF' column" );
-
-        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
-
-        Collection<Object> qTypeIndexes = values.getQuantitationTypes( samplePlatform );
-
-        for ( String el : designElementNames ) {
-            if ( !processedDesignElements.contains( el ) ) {
-                // put it in as missing data.
-                log.info( "Adding data missing from sample=" + currentSample + " for probe=" + el + " on "
-                        + samplePlatform );
-                for ( Object qt : qTypeIndexes ) {
-                    values.addValue( currentSample, ( Integer ) qt, el, null );
-                }
-            }
         }
     }
 
@@ -904,33 +961,6 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
-     * @param accession
-     * @param string
-     */
-    public void sampleTypeSet( String accession, String string ) {
-        GeoSample sample = results.getSampleMap().get( accession );
-        if ( string.equalsIgnoreCase( "cDNA" ) ) {
-            sample.setType( "RNA" );
-        } else if ( string.equalsIgnoreCase( "RNA" ) ) {
-            sample.setType( "RNA" );
-        } else if ( string.equalsIgnoreCase( "genomic" ) ) {
-            sample.setType( "genomic" );
-        } else if ( string.equalsIgnoreCase( "protein" ) ) {
-            sample.setType( "protein" );
-        } else if ( string.equalsIgnoreCase( "mixed" ) ) {
-            sample.setType( "mixed" );
-        } else if ( string.equalsIgnoreCase( "SAGE" ) ) {
-            sample.setType( "SAGE" );
-        } else if ( string.equalsIgnoreCase( "MPSS" ) ) {
-            sample.setType( "MPSS" );
-        } else if ( string.equalsIgnoreCase( "SARST" ) ) {
-            sample.setType( "protein" );
-        } else {
-            throw new IllegalArgumentException( "Unknown sample type " + string );
-        }
-    }
-
-    /**
      * Parse lines in GSE and GDS files. Lines are classified into three types:
      * <ul>
      * <li>Starting with "!". These indicate meta data.
@@ -1032,6 +1062,7 @@ public class GeoFamilyParser implements Parser {
                 log.trace( "Adding: " + value + " to  quantitationType " + ( quantitationTypeIndex ) + " for "
                         + designElement );
             }
+            processedDesignElements.add( designElement );
         }
 
         sampleDataLines++;
@@ -1264,91 +1295,6 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
-     * @param accession
-     * @param value
-     */
-    private void sampleLastUpdateDate( String accession, String value ) {
-        GeoSample sample = results.getSampleMap().get( accession );
-        lastUpdateDateSet( sample, value );
-    }
-
-    /**
-     * @param accession
-     * @param value
-     */
-    private void platformLastUpdateDate( String accession, String value ) {
-        GeoPlatform platform = results.getPlatformMap().get( accession );
-        lastUpdateDateSet( platform, value );
-    }
-
-    /**
-     * @param accession
-     * @param value
-     */
-    private void seriesLastUpdateDate( String accession, String value ) {
-        GeoSeries series = results.getSeriesMap().get( accession );
-        lastUpdateDateSet( series, value );
-    }
-
-    /**
-     * @param series
-     * @param value
-     */
-    private void lastUpdateDateSet( Object object, String value ) {
-
-        if ( object instanceof GeoPlatform )
-            ( ( GeoPlatform ) object ).setLastUpdateDate( value );
-
-        else if ( object instanceof GeoSeries )
-            ( ( GeoSeries ) object ).setLastUpdateDate( value );
-
-        else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setLastUpdateDate( value );
-    }
-
-    /**
-     * @param accession
-     * @param value
-     */
-    private void platformSupplementaryFileSet( String accession, String value ) {
-        GeoPlatform platform = results.getPlatformMap().get( accession );
-        supplementaryFileSet( platform, value );
-    }
-
-    /**
-     * @param accession
-     * @param value
-     */
-    private void sampleSupplementaryFileSet( String accession, String value ) {
-        GeoSample sample = results.getSampleMap().get( accession );
-        supplementaryFileSet( sample, value );
-    }
-
-    /**
-     * @param accession
-     * @param value
-     */
-    private void seriesSupplementaryFileSet( String accession, String value ) {
-        GeoSeries series = results.getSeriesMap().get( accession );
-        supplementaryFileSet( series, value );
-    }
-
-    /**
-     * @param series
-     * @param value
-     */
-    private void supplementaryFileSet( Object object, String value ) {
-
-        if ( object instanceof GeoSeries )
-            ( ( GeoSeries ) object ).setSupplementaryFile( value );
-
-        else if ( object instanceof GeoPlatform )
-            ( ( GeoPlatform ) object ).setSupplementaryFile( value );
-
-        else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setSupplementaryFile( value );
-
-    }
-
-    /**
      * @param line
      * @param value
      */
@@ -1442,6 +1388,15 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * @param accession
+     * @param value
+     */
+    private void platformLastUpdateDate( String accession, String value ) {
+        GeoPlatform platform = results.getPlatformMap().get( accession );
+        lastUpdateDateSet( platform, value );
+    }
+
+    /**
+     * @param accession
      * @param property
      * @param value
      */
@@ -1463,6 +1418,15 @@ public class GeoFamilyParser implements Parser {
             log.error( e, e );
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param accession
+     * @param value
+     */
+    private void platformSupplementaryFileSet( String accession, String value ) {
+        GeoPlatform platform = results.getPlatformMap().get( accession );
+        supplementaryFileSet( platform, value );
     }
 
     /**
@@ -1523,6 +1487,15 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * @param accession
+     * @param value
+     */
+    private void sampleLastUpdateDate( String accession, String value ) {
+        GeoSample sample = results.getSampleMap().get( accession );
+        lastUpdateDateSet( sample, value );
+    }
+
+    /**
+     * @param accession
      * @param property
      * @param value
      */
@@ -1536,6 +1509,15 @@ public class GeoFamilyParser implements Parser {
         } catch ( InvocationTargetException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param accession
+     * @param value
+     */
+    private void sampleSupplementaryFileSet( String accession, String value ) {
+        GeoSample sample = results.getSampleMap().get( accession );
+        supplementaryFileSet( sample, value );
     }
 
     /**
@@ -1561,6 +1543,15 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * @param accession
+     * @param value
+     */
+    private void seriesLastUpdateDate( String accession, String value ) {
+        GeoSeries series = results.getSeriesMap().get( accession );
+        lastUpdateDateSet( series, value );
+    }
+
+    /**
+     * @param accession
      * @param property
      * @param value
      */
@@ -1576,6 +1567,15 @@ public class GeoFamilyParser implements Parser {
             log.error( e, e );
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param accession
+     * @param value
+     */
+    private void seriesSupplementaryFileSet( String accession, String value ) {
+        GeoSeries series = results.getSeriesMap().get( accession );
+        supplementaryFileSet( series, value );
     }
 
     /**
@@ -1620,6 +1620,22 @@ public class GeoFamilyParser implements Parser {
             log.error( e, e );
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param series
+     * @param value
+     */
+    private void supplementaryFileSet( Object object, String value ) {
+
+        if ( object instanceof GeoSeries )
+            ( ( GeoSeries ) object ).setSupplementaryFile( value );
+
+        else if ( object instanceof GeoPlatform )
+            ( ( GeoPlatform ) object ).setSupplementaryFile( value );
+
+        else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setSupplementaryFile( value );
+
     }
 
 }

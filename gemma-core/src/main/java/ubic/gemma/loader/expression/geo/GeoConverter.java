@@ -766,7 +766,7 @@ public class GeoConverter implements Converter {
         Taxon taxon = convertPlatformOrganism( platform );
 
         // convert the design element information.
-        String identifier = determinePlatformIdentifier( platform );
+        String identifier = platform.getIdColumnName();
         if ( identifier == null ) {
             throw new IllegalStateException( "Cannot determine the platform design element id column." );
         }
@@ -1979,24 +1979,6 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param platform
-     * @return
-     */
-    private String determinePlatformIdentifier( GeoPlatform platform ) {
-        Collection<String> columnNames = platform.getColumnNames();
-        int index = 0;
-        for ( String string : columnNames ) {
-            if ( GeoConstants.likelyId( string ) ) {
-                log.debug( string + " appears to indicate the array element identifier in column " + index
-                        + " for platform " + platform );
-                return string;
-            }
-            index++;
-        }
-        return null;
-    }
-
-    /**
      * Turn a rough-cut dimension name into something of reasonable length.
      * 
      * @param dimensionName
@@ -2147,7 +2129,7 @@ public class GeoConverter implements Converter {
 
         assert indices.length == datasetSamples.size();
 
-        String identifier = determinePlatformIdentifier( platform );
+        String identifier = platform.getIdColumnName();
         List<String> designElements = platform.getColumnData( identifier );
         for ( String designElementName : designElements ) {
             /*

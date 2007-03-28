@@ -111,6 +111,12 @@ public class GeoValues {
     /**
      * Store a value. It is assumed that designElements have unique names.
      * <p>
+     * Implementation note: The way this works: the first time we see a sample, we associate it with a 'dimension' that
+     * is connected to the platform and quantitation type. In parallel, we add the data to a 'vector' for the
+     * designElement that is likewise connected to the platform the sample uses, the quantitation type. Because in GEO
+     * files samples are seen one at a time, the vectors for each designelement are built up. Thus it is important that
+     * we add a value for each sample for each design element.
+     * <p>
      * Note what happens if data is MISSING for a given designElement/quantitationType/sample combination. This can
      * happen (typically all the quantitation types for a designelement in a given sample). This method will NOT be
      * called. When the next sample is processed, the new data will be added onto the end in the wrong place. Then the
@@ -130,6 +136,10 @@ public class GeoValues {
     public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
 
         if ( skippableQuantitationTypes.contains( quantitationTypeIndex ) ) return;
+
+        if ( sample.getPlatforms().size() > 1 ) {
+            throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
+        }
 
         GeoPlatform platform = sample.getPlatforms().iterator().next();
         if ( !sampleDimensions.containsKey( platform ) ) {
@@ -161,17 +171,6 @@ public class GeoValues {
         }
 
         qtMap.get( designElement ).add( value );
-
-        /*
-         * This is the check to make sure we aren't missing any data for any samples. This is an exception rather than
-         * assertion because it's conceivable that some funky GEO file will trip us up.
-         */
-        if ( qtMap.get( designElement ).size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
-            throw new IllegalStateException(
-                    "There must be some data missing because the number of samples doesn't match the number of values collected for "
-                            + designElement + " on " + platform + " quant.type # " + quantitationTypeIndex
-                            + " current sample=" + sample );
-        }
 
         if ( log.isTraceEnabled() ) {
             log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex

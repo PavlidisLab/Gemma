@@ -43,7 +43,7 @@ public class GeoConstants {
     static {
         idNames = new HashSet<String>();
         idNames.add( "ID" );
-        idNames.add( "TAG" );
+        idNames.add( "TAG" ); // SAGE.
 
         extRefNames = new HashSet<String>();
         extRefNames.add( "GB_ACC" );

@@ -149,6 +149,25 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * Get the name of the column that has the 'ids' for the design elements on this platform. Usually this is "ID".
+     * @param platform
+     * @return
+     */
+    public String getIdColumnName() {
+        Collection<String> columnNames = this.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelyId( string ) ) {
+                log.debug( string + " appears to indicate the array element identifier in column " + index
+                        + " for platform " + this );
+                return string;
+            }
+            index++;
+        }
+        return null;
+    }
+
+    /**
      * @return Returns the catalogNumbers.
      */
     public Collection<String> getCatalogNumbers() {
