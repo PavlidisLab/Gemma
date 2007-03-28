@@ -18,6 +18,7 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
@@ -100,17 +101,14 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
 
             // TODO remove me - using this test expression experiment
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-            long time = stopwatch.getElapsedTime();
-            ee.setName( "Expression Experiment from " + this.getClass().getName() + " " + time );
-            ee.setShortName( "Expression Experiment " + time );
-            // Foo foo = new Foo();
-            // foo.setAString( "String from " + this.getClass().getName() );
-            // Result res = proxy.execute( foo );
+            String name = "_" + RandomUtils.nextLong();
+            ee.setName( "Expression Experiment - " + name + "from  " + this.getClass().getName() );
+            ee.setShortName( name );
 
             Result res = proxy.execute( ee );
             long wt = stopwatch.stop().getElapsedTime();
             log.info( "Submitted Job " + res.getTaskID() + " in " + wt + " ms.  Result expression experiment id is "
-                    + res.getAnswer() );
+                    + res.getAnswer() + "." );
 
         }
     }
