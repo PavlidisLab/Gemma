@@ -65,7 +65,7 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Running GigaSpaces Worker To Handling Expression Experiments ... \n" );
+        log.info( "Running GigaSpaces Worker To Handle Expression Experiments ... \n" );
         ExpressionExperimentWorkerCLI p = new ExpressionExperimentWorkerCLI();
         try {
             Exception ex = p.doWork( args );
