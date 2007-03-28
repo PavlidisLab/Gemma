@@ -21,16 +21,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
 
     }
 
-    public Result execute( Foo foo ) {
-        counter++;
-
-        Result result = new Result();
-        result.setTaskID( counter );
-        result.setAnswer( foo.getAString() );
-
-        return result;
-    }
-
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
