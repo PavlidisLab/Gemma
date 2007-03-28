@@ -373,6 +373,7 @@ public class ArrayDesignReportService {
                 origVo.setNumProbesToProbeAlignedRegions( cachedVo.getNumProbesToProbeAlignedRegions() );
                 origVo.setNumGenes( cachedVo.getNumGenes() );
                 origVo.setDateCached( cachedVo.getDateCached() );
+                origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
             }
         }
     }

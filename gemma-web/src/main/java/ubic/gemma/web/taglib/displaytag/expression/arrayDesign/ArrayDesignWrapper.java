@@ -174,7 +174,9 @@ public class ArrayDesignWrapper extends TableDecorator {
         buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
 
         buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<authz:authorize ifAnyGranted=\"admin\"><tr><td>" + "Sequences" + "</td><td>"
+                + "<authz:authorize ifAnyGranted=\"admin\">" 
+                + "<tr><td>Probes</td><td>" + object.getDesignElementCount() + "</td></tr>" 
+                + "<tr><td>" + "Sequences" + "</td><td>"
                 + object.getNumProbeSequences() + "</td></tr>" + "<tr><td>" + "Alignments to:" + "</td>" + "<td>"
                 + object.getNumProbeAlignments() + "</td></tr></authz:authorize>" + "<tr><td>" + "To Gene(s)"
                 + "</td><td>" + object.getNumProbesToGenes() + "</td></tr>" +
