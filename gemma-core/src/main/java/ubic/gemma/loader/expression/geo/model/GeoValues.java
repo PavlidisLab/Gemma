@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -176,14 +177,6 @@ public class GeoValues {
             log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex
                     + " de=" + designElement + " value=" + value );
         }
-
-        // assert qtMap.get( designElement ).size() == sampleQtMap.size() : "Duplicate quantitation type name in series?
-        // "
-        // + "While processing data for " + sample + ": Number of samples " + sampleQtMap.size()
-        // + " for designElement=" + designElement + " quantType=" + quantitationTypeIndex
-        // + " does not equal length of vector "
-        // + data.get( platform ).get( quantitationTypeIndex ).get( designElement ).size();
-
     }
 
     /**
@@ -287,14 +280,17 @@ public class GeoValues {
                  */
 
                 if ( rawvals.size() < ( i + 1 ) ) {
-                    throw new IllegalStateException( "Data out of bounds index=" + i + "(" + designElement + " on "
-                            + platform + " quant.type # " + quantitationType + ")" );
+                    throw new IllegalStateException( "Data out of bounds index=" + i + " (" + designElement + " on "
+                            + platform + " quant.type # " + quantitationType + ") - vector has only " + rawvals.size()
+                            + " values." );
                 }
                 Object value = rawvals.get( i );
                 if ( value == null ) {
                     if ( log.isDebugEnabled() )
-                        log.debug( "No data for index " + i + "(" + designElement + " on " + platform
-                                + " quant.type # " + quantitationType + ")" );
+                        log
+                                .debug( "No data for index " + i + " (" + designElement + " on " + platform
+                                        + " quant.type # " + quantitationType + ") - vector has " + rawvals.size()
+                                        + " values." );
                 }
                 result.add( value );
             }
@@ -345,6 +341,40 @@ public class GeoValues {
      */
     public void clear( GeoPlatform geoPlatform ) {
         this.data.remove( geoPlatform );
+    }
+
+    /**
+     * This method can only be called once a sample has been completely processed, and before a new sample has been
+     * started.
+     */
+    public void validate() {
+
+        for ( GeoPlatform platform : sampleDimensions.keySet() ) {
+
+            Map<Object, Map<String, List<Object>>> d = data.get( platform );
+
+            for ( Object qType : sampleDimensions.get( platform ).keySet() ) {
+
+                int numSamples = sampleDimensions.get( platform ).get( qType ).size();
+
+                if ( skippableQuantitationTypes.contains( qType ) ) continue;
+
+                Map<String, List<Object>> q = d.get( qType );
+
+                for ( String designElement : q.keySet() ) {
+                    List<Object> vals = q.get( designElement );
+                    if ( vals.size() != numSamples ) {
+                        log.error( "Samples so far: "
+                                + StringUtils.join( sampleDimensions.get( platform ).get( qType ), ',' ) );
+                        throw new IllegalStateException( "Validation failed at platform=" + platform
+                                + " designelement=" + designElement + " qType=" + qType + " expected " + numSamples
+                                + " values, got " + vals.size() );
+                    }
+                }
+                log.debug( qType + " ok on " + platform + ", all vectors have " + numSamples + " values" );
+            }
+        }
+
     }
 
 }

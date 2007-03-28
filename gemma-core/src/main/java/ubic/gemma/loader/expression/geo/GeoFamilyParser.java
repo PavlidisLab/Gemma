@@ -258,11 +258,8 @@ public class GeoFamilyParser implements Parser {
     /**
      * Check to make sure data has been added for all the design elements. This is necessary where the data for some
      * design elements is omitted. This can happen if there is some variability between the samples in terms of what
-     * design elements they have. This has to be called IMMEDIATELY after the data for the sample is read in, so the
-     * values get added in the right place.
-     * <p>
-     * This works by going over all the design elements for the GeoPlatform, and finding places where the sample has no
-     * data.
+     * design elements they have. Important: This has to be called IMMEDIATELY after the data for the sample is read in,
+     * so the values get added in the right place.
      * 
      * @param currentSample
      */
@@ -287,8 +284,8 @@ public class GeoFamilyParser implements Parser {
             if ( !processedDesignElements.contains( el ) ) {
                 countMissing++;
                 lastMissingValue = el;
-                for ( Object qt : qTypeIndexes ) {
-                    values.addValue( currentSample, ( Integer ) qt, el, "" );
+                for ( Object i : qTypeIndexes ) {
+                    values.addValue( currentSample, ( Integer ) i, el, " " );
                 }
                 if ( log.isDebugEnabled() )
                     log.debug( "Added data missing from sample=" + currentSample + " for probe=" + el + " on "
@@ -296,7 +293,7 @@ public class GeoFamilyParser implements Parser {
             }
         }
         if ( countMissing > 0 ) {
-            log.info( "Added data missing for " + countMissing + " probes for sample=" + currentSample + "  on "
+            log.debug( "Added data missing for " + countMissing + " probes for sample=" + currentSample + "  on "
                     + samplePlatform + "; last probe with missing data was " + lastMissingValue );
         }
     }
@@ -448,6 +445,7 @@ public class GeoFamilyParser implements Parser {
                     throw new CancellationException( "Thread was terminated during parsing. " + this.getClass() );
                 }
             }
+
         } catch ( Exception e ) {
             log.error( e, e );
             throw new RuntimeException( e );
@@ -459,6 +457,19 @@ public class GeoFamilyParser implements Parser {
         log.debug( this.dataSetDataLines + " data set data lines" );
         log.debug( this.sampleDataLines + " sample data lines" );
         return Boolean.TRUE;
+    }
+
+    private void checkDataCompleteness() {
+        if ( currentSampleAccession != null ) {
+            GeoSample currentSample = this.results.getSampleMap().get( currentSampleAccession );
+            assert currentSample != null;
+            if ( currentSample.getPlatforms().size() > 1 ) {
+                log.warn( "Can't check for data completeness when sample uses more than one platform." );
+            } else {
+                addMissingData( currentSample );
+            }
+            validate();
+        }
     }
 
     /**
@@ -746,17 +757,6 @@ public class GeoFamilyParser implements Parser {
                 inSeries = false;
             } else if ( startsWithIgnoreCase( line, "^SAMPLE" ) ) {
 
-                if ( currentSampleAccession != null ) {
-
-                    GeoSample currentSample = this.results.getSampleMap().get( currentSampleAccession );
-                    assert currentSample != null;
-                    if ( currentSample.getPlatforms().size() > 1 ) {
-                        log.warn( "Can't check for data completeness when sample uses more than one platform." );
-                    } else {
-                        addMissingData( currentSample );
-                    }
-                }
-
                 processedDesignElements.clear();
                 inSample = true;
                 inSubset = false;
@@ -837,6 +837,11 @@ public class GeoFamilyParser implements Parser {
         } else {
             parseRegularLine( line );
         }
+    }
+
+    private void validate() {
+        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
+        values.validate();
     }
 
     /**
@@ -1057,11 +1062,14 @@ public class GeoFamilyParser implements Parser {
         for ( int i = 1; i < tokens.length; i++ ) {
             String value = tokens[i];
             int quantitationTypeIndex = i - 1;
-            values.addValue( sample, quantitationTypeIndex, designElement, value );
             if ( log.isTraceEnabled() ) {
                 log.trace( "Adding: " + value + " to  quantitationType " + ( quantitationTypeIndex ) + " for "
                         + designElement );
             }
+            if ( i % 2000 == 0 ) {
+                log.info( "Processed " + i + " rows for " + currentSampleAccession );
+            }
+            values.addValue( sample, quantitationTypeIndex, designElement, value );
             processedDesignElements.add( designElement );
         }
 
@@ -1085,6 +1093,7 @@ public class GeoFamilyParser implements Parser {
             inSampleTable = true;
             haveReadSampleDataHeader = false;
         } else if ( startsWithIgnoreCase( line, "!sample_table_end" ) ) {
+            checkDataCompleteness();
             inSampleTable = false;
         } else if ( startsWithIgnoreCase( line, "!Sample_title" ) ) {
             if ( this.inDataset ) {
