@@ -92,6 +92,8 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
         for ( int i = 0; i < 2; i++ ) {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.start();
+
+            // TODO remove me - using this test expression experiment
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
             ee.setName( "Expression Experiment from " + this.getClass().getName() + " " + stopwatch.getElapsedTime() );
 
