@@ -285,6 +285,26 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     @SuppressWarnings("unchecked")
     @Override
+    public Collection findByName ( String name ) {
+        Collection<CompositeSequence> compositeSequences = null;
+        final String queryString = "select distinct cs from CompositeSequenceImpl"
+                + " cs where cs.name = :id";
+        try {
+            log.info("Query Name: " + name );
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            //queryObject.setParameter( "id", name );
+            queryObject.setString( "id", name );
+            compositeSequences = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compositeSequences;
+    }
+
+    
+    @SuppressWarnings("unchecked")
+    @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl   gp, GeneImpl gene  "

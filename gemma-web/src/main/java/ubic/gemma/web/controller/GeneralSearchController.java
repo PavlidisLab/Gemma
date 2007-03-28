@@ -165,7 +165,7 @@ public class GeneralSearchController extends BaseFormController {
         }
 
         if ( array ) {
-            Collection<ArrayDesign> foundADs = searchService.compassArrayDesignSearch( searchString );
+            Collection<ArrayDesign> foundADs = searchService.arrayDesignSearch( searchString );
             Collection<ArrayDesignValueObject> valueADs = arrayDesignService
                     .loadValueObjects( generateADIdList( foundADs ) );
 

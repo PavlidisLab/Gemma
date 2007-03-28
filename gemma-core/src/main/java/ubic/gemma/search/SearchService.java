@@ -93,6 +93,7 @@ public class SearchService {
      */
     public Collection<Gene> geneSearch( String searchString ) throws Exception {
 
+        searchString = searchString.trim();
         Collection<Gene> geneDbList = geneDbSearch( searchString );
         Collection<Gene> geneCompassList = compassGeneSearch( searchString );
         Collection<Gene> geneCsList = geneCompositeSequenceSearch( searchString );
@@ -129,6 +130,8 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     public Collection<Gene> geneDbSearch( String searchString ) throws Exception {
 
+        searchString = searchString.trim();
+        
         // search by inexact symbol
         Set<Gene> geneSet = new HashSet<Gene>();
         Set<Gene> geneMatch = new HashSet<Gene>();
@@ -174,6 +177,7 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     public Collection<Gene> geneCompositeSequenceSearch( String searchString ) throws Exception {
 
+        searchString = searchString.trim();
         Set<Gene> geneSet = new HashSet<Gene>();
 
         // search by exact composite sequence name
@@ -201,6 +205,7 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     public List<CompositeSequence> compositeSequenceSearch( String searchString, ArrayDesign arrayDesign ) {
 
+        searchString = searchString.trim();
         List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
         if ( StringUtils.isBlank( searchString ) ) return allResults;
         Collection<CompositeSequence> nameMatch;
@@ -233,8 +238,9 @@ public class SearchService {
      * @param query
      * @return
      */
-    public Collection<Gene> compassGeneSearch( final String query ) {
+    public Collection<Gene> compassGeneSearch( String searchString ) {
 
+        final String query = searchString.trim();
         CompassSearchResults searchResults;
 
         CompassTemplate template = new CompassTemplate( geneBean );
@@ -302,13 +308,58 @@ public class SearchService {
     }
 
     /**
+     * combines the compass style search, and the compositeSequence search and returns a collection
+     *  with no duplicates.
+     * 
+     * @param searchString
+     * @return a hashset of arraydesigns
+     * @throws Exception
+     */
+    public Collection<ArrayDesign> arrayDesignSearch( String searchString ) throws Exception {
+
+        searchString = searchString.trim();
+        Collection<ArrayDesign> adCompassList = compassArrayDesignSearch( searchString );
+        Collection<ArrayDesign> adCsList = arrayDesignCompositeSequenceSearch( searchString );
+
+        Collection<ArrayDesign> combinedList = new HashSet<ArrayDesign>();
+        combinedList.addAll( adCompassList );
+        combinedList.addAll( adCsList );
+
+        return combinedList;
+    }
+
+    /**
+     * searchs the DB for array designs which have composite sequences whose names match the given search string
+     * 
+     * @param searchString
+     * @return a collection of array designs (no duplicates)
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ArrayDesign> arrayDesignCompositeSequenceSearch( String searchString ) throws Exception {
+        
+        searchString = searchString.trim();
+        Set<ArrayDesign> adSet = new HashSet<ArrayDesign>();
+
+        // search by exact composite sequence name
+        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( searchString );
+        for ( CompositeSequence sequence : matchedCs ) {
+            adSet.add( sequence.getArrayDesign() );
+        }
+
+        return adSet;
+
+    }
+
+    /**
      * Does a compass style search on ArrayDesigns
      * 
      * @param query
      * @return
      */
-    public Collection<ArrayDesign> compassArrayDesignSearch( final String query ) {
+    public Collection<ArrayDesign> compassArrayDesignSearch(  String searchString ) {
 
+        final String query = searchString.trim();
         CompassSearchResults searchResults;
 
         CompassTemplate template = new CompassTemplate( arrayBean );
@@ -329,8 +380,9 @@ public class SearchService {
      * @param query
      * @return
      */
-    public Collection<OntologyEntry> compassOntologySearch( final String query ) {
+    public Collection<OntologyEntry> compassOntologySearch( String searchString ) {
 
+        final String query = searchString.trim();
         CompassSearchResults searchResults;
 
         CompassTemplate template = new CompassTemplate( ontologyBean );
@@ -384,6 +436,7 @@ public class SearchService {
         long time = System.currentTimeMillis();
 
         assert !StringUtils.isBlank( query );
+        query = query.trim();
         CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
 
         CompassHits hits = compassQuery.hits();

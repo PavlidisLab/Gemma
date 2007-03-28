@@ -58,19 +58,22 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getShortName() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         String result = object.getShortName();
-        if ( object.getIsMerged() ) {
+
+        if ( result == null ) result = "--";
+        
+        if ( (object.getIsMerged() != null) && (object.getIsMerged() )) {
             result = result
                     + "&nbsp;<img src=\"/Gemma/images/icons/chart_pie.png\" height=\"16\" width=\"16\" alt=\"Created by merge\" />";
         }
-        if ( object.getIsMergee() ) {
+        if (( object.getIsMergee() != null ) && ( object.getIsMergee() )) {
             result = result
                     + "&nbsp;<img src=\"/Gemma/images/icons/arrow_join.png\" height=\"16\" width=\"16\" alt=\"Part of a merge\"  />";
         }
-        if ( object.getIsSubsumer() ) {
+        if ((object.getIsSubsumer() != null) && ( object.getIsSubsumer() )) {
             result = result
                     + "&nbsp;<img src=\"/Gemma/images/icons/sitemap.png\" height=\"16\" width=\"16\" alt=\"Subsumer\"  />";
         }
-        if ( object.getIsSubsumed() ) {
+        if ((object.getIsSubsumed() != null) && ( object.getIsSubsumed() )) {
             result = result
                     + "&nbsp;<img src=\"/Gemma/images/icons/contrast_high.png\" height=\"16\" width=\"16\" alt=\"Sequences are subsumed by another\"  />";
         }
@@ -79,7 +82,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsSubsumed() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( object.getIsSubsumed() ) {
+        if ((object.getIsSubsumed() != null) && ( object.getIsSubsumed() )) {
             return "<<";
         } else {
             return "";
@@ -88,7 +91,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsSubsumer() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( object.getIsSubsumer() ) {
+        if ((object.getIsSubsumer() != null) && ( object.getIsSubsumer() )) {
             return ">>";
         } else {
             return "";
@@ -97,7 +100,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsMerged() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( object.getIsMerged() ) {
+        if ( (object.getIsMerged() != null) && (object.getIsMerged() )) {
             return "[";
         } else {
             return "";
@@ -106,7 +109,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getIsMergee() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( object.getIsMergee() ) {
+        if(( object.getIsMergee() != null ) && ( object.getIsMergee() )) {
             return "]";
         } else {
             return "";
@@ -174,9 +177,8 @@ public class ArrayDesignWrapper extends TableDecorator {
         buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
 
         buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<authz:authorize ifAnyGranted=\"admin\">" 
-                + "<tr><td>Probes</td><td>" + object.getDesignElementCount() + "</td></tr>" 
-                + "<tr><td>" + "Sequences" + "</td><td>"
+                + "<authz:authorize ifAnyGranted=\"admin\">" + "<tr><td>Probes</td><td>"
+                + object.getDesignElementCount() + "</td></tr>" + "<tr><td>" + "Sequences" + "</td><td>"
                 + object.getNumProbeSequences() + "</td></tr>" + "<tr><td>" + "Alignments to:" + "</td>" + "<td>"
                 + object.getNumProbeAlignments() + "</td></tr></authz:authorize>" + "<tr><td>" + "To Gene(s)"
                 + "</td><td>" + object.getNumProbesToGenes() + "</td></tr>" +
