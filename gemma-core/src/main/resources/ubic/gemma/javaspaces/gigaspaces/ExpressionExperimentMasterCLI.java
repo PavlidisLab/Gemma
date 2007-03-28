@@ -50,7 +50,7 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "\nRunning GigaSpaces Master ... \n" );
+        log.info( "Running GigaSpaces Master ... \n" );
         ExpressionExperimentMasterCLI p = new ExpressionExperimentMasterCLI();
         try {
             Exception ex = p.doWork( args );
@@ -100,8 +100,9 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
 
             // TODO remove me - using this test expression experiment
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-            ee.setName( "Expression Experiment from " + this.getClass().getName() + " " + stopwatch.getElapsedTime() );
-
+            long time = stopwatch.getElapsedTime();
+            ee.setName( "Expression Experiment from " + this.getClass().getName() + " " + time );
+            ee.setShortName( "Expression Experiment " + time );
             // Foo foo = new Foo();
             // foo.setAString( "String from " + this.getClass().getName() );
             // Result res = proxy.execute( foo );
