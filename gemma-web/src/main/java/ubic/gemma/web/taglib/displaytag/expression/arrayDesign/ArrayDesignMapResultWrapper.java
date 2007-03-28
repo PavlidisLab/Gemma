@@ -123,7 +123,7 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
         String name = object.getCompositeSequenceName();
         String id = object.getCompositeSequenceId();
         // call ajax, then call onload function to initialize scrolltable
-        String nameLink = "<a href='#' onclick=\"ajaxAnywhere.getAJAX('/Gemma/compositeSequence/showAjaxCompositeSequence.html?id="
+        String nameLink = "<a href='/Gemma/compositeSequence/showCompositeSequence.html?id=" + id + "' onclick=\"ajaxAnywhere.getAJAX('/Gemma/compositeSequence/showAjaxCompositeSequence.html?id="
                 + id + "');return false;\"> " + name + " </a>";
         return nameLink;
     }
