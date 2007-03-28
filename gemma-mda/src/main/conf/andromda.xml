@@ -72,6 +72,7 @@
 				<property name="hibernateJdbcBatchVersionedData">true</property>
 				<property name="hibernateJdbcUseStreamsForBinary">true</property>
 				<property name="hibernateQueryUseNamedParameters">true</property>
+				<property name="hibernateEnableCache">true</property>
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
 				<property name="hibernateInheritanceStrategy">subclass</property>
@@ -126,6 +127,7 @@
 				<property name="hibernateTypeMappingsUri">
 					file:${project.basedir}/src/main/conf/HibernateTypeMappings.xml
 				</property>
+				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
 				<property name="entities">${maven.andromda.core.generated.dir}</property>
