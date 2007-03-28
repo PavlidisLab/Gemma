@@ -25,11 +25,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public interface ExpressionExperimentTask {
-    
+
     /**
-     * 
      * @param expressionExperiment
-     * @return
+     * @return Result
      */
     public Result execute( ExpressionExperiment expressionExperiment );
 
