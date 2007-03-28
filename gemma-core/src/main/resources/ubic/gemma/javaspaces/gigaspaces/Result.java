@@ -38,7 +38,7 @@ public class Result implements Serializable {
     /**
      * The answer
      */
-    private String answer = null; // result
+    private Object answer = null; // result
 
     /**
      * Constructor
@@ -46,11 +46,11 @@ public class Result implements Serializable {
     public Result() {
     }
 
-    public String getAnswer() {
+    public Object getAnswer() {
         return answer;
     }
 
-    public void setAnswer( String answer ) {
+    public void setAnswer( Object answer ) {
         this.answer = answer;
     }
 
