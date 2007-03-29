@@ -104,6 +104,7 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
             // ee.setShortName( name );
             // Result res = proxy.execute( ee );
 
+            // TODO read values from command line
             Result res = proxy.execute( "GSE3434", false, false );
             long wt = stopwatch.stop().getElapsedTime();
             log.info( "Submitted Job " + res.getTaskID() + " in " + wt + " ms.  Result expression experiment id is "
