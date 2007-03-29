@@ -52,6 +52,26 @@
 				</tr>
 				<tr>
 					<td valign="top">
+					<a class="helpLink" href="?"
+							onclick="showHelpTip(event, 'The array design this probe belongs to.'); return false"><img
+							src="/Gemma/images/help.png" /> </a>
+						<b> Array Design </b>
+					</td>
+					<td>
+						<%
+						if ( compositeSequence.getArrayDesign().getName() != null ) {
+						%>
+						${
+						compositeSequence.arrayDesign.name}
+						<%
+						                } else {
+						                out.print( "Array Design unavailable." );
+						            }
+						%>
+					</td>
+				</tr>
+				<tr>
+					<td valign="top">
 						<b> Taxon </b>
 					</td>
 					<td>
