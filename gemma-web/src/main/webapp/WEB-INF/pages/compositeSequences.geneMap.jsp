@@ -7,18 +7,34 @@
 <link rel="stylesheet" type="text/css"
 	href="<c:url value='/styles/scrolltable.css'/>" />
 
-<title>Probes for : <jsp:getProperty name="arrayDesign"
+
+<title>
+<c:if test="${arrayDesign.id != null}">
+Probes for : <jsp:getProperty name="arrayDesign"
 		property="name" />
+</c:if>
+<c:if test="${gene != null}">
+Probes for : ${gene.officialSymbol}
+</c:if>
 </title>
 
 <content tag="heading">
 <a class="helpLink" href="?"
 	onclick="showHelpTip(event, 'This page displays information on multiple probes (array design elements). Enter a gene symbol or probe identifier into the form to find matches.'); return false"><img
-		src="/Gemma/images/help.png" /> </a> Probe Viewer for <br />
+		src="/Gemma/images/help.png" /> </a> Probe Viewer 
+
+<c:if test="${arrayDesign.id != null}">		
+for <br />
 <jsp:getProperty name="arrayDesign" property="name" />
 (
 <jsp:getProperty name="arrayDesign" property="shortName" />
 )
+</c:if>
+
+<c:if test="${gene != null}">		
+for Gene: <br />
+${gene.officialSymbol}
+</c:if>
 
 </content>
 
@@ -27,6 +43,7 @@
 	Displaying ${numCompositeSequences} probes. 
 </p>
 
+<c:if test="${arrayDesign.id != null}">	
 <form name="CompositeSequenceFilter"
 	action="<c:url value="/designElement/filterCompositeSequences.html" />"
 	method="POST">
@@ -38,6 +55,7 @@
 		value="<jsp:getProperty name="arrayDesign" property="id" />" />
 	<input type="submit" value="Find" />
 </form>
+</c:if>
 
 <br />
 
@@ -54,7 +72,9 @@
 			</tr>
 		</table>
 	</aa:zone>
+	<c:if test="${arrayDesign.id != null}">	
 	(this page only displays a maximum of 100 probes at a time).
+	</c:if>
 	<br />
 	<hr />
 	<a class="helpLink" href="?"

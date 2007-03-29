@@ -132,6 +132,26 @@
 						%>
 					</td>
 				</tr>
+					<tr>
+						<td valign="top">
+							<a class="helpLink" href="?"
+								onclick="showHelpTip(event, 'Description of the sequence in our system.'); return false"><img
+									src="/Gemma/images/help.png" /> </a>
+							<b> Sequence description </b>
+						</td>
+						<td>
+							<%
+							                        if ( compositeSequence.getBiologicalCharacteristic() != null
+							                        && compositeSequence.getBiologicalCharacteristic().getDescription() != null ) {
+							%>
+							${compositeSequence.biologicalCharacteristic.description }
+							<%
+							                    } else {
+							                    out.print( "No description available" );
+							                }
+							%>
+						</td>
+					</tr>
 				<tr>
 					<td valign="top">
 						<b> Sequence accession <a class="helpLink" href="?"

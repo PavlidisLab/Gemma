@@ -27,10 +27,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseMultiActionController;
@@ -45,6 +47,8 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
  * @spring.property name="methodNameResolver" ref="geneActions"
  */
 public class GeneController extends BaseMultiActionController {
@@ -52,6 +56,22 @@ public class GeneController extends BaseMultiActionController {
     private BibliographicReferenceService bibliographicReferenceService = null;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
     private Gene2GOAssociationService gene2GOAssociationService = null;
+    private ArrayDesignMapResultService arrayDesignMapResultService = null;
+    private CompositeSequenceService compositeSequenceService = null;
+
+    /**
+     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     */
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
 
     /**
      * @return Returns the geneService.
@@ -159,11 +179,26 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        ModelAndView mav = new ModelAndView( "compositeSequences" );
-        mav.addObject( "gene", gene );
+        //ModelAndView mav = new ModelAndView( "compositeSequences" );
+
         Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
                 .getCompositeSequencesByGeneId( id );
-        mav.addObject( "compositeSequences", compositeSequences );
+        //mav.addObject( "compositeSequences", compositeSequences );
+        
+        
+  
+        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+
+        Collection rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+
+        if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
+            // / FIXME, return error or do something else intelligent.
+        }
+        mav.addObject( "gene", gene );
+        mav.addObject( "sequenceData", compositeSequenceSummary );
+        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
+        
         return mav;
     }
 
