@@ -138,7 +138,7 @@
 				<property name="customTypesPackage">${application.package}</property>
 				<property name="userTypesPackage">${application.package}.persistence.hibernate.usertypes</property>
 				<property name="compositionDefinesEagerLoading">true</property>
-				<property name="mergeLocation">${maven.andromda.hibernate.merge.custom}</property>
+				<property name="mergeLocation">${project.basedir}/src/main/custom/hibernate</property>
 				<property name="mergeMappingsUri">file:${maven.andromda.merge.mappings}</property>
 				<property name="hibernateCompositionCascade">all</property>
 				<property name="hibernateAggregationCascade">none</property>

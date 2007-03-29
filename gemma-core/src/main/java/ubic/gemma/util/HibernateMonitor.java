@@ -40,16 +40,17 @@ public class HibernateMonitor {
 
     SessionFactory sessionFactory;
 
+    private boolean showQueryCacheStats = true;
+    private boolean showEntityStats = false;
+    private boolean showCollectionStats = false;
+    private boolean showSecondLevelCacheDetails = true;
+
     /**
      * Log some statistics.
      */
     public void getStats() {
 
         Statistics stats = sessionFactory.getStatistics();
-
-        double queryCacheHitCount = stats.getQueryCacheHitCount();
-        double queryCacheMissCount = stats.getQueryCacheMissCount();
-        double queryCacheHitRatio = queryCacheHitCount / ( queryCacheHitCount + queryCacheMissCount );
 
         StringBuilder buf = new StringBuilder();
         buf.append( "\n--------------- Hibernate stats -----------------------\n" );
@@ -60,78 +61,86 @@ public class HibernateMonitor {
         long open = stats.getSessionOpenCount();
         long close = stats.getSessionCloseCount();
 
-        buf.append( open + " sessions opened\n" );
-        buf.append( close + " sessions closed\n" );
+        buf.append( open + " sessions opened, " + close + " closed\n" );
         buf.append( prep + " statements prepared\n" );
         buf.append( trans + " transactions completed\n" );
         buf.append( flushes + " flushes\n" );
 
-        if ( queryCacheHitCount + queryCacheMissCount > 0 ) {
-            buf.append( "Query cache hit ratio:" + queryCacheHitRatio );
+        if ( showQueryCacheStats ) {
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
+            long queryCacheMissCount = stats.getQueryCacheMissCount();
+            long queryCachePutCount = stats.getQueryCachePutCount();
+
+            buf.append( "Query cache: " + queryCacheHitCount + " hits; " + queryCacheMissCount + " miss; "
+                    + queryCachePutCount + " put\n" );
         }
 
         long secCacheHits = stats.getSecondLevelCacheHitCount();
         long secCacheMiss = stats.getSecondLevelCacheMissCount();
         long secCachePut = stats.getSecondLevelCachePutCount();
+        buf.append( "2' Cache: " + secCacheHits + " hits; " + secCacheMiss + " miss; " + secCachePut + " put\n" );
 
-        buf
-                .append( "2' Cache summary: " + secCacheHits + " hits; " + secCacheMiss + " miss; " + secCachePut
-                        + " put\n" );
-
-        String[] regions = stats.getSecondLevelCacheRegionNames();
-        for ( String string : regions ) {
-            SecondLevelCacheStatistics secondLevelCacheStatistics = stats.getSecondLevelCacheStatistics( string );
-            long hitCount = secondLevelCacheStatistics.getHitCount();
-            long missCount = secondLevelCacheStatistics.getMissCount();
-            long putCount = secondLevelCacheStatistics.getPutCount();
-            if ( hitCount > 0 || missCount > 0 || putCount > 0 ) {
-                try {
-                    String shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                    buf.append( "    " + shortName + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
-                            + " puts" + "\n" );
-                } catch ( ClassNotFoundException e ) {
-                    buf.append( "    " + string + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
-                            + " puts" + "\n" );
+        if ( showSecondLevelCacheDetails ) {
+            String[] regions = stats.getSecondLevelCacheRegionNames();
+            for ( String string : regions ) {
+                SecondLevelCacheStatistics secondLevelCacheStatistics = stats.getSecondLevelCacheStatistics( string );
+                long hitCount = secondLevelCacheStatistics.getHitCount();
+                long missCount = secondLevelCacheStatistics.getMissCount();
+                long putCount = secondLevelCacheStatistics.getPutCount();
+                if ( hitCount > 0 || missCount > 0 || putCount > 0 ) {
+                    try {
+                        String shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
+                        buf.append( "    " + shortName + ": " + hitCount + " hits; " + missCount + " misses; "
+                                + putCount + " puts" + "\n" );
+                    } catch ( ClassNotFoundException e ) {
+                        buf.append( "    " + string + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
+                                + " puts" + "\n" );
+                    }
                 }
             }
         }
 
-        String[] collectionRoleNames = stats.getCollectionRoleNames();
-        for ( String string : collectionRoleNames ) {
-            CollectionStatistics collectionStatistics = stats.getCollectionStatistics( string );
-            long fetchCount = collectionStatistics.getFetchCount();
-            long loadCount = collectionStatistics.getLoadCount();
-            long updateCount = collectionStatistics.getUpdateCount();
-            if ( fetchCount > 0 || loadCount > 0 || updateCount > 0 ) {
-                buf.append( "Collection of role " + string + ": " + fetchCount + " fetches, " + loadCount + " loads, "
-                        + updateCount + " updates\n" );
+        if ( showCollectionStats ) {
+            String[] collectionRoleNames = stats.getCollectionRoleNames();
+            for ( String string : collectionRoleNames ) {
+                CollectionStatistics collectionStatistics = stats.getCollectionStatistics( string );
+                long fetchCount = collectionStatistics.getFetchCount();
+                long loadCount = collectionStatistics.getLoadCount();
+                long updateCount = collectionStatistics.getUpdateCount();
+                if ( fetchCount > 0 || loadCount > 0 || updateCount > 0 ) {
+                    buf.append( "Collection of role " + string + ": " + fetchCount + " fetches, " + loadCount
+                            + " loads, " + updateCount + " updates\n" );
+                }
             }
         }
 
-        String[] entityNames = stats.getEntityNames();
-        for ( String string : entityNames ) {
-            EntityStatistics entityStats = stats.getEntityStatistics( string );
-            long changes = entityStats.getInsertCount() + entityStats.getUpdateCount() + entityStats.getDeleteCount();
-            if ( changes > 0 ) {
-                String shortName;
-                try {
-                    shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                    buf.append( shortName + " changed " + changes + " \n" );
-                } catch ( ClassNotFoundException e ) {
-                    log.error( e, e );
+        if ( showEntityStats ) {
+            String[] entityNames = stats.getEntityNames();
+            for ( String string : entityNames ) {
+                EntityStatistics entityStats = stats.getEntityStatistics( string );
+                long changes = entityStats.getInsertCount() + entityStats.getUpdateCount()
+                        + entityStats.getDeleteCount();
+                if ( changes > 0 ) {
+                    String shortName;
+                    try {
+                        shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
+                        buf.append( shortName + " changed " + changes + " \n" );
+                    } catch ( ClassNotFoundException e ) {
+                        log.error( e, e );
+                    }
                 }
-            }
-            long reads = entityStats.getLoadCount();
-            if ( reads > 0 ) {
-                String shortName;
-                try {
-                    shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                    buf.append( shortName + " read " + reads + " \n" );
-                } catch ( ClassNotFoundException e ) {
-                    log.error( e, e );
+                long reads = entityStats.getLoadCount();
+                if ( reads > 0 ) {
+                    String shortName;
+                    try {
+                        shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
+                        buf.append( shortName + " read " + reads + " \n" );
+                    } catch ( ClassNotFoundException e ) {
+                        log.error( e, e );
+                    }
                 }
-            }
 
+            }
         }
 
         buf.append( "----------------------------------------------------------\n" );

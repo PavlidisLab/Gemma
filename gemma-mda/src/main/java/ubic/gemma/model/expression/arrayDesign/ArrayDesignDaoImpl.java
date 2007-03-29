@@ -841,11 +841,15 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
             org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
             csQueryObject.setCacheable( true );
-            csQueryObject.setCacheMode( CacheMode.NORMAL );
-            ScrollableResults csList = csQueryObject.scroll();
-            while ( csList.next() ) {
-                Long arrayId = csList.getLong( 0 );
-                Long csId = csList.getLong( 1 );
+            
+            // the name of the cache region is configured in ehcache.xml.vsl 
+            csQueryObject.setCacheRegion( "arrayDesignListing" );
+            
+            List csList = csQueryObject.list();
+            for ( Object object : csList ) {
+                Object[] res = ( Object[] ) object;
+                Long arrayId = ( Long ) res[0];
+                Long csId = ( Long ) res[1];
                 csToArray.put( csId, arrayId );
             }
 
