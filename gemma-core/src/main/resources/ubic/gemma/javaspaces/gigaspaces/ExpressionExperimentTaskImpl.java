@@ -18,6 +18,13 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -26,9 +33,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @version $Id$
  */
 public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
+    private Log log = LogFactory.getLog( this.getClass() );
 
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
+    private GeoDatasetService geoDatasetService = null;
 
     /*
      * (non-Javadoc)
@@ -48,11 +57,37 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
+     */
+    public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
+
+        log.info( "executing task" );
+        Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
+
+        // TODO figure out what to store in the result for collections
+        counter++;
+        Result result = new Result();
+        result.setAnswer( datasets.size() );
+        result.setTaskID( counter );
+        return result;
+    }
+
     /**
      * @param expressionExperimentService
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param geoDatasetService
+     */
+    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
+        this.geoDatasetService = geoDatasetService;
+        geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
     }
 
 }
