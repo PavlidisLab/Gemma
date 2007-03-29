@@ -87,7 +87,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      */
     public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
         this.geoDatasetService = geoDatasetService;
-        geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        this.geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
     }
 
 }
