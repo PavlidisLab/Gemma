@@ -32,4 +32,12 @@ public interface ExpressionExperimentTask {
      */
     public Result execute( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param geoAccession
+     * @param loadPlatformOnly
+     * @param doSampleMatching
+     * @return Result
+     */
+    public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+
 }
