@@ -613,7 +613,9 @@ public class GeoFamilyParser implements Parser {
         if ( inPlatform ) {
             extractColumnIdentifier( line, currentPlatform() );
         } else if ( inSample ) {
-            if ( !processPlatformsOnly ) extractColumnIdentifier( line, currentSample() );
+            if ( !processPlatformsOnly ) {
+                extractColumnIdentifier( line, currentSample() );
+            }
         } else if ( inSeries ) {
             if ( !processPlatformsOnly ) extractColumnIdentifier( line, currentSeries() );
         } else if ( inSubset ) {
@@ -1033,6 +1035,9 @@ public class GeoFamilyParser implements Parser {
 
         if ( !haveReadSampleDataHeader ) {
             haveReadSampleDataHeader = true;
+
+            initializeQuantitationTypes();
+
             return;
         }
 
@@ -1051,29 +1056,59 @@ public class GeoFamilyParser implements Parser {
 
         GeoSample sample = results.getSampleMap().get( currentSampleAccession );
 
-        String designElement = tokens[0]; // ID_REF.
-
         if ( results.getSeriesMap().get( currentSeriesAccession ) == null ) {
             return; // this happens if we are parsing a GPL file.
         }
 
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
 
+        String designElement = tokens[0]; // ID_REF.
         for ( int i = 1; i < tokens.length; i++ ) {
             String value = tokens[i];
             int quantitationTypeIndex = i - 1;
+
+            if ( !isWantedQuantitationType( quantitationTypeIndex ) ) continue;
+
             if ( log.isTraceEnabled() ) {
                 log.trace( "Adding: " + value + " to  quantitationType " + ( quantitationTypeIndex ) + " for "
                         + designElement );
-            }
-            if ( i % 2000 == 0 ) {
-                log.info( "Processed " + i + " rows for " + currentSampleAccession );
             }
             values.addValue( sample, quantitationTypeIndex, designElement, value );
             processedDesignElements.add( designElement );
         }
 
         sampleDataLines++;
+    }
+
+    private boolean isWantedQuantitationType( int index ) {
+        return wantedQuantitationTypes.contains( index );
+    }
+
+    private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
+
+    /**
+     * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0.
+     */
+    private void initializeQuantitationTypes() {
+        wantedQuantitationTypes.clear();
+        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
+        int i = 0;
+        for ( String columnName : currentSample().getColumnNames() ) {
+            boolean isWanted = values.isWantedQuantitationType( columnName );
+
+            int quantitationTypeIndex = i - 1;
+            if ( !isWanted ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
+                            + " - it is an 'unwanted' quantitation type (column number " + i + ", "
+                            + quantitationTypeIndex + "th quantitation type.)" );
+            } else {
+                wantedQuantitationTypes.add( quantitationTypeIndex );
+            }
+
+            values.addQuantitationType( columnName, quantitationTypeIndex );
+            i++;
+        }
     }
 
     /**

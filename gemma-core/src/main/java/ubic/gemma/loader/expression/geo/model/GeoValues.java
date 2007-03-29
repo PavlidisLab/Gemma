@@ -62,6 +62,8 @@ public class GeoValues {
      */
     Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<GeoPlatform, Map<Object, Map<String, List<Object>>>>();
 
+    private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
+
     private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
 
     static {
@@ -110,6 +112,19 @@ public class GeoValues {
     }
 
     /**
+     * Some quantitation types are 'skippable' - they are easily recomputed from other values, or are not necessary in
+     * the system. Skipping these makes loading the data more manageable for some data sets that are very large.
+     * 
+     * @param quantitationTypeName
+     * @return true if the name is NOT on the 'skippable' list.
+     */
+    public boolean isWantedQuantitationType( String quantitationTypeName ) {
+        if ( quantitationTypeName == null )
+            throw new IllegalArgumentException( "Quantitation type name cannot be null" );
+        return !skippableQuantitationTypes.contains( quantitationTypeName );
+    }
+
+    /**
      * Store a value. It is assumed that designElements have unique names.
      * <p>
      * Implementation note: The way this works: the first time we see a sample, we associate it with a 'dimension' that
@@ -135,8 +150,6 @@ public class GeoValues {
      * @param value The data point to be stored.
      */
     public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
-
-        if ( skippableQuantitationTypes.contains( quantitationTypeIndex ) ) return;
 
         if ( sample.getPlatforms().size() > 1 ) {
             throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
@@ -177,6 +190,15 @@ public class GeoValues {
             log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex
                     + " de=" + designElement + " value=" + value );
         }
+    }
+
+    /**
+     * Map between quantitation type names and the column number. This is used to help identify quantitation types that are not going to be stored.
+     * @param name
+     * @param columnNumber
+     */
+    public void addQuantitationType( String name, Integer columnNumber ) {
+        quantitationTypeMap.put( columnNumber, name );
     }
 
     /**

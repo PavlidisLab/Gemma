@@ -83,6 +83,9 @@ public class VectorMergingService {
         this.bioAssayDimensionService = bioAssayDimensionService;
     }
 
+    // ByteArrayConverter is stateless.
+    ByteArrayConverter converter = new ByteArrayConverter();
+
     /**
      * @param expExp
      */
@@ -137,7 +140,6 @@ public class VectorMergingService {
 
             int totalBioAssays = newBioAd.getBioAssays().size();
 
-            ByteArrayConverter converter = new ByteArrayConverter();
             Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
             for ( DesignElement de : deVMap.keySet() ) {
 

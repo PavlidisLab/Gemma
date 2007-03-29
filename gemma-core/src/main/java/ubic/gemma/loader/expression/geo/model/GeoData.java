@@ -22,14 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Abstract class from which many Geo objects are descended.
+ * Abstract class from which other GEO objects are descended.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public abstract class GeoData {
-
-    // private Map<String, List<String>> data = new HashMap<String, List<String>>();;
 
     protected GeoContact contact = new GeoContact();
 
@@ -57,18 +55,14 @@ public abstract class GeoData {
     }
 
     /**
+     * The column names mean different things in different subclasses. For samples, the column names are the
+     * "quantitation types". For platforms, they are descriptor names.
+     * 
      * @return Returns the columnNames.
      */
     public List<String> getColumnNames() {
         return this.columnNames;
     }
-
-    // /**
-    // * @return
-    // */
-    // public Map<String, List<String>> getData() {
-    // return this.data;
-    // }
 
     /**
      * @return
