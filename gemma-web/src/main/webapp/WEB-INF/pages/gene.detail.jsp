@@ -11,7 +11,10 @@
 <title><fmt:message key="gene.details" /></title>
 
 <h2>
-	<fmt:message key="gene.details" />
+	<fmt:message key="gene.details" /> 
+	<c:if test="${gene.officialSymbol != null}">
+	for <jsp:getProperty name="gene" property="officialSymbol" />
+	</c:if>
 </h2>
 <table width="100%" cellspacing="10">
 	<tr>
