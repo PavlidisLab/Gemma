@@ -96,6 +96,9 @@
 		<property name="expressionExperimentService">
 			<ref bean="expressionExperimentService" />
 		</property>
+		<property name="geoDatasetService">
+			<ref bean="geoDatasetService" />
+		</property>
 	</bean>
 </beans>
 
