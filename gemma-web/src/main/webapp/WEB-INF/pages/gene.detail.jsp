@@ -4,6 +4,11 @@
 <jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
 <jsp:useBean id="gene" scope="request"
 	class="ubic.gemma.model.genome.GeneImpl" />
+	
+<script type="text/javascript"
+	src="<c:url value="/scripts/scrolltable.js"/>"></script>
+<link rel="stylesheet" type="text/css"
+	href="<c:url value='/styles/scrolltable.css'/>" />
 
 	
 
@@ -178,19 +183,17 @@ if ( gene.getProducts().size() > 0 ) {
 }
 %>
 
-<table>
-<tr>
-<td>
-<display:table name="gene.products" class="list" requestURI=""
-	id="productsList" pagesize="10"
+
+<div id="tableContainer" class="tableContainer">
+<display:table name="gene.products" class="scrollTable" requestURI=""
+	id="productsList" pagesize="1000"
 	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
-	<display:column property="name" sortable="true" maxWords="20" />
-	<display:column property="description" sortable="true" maxWords="20" />
+	<display:column property="name" sortable="true" maxWords="20" headerClass="fixedHeader" />
+	<display:column property="description" sortable="true" maxWords="20" headerClass="fixedHeader" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
-</td>
-</tr>
-</table>
+</div>
+
 <br />
 There are
 <b> <a
