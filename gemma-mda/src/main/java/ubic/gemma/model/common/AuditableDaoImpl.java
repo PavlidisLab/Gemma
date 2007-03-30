@@ -21,10 +21,28 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.common;
+
+import java.util.Collection;
+
 /**
+ * @author pavlidis
+ * @version $Id$
  * @see ubic.gemma.model.common.Auditable
  */
-public class AuditableDaoImpl
-    extends ubic.gemma.model.common.AuditableDaoBase
-{
+public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
+
+    /**
+     * This is basically a thaw method.
+     */
+    @Override
+    public Collection handleGetAuditEvents( final Auditable auditable ) {
+        return ( Collection ) getHibernateTemplate().execute(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        return auditable.getAuditTrail().getEvents();
+                    }
+                } );
+
+    }
 }

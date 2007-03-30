@@ -22,10 +22,10 @@ package ubic.gemma.model.expression.arrayDesign;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -841,10 +841,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
             org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
             csQueryObject.setCacheable( true );
-            
-            // the name of the cache region is configured in ehcache.xml.vsl 
+
+            // the name of the cache region is configured in ehcache.xml.vsl
             csQueryObject.setCacheRegion( "arrayDesignListing" );
-            
+
             List csList = csQueryObject.list();
             for ( Object object : csList ) {
                 Object[] res = ( Object[] ) object;
@@ -1063,58 +1063,57 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw super.convertHibernateAccessException( ex );
         }
     }
-
+    
+    
     @Override
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
             throws Exception {
 
-        // Technically, size does not automatically disqualify, because we only consider BioSequences that actually have
-        // sequences in
-        // them.
+        // Size does not automatically disqualify, because we only consider BioSequences that actually have
+        // sequences in them.
         if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
             log.info( "Subsumee has more sequences than subsumer so probably cannot be subsumed ... checking anyway" );
-            // return false;
         }
 
-        // this is very inefficient, on big designs it can be a bit slow.
-        int count = 0;
-        for ( CompositeSequence subsumeeCs : candidateSubsumee.getCompositeSequences() ) {
-            BioSequence subsumeeSeq = subsumeeCs.getBiologicalCharacteristic();
+        Collection<BioSequence> subsumerSeqs = new HashSet<BioSequence>();
+        Collection<BioSequence> subsumeeSeqs = new HashSet<BioSequence>();
 
-            // ignore cases that have no BioSequence...
-            if ( subsumeeSeq == null ) continue;
+        for ( CompositeSequence cs : candidateSubsumee.getCompositeSequences() ) {
+            BioSequence seq = cs.getBiologicalCharacteristic();
+            if ( seq == null ) continue;
+            subsumeeSeqs.add( seq );
+        }
 
-            // ignore cases that lack a sequence in the BioSequence.
-            if ( StringUtils.isBlank( subsumeeSeq.getSequence() ) && subsumeeSeq.getSequenceDatabaseEntry() == null ) {
-                if ( log.isDebugEnabled() ) log.debug( "No sequence info in " + subsumeeSeq );
-                continue;
+        for ( CompositeSequence cs : candidateSubsumer.getCompositeSequences() ) {
+            BioSequence seq = cs.getBiologicalCharacteristic();
+            if ( seq == null ) continue;
+            subsumerSeqs.add( seq );
+        }
+
+        if ( subsumeeSeqs.size() > subsumerSeqs.size() ) {
+            log.info( "Subsumee has more sequences than subsumer so probably cannot be subsumed, checking overlap" );
+        }
+
+        int overlap = 0;
+        List<BioSequence> missing = new ArrayList<BioSequence>();
+        for ( BioSequence sequence : subsumeeSeqs ) {
+            if ( subsumerSeqs.contains( sequence ) ) {
+                overlap++;
+            } else {
+                missing.add( sequence );
             }
+        }
 
-            boolean found = false;
-            for ( CompositeSequence subsumerCs : candidateSubsumer.getCompositeSequences() ) {
-                BioSequence subsumerSeq = subsumerCs.getBiologicalCharacteristic();
+        log.info( "Subsumer " + candidateSubsumer + " contains " + overlap + "/" + subsumeeSeqs.size()
+                + " biosequences from the subsumee " + candidateSubsumee );
 
-                if ( subsumerSeq == null ) continue;
-
-                if ( StringUtils.isBlank( subsumerSeq.getSequence() ) && subsumerSeq.getSequenceDatabaseEntry() == null ) {
-                    if ( log.isDebugEnabled() ) log.debug( "No sequence info in " + subsumerSeq );
-                    continue;
-                }
-
-                if ( subsumerSeq.equals( subsumeeSeq ) ) {
-                    found = true;
-                    break;
-                }
+        if ( overlap != subsumeeSeqs.size() ) {
+            int n = 50;
+            System.err.println( "Up to " + n + " missing sequences will be listed." );
+            for ( int i = 0; i < Math.min( n, missing.size() ); i++ ) {
+                System.err.println( missing.get( i ) );
             }
-
-            if ( !found ) {
-                log.info( candidateSubsumer + " does not contain " + subsumeeCs.getBiologicalCharacteristic()
-                        + " from " + candidateSubsumee );
-                return false;
-            }
-            if ( ++count % 2000 == 0 ) {
-                log.info( "Tested " + count + " probes" );
-            }
+            return false;
         }
 
         // if we got this far, then we definitely have a subsuming situtation.
