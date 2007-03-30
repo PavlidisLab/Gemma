@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -42,8 +43,6 @@ import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -715,20 +714,23 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( list.next() ) {
+            queryObject.setCacheable( true );
+            List list = queryObject.list();
+            for ( Object object : list ) {
+
+                Object[] res = ( Object[] ) object;
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                v.setId( list.getLong( 0 ) );
-                v.setName( list.getString( 1 ) );
-                v.setExternalDatabase( list.getString( 2 ) );
-                v.setExternalUri( list.getString( 3 ) );
-                v.setSource( list.getString( 4 ) );
-                v.setAccession( list.getString( 5 ) );
-                v.setTaxon( list.getString( 6 ) );
-                v.setBioAssayCount( list.getInteger( 7 ) );
-                v.setArrayDesignCount( list.getInteger( 8 ) );
-                v.setShortName( list.getString( 9 ) );
-                v.setDateCreated( list.getDate( 10 ).toString() );
+                v.setId( ( Long ) res[0] );
+                v.setName( ( String ) res[1] );
+                v.setExternalDatabase( ( String ) res[2] );
+                v.setExternalUri( ( String ) res[3] );
+                v.setSource( ( String ) res[4] );
+                v.setAccession( ( String ) res[5] );
+                v.setTaxon( ( String ) res[6] );
+                v.setBioAssayCount( ( Integer ) res[7] );
+                v.setArrayDesignCount( ( Integer ) res[8] );
+                v.setShortName( ( String ) res[9] );
+                v.setDateCreated( ( ( Date ) res[10] ).toString() );
                 vo.add( v );
             }
         } catch ( org.hibernate.HibernateException ex ) {

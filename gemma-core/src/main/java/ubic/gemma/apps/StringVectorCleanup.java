@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.datastructure.matrix.VectorMarshall;
@@ -130,9 +131,11 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCli {
                     int numBioAssays = vector.getBioAssayDimension().getBioAssays().size();
                     if ( vec.size() != numBioAssays ) {
                         dedvs.thaw( vector );
+                        expressionExperimentService.thawLite( vector.getExpressionExperiment() );
                         log.error( "Vector " + vector.getId() + " did not have right number of values  " + type
                                 + "; expected " + numBioAssays + " got " + vec.size() + "; "
                                 + vector.getExpressionExperiment() );
+                        log.error( "Values:\n" + StringUtils.join( vec, "," ) );
                         continue qtype;
                     }
                 }

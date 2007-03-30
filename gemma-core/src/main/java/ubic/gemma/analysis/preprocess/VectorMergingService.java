@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -305,6 +306,7 @@ public class VectorMergingService {
             bad.setDescription( bad.getDescription() + bioAd.getName() + " " );
         }
 
+        bad.setName( StringUtils.abbreviate( bad.getName(), 255 ) );
         bad.setBioAssays( bioAssays );
 
         return bioAssayDimensionService.create( bad );

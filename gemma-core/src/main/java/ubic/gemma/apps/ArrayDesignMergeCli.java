@@ -154,10 +154,6 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         for ( CompositeSequence cs : otherArrayDesign.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
 
-            // if ( bs == null ) {
-            // continue; // we can't do anything with these.
-            // } else {
-
             if ( !globalBsMap.containsKey( bs ) ) {
                 globalBsMap.put( bs, new HashSet<CompositeSequence>() );
             }
@@ -192,12 +188,6 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         mergedAd.setTechnologyType( arrayDesign.getTechnologyType() );
         mergedAd.setDesignProvider( arrayDesign.getDesignProvider() );
 
-        // mergedAd.setExternalReferences( arrayDesign.getExternalReferences() );
-        // for ( String otherArrayDesigName : otherArrayDesignNames ) {
-        // ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
-        // mergedAd.getExternalReferences().addAll( otherArrayDesign.getExternalReferences() );
-        // }
-
         StringBuilder mergeeList = new StringBuilder();
         for ( String s : otherArrayDesignNames ) {
             mergeeList.append( s + ", " );
@@ -225,7 +215,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                 newCs.setDescription( ( cs.getDescription() == null ? "" : cs.getDescription() ) + " (via merge)" );
                 newCs.setArrayDesign( mergedAd );
                 newProbes.add( newCs );
-                if ( ++count % 1000 == 0 ) {
+                if ( ++count % 2000 == 0 ) {
                     log.info( "Made " + count + " new probes" );
                 }
             }
