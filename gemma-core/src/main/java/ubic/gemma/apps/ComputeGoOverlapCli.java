@@ -17,7 +17,6 @@
  *
  */
 
-
 package ubic.gemma.apps;
 
 import java.io.File;
@@ -34,6 +33,8 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.model.genome.Gene;
@@ -70,6 +71,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private TaxonService taxonService;
 
     private Map<Gene, HashSet<OntologyEntry>> geneOntologyTerms = new HashMap<Gene, HashSet<OntologyEntry>>();
+    private Map<Gene, Integer> goSetSize = new HashMap<Gene, Integer>();
 
     // a hashmap for each gene and its GO terms + parents
 
@@ -101,18 +103,29 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         Set<Gene> allGenes = new HashSet<Gene>( masterGenes );
         // a hashset containing all genes (master genes and coexpressed genes)
 
+        Set<Gene> coExpGenes = new HashSet<Gene>();
+        // a hashset containing all genes (master genes and coexpressed genes)
+
         final int stringincy = 6;
 
         Map<Gene, Collection<Gene>> geneExpMap = new HashMap<Gene, Collection<Gene>>();
         // a hashmap for each gene and its collection of expressed genes
 
+        log.debug( "Total master genes:" + masterGenes.size() );
+
         for ( Gene gene : masterGenes ) {
 
             log.debug( "I'm here: " + gene );
-            Map<Long, Collection<Long>> geneMap = geneService.getCoexpressedGeneMap( stringincy, gene );
+            CoexpressionCollectionValueObject coexpressed = ( CoexpressionCollectionValueObject ) geneService
+                    .getCoexpressedGenes( gene, null, stringincy );
+
+            Collection<Long> geneIds = new HashSet<Long>();
+            for ( CoexpressionValueObject co : coexpressed.getCoexpressionData() ) {
+                geneIds.add( co.getGeneId() );
+            }
 
             Collection<Gene> foundGenes = new HashSet<Gene>();
-            for ( long id : geneMap.keySet() ) {
+            for ( long id : geneIds ) {
                 foundGenes.add( geneService.load( id ) );
             }
 
@@ -120,42 +133,41 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
             geneExpMap.put( gene, foundGenes );
             allGenes.addAll( foundGenes );
+            coExpGenes.addAll( foundGenes );
 
         }
 
-        // log.debug( "The following genes: " + allGenes );
+        log.debug( "Total coexpressed genes:" + coExpGenes.size() );
+        // log.debug( "The following genes: " + allGenes.size() );
 
         for ( Gene gene : allGenes ) {
 
             HashSet<OntologyEntry> GOTermSet = new HashSet<OntologyEntry>();
             GOTermSet = getGOTerms( gene );
             geneOntologyTerms.put( gene, GOTermSet );
-
         }
 
         Map<Gene, Map<Gene, Integer>> masterTermCountMap = new HashMap<Gene, Map<Gene, Integer>>();
         // a hashmap for each gene and its map to each of its expressed
+
         Set<Gene> set = geneExpMap.keySet();
 
         for ( Gene masterGene : set ) {
-            log.debug( "I'm here: " + masterGene.getOfficialSymbol() );
+            // log.debug( "I'm here: " + masterGene.getOfficialSymbol() );
 
             Collection<OntologyEntry> masterGO = geneOntologyTerms.get( masterGene );
             // for each (key master gene) obtain set of Ontology terms
-
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
             // for that same key (master gene) obtain collection of coexpressed genes
 
             masterTermCountMap.put( masterGene, computeOverlap( masterGO, coExpGene ) );
-
         }
 
         try {
-            Writer write = initOutputFile( "synaptic_transmission[2]" );
+            Writer write = initOutputFile( "synaptic_transmission[3]" );
             String masterGene;
             String geneCoexpressed;
             int overlap;
-
             for ( Gene g : masterTermCountMap.keySet() ) {
                 masterGene = g.getOfficialSymbol();
                 Map<Gene, Integer> coexpressed = masterTermCountMap.get( g );
@@ -164,7 +176,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 for ( Gene coexpG : coexpressed.keySet() ) {
                     geneCoexpressed = coexpG.getOfficialSymbol();
                     overlap = coexpressed.get( coexpG );
-
                     int coExpGOTerms;
                     if ( geneOntologyTerms.get( coexpG ) == null )
                         coExpGOTerms = 0;
@@ -172,11 +183,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                         coExpGOTerms = ( geneOntologyTerms.get( coexpG ) ).size();
 
                     Collection<OntologyEntry> goTerms = getTermOverlap( g, coexpG );
-
                     writeOverlapLine( write, masterGene, geneCoexpressed, overlap, goTerms, masterGOTerms, coExpGOTerms );
-
                 }
-
             }
 
             // printResults(masterTermCountMap);
@@ -284,9 +292,19 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             allGOTermSet.add( oe ); // add the child
         }
 
-        // log.debug( "The GOTerm Set: " + allGOTermSet );
+        HashSet<OntologyEntry> finalGOTermSet = new HashSet<OntologyEntry>();
+        for ( OntologyEntry oe : allGOTermSet ) {
+            if ( ( oe.getAccession().equalsIgnoreCase( "GO:0005575" ) )
+                    || ( oe.getAccession().equalsIgnoreCase( "GO:0008150" ) )
+                    || ( oe.getAccession().equalsIgnoreCase( "GO:0003674" ) ) ) {
+                log.info( "Removing Ontology entry" );
+                continue;
+            }
+           
+            finalGOTermSet.add( oe );
+        }
 
-        return allGOTermSet;
+        return finalGOTermSet;
     }
 
     /**
@@ -297,7 +315,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         Taxon taxon = taxonService.findByCommonName( commonName );
         return gene2GOAssociationService.findByGOTerm( goID, taxon );
-        
+
     }
 
     public static void main( String[] args ) {
@@ -348,12 +366,10 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     protected void writeOverlapLine( Writer writer, String masterGene, String geneCoexpressed, int overlap,
             Collection<OntologyEntry> goTerms, int masterGOTerms, int coExpGOTerms ) throws IOException {
 
-        if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
+        if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file \n" );
 
         if ( masterGene == null ) masterGene = "";
-
         if ( geneCoexpressed == null ) geneCoexpressed = "";
-
         writer.write( masterGene + "\t" + masterGOTerms + "\t" + geneCoexpressed + "\t" + coExpGOTerms + "\t" + overlap
                 + "\t" );
 
@@ -366,21 +382,16 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         boolean wrote = false;
 
         for ( OntologyEntry oe : goTerms ) {
-
             if ( oe == null ) continue;
-
             if ( wrote )
                 writer.write( "|" + oe.getAccession() );
             else
                 writer.write( oe.getAccession() );
-
             wrote = true;
-
         }
 
         writer.write( "\n" );
         writer.flush();
-
     }
 
 }
