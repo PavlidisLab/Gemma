@@ -21,6 +21,7 @@ package ubic.gemma.web.taglib.expression.experiment;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -32,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
@@ -47,8 +47,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
-
     private double EMSIZE = .825;
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
@@ -57,13 +55,23 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private ExpressionDataMatrix expressionDataMatrix = null;
 
+    private Map<CompositeSequence, Collection<Gene>> genes;
+
     /**
      * @jsp.attribute description="The object to visualize." required="true" rtexprvalue="true"
      * @param expressionDataMatrix
      */
     public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
         this.expressionDataMatrix = expressionDataMatrix;
-        this.compositeSequenceGeneMapperService = new CompositeSequenceGeneMapperService();
+    }
+
+    /**
+     * @jsp.attribute description="Gene data (map of composite sequences to genes) for the matrix." required="false"
+     *                rtexprvalue="true"
+     * @param genes
+     */
+    public void setGenes( Map<CompositeSequence, Collection<Gene>> genes ) {
+        this.genes = genes;
     }
 
     /*
@@ -132,19 +140,23 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 // print out the gene associated with the cs
                 buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
                 for ( int i = 0; i < rowElements.size(); i++ ) {
-                    Collection associatedGenes = compositeSequenceGeneMapperService
-                            .getGenesForCompositeSequence( ( CompositeSequence ) ( rowElements.get( i )
-                                    .getDesignElement() ) );
-                    if ( associatedGenes != null ) {
+                    CompositeSequence compositeSequence = ( CompositeSequence ) rowElements.get( i ).getDesignElement();
+
+                    if ( genes != null && genes.containsKey( compositeSequence ) ) {
+                        Collection associatedGenes = genes.get( compositeSequence );
                         Iterator iter = associatedGenes.iterator();
-                        // TODO only adding the first gene ... add others as well?
+                        // TODO only adding the first gene ... add others as well? YES.
                         if ( iter.hasNext() ) {
                             Gene gene = ( Gene ) iter.next();
-                            String name = gene.getName();
-                            if ( !StringUtils.isEmpty( name ) ) {
+                            String symbol = gene.getOfficialSymbol();
+                            if ( !StringUtils.isEmpty( symbol ) ) {
                                 buf
                                         .append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
-                                                + name + "\">" + name + "</a>" );
+                                                + symbol + "\">" + symbol + "</a>" ); // FIXME add Gemma link.
+                            }
+                            String name = gene.getOfficialName();
+                            if ( StringUtils.isNotBlank( name ) ) {
+                                buf.append( "&nbsp;" + name );
                             }
                         }
                     }
@@ -159,6 +171,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
+            log.error( ex, ex );
             throw new JspException( "ExpressionDataMatrixVisualizerTag: " + ex.getMessage() );
         }
 

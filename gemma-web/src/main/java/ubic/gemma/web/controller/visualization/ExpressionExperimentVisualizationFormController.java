@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -178,9 +179,15 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
-        QuantitationType qt = quantitationTypes.iterator().next();
+        if ( quantitationTypes.size() > 0 ) {
+            QuantitationType qt = quantitationTypes.iterator().next();
+            eevc.setQuantitationType( qt );
+        } else {
+            throw new RuntimeException( "No continuous-valued quantitation types" );
+        }
+
         eevc.setSearchString( "gene symbol 1, gene symbol 2" );
-        eevc.setQuantitationType( qt );
+
         eevc.setViewSampling( true );
         return eevc;
     }
@@ -190,7 +197,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      */
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-
         super.initBinder( request, binder );
         binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
                 getContinuousQuantitationTypes( request ) ) );
@@ -292,7 +298,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         designElementDataVectorService.thaw( dataVectors );
-        ExpressionDataMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors, quantitationType );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors );
+
         /* deals with the case where probes don't match for the given quantitation type. */
         if ( expressionDataMatrix.rows() == 0 ) {
             String message = "None of the probe sets match the given quantitation type "
@@ -301,15 +308,30 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             return processErrors( request, response, command, errors, message );
         }
 
+        Map<CompositeSequence, Collection<Gene>> genes = getGenes( expressionDataMatrix ); // this will slow things
+        // down.
+
         /* return the model and view */
         ModelAndView mav = new ModelAndView( getSuccessView() );
         mav.addObject( "expressionDataMatrix", expressionDataMatrix );
+        mav.addObject( "genes", genes );
         mav.addObject( "expressionExperiment", expressionExperiment );
         mav.addObject( "quantitationType", eevc.getQuantitationType() );
         mav.addObject( "searchCriteria", eevc.getSearchCriteria() );
         mav.addObject( "searchString", eevc.getSearchString() );
         mav.addObject( "viewSampling", new Boolean( eevc.isViewSampling() ) );
         return mav;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
+        Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
+        for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {
+            CompositeSequence cs = ( CompositeSequence ) el.getDesignElement();
+            css.add( cs );
+        }
+        return compositeSequenceService.getGenes( css );
+
     }
 
     /**
@@ -337,10 +359,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         if ( viewSampling ) {
             vectors = expressionExperimentService.getSamplingOfVectors( expressionExperiment, quantitationType,
                     MAX_ELEMENTS_TO_VISUALIZE );
-        }
-
-        else {
-
+        } else {
             String searchString = eevc.getSearchString();
 
             String[] searchIds = StringUtils.split( searchString, "," );
@@ -351,7 +370,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 return null;
             }
 
-            List searchIdsAsList = Arrays.asList( searchIds );
+            List<String> searchIdsAsList = Arrays.asList( searchIds );
 
             /* handle search by design element */
             if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
@@ -365,17 +384,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
                 compositeSequences = compositeSequenceService.findByNamesInArrayDesigns( searchIdsAsList, arrayDesigns );
 
-            }
-
-            /* handle search by gene */
-            else if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
-
-                /* comment me out to add this gene search functionality. */
-                // errors.addError( new ObjectError( command.toString(), null, null,
-                // "Search by gene symbol unsupported at this time." ) );
-                // if ( errors.getErrorCount() > 0 ) return null;
-                /* end */
-
+            } else if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
+                /* search by gene */
                 if ( arrayDesigns.size() == 0 ) {
                     String message = "No array designs found for " + expressionExperiment;
                     log.error( message );
@@ -384,7 +394,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 }
 
                 Map<Gene, Collection<CompositeSequence>> compositeSequencesForGene = compositeSequenceGeneMapperService
-                        .getCompositeSequencesForGenesByOfficialSymbols( searchIdsAsList );
+                        .getCompositeSequencesForGenesByOfficialSymbols( searchIdsAsList, arrayDesigns );
 
                 Collection<Gene> geneKeySet = compositeSequencesForGene.keySet();
 
@@ -428,8 +438,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Iterator iter = types.iterator();
         while ( iter.hasNext() ) {
             QuantitationType type = ( QuantitationType ) iter.next();
-
-            if ( !StringUtils.equalsIgnoreCase( type.getGeneralType().getValue(), GeneralType.QUANTITATIVE.getValue() ) ) {
+            if ( !type.getGeneralType().equals( GeneralType.QUANTITATIVE ) ) {
                 iter.remove();
             }
         }

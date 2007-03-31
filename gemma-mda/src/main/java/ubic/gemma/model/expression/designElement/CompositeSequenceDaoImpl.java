@@ -290,7 +290,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";
         try {
             log.info( "Query Name: " + name );
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );          
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "id", name );
             compositeSequences = queryObject.list();
 
@@ -341,6 +341,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "cs", compositeSequence );
@@ -356,12 +357,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @SuppressWarnings("unchecked")
     @Override
     protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection compositeSequences ) throws Exception {
-        //
-        // final String queryString = "select distinct cs, gene from CompositeSequenceImpl cs, BioSequenceImpl bs,
-        // BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene "
-        // + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs
-        // in (:cs)";
-
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
         for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
             returnVal.put( cs, new HashSet<Gene>() );
@@ -466,54 +461,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             ++count;
         }
 
-        // Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-
-        // // Note that batching it doesn't help performance all that much, if at all. But at least the query parsing
-        // stage
-        // // is faster ;)
-        // int BATCHSIZE = -1;
-        // 
-        // for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
-        //
-        // batch.add( cs );
-        //
-        // if ( BATCHSIZE > 0 && batch.size() == BATCHSIZE ) {
-        // count = processCompositeSequenceBatch( queryString, returnVal, batch, count );
-        // batch.clear();
-        // }
-        // }
-
-        // if ( batch.size() > 0 ) {
-        // count = processCompositeSequenceBatch( queryString, returnVal, compositeSequences, count );
-        // }
         log.info( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences.size()
                 + " probes are associated with genes" );
         return returnVal;
     }
-
-    // private int processCompositeSequenceBatch( final String queryString,
-    // Map<CompositeSequence, Collection<Gene>> returnVal, Collection<CompositeSequence> batch, int count ) {
-    // try {
-    // org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-    // queryObject.setParameterList( "cs", batch );
-    // List results = queryObject.list();
-    //
-    // for ( Object[] objects : ( List<Object[]> ) results ) {
-    // CompositeSequence c = ( CompositeSequence ) objects[0];
-    // Gene g = ( Gene ) objects[1];
-    // if ( !returnVal.containsKey( c ) ) {
-    // returnVal.put( c, new HashSet<Gene>() );
-    // }
-    // returnVal.get( c ).add( g );
-    // if ( ++count % 2000 == 0 ) {
-    // log.info( count + " result rows processed" );
-    // }
-    // }
-    // } catch ( org.hibernate.HibernateException ex ) {
-    // throw super.convertHibernateAccessException( ex );
-    // }
-    // return count;
-    // }
 
     /*
      * (non-Javadoc)

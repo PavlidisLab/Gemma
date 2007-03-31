@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +50,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
@@ -569,6 +567,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
+    // FIXME, EE is not needed as a parameter.
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
@@ -577,32 +576,19 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         assert quantitationType.getId() != null && expressionExperiment.getId() != null;
 
-        // FIXME: this would be much faster done as a batch query (with "in") instead of once per design element.
-        // FIXME EE is not needed as a paramter because QT belongs to EE.
         final String queryString = "select dev from DesignElementDataVectorImpl as dev inner join dev.designElement as de "
-                + " where de = :de and dev.quantitationType = :qt";
+                + " where de in (:de) and dev.quantitationType = :qt";
 
-        Collection<DesignElementDataVector> vectors = new LinkedHashSet<DesignElementDataVector>();
-        for ( DesignElement designElement : ( Collection<DesignElement> ) designElements ) {
-            assert designElement.getId() != null;
-            try {
-                org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-                queryObject.setParameter( "de", designElement );
-                queryObject.setParameter( "qt", quantitationType );
-                List results = queryObject.list();
-                if ( results == null || results.size() == 0 ) continue;
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one design element data vector found for " + designElement + " in "
-                                    + expressionExperiment + " for " + quantitationType );
-                }
-                DesignElementDataVector result = ( DesignElementDataVector ) results.iterator().next();
-                vectors.add( result );
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw super.convertHibernateAccessException( ex );
-            }
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "de", designElements );
+            queryObject.setParameter( "qt", quantitationType );
+            queryObject.setCacheable( true );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
         }
-        return vectors;
+
     }
 
     /*

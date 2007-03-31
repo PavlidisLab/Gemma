@@ -54,6 +54,7 @@ import ubic.gemma.util.BusinessKey;
  */
 public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
 
+    private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
     static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
 
     /*
@@ -375,7 +376,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
-                    if ( ++i % 2000 == 0 ) {
+                    if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
                         log.info( "CS assoc thaw progress: " + i + "/" + numToDo + " ... (" + timer.getTime()
                                 + " ms elapsed)" );
                         try {
@@ -1063,8 +1064,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
-    
+
     @Override
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
             throws Exception {

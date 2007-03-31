@@ -26,7 +26,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Represents a matrix of data from an expression experiment.

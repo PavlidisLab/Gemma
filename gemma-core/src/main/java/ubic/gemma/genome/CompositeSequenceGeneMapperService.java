@@ -19,6 +19,7 @@
 package ubic.gemma.genome;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean name="compositeSequenceGeneMapperService"
+ * @spring.bean id="compositeSequenceGeneMapperService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="geneDao" ref="geneDao"
@@ -43,18 +44,19 @@ import ubic.gemma.model.genome.gene.GeneService;
 public class CompositeSequenceGeneMapperService {
     private Log log = LogFactory.getLog( this.getClass() );
 
-    GeneService geneService = null;
+    GeneService geneService;
 
-    CompositeSequenceService compositeSequenceService = null;
+    CompositeSequenceService compositeSequenceService;
 
     GeneDao geneDao = null;
 
     /**
      * @param officialSymbols
+     * @param arrayDesigns to look in
      * @return LinkedHashMap<Gene, Collection<CompositeSequence>>
      */
     public LinkedHashMap<Gene, Collection<CompositeSequence>> getCompositeSequencesForGenesByOfficialSymbols(
-            Collection<String> officialSymbols ) {
+            Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
 
         LinkedHashMap<String, Collection<Gene>> genesMap = findGenesByOfficialSymbols( officialSymbols );
 
@@ -67,7 +69,15 @@ public class CompositeSequenceGeneMapperService {
             Collection<Gene> genes = genesMap.get( officialSymbol );
             for ( Gene g : genes ) {
                 Collection<CompositeSequence> compositeSequences = this.getCompositeSequencesByGeneId( g.getId() );
-                compositeSequencesForGeneMap.put( g, compositeSequences );
+                for ( CompositeSequence sequence : compositeSequences ) {
+                    if ( arrayDesigns.contains( sequence.getArrayDesign() ) ) {
+                        if ( compositeSequencesForGeneMap.get( g ) == null ) {
+                            compositeSequencesForGeneMap.put( g, new HashSet<CompositeSequence>() );
+                        }
+                        compositeSequencesForGeneMap.get( g ).add( sequence );
+                    }
+                }
+
             }
         }
         return compositeSequencesForGeneMap;
