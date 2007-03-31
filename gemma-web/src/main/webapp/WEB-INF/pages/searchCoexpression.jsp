@@ -35,9 +35,6 @@ Results for
 </h2>
 <hr>
 
-<span  style="background-color:#DDDDDD;border-width:1px;"><img src="/Gemma/spark?type=bar&width=111&height=10&color=black&spacing=0&data=1,1,1,1,1,1,1,1,1,1,1,20,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,20,1,1,1,20,1,1,1,1,1,1,1,20,1,1,1,1,1,1,20,1,1,1,1,1,1,1" /></span>
-
-
 	<h4>
 
 			<a href="/Gemma/searchCoexpression.html?
