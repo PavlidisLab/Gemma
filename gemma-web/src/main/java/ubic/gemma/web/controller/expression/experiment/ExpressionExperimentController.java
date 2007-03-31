@@ -85,15 +85,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
-        String filter = request.getParameter( "filter" );
+        String searchString = request.getParameter( "filter" );
 
         // Validate the filtering search criteria.
-        if ( StringUtils.isBlank( filter ) ) {
-            this.saveMessage( request, "No search critera provided" );
+        if ( StringUtils.isBlank( searchString ) ) {
+            this.saveMessage( request, "No search criteria provided" );
             return showAll( request, response );
         }
 
-        Collection<ExpressionExperiment> searchResults = searchService.compassExpressionSearch( filter );
+        Collection<ExpressionExperiment> searchResults = searchService.expressionExperimentSearch( searchString );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results." );
@@ -101,7 +101,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         if ( searchResults.size() == 1 ) {
-            this.saveMessage( request, "Search Criteria: " + filter + "; " + searchResults.size()
+            this.saveMessage( request, "Search Criteria: " + searchString + "; " + searchResults.size()
                     + " Datasets matched." );
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                     + searchResults.iterator().next().getId() ) );
@@ -111,7 +111,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         for ( ExpressionExperiment ee : searchResults )
             list += ee.getId() + ",";
 
-        this.saveMessage( request, "Search Criteria: " + filter + "; " + searchResults.size() + " Datasets matched." );
+        this.saveMessage( request, "Search Criteria: " + searchString + "; " + searchResults.size()
+                + " Datasets matched." );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
                 + list ) );
     }

@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
@@ -76,6 +77,7 @@ public class SearchService {
     private GeneService geneService;
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
+    private ExpressionExperimentService expressionExperimentService;
     private BioSequenceService bioSequenceService;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
     private Compass geneBean;
@@ -291,20 +293,57 @@ public class SearchService {
      * @param query
      * @return
      */
-    public Collection<ExpressionExperiment> compassExpressionSearch( final String query ) {
+    public Collection<ExpressionExperiment> compassExpressionSearch( String query ) {
 
         CompassSearchResults searchResults;
 
         CompassTemplate template = new CompassTemplate( eeBean );
-
+        final String tq = StringUtils.strip( query );
         searchResults = ( CompassSearchResults ) template.execute(
                 CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
                     public Object doInCompass( CompassSession session ) throws CompassException {
-                        return performSearch( query, session );
+                        return performSearch( tq, session );
                     }
                 } );
 
         return convert2ExpressionList( searchResults.getHits() );
+    }
+
+    /**
+     * @param query
+     * @return
+     */
+    public Collection<ExpressionExperiment> expressionExperimentSearch( final String query ) {
+
+        String tq = StringUtils.strip( query );
+
+        Collection<ExpressionExperiment> results = expressionExperimentDbSearch( tq );
+
+        results.addAll( compassExpressionSearch( tq ) );
+
+        return results;
+    }
+
+    /**
+     * Does search on exact string by: id, name and short name.
+     * 
+     * @param query
+     * @return
+     */
+    public Collection<ExpressionExperiment> expressionExperimentDbSearch( final String query ) {
+        String tq = StringUtils.strip( query );
+        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
+        ExpressionExperiment ee = expressionExperimentService.findByName( tq );
+        if ( ee != null ) results.add( ee );
+        ee = expressionExperimentService.findByShortName( tq );
+        if ( ee != null ) results.add( ee );
+        try {
+            ee = expressionExperimentService.findById( new Long( tq ) );
+            if ( ee != null ) results.add( ee );
+        } catch ( NumberFormatException e ) {
+            // noop
+        }
+        return results;
     }
 
     /**
@@ -515,6 +554,10 @@ public class SearchService {
     public void setCompositeSequenceGeneMapperService(
             CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
         this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
 }
