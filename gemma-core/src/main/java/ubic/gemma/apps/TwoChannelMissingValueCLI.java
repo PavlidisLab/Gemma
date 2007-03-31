@@ -175,7 +175,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
 
         log.info( "Got " + ee + ", thawing..." );
-        TwoChannelMissingValues tcmv = new TwoChannelMissingValues();
 
         log.info( "Computing missing value data.." );
 
@@ -204,6 +203,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
     }
 
+    TwoChannelMissingValues tcmv;
+
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -216,6 +217,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         if ( hasOption( "force" ) ) {
             this.force = true;
         }
+        tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
         // this.designElementDataVectorService = ( DesignElementDataVectorService ) getBean(
         // "designElementDataVectorService" );
     }
