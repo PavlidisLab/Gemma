@@ -153,8 +153,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         } else if ( taxon != null ) {
             log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** " );
-            Collection<String> errorObjects = new HashSet<String>();
-            Collection<String> persistedObjects = new HashSet<String>();
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
@@ -173,7 +171,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     try {
                         arrayDesignService.thaw( design );
                         arrayDesignSequenceAlignmentService.processArrayDesign( design );
-                        persistedObjects.add( design.getName() );
+                        successObjects.add( design.getName() );
                         audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
                     } catch ( Exception e ) {
                         errorObjects.add( design + ": " + e.getMessage() );
@@ -182,7 +180,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     }
                 }
             }
-            summarizeProcessing( errorObjects, persistedObjects );
+            summarizeProcessing();
         } else {
             bail( ErrorCode.MISSING_ARGUMENT );
         }

@@ -21,10 +21,10 @@
 	onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
 <display:table pagesize="50" name="expressionExperiments" sort="list"
-	class="list" requestURI="" id="expressionExperimentList"
+	class="list" requestURI="" id="expressionExperimentList" defaultsort="1"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-	<display:column property="nameLink" sortable="true" sortProperty="name"
+	<display:column property="nameLink" sortable="true" sortProperty="name" 
 		titleKey="expressionExperiment.name"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
@@ -32,7 +32,7 @@
 		titleKey="expressionExperiment.shortName" />
 
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="arrayDesignLink" sortable="true"
+		<display:column property="arrayDesignLink" sortable="true" 
 			defaultorder="descending" title="Arrays"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	</authz:authorize>

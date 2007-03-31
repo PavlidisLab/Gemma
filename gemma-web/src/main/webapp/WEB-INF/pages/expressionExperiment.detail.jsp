@@ -2,24 +2,46 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
-<title>Dataset details <%
-if ( expressionExperiment.getName() != null ) {
-%>: <jsp:getProperty name="expressionExperiment" property="name" /> <%
+<title>
+	Expression experiment <%
+	if ( expressionExperiment.getName() != null ) {
+	%>: <jsp:getProperty name="expressionExperiment" property="name" /> <%
  }
  %>
 </title>
-<h2>
-	<fmt:message key="expressionExperiment.details" />
-</h2>
+
+<form style="float: right;" name="ExpresssionExperimentFilter"
+	action="filterExpressionExperiments.html" method="POST">
+	<a class="helpLink" href="?"
+		onclick="showHelpTip(event, 'Search for another experiment'); return false"><img
+			src="<c:url value="/images/help.png"/>" alt="help"> </a>
+	<input type="text" name="filter" size="38" />
+	<input type="submit" value="Find a dataset" />
+</form>
+
+<content tag="heading">
+Experiment detail view for
+<%
+if ( expressionExperiment.getName() != null ) {
+%>
+:
+<jsp:getProperty name="expressionExperiment" property="name" />
+-
+<%
+}
+%>
+<jsp:getProperty name="expressionExperiment" property="shortName" />
+&nbsp;
 <a class="helpLink" href="?"
-	onclick="showHelpTip(event, 'This page shows the details for a specific expression experiment; further details can be obtained by following the links on this page.'); return false">Help</a>
+	onclick="showHelpTip(event, 'This page shows the details for a specific expression experiment; further details can be obtained by following the links on this page.'); return false"><img
+		src="<c:url value="/images/help.png"/>" alt="help"> </a>
+</content>
+
 
 
 <table width="100%" cellspacing="10">
 	<tr>
-		<td class="label" >
+		<td class="label">
 			<fmt:message key="expressionExperiment.name" />
 		</td>
 		<td>
@@ -43,7 +65,7 @@ if ( expressionExperiment.getName() != null ) {
 			<%
 			if ( expressionExperiment.getDescription() != null ) {
 			%>
-			<div class="clob">
+			<div class="clob" style="width:40%;">
 				<jsp:getProperty name="expressionExperiment" property="description" />
 			</div>
 
@@ -152,13 +174,16 @@ if ( expressionExperiment.getName() != null ) {
 			</td>
 		</tr>
 	</authz:authorize>
-	<tr><td class="label">
+	<tr>
+		<td class="label">
 			Profiles
 		</td>
-		<td>${designElementDataVectorCount} <a class="helpLink" href="?"
-					onclick="showHelpTip(event, 
+		<td>
+			${designElementDataVectorCount}
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 
 				'The total number of expression profiles for this experiment, combined across all quantitation types.'); return false">
-					<img src="/Gemma/images/help.png" /> </a>
+				<img src="/Gemma/images/help.png" /> </a>
 		</td>
 	</tr>
 	<tr>
@@ -167,9 +192,10 @@ if ( expressionExperiment.getName() != null ) {
 		<td>
 			<%
 			out.print( expressionExperiment.getBioAssays().size() );
-			%> <a
+			%>
+			<a
 				href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
-				<img src="/Gemma/images/magnifier.png" /></a> 
+				<img src="/Gemma/images/magnifier.png" /> </a>
 		</td>
 
 	</tr>
@@ -181,7 +207,7 @@ if ( expressionExperiment.getName() != null ) {
 				<c:out value="${ arrayDesign.name}" />
 				<a
 					href="/Gemma/arrays/showArrayDesign.html?id=<c:out value="${ arrayDesign.id}" />">
-					<img src="/Gemma/images/magnifier.png" /></a>
+					<img src="/Gemma/images/magnifier.png" /> </a>
 				<br />
 			</c:forEach>
 
@@ -192,98 +218,74 @@ if ( expressionExperiment.getName() != null ) {
 			<td class="label">
 				Coexpression Links
 			<td>
-				<c:if test="${ eeCoexpressionLinks != null}" >
+				<c:if test="${ eeCoexpressionLinks != null}">
 				${eeCoexpressionLinks}
 				</c:if>
-				<c:if test="${ eeCoexpressionLinks == null}" >
+				<c:if test="${ eeCoexpressionLinks == null}">
 					(count not available)
-				</c:if>				
+				</c:if>
 			</td>
 		</tr>
 	</authz:authorize>
 </table>
 
-<authz:authorize ifAnyGranted="admin">
+
 	<%
 	if ( expressionExperiment.getExperimentalDesign() != null ) {
 	%>
 	<h3>
 		<fmt:message key="experimentalDesign.title" />
-		:
+		&nbsp;
 		<a
 			href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
 			<%
 			out.print( expressionExperiment.getExperimentalDesign().getName() );
-			%> (view) </a>
+			%>
+			<img src="/Gemma/images/magnifier.png" />
+		</a>
 	</h3>
-	<p>
-		<b>Description:</b>
-		<%
-		                            out.print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(),
-		                            100 ) );
-		%>
-		<BR />
-		<BR />
-		This experimental design has
-		<%
-		out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
-		%>
-		experimental factors.
-	</p>
-	<%
-	} else {
-	%>
-			No experimental design information for this experiment.
-			<%
-	}
-	%>
 
-	<%
-	if ( expressionExperiment.getAnalyses().size() > 0 ) {
-	%>
-	<h3>
-		<fmt:message key="analyses.title" />
-	</h3>
-	<display:table name="expressionExperiment.analyses" class="list"
-		requestURI="" id="analysisList" pagesize="10"
-		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-		<display:column property="name" sortable="true" maxWords="20"
-			href="/Gemma/experimentalDesign/showExperimentalDesign.html"
-			paramId="name" paramProperty="name" />
-		<display:column property="description" sortable="true" maxWords="100" />
-		<display:setProperty name="basic.empty.showtable" value="false" />
-	</display:table>
+	<Gemma:eeDesign
+		experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
 	<%
 	}
 	%>
+	<authz:authorize ifAnyGranted="admin">
 	<%
 	if ( expressionExperiment.getSubsets().size() > 0 ) {
 	%>
-	<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
+	<div
+		style="margin:0px 0px 0px 20px;><script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 	<h3>
-		<fmt:message key="expressionExperimentSubsets.title" />
+		<fmt:message key="expressionExperimentSubsets.title" />&nbsp;<a class="helpLink" href="?"
+	onclick="showHelpTip(event, 'Subsets are much like experimental design factors...'); return false"><img
+		src="<c:url value="/images/help.png"/>" alt="help"> </a>
 	</h3>
 	<aazone tableId="subsetList" zone="subsetTable" />
 	<aa:zone name="subsetTable">
-		<display:table name="expressionExperiment.subsets" class="list"
+		<display:table name="expressionExperiment.subsets" class="list" defaultsort="1" 
 			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
-			id="subsetList" pagesize="10"
+			id="subsetList" pagesize="10" 
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
-			<display:column property="nameLink" sortable="true" maxWords="20"
+			<display:column defaultorder="ascending"  title="Factor" property="description" sortable="true" maxWords="100" />
+			<display:column title="Value" property="name" sortable="true" maxWords="20"
 				titleKey="expressionExperimentSubsets.name" />
-			<display:column property="description" sortable="true" maxWords="100" />
+			<display:column sortable="true" title="Assays" property="bioAssaySize" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
 	</aa:zone>
+	</div>
 	<%
 	}
 	%>
 </authz:authorize>
 
-<h3>Quantitation Types <a class="helpLink" href="?"
-					onclick="showHelpTip(event, 
+<h3>
+	Quantitation Types
+	<a class="helpLink" href="?"
+		onclick="showHelpTip(event, 
 				'Quantitation types are the different measurements available for this experiment.'); return false">
-					<img src="/Gemma/images/help.png" /> </a>
+		<img src="/Gemma/images/help.png" /> </a>
 </h3>
 <div id="tableContainer" class="tableContainer">
 	<display:table name="quantitationTypes" class="scrollTable"
@@ -296,8 +298,8 @@ if ( expressionExperiment.getName() != null ) {
 			titleKey="description" />
 		<display:column property="qtPreferredStatus" sortable="true"
 			maxWords="20" titleKey="quantitationType.preferred" />
-		<display:column property="qtRatioStatus" sortable="true"
-			maxWords="20" titleKey="quantitationType.ratio" />		
+		<display:column property="qtRatioStatus" sortable="true" maxWords="20"
+			titleKey="quantitationType.ratio" />
 		<display:column property="qtBackground" sortable="true" maxWords="20"
 			titleKey="quantitationType.background" />
 		<display:column property="qtBackgroundSubtracted" sortable="true"
@@ -306,7 +308,8 @@ if ( expressionExperiment.getName() != null ) {
 			titleKey="quantitationType.normalized" />
 		<display:column property="generalType" sortable="true" />
 		<display:column property="type" sortable="true" />
-		<display:column property="representation" sortable="true" title="Repr." />
+		<display:column property="representation" sortable="true"
+			title="Repr." />
 		<display:column property="scale" sortable="true" />
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>

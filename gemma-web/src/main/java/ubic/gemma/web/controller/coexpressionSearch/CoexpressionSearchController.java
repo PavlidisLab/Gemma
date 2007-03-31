@@ -55,6 +55,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -302,37 +303,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedGenes, new CoexpressionComparator() );
 
-        StopWatch overlapWatch = new StopWatch();
-        overlapWatch.start();
-        log.info( "Calculating go overlap...." );
-        // calculate the goOverlap for the 1st 25 genes
-        Collection<Long> overlapIds = new HashSet<Long>();
-        int i = 0;
-        for ( CoexpressionValueObject cvo : coexpressedGenes ) {
-            overlapIds.add( cvo.getGeneId() );
-            if ( i++ > MAX_OVERLAP ) break;
-        }
-
-        Map<Long, Collection<OntologyEntry>> overlap = geneOntologyService.calculateGoTermOverlap( csc.getSourceGene(),
-                overlapIds );
-
-        Integer numSourceGeneGoTerms;
-        if ( overlap == null ) // query gene had no go terms
-            numSourceGeneGoTerms = 0;
-        else {
-            numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
-
-            if ( overlap.keySet().size() > 1 ) {
-                for ( CoexpressionValueObject cvo : coexpressedGenes ) {
-                    cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
-                    cvo.setPossibleOverlap( numSourceGeneGoTerms );
-                }
-            }
-        }
-        Long overlapTime = overlapWatch.getTime();
-        overlapWatch.stop();
-        log.info( "took " + overlapTime / 1000 + "s to calculate GO overlap" );
-
         // load expression experiment value objects
         Collection<Long> eeIds = new HashSet<Long>();
         Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
@@ -355,6 +325,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         if ( coexpressedGenes.size() == 0 ) {
             this.saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
+        int numSourceGeneGoTerms = computeGoOverlap( csc, coexpressedGenes );
 
         Long numUsedExpressionExperiments = new Long( coexpressions.getNumberOfUsedExpressonExperiments() );
         Long numPositiveCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
@@ -557,6 +528,49 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         this.expressionExperimentService = expressionExperimentService;
     }
 
+    private int computeGoOverlap( CoexpressionSearchCommand csc, List<CoexpressionValueObject> coexpressedGenes )
+            throws Exception {
+
+        // streamlining: don't compute this if we aren't loading GO into memory.
+        boolean loadOntology = ConfigUtils.getBoolean( "loadOntology" );
+        if ( !loadOntology ) {
+            log.warn( "Won't compute GO overlaps, it will take too long without GO cache." );
+            return 0;
+        }
+
+        StopWatch overlapWatch = new StopWatch();
+        overlapWatch.start();
+        log.info( "Calculating go overlap...." );
+        // calculate the goOverlap for the 1st 25 genes
+        Collection<Long> overlapIds = new HashSet<Long>();
+        int i = 0;
+        for ( CoexpressionValueObject cvo : coexpressedGenes ) {
+            overlapIds.add( cvo.getGeneId() );
+            if ( i++ > MAX_OVERLAP ) break;
+        }
+
+        Map<Long, Collection<OntologyEntry>> overlap = geneOntologyService.calculateGoTermOverlap( csc.getSourceGene(),
+                overlapIds );
+
+        Integer numSourceGeneGoTerms;
+        if ( overlap == null ) // query gene had no go terms
+            numSourceGeneGoTerms = 0;
+        else {
+            numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
+
+            if ( overlap.keySet().size() > 1 ) {
+                for ( CoexpressionValueObject cvo : coexpressedGenes ) {
+                    cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
+                    cvo.setPossibleOverlap( numSourceGeneGoTerms );
+                }
+            }
+        }
+        Long overlapTime = overlapWatch.getTime();
+        overlapWatch.stop();
+        log.info( "took " + overlapTime / 1000 + "s to calculate GO overlap" );
+        return numSourceGeneGoTerms;
+    }
+
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             final HttpServletRequest request, final HttpServletResponse response, final Object command,
@@ -590,37 +604,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 // sort coexpressed genes by dataset count
                 Collections.sort( coexpressedGenes, new CoexpressionComparator() );
 
-                StopWatch overlapWatch = new StopWatch();
-                overlapWatch.start();
-                log.info( "Calculating go overlap...." );
-                // calculate the goOverlap for the 1st 25 genes
-                int i = 0;
-                Collection<Long> overlapIds = new HashSet<Long>();
-                for ( CoexpressionValueObject cvo : coexpressedGenes ) {
-                    i++;
-                    if ( i >= 25 ) break;
-                    overlapIds.add( cvo.getGeneId() );
-                }
-
-                Map<Long, Collection<OntologyEntry>> overlap = geneOntologyService.calculateGoTermOverlap( csc
-                        .getSourceGene(), overlapIds );
-
-                Integer numSourceGeneGoTerms;
-                if ( overlap == null ) // query gene had no go terms
-                    numSourceGeneGoTerms = 0;
-                else {
-                    numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
-
-                    if ( overlap.keySet().size() > 1 ) {
-                        for ( CoexpressionValueObject cvo : coexpressedGenes ) {
-                            cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
-                            cvo.setPossibleOverlap( numSourceGeneGoTerms );
-                        }
-                    }
-                }
-                Long overlapTime = overlapWatch.getTime();
-                overlapWatch.stop();
-                this.saveMessage( "took " + overlapTime / 1000 + "s to calculate GO overlap" );
+                computeGoOverlap( csc, coexpressedGenes );
 
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();
@@ -702,6 +686,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 return mav;
 
             }
+
         };
     }
 

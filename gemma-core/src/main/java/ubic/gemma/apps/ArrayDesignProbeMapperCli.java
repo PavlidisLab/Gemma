@@ -2,7 +2,6 @@ package ubic.gemma.apps;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -86,8 +85,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( this.taxon != null ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
-            Collection<String> errorObjects = new HashSet<String>();
-            Collection<String> persistedObjects = new HashSet<String>();
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
@@ -105,7 +102,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     try {
                         arrayDesignService.thaw( design );
                         arrayDesignProbeMapperService.processArrayDesign( design );
-                        persistedObjects.add( design.getName() );
+                        successObjects.add( design.getName() );
                         audit( design, "Part of a batch job" );
                     } catch ( Exception e ) {
                         errorObjects.add( design + ": " + e.getMessage() );
@@ -114,7 +111,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     }
                 }
             }
-            summarizeProcessing( errorObjects, persistedObjects );
+            summarizeProcessing();
         } else {
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 

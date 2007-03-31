@@ -30,27 +30,19 @@
 		<decorator:getProperty property="body.id" writeEntireProperty="true"/>
 		<decorator:getProperty property="body.class" writeEntireProperty="true"/>>
 
-		<%--		<div id="logo">
-			<a href="<%=request.getContextPath()%>"> <img src="<%=request.getContextPath()%>/images/logo/gemOnlyTiny.gif" />
-			</a>
-		</div>--%>
-
 		<div id="page">
 
 			<div id="header" class="clearfix">
 				<jsp:include page="/common/header.jsp" />
-				<c:if test="${true}">
-
-				</c:if>
 			</div>
 
 			<div id="content" class="clearfix">
 
 				<div id="main">
 					<%@ include file="/common/messages.jsp"%>
-					<h1>
+					<h2>
 						<decorator:getProperty property="page.heading" />
-					</h1>
+					</h2>
 					<decorator:body />
 				</div>
 
@@ -76,7 +68,6 @@
 						</h2>
 						<jsp:include page="/WEB-INF/pages/menu.jsp" />
 					</div>
-					<hr />
 				</div>
 				<%-- end nav --%>
 

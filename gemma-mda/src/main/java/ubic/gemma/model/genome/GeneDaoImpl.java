@@ -223,6 +223,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
         Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
 
+        List<Long> allEEIds = new ArrayList<Long>();
+        for ( ExpressionExperimentValueObject eevo : coexpressions.getExpressionExperiments() ) {
+            allEEIds.add( eevo.getId() );
+        }
+        Collections.sort( allEEIds );
+
         for ( Long geneId : geneMap.keySet() ) {
             CoexpressionValueObject coExValObj = geneMap.get( geneId );
 
@@ -236,6 +242,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             // the query gene
             nonspecificEE.removeAll( specificEE );
             coExValObj.setNonspecificEE( nonspecificEE );
+
+            coExValObj.computeExperimentBits( allEEIds );
 
             boolean added = false;
             if ( coExValObj.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {

@@ -69,9 +69,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     CompositeSequenceService compositeSequenceService;
     GeneOntologyService oeService;
 
-    Collection<String> errorObjects = new HashSet<String>();
-    Collection<String> successObjects = new HashSet<String>();
-
     // file info
     String batchFileName;
 
@@ -258,7 +255,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         }
 
-        summarizeProcessing( errorObjects, successObjects );
+        summarizeProcessing();
 
     }
 

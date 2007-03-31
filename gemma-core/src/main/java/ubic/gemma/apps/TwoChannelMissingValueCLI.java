@@ -22,7 +22,6 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -80,6 +79,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 "Replace existing missing value data (two-color experiments only)" ).create( "force" );
 
         addOption( force );
+
+        addDateOption();
     }
 
     /*
@@ -94,22 +95,19 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         Exception err = processCommandLine( "Two-channel missing values", args );
         if ( err != null ) return err;
 
-        Collection<String> errorObjects = new HashSet<String>();
-        Collection<String> persistedObjects = new HashSet<String>();
         if ( doAll ) {
 
             Collection<ExpressionExperiment> ees = this.getExpressionExperimentService().loadAll();
             for ( ExpressionExperiment ee : ees ) {
                 try {
-                    processExperiment( persistedObjects, ee );
-
+                    processExperiment( ee );
                 } catch ( Exception e ) {
                     errorObjects.add( ee + ": " + e.getMessage() );
                     log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
                 }
             }
 
-            summarizeProcessing( errorObjects, persistedObjects );
+            summarizeProcessing();
 
         } else {
             ExpressionExperiment ee = locateExpressionExperiment( this.getExperimentShortName() );
@@ -119,7 +117,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            processExperiment( persistedObjects, ee );
+            processExperiment( ee );
 
         }
 
@@ -127,7 +125,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     @SuppressWarnings("unchecked")
-    private void processExperiment( Collection<String> persistedObjects, ExpressionExperiment ee ) {
+    private void processExperiment( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService().getArrayDesignsUsed( ee );
 
         for ( ArrayDesign design : arrayDesignsUsed ) {
@@ -139,7 +137,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 } else {
                     processExperiment( ee, design );
                 }
-                persistedObjects.add( ee.toString() );
+                successObjects.add( ee.toString() );
             }
         }
 
@@ -154,6 +152,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     private void processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<QuantitationType> types = this.getExpressionExperimentService().getQuantitationTypes( ee );
+
+        if ( !needToRun( ee, MissingValueAnalysisEvent.class ) ) return;
 
         QuantitationType previousMissingValueQt = null;
         for ( QuantitationType qType : types ) {

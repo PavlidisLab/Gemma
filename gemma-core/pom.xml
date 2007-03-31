@@ -421,6 +421,12 @@
 			<version>1.5.2</version>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+			<groupId>spark</groupId>
+			<artifactId>spark</artifactId>
+			<version>1.2</version>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 	<build>
 		<directory>target</directory>

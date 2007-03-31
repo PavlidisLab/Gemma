@@ -42,7 +42,7 @@ public class CoexpressionCollectionValueObject {
     private int positiveStringencyLinkCount; // the number of links for this coexpression that passed the stringency
     // requirements
     private int negativeStringencyLinkCount;
-    private Map<Long, ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were
+    private Map<Long, ExpressionExperimentValueObject> expressionExperiments; // the expression experiments that were used.
 
     // the number of actual genes, predicted genes, and probe aligned regions in the query, unfiltered by stringency
     private int numGenes;

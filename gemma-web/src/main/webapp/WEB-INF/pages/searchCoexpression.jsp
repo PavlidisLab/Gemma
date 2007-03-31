@@ -33,6 +33,11 @@ Results for
 	(<c:out value="${sourceGene.officialName}" />) <br />
 	with <c:out value="${numSourceGeneGoTerms}" /> GO Terms 
 </h2>
+<hr>
+
+<span  style="background-color:#DDDDDD;border-width:1px;"><img src="/Gemma/spark?type=bar&width=111&height=10&color=black&spacing=0&data=1,1,1,1,1,1,1,1,1,1,1,20,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,20,1,1,1,20,1,1,1,1,1,1,1,20,1,1,1,1,1,1,20,1,1,1,1,1,1,1" /></span>
+
+
 	<h4>
 
 			<a href="/Gemma/searchCoexpression.html?
@@ -45,6 +50,8 @@ Results for
 			</a>
 
 	</h4>
+	
+		
 <table class="datasummary">
 	<tr>
 		<td colspan=2 align=center>
@@ -354,6 +361,9 @@ Results for
 	
 			var text2 = '<Gemma:help helpFile="CoexpressionSearchOverlapHelp.html"/>';
 			function getOverlapHelp(event) {showWideHelpTip(event,text2); }
+			
+			var text3 = '<Gemma:help helpFile="ExpressionExperimentBits.html"/>';
+			function getExpBitsHelp(event) {showWideHelpTip(event,text3); }
 		</script>
 				
 	
@@ -368,6 +378,8 @@ Results for
 					<img src='/Gemma/images/help.png' /> </a>" />	
 	<display:column property="goOverlap" sortable="true" title="go overlap % <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
 					<img src='/Gemma/images/help.png' /> </a>"  />
+	<display:column property="experimentBitImage" sortable="false" title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 

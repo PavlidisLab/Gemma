@@ -268,9 +268,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
                 log.info( "Loading experiments from " + this.fileName );
                 InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
                 BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
-                Collection<String> errorObjects = new HashSet<String>();
-                Collection<String> persistedObjects = new HashSet<String>();
                 String conf = null;
                 while ( ( conf = br.readLine() ) != null ) {
 
@@ -286,13 +283,13 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
                     try {
                         this.loadExperiment( conf );
                         log.info( "Successfully Loaded " + expName );
-                        persistedObjects.add( expName );
+                        successObjects.add( expName );
                     } catch ( Exception e ) {
                         errorObjects.add( expName + ": " + e.getMessage() );
                         log.error( "Failure loading " + expName );
                     }
                 }
-                summarizeProcessing( errorObjects, persistedObjects );
+                summarizeProcessing();
             }
         } catch ( IOException e ) {
             return e;

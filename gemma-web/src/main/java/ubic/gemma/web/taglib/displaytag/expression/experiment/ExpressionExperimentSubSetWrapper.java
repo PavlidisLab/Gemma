@@ -46,7 +46,15 @@ public class ExpressionExperimentSubSetWrapper extends TableDecorator {
         if ( name == null ) {
             name = "No name";
         }
-        return "<a href=\"showExpressionExperimentSubSet.html?id=" + object.getId() + "\"> "+ name + "</a>";
+        return "<a href=\"showExpressionExperimentSubSet.html?id=" + object.getId() + "\"> " + name + "</a>";
+    }
+
+    /**
+     * @return String
+     */
+    public String getBioAssaySize() {
+        ExpressionExperimentSubSet object = ( ExpressionExperimentSubSet ) getCurrentRowObject();
+        return "<a href=\"showExpressionExperimentSubSet.html?id=" + object.getId() + "\"> " + object.getBioAssays().size() + "</a>";
     }
 
 }

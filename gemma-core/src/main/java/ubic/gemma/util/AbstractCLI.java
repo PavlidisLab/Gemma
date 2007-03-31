@@ -20,6 +20,8 @@ package ubic.gemma.util;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.AlreadySelectedException;
@@ -34,11 +36,16 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
@@ -84,6 +91,8 @@ public abstract class AbstractCLI {
     protected String password;
     private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
     private Level originalLoggingLevel;
+
+    protected String mDate = null;
 
     public AbstractCLI() {
         this.buildStandardOptions();
@@ -504,6 +513,10 @@ public abstract class AbstractCLI {
             }
         }
 
+        if ( hasOption( "mdate" ) ) {
+            this.mDate = this.getOptionValue( "mdate" );
+        }
+
         configureLogging();
 
     }
@@ -521,5 +534,85 @@ public abstract class AbstractCLI {
         }
 
         log4jLogger.setLevel( this.originalLoggingLevel );
+    }
+
+    @SuppressWarnings("static-access")
+    protected void addDateOption() {
+        Option dateOption = OptionBuilder
+                .hasArg()
+                .withArgName( "mdate" )
+                .withDescription(
+                        "Constrain to run only on entities with analyses older than the given date. "
+                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                                + "If there is no record of when the analysis was last run, it will be run." ).create(
+                        "mdate" );
+
+        addOption( dateOption );
+    }
+
+    protected Collection<Object> errorObjects = new HashSet<Object>();
+    protected Collection<Object> successObjects = new HashSet<Object>();
+
+    /**
+     * @param errorObjects
+     * @param successObjects
+     */
+    protected void summarizeProcessing() {
+        if ( successObjects.size() > 0 ) {
+            StringBuilder buf = new StringBuilder();
+            buf.append( "\n---------------------\n   Processed:\n" );
+            for ( Object object : successObjects ) {
+                buf.append( "    " + object + "\n" );
+            }
+            buf.append( "---------------------\n" );
+
+            log.info( buf );
+        } else {
+            log.error( "No objects processed successfully!" );
+        }
+
+        if ( errorObjects.size() > 0 ) {
+            StringBuilder buf = new StringBuilder();
+            buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
+            for ( Object object : errorObjects ) {
+                buf.append( "    " + object + "\n" );
+            }
+            buf.append( "---------------------\n" );
+            log.error( buf );
+        }
+    }
+
+    /**
+     * @param ee
+     * @param eventClass
+     * @return
+     */
+    protected boolean needToRun( Auditable ee, Class<? extends AuditEventType> eventClass ) {
+        boolean needToRun = true;
+        Date skipIfLastRunLaterThan = getLimitingDate();
+        if ( skipIfLastRunLaterThan != null ) {
+            for ( AuditEvent event : ee.getAuditTrail().getEvents() ) {
+                if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                    // figure out if we need to run it.
+                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
+                        errorObjects.add( ee + ": " + " run more recently than " + skipIfLastRunLaterThan );
+                        needToRun = false;
+                    }
+                }
+            }
+        }
+        return needToRun;
+    }
+
+    /**
+     * @return
+     */
+    protected Date getLimitingDate() {
+        Date skipIfLastRunLaterThan = null;
+        if ( StringUtils.isNotBlank( mDate ) ) {
+            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
+            log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
+        }
+        return skipIfLastRunLaterThan;
     }
 }

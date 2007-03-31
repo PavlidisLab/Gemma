@@ -100,12 +100,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return showAll( request, response );
         }
 
+        if ( searchResults.size() == 1 ) {
+            this.saveMessage( request, "Search Criteria: " + filter + "; " + searchResults.size()
+                    + " Datasets matched." );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                    + searchResults.iterator().next().getId() ) );
+        }
+
         String list = "";
         for ( ExpressionExperiment ee : searchResults )
             list += ee.getId() + ",";
 
-        this.saveMessage( request, "Search Criteria: " + filter );
-        this.saveMessage( request, searchResults.size() + " Datasets matched your search." );
+        this.saveMessage( request, "Search Criteria: " + filter + "; " + searchResults.size() + " Datasets matched." );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
                 + list ) );
     }

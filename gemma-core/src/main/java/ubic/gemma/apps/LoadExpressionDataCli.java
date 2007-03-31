@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -121,9 +120,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         try {
 
-            Collection<String> errorObjects = new HashSet<String>();
-            Collection<String> persistedObjects = new HashSet<String>();
-
             GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
@@ -148,13 +144,13 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         Collection designs = geoService.fetchAndLoad( accession, true, true );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            persistedObjects.add( ( ( Describable ) object ).getName()
+                            successObjects.add( ( ( Describable ) object ).getName()
                                     + " ("
                                     + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next()
                                             .getAccession() + ")" );
                         }
                     } else {
-                        processAccession( errorObjects, persistedObjects, geoService, accession );
+                        processAccession( geoService, accession );
                     }
                 }
 
@@ -172,12 +168,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         continue;
                     }
 
-                    processAccession( errorObjects, persistedObjects, geoService, accession );
+                    processAccession( geoService, accession );
 
                 }
             }
 
-            summarizeProcessing( errorObjects, persistedObjects );
+            summarizeProcessing();
 
         } catch ( Exception e ) {
             log.error( e );
@@ -187,8 +183,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     }
 
     @SuppressWarnings("unchecked")
-    private void processAccession( Collection<String> errorObjects, Collection<String> persistedObjects,
-            GeoDatasetService geoService, String accession ) {
+    private void processAccession( GeoDatasetService geoService, String accession ) {
         try {
 
             if ( force ) {
@@ -199,7 +194,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
-                persistedObjects.add( ( ( Describable ) object ).getName() + " ("
+                successObjects.add( ( ( Describable ) object ).getName() + " ("
                         + ( ( ExpressionExperiment ) object ).getAccession().getAccession() + ")" );
             }
         } catch ( Exception e ) {

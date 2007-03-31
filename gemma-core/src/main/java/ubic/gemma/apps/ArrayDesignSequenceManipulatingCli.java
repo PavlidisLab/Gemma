@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -34,7 +33,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.AbstractSpringAwareCLI;
-import ubic.gemma.util.DateUtil;
 
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
@@ -49,8 +47,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     String arrayDesignName = null;
     AuditTrailService auditTrailService;
 
-    String mDate = null;
-
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
@@ -59,16 +55,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
         addOption( arrayDesignOption );
 
-        Option dateOption = OptionBuilder
-                .hasArg()
-                .withArgName( "mdate" )
-                .withDescription(
-                        "Constrain to run only on array designs with analyses older than the given date. "
-                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                                + "If there is no record of when the analysis was last run, it will be run." ).create(
-                        "mdate" );
-
-        addOption( dateOption );
+        addDateOption();
 
     }
 
@@ -101,9 +88,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         if ( this.hasOption( 'a' ) ) {
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
-        if ( hasOption( "mdate" ) ) {
-            this.mDate = this.getOptionValue( "mdate" );
-        }
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
@@ -117,18 +101,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         ae.setPerformer( UserDetailsServiceImpl.getCurrentUser() );
         ad.getAuditTrail().addEvent( ae );
         arrayDesignService.update( ad );
-    }
-
-    /**
-     * @return
-     */
-    protected Date getLimitingDate() {
-        Date skipIfLastRunLaterThan = null;
-        if ( StringUtils.isNotBlank( mDate ) ) {
-            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-            log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
-        }
-        return skipIfLastRunLaterThan;
     }
 
     /**
@@ -155,13 +127,13 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             }
         }
 
-        List<AuditEvent> sequenceAnalysisEvents = getEvents( arrayDesign, eventClass );
+        List<AuditEvent> events = getEvents( arrayDesign, eventClass );
 
-        if ( sequenceAnalysisEvents.size() == 0 ) {
+        if ( events.size() == 0 ) {
             return true; // always do it
         } else {
             // return true if the last time was older than the limit time.
-            AuditEvent lastEvent = sequenceAnalysisEvents.get( sequenceAnalysisEvents.size() - 1 );
+            AuditEvent lastEvent = events.get( events.size() - 1 );
             return lastEvent.getDate().before( skipIfLastRunLaterThan );
         }
     }
@@ -172,15 +144,15 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      * @return
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        List<AuditEvent> sequenceAnalysisEvents = new ArrayList<AuditEvent>();
+        List<AuditEvent> events = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
             if ( event == null ) continue;
             if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
-                sequenceAnalysisEvents.add( event );
+                events.add( event );
             }
         }
-        return sequenceAnalysisEvents;
+        return events;
     }
 
 }

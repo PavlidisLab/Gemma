@@ -156,7 +156,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                             }
                             String name = gene.getOfficialName();
                             if ( StringUtils.isNotBlank( name ) ) {
-                                buf.append( "&nbsp;" + name );
+                                buf.append( "&nbsp;&nbsp;&nbsp;" + name );
                             }
                         }
                     }

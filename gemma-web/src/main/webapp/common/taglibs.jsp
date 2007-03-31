@@ -14,6 +14,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ taglib uri="/WEB-INF/Gemma.tld" prefix="Gemma"%>
 <%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa"%>
-
+<%@ taglib uri="http://www.representqueens.com/taglibs/spark" prefix="spark" %>
 
 

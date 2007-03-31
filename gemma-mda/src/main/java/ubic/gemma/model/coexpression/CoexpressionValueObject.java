@@ -18,21 +18,22 @@
  */
 package ubic.gemma.model.coexpression;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
- * 
- * @author klc
- *
- * The coexpressionValueObject is used for storing the results of each gene that is coexpressed with the query gene.  
- * Keeps track of specificity, pValues, Scores, goTerms, overlap, stringency value.
- * This object is threadsafe.
+ * @author klc The coexpressionValueObject is used for storing the results of each gene that is coexpressed with the
+ *         query gene. Keeps track of specificity, pValues, Scores, goTerms, overlap, stringency value. This object is
+ *         threadsafe.
  */
 public class CoexpressionValueObject {
 
@@ -48,6 +49,29 @@ public class CoexpressionValueObject {
     private Collection<Long> nonspecificEE;
     private int possibleOverlap;
     private Collection<OntologyEntry> goOverlap;
+
+    private List<Integer> experimentBitList = new ArrayList<Integer>();
+
+    public String getExperimentBitList() {
+        return StringUtils.join( experimentBitList, "," );
+    }
+
+    /**
+     * Initialize the vector of 'bits'.
+     * 
+     * @param eeIds
+     */
+    public void computeExperimentBits( List<Long> eeIds ) {
+        experimentBitList.clear();
+        Collection<Long> thisUsed = expressionExperimentValueObjects.keySet();
+        for ( Long long1 : eeIds ) {
+            if ( thisUsed.contains( long1 ) ) {
+                experimentBitList.add( 20 );
+            } else {
+                experimentBitList.add( 1 );
+            }
+        }
+    }
 
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;

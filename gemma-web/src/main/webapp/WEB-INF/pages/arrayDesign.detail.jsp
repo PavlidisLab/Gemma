@@ -6,14 +6,13 @@
 	class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
 <!DOCTYPE html PUBLIC "-//W3C//Dtd html 4.01 transitional//EN">
-<title>Array Design Details</title>
+<title><jsp:getProperty name="arrayDesign" property="name" />
+</title>
 
-
-
-<content tag="heading">
-Details for
-<jsp:getProperty name="arrayDesign" property="name" />
-</content>
+<h2>
+	Details for
+	<jsp:getProperty name="arrayDesign" property="name" />
+</h2>
 
 
 <!--  Summary of array design associations -->

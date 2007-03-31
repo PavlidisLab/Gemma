@@ -52,7 +52,7 @@ public class CoexpressionWrapper extends TableDecorator {
         CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
         if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "-";
 
-        String overlap =  "" + ( ( cvo.getGoOverlap().size() ) * 100 ) / cvo.getPossibleOverlap() + "";
+        String overlap = "" + ( ( cvo.getGoOverlap().size() ) * 100 ) / cvo.getPossibleOverlap() + "";
         /*
          * <br /> <span style = 'font-size:smaller'> "; int i = 0; for(OntologyEntry oe: cvo.getGoOverlap()){ if ( ++i %
          * 5 == 0 ) { overlap += "<br />"; } overlap += oe.getAccession() + " "; } return overlap + "</span>";
@@ -146,6 +146,18 @@ public class CoexpressionWrapper extends TableDecorator {
         return StringUtils.join( dsLinks.toArray(), "," );
     }
 
+    public String getExperimentBitList() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        return object.getExperimentBitList();
+    }
+
+    public String getExperimentBitImage() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        int width = object.getExperimentBitList().length() - 1; // probably okay
+        return "<span  style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width + "&height=10&color=black&spacing=0&data="
+                + object.getExperimentBitList() + "\" /></span>";
+    }
+
     /**
      * Function to build a GET coexpression link, given a coexpressionValueObect
      * 
@@ -206,21 +218,21 @@ public class CoexpressionWrapper extends TableDecorator {
         }
     }
 
-    /**
-     * Helper function. Checks to see if the entry is in the given exclude list
-     * 
-     * @param excludeList
-     * @param entry
-     * @return
-     */
-    private boolean isInExcludeList( Collection<String> excludeList, Map.Entry entry ) {
-        for ( String exclude : excludeList ) {
-            if ( ( ( String ) entry.getKey() ).equals( exclude ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // /**
+    // * Helper function. Checks to see if the entry is in the given exclude list
+    // *
+    // * @param excludeList
+    // * @param entry
+    // * @return
+    // */
+    // private boolean isInExcludeList( Collection<String> excludeList, Map.Entry entry ) {
+    // for ( String exclude : excludeList ) {
+    // if ( ( ( String ) entry.getKey() ).equals( exclude ) ) {
+    // return true;
+    // }
+    // }
+    // return false;
+    // }
 
     /**
      * Helper function. Checks to see if the entry is in the given include list

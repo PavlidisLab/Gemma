@@ -203,6 +203,11 @@
         <load-on-startup>2</load-on-startup>
     </servlet>
     
+     <servlet>
+      <servlet-name>SparkLines</servlet-name>
+      <servlet-class>com.representqueens.spark.service.SparkController</servlet-class>
+    </servlet>
+    
     <!--  servlet mappings -->
  	<servlet-mapping>
 		<servlet-name>action</servlet-name>
@@ -259,6 +264,11 @@
 		<servlet-name>default</servlet-name>
 		<url-pattern>/s/*</url-pattern>
 	</servlet-mapping>
+	
+	<servlet-mapping>
+      <servlet-name>SparkLines</servlet-name>
+      <url-pattern>/spark</url-pattern>
+    </servlet-mapping>
     
     <session-config>
         <session-timeout>60</session-timeout>

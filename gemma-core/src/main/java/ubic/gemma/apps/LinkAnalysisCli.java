@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -454,8 +453,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                 .getBean( "probe2ProbeCoexpressionService" ) );
 
         if ( this.geneExpressionFile == null ) {
-            Collection<String> errorObjects = new HashSet<String>();
-            Collection<String> persistedObjects = new HashSet<String>();
             if ( this.geneExpressionList == null ) {
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
@@ -468,7 +465,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
                     try {
                         this.process( ee );
-                        persistedObjects.add( ee.toString() );
+                        successObjects.add( ee.toString() );
                         audit( ee, "Part of run on all EEs" );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
@@ -498,7 +495,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
                         try {
                             this.process( expressionExperiment );
-                            persistedObjects.add( expressionExperiment.toString() );
+                            successObjects.add( expressionExperiment.toString() );
                             audit( expressionExperiment, "From list in file: " + geneExpressionList );
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
@@ -511,7 +508,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                     return e;
                 }
             }
-            summarizeProcessing( errorObjects, persistedObjects );
+            summarizeProcessing();
         } else {
             ExpressionExperiment expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
 

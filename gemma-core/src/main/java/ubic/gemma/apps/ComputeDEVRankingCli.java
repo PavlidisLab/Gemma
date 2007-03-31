@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
@@ -34,6 +35,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
@@ -81,6 +84,7 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
 
         addOption( methodOption );
 
+        addDateOption();
     }
 
     DedvRankService dedvRankservice;
@@ -129,15 +133,13 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
                 .getBean( "expressionExperimentService" );
         ExpressionExperiment expressionExperiment = null;
 
-        Collection<String> errorObjects = new HashSet<String>();
-        Collection<String> persistedObjects = new HashSet<String>();
         if ( this.geneExpressionFile == null ) {
 
             if ( this.geneExpressionList == null ) {
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
-                    processExperiment( errorObjects, persistedObjects, ee );
+                    processExperiment( ee );
                 }
             } else {
                 try {
@@ -152,23 +154,23 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
                             errorObjects.add( shortName + " is not found in the database! " );
                             continue;
                         }
-                        processExperiment( errorObjects, persistedObjects, expressionExperiment );
+                        processExperiment( expressionExperiment );
                     }
                 } catch ( Exception e ) {
                     return e;
                 }
             }
-            summarizeProcessing( errorObjects, persistedObjects );
+            summarizeProcessing();
         } else {
             expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
             if ( expressionExperiment == null ) {
                 log.info( this.geneExpressionFile + " is not loaded yet!" );
                 return null;
             }
-            processExperiment( errorObjects, persistedObjects, expressionExperiment );
+            processExperiment( expressionExperiment );
         }
 
-        summarizeProcessing( errorObjects, persistedObjects );
+        summarizeProcessing();
 
         return null;
     }
@@ -178,11 +180,14 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
      * @param persistedObjects
      * @param ee
      */
-    private void processExperiment( Collection<String> errorObjects, Collection<String> persistedObjects,
-            ExpressionExperiment ee ) {
+    private void processExperiment( ExpressionExperiment ee ) {
         try {
+            boolean needToRun = true;
+            needToRun = needToRun( ee, RankComputationEvent.class );
+
+            if ( !needToRun ) return;
             this.dedvRankservice.computeDevRankForExpressionExperiment( ee, method );
-            persistedObjects.add( ee.toString() );
+            successObjects.add( ee.toString() );
             audit( ee, "" );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
