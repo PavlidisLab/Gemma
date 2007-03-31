@@ -19,7 +19,6 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -40,8 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
- * or column, returning data for a specific DesignElement or data for a specific BioAssay. The data itself is backed by
- * a SparseRaggedDoubleMatrix2DNamed, which allows for each row to contain a different number of values.
+ * or column, returning data for a specific DesignElement or data for a specific BioAssay.
  * 
  * @author pavlidis
  * @author keshav
@@ -65,10 +63,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
         init();
         this.bioAssayDimensions.addAll( bioAssayDimensions );
-        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimension,
                 quantitationType );
         vectorsToMatrix( selectedVectors );
+    }
+
+    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
+        init();
+        selectVectors( vectors );
+        vectorsToMatrix( vectors );
     }
 
     /**
@@ -80,7 +83,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
         this.bioAssayDimensions.addAll( bioAssayDimensions );
-        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimensions,
                 quantitationTypes );
         vectorsToMatrix( selectedVectors );
@@ -107,7 +109,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             QuantitationType quantitationType ) {
         init();
         this.bioAssayDimensions.add( bioAssayDimension );
-        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationType,
                 bioAssayDimension );
         vectorsToMatrix( selectedVectors );
@@ -134,7 +135,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
         this.bioAssayDimensions.addAll( bioAssayDimensions );
-        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
                 bioAssayDimensions );
         vectorsToMatrix( selectedVectors );
@@ -211,15 +211,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         }
 
         return dMatrix;
-    }
-
-    /**
-     * @return DoubleMatrixNamed
-     * @deprecated Supplied for backwards compatibility. Access to the data should be through the ExpressionDataMatrix
-     *             interface
-     */
-    public DoubleMatrixNamed getNamedMatrix() {
-        return this.matrix;
     }
 
     /*
@@ -352,12 +343,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
         for ( int j = 0; j < rows; j++ ) {
 
-            // print out the row label, which shows the composite sequences.
-            buf.append( this.getBioSequenceForRow( j ) + ":" );
-            for ( DesignElement de : this.rowDesignElementMapByInteger.get( j ) ) {
-                buf.append( de );
-                buf.append( "|" );
-            }
+            buf.append( this.rowDesignElementMapByInteger.get( j ) );
 
             for ( int i = 0; i < columns; i++ ) {
                 buf.append( "\t" + this.get( j, i ) );
@@ -390,6 +376,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
 
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+            matrix.addColumnName( j );
+        }
+
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
@@ -397,70 +387,57 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             }
         }
 
-        for ( int j = 0; j < matrix.columns(); j++ ) {
-            matrix.addColumnName( j );
-        }
-
         log.info( "Creating a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
 
         ByteArrayConverter bac = new ByteArrayConverter();
-        int rowNum = 0;
-        Collection<BioAssayDimension> seenDims = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
 
             DesignElement designElement = vector.getDesignElement();
             assert designElement != null : "No designelement for " + vector;
 
-            int currentRowNum;
-            int startIndex = 0;
-
             Integer rowIndex = this.rowElementMap.get( designElement );
 
-            // Rows are indexed by the underlying sequence.
-            if ( !matrix.containsRowName( rowIndex ) ) {
-                log.debug( "Adding row " + rowIndex );
-                matrix.addRowName( rowIndex );
-                currentRowNum = rowNum;
-                rowNum++; // only add a new row if we are looking at a new sequence.
-            } else {
-                // we're adding on to the row.
-                // This has to index by an integer, not a sequence.
-                log.debug( "Adding on to row " + rowIndex );
-                currentRowNum = matrix.getRowIndexByName( rowIndex );
-                double[] row = matrix.getRowByName( rowIndex );
-                for ( startIndex = 0; startIndex < row.length; startIndex++ ) {
-                    double d = row[startIndex];
-                    if ( d == Double.NEGATIVE_INFINITY ) break;
-                }
+            assert rowIndex != null;
 
-            }
+            // Rows are indexed by the underlying designElement.
+            // if ( log.isTraceEnabled() ) log.trace( "Adding row " + rowIndex );
+            matrix.addRowName( rowIndex );
 
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
-            Iterator<BioAssay> it = dimension.getBioAssays().iterator();
-            seenDims.add( dimension );
-            assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
-                    + dimension.getBioAssays().size();
+            Collection<BioAssay> bioAssays = dimension.getBioAssays();
+            assert bioAssays.size() == vals.length : "Expected " + vals.length + " got " + bioAssays.size();
 
-            for ( int i = startIndex; i < vals.length; i++ ) {
-                BioAssay bioAssay = it.next();
-                if ( vals[i] == Double.NEGATIVE_INFINITY ) {
+            Iterator it = bioAssays.iterator();
+
+            for ( int j = 0; j < bioAssays.size(); j++ ) {
+
+                BioAssay bioAssay = ( BioAssay ) it.next();
+                Integer column = this.columnAssayMap.get( bioAssay );
+
+                assert column != null;
+
+                // if ( log.isTraceEnabled() )
+                // log.trace( "Setting " + rowIndex + " " + column + " to " + vals[j] + " for " + bioAssay );
+
+                if ( vals[j] == Double.NEGATIVE_INFINITY ) {
                     throw new IllegalArgumentException(
-                            "Whoops, data contains -infinity, which we use as a special value at row " + currentRowNum
-                                    + " col=" + i );
+                            "Whoops, negative infinity is a special value, we can't have it in the data" );
                 }
-                matrix.setQuick( currentRowNum, columnAssayMap.get( bioAssay ), vals[i] );
+                matrix.setQuick( rowIndex, column, vals[j] );
             }
 
         }
-        log.info( seenDims.size() + " bioAssayDimensions observed" );
 
         // fill in remaining missing values.
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                if ( matrix.getQuick( i, j ) == Double.NEGATIVE_INFINITY ) matrix.setQuick( i, j, Double.NaN );
+                if ( matrix.getQuick( i, j ) == Double.NEGATIVE_INFINITY ) {
+                    // log.debug( "Missing value at " + i + " " + j );
+                    matrix.setQuick( i, j, Double.NaN );
+                }
             }
         }
 
@@ -504,18 +481,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
         int i = 0;
         for ( Integer row : ( List<Integer> ) rowsToUse ) {
-            Collection<DesignElement> elsForRow = sourceMatrix.getDesignElementsForRow( row );
-            for ( DesignElement element : elsForRow ) {
-                boolean addedRow = super.addToRowMaps( i, element );
-                Double[] rowVals = sourceMatrix.getRow( row );
-                for ( int j = 0; j < rowVals.length; j++ ) {
-                    Double val = rowVals[j];
-                    set( i, j, val );
-                }
-                if ( addedRow ) { // I believe this should always be true in tihs 'copy' operation
-                    i++;
-                }
+            DesignElement element = sourceMatrix.getDesignElementForRow( row );
+            super.addToRowMaps( i, element );
+            Double[] rowVals = sourceMatrix.getRow( row );
+            for ( int j = 0; j < rowVals.length; j++ ) {
+                Double val = rowVals[j];
+                set( i, j, val );
             }
+            i++;
         }
 
     }

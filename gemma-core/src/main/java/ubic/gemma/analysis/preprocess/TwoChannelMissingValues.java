@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -71,6 +72,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * 
  * @spring.bean id="twoChannelMissingValues"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @author pavlidis
  * @version $Id$
  */
@@ -79,6 +81,8 @@ public class TwoChannelMissingValues {
     private static Log log = LogFactory.getLog( TwoChannelMissingValues.class.getName() );
 
     private ExpressionExperimentService expressionExperimentService;
+
+    private DesignElementDataVectorService designElementDataVectorService;
 
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
@@ -97,6 +101,8 @@ public class TwoChannelMissingValues {
         expressionExperimentService.thawLite( expExp );
         Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors( expExp,
                 ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( expExp ) );
+
+        designElementDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions( ad );
@@ -157,62 +163,61 @@ public class TwoChannelMissingValues {
         int count = 0;
         for ( ExpressionDataMatrixRowElement element : signalChannelA.getRowElements() ) {
 
-            // there can be more than one designelement if two or more array designs were used.
-            for ( DesignElement designElement : element.getDesignElements() ) {
+            DesignElement designElement = element.getDesignElement();
 
-                DesignElementDataVector vect = DesignElementDataVector.Factory.newInstance();
-                vect.setQuantitationType( present );
-                vect.setExpressionExperiment( source );
-                vect.setDesignElement( designElement );
-                vect.setBioAssayDimension( bioAssayDimension );
+            DesignElementDataVector vect = DesignElementDataVector.Factory.newInstance();
+            vect.setQuantitationType( present );
+            vect.setExpressionExperiment( source );
+            vect.setDesignElement( designElement );
+            vect.setBioAssayDimension( bioAssayDimension );
 
-                // FIXME preferred.columns is slow.
-                int numCols = preferred.columns( designElement );
+            // FIXME preferred.columns is slow.
+            int numCols = preferred.columns( designElement );
 
-                boolean[] detectionCalls = new boolean[numCols];
-                Double[] prefRow = preferred.getRow( designElement );
+            boolean[] detectionCalls = new boolean[numCols];
+            Double[] prefRow = preferred.getRow( designElement );
 
-                Double[] signalA = signalChannelA != null ? signalChannelA.getRow( designElement ) : null;
-                Double[] signalB = signalChannelB != null ? signalChannelB.getRow( designElement ) : null;
-                Double[] bkgA = null;
-                Double[] bkgB = null;
+            Double[] signalA = signalChannelA != null ? signalChannelA.getRow( designElement ) : null;
+            Double[] signalB = signalChannelB != null ? signalChannelB.getRow( designElement ) : null;
+            Double[] bkgA = null;
+            Double[] bkgB = null;
 
-                if ( bkgChannelA != null ) bkgA = bkgChannelA.getRow( designElement );
+            if ( bkgChannelA != null ) bkgA = bkgChannelA.getRow( designElement );
 
-                if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
+            if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
 
-                // columsn only for this designelement!
+            // columsn only for this designelement!
 
-                for ( int col = 0; col < numCols; col++ ) {
+            for ( int col = 0; col < numCols; col++ ) {
 
-                    // If the "preferred" value is already missing, we retain that.
-                    Double pref = prefRow == null ? Double.NaN : prefRow[col];
-                    if ( pref == null || pref.isNaN() ) {
-                        detectionCalls[col] = false;
-                        continue;
-                    }
-
-                    Double bkgAV = 0.0;
-                    Double bkgBV = 0.0;
-
-                    if ( bkgA != null ) bkgAV = bkgA[col];
-
-                    if ( bkgB != null ) bkgBV = bkgB[col];
-
-                    Double sigAV = signalA[col] == null ? 0.0 : signalA[col];
-                    Double sigBV = signalB[col] == null ? 0.0 : signalB[col];
-
-                    boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
-                    detectionCalls[col] = call;
+                // If the "preferred" value is already missing, we retain that.
+                Double pref = prefRow == null ? Double.NaN : prefRow[col];
+                if ( pref == null || pref.isNaN() ) {
+                    detectionCalls[col] = false;
+                    continue;
                 }
 
-                vect.setData( converter.booleanArrayToBytes( detectionCalls ) );
-                results.add( vect );
+                Double bkgAV = 0.0;
+                Double bkgBV = 0.0;
 
-                if ( ++count % 4000 == 0 ) {
-                    log.info( count + " vectors examined for missing values" );
-                }
+                if ( bkgA != null ) bkgAV = bkgA[col];
+
+                if ( bkgB != null ) bkgBV = bkgB[col];
+
+                Double sigAV = signalA[col] == null ? 0.0 : signalA[col];
+                Double sigBV = signalB[col] == null ? 0.0 : signalB[col];
+
+                boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
+                detectionCalls[col] = call;
             }
+
+            vect.setData( converter.booleanArrayToBytes( detectionCalls ) );
+            results.add( vect );
+
+            if ( ++count % 4000 == 0 ) {
+                log.info( count + " vectors examined for missing values" );
+            }
+
         }
         log.info( "Finished: " + count + " vectors examined for missing values" );
         return results;
@@ -293,5 +298,9 @@ public class TwoChannelMissingValues {
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
     }
 }

@@ -20,7 +20,6 @@ package ubic.gemma.datastructure.matrix;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -36,10 +35,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Base class for ExpressionDataMatrix implementations.
@@ -65,23 +62,16 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
     // maps for designelements/sequences/rows
     protected Map<DesignElement, Integer> rowElementMap;
-    protected Map<BioSequence, Collection<Integer>> rowBioSequenceMap;
-    protected Map<Integer, Collection<DesignElement>> rowDesignElementMapByInteger;
-    protected Map<Integer, BioSequence> rowBioSequencemapByInteger;
+    protected Map<Integer, DesignElement> rowDesignElementMapByInteger;
 
     private Collection<QuantitationType> quantitationTypes;
-
-    private boolean allowVectorMerge;
 
     protected void init() {
         quantitationTypes = new HashSet<QuantitationType>();
         bioAssayDimensions = new HashSet<BioAssayDimension>();
 
-        // rowElements = new LinkedHashSet<DesignElement>(); // defunct.
         rowElementMap = new LinkedHashMap<DesignElement, Integer>();
-        rowBioSequenceMap = new LinkedHashMap<BioSequence, Collection<Integer>>();
-        rowDesignElementMapByInteger = new LinkedHashMap<Integer, Collection<DesignElement>>();
-        rowBioSequencemapByInteger = new LinkedHashMap<Integer, BioSequence>();
+        rowDesignElementMapByInteger = new LinkedHashMap<Integer, DesignElement>();
 
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
@@ -154,11 +144,11 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         return this.getRowElements().get( index );
     }
 
-    public BioSequence getBioSequenceForRow( int index ) {
-        return this.rowBioSequencemapByInteger.get( index );
-    }
+    // public BioSequence getBioSequenceForRow( int index ) {
+    // return this.rowBioSequencemapByInteger.get( index );
+    // }
 
-    public Collection<DesignElement> getDesignElementsForRow( int index ) {
+    public DesignElement getDesignElementForRow( int index ) {
         return this.rowDesignElementMapByInteger.get( index );
     }
 
@@ -217,8 +207,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
                 this.bioAssayDimensions.add( vector.getBioAssayDimension() );
-                boolean addedRow = addToRowMaps( i, designElement );
-                if ( addedRow ) i++;
+                addToRowMaps( i, designElement );
+                i++;
             }
         }
         return vectorsOfInterest;
@@ -243,8 +233,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
                 this.bioAssayDimensions.add( vector.getBioAssayDimension() );
-                boolean addedRow = addToRowMaps( i, designElement );
-                if ( addedRow ) i++;
+                addToRowMaps( i, designElement );
+                i++;
             }
         }
         return vectorsOfInterest;
@@ -296,8 +286,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                     vectorsOfInterest.add( vector );
                     DesignElement designElement = vector.getDesignElement();
                     this.bioAssayDimensions.add( vector.getBioAssayDimension() );
-                    boolean addedRow = addToRowMaps( rowIndex, designElement );
-                    if ( addedRow ) rowIndex++;
+                    addToRowMaps( rowIndex, designElement );
+                    rowIndex++;
                 }
             }
         }
@@ -306,127 +296,14 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     /**
-     * Information needed to track row and biosequence &lt;--&gt; design element relations in the matrix.
-     * <p>
-     * Cases:
-     * <ol>
-     * <li>Sequence has already appeared
-     * <ol>
-     * <li>This is a repeat occurrence of this sequence on the same microarray. Action: add a row to the matrix, UNLESS
-     * there is a match on another microarray design, in which case use THAT row.
-     * <li>This is a new occurence of this sequence on this microarray, but has appeared on another. Action: don't add
-     * a new row to the matrix. Add the design Element to the map for the current row.
-     * </ol>
-     * <li>Sequence has not yet appeared. Action: add a row to the matrix. Create new map information for this sequence
-     * and row.
-     * </ol>
+     * Each row is a unique DesignElement.
      * 
-     * @param row The current row number to be used if a new row is added.
+     * @param rwo The row number to be used by this design element.
      * @param designElement
-     * @return true if a new row element is added, false if we've encountered a biosequence that is already in the
-     *         matrix.
      */
-    protected boolean addToRowMaps( Integer row, DesignElement designElement ) {
-        // assert !rowBioSequencemapByInteger.containsKey( row ) : "Already have row " + row;
-        assert designElement instanceof CompositeSequence : "Got a " + designElement.getClass();
-
-        CompositeSequence cs = ( CompositeSequence ) designElement;
-        BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
-
-        if ( biologicalCharacteristic == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "No sequence for " + designElement + ", using dummy" );
-            biologicalCharacteristic = getDummySequence( cs ); // this is guaranteed to be unique for this desgin
-            // element.
-        }
-
-        boolean isNew = false;
-
-        Integer actualRow = row;
-
-        if ( log.isDebugEnabled() ) log.debug( "Seeking row for " + designElement );
-
-        if ( rowBioSequenceMap.containsKey( biologicalCharacteristic ) ) {
-
-            if ( log.isDebugEnabled() )
-                log.debug( "Already have a row(s) for " + biologicalCharacteristic + ": "
-                        + rowBioSequenceMap.get( biologicalCharacteristic ) );
-
-            /*
-             * then add it to one of the existing rows for this sequence OR create a new row, if the existing row is for
-             * the SAME array design.
-             */
-
-            Collection<Integer> existingRowsForSequence = rowBioSequenceMap.get( biologicalCharacteristic );
-            boolean foundRowToAddTo = false;
-
-            if ( allowVectorMerge ) {
-                for ( Integer candidateRowToAddTo : existingRowsForSequence ) {
-                    if ( log.isDebugEnabled() ) log.debug( "Checking if we can add to row " + candidateRowToAddTo );
-                    Collection<DesignElement> des = rowDesignElementMapByInteger.get( candidateRowToAddTo );
-
-                    // First look for a row we can add it to.
-                    for ( DesignElement element : des ) {
-                        if ( log.isDebugEnabled() )
-                            log.debug( "Row " + candidateRowToAddTo + ": " + element
-                                    + " uses same sequence, checking..." );
-                        if ( !element.getArrayDesign().equals( designElement.getArrayDesign() ) ) {
-                            // make sure there isn't already an entry in the CURRENT array design for that row.
-                            for ( DesignElement checkOnSameArray : rowDesignElementMapByInteger
-                                    .get( candidateRowToAddTo ) ) {
-                                if ( !checkOnSameArray.getArrayDesign().equals( designElement.getArrayDesign() ) ) {
-                                    if ( log.isDebugEnabled() ) log.debug( "Can add to row " + candidateRowToAddTo );
-                                    actualRow = candidateRowToAddTo;
-                                    foundRowToAddTo = true;
-                                } else {
-                                    if ( log.isDebugEnabled() )
-                                        log.debug( "Can't add to row because it's on the same array" );
-                                }
-                            }
-
-                        } else {
-                            if ( log.isDebugEnabled() )
-                                log.debug( "Element is on the same array as " + designElement + "("
-                                        + designElement.getArrayDesign() + ")" );
-                        }
-                    }
-                }
-            }
-
-            if ( !foundRowToAddTo ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( "Couldn't add " + designElement
-                            + " to an existing row (or merging vectors isn't allowed)" );
-                isNew = true;
-            }
-
-        } else {
-            if ( log.isDebugEnabled() ) log.debug( "No row for " + biologicalCharacteristic + " yet" );
-            rowBioSequenceMap.put( biologicalCharacteristic, new LinkedHashSet<Integer>() );
-            isNew = true;
-        }
-
-        if ( log.isDebugEnabled() ) log.debug( "Adding " + designElement + " to row " + actualRow );
-        if ( !rowBioSequencemapByInteger.containsKey( actualRow ) ) {
-            rowDesignElementMapByInteger.put( actualRow, new HashSet<DesignElement>() );
-        }
-
-        rowDesignElementMapByInteger.get( actualRow ).add( designElement );
-        rowBioSequenceMap.get( biologicalCharacteristic ).add( actualRow );
-        rowBioSequencemapByInteger.put( actualRow, biologicalCharacteristic );
-        rowElementMap.put( designElement, actualRow );
-
-        return isNew;
-    }
-
-    /**
-     * @param designElement
-     * @return
-     */
-    protected BioSequence getDummySequence( CompositeSequence designElement ) {
-        BioSequence biologicalCharacteristic;
-        biologicalCharacteristic = BioSequence.Factory.newInstance();
-        biologicalCharacteristic.setName( "Dummy biosequence for " + designElement );
-        return biologicalCharacteristic;
+    protected void addToRowMaps( Integer row, DesignElement designElement ) {
+        rowDesignElementMapByInteger.put( row, designElement );
+        rowElementMap.put( designElement, row );
     }
 
     /**
@@ -451,8 +328,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.add( vector.getBioAssayDimension() );
-                boolean addedRow = addToRowMaps( i, designElement );
-                if ( addedRow ) i++;
+                addToRowMaps( i, designElement );
+                i++;
             }
 
         }
@@ -460,58 +337,26 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     /**
-     * Determine if the data is such that multiple designelements must be allowed per row.
+     * Selects all the vectors passed in (uses them to initialize the data)
      * 
      * @param vectors
      */
-    protected void checkBioMaterialStatus() {
-
-        this.setAllowVectorMerge( false ); // default.
-
-        if ( this.bioAssayDimensions.size() == 0 ) {
-            throw new IllegalStateException( "Must have bioassaydimensions" );
-        }
-
-        Collection<ArrayDesign> arrayDesigns = new HashSet<ArrayDesign>();
-        for ( BioAssayDimension dim : bioAssayDimensions ) {
-            for ( BioAssay assay : dim.getBioAssays() ) {
-                arrayDesigns.add( assay.getArrayDesignUsed() );
-            }
-        }
-
-        if ( arrayDesigns.size() > 1 ) {
-            // if ANY biomaterials show up on more than one array designs, then we can't merge vectors.
-            // FIXME this doesn't handle the situation on two-channel arrays where biomaterials can be used repeatedly
-            // as a reference.
-            Map<BioMaterial, Collection<ArrayDesign>> bm2ars = new HashMap<BioMaterial, Collection<ArrayDesign>>();
-            for ( BioAssayDimension dim : bioAssayDimensions ) {
-                for ( BioAssay assay : dim.getBioAssays() ) {
-                    ArrayDesign ad = assay.getArrayDesignUsed();
-                    for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
-                        if ( !bm2ars.containsKey( bioMaterial ) ) {
-                            bm2ars.put( bioMaterial, new HashSet<ArrayDesign>() );
-                        }
-                        bm2ars.get( bioMaterial ).add( ad );
-                    }
+    protected void selectVectors( Collection<DesignElementDataVector> vectors ) {
+        QuantitationType quantitationType = null;
+        int i = 0;
+        for ( DesignElementDataVector vector : vectors ) {
+            QuantitationType vectorQuantitationType = vector.getQuantitationType();
+            this.bioAssayDimensions.add( vector.getBioAssayDimension() );
+            if ( quantitationType == null ) {
+                quantitationType = vectorQuantitationType;
+            } else {
+                if ( quantitationType != vectorQuantitationType ) {
+                    throw new IllegalArgumentException( "Cannot pass vectors from more than one quantitation type" );
                 }
             }
-
-            boolean foundBmOnMultAd = false;
-            for ( BioMaterial bioMaterial : bm2ars.keySet() ) {
-                if ( bm2ars.get( bioMaterial ).size() > 1 ) {
-                    log.info( bioMaterial + " is used on more than on array design: " + bm2ars.get( bioMaterial )
-                            + ", vectors cannot be merged." );
-                    foundBmOnMultAd = true;
-                    break;
-                }
-            }
-
-            if ( !foundBmOnMultAd ) {
-                log.info( "All biomaterials are used on only one array design, "
-                        + "so row-merging of vectors by sequence will be allowed" );
-                this.setAllowVectorMerge( true );
-            }
-
+            DesignElement designElement = vector.getDesignElement();
+            addToRowMaps( i, designElement );
+            i++;
         }
 
     }
@@ -590,7 +435,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
         Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
-            log.debug( "Processing: " + dimension + " with " + dimension.getBioAssays().size() + " assays" );
+            log.info( "Processing: " + dimension + " with " + dimension.getBioAssays().size() + " assays" );
             for ( BioAssay ba : dimension.getBioAssays() ) {
                 log.debug( "      " + ba );
                 Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
@@ -613,21 +458,21 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             }
         }
 
-        log.info( bioMaterialGroups.size() + " biomaterialGroups" );
+        log.info( bioMaterialGroups.size() + " biomaterialGroups (correspond to columns)" );
         int column = 0;
         for ( Collection<BioMaterial> bms : bioMaterialGroups ) {
             for ( BioMaterial bioMaterial : bms ) {
                 log.debug( "Column " + column + " **--->>>> " + bms );
                 for ( BioAssay assay : bioMaterialMap.get( bioMaterial ) ) {
                     if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
-                        int columnIndex = columnBioMaterialMap.get( bioMaterial );
-                        this.columnAssayMap.put( assay, columnIndex );
-                        log.debug( assay + " --> column " + columnIndex );
+                        int existingColumn = columnBioMaterialMap.get( bioMaterial );
+                        this.columnAssayMap.put( assay, existingColumn );
+                        log.debug( assay + " --> column " + existingColumn );
 
-                        if ( columnBioAssayMapByInteger.get( columnIndex ) == null ) {
-                            columnBioAssayMapByInteger.put( columnIndex, new HashSet<BioAssay>() );
+                        if ( columnBioAssayMapByInteger.get( existingColumn ) == null ) {
+                            columnBioAssayMapByInteger.put( existingColumn, new HashSet<BioAssay>() );
                         }
-                        columnBioAssayMapByInteger.get( columnIndex ).add( assay );
+                        columnBioAssayMapByInteger.get( existingColumn ).add( assay );
                     } else {
                         log.debug( bioMaterial + " --> column " + column );
                         log.debug( assay + " --> column " + column );
@@ -645,6 +490,12 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
 
             }
             column++;
+        }
+
+         if ( log.isInfoEnabled() ) {
+            for ( Object o : this.columnAssayMap.keySet() ) {
+                log.info( o + " " + this.columnAssayMap.get( o ) );
+            }
         }
 
         assert bioMaterialGroups.size() == columnBioMaterialMapByInteger.keySet().size();
@@ -725,7 +576,4 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         return quantitationTypes;
     }
 
-    public void setAllowVectorMerge( boolean allowVectorMerge ) {
-        this.allowVectorMerge = allowVectorMerge;
-    }
 }

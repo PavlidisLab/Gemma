@@ -157,19 +157,19 @@ public interface ExpressionDataMatrix<T> {
      */
     public BioMaterial getBioMaterialForColumn( int index );
 
-    /**
-     * Given a row, identify the BioSequence
-     * 
-     * @param index
-     * @return
-     */
-    public BioSequence getBioSequenceForRow( int index );
+    // /**
+    // * Given a row, identify the BioSequence
+    // *
+    // * @param index
+    // * @return
+    // */
+    // public BioSequence getBioSequenceForRow( int index );
 
     /**
      * @param index
      * @return
      */
-    public Collection<DesignElement> getDesignElementsForRow( int index );
+    public DesignElement getDesignElementForRow( int index );
 
     /**
      * @param index
@@ -178,8 +178,7 @@ public interface ExpressionDataMatrix<T> {
     public Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
-     * Produce a BioAssayDimension representing the matrix columns. This is not guaranteed to be a persistent instance,
-     * and may in fact be created by merging two bioassaydimensions from two array designs.
+     * Produce a BioAssayDimension representing the matrix columns
      * 
      * @param matrix
      * @return
@@ -213,12 +212,5 @@ public interface ExpressionDataMatrix<T> {
      * @return
      */
     public Collection<QuantitationType> getQuantitationTypes();
-
-    /**
-     * Establish whether this matrix should try to "line up" vectors based on sequences.
-     * 
-     * @param b
-     */
-    public void setAllowVectorMerge( boolean b );
 
 }

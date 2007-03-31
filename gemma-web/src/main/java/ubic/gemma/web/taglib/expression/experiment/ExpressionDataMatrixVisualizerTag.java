@@ -48,7 +48,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
-    
+
     private double EMSIZE = .825;
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
@@ -121,20 +121,20 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                 // plug in design elements into a guaranteed order list (we will need to guarantee order to
                 // build the table properly
-                List<ExpressionDataMatrixRowElement> designElements = expressionDataMatrix.getRowElements();
+                List<ExpressionDataMatrixRowElement> rowElements = expressionDataMatrix.getRowElements();
 
                 // print out the composite sequence name
                 buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
-                for ( int i = 0; i < designElements.size(); i++ ) {
-                    buf.append( designElements.get( i ) + "<br />\n" );
+                for ( int i = 0; i < rowElements.size(); i++ ) {
+                    buf.append( rowElements.get( i ) + "<br />\n" );
                 }
                 buf.append( "</td>" );
                 // print out the gene associated with the cs
                 buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
-                for ( int i = 0; i < designElements.size(); i++ ) {
+                for ( int i = 0; i < rowElements.size(); i++ ) {
                     Collection associatedGenes = compositeSequenceGeneMapperService
-                            .getGenesForCompositeSequence( ( CompositeSequence ) ( designElements.get( i )
-                                    .getDesignElements().iterator().next() ) );
+                            .getGenesForCompositeSequence( ( CompositeSequence ) ( rowElements.get( i )
+                                    .getDesignElement() ) );
                     if ( associatedGenes != null ) {
                         Iterator iter = associatedGenes.iterator();
                         // TODO only adding the first gene ... add others as well?

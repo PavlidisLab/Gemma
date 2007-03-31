@@ -41,7 +41,7 @@ public class ExpressionDataDoubleMatrixUtil {
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
             int rowNum = el.getIndex();
-            DesignElement del = el.getDesignElements().iterator().next();
+            DesignElement del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
                 double valA = a.get( del, bm );
@@ -61,7 +61,7 @@ public class ExpressionDataDoubleMatrixUtil {
         int columns = matrix.columns();
         double log2 = Math.log( LOGARITHM_BASE );
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            DesignElement del = el.getDesignElements().iterator().next();
+            DesignElement del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 double valA = matrix.get( del, bm );
@@ -86,7 +86,7 @@ public class ExpressionDataDoubleMatrixUtil {
         checkConformant( a, b );
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
-            DesignElement del = el.getDesignElements().iterator().next();
+            DesignElement del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
                 double valA = a.get( del, bm );
@@ -113,7 +113,7 @@ public class ExpressionDataDoubleMatrixUtil {
         if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            DesignElement del = el.getDesignElements().iterator().next();
+            DesignElement del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 double valA = matrix.get( del, bm );
@@ -134,7 +134,7 @@ public class ExpressionDataDoubleMatrixUtil {
         checkConformant( matrix, mask );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            DesignElement del = el.getDesignElements().iterator().next();
+            DesignElement del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 boolean present = mask.get( del, bm );

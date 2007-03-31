@@ -120,13 +120,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
 
         for ( ExpressionDataMatrixRowElement element : rowElements ) {
 
-            Collection<DesignElement> designElements = element.getDesignElements();
-            if ( designElements.size() > 1 ) {
-                throw new UnsupportedOperationException(
-                        "Sorry, don't know how to deal with rows that refer to more than one design element yet. Current row: "
-                                + element );
-            }
-            DesignElement de = designElements.iterator().next();
+            DesignElement de = element.getDesignElement();
             rowMapCache.put( element, de );
 
             Collection<Gene> geneIdSet = this.probeToGeneMap.get( de );

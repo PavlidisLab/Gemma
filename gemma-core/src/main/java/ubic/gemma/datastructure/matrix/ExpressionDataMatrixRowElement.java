@@ -18,10 +18,7 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Encapsulates information about the row 'label' for a ExpressionDataMatrix. Normal applications do not need to deal
@@ -32,17 +29,14 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class ExpressionDataMatrixRowElement {
 
-    private BioSequence bioSequence;
-
-    private Collection<DesignElement> designElements;
+    private DesignElement designElement;
 
     private Integer index;
 
     @SuppressWarnings("unchecked")
     public ExpressionDataMatrixRowElement( ExpressionDataMatrix matrix, int i ) {
         this.index = i;
-        this.designElements = matrix.getDesignElementsForRow( i );
-        this.bioSequence = matrix.getBioSequenceForRow( i );
+        this.designElement = matrix.getDesignElementForRow( i );
     }
 
     @Override
@@ -58,32 +52,15 @@ public class ExpressionDataMatrixRowElement {
 
     @Override
     public String toString() {
-        if ( designElements.size() == 1 ) {
-            return designElements.iterator().next().getName();
-        } else {
-            String buf = bioSequence.getName();
-            buf = buf + ": ";
-            for ( DesignElement de : designElements ) {
-                buf = buf + de.getName() + ",";
-            }
-            return buf.replaceFirst( ",$", "" );
-        }
+        return designElement.getName();
     }
 
-    public BioSequence getBioSequence() {
-        return bioSequence;
+    public DesignElement getDesignElement() {
+        return designElement;
     }
 
-    public void setBioSequence( BioSequence bioSequence ) {
-        this.bioSequence = bioSequence;
-    }
-
-    public Collection<DesignElement> getDesignElements() {
-        return designElements;
-    }
-
-    public void setDesignElements( Collection<DesignElement> designElements ) {
-        this.designElements = designElements;
+    public void setDesignElement( DesignElement designElement ) {
+        this.designElement = designElement;
     }
 
     public Integer getIndex() {

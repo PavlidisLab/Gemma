@@ -55,7 +55,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
         this.bioAssayDimensions.addAll( bioAssayDimensions );
-        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
                 bioAssayDimensions );
         vectorsToMatrix( selectedVectors );
@@ -70,7 +69,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
             List<BioAssayDimension> dimensions, List<QuantitationType> qtypes ) {
         init();
         this.bioAssayDimensions.addAll( dimensions );
-        checkBioMaterialStatus();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, dimensions, qtypes );
         vectorsToMatrix( selectedVectors );
     }

@@ -426,7 +426,8 @@ public class ExpressionDataMatrixBuilder {
                 return true;
             } else {
                 throw new IllegalStateException( "Could not find signals for both channels: " + "Channel A ="
-                        + signalChannelA + ", Channel B=" + signalChannelB );
+                        + signalChannelA + ", Channel B=" + signalChannelB + " and backgroundChannelA ="
+                        + backgroundChannelA + " and background-subtracted channel A =" + bkgSubChannelA );
             }
         }
         return false;
@@ -502,6 +503,9 @@ public class ExpressionDataMatrixBuilder {
         Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
 
         Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 )
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
 
         log.info( "Experiment has " + eeQtTypes.size() + " quantitation types" );
 

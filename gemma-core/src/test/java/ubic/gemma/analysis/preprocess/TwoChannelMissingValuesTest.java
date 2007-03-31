@@ -32,7 +32,9 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -44,11 +46,17 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     GeoConverter gc = new GeoConverter();
     TwoChannelMissingValues tcmv;
 
+    ExpressionExperimentService eeService;
+
+    DesignElementDataVectorService dedvService;
+
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        // endTransaction();
+        dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        endTransaction();
     }
 
     /**
@@ -115,6 +123,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
 
         assertEquals( 500, calls.size() );

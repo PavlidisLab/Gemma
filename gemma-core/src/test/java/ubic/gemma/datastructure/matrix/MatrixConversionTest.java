@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.testing.TestPersistentObjectHelper;
 import junit.framework.TestCase;
@@ -54,21 +53,24 @@ public class MatrixConversionTest extends TestCase {
             QuantitationType quantType = TestPersistentObjectHelper.getTestNonPersistentQuantitationType();
             quantType.setId( ( long ) quantitationTypeNum );
             quantTypes.add( quantType );
+            break;
         }
 
         Collection<DesignElementDataVector> vectors = getDesignElementDataVectors( quantTypes );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors, quantTypes.iterator().next() );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
         assertEquals( NUM_CS, mat.rows() );
         assertEquals( NUM_BIOMATERIALS, mat.columns() );
 
-        for ( DesignElementDataVector vector : vectors ) {
-            DesignElement de = vector.getDesignElement();
-            Double[] res = mat.getRow( de );
-            assertEquals( NUM_BIOMATERIALS, res.length );
-            // System.err.print( de.getName() );
-            for ( int i = 0; i < res.length; i++ ) {
-                Double r = res[i];
-                assertNotNull( "No value for " + de + " at index " + i, r );
+        // System.err.print( "--" );
+        // for ( int i = 0; i < mat.columns(); i++ ) {
+        // System.err.print( "\t" + mat.getBioMaterialForColumn( i ) );
+        // }
+        // System.err.print( "\n" );
+        for ( int j = 0; j < mat.rows(); j++ ) {
+            // System.err.print( mat.getRowElement( j ) );
+            for ( int i = 0; i < mat.columns(); i++ ) {
+                Double r = mat.get( j, i );
+                assertNotNull( "No value for at index " + i, r );
                 assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
                 // System.err.print( "\t" + r );
             }
@@ -120,7 +122,7 @@ public class MatrixConversionTest extends TestCase {
                 ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
                 ba.getSamplesUsed().add( bmitb.next() );
                 ba.setArrayDesignUsed( adb );
-                ba.setId( i );
+                ba.setId( i + 20 );
                 baDimB.getBioAssays().add( ba );
             }
             baDimB.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
@@ -141,10 +143,7 @@ public class MatrixConversionTest extends TestCase {
                 vector.setDesignElement( cs );
                 vector.setQuantitationType( quantType );
                 vector.setBioAssayDimension( baDimA );
-
-                // we're only creating one vector here, but each design element can have more than one.
                 vectors.add( vector );
-                // cs.getDesignElementDataVectors().add( vector );
             }
 
             for ( ; j < NUM_CS; j++ ) {
@@ -161,10 +160,7 @@ public class MatrixConversionTest extends TestCase {
                 vector.setDesignElement( cs );
                 vector.setQuantitationType( quantType );
                 vector.setBioAssayDimension( baDimB );
-
-                // we're only creating one vector here, but each design element can have more than one.
                 vectors.add( vector );
-                // cs.getDesignElementDataVectors().add( vector );
             }
         }
         return vectors;

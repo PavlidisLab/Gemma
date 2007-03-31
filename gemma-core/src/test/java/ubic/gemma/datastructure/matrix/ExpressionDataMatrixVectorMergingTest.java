@@ -46,7 +46,7 @@ public class ExpressionDataMatrixVectorMergingTest extends BaseSpringContextTest
 
     /**
      * Used 4 related platforms. This is the Sorlie breast cancer data set (2001), altered to be simpler for us to
-     * interpret test results. This is a key test case!
+     * interpret test results.
      * <p>
      * This test has problems running in a transaction, it works best if the data gets loaded once and then reused each
      * time you run the test (the test isn't about loading the data).
