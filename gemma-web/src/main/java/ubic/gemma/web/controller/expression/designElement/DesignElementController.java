@@ -67,6 +67,7 @@ public class DesignElementController extends BaseMultiActionController {
     }
 
     /**
+     * FIXME move this into the compositesequencecontroller or the arraydesigncontroller - it's confusing having a 'designelementcontroller'
      * @param request
      * @param response
      * @return
@@ -130,7 +131,7 @@ public class DesignElementController extends BaseMultiActionController {
             compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
         }
 
-        ModelAndView mav = new ModelAndView( "arrayDesign.compositeSequences" );
+        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "sequenceData", compositeSequenceSummary );
         mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
