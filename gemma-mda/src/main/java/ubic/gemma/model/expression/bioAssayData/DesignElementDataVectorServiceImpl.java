@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -82,9 +83,8 @@ public class DesignElementDataVectorServiceImpl extends
      *      ubic.gemma.model.expression.designElement.DesignElement)
      */
     @Override
-    protected Collection handleFind( ExpressionExperiment expressionExperiment, QuantitationType quantitationType )
-            throws Exception {
-        return this.getDesignElementDataVectorDao().find( expressionExperiment, quantitationType );
+    protected Collection handleFind( QuantitationType quantitationType ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( quantitationType );
     }
 
     /*
@@ -150,9 +150,8 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection handleFind( ExpressionExperiment expressionExperiment, Collection quantitationTypes )
-            throws Exception {
-        return this.getDesignElementDataVectorDao().find( expressionExperiment, quantitationTypes );
+    protected Collection handleFind( Collection quantitationTypes ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( quantitationTypes );
     }
 
     @Override
@@ -166,8 +165,8 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection handleFind( QuantitationType quantitationType ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( quantitationType );
+    protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
     }
 
 }

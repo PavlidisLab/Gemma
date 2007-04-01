@@ -76,6 +76,7 @@
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
 				<property name="hibernateInheritanceStrategy">subclass</property>
+				<property name="enableTemplating">true</property>
 				<property name="springTypesPackage">ubic.gemma.spring</property>
 				<property name="springPresentationTypesPackage">ubic.gemma.spring.presentation</property>
 				<property name="mergeLocation">${maven.andromda.spring.merge.custom}</property>
@@ -127,6 +128,7 @@
 				<property name="hibernateTypeMappingsUri">
 					file:${project.basedir}/src/main/conf/HibernateTypeMappings.xml
 				</property>
+				<property name="enableTemplating">true</property>
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
@@ -163,6 +165,7 @@
 				<property name="enumerations">${maven.andromda.core.generated.dir}</property>
 				<property name="exceptions">${maven.andromda.core.generated.dir}</property>
 				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
+				<property name="enableTemplating">true</property>
 			</properties>
 		</namespace>
 	</namespaces>

@@ -85,6 +85,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     /**
      *
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
@@ -110,7 +111,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
             // first load small two-color
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "platform" ) );
-            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
+             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
                     true, true );
             ad = ads.iterator().next();
 
@@ -244,6 +245,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testGetCompositeSequencesByGeneId() throws Exception {
 
         Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );

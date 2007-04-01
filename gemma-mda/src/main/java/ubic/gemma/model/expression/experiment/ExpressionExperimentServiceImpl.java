@@ -269,16 +269,15 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetSamplingOfVectors( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, Integer limit ) throws Exception {
-        return this.getExpressionExperimentDao().getSamplingOfVectors( expressionExperiment, quantitationType, limit );
+    protected Collection handleGetSamplingOfVectors( QuantitationType quantitationType, Integer limit )
+            throws Exception {
+        return this.getExpressionExperimentDao().getSamplingOfVectors( quantitationType, limit );
     }
 
     @Override
-    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
-            Collection designElements, QuantitationType quantitationType ) throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, designElements,
-                quantitationType );
+    protected Collection handleGetDesignElementDataVectors( Collection designElements, QuantitationType quantitationType )
+            throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectors( designElements, quantitationType );
     }
 
     /*
@@ -449,7 +448,9 @@ public class ExpressionExperimentServiceImpl extends
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override

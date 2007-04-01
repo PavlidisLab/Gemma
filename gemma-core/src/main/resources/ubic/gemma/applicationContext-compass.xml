@@ -38,7 +38,7 @@
 			<ref bean="compositeSequenceGeneMapperService" />
 		</property>
 		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService"/>
+			<ref bean="expressionExperimentService" />
 		</property>
 		<property name="geneBean">
 			<ref bean="compassGene" />
@@ -163,7 +163,7 @@
 			<ref bean="hibernateStatsJobDetail" />
 		</property>
 		<property name="repeatInterval">
-			<value>60000</value>
+			<value>1800000</value>
 		</property>
 	</bean>
 	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">

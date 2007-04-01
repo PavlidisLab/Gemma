@@ -2,6 +2,8 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <jsp:useBean id="expressionDataMatrix" scope="request"
 	class="ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix" />
+<jsp:useBean id="command" scope="request"
+	class="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand" />
 
 <title><fmt:message key="expression.visualization.results" /></title>
 

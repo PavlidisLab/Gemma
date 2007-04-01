@@ -149,7 +149,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         /* set the vectors on the expression experiment */
         ee.setDesignElementDataVectors( eeVectors );
 
-        expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors, qt );
+        expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
     }
 
     /**

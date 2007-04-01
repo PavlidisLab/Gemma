@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection;
 import java.util.List;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

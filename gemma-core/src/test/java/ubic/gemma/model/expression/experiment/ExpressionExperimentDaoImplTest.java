@@ -28,7 +28,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -140,7 +139,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
             designElements.add( it.next().getDesignElement() );
         }
 
-        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors( ee,
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors(
                 designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );
@@ -164,8 +163,8 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     public final void testGetSamplingOfVectors() throws Exception {
         QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
-        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getSamplingOfVectors( ee,
-                quantitationType, 2 );
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao
+                .getSamplingOfVectors( quantitationType, 2 );
 
         assertEquals( 2, vectors.size() );
 

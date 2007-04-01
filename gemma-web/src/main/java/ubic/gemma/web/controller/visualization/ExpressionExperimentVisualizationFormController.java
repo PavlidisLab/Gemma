@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.visualization;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,15 +45,21 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
@@ -88,10 +95,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
     private static final int MAX_ELEMENTS_TO_VISUALIZE = 70;
 
-    private ExpressionExperimentService expressionExperimentService = null;
-    private CompositeSequenceService compositeSequenceService = null;
-    private DesignElementDataVectorService designElementDataVectorService;
-    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
+    protected ExpressionExperimentService expressionExperimentService = null;
+    protected CompositeSequenceService compositeSequenceService = null;
+    protected DesignElementDataVectorService designElementDataVectorService;
+    protected CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -298,6 +305,46 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         designElementDataVectorService.thaw( dataVectors );
+
+        /*
+         * Determine ordering we want to use.
+         */
+        if ( false ) {
+            // need to thaw
+            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
+            Map<FactorValue, Collection<BioMaterial>> fvMap = new HashMap<FactorValue, Collection<BioMaterial>>();
+            Map<FactorValue, Integer> fvSizes = new HashMap<FactorValue, Integer>();
+            Map<ExperimentalFactor, Integer> facNumVals = new HashMap<ExperimentalFactor, Integer>();
+            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
+                bioMaterials.addAll( assay.getSamplesUsed() );
+            }
+            for ( BioMaterial bm : bioMaterials ) {
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    ExperimentalFactor factor = fv.getExperimentalFactor();
+
+                    if ( !facNumVals.containsKey( factor ) ) {
+                        facNumVals.put( factor, factor.getFactorValues().size() );
+                    }
+
+                    if ( !fvMap.containsKey( fv ) ) {
+                        fvMap.put( fv, new HashSet<BioMaterial>() );
+                        fvSizes.put( fv, 0 );
+                    }
+                    fvMap.get( fv ).add( bm );
+                    fvSizes.put( fv, fvSizes.get( fv ) + 1 );
+                }
+            }
+
+            if ( fvMap.size() > 0 ) {
+                // find the factor with the fewest values.
+
+                // sort biomaterials by that; anybody who doesn't have a value for it gets put at the end
+                
+                // impose the ordering on the samples.
+
+            }
+        }
+
         ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors );
 
         /* deals with the case where probes don't match for the given quantitation type. */
@@ -343,7 +390,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @return Collection<DesignElementDataVector>
      */
     @SuppressWarnings("unchecked")
-    private Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
+    protected Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
             ExpressionExperimentVisualizationCommand eevc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
 
@@ -357,8 +404,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         /* check size if 'viewSampling' is set. */
         if ( viewSampling ) {
-            vectors = expressionExperimentService.getSamplingOfVectors( expressionExperiment, quantitationType,
-                    MAX_ELEMENTS_TO_VISUALIZE );
+            vectors = expressionExperimentService.getSamplingOfVectors( quantitationType, MAX_ELEMENTS_TO_VISUALIZE );
         } else {
             String searchString = eevc.getSearchString();
 
@@ -412,8 +458,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 return null;
             }
 
-            vectors = expressionExperimentService.getDesignElementDataVectors( expressionExperiment,
-                    compositeSequences, quantitationType );
+            vectors = expressionExperimentService.getDesignElementDataVectors( compositeSequences, quantitationType );
         }
         if ( vectors == null || vectors.size() == 0 ) {
             errors.addError( new ObjectError( command.toString(), null, null, "No data could be found." ) );
@@ -495,5 +540,40 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             this.setComment( "User selections for visualization form" );
         }
 
+    }
+}
+
+class FactorValueComparator implements Comparator<FactorValue> {
+
+    public int compare( FactorValue arg0, FactorValue arg1 ) {
+        if ( arg0.getMeasurement() != null && arg1.getMeasurement() != null ) {
+            return ( new MeasurementComparator() ).compare( arg0.getMeasurement(), arg1.getMeasurement() );
+        } else if ( arg0.getOntologyEntry() != null && arg1.getOntologyEntry() != null ) {
+            return arg0.getOntologyEntry().getValue().compareTo( arg1.getOntologyEntry().getValue() );
+        } else if ( arg0.getValue() != null && arg1.getValue() != null ) {
+            return arg0.getValue().compareTo( arg1.getValue() );
+        } else {
+            return arg0.getId().compareTo( arg1.getId() ); // fallback.
+        }
+    }
+}
+
+class MeasurementComparator implements Comparator<Measurement> {
+
+    public int compare( Measurement o1, Measurement o2 ) {
+        PrimitiveType ptype = o1.getRepresentation();
+        if ( ptype.equals( PrimitiveType.STRING ) || ptype.equals( PrimitiveType.BOOLEAN ) ) {
+            return o1.getValue().compareTo( o2.getValue() );
+        } else if ( ptype.equals( PrimitiveType.DOUBLE ) ) {
+            Double d1 = Double.parseDouble( o1.getValue() );
+            Double d2 = Double.parseDouble( o2.getValue() );
+            return d1.compareTo( d2 );
+        } else if ( ptype.equals( PrimitiveType.INT ) ) {
+            Integer d1 = Integer.parseInt( o1.getValue() );
+            Integer d2 = Integer.parseInt( o2.getValue() );
+            return d1.compareTo( d2 );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to compare " + ptype + "'s" );
+        }
     }
 }

@@ -32,6 +32,7 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationService;
 import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.view.TextView;
 
 /**
  * This controller allows images to be created in a web environment. Specifically, the image is written to the
@@ -46,11 +47,11 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
-    private static final Double DEFAULT_VISUALIZATION_THRESHOLD = Double.valueOf( 2 );
-
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
 
     private static final String HEAT_MAP_IMAGE_TYPE = "heatmap";
+
+    private static final String TEXT_TYPE = "text";
 
     private ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = null;
 
@@ -68,37 +69,58 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
         String type = ( String ) request.getParameter( "type" );
 
         String id = ( String ) request.getParameter( "id" );
-        ExpressionDataMatrix expressionDataMatrix = ( ExpressionDataMatrix ) request.getSession().getAttribute( id );
-        log.debug( "attribute \"" + id + "\" from tag: " + expressionDataMatrix );
 
-        OutputStream out = null;
-        try {
-            out = response.getOutputStream();
-            if ( type.equalsIgnoreCase( HEAT_MAP_IMAGE_TYPE ) ) {
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        ExpressionDataMatrix expressionDataMatrix = ( ExpressionDataMatrix ) request.getSession().getAttribute( id );
+
+        if ( expressionDataMatrix == null ) {
+            log.warn( "No matrix" );
+            return null;
+        }
+
+        if ( type.equalsIgnoreCase( HEAT_MAP_IMAGE_TYPE ) ) {
+            OutputStream out = null;
+            try {
+                out = response.getOutputStream();
+
                 /* normalize and clip the expression data matrix */
-                expressionDataMatrix = expressionDataMatrixVisualizationService.standardizeExpressionDataDoubleMatrix(
-                        expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
+                // ExpressionDataMatrix normedExpressionDataMatrix = expressionDataMatrixVisualizationService
+                // .standardizeExpressionDataDoubleMatrix( expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
                 JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( DEFAULT_CONTENT_TYPE );
                     display.writeOutAsPNG( out, true, true );
                 }
-            }
-        } catch ( Exception e ) {
-            log.error( "Error is: " );
-            e.printStackTrace();
-        } finally {
-            if ( out != null ) {
-                try {
-                    out.close();
-                    request.getSession().removeAttribute( id );
-                } catch ( IOException e ) {
-                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
+
+            } catch ( Exception e ) {
+                log.error( "Error is: " );
+                e.printStackTrace();
+            } finally {
+                if ( out != null ) {
+                    try {
+                        out.close();
+                        request.getSession().removeAttribute( id );
+                    } catch ( IOException e ) {
+                        log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
+                    }
                 }
             }
+            request.getSession().setAttribute( id, expressionDataMatrix );
+            return null; // nothing to return;
+        } else if ( type.equalsIgnoreCase( TEXT_TYPE ) ) {
+            // return model and view with text
+            ModelAndView mav = new ModelAndView( new TextView() );
+            mav.addObject( "text", expressionDataMatrix.toString() );
+            return mav;
+        } else {
+            log.warn( "Don't know how to view data as " + type );
+            return null;
         }
 
-        return null; // nothing to return;
     }
 
     /**

@@ -550,15 +550,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     }
 
     @Override
-    protected Collection handleGetSamplingOfVectors( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, Integer limit ) throws Exception {
-        final String queryString = "select dev from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors as dev "
-                + "inner join dev.quantitationType as qt where ee.id = :id and qt.id = :qtid";
+    protected Collection handleGetSamplingOfVectors( QuantitationType quantitationType, Integer limit )
+            throws Exception {
+        final String queryString = "select dev from DesignElementDataVectorImpl dev "
+                + "inner join dev.quantitationType as qt where qt.id = :qtid";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setMaxResults( limit );
-            queryObject.setParameter( "id", expressionExperiment.getId() );
             queryObject.setParameter( "qtid", quantitationType.getId() );
             List results = queryObject.list();
             return results;
@@ -570,11 +568,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     // FIXME, EE is not needed as a parameter.
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
-            Collection designElements, QuantitationType quantitationType ) throws Exception {
-        if ( designElements == null || designElements.size() == 0 ) return null;
+    protected Collection handleGetDesignElementDataVectors( Collection designElements, QuantitationType quantitationType )
+            throws Exception {
+        if ( designElements == null || designElements.size() == 0 ) return new HashSet();
 
-        assert quantitationType.getId() != null && expressionExperiment.getId() != null;
+        assert quantitationType.getId() != null;
 
         final String queryString = "select dev from DesignElementDataVectorImpl as dev inner join dev.designElement as de "
                 + " where de in (:de) and dev.quantitationType = :qt";

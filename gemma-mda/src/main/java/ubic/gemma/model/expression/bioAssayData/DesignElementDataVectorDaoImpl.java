@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -94,6 +93,19 @@ public class DesignElementDataVectorDaoImpl extends
         }
     }
 
+    @Override
+    public Collection find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
+        final String queryString = "select dedv from DesignElementDataVectorImpl dedv where dedv.designElement in (:desEls) and dedv.quantitationType = :quantitationType ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "quantitationType", quantitationType );
+            queryObject.setParameterList( "desEls", arrayDesign.getCompositeSequences() );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
     /*
      * (non-Javadoc)
      */
@@ -119,20 +131,19 @@ public class DesignElementDataVectorDaoImpl extends
     protected Collection handleQueryByGeneSymbolAndSpecies( String geneOfficialSymbol, String species,
             Collection expressionExperiments ) throws Exception {
 
-        String expressionExperimentIds = parenthesis( expressionExperiments );
         final String queryString = "from DesignElementDataVectorImpl as d " // get DesignElementDataVectorImpl
                 + "inner join d.designElement as de " // where de.name='probe_5'";
                 + "inner join de.biologicalCharacteristic as bs " // where bs.name='test_bs'";
                 + "inner join bs.bioSequence2GeneProduct as b2g "// where b2g.score=1.5";
                 + "inner join b2g.geneProduct as gp inner join gp.gene as g "
                 + "inner join g.taxon as t where g.officialSymbol = :geneOfficialSymbol and t.commonName = :species "
-                + "and d.expressionExperiment.id in " + expressionExperimentIds;
+                + "and d.expressionExperiment in (:expressionExperiments)";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "geneOfficialSymbol", geneOfficialSymbol );
             queryObject.setParameter( "species", species );
-            // queryObject.setParameter( "expressionExperiments", get ids of each expression experiment );
+            queryObject.setParameterList( "expressionExperiments", expressionExperiments );
             java.util.List results = queryObject.list();
 
             if ( results != null ) {
@@ -228,8 +239,8 @@ public class DesignElementDataVectorDaoImpl extends
         log.info( "Got " + cs2gene.keySet().size() + " composite sequences for " + genes.size() + " genes in "
                 + watch.getTime() + "ms" );
         watch.reset();
-        
-        //Second, get designElementDataVectors for each compositeSequence and then fill the dedv2genes
+
+        // Second, get designElementDataVectors for each compositeSequence and then fill the dedv2genes
         watch.start();
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
@@ -240,7 +251,6 @@ public class DesignElementDataVectorDaoImpl extends
                     + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
                     + " and dedv.expressionExperiment in ( :ees )";
         }
-        int count = 0;
         org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
 
         try {
@@ -252,16 +262,16 @@ public class DesignElementDataVectorDaoImpl extends
 
             ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             log.info( "Query done in " + watch.getTime() + "ms" );
-            
+
             while ( results.next() ) {
-            	DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
+                DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
                 CompositeSequence cs = ( CompositeSequence ) results.get( 1 );
-                Collection<Gene> associatedGenes = cs2gene.get(cs);
+                Collection<Gene> associatedGenes = cs2gene.get( cs );
                 if ( !dedv2genes.containsKey( dedv ) ) {
-                    dedv2genes.put(dedv, associatedGenes);
-                }else{
-                	Collection<Gene> mappedGenes = dedv2genes.get(dedv);
-                	mappedGenes.addAll(associatedGenes);
+                    dedv2genes.put( dedv, associatedGenes );
+                } else {
+                    Collection<Gene> mappedGenes = dedv2genes.get( dedv );
+                    mappedGenes.addAll( associatedGenes );
                 }
             }
             results.close();
@@ -271,8 +281,8 @@ public class DesignElementDataVectorDaoImpl extends
         }
 
         watch.stop();
-        log.info( "Got " + dedv2genes.keySet().size() + " DEDV for " + cs2gene.keySet().size() + " composite sequences in "
-                + watch.getTime() + "ms" );
+        log.info( "Got " + dedv2genes.keySet().size() + " DEDV for " + cs2gene.keySet().size()
+                + " composite sequences in " + watch.getTime() + "ms" );
 
         return dedv2genes;
     }

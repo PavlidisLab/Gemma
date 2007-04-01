@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -26,14 +27,15 @@ import java.util.Map;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -43,11 +45,18 @@ import ubic.gemma.model.genome.Gene;
  */
 public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
+    private static final int MAX_GENE_NAME_LENGTH = 25;
+
+    private static final int MAX_GENE_SYMBOL_LENGTH = 12;
+
+    private static final double IMAGE_HEADER_EM_HEIGHT = 8.5;
+
+    private static final double MAGIC_EM_SIZE = .825;
+
     private static final long serialVersionUID = 6403196597063627020L;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private double EMSIZE = .825;
     // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
@@ -89,40 +98,42 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
 
-            // Collection<DesignElement> compositeSequences = expressionDataMatrix.getRowElements();
-
             StringBuilder buf = new StringBuilder();
 
             // TODO read this in
             String type = "heatmap";
 
-            /* random identifier for ExpressionDataMatrix */
-            String id = "id_" + Math.abs( RandomUtils.nextInt() );
-            this.pageContext.getSession().setAttribute( id, expressionDataMatrix );
+            /* random identifier for ExpressionDataMatrix, stored in session. */
+            String matrixId = RandomStringUtils.randomAlphanumeric( 30 ).toUpperCase();
+
+            this.pageContext.getSession().setAttribute( matrixId, expressionDataMatrix );
 
             if ( expressionDataMatrix == null || m.length == 0 ) {
                 buf.append( "No data to display" );
             } else {
-                buf.append( "<table border=\"0\">" );
-                // buf.append( "<tr>" );
-                // buf.append( "<td>&nbsp;</td>" );
-                // buf.append( "<td align=\"left\" valign=\"bottom\" >Probe
-                // Set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gene<br/><br/></td>" );
-                // buf.append( "</tr>" );
+                buf.append( "<div class=\"datamatrix\"><table border=\"0\">" );
 
                 buf.append( "<tr>" );
-                buf.append( "<td border=\"0\" rowspan=\"5\" align='right'>" );
 
-                Double emHeight = EMSIZE * expressionDataMatrix.rows() + 8.5;
+                int HEADER_ROW_HEIGHT = 3;
+
+                buf.append( "<td border=\"0\" rowspan=\"" + HEADER_ROW_HEIGHT + "\" align='right' valign=\"bottom\">" );
+
+                Double emHeight = MAGIC_EM_SIZE * expressionDataMatrix.rows() + IMAGE_HEADER_EM_HEIGHT;
+
                 buf.append( "<img style='height : " + emHeight.toString() + "em;' src=\"visualizeDataMatrix.html?type="
-                        + type + "&id=" + id + "\"border=1/>" );
+                        + type + "&id=" + matrixId + "\"border='0' />" );
 
                 buf.append( "</td>" );
 
-                buf.append( "<td colspan='2' valign='bottom'>" );
+                buf.append( "<td colspan='3' valign='bottom'>" );
 
                 buf
-                        .append( "<table border='0' cellpadding='0' cellspacing='0'><tbody><tr><th nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th><th nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th></tr></tbody></table>" );
+                        .append( "<table border='0' cellpadding='0' cellspacing='0'>"
+                                + "<tbody><tr><th valign='bottom' nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th>"
+                                + "<th valign='bottom' nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th>"
+                                + "<th valign='bottom' nowrap='nowrap' width='200'><span class='annotation'>Name</span></th>"
+                                + "</tr></tbody></table>" );
                 buf.append( "</td>" );
                 buf.append( "</tr>" );
                 buf.append( "<tr>" );
@@ -131,42 +142,17 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 // build the table properly
                 List<ExpressionDataMatrixRowElement> rowElements = expressionDataMatrix.getRowElements();
 
-                // print out the composite sequence name
-                buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
-                for ( int i = 0; i < rowElements.size(); i++ ) {
-                    buf.append( rowElements.get( i ) + "<br />\n" );
-                }
-                buf.append( "</td>" );
-                // print out the gene associated with the cs
-                buf.append( "<td style='font-size : .825em; line-height:1.0em;' valign='bottom' align=\"left\">" );
-                for ( int i = 0; i < rowElements.size(); i++ ) {
-                    CompositeSequence compositeSequence = ( CompositeSequence ) rowElements.get( i ).getDesignElement();
-
-                    if ( genes != null && genes.containsKey( compositeSequence ) ) {
-                        Collection associatedGenes = genes.get( compositeSequence );
-                        Iterator iter = associatedGenes.iterator();
-                        // TODO only adding the first gene ... add others as well? YES.
-                        if ( iter.hasNext() ) {
-                            Gene gene = ( Gene ) iter.next();
-                            String symbol = gene.getOfficialSymbol();
-                            if ( !StringUtils.isEmpty( symbol ) ) {
-                                buf
-                                        .append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
-                                                + symbol + "\">" + symbol + "</a>" ); // FIXME add Gemma link.
-                            }
-                            String name = gene.getOfficialName();
-                            if ( StringUtils.isNotBlank( name ) ) {
-                                buf.append( "&nbsp;&nbsp;&nbsp;" + name );
-                            }
-                        }
-                    }
-                    buf.append( "<br />" );
-                    // buf.append( designElements.get( i ).getName() + "<br />\n");
-                }
-                buf.append( "</td>" );
+                addProbeColumn( buf, rowElements );
+                addGeneSymbolColumn( buf, rowElements );
+                addGeneNameColumn( buf, rowElements );
 
                 buf.append( "</tr>" );
                 buf.append( "</table>" );
+
+                buf.append( "<a target=\"blank\" href=\"visualizeDataMatrix.html?type=text&id=" + matrixId
+                        + "\">View as text</a>" );
+
+                buf.append( "</div>" );
             }
 
             pageContext.getOut().print( buf.toString() );
@@ -177,6 +163,116 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
         log.debug( "return SKIP_BODY" );
         return SKIP_BODY;
+    }
+
+    private void addProbeColumn( StringBuilder buf, List<ExpressionDataMatrixRowElement> rowElements ) {
+        openColumnTableData( buf );
+        for ( int i = 0; i < rowElements.size(); i++ ) {
+            buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
+            DesignElement designElement = rowElements.get( i ).getDesignElement();
+            buf.append( "<a href=\"/Gemma/compositeSequence/showCompositeSequence.html?id=" + designElement.getId()
+                    + "\">" + designElement.getName() + "</a></span><br />\n" );
+        }
+        buf.append( "</td>" );
+    }
+
+    private final static int MAX_GENES_TO_SHOW_PER_ROW = 2;
+
+    /**
+     * @param buf
+     * @param rowElements
+     */
+    private void addGeneSymbolColumn( StringBuilder buf, List<ExpressionDataMatrixRowElement> rowElements ) {
+        openColumnTableData( buf );
+        for ( int i = 0; i < rowElements.size(); i++ ) {
+            CompositeSequence compositeSequence = ( CompositeSequence ) rowElements.get( i ).getDesignElement();
+            buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
+            if ( genes == null || !genes.containsKey( compositeSequence ) ) {
+                buf.append( "</span><br />" );
+                continue;
+            }
+            int geneNum = 0;
+            Iterator<Gene> it = genes.get( compositeSequence ).iterator();
+            for ( ; it.hasNext(); ) {
+                Gene gene = it.next();
+                String symbol = gene.getOfficialSymbol();
+                if ( !StringUtils.isEmpty( symbol ) ) {
+                    String symbolTrimmed = StringUtils.abbreviate( symbol, MAX_GENE_SYMBOL_LENGTH );
+                    buf.append( "<a title=\"" + symbol + "\" href=\"/Gemma/gene/showGene.html?id=" + gene.getId()
+                            + "\">" + symbolTrimmed + "</a>" );
+                }
+                geneNum++;
+                if ( it.hasNext() && geneNum == MAX_GENES_TO_SHOW_PER_ROW ) {
+                    buf.append( "&nbsp;<a title=\"More genes not shown\">...</a>" );
+                    break;
+                }
+                if ( it.hasNext() ) {
+                    buf.append( "&nbsp;|&nbsp;" );
+                }
+
+            }
+            buf.append( "</span><br />" );
+        }
+
+        buf.append( "</td>" );
+    }
+
+    /**
+     * @param buf
+     */
+    private void openColumnTableData( StringBuilder buf ) {
+        buf.append( "<td nowrap='nowrap' style='font-size : " + MAGIC_EM_SIZE
+                + "em; line-height:1.0em;' valign='bottom' align=\"left\">" );
+    }
+
+    /**
+     * @param buf
+     * @param rowElements
+     */
+    private void addGeneNameColumn( StringBuilder buf, List<ExpressionDataMatrixRowElement> rowElements ) {
+        openColumnTableData( buf );
+        for ( int i = 0; i < rowElements.size(); i++ ) {
+            CompositeSequence compositeSequence = ( CompositeSequence ) rowElements.get( i ).getDesignElement();
+            buf.append( "<span " + alternateRowStyle( i, 200 ) + ">" );
+            if ( genes == null || !genes.containsKey( compositeSequence ) ) {
+                buf.append( "</span><br />" );
+                continue;
+            }
+            List<Gene> geneList = new ArrayList<Gene>();
+            geneList.addAll( genes.get( compositeSequence ) );
+            for ( int geneNum = 0; geneNum < geneList.size(); geneNum++ ) {
+                Gene gene = geneList.get( geneNum );
+                String name = gene.getOfficialName();
+                if ( geneNum == MAX_GENES_TO_SHOW_PER_ROW ) {
+                    if ( StringUtils.isNotBlank( name ) ) {
+                        buf.append( "&nbsp<a title=\"More genes not shown including " + name + "\">...</a>" );
+                    }
+                    break;
+                }
+
+                if ( StringUtils.isNotBlank( name ) ) {
+                    buf.append( "<a title=\"" + name + " [" + gene.getOfficialSymbol() + "]\">"
+                            + StringUtils.abbreviate( name, MAX_GENE_NAME_LENGTH ) + "</a>" );
+                }
+
+                if ( StringUtils.isNotBlank( name ) && geneNum < geneList.size() - 1
+                        && StringUtils.isNotBlank( geneList.get( geneNum + 1 ).getName() ) ) {
+                    buf.append( "&nbsp;|&nbsp;" );
+                }
+            }
+            buf.append( "</span><br />" );
+        }
+        buf.append( "</td>" );
+    }
+
+    private String alternateRowStyle( int i, int width ) {
+        if ( i % 2 == 0 ) {
+            // FIXME this doesn't work as desired.
+            // return "style=\"width:" + width + "px;background-color:#eee;\"";
+            return "";
+        } else {
+            return "";
+        }
     }
 
     /*

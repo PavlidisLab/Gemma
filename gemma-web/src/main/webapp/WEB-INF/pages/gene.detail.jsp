@@ -4,19 +4,20 @@
 <jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
 <jsp:useBean id="gene" scope="request"
 	class="ubic.gemma.model.genome.GeneImpl" />
-	
+
 <script type="text/javascript"
 	src="<c:url value="/scripts/scrolltable.js"/>"></script>
 <link rel="stylesheet" type="text/css"
 	href="<c:url value='/styles/scrolltable.css'/>" />
 
-	
+
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<title><fmt:message key="gene.details" /></title>
+<title><fmt:message key="gene.details" />
+</title>
 
 <h2>
-	<fmt:message key="gene.details" /> 
+	<fmt:message key="gene.details" />
 	<c:if test="${gene.officialSymbol != null}">
 	for <jsp:getProperty name="gene" property="officialSymbol" />
 	</c:if>
@@ -136,10 +137,10 @@
 </table>
 
 <c:if test="${numOntologyEntries > 0 }">
-<h3>
-	<fmt:message key="gene.ontology" />
-	
-</h3>
+	<h3>
+		<fmt:message key="gene.ontology" />
+
+	</h3>
 </c:if>
 
 <display:table name="ontologyEntries" class="list" requestURI=""
@@ -185,13 +186,17 @@ if ( gene.getProducts().size() > 0 ) {
 
 
 <div id="tableContainer" class="tableContainer">
-<display:table name="gene.products" class="scrollTable" requestURI=""
-	id="productsList" pagesize="1000"
-	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper">
-	<display:column property="name" sortable="true" maxWords="20" headerClass="fixedHeader" />
-	<display:column property="description" sortable="true" maxWords="20" headerClass="fixedHeader" />
-	<display:setProperty name="basic.empty.showtable" value="false" />
-</display:table>
+	<display:table name="gene.products" class="scrollTable" requestURI=""
+		id="productsList" pagesize="1000"
+		decorator="ubic.gemma.web.taglib.displaytag.gene.GeneWrapper"
+		defaultsort="3">
+		<display:column property="name" sortable="true" maxWords="20"
+			headerClass="fixedHeader" />
+		<display:column property="description" sortable="true" maxWords="20"
+			headerClass="fixedHeader" />
+		<display:column property="type" sortable="true" title="Type" />
+		<display:setProperty name="basic.empty.showtable" value="false" />
+	</display:table>
 </div>
 
 <br />
