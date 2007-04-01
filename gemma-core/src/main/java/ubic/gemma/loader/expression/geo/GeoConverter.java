@@ -1384,6 +1384,9 @@ public class GeoConverter implements Converter {
         // GEO does not have the concept of a biomaterial.
         Collection<GeoSample> allSeriesSamples = series.getSamples();
         log.info( "Series has " + series.getSamples().size() + " samples" );
+        if ( samplesToSkip.size() > 0 ) {
+            log.info( samplesToSkip.size() + " samples will be skipped" );
+        }
         expExp.setBioAssays( new HashSet() );
 
         if ( series.getSampleCorrespondence().size() == 0 ) {
@@ -1397,6 +1400,7 @@ public class GeoConverter implements Converter {
         /*
          * For each _set_ of "corresponding" samples (from the same RNA, or so we think) we make up a new BioMaterial.
          */
+
         Collection<String> seen = new HashSet<String>();
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
@@ -1456,6 +1460,15 @@ public class GeoConverter implements Converter {
         log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays and "
                 + numBioMaterials + " biomaterials." );
 
+        int expectedNumSamples = series.getSamples().size() - samplesToSkip.size();
+        int actualNumSamples = expExp.getBioAssays().size();
+        if ( expectedNumSamples > actualNumSamples ) {
+            log
+                    .warn( ( expectedNumSamples - actualNumSamples )
+                            + " samples were not in the 'sample correspondence'"
+                            + " and have been omitted. Possibly they were in the Series (GSE) but not in the corresponding Dataset (GDS)?" );
+        }
+
         // Dataset has additional information about the samples.
 
         if ( dataSets.size() == 0 ) {
@@ -1501,7 +1514,6 @@ public class GeoConverter implements Converter {
     private void checkForDataToSkip( Collection<GeoDataset> dataSets, Collection<String> dataSetsToSkip,
             Collection<GeoSample> samplesToSkip ) {
         for ( GeoDataset dataset : dataSets ) {
-
             // This doesn't cover every possibility...
             if ( dataset.getExperimentType() == ExperimentType.arrayCGH
                     || dataset.getExperimentType() == ExperimentType.ChIPChip
@@ -1515,7 +1527,8 @@ public class GeoConverter implements Converter {
                 samplesToSkip.addAll( this.getDatasetSamples( dataset ) );
                 dataSetsToSkip.add( dataset.getGeoAccession() );
             } else {
-                log.info( "Data from " + dataset + " is " + dataset.getExperimentType() );
+                log.info( "Data from " + dataset + " is of type " + dataset.getExperimentType() + ", "
+                        + getDatasetSamples( dataset ).size() + " samples." );
             }
         }
     }

@@ -43,7 +43,7 @@ public class HibernateMonitor {
     private boolean showQueryCacheStats = true;
     private boolean showEntityStats = false;
     private boolean showCollectionStats = false;
-    private boolean showSecondLevelCacheDetails = true;
+    private boolean showSecondLevelCacheDetails = false;
 
     /**
      * Log some statistics.
@@ -53,7 +53,7 @@ public class HibernateMonitor {
         Statistics stats = sessionFactory.getStatistics();
 
         StringBuilder buf = new StringBuilder();
-        buf.append( "\n--------------- Hibernate stats -----------------------\n" );
+        buf.append( "\n------------------- Hibernate stats -----------------------\n" );
 
         long flushes = stats.getFlushCount();
         long trans = stats.getTransactionCount();
@@ -62,9 +62,7 @@ public class HibernateMonitor {
         long close = stats.getSessionCloseCount();
 
         buf.append( open + " sessions opened, " + close + " closed\n" );
-        buf.append( prep + " statements prepared\n" );
-        buf.append( trans + " transactions completed\n" );
-        buf.append( flushes + " flushes\n" );
+        buf.append( prep + " statements prepared, " + trans + " transactions completed, " + flushes + " flushes.\n" );
 
         if ( showQueryCacheStats ) {
             long queryCacheHitCount = stats.getQueryCacheHitCount();

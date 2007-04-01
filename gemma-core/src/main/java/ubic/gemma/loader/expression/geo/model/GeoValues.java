@@ -83,10 +83,11 @@ public class GeoValues {
         skippableQuantitationTypes.add( "TOT_BPIX" );
 
         // the following are background-subtracted values that can be easily computed from the raw values
-        skippableQuantitationTypes.add( "CH1D_MEAN" );
-        skippableQuantitationTypes.add( "CH2D_MEAN" );
-        skippableQuantitationTypes.add( "CH1D_MEDIAN" );
-        skippableQuantitationTypes.add( "CH2D_MEDIAN" );
+        // unfortunately the non-background-subtracted values aren't always available.
+        // skippableQuantitationTypes.add( "CH1D_MEAN" );
+        // skippableQuantitationTypes.add( "CH2D_MEAN" );
+        // skippableQuantitationTypes.add( "CH1D_MEDIAN" );
+        // skippableQuantitationTypes.add( "CH2D_MEDIAN" );
 
         // some raw items are skippable.(assumes we use median)
         skippableQuantitationTypes.add( "SUM_MEAN" );
@@ -193,7 +194,9 @@ public class GeoValues {
     }
 
     /**
-     * Map between quantitation type names and the column number. This is used to help identify quantitation types that are not going to be stored.
+     * Map between quantitation type names and the column number. This is used to help identify quantitation types that
+     * are not going to be stored.
+     * 
      * @param name
      * @param columnNumber
      */

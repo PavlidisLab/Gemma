@@ -178,6 +178,8 @@ public class ExpressionDataMatrixVisualizationService {
 
         ColorMatrix colorMatrix = new ColorMatrix( matrix );
 
+        colorMatrix.standardize();
+
         return colorMatrix;
     }
 

@@ -159,6 +159,7 @@ public class TwoChannelMissingValues {
         ByteArrayConverter converter = new ByteArrayConverter();
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         QuantitationType present = getQuantitationType( signalToNoiseThreshold );
+        source.getQuantitationTypes().add(present);
 
         int count = 0;
         for ( ExpressionDataMatrixRowElement element : signalChannelA.getRowElements() ) {
@@ -215,7 +216,8 @@ public class TwoChannelMissingValues {
             results.add( vect );
 
             if ( ++count % 4000 == 0 ) {
-                log.info( count + " vectors examined for missing values" );
+                log.info( count + " vectors examined for missing values, " + results.size()
+                        + " vectors generated so far." );
             }
 
         }
@@ -243,6 +245,10 @@ public class TwoChannelMissingValues {
         present.setIsBackground( false );
         present.setRepresentation( PrimitiveType.BOOLEAN );
         present.setScale( ScaleType.OTHER );
+        present.setIsPreferred( false );
+        present.setIsBackgroundSubtracted( false );
+        present.setIsNormalized( false );
+        present.setIsRatio( false );
         present.setType( StandardQuantitationType.PRESENTABSENT );
         return present;
     }

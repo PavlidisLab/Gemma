@@ -18,6 +18,8 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +38,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -328,25 +331,36 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         int columns = this.columns();
         int rows = this.rows();
 
+        NumberFormat nf = DecimalFormat.getInstance();
+        nf.setMaximumFractionDigits( 4 );
+
         StringBuffer buf = new StringBuffer();
         buf.append( rows + " x " + columns + " matrix of double values, showing up to " + MAX_ROWS_TO_STRING
                 + " rows\n" );
         int stop = 0;
-        buf.append( "Row\\Col" );
+        buf.append( "Probe" );
         for ( int i = 0; i < columns; i++ ) {
-            buf.append( "\t" + this.getBioMaterialForColumn( i ) + ":" );
+            buf.append( "\t" + this.getBioMaterialForColumn( i ).getName() + ":" );
             for ( BioAssay ba : this.getBioAssaysForColumn( i ) ) {
-                buf.append( ba + "," );
+                buf.append( ba.getName() + "," );
             }
         }
         buf.append( "\n" );
 
         for ( int j = 0; j < rows; j++ ) {
 
-            buf.append( this.rowDesignElementMapByInteger.get( j ) );
+            buf.append( this.rowDesignElementMapByInteger.get( j ).getName() );
+            BioSequence biologicalCharacteristic = ( ( CompositeSequence ) this.rowDesignElementMapByInteger.get( j ) )
+                    .getBiologicalCharacteristic();
+            if ( biologicalCharacteristic != null ) buf.append( " [" + biologicalCharacteristic.getName() + "]" );
 
             for ( int i = 0; i < columns; i++ ) {
-                buf.append( "\t" + this.get( j, i ) );
+                Double val = this.get( j, i );
+                if ( Double.isNaN( val ) ) {
+                    buf.append( "\t" + val );
+                } else {
+                    buf.append( "\t" + nf.format( this.get( j, i ) ) );
+                }
             }
 
             buf.append( "\n" );

@@ -115,6 +115,7 @@ public class ExpressionExperimentPlatformSwitchService {
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
         Collection<DesignElement> usedDesignElements = new HashSet<DesignElement>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
+            arrayDesignService.thawLite( oldAd );
             Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp, oldAd );
             log.info( qts.size() + " quantitation types for vectors on " + oldAd );
             for ( QuantitationType type : qts ) {
@@ -124,7 +125,7 @@ public class ExpressionExperimentPlatformSwitchService {
                 // use each design element only once per quantitation type per array design.
                 usedDesignElements.clear();
 
-                Collection<DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( expExp, type );
+                Collection<DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd, type );
                 // Collection<DesignElementDataVector> doomedToBeRemoved = new HashSet<DesignElementDataVector>();
                 int count = 0;
                 for ( DesignElementDataVector vector : vectorsForQt ) {
@@ -223,17 +224,14 @@ public class ExpressionExperimentPlatformSwitchService {
     }
 
     /**
-     * @param expExp
+     * @param arrayDesign
      * @param type
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<DesignElementDataVector> getVectorsForOneQuantitationType( ExpressionExperiment expExp,
+    private Collection<DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
             QuantitationType type ) {
-        Collection<QuantitationType> oneType = new HashSet<QuantitationType>();
-        oneType.add( type );
-        Collection<DesignElementDataVector> vectorsForQt = expressionExperimentService.getDesignElementDataVectors(
-                expExp, oneType );
+        Collection<DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign, type );
         designElementDataVectorService.thaw( vectorsForQt );
         return vectorsForQt;
     }

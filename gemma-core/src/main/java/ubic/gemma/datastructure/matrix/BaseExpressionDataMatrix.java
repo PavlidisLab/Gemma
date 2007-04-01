@@ -435,7 +435,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
         Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
-            log.info( "Processing: " + dimension + " with " + dimension.getBioAssays().size() + " assays" );
+            log.debug( "Processing: " + dimension + " with " + dimension.getBioAssays().size() + " assays" );
             for ( BioAssay ba : dimension.getBioAssays() ) {
                 log.debug( "      " + ba );
                 Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
@@ -458,7 +458,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             }
         }
 
-        log.info( bioMaterialGroups.size() + " biomaterialGroups (correspond to columns)" );
+        log.debug( bioMaterialGroups.size() + " biomaterialGroups (correspond to columns)" );
         int column = 0;
         for ( Collection<BioMaterial> bms : bioMaterialGroups ) {
             for ( BioMaterial bioMaterial : bms ) {
@@ -492,9 +492,11 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             column++;
         }
 
-         if ( log.isInfoEnabled() ) {
+        // TODO: allow columns to be rearranged according to some other ordering (e.g., by factors)
+
+        if ( log.isDebugEnabled() ) {
             for ( Object o : this.columnAssayMap.keySet() ) {
-                log.info( o + " " + this.columnAssayMap.get( o ) );
+                log.debug( o + " " + this.columnAssayMap.get( o ) );
             }
         }
 

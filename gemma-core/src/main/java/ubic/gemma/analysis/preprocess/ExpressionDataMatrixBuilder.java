@@ -129,6 +129,7 @@ public class ExpressionDataMatrixBuilder {
             return result;
         }
 
+        log.debug("Checking all vectors to get bioAssayDimensions");
         Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
             ArrayDesign adUsed = arrayDesignForVector( vector );
@@ -141,6 +142,7 @@ public class ExpressionDataMatrixBuilder {
             }
         }
 
+        log.debug("got " + dimensions.size() + " bioassaydimensions");
         result.addAll( dimensions );
         return result;
     }
@@ -473,6 +475,10 @@ public class ExpressionDataMatrixBuilder {
 
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
 
+        if ( dimensions.size() == 0 ) {
+            throw new IllegalArgumentException( "No bioassaydimensions!" );
+        }
+
         for ( BioAssayDimension dimension : dimensions ) {
             for ( DesignElementDataVector vector : vectors ) {
 
@@ -594,7 +600,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     private static boolean isBackgroundChannelA( String name ) {
-        return name.equals( "CH1A_MEDIAN" ) || name.equals( "CH1_BKD" )
+        return name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
                 || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
                 || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )

@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -141,9 +142,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             }
         }
 
-        AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditEventService" );
+        AuditTrailService auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
-        auditEventService
+        auditTrailService
                 .addUpdateEvent( ee, type, "Computed missing value data on array designs: " + arrayDesignsUsed );
 
     }
@@ -169,8 +170,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         if ( force && previousMissingValueQt != null ) {
             log.info( "Removing old present/absent data" );
-            DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
-                    .getBean( "designElementDataVectorService" );
             dedvs.removeDataForQuantitationType( ee, previousMissingValueQt );
         }
 
@@ -182,13 +181,12 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         PersisterHelper persisterHelper = this.getPersisterHelper();
 
-        log.info( "Persisting results..." );
+        log.info( "Persisting " + vectors.size() + " vectors ... " );
         for ( DesignElementDataVector vector : vectors ) {
             vector.setQuantitationType( ( QuantitationType ) persisterHelper.persist( vector.getQuantitationType() ) );
         }
-
-        ee.getDesignElementDataVectors().addAll( vectors );
-        this.getExpressionExperimentService().update( ee );
+        dedvs.create( vectors );
+        eeService.update( ee );
     }
 
     public static void main( String[] args ) {
@@ -204,6 +202,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     TwoChannelMissingValues tcmv;
+    DesignElementDataVectorService dedvs;
+    ExpressionExperimentService eeService;
 
     @Override
     protected void processOptions() {
@@ -218,7 +218,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             this.force = true;
         }
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        // this.designElementDataVectorService = ( DesignElementDataVectorService ) getBean(
-        // "designElementDataVectorService" );
+        dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }
 }

@@ -137,26 +137,27 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         addOption( OutOption );
     }
 
-    private QuantitationType getQuantitationType( ExpressionExperiment ee, StandardQuantitationType requiredQT, boolean isPreferedQT ) {
+    private QuantitationType getQuantitationType( ExpressionExperiment ee, StandardQuantitationType requiredQT,
+            boolean isPreferedQT ) {
         QuantitationType qtf = null;
         Collection<QuantitationType> eeQT = this.eeService.getQuantitationTypes( ee );
         for ( QuantitationType qt : eeQT ) {
-        	if(isPreferedQT){
-        		if ( qt.getIsPreferred() ) {
-        			qtf = qt;
-        			StandardQuantitationType tmpQT = qt.getType();
-        			if ( tmpQT != StandardQuantitationType.AMOUNT ) {
-        				log.warn( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
-        						+ tmpQT.toString() );
-        			}
-        			break;
-        		}
-        	}else{
-                if ( qt.getType().equals(requiredQT) ) {
+            if ( isPreferedQT ) {
+                if ( qt.getIsPreferred() ) {
+                    qtf = qt;
+                    StandardQuantitationType tmpQT = qt.getType();
+                    if ( tmpQT != StandardQuantitationType.AMOUNT ) {
+                        log.warn( "Preferred Quantitation Type may not be correct." + ee.getShortName() + ":"
+                                + tmpQT.toString() );
+                    }
+                    break;
+                }
+            } else {
+                if ( qt.getType().equals( requiredQT ) ) {
                     qtf = qt;
                     break;
                 }
-        	}
+            }
         }
         if ( qtf == null ) {
             log.info( "Expression Experiment " + ee.getShortName() + " doesn't have required QT " );
@@ -170,7 +171,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         if ( qt == null ) return ( "No usable quantitation type in " + ee.getShortName() );
         log.info( "Load Data for  " + ee.getShortName() );
 
-        Collection<DesignElementDataVector> dataVectors = devService.find( ee, qt );
+        Collection<DesignElementDataVector> dataVectors = devService.find( qt );
         if ( dataVectors == null ) return ( "No data vector " + ee.getShortName() );
         ByteArrayConverter bac = new ByteArrayConverter();
 
@@ -194,7 +195,9 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         }
         return null;
     }
-    private HashMap<Object, Set> getDevToGeneAssociation( Object[] allVectors, int start, int end ) // From start to end-1
+
+    private HashMap<Object, Set> getDevToGeneAssociation( Object[] allVectors, int start, int end ) // From start to
+    // end-1
     {
         Collection<DesignElementDataVector> someVectors = new HashSet<DesignElementDataVector>();
         HashMap<Object, Set> returnAssocation = null;
@@ -205,12 +208,12 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         return returnAssocation;
     }
 
-    private HashMap<Object, Set> getProbeToGeneAssociation(Collection<DesignElementDataVector> dataVectors){
-    	HashMap<Object, Set> association = new HashMap<Object, Set>();
+    private HashMap<Object, Set> getProbeToGeneAssociation( Collection<DesignElementDataVector> dataVectors ) {
+        HashMap<Object, Set> association = new HashMap<Object, Set>();
         Object[] allVectors = dataVectors.toArray();
         int ChunkNum = 1000;
         int end = allVectors.length > ChunkNum ? ChunkNum : allVectors.length;
-        association.putAll(this.getDevToGeneAssociation(allVectors, 0, end ));
+        association.putAll( this.getDevToGeneAssociation( allVectors, 0, end ) );
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -219,30 +222,31 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
             if ( i >= end ) {
                 int start = end;
                 end = allVectors.length > end + ChunkNum ? end + ChunkNum : allVectors.length;
-                System.err.println(start + " " + end);
-                association.putAll(this.getDevToGeneAssociation(allVectors, start, end ));
+                System.err.println( start + " " + end );
+                association.putAll( this.getDevToGeneAssociation( allVectors, start, end ) );
             }
         }
         HashMap<Object, Set> probeToGeneAssociation = new HashMap<Object, Set>();
-        
-        for(Object dev:association.keySet()){
-        	Set<Gene> mappedGenes = association.get(dev);
-        	probeToGeneAssociation.put(((DesignElementDataVector)dev).getDesignElement(), mappedGenes);
+
+        for ( Object dev : association.keySet() ) {
+            Set<Gene> mappedGenes = association.get( dev );
+            probeToGeneAssociation.put( ( ( DesignElementDataVector ) dev ).getDesignElement(), mappedGenes );
         }
-        	
-    	return probeToGeneAssociation;
+
+        return probeToGeneAssociation;
     }
+
     @SuppressWarnings("unchecked")
     String processEE( ExpressionExperiment ee ) {
         // eeService.thaw( ee );
-        QuantitationType qt = this.getQuantitationType( ee, null, true);
+        QuantitationType qt = this.getQuantitationType( ee, null, true );
         if ( qt == null ) return ( "No usable quantitation type in " + ee.getShortName() );
         log.info( "Load Data for  " + ee.getShortName() );
 
-        Collection<DesignElementDataVector> dataVectors = devService.find( ee, qt );
+        Collection<DesignElementDataVector> dataVectors = devService.find( qt );
         if ( dataVectors == null ) return ( "No data vector " + ee.getShortName() );
-        if ( this.probeToGeneAssociation == null){
-        	this.probeToGeneAssociation = getProbeToGeneAssociation(dataVectors);
+        if ( this.probeToGeneAssociation == null ) {
+            this.probeToGeneAssociation = getProbeToGeneAssociation( dataVectors );
         }
 
         for ( DesignElementDataVector vector : dataVectors ) {
@@ -284,19 +288,21 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         if ( Double.isNaN( value ) ) value = 0.0;
         return value;
     }
-    int getNumberofArraysinEE(ExpressionExperiment ee, ArrayDesign ad){
-    	int numberofArrays = 0;
-    	eeService.thaw( ee );
+
+    int getNumberofArraysinEE( ExpressionExperiment ee, ArrayDesign ad ) {
+        int numberofArrays = 0;
+        eeService.thaw( ee );
         Collection<BioAssay> bioAssays = ee.getBioAssays();
         for ( BioAssay assay : bioAssays ) {
             ArrayDesign design = assay.getArrayDesignUsed();
-            if ( ad.equals(design) ) {
+            if ( ad.equals( design ) ) {
                 numberofArrays++;
             }
         }
-        System.err.println("Got " + numberofArrays);
-    	return numberofArrays;
+        System.err.println( "Got " + numberofArrays );
+        return numberofArrays;
     }
+
     @Override
     protected Exception doWork( String[] args ) {
         // TODO Auto-generated method stub
@@ -326,11 +332,12 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         int numberofAllArrays = 0;
         for ( ExpressionExperiment ee : relatedEEs ) {
             System.err.println( ee.getName() );
-            if(this.processEEForPercentage( ee ) != null) continue;;
-           	if(this.processEE( ee ) != null) continue;
-           	numberofAllArrays = numberofAllArrays + this.getNumberofArraysinEE(ee, arrayDesign);
+            if ( this.processEEForPercentage( ee ) != null ) continue;
+            ;
+            if ( this.processEE( ee ) != null ) continue;
+            numberofAllArrays = numberofAllArrays + this.getNumberofArraysinEE( ee, arrayDesign );
         }
-        log.info("The total number of all arrays is " + numberofAllArrays);
+        log.info( "The total number of all arrays is " + numberofAllArrays );
         ObjectArrayList sortedList = new ObjectArrayList();
         for ( DesignElement de : this.rankData.keySet() ) {
             DoubleArrayList rankList = this.rankData.get( de );
@@ -350,19 +357,19 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
             PrintStream output = new PrintStream( new FileOutputStream( new File( this.outFileName ) ) );
             for ( int i = 0; i < sortedList.size(); i++ ) {
                 SortedElement oneElement = ( SortedElement ) sortedList.get( i );
-                if(oneElement.getDE().getName().toUpperCase().contains("AFFY")) continue;
+                if ( oneElement.getDE().getName().toUpperCase().contains( "AFFY" ) ) continue;
                 output.print( oneElement.getDE().getName() );
                 output.print( "\t" + oneElement.getMax() );
                 double lower_threshould = 0.001;
-                if(oneElement.getPresentAbsentCall() < lower_threshould)
-                	output.print( "\t"+ lower_threshould );
+                if ( oneElement.getPresentAbsentCall() < lower_threshould )
+                    output.print( "\t" + lower_threshould );
                 else
-                	output.print( "\t" + oneElement.getPresentAbsentCall() );
-                Set<Gene> mappedGenes = this.probeToGeneAssociation.get(oneElement.getDE());
-                if(mappedGenes != null)
-                	output.println( "\t" + mappedGenes.size() );
+                    output.print( "\t" + oneElement.getPresentAbsentCall() );
+                Set<Gene> mappedGenes = this.probeToGeneAssociation.get( oneElement.getDE() );
+                if ( mappedGenes != null )
+                    output.println( "\t" + mappedGenes.size() );
                 else
-                	output.println("\t0");
+                    output.println( "\t0" );
             }
             output.close();
         } catch ( Exception e ) {

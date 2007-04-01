@@ -115,6 +115,7 @@ public class DatasetCombiner {
 
     private static Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
 
+    // Maps of sample accessions to other useful bits.
     LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<String, String>();
     LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
     LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
@@ -246,8 +247,21 @@ public class DatasetCombiner {
      * @return
      */
     public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
-        if ( series.getDatasets() != null && series.getDatasets().size() > 0 ) {
-            return findGSECorrespondence( series.getDatasets() );
+        Collection<GeoDataset> datasets = series.getDatasets();
+        if ( datasets != null && datasets.size() > 0 ) {
+            fillAccessionMaps( datasets );
+            // make sure all samples are accounted for - just informative
+            boolean ok = true;
+            for ( GeoSample sample : series.getSamples() ) {
+                if ( !this.accToDataset.containsKey( sample.getGeoAccession() ) ) {
+                    ok = false;
+                    break;
+                }
+            }
+            if ( !ok ) {
+                log.warn( "There were one or more samples missing from the datasets so" );
+            }
+            return findGSECorrespondence( datasets );
         }
 
         int numPlatforms = fillAccessionMaps( series );
@@ -265,11 +279,7 @@ public class DatasetCombiner {
         if ( dataSets.size() == 0 ) {
             throw new IllegalArgumentException( "No datasets!" );
         }
-
         int numDatasets = dataSets.size();
-
-        fillAccessionMaps( dataSets );
-
         return findCorrespondence( numDatasets );
     }
 
@@ -794,6 +804,8 @@ public class DatasetCombiner {
     }
 
     /**
+     * This is used if there are no 'datasets' (GDS) to work with; we just use platforms.
+     * 
      * @param series
      * @param accToTitle
      * @param accToOwneracc
