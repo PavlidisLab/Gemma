@@ -358,14 +358,25 @@ public class MetaLinkFinder {
     	Gene gene = geneService.load(((Long)geneId).longValue());
     	return gene;
     }
-    
-    public static String getLinkName(long id){
-        int row = (int)(id/shift);
-        int col = (int)(id%shift);
+    public static boolean filter(int row, int col){
         String geneName1 = getRowGene(row).getName();
         String geneName2 = getColGene(col).getName();
-        while(!MetaLinkFinder.geneOntologyService.isGeneOntologyLoaded());
-        return geneName1+"_"+geneName2 + "_"+computeGOOverlap(getRowGene(row),getColGene(col));
+        //if(geneName1.matches("(RPL|RPS)(.*)") ||geneName2.matches("(RPL|RPS)(.*)"))
+        	//return true;
+        return false;
+    }
+    public static Gene[] getPairedGenes(long id){
+    	Gene[] pairedGene = new Gene[2];
+        int row = (int)(id/shift);
+        int col = (int)(id%shift);
+        pairedGene[0] = getRowGene(row);
+        pairedGene[1] = getRowGene(col);
+    	return pairedGene;
+    }
+    public static String getLinkName(long id){
+    	Gene[] pairedGene = getPairedGenes(id);
+    	while(!MetaLinkFinder.geneOntologyService.isGeneOntologyLoaded());
+        return pairedGene[0].getName() +"_"+ pairedGene[1].getName() + "_"+computeGOOverlap(pairedGene[0], pairedGene[1]);
     }
     public static boolean checkEEConfirmation(long id, int eeIndex){
         int rows = (int)(id/shift);
