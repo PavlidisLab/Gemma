@@ -19,7 +19,6 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -100,60 +99,81 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
         ByteArrayConverter bac = new ByteArrayConverter();
         int rowNum = 0;
 
-        Collection<BioAssayDimension> seenDims = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
             matrix.addRowName( vector.getDesignElement() );
             byte[] bytes = vector.getData();
 
-            boolean[] vals = null;
-            if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
-                vals = bac.byteArrayToBooleans( bytes );
-            } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.CHAR ) ) {
-                char[] charVals = bac.byteArrayToChars( bytes );
-                vals = new boolean[charVals.length];
-                int j = 0;
-                for ( char c : charVals ) {
-                    if ( c == 'P' ) {
-                        vals[j] = true;
-                    } else if ( c == 'M' ) {
-                        vals[j] = false;
-                    } else if ( c == 'A' ) {
-                        vals[j] = false;
-                    }
-                    j++;
-                }
+            Integer rowIndex = this.rowElementMap.get( vector.getDesignElement() );
+            assert rowIndex != null;
 
-            } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
-                String val = bac.byteArrayToAsciiString( bytes );
-                String[] fields = StringUtils.split( val, '\t' );
-                vals = new boolean[fields.length];
-                int j = 0;
-                for ( String c : fields ) {
-                    if ( c.equals( "P" ) ) {
-                        vals[j] = true;
-                    } else if ( c.equals( "M" ) ) {
-                        vals[j] = false;
-                    } else if ( c.equals( "A" ) ) {
-                        vals[j] = false;
-                    }
-                    j++;
-                }
-            }
+            boolean[] vals = getVals( bac, vector, bytes );
 
-            Iterator<BioAssay> it = dimension.getBioAssays().iterator();
-            seenDims.add( dimension );
-            assert dimension.getBioAssays().size() == vals.length : "Expected " + vals.length + " got "
-                    + dimension.getBioAssays().size();
-            for ( int i = 0; i < vals.length; i++ ) {
-                BioAssay bioAssay = it.next();
-                matrix.setQuick( rowNum, columnAssayMap.get( bioAssay ), vals[i] );
+            Collection<BioAssay> bioAssays = dimension.getBioAssays();
+            Iterator<BioAssay> it = bioAssays.iterator();
+            assert bioAssays.size() == vals.length : "Expected " + vals.length + " got "
+                    + bioAssays.size();
+            for ( int j = 0; j < bioAssays.size(); j++ ) {
+                BioAssay bioAssay = ( BioAssay ) it.next();
+                Integer column = this.columnAssayMap.get( bioAssay );
+                assert column != null;
+                matrix.setQuick( rowIndex, column, vals[j] );
             }
 
             rowNum++;
         }
 
         return matrix;
+    }
+
+    /**
+     * Note that if we have trouble interpreting the data, it gets left as false.
+     * @param bac
+     * @param vector
+     * @param bytes
+     * @return
+     */
+    private boolean[] getVals( ByteArrayConverter bac, DesignElementDataVector vector, byte[] bytes ) {
+        boolean[] vals = null;
+        if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
+            vals = bac.byteArrayToBooleans( bytes );
+        } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.CHAR ) ) {
+            char[] charVals = bac.byteArrayToChars( bytes );
+            vals = new boolean[charVals.length];
+            int j = 0;
+            for ( char c : charVals ) {
+                if ( c == 'P' ) {
+                    vals[j] = true;
+                } else if ( c == 'M' ) {
+                    vals[j] = false;
+                } else if ( c == 'A' ) {
+                    vals[j] = false;
+                } else {
+                    vals[j] = false;
+                }
+
+                j++;
+            }
+
+        } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
+            String val = bac.byteArrayToAsciiString( bytes );
+            String[] fields = StringUtils.split( val, '\t' );
+            vals = new boolean[fields.length];
+            int j = 0;
+            for ( String c : fields ) {
+                if ( c.equals( "P" ) ) {
+                    vals[j] = true;
+                } else if ( c.equals( "M" ) ) {
+                    vals[j] = false;
+                } else if ( c.equals( "A" ) ) {
+                    vals[j] = false;
+                } else {
+                    vals[j] = false;
+                }
+                j++;
+            }
+        }
+        return vals;
     }
 
     /*

@@ -188,7 +188,7 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
             audit( ee, "" );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
         }
     }
 

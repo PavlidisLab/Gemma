@@ -22,6 +22,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
+ * Perform various compuations on ExpressionDataMatrices (usually in-place).
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -43,9 +45,9 @@ public class ExpressionDataDoubleMatrixUtil {
             int rowNum = el.getIndex();
             DesignElement del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
-                double valA = a.get( del, bm );
-                double valB = b.get( del, bm );
+                BioAssay assay = a.getBioAssaysForColumn( i ).iterator().next();
+                double valA = a.get( del, assay );
+                double valB = b.get( del, assay );
                 a.set( rowNum, i, valA - valB );
             }
         }

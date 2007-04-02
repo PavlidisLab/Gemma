@@ -34,11 +34,9 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.PersisterHelper;
 
 /**
  * CLI for computing and persisting the 'present' calls for two-channel data
@@ -104,7 +102,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                     processExperiment( ee );
                 } catch ( Exception e ) {
                     errorObjects.add( ee + ": " + e.getMessage() );
-                    log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+                    log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
                 }
             }
 

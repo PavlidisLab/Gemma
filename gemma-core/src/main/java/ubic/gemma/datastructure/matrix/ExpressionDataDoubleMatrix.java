@@ -130,10 +130,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double get( DesignElement designElement, BioAssay bioAssay ) {
-        int i = matrix.getRowIndexByName( ( ( CompositeSequence ) designElement ).getBiologicalCharacteristic() );
-        int colNum = this.columnAssayMap.get( bioAssay );
-        int j = matrix.getColIndexByName( colNum );
-        log.debug( designElement + " = " + i + " " + bioAssay + " = " + j + " (colnum=" + colNum );
+        int i = this.rowElementMap.get( designElement );
+        int j = this.columnAssayMap.get( bioAssay );
         return this.matrix.get( i, j );
     }
 
@@ -358,10 +356,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      */
     private DoubleMatrixNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
 
-        /*
-         * The number of rows in the matrix is equal to the number of BioSequences represented - not the number of
-         * vectors.
-         */
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );

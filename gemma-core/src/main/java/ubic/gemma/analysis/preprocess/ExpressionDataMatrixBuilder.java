@@ -192,15 +192,13 @@ public class ExpressionDataMatrixBuilder {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
 
         if ( dimensions.size() == 0 ) {
-            throw new IllegalStateException( "Could not find any BioAssayDimensions for " + arrayDesign + " in "
-                    + this.expressionExperiment );
+            throw new IllegalStateException( "Could not find any BioAssayDimensions" );
         }
 
         List<QuantitationType> qtypes = this.getPreferredQTypes( arrayDesign );
 
         if ( qtypes.size() == 0 ) {
-            throw new IllegalStateException( "Could not find a 'preferred' quantitation type for " + arrayDesign
-                    + " in " + this.expressionExperiment );
+            throw new IllegalStateException( "Could not find a 'preferred' quantitation type" );
         }
 
         log.info( qtypes.size() + " preferred quantitation types" );
@@ -346,6 +344,10 @@ public class ExpressionDataMatrixBuilder {
             ExpressionDataDoubleMatrix signalB = this.getSignalChannelB( arrayDesign );
             ExpressionDataDoubleMatrix backgroundA = this.getBackgroundChannelA( arrayDesign );
             ExpressionDataDoubleMatrix backgroundB = this.getBackgroundChannelB( arrayDesign );
+
+            if ( signalA == null && signalB == null ) {
+                throw new IllegalStateException( "Cannot get signal for both channels" );
+            }
 
             if ( backgroundA != null ) ExpressionDataDoubleMatrixUtil.subtractMatrices( signalA, backgroundA );
 

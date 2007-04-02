@@ -177,7 +177,6 @@ public class TwoChannelMissingValues {
             vect.setDesignElement( designElement );
             vect.setBioAssayDimension( bioAssayDimension );
 
-            // FIXME preferred.columns is slow.
             int numCols = preferred.columns( designElement );
 
             boolean[] detectionCalls = new boolean[numCols];
