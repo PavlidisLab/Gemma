@@ -12,7 +12,7 @@
 </h2>
 <li>
 	Expression Experiment:
-	<i><c:out value="${expressionExperiment.name}" /> </i>
+	<i><c:out value="${expressionExperiment.name}" /> (<a href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}"/>"><c:out value="${expressionExperiment.shortName }"/>)</a></i>
 </li>
 <br />
 <li>
