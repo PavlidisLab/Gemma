@@ -23,9 +23,7 @@ Probes for : ${gene.officialSymbol}
 for <br />
 		<jsp:getProperty name="arrayDesign" property="name" />
 (
-<a
-			href="<c:url value="/arrays/showArrayDesign.html?id=${arrayDesign.id }" />"
-			<jsp:getProperty name="arrayDesign" property="shortName" /></a>
+<a href="<c:url value="/arrays/showArrayDesign.html?id=${arrayDesign.id }" />"><jsp:getProperty name="arrayDesign" property="shortName" /></a>
 )
 </c:if>
 </h2>
