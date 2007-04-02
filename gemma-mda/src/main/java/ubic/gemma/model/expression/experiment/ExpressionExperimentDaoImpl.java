@@ -491,6 +491,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 session.update( expressionExperiment );
                 Hibernate.initialize( expressionExperiment );
                 expressionExperiment.getBioAssays().size();
+                expressionExperiment.getAuditTrail().getEvents().size();
                 thawPrimaryReference( expressionExperiment, session );
                 if ( expressionExperiment.getAccession() != null )
                     expressionExperiment.getAccession().getExternalDatabase();

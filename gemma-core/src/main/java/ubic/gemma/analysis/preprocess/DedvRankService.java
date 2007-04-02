@@ -20,6 +20,10 @@ package ubic.gemma.analysis.preprocess;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -33,7 +37,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
-import cern.jet.stat.Descriptive;
 
 /**
  * For each 'preferred' DesignElementDataVector in the experiment, compute the 'rank' of the expression level. For
@@ -47,9 +50,14 @@ import cern.jet.stat.Descriptive;
  */
 public class DedvRankService {
 
+    private static Log log = LogFactory.getLog( DedvRankService.class.getName() );
+
     private ExpressionExperimentService eeService = null;
     private DesignElementDataVectorService devService = null;
 
+    /**
+     * MAX - rank is based on the maximum value of the vector.
+     */
     public enum Method {
         MAX, MIN, MEAN, MEDIAN
     };
@@ -74,9 +82,12 @@ public class DedvRankService {
         Collection<DesignElementDataVector> vectors = eeService.getDesignElementDataVectors( ee,
                 ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee ) );
 
+        devService.thaw( vectors );
+
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
 
+            log.info( "Processing vectors on " + ad );
             ExpressionDataDoubleMatrix intensities = builder.getIntensity( ad );
 
             // We don't remove missing values for Affymetrix based on absent/present calls.
@@ -87,13 +98,16 @@ public class DedvRankService {
             IntArrayList ranks = getRanks( intensities, method );
 
             Collection<DesignElementDataVector> preferredVectors = builder.getPreferredDataVectors( ad );
+            log.debug( preferredVectors.size() + " vectors" );
             for ( DesignElementDataVector vector : preferredVectors ) {
                 DesignElement de = vector.getDesignElement();
-                int i = intensities.getRowIndex( de );
+                Integer i = intensities.getRowIndex( de );
+                assert i != null;
                 double rank = ( double ) ranks.get( i ) / ranks.size();
                 vector.setRank( rank );
             }
 
+            log.info( "Updating ranks data for " + preferredVectors.size() + " vectors" );
             this.devService.update( preferredVectors );
         }
 
@@ -104,18 +118,14 @@ public class DedvRankService {
      * @return
      */
     private IntArrayList getRanks( ExpressionDataDoubleMatrix intensities, Method method ) {
+        log.debug( "Getting ranks" );
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
         for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
-            Double[] rowObj = intensities.getRow( de.getIndex() );
+            double[] rowObj = ArrayUtils.toPrimitive( intensities.getRow( de.getDesignElement() ) );
             double valueForRank = Double.NaN;
             if ( rowObj != null ) {
-                DoubleArrayList row = new DoubleArrayList( rowObj.length );
-                for ( int j = 0; j < rowObj.length; j++ ) {
-                    double val = rowObj[j].doubleValue();
-                    row.add( val );
-                }
-
+                DoubleArrayList row = new DoubleArrayList( rowObj );
                 switch ( method ) {
                     case MIN:
                         valueForRank = DescriptiveWithMissing.min( row );

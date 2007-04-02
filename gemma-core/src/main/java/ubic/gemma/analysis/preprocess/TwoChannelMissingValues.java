@@ -30,6 +30,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -73,6 +74,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.bean id="twoChannelMissingValues"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
  * @author pavlidis
  * @version $Id$
  */
@@ -83,6 +85,8 @@ public class TwoChannelMissingValues {
     private ExpressionExperimentService expressionExperimentService;
 
     private DesignElementDataVectorService designElementDataVectorService;
+
+    private QuantitationTypeService quantitationTypeService;
 
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
@@ -148,6 +152,7 @@ public class TwoChannelMissingValues {
      *         biomaterial dimension represented in the inputs.
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )
      */
+    @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment source,
             BioAssayDimension bioAssayDimension, ExpressionDataDoubleMatrix preferred,
             ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
@@ -159,7 +164,7 @@ public class TwoChannelMissingValues {
         ByteArrayConverter converter = new ByteArrayConverter();
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         QuantitationType present = getQuantitationType( signalToNoiseThreshold );
-        source.getQuantitationTypes().add(present);
+        source.getQuantitationTypes().add( present );
 
         int count = 0;
         for ( ExpressionDataMatrixRowElement element : signalChannelA.getRowElements() ) {
@@ -222,6 +227,11 @@ public class TwoChannelMissingValues {
 
         }
         log.info( "Finished: " + count + " vectors examined for missing values" );
+
+        log.info( "Persisting " + results.size() + " vectors ... " );
+        results = designElementDataVectorService.create( results );
+        expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
+
         return results;
     }
 
@@ -250,7 +260,7 @@ public class TwoChannelMissingValues {
         present.setIsNormalized( false );
         present.setIsRatio( false );
         present.setType( StandardQuantitationType.PRESENTABSENT );
-        return present;
+        return this.quantitationTypeService.create( present );
     }
 
     /**
@@ -308,5 +318,9 @@ public class TwoChannelMissingValues {
 
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
     }
 }

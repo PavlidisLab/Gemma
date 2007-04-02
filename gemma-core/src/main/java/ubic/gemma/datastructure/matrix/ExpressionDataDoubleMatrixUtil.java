@@ -128,9 +128,10 @@ public class ExpressionDataDoubleMatrixUtil {
      * the same order, but they do have to have the same row and column keys. The result is stored in a.
      * 
      * @param matrix
-     * @param mask
+     * @param mask if null, masking is not attempted.
      */
     public static void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
+        if ( mask == null ) return;
         checkConformant( matrix, mask );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {

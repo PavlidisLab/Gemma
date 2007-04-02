@@ -129,7 +129,7 @@ public class ExpressionDataMatrixBuilder {
             return result;
         }
 
-        log.debug("Checking all vectors to get bioAssayDimensions");
+        log.debug( "Checking all vectors to get bioAssayDimensions" );
         Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
         for ( DesignElementDataVector vector : vectors ) {
             ArrayDesign adUsed = arrayDesignForVector( vector );
@@ -142,7 +142,7 @@ public class ExpressionDataMatrixBuilder {
             }
         }
 
-        log.debug("got " + dimensions.size() + " bioassaydimensions");
+        log.debug( "got " + dimensions.size() + " bioassaydimensions" );
         result.addAll( dimensions );
         return result;
     }
@@ -152,9 +152,9 @@ public class ExpressionDataMatrixBuilder {
      *         computed by our system) is not found.
      */
     public ExpressionDataBooleanMatrix getMissingValueData( ArrayDesign arrayDesign ) {
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
         List<QuantitationType> qtypes = this.getMissingValueQTypes( arrayDesign );
-        if ( qtypes.size() == 0 ) return null;
+        if ( qtypes == null || qtypes.size() == 0 ) return null;
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
         return new ExpressionDataBooleanMatrix( vectors, dimensions, qtypes );
     }
 
@@ -370,7 +370,7 @@ public class ExpressionDataMatrixBuilder {
      */
     public void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ArrayDesign arrayDesign ) {
         ExpressionDataBooleanMatrix missingValueMatrix = this.getMissingValueData( arrayDesign );
-        ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValueMatrix );
+        if ( missingValueMatrix != null ) ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValueMatrix );
     }
 
     /**

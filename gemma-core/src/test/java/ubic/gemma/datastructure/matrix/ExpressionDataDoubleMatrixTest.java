@@ -285,7 +285,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         /* Constructor 1 */
         ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix(
-                designElementDataVectors, quantitationType );
+                designElementDataVectors );
 
         /* Assertions */
         DesignElement deToQuery = designElements.iterator().next();
@@ -414,7 +414,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
         ee.setDesignElementDataVectors( eeVectors );
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors, qt );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
 
         assertNotNull( expressionDataMatrix );
         assertEquals( expressionDataMatrix.rows(), 2 );

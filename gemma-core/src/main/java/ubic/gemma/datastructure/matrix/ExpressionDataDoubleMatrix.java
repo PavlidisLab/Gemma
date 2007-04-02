@@ -92,18 +92,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     }
 
     /**
-     * @param dataVectors
-     * @param quantitationType
-     * @deprecated Use ExpressionDataMatrixBuilder instead.
-     */
-    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
-            QuantitationType quantitationType ) {
-        init();
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( quantitationType, dataVectors );
-        vectorsToMatrix( selectedVectors );
-    }
-
-    /**
      * @param expressionExperiment
      * @param bioAssayDimension
      * @param quantitationType
@@ -115,18 +103,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationType,
                 bioAssayDimension );
         vectorsToMatrix( selectedVectors );
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param quantitationTypes
-     * @deprecated Use ExpressionDataMatrixBuilder instead.
-     */
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
-            Collection<QuantitationType> quantitationTypes ) {
-        init();
-        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( expressionExperiment, quantitationTypes );
-        vectorsToMatrix( vectorsOfInterest );
     }
 
     /**
@@ -401,8 +377,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             }
         }
 
-        log.info( "Creating a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
-
         ByteArrayConverter bac = new ByteArrayConverter();
         for ( DesignElementDataVector vector : vectors ) {
 
@@ -410,7 +384,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             assert designElement != null : "No designelement for " + vector;
 
             Integer rowIndex = this.rowElementMap.get( designElement );
-
             assert rowIndex != null;
 
             // Rows are indexed by the underlying designElement.
@@ -454,7 +427,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                 }
             }
         }
-
+        log.debug( "Created a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
         return matrix;
     }
 

@@ -154,6 +154,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Collection<QuantitationType> types = this.getExpressionExperimentService().getQuantitationTypes( ee );
 
+        eeService.thawLite( ee );
+
         if ( !needToRun( ee, MissingValueAnalysisEvent.class ) ) return;
 
         QuantitationType previousMissingValueQt = null;
@@ -177,16 +179,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         log.info( "Computing missing value data.." );
 
-        Collection<DesignElementDataVector> vectors = tcmv.computeMissingValues( ee, ad, s2n );
+        tcmv.computeMissingValues( ee, ad, s2n );
 
-        PersisterHelper persisterHelper = this.getPersisterHelper();
-
-        log.info( "Persisting " + vectors.size() + " vectors ... " );
-        for ( DesignElementDataVector vector : vectors ) {
-            vector.setQuantitationType( ( QuantitationType ) persisterHelper.persist( vector.getQuantitationType() ) );
-        }
-        dedvs.create( vectors );
-        eeService.update( ee );
     }
 
     public static void main( String[] args ) {

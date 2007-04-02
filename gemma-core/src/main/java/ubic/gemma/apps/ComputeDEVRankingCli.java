@@ -23,8 +23,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -35,8 +33,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
@@ -59,7 +55,7 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
     private String geneExpressionList = null;
     private String geneExpressionFile = null;
 
-    private Method method;
+    private Method method = Method.MAX;
 
     /**
      * 
@@ -80,7 +76,7 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
         addOption( geneFileListOption );
 
         Option methodOption = OptionBuilder.hasArg().withArgName( "Method for determining row statistics" )
-                .withDescription( "MEAN, MEDIAN, MAX or MIN" ).withLongOpt( "method" ).create( 'm' );
+                .withDescription( "MEAN, MEDIAN, MAX or MIN; default = MAX" ).withLongOpt( "method" ).create( 'm' );
 
         addOption( methodOption );
 
@@ -116,7 +112,10 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
         }
         dedvRankservice = ( DedvRankService ) this.getBean( "dedvRankService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }
+
+    ExpressionExperimentService eeService;
 
     /**
      * 
@@ -129,8 +128,6 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
             return err;
         }
 
-        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
         ExpressionExperiment expressionExperiment = null;
 
         if ( this.geneExpressionFile == null ) {
@@ -182,8 +179,8 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
      */
     private void processExperiment( ExpressionExperiment ee ) {
         try {
-            boolean needToRun = true;
-            needToRun = needToRun( ee, RankComputationEvent.class );
+            eeService.thawLite( ee );
+            boolean needToRun = needToRun( ee, RankComputationEvent.class );
 
             if ( !needToRun ) return;
             this.dedvRankservice.computeDevRankForExpressionExperiment( ee, method );

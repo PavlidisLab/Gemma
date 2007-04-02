@@ -23,9 +23,7 @@ import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
@@ -399,7 +397,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // try {
     // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
     // .fetchAndLoad( "GDS994" );
-    // // FIXME: what does this test test
     // } catch ( AlreadyExistsInSystemException e ) {
     // log.warn( "Skipping test, data already exists in system" );
     // }
@@ -524,8 +521,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         ExpressionExperiment newee = results.iterator().next();
         expressionExperimentService.thaw( newee );
-
-        ExpressionDataMatrixService edms = new ExpressionDataMatrixService();
 
         ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
 
