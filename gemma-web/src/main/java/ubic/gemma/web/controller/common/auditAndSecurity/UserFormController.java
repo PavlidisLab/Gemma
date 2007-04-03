@@ -161,7 +161,8 @@ public class UserFormController extends UserAuthenticatingController {
                 request.getSession().setAttribute( "cookieLogin", "true" );
 
                 // add warning message
-                saveMessage( request, "userProfile.cookieLogin", "Remember me is active, so password cannot be changed" );
+                saveMessage( request, "Remember me is active, so password cannot be changed");
+                //saveMessage( request, "userProfile.cookieLogin", "Remember me is active, so password cannot be changed" );
             }
         }
     }
