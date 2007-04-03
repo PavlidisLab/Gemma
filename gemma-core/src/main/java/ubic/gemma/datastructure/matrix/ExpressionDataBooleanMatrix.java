@@ -24,6 +24,8 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import cern.colt.matrix.ObjectMatrix1D;
+
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -111,8 +113,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
             Iterator<BioAssay> it = bioAssays.iterator();
-            assert bioAssays.size() == vals.length : "Expected " + vals.length + " got "
-                    + bioAssays.size();
+            assert bioAssays.size() == vals.length : "Expected " + vals.length + " got " + bioAssays.size();
             for ( int j = 0; j < bioAssays.size(); j++ ) {
                 BioAssay bioAssay = ( BioAssay ) it.next();
                 Integer column = this.columnAssayMap.get( bioAssay );
@@ -128,6 +129,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
     /**
      * Note that if we have trouble interpreting the data, it gets left as false.
+     * 
      * @param bac
      * @param vector
      * @param bytes
@@ -203,8 +205,15 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Boolean[] getColumn( BioAssay bioAssay ) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        int index = this.columnAssayMap.get( bioAssay );
+        ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
+        Boolean[] res = new Boolean[rawResult.size()];
+        int i = 0;
+        for ( Object o : rawResult.toArray() ) {
+            res[i] = ( Boolean ) o;
+            i++;
+        }
+        return res;
     }
 
     /*
