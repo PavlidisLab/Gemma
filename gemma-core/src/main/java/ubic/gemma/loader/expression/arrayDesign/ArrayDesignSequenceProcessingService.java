@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -216,12 +216,12 @@ public class ArrayDesignSequenceProcessingService {
 
     @SuppressWarnings("unchecked")
     private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
-            Collection<CompositeSequence> csBuffer ) {
+            Map<String, CompositeSequence> csBuffer ) {
         Collection<BioSequence> newOnes = bioSequenceService.findOrCreate( sequenceBuffer );
         bioSequences.addAll( newOnes );
-        Iterator<CompositeSequence> csit = csBuffer.iterator();
         for ( BioSequence sequence : newOnes ) {
-            CompositeSequence cs = csit.next();
+            CompositeSequence cs = csBuffer.get( sequence.getName() );
+            assert cs != null;
             cs.setBiologicalCharacteristic( sequence );
         }
         csBuffer.clear();
@@ -378,27 +378,31 @@ public class ArrayDesignSequenceProcessingService {
         assert taxon != null;
 
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
-        Collection<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
-        Collection<CompositeSequence> csBuffer = new ArrayList<CompositeSequence>();
-        for ( CompositeSequence compositeSequence : compositeSequencesFromProbes ) {
+        List<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
+        Map<String, CompositeSequence> csBuffer = new HashMap<String, CompositeSequence>();
+        for ( CompositeSequence newCompositeSequence : compositeSequencesFromProbes ) {
 
-            compositeSequence.setArrayDesign( arrayDesign );
-            BioSequence collapsed = SequenceManipulation.collapse( compositeSequence );
-            collapsed.setName( compositeSequence.getName() + "_collapsed" );
+            // these composite sequences are just use
+            newCompositeSequence.setArrayDesign( arrayDesign );
+            BioSequence collapsed = SequenceManipulation.collapse( newCompositeSequence );
+            String sequenceName = newCompositeSequence.getName() + "_collapsed";
+            collapsed.setName( sequenceName );
             collapsed.setType( SequenceType.AFFY_COLLAPSED );
             collapsed.setPolymerType( PolymerType.DNA );
             collapsed.setTaxon( taxon );
 
             sequenceBuffer.add( collapsed );
-            csBuffer.add( compositeSequence );
+            if ( csBuffer.containsKey( sequenceName ) )
+                throw new IllegalArgumentException( "All probes must have unique names" );
+            csBuffer.put( sequenceName, newCompositeSequence );
             if ( sequenceBuffer.size() == BATCH_SIZE ) {
                 flushBuffer( bioSequences, sequenceBuffer, csBuffer );
             }
 
             if ( wasOriginallyLackingCompositeSequences ) {
-                arrayDesign.getCompositeSequences().add( compositeSequence );
+                arrayDesign.getCompositeSequences().add( newCompositeSequence );
             } else {
-                quickFindMap.put( compositeSequence.getName(), compositeSequence );
+                quickFindMap.put( newCompositeSequence.getName(), newCompositeSequence );
             }
 
             if ( ++done % 1000 == 0 ) {
@@ -415,12 +419,16 @@ public class ArrayDesignSequenceProcessingService {
             for ( CompositeSequence originalCompositeSequence : arrayDesign.getCompositeSequences() ) {
                 // go back and fill this information into the composite sequences, namely the database entry
                 // information.
+
                 CompositeSequence compositeSequenceFromParse = quickFindMap.get( originalCompositeSequence.getName() );
                 if ( compositeSequenceFromParse == null ) {
                     numWithNoSequence++;
                     notifyAboutMissingSequences( numWithNoSequence, originalCompositeSequence );
                     continue;
                 }
+
+                log.debug( originalCompositeSequence + " matches " + compositeSequenceFromParse + " seq is "
+                        + compositeSequenceFromParse.getBiologicalCharacteristic() );
 
                 originalCompositeSequence.setBiologicalCharacteristic( compositeSequenceFromParse
                         .getBiologicalCharacteristic() );
