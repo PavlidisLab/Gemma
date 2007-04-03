@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -285,37 +284,6 @@ public class DesignElementDataVectorDaoImpl extends
                 + " composite sequences in " + watch.getTime() + "ms" );
 
         return dedv2genes;
-    }
-
-    /**
-     * Places objects in the collection in a list surrounded by parenthesis and separated by commas. Useful for placing
-     * this String representation of the list in a sql "in" statement. ie. "... in stringReturnedFromThisMethod" will
-     * look like "... in (a,b,c)" FIXME this isn't necessary for HQL? Can just use list as a parameter?
-     * 
-     * @param objects
-     * @return String
-     */
-    private String parenthesis( Collection objects ) {
-        // TODO refactor me into a utilities class and use reflection to determine
-        // the parameters that should live in the parenthesis.
-        String expressionExperimentIds = "";
-
-        Object[] objs = objects.toArray();
-        for ( int i = 0; i < objs.length; i++ ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) objs[i];
-
-            if ( StringUtils.isEmpty( expressionExperimentIds ) ) {
-                expressionExperimentIds = "(";
-            } else {
-                expressionExperimentIds = expressionExperimentIds + ee.getId().toString();
-                expressionExperimentIds = expressionExperimentIds + ",";
-            }
-        }
-
-        expressionExperimentIds = expressionExperimentIds + ( ( ExpressionExperiment ) objs[objs.length - 1] ).getId()
-                + ")";
-
-        return expressionExperimentIds;
     }
 
     @Override
