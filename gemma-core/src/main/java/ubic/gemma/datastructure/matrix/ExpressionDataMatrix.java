@@ -140,29 +140,15 @@ public interface ExpressionDataMatrix<T> {
     public T[][] getMatrix();
 
     /**
-     * @return list (in index order) of elements representing the row 'labels'.
+     * @return list of elements representing the row 'labels'.
      */
-    public List<ExpressionDataMatrixRowElement> getRowElements();
-
-    /**
-     * @param index
-     * @return
-     */
-    public ExpressionDataMatrixRowElement getRowElement( int index );
+    public List<DesignElement> getRowElements();
 
     /**
      * @param index
      * @return BioMaterial FIXME technically this can still be a collection. See bug 629
      */
     public BioMaterial getBioMaterialForColumn( int index );
-
-    // /**
-    // * Given a row, identify the BioSequence
-    // *
-    // * @param index
-    // * @return
-    // */
-    // public BioSequence getBioSequenceForRow( int index );
 
     /**
      * @param index

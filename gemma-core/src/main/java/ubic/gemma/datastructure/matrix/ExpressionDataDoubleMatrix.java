@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,7 +32,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -196,38 +196,19 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
      */
     public Double[] getRow( DesignElement designElement ) {
-
         Integer row = this.rowElementMap.get( designElement );
-
-        if ( !this.matrix.containsRowName( row ) ) {
-            if ( log.isDebugEnabled() ) log.debug( "No row " + row );
-            return null;
-        }
-
-        double[] rawResult = this.matrix.getRowByName( row );
-        assert rawResult != null;
-        Double[] result = new Double[rawResult.length];
-        ArrayDesign ad = designElement.getArrayDesign();
-        for ( int i = 0; i < rawResult.length; i++ ) {
-            Collection<BioAssay> bioAssay = this.columnBioAssayMapByInteger.get( i );
-            for ( BioAssay assay : bioAssay ) {
-                if ( assay.getArrayDesignUsed().equals( ad ) ) {
-                    result[i] = rawResult[i];
-                    break;
-                }
-            }
-
-        }
-        return result;
+        if ( row == null ) return null;
+        return getRow( row );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(java.lang.Integer)
+     */
     public Double[] getRow( Integer index ) {
-        Double[] result = new Double[columns()];
         double[] rawRow = matrix.getRow( index );
-        for ( int i = 0; i < result.length; i++ ) {
-            result[i] = rawRow[i];
-        }
-        return result;
+        return ArrayUtils.toObject( rawRow );
     }
 
     /*
@@ -274,8 +255,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     }
 
     public void set( int row, int column, Object value ) {
-        assert value instanceof Double;
-        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+        if ( value == null ) {
+            matrix.setQuick( row, column, Double.NaN );
+        } else {
+            matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+        }
     }
 
     /**
@@ -448,7 +432,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @param sourceMatrix
      * @param rowsToUse
      */
-    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<Integer> rowsToUse ) {
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<DesignElement> rowsToUse ) {
         init();
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -461,10 +445,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
 
         int i = 0;
-        for ( Integer row : ( List<Integer> ) rowsToUse ) {
-            DesignElement element = sourceMatrix.getDesignElementForRow( row );
+        for ( DesignElement element : rowsToUse ) {
             super.addToRowMaps( i, element );
-            Double[] rowVals = sourceMatrix.getRow( row );
+            Double[] rowVals = sourceMatrix.getRow( element );
+            assert rowVals != null : "Source matrix does not have row for " + element;
             for ( int j = 0; j < rowVals.length; j++ ) {
                 Double val = rowVals[j];
                 set( i, j, val );

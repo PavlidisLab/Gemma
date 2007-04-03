@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.IntArrayList;
 
 /**
@@ -86,7 +87,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         int numCols = data.columns();
         IntArrayList present = new IntArrayList( numRows );
 
-        List<Integer> kept = new ArrayList<Integer>();
+        List<DesignElement> kept = new ArrayList<DesignElement>();
 
         if ( minPresentFractionIsSet ) {
             setMinPresentCount( ( int ) Math.ceil( minPresentFraction * numCols ) );
@@ -104,6 +105,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
 
         /* first pass - determine how many missing values there are per row */
         for ( int i = 0; i < numRows; i++ ) {
+            DesignElement designElementForRow = data.getDesignElementForRow( i );
             int presentCount = 0;
             for ( int j = 0; j < numCols; j++ ) {
                 if ( !Double.isNaN( data.get( i, j ) )
@@ -113,7 +115,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             }
             present.add( presentCount );
             if ( presentCount >= ABSOLUTEMINPRESENT && presentCount >= minPresentCount ) {
-                kept.add( i );
+                kept.add( designElementForRow );
             }
         }
 
@@ -127,13 +129,16 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             log.info( "There are " + kept.size() + " rows that meet criterion of at least " + minPresentCount
                     + " non-missing values, but that's too many given the max fraction of " + maxFractionRemoved
                     + "; minpresent adjusted to " + sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) ) );
+
             minPresentCount = sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) );
 
-            // Do another pass to add rows we missed before. ????
+            // Do another pass to add rows we missed before.
             for ( int i = 0; i < numRows; i++ ) {
                 if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTEMINPRESENT ) {
-                    if ( kept.contains( i ) ) continue; // FIXME SLOW
-                    kept.add( i );
+                    DesignElement designElementForRow = data.getDesignElementForRow( i );
+                    if ( kept.contains( designElementForRow ) ) continue; // FIXME SLOW because it is a
+                                                                                        // list.
+                    kept.add( designElementForRow );
                 }
             }
 

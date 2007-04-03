@@ -22,14 +22,12 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysis;
@@ -41,11 +39,11 @@ import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -55,8 +53,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
-import ubic.gemma.util.DateUtil;
 
 /**
  * Commandline tool to conduct link analysis
@@ -64,7 +60,7 @@ import ubic.gemma.util.DateUtil;
  * @author xiangwan
  * @version $Id$
  */
-public class LinkAnalysisCli extends AbstractSpringAwareCLI {
+public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
 
     /**
      * Fewer rows than this, and we bail.
@@ -106,10 +102,8 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     /**
      * Use for batch processing These two files could contain the lists of experiment;
      */
-    private String geneExpressionList = null;
 
-    private String geneExpressionFile = null;
-
+    // private String geneExpressionFile = null;
     private ExpressionExperimentService eeService = null;
 
     private DesignElementDataVectorService vectorService = null;
@@ -123,7 +117,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
-    private String mDate;
 
     AuditTrailService auditTrailService;
 
@@ -142,8 +135,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     /**
      * @param arrayDesign
      */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = LinkAnalysisEvent.Factory.newInstance();
+    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
@@ -206,41 +198,29 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         return filteredMatrix;
     }
 
+    /**
+     * @param ee
+     * @param builder
+     * @param eeDoubleMatrix
+     * @return
+     */
     private ExpressionDataDoubleMatrix filter( ExpressionExperiment ee, ExpressionDataMatrixBuilder builder,
             ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         if ( eeDoubleMatrix.rows() == 0 ) throw new IllegalStateException( "No data found!" );
 
         if ( eeDoubleMatrix.rows() < MINIMUM_ROWS_TO_BOTHER )
-            throw new IllegalArgumentException( "Most Probes are filtered out " + ee.getShortName() );
+            throw new IllegalArgumentException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
+                    + "), data sets are not analyzed unless they have at least " + MINIMUM_ROWS_TO_BOTHER + " rows" );
 
         if ( eeDoubleMatrix.columns() < LinkAnalysisCli.MINIMUM_SAMPLE )
-            throw new IllegalArgumentException( "No enough samples " + ee.getShortName() );
+            throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName() + ", must have at least "
+                    + LinkAnalysisCli.MINIMUM_SAMPLE + " to be eligble for link analysis." );
 
         eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );
 
         if ( eeDoubleMatrix == null )
-            throw new IllegalStateException( "Failed to get filtered data matrix " + ee.getShortName() );
+            throw new IllegalStateException( "Failed to get filtered data matrix, it was null " + ee.getShortName() );
         return eeDoubleMatrix;
-    }
-
-    /**
-     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
-     * 
-     * @param expressionExperiment
-     * @param eventClass
-     * @return
-     */
-    private List<AuditEvent> getEvents( ExpressionExperiment expressionExperiment,
-            Class<? extends ExpressionExperimentAnalysisEvent> eventClass ) {
-        List<AuditEvent> events = new ArrayList<AuditEvent>();
-
-        for ( AuditEvent event : expressionExperiment.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue;
-            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
-                events.add( event );
-            }
-        }
-        return events;
     }
 
     /**
@@ -315,8 +295,7 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
         if ( absentPresent != null ) {
             if ( absentPresent.rows() != matrix.rows() ) {
-                throw new IllegalArgumentException( "Missing value matrix has " + absentPresent.rows() + " rows (!="
-                        + matrix.rows() + ")" );
+                log.warn( "Missing value matrix has " + absentPresent.rows() + " rows (!=" + matrix.rows() + ")" );
             }
 
             if ( absentPresent.columns() != matrix.columns() ) {
@@ -379,16 +358,12 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     @Override
     protected void buildOptions() {
 
+        super.addDateOption();
+
         Option geneFileOption = OptionBuilder.hasArg().withArgName( "dataSet" ).withDescription(
                 "Short name of the expression experiment to analyze (default is to analyze all found in the database)" )
-                .withLongOpt( "dataSet" ).create( 'g' );
+                .withLongOpt( "dataSet" ).create( 'e' );
         addOption( geneFileOption );
-
-        Option geneFileListOption = OptionBuilder.hasArg().withArgName( "list of Gene Expression file" )
-                .withDescription(
-                        "File with list of short names of expression experiments (one per line; use instead of '-g')" )
-                .withLongOpt( "listfile" ).create( 'f' );
-        addOption( geneFileListOption );
 
         Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" ).withDescription(
                 "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" ).create( 'c' );
@@ -404,12 +379,12 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
 
         Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
                 "The tolerance for accepting the gene with missing values, default=" + DEFAULT_MINPRESENT_FRACTION )
-                .withLongOpt( "missing" ).create( 'm' );
+                .withLongOpt( "missingcut" ).create( 'm' );
         addOption( minPresentFraction );
 
         Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
                 "The tolerance for accepting the expression values, default=" + DEFAULT_LOWEXPRESSIONCUT ).withLongOpt(
-                "expression" ).create( 'e' );
+                "lowcut" ).create( 'l' );
         addOption( lowExpressionCut );
 
         Option absoluteValue = OptionBuilder.withDescription( "If using absolute value in expression file" )
@@ -419,17 +394,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         Option useDB = OptionBuilder.withDescription( "Don't save the results in the database (i.e., testing)" )
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
-
-        Option dateOption = OptionBuilder
-                .hasArg()
-                .withArgName( "mdate" )
-                .withDescription(
-                        "Constrain to run only on experiments with analyses older than the given date. "
-                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                                + "If there is no record of when the analysis was last run, it will be run." ).create(
-                        "mdate" );
-
-        addOption( dateOption );
 
     }
 
@@ -441,8 +405,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             return err;
         }
 
-        Date skipIfLastRunLaterThan = getLimitingDate();
-
         this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         this.vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
@@ -452,30 +414,29 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
         this.linkAnalysis.setPPService( ( Probe2ProbeCoexpressionService ) this
                 .getBean( "probe2ProbeCoexpressionService" ) );
 
-        if ( this.geneExpressionFile == null ) {
-            if ( this.geneExpressionList == null ) {
+        if ( this.getExperimentShortName() == null ) {
+            if ( this.experimentListFile == null ) {
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
 
-                    if ( !needToRun( skipIfLastRunLaterThan, ee, LinkAnalysisEvent.class ) ) {
-                        log.warn( ee + " was last run more recently than " + skipIfLastRunLaterThan );
+                    if ( !needToRun( ee, LinkAnalysisEvent.class ) ) {
                         continue;
                     }
 
                     try {
                         this.process( ee );
                         successObjects.add( ee.toString() );
-                        audit( ee, "Part of run on all EEs" );
+                        audit( ee, "Part of run on all EEs", LinkAnalysisEvent.Factory.newInstance() );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
-                        e.printStackTrace();
+                        logFailure( ee, e );
                         log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
                     }
                 }
             } else {
                 try {
-                    InputStream is = new FileInputStream( this.geneExpressionList );
+                    InputStream is = new FileInputStream( this.experimentListFile );
                     BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
                     String shortName = null;
                     while ( ( shortName = br.readLine() ) != null ) {
@@ -487,18 +448,21 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
                             continue;
                         }
 
-                        if ( !needToRun( skipIfLastRunLaterThan, expressionExperiment, LinkAnalysisEvent.class ) ) {
-                            log.warn( expressionExperiment + " was last run more recently than "
-                                    + skipIfLastRunLaterThan );
+                        if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                             continue;
                         }
 
                         try {
                             this.process( expressionExperiment );
                             successObjects.add( expressionExperiment.toString() );
-                            audit( expressionExperiment, "From list in file: " + geneExpressionList );
+
+                            audit( expressionExperiment, "From list in file: " + experimentListFile,
+                                    LinkAnalysisEvent.Factory.newInstance() );
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
+
+                            logFailure( expressionExperiment, e );
+
                             e.printStackTrace();
                             log.error( "**** Exception while processing " + expressionExperiment + ": "
                                     + e.getMessage() + " ********" );
@@ -510,23 +474,19 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             }
             summarizeProcessing();
         } else {
-            ExpressionExperiment expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
+            ExpressionExperiment expressionExperiment = locateExpressionExperiment( this.getExperimentShortName() );
 
-            if ( expressionExperiment == null ) {
-                log.info( this.geneExpressionFile + " is not loaded yet!" );
-                return null;
-            }
-
-            if ( !needToRun( skipIfLastRunLaterThan, expressionExperiment, LinkAnalysisEvent.class ) ) {
-                log.warn( expressionExperiment + " was last run more recently than " + skipIfLastRunLaterThan );
+            if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                 return null;
             }
 
             try {
                 this.process( expressionExperiment );
-                audit( expressionExperiment, "From list in file: " + geneExpressionList );
+                audit( expressionExperiment, "From list in file: " + experimentListFile, LinkAnalysisEvent.Factory
+                        .newInstance() );
             } catch ( Exception e ) {
                 e.printStackTrace();
+                logFailure( expressionExperiment, e );
                 log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
                         + " ********" );
             }
@@ -536,41 +496,15 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
-     * 
-     * @return
-     */
-    protected Date getLimitingDate() {
-        Date skipIfLastRunLaterThan = null;
-        if ( StringUtils.isNotBlank( mDate ) ) {
-            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-            log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
-        }
-        return skipIfLastRunLaterThan;
-    }
-
-    /**
-     * FIXME this code was copied from ArrayDesignSequenceManipulatingCli
-     * 
-     * @param skipIfLastRunLaterThan
      * @param expressionExperiment
-     * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
-     * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
-     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
+     * @param e
      */
-    protected boolean needToRun( Date skipIfLastRunLaterThan, ExpressionExperiment expressionExperiment,
-            Class<? extends ExpressionExperimentAnalysisEvent> eventClass ) {
-        if ( skipIfLastRunLaterThan == null ) return true;
-        auditTrailService.thaw( expressionExperiment );
-
-        List<AuditEvent> sequenceAnalysisEvents = getEvents( expressionExperiment, eventClass );
-
-        if ( sequenceAnalysisEvents.size() == 0 ) {
-            return true; // always do it
+    private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
+        if ( e instanceof InsufficientSamplesException ) {
+            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else {
-            // return true if the last time was older than the limit time.
-            AuditEvent lastEvent = sequenceAnalysisEvents.get( sequenceAnalysisEvents.size() - 1 );
-            return lastEvent.getDate().before( skipIfLastRunLaterThan );
+            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory
+                    .newInstance() );
         }
     }
 
@@ -578,12 +512,6 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( 'g' ) ) {
-            this.geneExpressionFile = getOptionValue( 'g' );
-        }
-        if ( hasOption( 'f' ) ) {
-            this.geneExpressionList = getOptionValue( 'f' );
-        }
         if ( hasOption( 'c' ) ) {
             this.linkAnalysis.setCdfCut( Double.parseDouble( getOptionValue( 'c' ) ) );
         }
@@ -599,9 +527,9 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             this.minPresentFractionIsSet = true;
             this.minPresentFraction = Double.parseDouble( getOptionValue( 'm' ) );
         }
-        if ( hasOption( 'e' ) ) {
+        if ( hasOption( 'l' ) ) {
             this.lowExpressionCutIsSet = true;
-            this.lowExpressionCut = Double.parseDouble( getOptionValue( 'e' ) );
+            this.lowExpressionCut = Double.parseDouble( getOptionValue( 'l' ) );
         }
 
         if ( hasOption( 'a' ) ) {
@@ -611,11 +539,27 @@ public class LinkAnalysisCli extends AbstractSpringAwareCLI {
             this.linkAnalysis.setUseDB( false );
         }
 
-        if ( hasOption( "mdate" ) ) {
-            this.mDate = this.getOptionValue( "mdate" );
-        }
-
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+    }
+
+}
+
+class InsufficientSamplesException extends RuntimeException {
+
+    public InsufficientSamplesException() {
+        super();
+    }
+
+    public InsufficientSamplesException( String arg0, Throwable arg1 ) {
+        super( arg0, arg1 );
+    }
+
+    public InsufficientSamplesException( String arg0 ) {
+        super( arg0 );
+    }
+
+    public InsufficientSamplesException( Throwable arg0 ) {
+        super( arg0 );
     }
 
 }

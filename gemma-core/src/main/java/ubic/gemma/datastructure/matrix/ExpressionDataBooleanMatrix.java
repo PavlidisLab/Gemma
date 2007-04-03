@@ -24,18 +24,16 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import cern.colt.matrix.ObjectMatrix1D;
-
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import cern.colt.matrix.ObjectMatrix1D;
 
 /**
  * Matrix of booleans mapped from an ExpressionExperiment.
@@ -243,26 +241,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[] getRow( DesignElement designElement ) {
         Integer row = this.rowElementMap.get( designElement );
-
-        if ( !this.matrix.containsRowName( row ) ) {
-            return null;
-        }
-
-        Object[] rawResult = this.matrix.getRow( row );
-        assert rawResult != null;
-        Boolean[] result = new Boolean[rawResult.length];
-        ArrayDesign ad = designElement.getArrayDesign();
-        for ( int i = 0; i < rawResult.length; i++ ) {
-            Collection<BioAssay> bioAssay = this.columnBioAssayMapByInteger.get( i );
-            for ( BioAssay assay : bioAssay ) {
-                if ( assay.getArrayDesignUsed().equals( ad ) ) {
-                    result[i] = ( Boolean ) rawResult[i];
-                    break;
-                }
-            }
-
-        }
-        return result;
+        Object[] rawRow = matrix.getRow( row );
+        return ( Boolean[] ) rawRow;
     }
 
     /*

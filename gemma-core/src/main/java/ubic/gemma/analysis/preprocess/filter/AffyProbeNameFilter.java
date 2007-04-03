@@ -24,8 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -86,18 +86,16 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
         int numRows = data.rows();
 
-        List<ExpressionDataMatrixRowElement> rowElements = data.getRowElements();
-
-        assert rowElements != null;
-
-        List<Integer> kept = new ArrayList<Integer>();
+        List<DesignElement> kept = new ArrayList<DesignElement>();
         for ( int i = 0; i < numRows; i++ ) {
 
-            ExpressionDataMatrixRowElement rowEl = rowElements.get( i );
+            DesignElement d = data.getDesignElementForRow( i );
 
-            assert rowEl != null;
+            assert d != null;
 
-            BioSequence sequence = ( ( CompositeSequence ) rowEl.getDesignElement() ).getBiologicalCharacteristic();
+            BioSequence sequence = ( ( CompositeSequence ) d ).getBiologicalCharacteristic();
+
+            if ( sequence == null ) continue;
 
             String name = sequence.getName();
 
@@ -106,12 +104,13 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
                 continue;
             }
 
+            // control probes.
             if ( skip_AFFX && name.contains( "AFFX" ) ) {
                 continue;
             }
 
-            if ( skip_F && name.contains( "_f_at" ) ) { // gene family. We don't
-                // like.
+            // gene family.
+            if ( skip_F && name.contains( "_f_at" ) ) {
                 continue;
             }
 
@@ -122,12 +121,11 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
                 continue;
             }
 
-            kept.add( i );
+            kept.add( data.getDesignElementForRow( i ) );
         }
 
         log.info( "There are " + kept.size() + " rows left after filtering." );
 
         return new ExpressionDataDoubleMatrix( data, kept );
     }
-
 }

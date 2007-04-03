@@ -35,6 +35,7 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
 
     ExpressionExperimentService expressionExperimentService;
     private String experimentShortName = null;
+    protected String experimentListFile = null;
 
     @SuppressWarnings("static-access")
     protected void buildOptions() {
@@ -43,6 +44,11 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
 
         addOption( expOption );
 
+        Option geneFileListOption = OptionBuilder.hasArg().withArgName( "list of Gene Expression file" )
+                .withDescription(
+                        "File with list of short names of expression experiments (one per line; use instead of '-e')" )
+                .withLongOpt( "listfile" ).create( 'f' );
+        addOption( geneFileListOption );
     }
 
     /**
@@ -52,7 +58,7 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
     protected ExpressionExperiment locateExpressionExperiment( String name ) {
 
         if ( name == null ) {
-            throw new IllegalArgumentException( "Expression experiment name must be provided" );
+            throw new IllegalArgumentException( "Expression experiment short name must be provided" );
         }
 
         ExpressionExperiment experiment = expressionExperimentService.findByShortName( name );
@@ -69,6 +75,9 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
         super.processOptions();
         if ( this.hasOption( 'e' ) ) {
             this.experimentShortName = this.getOptionValue( 'e' );
+        }
+        if ( hasOption( 'f' ) ) {
+            this.experimentListFile = getOptionValue( 'f' );
         }
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }

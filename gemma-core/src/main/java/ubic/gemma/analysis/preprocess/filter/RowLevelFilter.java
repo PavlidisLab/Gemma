@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 
@@ -223,11 +224,11 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             realLowCut = lowCut;
         }
 
-        List<Integer> kept = new ArrayList<Integer>();
+        List<DesignElement> kept = new ArrayList<DesignElement>();
 
         for ( int i = 0; i < numRows; i++ ) {
             if ( criteria.get( i ) >= realLowCut && criteria.get( i ) <= realHighCut ) {
-                kept.add( i );
+                kept.add( data.getDesignElementForRow( i ) );
             }
         }
         log.info( "There are " + kept.size() + " rows left after filtering." );
