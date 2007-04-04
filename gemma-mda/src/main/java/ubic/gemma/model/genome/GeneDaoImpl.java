@@ -460,7 +460,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
-        String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
+        String query = "SELECT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM "
                 + " GENE2CS gcIn "
