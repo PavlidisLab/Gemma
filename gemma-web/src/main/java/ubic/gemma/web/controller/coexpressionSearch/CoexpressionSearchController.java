@@ -270,9 +270,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 return mav;
             }
 
-        } else
-            ees = expressionExperimentService.load( possibleEEs );
-
+        } else {
+        //    ees = expressionExperimentService.load( possibleEEs );
+        }
         csc.setToUseEE( ees );
         numExpressionExperiments = ees.size();
 

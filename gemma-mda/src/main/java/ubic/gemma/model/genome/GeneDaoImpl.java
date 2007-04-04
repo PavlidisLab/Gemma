@@ -429,7 +429,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
         String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, ee.SHORT_NAME as  shortName,inv.NAME as name, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut, geneout.class as geneType  FROM "
                 + " GENE2CS gcIn "
                 + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS " + " INNER JOIN "
@@ -437,8 +437,38 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "
                 + " INNER JOIN GENE2CS gcout ON gcout.CS=dedvout.DESIGN_ELEMENT_FK"
                 + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE"
-                + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=dedvout.EXPRESSION_EXPERIMENT_FK"
-                + " INNER JOIN INVESTIGATION inv ON ee.ID=inv.ID " + " where " + eeClause + " gcIn.GENE=:id ";
+                + " where " + eeClause + " gcIn.GENE=:id ";
+
+        return query;
+    }
+    
+    
+    /**
+     * @param p2pClassName
+     * @param in
+     * @param out
+     * @return
+     */
+    private synchronized String getFastNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
+        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
+        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
+        String eeClause = "";
+        if ( eeIds.size() > 0 ) {
+            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
+            eeClause += StringUtils.join( eeIds.iterator(), "," );
+            eeClause += ") AND ";
+        }
+
+        String p2pClass = getP2PTableNameForClassName( p2pClassName );
+        String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
+                + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM "
+                + " GENE2CS gcIn "
+                + " INNER JOIN "
+                + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
+                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
+                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE"
+                + " where " + eeClause + " gcIn.GENE=:id ";
 
         return query;
     }
@@ -462,7 +492,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             vo.setGeneId( geneId );
             vo.setGeneName( scroll.getString( 1 ) );
             vo.setGeneOfficialName( scroll.getString( 2 ) );
-            vo.setGeneType( scroll.getString( 10 ) );
+            vo.setGeneType( scroll.getString( 8 ) );
             vo.setStringencyFilterValue( coexpressions.getStringency() );
             geneMap.put( geneId, vo );
         }
@@ -474,19 +504,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( eeVo == null ) {
             eeVo = new ExpressionExperimentValueObject();
             eeVo.setId( eeID );
-            eeVo.setShortName( scroll.getString( 4 ) );
-            eeVo.setName( scroll.getString( 5 ) );
             coexpressions.addExpressionExperiment( eeVo );
         }
 
         vo.addExpressionExperimentValueObject( eeVo );
 
-        Long probeID = scroll.getLong( 9 );
-        vo.addScore( eeID, scroll.getDouble( 7 ), probeID );
-        vo.addPValue( eeID, scroll.getDouble( 6 ), probeID );
+        Long probeID = scroll.getLong( 7 );
+        vo.addScore( eeID, scroll.getDouble( 5 ), probeID );
+        vo.addPValue( eeID, scroll.getDouble( 4 ), probeID );
 
         coexpressions.addSpecifityInfo( eeID, probeID, geneId );
-        coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 8 ) );
+        coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 6 ) );
     }
 
     /**
@@ -501,7 +529,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         while ( scroll.next() ) {
             processCoexpQueryResult( geneMap, scroll, coexpressions );
         }
-
     }
 
     /**
@@ -522,8 +549,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "genesymb", new StringType() );
         queryObject.addScalar( "genename", new StringType() );
         queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "shortName", new StringType() );
-        queryObject.addScalar( "name", new StringType() );
         queryObject.addScalar( "pvalue", new DoubleType() );
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
@@ -751,7 +776,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         // do query joining coexpressed genes through the firstVector to the secondVector
                         // eeIds is an argument because the native SQL query needs to be built with the knowledge
                         // of the number of expressionExperimentId arguments.
-                        String queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
+                        String queryString = "";
+                        //if (p2pClassName.equalsIgnoreCase( "HumanProbeCoExpressionImpl" ) ){
+                            queryString = getFastNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );          
+                        //}
+                        //else {
+                        //    queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
+                        //}
                         Session session = getSessionFactory().openSession();
                         org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
                         processCoexpQuery( 1, geneMap, queryObject, coexpressions );
@@ -776,7 +807,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     log.info( "Starting second query" );
 
                     try {
-                        String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
+                        String queryString = "";
+                        //if (p2pClassName.equalsIgnoreCase( "HumanProbeCoExpressionImpl" ) ){
+                            queryString = getFastNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );          
+                        //}
+                        //else {
+                        //    queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
+                        //}
                         Session session = getSessionFactory().openSession();
                         org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
                         processCoexpQuery( 2, geneMap, queryObject, coexpressions );
@@ -815,7 +852,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 }
 
             }
-
+            log.info( "Retrieving expression experiment details..." );
+            // fill in names of eeVos separately to speed up queries.
+            fillInExpressionExperimentNames( coexpressions );
+            log.info( "Done retrieving expression experiment details." );  
             overallWatch.stop();
             Long overallElapsed = overallWatch.getTime();
             log.info( "Query threads took a total of " + overallElapsed + "ms (wall clock time)" );
@@ -837,6 +877,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         return coexpressions;
     }
+
+
 
     /**
      * Gets a count of the CompositeSequences related to the gene identified by the given id.
@@ -1069,6 +1111,66 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         log.debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + csIds.size()
                 + " probes are associated with genes" );
         return returnVal;
+    }
+
+
+    /**
+     * Quickly retrieves the short name and name of the given expression experiment ID
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    private String[] getExpressionExperimentInfo(Long id) throws Exception {
+        
+        final String query = "select ee.shortName, ee.name from ExpressionExperimentImpl ee where ee.id = :id";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            queryObject.setLong( "id", id );
+            String[] results = new String[2];
+            ScrollableResults resultRows = queryObject.scroll();
+            resultRows.first();
+            results[0] = resultRows.getString( 0 );
+            results[1] = resultRows.getString( 1 );         
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        
+/*        final String query = "select ee.SHORT_NAME as name ,i.NAME as shortName from EXPRESSION_EXPERIMENT ee, INVESTIGATION i WHERE i.ID=ee.ID and ee.ID = :id";
+        try {
+            org.hibernate.SQLQuery queryObject = super.getSession().createSQLQuery( query );
+            queryObject.addScalar( "name", new StringType() );
+            queryObject.addScalar( "shortName", new StringType() );
+            queryObject.setLong( "id", id );
+            String[] results = new String[2];
+            ScrollableResults resultRows = queryObject.scroll();
+            resultRows.first();
+            results[0] = resultRows.getString( 0 );
+            results[1] = resultRows.getString( 1 );         
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }*/
+    }
+    
+    /**
+     * Function to fill in the names of the expression experiments. This is for speed.
+     * @param coexpressions
+     */
+    private void fillInExpressionExperimentNames( final CoexpressionCollectionValueObject coexpressions ) {
+        Collection<ExpressionExperimentValueObject> eeVos = coexpressions.getExpressionExperiments();
+        for ( ExpressionExperimentValueObject eeVo : eeVos ) {
+            try {
+                String[] results = getExpressionExperimentInfo(eeVo.getId());
+                eeVo.setShortName( results[0]);
+                eeVo.setName(results[1] );
+
+
+            } catch ( Exception e ) {
+                eeVo.setShortName( "Unavailable" );
+                eeVo.setName("Unavailable" );
+            }       
+        }
     }
 
 }
