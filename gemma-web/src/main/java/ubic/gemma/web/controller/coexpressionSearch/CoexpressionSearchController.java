@@ -327,6 +327,14 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
         int numSourceGeneGoTerms = computeGoOverlap( csc, coexpressedGenes );
 
+        
+        // still get the number of EEs that are used even if it is not given as a keyword search.
+        if ( ees.size() == 0 ) {
+            ees = expressionExperimentService.load( possibleEEs );
+        }
+        csc.setToUseEE( ees );
+        numExpressionExperiments = ees.size();
+        
         Long numUsedExpressionExperiments = new Long( coexpressions.getNumberOfUsedExpressonExperiments() );
         Long numPositiveCoexpressedGenes = new Long( coexpressions.getPositiveStringencyLinkCount() );
         Long numNegativeCoexpressedGenes = new Long( coexpressions.getNegativeStringencyLinkCount() );
