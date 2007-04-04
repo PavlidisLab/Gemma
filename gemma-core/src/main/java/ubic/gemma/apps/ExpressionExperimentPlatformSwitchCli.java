@@ -45,6 +45,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
         ExpressionExperiment ee = this.locateExpressionExperiment( this.getExperimentShortName() );
 
+        if ( ee == null ) return null;
+
         this.expressionExperimentService.thawLite( ee );
 
         serv.assignArrayDesignTo( ee );

@@ -474,21 +474,29 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
             }
             summarizeProcessing();
         } else {
-            ExpressionExperiment expressionExperiment = locateExpressionExperiment( this.getExperimentShortName() );
+            String[] shortNames = this.getExperimentShortName().split( "," );
 
-            if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
-                return null;
-            }
+            for ( String shortName : shortNames ) {
+                ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
 
-            try {
-                this.process( expressionExperiment );
-                audit( expressionExperiment, "From list in file: " + experimentListFile, LinkAnalysisEvent.Factory
-                        .newInstance() );
-            } catch ( Exception e ) {
-                e.printStackTrace();
-                logFailure( expressionExperiment, e );
-                log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
-                        + " ********" );
+                if ( expressionExperiment == null ) {
+                    continue;
+                }
+
+                if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
+                    return null;
+                }
+
+                try {
+                    this.process( expressionExperiment );
+                    audit( expressionExperiment, "From list in file: " + experimentListFile, LinkAnalysisEvent.Factory
+                            .newInstance() );
+                } catch ( Exception e ) {
+                    e.printStackTrace();
+                    logFailure( expressionExperiment, e );
+                    log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
+                            + " ********" );
+                }
             }
 
         }

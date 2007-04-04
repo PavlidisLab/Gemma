@@ -79,6 +79,7 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCli {
         Collection<QuantitationType> types;
         if ( this.getExperimentShortName() != null ) {
             ExpressionExperiment ee = this.locateExpressionExperiment( this.getExperimentShortName() );
+            if ( ee == null ) return null;
             types = this.expressionExperimentService.getQuantitationTypes( ee );
         } else {
             types = qts.loadAll();

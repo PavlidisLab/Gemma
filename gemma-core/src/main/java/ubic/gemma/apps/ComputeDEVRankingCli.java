@@ -38,7 +38,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * For each DesignElementDataVector in the experiment, compute the 'rank' of the expression level. For experiments using
@@ -48,7 +47,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @version $Id$
  * @see ubic.gemma.analysis.preprocess.DedvRankService
  */
-public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
+public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCli {
 
     private static Log log = LogFactory.getLog( ComputeDEVRankingCli.class.getName() );
 
@@ -63,10 +62,6 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option geneFileOption = OptionBuilder.hasArg().withArgName( "dataSet" ).withDescription(
-                "Short name of the expression experiment to analyze (default is to analyze all found in the database)" )
-                .withLongOpt( "dataSet" ).create( 'g' );
-        addOption( geneFileOption );
 
         Option geneFileListOption = OptionBuilder.hasArg().withArgName( "list of Gene Expression file" )
                 .withDescription(
@@ -101,9 +96,6 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( 'g' ) ) {
-            this.geneExpressionFile = getOptionValue( 'g' );
-        }
         if ( hasOption( 'f' ) ) {
             this.geneExpressionList = getOptionValue( 'f' );
         }
@@ -159,15 +151,20 @@ public class ComputeDEVRankingCli extends AbstractSpringAwareCLI {
             }
             summarizeProcessing();
         } else {
-            expressionExperiment = eeService.findByShortName( this.geneExpressionFile );
-            if ( expressionExperiment == null ) {
-                log.info( this.geneExpressionFile + " is not loaded yet!" );
-                return null;
-            }
-            processExperiment( expressionExperiment );
-        }
+            String[] shortNames = this.getExperimentShortName().split( "," );
 
-        summarizeProcessing();
+            for ( String shortName : shortNames ) {
+                ExpressionExperiment ee = locateExpressionExperiment( shortName );
+
+                if ( ee == null ) {
+                    continue;
+                }
+
+                processExperiment( ee );
+            }
+            summarizeProcessing();
+
+        }
 
         return null;
     }

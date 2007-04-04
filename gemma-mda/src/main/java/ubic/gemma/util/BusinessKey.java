@@ -148,14 +148,17 @@ public class BusinessKey {
      * @param contact
      */
     public static void addRestrictions( Criteria queryObject, Contact contact ) {
+        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
+            // email is unique.
+            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+            return;
+        }
+
         if ( StringUtils.isNotBlank( contact.getName() ) )
             queryObject.add( Restrictions.eq( "name", contact.getName() ) );
 
         if ( StringUtils.isNotBlank( contact.getAddress() ) )
             queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
-
-        if ( StringUtils.isNotBlank( contact.getEmail() ) )
-            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
 
         if ( StringUtils.isNotBlank( contact.getPhone() ) )
             queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );

@@ -109,15 +109,20 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             summarizeProcessing();
 
         } else {
-            ExpressionExperiment ee = locateExpressionExperiment( this.getExperimentShortName() );
 
-            if ( ee == null ) {
-                log.error( "No expression experiment with name " + this.getExperimentShortName() );
-                bail( ErrorCode.INVALID_OPTION );
+            String[] shortNames = this.getExperimentShortName().split( "," );
+
+            for ( String shortName : shortNames ) {
+                ExpressionExperiment ee = locateExpressionExperiment( shortName );
+
+                if ( ee == null ) {
+                    errorObjects.add( "No expression experiment with name " + shortName );
+                    continue;
+                }
+
+                processExperiment( ee );
             }
-
-            processExperiment( ee );
-
+            summarizeProcessing();
         }
 
         return null;

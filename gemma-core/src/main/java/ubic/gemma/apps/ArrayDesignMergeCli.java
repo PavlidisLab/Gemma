@@ -108,6 +108,10 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
      * @param arrayDesign
      */
     private void merge( ArrayDesign arrayDesign ) {
+        
+        Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
+        boolean mergeWithExisting = existingMergees.size() > 0;
+        
         // FIXME refactor this into a separate service.
 
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
@@ -182,19 +186,28 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
      */
     private void createMerged( ArrayDesign arrayDesign, Map<BioSequence, Collection<CompositeSequence>> globalBsMap ) {
 
-        ArrayDesign mergedAd = ArrayDesign.Factory.newInstance();
-        mergedAd.setName( newName );
-        mergedAd.setShortName( newShortName );
-        mergedAd.setTechnologyType( arrayDesign.getTechnologyType() );
-        mergedAd.setDesignProvider( arrayDesign.getDesignProvider() );
-
+        Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
+        boolean mergeWithExisting = existingMergees.size() > 0;
+       
         StringBuilder mergeeList = new StringBuilder();
         for ( String s : otherArrayDesignNames ) {
             mergeeList.append( s + ", " );
         }
-
-        mergeeList.append( arrayDesign.getShortName() );
-        mergedAd.setDescription( "Created by merging the following array designs: " + mergeeList.toString() );
+        ArrayDesign mergedAd;
+        if ( mergeWithExisting ) {
+            mergeWithExisting = true;
+            log.info( arrayDesign + " is already a merged design, others will be added in" );
+            mergedAd = arrayDesign;
+            mergedAd.setDescription( "Additional designs merged in: " + StringUtils.chop( mergeeList.toString() ) );
+        } else {
+            mergedAd = ArrayDesign.Factory.newInstance();
+            mergedAd.setName( newName );
+            mergedAd.setShortName( newShortName );
+            mergedAd.setTechnologyType( arrayDesign.getTechnologyType() );
+            mergedAd.setDesignProvider( arrayDesign.getDesignProvider() );
+            mergeeList.append( arrayDesign.getShortName() );
+            mergedAd.setDescription( "Created by merging the following array designs: " + mergeeList.toString() );
+        }
 
         int count;
         count = 0;
@@ -221,13 +234,17 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             }
         }
 
-        mergedAd.setCompositeSequences( newProbes );
-        mergedAd = ( ArrayDesign ) this.getPersisterHelper().persist( mergedAd );
+        if ( mergeWithExisting ) {
+            // TODO add new probes as needed.
+            arrayDesignService.update( mergedAd );
+            audit( arrayDesign, "More array design(s) added to merge" );
+        } else {
+            mergedAd.setCompositeSequences( newProbes );
+            mergedAd = ( ArrayDesign ) this.getPersisterHelper().persist( mergedAd );
+            arrayDesign.setMergedInto( mergedAd );
+            audit( arrayDesign, "Merged into " + mergedAd );
+        }
 
-        // update merged status (like subsumed) and audit merging
-        arrayDesign.setMergedInto( mergedAd );
-        arrayDesignService.update( arrayDesign );
-        audit( arrayDesign, "Merged into " + mergedAd );
         for ( String otherArrayDesigName : otherArrayDesignNames ) {
             ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
             otherArrayDesign.setMergedInto( mergedAd );

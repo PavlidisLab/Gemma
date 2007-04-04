@@ -100,7 +100,7 @@ public class LinkAnalysis {
     /**
      * @return
      */
-    public boolean analyze() throws Exception {
+    public void analyze() throws Exception {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
         assert this.ppService != null;
@@ -110,8 +110,7 @@ public class LinkAnalysis {
 
         this.init();
         if ( this.uniqueGenesInDataset == 0 ) {
-            log.info( "Couldn't find the map between probe and gene " );
-            return false;
+            throw new RuntimeException( "No genes found for this dataset; make sure the probe -> gene map is complete." );
         }
 
         this.outputOptions();
@@ -119,7 +118,6 @@ public class LinkAnalysis {
         this.writeDistribution();
         this.getLinks();
         this.saveLinks();
-        return true;
     }
 
     /**

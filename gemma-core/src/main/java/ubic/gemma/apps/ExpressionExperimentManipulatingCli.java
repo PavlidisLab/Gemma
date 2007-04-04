@@ -40,7 +40,9 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         Option expOption = OptionBuilder.hasArg().withArgName( "Expression experiment" ).withDescription(
-                "Expression experiment short name" ).withLongOpt( "experiment" ).create( 'e' );
+                "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
+                        + "and if this option is omitted, the tool will be applied to all expression experiments." )
+                .withLongOpt( "experiment" ).create( 'e' );
 
         addOption( expOption );
 
@@ -58,7 +60,8 @@ public abstract class ExpressionExperimentManipulatingCli extends AbstractSpring
     protected ExpressionExperiment locateExpressionExperiment( String name ) {
 
         if ( name == null ) {
-            throw new IllegalArgumentException( "Expression experiment short name must be provided" );
+            errorObjects.add( "Expression experiment short name must be provided" );
+            return null;
         }
 
         ExpressionExperiment experiment = expressionExperimentService.findByShortName( name );
