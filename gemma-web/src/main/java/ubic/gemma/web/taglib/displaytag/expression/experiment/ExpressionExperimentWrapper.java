@@ -372,13 +372,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     }
 
     public String getSpecific() {
-        
+
         ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( eeVo == null ) return "Expression Experiment unavailable";
 
-        if (eeVo.isSpecific())
-            return "yes";
-        
+        if ( eeVo.isSpecific() ) return "yes";
+
         return "no";
     }
 

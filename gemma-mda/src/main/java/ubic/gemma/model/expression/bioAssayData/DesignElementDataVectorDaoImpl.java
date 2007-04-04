@@ -29,6 +29,8 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
@@ -291,7 +293,6 @@ public class DesignElementDataVectorDaoImpl extends
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( designElementDataVector );
                 thaw( session, designElementDataVector );
                 return null;
             }
@@ -301,6 +302,12 @@ public class DesignElementDataVectorDaoImpl extends
 
     @Override
     protected void handleThaw( final Collection designElementDataVectors ) throws Exception {
+
+//        String query = "from DesignElementDataVectorImpl d "
+//                + "inner join fetch d.designElement inner join fetch d.bioAssayDimension dim "
+//                + "inner join fetch dim.bioAssays ba " + "inner join fetch ba.arrayDesignUsed "
+//                + "inner join fetch ba.samplesUsed " + "inner join fetch ba.derivedDataFiles where d in (:dedvs) ";
+
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -338,14 +345,16 @@ public class DesignElementDataVectorDaoImpl extends
             session.update( seq );
             seq.hashCode();
         }
+
         ArrayDesign arrayDesign = ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getArrayDesign();
-        session.update( arrayDesign );
+        session.update( arrayDesign ); // lock with LockMode.NONE or READ yields 'dirty collection reference' error.
+        Hibernate.initialize( arrayDesign );
         arrayDesign.hashCode();
 
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
             session.update( ba );
-            session.update( ba.getArrayDesignUsed() );
+            ba.setArrayDesignUsed( ( ArrayDesign ) session.merge( ba.getArrayDesignUsed() ) );
             ba.getArrayDesignUsed().hashCode();
             ba.getSamplesUsed().size();
             ba.getDerivedDataFiles().size();

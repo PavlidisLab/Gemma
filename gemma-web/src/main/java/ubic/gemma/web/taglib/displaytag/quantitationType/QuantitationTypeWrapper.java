@@ -3,8 +3,6 @@
  */
 package ubic.gemma.web.taglib.displaytag.quantitationType;
 
-import java.util.Map;
-
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -22,8 +20,7 @@ public class QuantitationTypeWrapper extends TableDecorator {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
         return qt.getName();
     }
-    
-    
+
     /**
      * @return View for status of the QTs
      */
@@ -35,7 +32,7 @@ public class QuantitationTypeWrapper extends TableDecorator {
             return "<input type=checkbox disabled></input>";
         }
     }
-    
+
     /**
      * @return View for ratio of the QTs
      */
@@ -82,6 +79,16 @@ public class QuantitationTypeWrapper extends TableDecorator {
         } else {
             return "<input type=checkbox disabled></input>";
         }
+    }
+
+    public String getData() {
+        QuantitationType object = ( QuantitationType ) getCurrentRowObject();
+        if ( object == null ) {
+            return "-";
+        }
+
+        return "<form action=\"/Gemma/getData.html?qt=" + object.getId()
+                + "\"  method=\"post\"><input type=\"submit\"  value=\"Get data\" /></form>";
     }
 
 }

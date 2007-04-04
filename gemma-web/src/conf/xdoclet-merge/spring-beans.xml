@@ -57,6 +57,7 @@
 			<prop key="/expressionExperiment/visualizeDataMatrix.html">
 				expressionExperimentVisualizationController
 			</prop>
+			<prop key="/getData.html">expressionExperimentDataFetchController</prop>
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
 			<prop key="/gene/*">geneController</prop>
 			<prop key="/geneFinder.html">geneFinderController</prop>

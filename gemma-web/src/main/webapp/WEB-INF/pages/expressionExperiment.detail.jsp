@@ -292,6 +292,7 @@ if ( expressionExperiment.getName() != null ) {
 		requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
 		id="dataVectorList" pagesize="30"
 		decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
+		<display:column property="data" sortable="false" title="Get data" />
 		<display:column property="qtName" sortable="true" maxWords="20"
 			titleKey="name" />
 		<display:column property="description" sortable="true" maxLength="20"

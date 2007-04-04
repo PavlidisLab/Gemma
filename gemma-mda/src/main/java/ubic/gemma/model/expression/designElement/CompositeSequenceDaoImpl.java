@@ -30,6 +30,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
@@ -419,13 +420,14 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         // fetch the genes
         Collection<Long> batch = new HashSet<Long>();
         Collection<Gene> genes = new HashSet<Gene>();
-        String geneQuery = "select g from GeneImpl g where g.id in ( :gs )";
+        String geneQuery = "from GeneImpl g where g.id in ( :gs )";
 
         org.hibernate.Query geneQueryObject = super.getSession( false ).createQuery( geneQuery ).setFetchSize( 1000 );
         int BATCH_SIZE = 10000;
         for ( Long gene : genesToFetch ) {
             batch.add( gene );
             if ( batch.size() == BATCH_SIZE ) {
+                log.debug( "Processing batch ... " );
                 geneQueryObject.setParameterList( "gs", batch );
                 genes.addAll( geneQueryObject.list() );
                 batch.clear();
@@ -441,6 +443,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         Map<Long, Gene> geneIdMap = new HashMap<Long, Gene>();
         for ( Gene g : ( Collection<Gene> ) genes ) {
+            Hibernate.initialize( g );
             Long id = g.getId();
             geneIdMap.put( id, g );
         }

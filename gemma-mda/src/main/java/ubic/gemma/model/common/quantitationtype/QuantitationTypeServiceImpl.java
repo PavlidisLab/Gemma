@@ -73,4 +73,9 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
         return this.getQuantitationTypeDao().loadAll();
     }
 
+    @Override
+    protected QuantitationType handleLoad( Long id ) throws Exception {
+        return ( QuantitationType ) this.getQuantitationTypeDao().load( id );
+    }
+
 }
