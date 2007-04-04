@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.geo.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,7 +63,7 @@ public class GeoValues {
      */
     Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<GeoPlatform, Map<Object, Map<String, List<Object>>>>();
 
-    private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
+    // private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
 
     private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
 
@@ -177,6 +178,7 @@ public class GeoValues {
 
         Map<Object, Map<String, List<Object>>> platformMap = data.get( platform );
         if ( !platformMap.containsKey( quantitationTypeIndex ) ) {
+
             platformMap.put( quantitationTypeIndex, new HashMap<String, List<Object>>() );
         }
 
@@ -193,15 +195,20 @@ public class GeoValues {
         }
     }
 
-    /**
-     * Map between quantitation type names and the column number. This is used to help identify quantitation types that
-     * are not going to be stored.
-     * 
-     * @param name
-     * @param columnNumber
-     */
-    public void addQuantitationType( String name, Integer columnNumber ) {
-        quantitationTypeMap.put( columnNumber, name );
+    private Map<String, Integer> quantitationTypeNameMap = new HashMap<String, Integer>();
+
+    public void addQuantitationType( String columnName, Integer index ) {
+        if ( columnName != null ) {
+            if ( quantitationTypeNameMap.containsKey( columnName )
+                    && getQuantitationTypeIndex( columnName ).intValue() != index.intValue() ) {
+                throw new IllegalArgumentException( "You just tried to reassign the column for a quantitation type" );
+            }
+            quantitationTypeNameMap.put( columnName, index );
+        }
+    }
+
+    public Integer getQuantitationTypeIndex( String columnName ) {
+        return this.quantitationTypeNameMap.get( columnName );
     }
 
     /**
@@ -336,9 +343,11 @@ public class GeoValues {
             assert data.get( platform ) != null : platform;
 
             buf.append( "============== " + platform + " =================\n" );
-            for ( Object qType : sampleDimensions.get( platform ).keySet() ) {
-                buf.append( "---------------- " + qType + " ------------------\n" );
-                buf.append( "DesignEl" );
+            Object[] ar = sampleDimensions.get( platform ).keySet().toArray();
+            Arrays.sort( ar );
+            for ( Object qType : ar ) {
+                buf.append( "---------------- QuantitationType #" + qType + " ------------------\n" );
+                buf.append( "DeEl" );
 
                 for ( GeoSample sam : sampleDimensions.get( platform ).get( qType ) ) {
                     buf.append( "\t" + sam.getGeoAccession() );
@@ -346,9 +355,14 @@ public class GeoValues {
                 buf.append( "\n" );
 
                 assert data.get( platform ).get( qType ) != null;
-                for ( String dEl : data.get( platform ).get( qType ).keySet() ) {
+                Object[] els = data.get( platform ).get( qType ).keySet().toArray();
+                Arrays.sort( els );
+                for ( Object dEl : els ) {
                     buf.append( dEl );
                     for ( Object val : data.get( platform ).get( qType ).get( dEl ) ) {
+                        if ( StringUtils.isBlank( val.toString() ) ) {
+                            val = ".";
+                        }
                         buf.append( "\t" + val );
                     }
                     buf.append( "\n" );
@@ -373,7 +387,6 @@ public class GeoValues {
      * started.
      */
     public void validate() {
-
         for ( GeoPlatform platform : sampleDimensions.keySet() ) {
 
             Map<Object, Map<String, List<Object>>> d = data.get( platform );

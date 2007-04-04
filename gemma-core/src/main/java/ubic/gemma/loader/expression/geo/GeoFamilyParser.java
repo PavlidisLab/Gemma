@@ -1017,6 +1017,8 @@ public class GeoFamilyParser implements Parser {
 
     }
 
+    Integer previousNumTokens = null;
+
     /**
      * The data for one sample is all the values for each quantitation type.
      * <p>
@@ -1035,7 +1037,7 @@ public class GeoFamilyParser implements Parser {
 
         if ( !haveReadSampleDataHeader ) {
             haveReadSampleDataHeader = true;
-
+            // previousNumTokens = null;
             initializeQuantitationTypes();
 
             return;
@@ -1054,6 +1056,13 @@ public class GeoFamilyParser implements Parser {
             return;
         }
 
+        if ( previousNumTokens != null && tokens.length != previousNumTokens ) {
+            log.warn( "Last line had " + ( previousNumTokens - 1 ) + " , quantitation types, this one has "
+                    + ( tokens.length - 1 ) );
+        }
+
+        previousNumTokens = tokens.length;
+
         GeoSample sample = results.getSampleMap().get( currentSampleAccession );
 
         if ( results.getSeriesMap().get( currentSeriesAccession ) == null ) {
@@ -1068,6 +1077,10 @@ public class GeoFamilyParser implements Parser {
             int quantitationTypeIndex = i - 1;
 
             if ( !isWantedQuantitationType( quantitationTypeIndex ) ) continue;
+
+            if ( quantitationTypeTargetColumn.containsKey( quantitationTypeIndex ) ) {
+                quantitationTypeIndex = quantitationTypeTargetColumn.get( quantitationTypeIndex );
+            }
 
             if ( log.isTraceEnabled() ) {
                 log.trace( "Adding: " + value + " to  quantitationType " + ( quantitationTypeIndex ) + " for "
@@ -1085,12 +1098,16 @@ public class GeoFamilyParser implements Parser {
     }
 
     private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
+    Map<String, Integer> quantitationTypeKey = new HashMap<String, Integer>();
+    Map<Integer, Integer> quantitationTypeTargetColumn = new HashMap<Integer, Integer>();
 
     /**
-     * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0.
+     * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0. This
+     * initialization is run for each sample.
      */
     private void initializeQuantitationTypes() {
         wantedQuantitationTypes.clear();
+        quantitationTypeTargetColumn.clear();
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
         int i = 0;
         for ( String columnName : currentSample().getColumnNames() ) {
@@ -1106,9 +1123,22 @@ public class GeoFamilyParser implements Parser {
                 wantedQuantitationTypes.add( quantitationTypeIndex );
             }
 
-            values.addQuantitationType( columnName, quantitationTypeIndex );
+            if ( quantitationTypeKey.containsKey( columnName ) ) {
+                int previousColumnLocation = quantitationTypeKey.get( columnName ).intValue();
+                if ( previousColumnLocation != quantitationTypeIndex ) {
+                    log.warn( columnName + " is not in previous column " + previousColumnLocation + " for sample "
+                            + currentSample() + ", it is in column " + quantitationTypeIndex );
+                    quantitationTypeTargetColumn.put( quantitationTypeIndex, previousColumnLocation );
+                }
+                values.addQuantitationType( columnName, previousColumnLocation );
+            } else {
+                quantitationTypeKey.put( columnName, quantitationTypeIndex );
+                values.addQuantitationType( columnName, quantitationTypeIndex );
+            }
+
             i++;
         }
+
     }
 
     /**

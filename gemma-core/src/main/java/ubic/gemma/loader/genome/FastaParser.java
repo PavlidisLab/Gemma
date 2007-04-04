@@ -141,7 +141,7 @@ public class FastaParser extends RecordParser {
     /**
      * <pre>
      *        Affymetrix targets or collapsed sequence     target:array:probeset;
-     *        Affymetrix "style" file                      target:probename
+     *        Affymetrix &quot;style&quot; file                      target:probename
      *        Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
      *        Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
@@ -257,7 +257,9 @@ public class FastaParser extends RecordParser {
         } else if ( firstTag.matches( NIA_HEADER_REGEX ) ) {
             return parseNIA( bioSequence, header );
         } else {
+            // generic.
             bioSequence.setName( split[0] );
+            if ( split.length > 1 ) bioSequence.setDescription( split[1] );
             // log.warn( "Defline-style FASTA header in unrecognized format, started with " + firstTag );
             // return false;
         }

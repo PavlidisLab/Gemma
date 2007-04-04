@@ -18,7 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -79,19 +81,45 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
 
         log.info( "Fetching vectors" );
         Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( qType );
-        log.info( "Thawing vectors" );
-        designElementDataVectorService.thaw( vectors );
+        log.info( "Thawing " + vectors.size() + " vectors" );
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
-
+        response.setContentType( "text/plain" );
         MatrixWriter writer = new MatrixWriter();
 
-        log.info( "Writing to browser" );
-        response.setContentType( "text/plain" );
-        writer.write( response.getWriter(), expressionDataMatrix );
+        int BATCH_SIZE = 200;
+        Collection<DesignElementDataVector> batch = new HashSet<DesignElementDataVector>();
+        boolean firstBatch = true;
+        for ( DesignElementDataVector v : vectors ) {
+            batch.add( v );
+            if ( batch.size() == BATCH_SIZE ) {
+                writeBatch( response, writer, batch, firstBatch );
+                response.getWriter().flush();
+                firstBatch = false;
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            writeBatch( response, writer, batch, firstBatch );
+        }
         response.getWriter().flush();
 
         return null;
+    }
+
+    /**
+     * @param response
+     * @param writer
+     * @param batch
+     * @param firstBatch
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    private void writeBatch( HttpServletResponse response, MatrixWriter writer,
+            Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
+        designElementDataVectorService.thaw( batch );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( batch );
+        writer.write( response.getWriter(), expressionDataMatrix, firstBatch );
+        batch.clear();
     }
 
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {

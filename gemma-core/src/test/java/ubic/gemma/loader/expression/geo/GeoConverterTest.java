@@ -28,8 +28,10 @@ import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.expression.geo.model.GeoValues;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -215,6 +217,38 @@ public class GeoConverterTest extends TestCase {
         assertNotNull( result );
     }
 
+    @SuppressWarnings("unchecked")
+    public void testConvertGse59() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE59Short/GSE59_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE59" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        // GeoValues values = series.getValues();
+        // System.err.print( values );
+        Object result = this.gc.convert( series );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        ExpressionExperiment ee = ees.iterator().next();
+        boolean ok = false;
+        for ( DesignElementDataVector dedv : ee.getDesignElementDataVectors() ) {
+            QuantitationType qt = dedv.getQuantitationType();
+
+            if ( qt.getIsPreferred() ) {
+                ok = true;
+                assertEquals( "VALUE", qt.getName() );
+                // ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, dedv.getBioAssayDimension(), qt
+                // );
+                // System.err.println( qt );
+                // System.err.print( mat );
+            }
+        }
+
+        assertTrue( ok );
+    }
+
     /**
      * Not all quantitation types are found in all samples, and not all in the same order. This is a broken GSE for us.
      */
@@ -349,7 +383,7 @@ public class GeoConverterTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3193" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );

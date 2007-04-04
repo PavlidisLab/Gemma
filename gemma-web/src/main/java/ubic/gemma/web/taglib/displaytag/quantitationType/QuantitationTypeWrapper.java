@@ -87,8 +87,7 @@ public class QuantitationTypeWrapper extends TableDecorator {
             return "-";
         }
 
-        return "<form action=\"/Gemma/getData.html?qt=" + object.getId()
-                + "\"  method=\"post\"><input type=\"submit\"  value=\"Get data\" /></form>";
+        return "<a href=\"javascript:window.open('/Gemma/getData.html?qt=" +  object.getId() + "')\">Data</a>";
     }
 
 }

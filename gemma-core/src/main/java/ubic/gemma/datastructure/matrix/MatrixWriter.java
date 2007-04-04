@@ -43,26 +43,29 @@ public class MatrixWriter<T> {
      * @param matrix
      * @return
      */
-    public void write( Writer writer, ExpressionDataMatrix<T> matrix ) throws IOException {
+    public void write( Writer writer, ExpressionDataMatrix<T> matrix, boolean writeHeader ) throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
         StringBuffer buf = new StringBuffer();
-        buf.append( "Probe" );
-        for ( int i = 0; i < columns; i++ ) {
-            buf.append( "\t" + matrix.getBioMaterialForColumn( i ).getName() + ":" );
-            for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
-                buf.append( ( ( BioAssay ) ba ).getName() + "," );
+        if ( writeHeader ) {
+            // TO do get gene.
+            buf.append( "Probe\tSequence" );
+            for ( int i = 0; i < columns; i++ ) {
+                buf.append( "\t" + matrix.getBioMaterialForColumn( i ).getName() + ":" );
+                for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
+                    buf.append( ( ( BioAssay ) ba ).getName() + "," );
+                }
             }
+            buf.append( "\n" );
         }
-        buf.append( "\n" );
 
         for ( int j = 0; j < rows; j++ ) {
 
             buf.append( matrix.getDesignElementForRow( j ).getName() );
             BioSequence biologicalCharacteristic = ( ( CompositeSequence ) matrix.getDesignElementForRow( j ) )
                     .getBiologicalCharacteristic();
-            if ( biologicalCharacteristic != null ) buf.append( " [" + biologicalCharacteristic.getName() + "]" );
+            if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() );
 
             for ( int i = 0; i < columns; i++ ) {
                 T val = matrix.get( j, i );

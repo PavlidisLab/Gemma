@@ -24,6 +24,8 @@ import java.util.zip.GZIPInputStream;
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.expression.geo.model.GeoValues;
 
 /**
  * @author pavlidis
@@ -87,6 +89,21 @@ public class GeoFamilyParserTest extends TestCase {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
         parser.parse( is );
+    }
+
+    /**
+     * This was getting garbled because not all samples have all the same quantitation types in the same order etc.
+     * 
+     * @throws Exception
+     */
+    public void testParseGse59() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE59Short/GSE59_family.soft.gz" ) );
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE59" );
+        GeoValues values = series.getValues();
+        System.err.print( values );
+        
     }
 
     // /**

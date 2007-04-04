@@ -584,36 +584,35 @@ public class GeoConverter implements Converter {
          * data is 'counts'). For others we just have free text in the column descriptions
          */
 
-        int quantitationTypeIndex = 0;
         for ( String quantitationType : quantitationTypes ) {
 
             // skip the first quantitationType, it's the ID or ID_REF.
             if ( first ) {
                 first = false;
-                // quantitationTypeIndex++; // don't count the first column, don't increment.
                 continue;
             }
 
-            log.info( "Processing " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
+            int columnAccordingToSample = quantitationTypes.indexOf( quantitationType );
+
+            int quantitationTypeIndex = values.getQuantitationTypeIndex( quantitationType );
+            log.info( "Processing " + quantitationType + " (column=" + quantitationTypeIndex
+                    + " - according to sample, it's " + columnAccordingToSample + ")" );
 
             Map<String, List<Object>> dataVectors = makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
             if ( dataVectors == null ) {
-                log.info( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
-                quantitationTypeIndex++;
+                // log.info( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
                 continue;
             } else {
-                log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
-                        + quantitationTypeIndex + ")" );
+                // log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
+                // + quantitationTypeIndex + ")" );
             }
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
-            String description = quantitationTypeDescriptions.get( quantitationTypeIndex + 1 );
+            String description = quantitationTypeDescriptions.get( columnAccordingToSample );
             qt.setDescription( description );
             QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description );
-
-            expExp.getQuantitationTypes().add( qt );
 
             int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
@@ -636,16 +635,21 @@ public class GeoConverter implements Converter {
 
                 expExp.getDesignElementDataVectors().add( vector );
 
-                if ( log.isDebugEnabled() && ++count % LOGGING_VECTOR_COUNT_UPDATE == 0 ) {
+                if ( ++count % LOGGING_VECTOR_COUNT_UPDATE == 0 && log.isDebugEnabled() ) {
                     log.debug( count + " Data vectors added" );
                 }
             }
-            if ( log.isDebugEnabled() ) {
-                log.debug( count + " Data vectors added for '" + quantitationType + "'" );
+
+            if ( count > 0 ) {
+                expExp.getQuantitationTypes().add( qt );
             }
-            quantitationTypeIndex++;
+
+            if ( log.isInfoEnabled() ) {
+                log.info( count + " Data vectors added for '" + quantitationType + "'" );
+            }
         }
-        log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors so far..." );
+        log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors so far..."
+                + expExp.getQuantitationTypes().size() + " quantitation types." );
     }
 
     /**
