@@ -45,7 +45,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             Class<ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
         Collection<AuditEvent> subsumerEvents = this.getEvents( subsumedInto );
         AuditEvent lastSubsumerEvent = getLastEvent( subsumerEvents, eventclass );
-        if ( lastSubsumerEvent != null
+        if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
+                && lastEventMap.get( arrayDesignId ) != null
                 && lastEventMap.get( arrayDesignId ).getDate().before( lastSubsumerEvent.getDate() ) ) {
             lastEventMap.put( arrayDesignId, lastSubsumerEvent );
         }
