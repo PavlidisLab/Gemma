@@ -20,18 +20,12 @@ package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import org.acegisecurity.userdetails.UserDetails;
 import org.acegisecurity.userdetails.UserDetailsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.SecurityUtil;
@@ -73,27 +67,20 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      */
     public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
 
-        log.info( "executing task" );
+        log.info( "executing task " + this.getClass().getName() );
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        User user = null;
-        UserDetails userDetails = null;
-        if ( auth == null ) {
-            userDetails = userDetailsService.loadUserByUsername( "administrator" );
-            user = SecurityUtil.getUserFromUserDetails( userDetails );
-        }
-        GrantedAuthority[] authorities = userDetails.getAuthorities();
-        auth = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
-        SecurityContextHolder.getContext().setAuthentication( auth );
+        SecurityUtil.populateAuthenticationIfEmpty( userDetailsService, "administrator" );
 
         Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
+
+        SecurityUtil.flushAuthentication();
 
         // TODO figure out what to store in the result for collections
         counter++;
         Result result = new Result();
         result.setAnswer( datasets.size() );
         result.setTaskID( counter );
+
         return result;
     }
 
