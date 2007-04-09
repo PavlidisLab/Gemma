@@ -18,7 +18,12 @@
  */
 package ubic.gemma.util;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.GrantedAuthority;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.acegisecurity.userdetails.UserDetails;
+import org.acegisecurity.userdetails.UserDetailsService;
 import org.hibernate.proxy.HibernateProxy;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -55,5 +60,33 @@ public class SecurityUtil {
         user.setPassword( userDetails.getPassword() );
 
         return user;
+    }
+
+    /**
+     * If Authentication object is empty, checks if user with username exists. If so, populates Authentication object
+     * with a user with username.
+     * 
+     * @param userDetailsService
+     * @param username
+     */
+    public static void populateAuthenticationIfEmpty( UserDetailsService userDetailsService, String username ) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = null;
+        UserDetails userDetails = null;
+        if ( auth == null ) {
+            userDetails = userDetailsService.loadUserByUsername( username );
+            user = SecurityUtil.getUserFromUserDetails( userDetails );
+        }
+        GrantedAuthority[] authorities = userDetails.getAuthorities();
+        auth = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
+        SecurityContextHolder.getContext().setAuthentication( auth );
+    }
+
+    /**
+     * Clears the Authentication object.
+     */
+    public static void flushAuthentication() {
+        /* authentication information no longer needed */
+        SecurityContextHolder.getContext().setAuthentication( null );
     }
 }
