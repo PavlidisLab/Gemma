@@ -20,13 +20,21 @@ package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.GrantedAuthority;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.acegisecurity.userdetails.UserDetails;
+import org.acegisecurity.userdetails.UserDetailsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
@@ -38,6 +46,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
+    private UserDetailsService userDetailsService = null;
 
     /*
      * (non-Javadoc)
@@ -65,6 +74,19 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
 
         log.info( "executing task" );
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        User user = null;
+        UserDetails userDetails = null;
+        if ( auth == null ) {
+            userDetails = userDetailsService.loadUserByUsername( "administrator" );
+            user = SecurityUtil.getUserFromUserDetails( userDetails );
+        }
+        GrantedAuthority[] authorities = userDetails.getAuthorities();
+        auth = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
+        SecurityContextHolder.getContext().setAuthentication( auth );
+
         Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
 
         // TODO figure out what to store in the result for collections
@@ -88,6 +110,13 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
         this.geoDatasetService = geoDatasetService;
         this.geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    }
+
+    /**
+     * @param userDetailsService
+     */
+    public void setUserDetailsService( UserDetailsService userDetailsService ) {
+        this.userDetailsService = userDetailsService;
     }
 
 }
