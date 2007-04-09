@@ -188,7 +188,7 @@
 	<classpathentry kind="var" path="M2_REPO/quartz/quartz/1.5.2/quartz-1.5.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/sdicons/jsontools/jsontools-core/1.4/jsontools-core-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.8/mtj-0.9.8.jar"/>
-	<classpathentry kind="var" path="M2_REPO/spring/spring-modules-javaspaces/0.8/spring-modules-javaspaces-0.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/spring/spring-modules-javaspaces/0.8/spring-modules-javaspaces-0.8.jar" sourcepath="/JAR_SOURCE/spring-modules-0.8/sources/spring-modules-javaspaces-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/jini/jini-core/2.1/jini-core-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jini/jini-ext/2.1/jini-ext-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces/0.8/JSpaces-0.8.jar"/>
