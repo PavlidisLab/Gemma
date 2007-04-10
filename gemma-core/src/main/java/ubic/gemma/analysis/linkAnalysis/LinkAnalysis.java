@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +56,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.TaxonUtility;
+import cern.colt.Sorting;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
@@ -397,7 +399,7 @@ public class LinkAnalysis {
     }
 
     /**
-     * @param c
+     * @param numColumns
      * @param p2plinks
      * @param i
      * @param w
@@ -405,13 +407,28 @@ public class LinkAnalysis {
      * @param v2
      * @return
      */
-    private Probe2ProbeCoexpression persist( int c, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
+    private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
             DesignElementDataVector v1, DesignElementDataVector v2 ) {
-        Probe2ProbeCoexpression ppCoexpression;
+
         if ( taxon == null ) {
             throw new IllegalStateException( "Taxon cannot be null" );
         }
 
+        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, v1 );
+
+        ppCoexpression.setFirstVector( v1 );
+        ppCoexpression.setSecondVector( v2 );
+
+        p2plinks.add( ppCoexpression );
+
+        if ( i % LINK_BATCH_SIZE == 0 ) {
+            this.ppService.create( p2plinks );
+            p2plinks.clear();
+        }
+    }
+
+    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, DesignElementDataVector v1 ) {
+        Probe2ProbeCoexpression ppCoexpression;
         if ( TaxonUtility.isMouse( taxon ) ) {
             ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
         } else if ( TaxonUtility.isRat( taxon ) ) {
@@ -421,17 +438,9 @@ public class LinkAnalysis {
         } else {
             ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
         }
-
-        ppCoexpression.setFirstVector( v1 );
-        ppCoexpression.setSecondVector( v2 );
         ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, c ) );
+        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
         ppCoexpression.setQuantitationType( v1.getQuantitationType() );
-        p2plinks.add( ppCoexpression );
-        if ( i % LINK_BATCH_SIZE == 0 ) {
-            this.ppService.create( p2plinks );
-            p2plinks.clear();
-        }
         return ppCoexpression;
     }
 
@@ -452,15 +461,48 @@ public class LinkAnalysis {
         log.info( "Deleting any old links for " + expressionExperiment + " ..." );
         ppService.deleteLinks( expressionExperiment );
 
-        /* *******Find the dataVector for each probe first*** */
-        int c = dataMatrix.columns();
-
         log.info( "Start submitting data to database." );
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<Probe2ProbeCoexpression> p2plinks = new HashSet<Probe2ProbeCoexpression>();
-        for ( int i = 0, n = keep.size(); i < n; i++ ) {
-            Link m = ( Link ) keep.get( i );
+        Object[] links = keep.elements();
+        int numColumns = dataMatrix.columns();
+
+        saveLinks( numColumns, links );
+
+        // now create 'reversed' links, by sorting by the 'y' coordinate.
+        log.info( "Sorting links to create flipped set" );
+        Sorting.quickSort( links, new Comparator() {
+            public int compare( Object arg0, Object arg1 ) {
+                Link a = ( Link ) arg0;
+                Link b = ( Link ) arg1;
+
+                if ( a.gety() < b.gety() ) {
+                    return -1;
+                } else if ( a.gety() > b.gety() ) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+
+            }
+        } );
+
+        log.info( "Saving flipped links" );
+        saveLinks( numColumns, links );
+
+        watch.stop();
+        log.info( "Seconds to insert " + this.keep.size() + " links plus flipped versions:"
+                + ( double ) watch.getTime() / 1000.0 );
+    }
+
+    /**
+     * @param c
+     * @param links
+     */
+    private void saveLinks( int c, Object[] links ) {
+        Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
+        for ( int i = 0, n = links.length; i < n; i++ ) {
+            Link m = ( Link ) links[i];
             double w = m.getWeight();
 
             DesignElement p1 = this.metricMatrix.getProbeForRow( dataMatrix.getRowElement( m.getx() ) );
@@ -469,16 +511,17 @@ public class LinkAnalysis {
             DesignElementDataVector v1 = p2v.get( p1 );
             DesignElementDataVector v2 = p2v.get( p2 );
 
-            persist( c, p2plinks, i, w, v1, v2 );
+            persist( c, p2plinkBatch, i, w, v1, v2 );
 
             if ( i > 0 && i % 50000 == 0 ) {
                 log.info( i + " links loaded into the database" );
             }
 
         }
-        if ( p2plinks.size() > 0 ) this.ppService.create( p2plinks );
-        watch.stop();
-        log.info( "Seconds to insert " + this.keep.size() + " links:" + ( double ) watch.getTime() / 1000.0 );
+        if ( p2plinkBatch.size() > 0 ) {
+            this.ppService.create( p2plinkBatch );
+            p2plinkBatch.clear();
+        }
     }
 
     /**

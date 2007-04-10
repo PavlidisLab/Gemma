@@ -318,6 +318,7 @@ public class ExpressionDataMatrixBuilder {
 
             boolean channelANeedsReconstruction = checkChannelA( signalChannelA, signalChannelB, backgroundChannelA,
                     bkgSubChannelA );
+
             if ( channelANeedsReconstruction ) {
                 return getSignalChannelAFancy( arrayDesign );
             }
@@ -332,7 +333,9 @@ public class ExpressionDataMatrixBuilder {
 
     /**
      * Compute an intensity matrix. For two-channel arrays, this is the geometric mean of the background-subtracted
-     * signals on the two channels. For one-color arrays, this is the same as the preferred data matrix.
+     * signals on the two channels. For two-color arrays, if one channel is missing (as happens sometimes) the
+     * intensities returned are just from the one channel. For one-color arrays, this is the same as the preferred data
+     * matrix.
      * 
      * @param arrayDesign
      * @return
@@ -346,21 +349,34 @@ public class ExpressionDataMatrixBuilder {
             ExpressionDataDoubleMatrix backgroundB = this.getBackgroundChannelB( arrayDesign );
 
             if ( signalA == null && signalB == null ) {
-                throw new IllegalStateException( "Cannot get signal for both channels" );
+                throw new IllegalStateException( "Cannot get signal for either channel" );
             }
 
-            if ( backgroundA != null ) ExpressionDataDoubleMatrixUtil.subtractMatrices( signalA, backgroundA );
+            if ( backgroundA != null && signalA != null )
+                ExpressionDataDoubleMatrixUtil.subtractMatrices( signalA, backgroundA );
 
-            if ( backgroundB != null ) ExpressionDataDoubleMatrixUtil.subtractMatrices( signalB, backgroundB );
+            if ( backgroundB != null && signalB != null )
+                ExpressionDataDoubleMatrixUtil.subtractMatrices( signalB, backgroundB );
 
-            ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalA );
-            ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalB );
+            if ( signalA != null ) {
+                ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalA );
+            }
 
-            ExpressionDataDoubleMatrixUtil.addMatrices( signalA, signalB );
+            if ( signalB != null ) {
+                ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalB );
+            }
 
-            ExpressionDataDoubleMatrixUtil.scalarDivideMatrix( signalA, 2.0 );
+            if ( signalA != null && signalB != null ) {
+                ExpressionDataDoubleMatrixUtil.addMatrices( signalA, signalB );
+                ExpressionDataDoubleMatrixUtil.scalarDivideMatrix( signalA, 2.0 );
+            }
 
-            return signalA; // now this contains the answer
+            if ( signalA == null ) {
+                return signalB;
+            } else {
+                return signalA; // now this contains the answer
+            }
+
         } else {
             return getPreferredData( arrayDesign );
         }
@@ -429,9 +445,10 @@ public class ExpressionDataMatrixBuilder {
                 log.info( "Invoking work-around for missing channel 1 intensities" );
                 return true;
             } else {
-                throw new IllegalStateException( "Could not find signals for both channels: " + "Channel A ="
-                        + signalChannelA + ", Channel B=" + signalChannelB + " and backgroundChannelA ="
-                        + backgroundChannelA + " and background-subtracted channel A =" + bkgSubChannelA );
+                log.warn( "Could not find signals for both channels: " + "Channel A =" + signalChannelA
+                        + ", Channel B=" + signalChannelB + " and backgroundChannelA =" + backgroundChannelA
+                        + " and background-subtracted channel A =" + bkgSubChannelA );
+                return false;
             }
         }
         return false;
@@ -606,7 +623,7 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
                 || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
-                || name.equals( "CH1_BKD_ Median" );
+                || name.equals( "CH1_BKD_ Median" ) || name.equals( "BKG1Mean" );
     }
 
     /**
@@ -620,7 +637,7 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
                 || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
-                || name.equals( "CH2_BKD_ Median" );
+                || name.equals( "CH2_BKD_ Median" ) || name.equals( "BKG2Mean" );
     }
 
     /**
@@ -634,7 +651,8 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
                 || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
                 || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" );
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
+                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals("\"log2(532), gN\"");
     }
 
     /**
@@ -648,7 +666,8 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
                 || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
                 || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" );
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
+                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" )|| name.equals("\"log2(635), gN\"");
     }
 
     /**

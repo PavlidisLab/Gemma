@@ -52,8 +52,6 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCli {
     private static Log log = LogFactory.getLog( ComputeDEVRankingCli.class.getName() );
 
     private String geneExpressionList = null;
-    private String geneExpressionFile = null;
-
     private Method method = Method.MAX;
 
     /**
@@ -62,6 +60,8 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCli {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
+
+        super.buildOptions();
 
         Option geneFileListOption = OptionBuilder.hasArg().withArgName( "list of Gene Expression file" )
                 .withDescription(
@@ -122,7 +122,7 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCli {
 
         ExpressionExperiment expressionExperiment = null;
 
-        if ( this.geneExpressionFile == null ) {
+        if ( this.getExperimentShortName() == null ) {
 
             if ( this.geneExpressionList == null ) {
                 Collection<ExpressionExperiment> all = eeService.loadAll();

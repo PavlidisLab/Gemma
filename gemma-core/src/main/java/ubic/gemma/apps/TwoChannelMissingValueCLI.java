@@ -25,10 +25,13 @@ import java.util.Collection;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -82,6 +85,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         addDateOption();
     }
 
+    AuditTrailService auditTrailService;
+
     /*
      * (non-Javadoc)
      * 
@@ -102,6 +107,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                     processExperiment( ee );
                 } catch ( Exception e ) {
                     errorObjects.add( ee + ": " + e.getMessage() );
+
+                    AuditEventType type = FailedMissingValueAnalysisEvent.Factory.newInstance();
+                    auditTrailService.addUpdateEvent( ee, type, ExceptionUtils.getFullStackTrace( e ) );
                     log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
                 }
             }
@@ -110,7 +118,11 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         } else {
 
-            String[] shortNames = this.getExperimentShortName().split( "," );
+            String name = this.getExperimentShortName();
+            if ( StringUtils.isBlank( name ) ) {
+                bail( ErrorCode.INVALID_OPTION );
+            }
+            String[] shortNames = name.split( "," );
 
             for ( String shortName : shortNames ) {
                 ExpressionExperiment ee = locateExpressionExperiment( shortName );
@@ -145,7 +157,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             }
         }
 
-        AuditTrailService auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
         auditTrailService
                 .addUpdateEvent( ee, type, "Computed missing value data on array designs: " + arrayDesignsUsed );
@@ -214,6 +225,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         if ( hasOption( "force" ) ) {
             this.force = true;
         }
+        auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
         dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
