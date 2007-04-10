@@ -240,18 +240,21 @@ public class ExpressionExperimentReportService {
                 AuditEvent event = linkAnalysisEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateLinkAnalysis( event.getDate() );
+                    eeVo.setLinkAnalysisEventType( event.getEventType() );
                 }
             }
             if ( missingValueAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = missingValueAnalysisEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateMissingValueAnalysis( ( event.getDate() ) );
+                    eeVo.setMissingValueAnalysisEventType( event.getEventType() );
                 }
             }
             if ( rankComputationEvents.containsKey( id ) ) {
                 AuditEvent event = rankComputationEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateRankComputation( event.getDate() );
+                    eeVo.setRankComputationEventType( event.getEventType() );
                 }
             }
         }

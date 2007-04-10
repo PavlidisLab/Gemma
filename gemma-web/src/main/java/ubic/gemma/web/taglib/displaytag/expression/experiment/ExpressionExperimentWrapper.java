@@ -26,6 +26,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -98,9 +102,18 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateMissingValueAnalysis();
         if ( dateObject != null ) {
+            AuditEventType type = object.getMissingValueAnalysisEventType();
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
-            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+            String style = "";
+
+            if ( type instanceof FailedMissingValueAnalysisEvent ) {
+                style = "style=\"color=#F33;\"";
+                // } else if ( type instanceof NoIntensityMissingValueAnalysisEvent ) {
+                // style = "style=\"font-style=italic;\"";
+            }
+
+            return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
         }
@@ -113,6 +126,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateRankComputation();
         if ( dateObject != null ) {
+            // AuditEventType type = object.getRankComputationEventType();
+            // if ( type instanceof FailedRankAnalysisEvent ) {
+            // style = "style=\"color=#F33;\"";
+            // }
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
@@ -128,9 +145,18 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateLinkAnalysis();
         if ( dateObject != null ) {
+            AuditEventType type = object.getLinkAnalysisEventType();
+
+            String style = "";
+            if ( type instanceof FailedLinkAnalysisEvent ) {
+                style = "style=\"color:#F33;\"";
+            } else if ( type instanceof TooSmallDatasetLinkAnalysisEvent ) {
+                style = "style=\"font-style:italic;\"";
+            }
+
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
-            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+            return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
         }
