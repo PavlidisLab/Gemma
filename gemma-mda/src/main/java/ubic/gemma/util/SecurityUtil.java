@@ -24,6 +24,8 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.acegisecurity.userdetails.UserDetails;
 import org.acegisecurity.userdetails.UserDetailsService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.proxy.HibernateProxy;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -34,6 +36,8 @@ import ubic.gemma.model.common.auditAndSecurity.UserImpl;
  * @version $Id$
  */
 public class SecurityUtil {
+    private static Log log = LogFactory.getLog( SecurityUtil.class );
+
     /**
      * Returns the Implementation object from the HibernateProxy. If target is not an instanceof HibernateProxy, target
      * is returned.
@@ -73,13 +77,16 @@ public class SecurityUtil {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = null;
         UserDetails userDetails = null;
-        if ( auth == null ) {
-            userDetails = userDetailsService.loadUserByUsername( username );
-            user = SecurityUtil.getUserFromUserDetails( userDetails );
-        }
+
+        if ( auth != null ) return;
+
+        log.info( "Populating authentication object ... " );
+        userDetails = userDetailsService.loadUserByUsername( username );
+        user = SecurityUtil.getUserFromUserDetails( userDetails );
         GrantedAuthority[] authorities = userDetails.getAuthorities();
         auth = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
         SecurityContextHolder.getContext().setAuthentication( auth );
+
     }
 
     /**
