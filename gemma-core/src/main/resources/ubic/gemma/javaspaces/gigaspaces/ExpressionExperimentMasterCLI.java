@@ -18,6 +18,7 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
@@ -94,7 +95,7 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
     protected void start() {
         ExpressionExperimentTask proxy = ( ExpressionExperimentTask ) this.getBean( "proxy" );
         for ( int i = 0; i < 2; i++ ) {
-            Stopwatch stopwatch = new Stopwatch();
+            StopWatch stopwatch = new StopWatch();
             stopwatch.start();
 
             // TODO remove me - using this test expression experiment
@@ -106,7 +107,8 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
 
             // TODO read values from command line
             Result res = proxy.execute( "GSE3434", false, false );
-            long wt = stopwatch.stop().getElapsedTime();
+            stopwatch.stop();
+            long wt = stopwatch.getTime();
             log.info( "Submitted Job " + res.getTaskID() + " in " + wt + " ms.  Result expression experiment id is "
                     + res.getAnswer() + "." );
 
