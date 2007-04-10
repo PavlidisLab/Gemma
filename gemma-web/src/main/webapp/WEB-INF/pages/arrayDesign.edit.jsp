@@ -72,7 +72,7 @@
 			<td>
 				<spring:bind path="arrayDesign.technologyType">
 					<select name="${status.expression}">
-						<c:forEach items="${technologyType}" var="type">
+						<c:forEach items="${technologyTypes}" var="type">
 							<option value="${type}"
 								<c:if test="${status.value == type}">selected</c:if>>
 								${type}
