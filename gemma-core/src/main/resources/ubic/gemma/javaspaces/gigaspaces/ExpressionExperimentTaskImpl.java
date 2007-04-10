@@ -69,6 +69,10 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
 
         log.info( "executing task " + this.getClass().getName() );
 
+        /*
+         * Needed since the worker executes the task in a separate thread and credentials are not passed between
+         * threads.
+         */
         SecurityUtil.populateAuthenticationIfEmpty( userDetailsService, "administrator" );
 
         Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
