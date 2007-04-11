@@ -96,4 +96,14 @@ public class SecurityUtil {
         /* authentication information no longer needed */
         SecurityContextHolder.getContext().setAuthentication( null );
     }
+
+    /**
+     * Sets the security mode such that all threads spawned from the thread where this method is invoked will get the
+     * Authentication object.
+     */
+    public static void passAuthenticationToChildThreads() {
+
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+
+    }
 }
