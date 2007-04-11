@@ -20,6 +20,7 @@ package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
 
+import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetailsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,7 +29,6 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
@@ -73,11 +73,11 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
          * Needed since the worker executes the task in a separate thread and credentials are not passed between
          * threads.
          */
-        SecurityUtil.populateAuthenticationIfEmpty( userDetailsService, "administrator" );
+
+        log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
+                + SecurityContextHolder.getContext().getAuthentication() );
 
         Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
-
-        SecurityUtil.flushAuthentication();
 
         // TODO figure out what to store in the result for collections
         counter++;
