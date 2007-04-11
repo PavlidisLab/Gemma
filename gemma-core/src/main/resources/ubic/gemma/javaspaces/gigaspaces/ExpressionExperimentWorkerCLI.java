@@ -18,12 +18,14 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
@@ -57,6 +59,9 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
     }
 
     protected void start() {
+        log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
+                + SecurityContextHolder.getContext().getAuthentication() );
+
         itbThread = new Thread( iTestBeanWorker );
         itbThread.start();
     }
@@ -66,6 +71,9 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
      */
     public static void main( String[] args ) {
         log.info( "Running GigaSpaces Worker To Handle Expression Experiments ... \n" );
+
+        SecurityUtil.passAuthenticationToChildThreads();
+
         ExpressionExperimentWorkerCLI p = new ExpressionExperimentWorkerCLI();
         try {
             Exception ex = p.doWork( args );
