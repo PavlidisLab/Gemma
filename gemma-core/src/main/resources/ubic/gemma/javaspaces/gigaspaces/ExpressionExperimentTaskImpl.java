@@ -40,7 +40,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
-    private UserDetailsService userDetailsService = null;
 
     /*
      * (non-Javadoc)
@@ -102,12 +101,4 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         this.geoDatasetService = geoDatasetService;
         this.geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
     }
-
-    /**
-     * @param userDetailsService
-     */
-    public void setUserDetailsService( UserDetailsService userDetailsService ) {
-        this.userDetailsService = userDetailsService;
-    }
-
 }

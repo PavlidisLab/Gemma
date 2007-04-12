@@ -99,9 +99,6 @@
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
-		<property name="userDetailsService">
-			<ref bean="userDetailsService" />
-		</property>
 	</bean>
 </beans>
 
