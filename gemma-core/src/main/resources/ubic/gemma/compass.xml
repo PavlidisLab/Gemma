@@ -73,8 +73,10 @@
                 <prop key="compass.engine.analyzer.default.name">English</prop>
                 <prop key="compass.engine.optimizer.schedule">false</prop>
                 <prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer</prop>
-                <prop key="compass.engine.indexManagerScheduleInterval">-1</prop>             
-                
+                <prop key="compass.engine.indexManagerScheduleInterval">-1</prop>  
+          	    <prop key="compass.engine.mergeFactor">50</prop>
+                <prop key="compass.engine.maxBufferedDocs">50</prop>               
+        
             </props>
         </property>
         <property name="transactionManager">

@@ -65,6 +65,10 @@
 		<property name="mirrorDataChanges">
 			<value>false</value>
 		</property>
+		 <property name="fetchCount"> 
+             <value>200</value> 
+         </property>
+		
 	</bean>
 	<bean id="expressionGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
