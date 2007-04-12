@@ -200,6 +200,7 @@
 			<prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop>
 			<prop key="/expressionExperiment/showExpressionExperiment.html">show</prop>
 			<prop key="/expressionExperiment/showBioAssaysFromExpressionExperiment.html">showBioAssays</prop>
+			<prop key="/expressionExperiment/showBioMaterialsFromExpressionExperiment.html">showBioMaterials</prop>
 			<prop key="/expressionExperiment/showExpressionExperimentSubSet.html">showSubSet</prop>
 			<prop key="/expressionExperiment/filterExpressionExperiments.html">filter</prop>
 			<prop key="/expressionExperiment/generateExpressionExperimentLinkSummary.html">generateSummary</prop>

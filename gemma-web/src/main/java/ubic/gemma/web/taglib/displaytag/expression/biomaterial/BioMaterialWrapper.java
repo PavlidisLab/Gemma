@@ -18,11 +18,14 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.biomaterial;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -47,5 +50,30 @@ public class BioMaterialWrapper extends TableDecorator {
      + object.getTreatments().size() + "</a>";
      }
      return "No treatments";
+     }
+     
+     public String getFactorList() {
+         String factorValueString = "";
+         BioMaterial object = ( BioMaterial ) getCurrentRowObject();
+         Collection<FactorValue> factorValues = object.getFactorValues();
+
+           for ( FactorValue value : factorValues ) {
+               if (value.getOntologyEntry() != null)
+               { 
+                   factorValueString += value.getOntologyEntry().getValue() + " - " + value.getValue() + "<br>";
+               }
+               else {
+                   factorValueString +=  value.getValue() + "<br>";      
+               }
+           }
+         return factorValueString;
+     }
+     
+     
+     public String getNameLink() {
+         BioMaterial object = ( BioMaterial ) getCurrentRowObject();
+         
+         String nameLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + object.getId() + "'>" + object.getName() + "</a>";
+         return nameLink;
      }
 }

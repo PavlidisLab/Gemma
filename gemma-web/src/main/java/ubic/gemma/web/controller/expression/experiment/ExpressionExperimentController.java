@@ -35,6 +35,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.expression.experiment.ExpressionExperimentReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -212,6 +213,47 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
     }
 
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView showBioMaterials( HttpServletRequest request, HttpServletResponse response ) {
+        String idStr = request.getParameter( "id" );
+
+        if ( idStr == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( identifierNotFound );
+        }
+        Long id = Long.parseLong( idStr );
+
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( id + " not found" );
+        }
+
+        request.setAttribute( "id", id );
+        
+        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
+        Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
+        for ( BioAssay assay : bioAssays ) {
+            Collection<BioMaterial> materials = assay.getSamplesUsed();
+            if (materials != null) {
+                bioMaterials.addAll( materials );
+            }
+        }
+        
+        Long numBioMaterials = new Long(bioMaterials.size()); 
+        
+        ModelAndView mav = new ModelAndView( "bioMaterials" );
+        mav.addObject( "numBioMaterials" , numBioMaterials  );
+        mav.addObject( "bioMaterials", bioMaterials );
+        
+        return mav;
+    }
+    
     /**
      * shows a list of BioAssays for an expression experiment subset
      * 

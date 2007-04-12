@@ -317,7 +317,7 @@ if ( expressionExperiment.getName() != null ) {
 </div>
 <authz:authorize ifAnyGranted="admin">
 	<h3>
-		Biomaterials and Assays
+		Biomaterials and Assays <a href="/Gemma/expressionExperiment/showBioMaterialsFromExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>">(list samples)</a>
 	</h3>
 	<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
 </authz:authorize>
