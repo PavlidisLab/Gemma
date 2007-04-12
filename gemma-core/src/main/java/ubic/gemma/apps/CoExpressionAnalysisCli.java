@@ -75,6 +75,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     private String taxonName = null;
     private String outputFile = null;
 	private int stringency = 3;
+	private static String DIVIDOR = "-----";
 
     @SuppressWarnings("static-access")
     @Override
@@ -162,21 +163,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
         return taxon;
     }
-	Collection<String> readQueryGenesFromFile(String fileName){
-		HashSet<String> targetGeneNames = new HashSet<String>();
-		try{
-			InputStream is = new FileInputStream( this.geneList );
-			BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-			String shortName = null;
-			while ( ( shortName = br.readLine() ) != null ) {
-				if ( StringUtils.isBlank( shortName ) ) continue;
-				targetGeneNames.add(shortName.trim());
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return targetGeneNames;
-	}
 	
 	Collection<Gene> getCoExpressedGenes(Collection<Gene> queryGenes){
 		HashSet<Gene> coExpressedGenes = new HashSet<Gene>();
@@ -244,7 +230,33 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
         Taxon taxon = getTaxon();
         Collection<ExpressionExperiment> allEE = eeService.findByTaxon( taxon );
-		Collection<String> queryGeneNames = readQueryGenesFromFile(this.geneList);
+		Collection<String> queryGeneNames = new HashSet<String>();
+		Collection<String> coExpressedGeneNames = new HashSet<String>();
+		boolean readingQueryGene = true;
+		/*
+		 * The gene input file could contain query genes and co-expressed genes divided by DIVIDOR;
+		 * If user doesn't provide the co-expressed genes, then use the service to find the co-expressed genes in database.
+		 */
+		try {
+			InputStream is = new FileInputStream( this.geneList );
+			BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+			String shortName = null;
+			while ( ( shortName = br.readLine() ) != null ) {
+				if ( StringUtils.isBlank( shortName ) ) continue;
+				if ( shortName.trim().contains( DIVIDOR ) ) {
+					readingQueryGene = false;
+					continue;
+				}
+				if ( readingQueryGene ) {
+					queryGeneNames.add( shortName.trim() );
+				} else {
+					coExpressedGeneNames.add( shortName.trim() );
+				}
+			}
+		} catch ( Exception e ) {
+			return e;
+		}
+
 		if(queryGeneNames.size() == 0){
 			log.info( "No gene is read from the input file" );
 			return null;
@@ -254,7 +266,12 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 			log.info( "Can't load any of genes" + queryGeneNames );
 			return null;
 		}
-		Collection<Gene> coExpressedGenes = this.getCoExpressedGenes(queryGenes); 
+		Collection<Gene> coExpressedGenes = null;
+		if(coExpressedGeneNames.size() != 0){
+			coExpressedGenes = this.getGenes(geneService, coExpressedGeneNames.toArray(), taxon);
+		}else{			
+			coExpressedGenes = this.getCoExpressedGenes(queryGenes);
+		}
         HashSet<Gene> allGenes = new HashSet<Gene>();
         allGenes.addAll(queryGenes);
         allGenes.addAll(coExpressedGenes);
