@@ -21,7 +21,6 @@ package ubic.gemma.javaspaces.gigaspaces;
 import java.util.Collection;
 
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.userdetails.UserDetailsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -67,11 +66,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
 
         log.info( "executing task " + this.getClass().getName() );
-
-        /*
-         * Needed since the worker executes the task in a separate thread and credentials are not passed between
-         * threads.
-         */
 
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
