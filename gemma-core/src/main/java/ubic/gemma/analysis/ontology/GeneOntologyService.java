@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.ontology;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -366,7 +367,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param geneOntologyTerms
      */
     @SuppressWarnings("unchecked")
-    private Collection<OntologyEntry> getGOTerms( Gene gene ) {
+    public Collection<OntologyEntry> getGOTerms( Gene gene ) {
 
         Collection<OntologyEntry> ontEntry = gene2GOAssociationService.findByGene( gene );
         Collection<OntologyEntry> allGOTermSet = new HashSet<OntologyEntry>( ontEntry );
@@ -378,6 +379,31 @@ public class GeneOntologyService implements InitializingBean {
         return allGOTermSet;
     }
 
+    /**
+     * <p>
+     * Returns all the genes that have the given GoTerms or any of the
+     * given goterms children.
+     * </p>
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Gene> getGenes( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon ) {
+
+        OntologyEntry searchOnto = this.ontologyEntryService.findByAccession( goID );
+
+        if ( searchOnto == null ) return new ArrayList<Gene>();
+
+        Collection<OntologyEntry> searchOntologies = getAllChildren( searchOnto );
+        searchOntologies.add( searchOnto );
+
+        //TODO fix the model so that the gene2GOAssociationService just delegates to the DAO and doesn't discover 
+        //any of the children.  This method belongs here anyway as it will be faster with the preloaded assciations.
+        //cant do it the other way as this service isn't in the model
+        //return this.gene2GOAssociationService.findByGOTerm( searchOntologies, taxon );
+
+        return this.gene2GOAssociationService.findByGOTerm( searchOnto.getAccession(), taxon );
+    }
+
+    
     private Collection<OntologyEntry> computerOverlap( Collection<OntologyEntry> masterOntos,
             Collection<OntologyEntry> comparisonOntos ) {
         Collection<OntologyEntry> overlapTerms = new HashSet<OntologyEntry>( masterOntos );
