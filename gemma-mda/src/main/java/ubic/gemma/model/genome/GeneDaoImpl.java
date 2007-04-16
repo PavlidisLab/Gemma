@@ -460,6 +460,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
+        
+
         String query = "SELECT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM "
@@ -798,7 +800,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     return true;
                 }
             } );
-
+/*
             FutureTask<Boolean> secondQueryThread = new FutureTask<Boolean>( new Callable<Boolean>() {
                 @SuppressWarnings("synthetic-access")
                 public Boolean call() throws FileNotFoundException, IOException {
@@ -830,10 +832,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     return true;
                 };
             } );
-
+*/
             ExecutorService executor = Executors.newCachedThreadPool();
+//            executor.execute( secondQueryThread );
             executor.execute( firstQueryThread );
-            executor.execute( secondQueryThread );
             executor.shutdown();
 
             // wait...
@@ -841,7 +843,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             overallWatch.start();
 
             int ticks = 0;
-            while ( !firstQueryThread.isDone() || !secondQueryThread.isDone() ) {
+            while ( !firstQueryThread.isDone()  ) {
                 try {
                     Thread.sleep( 100 );
                     if ( ++ticks % 10 == 0 ) {
@@ -860,7 +862,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             Long overallElapsed = overallWatch.getTime();
             log.info( "Query threads took a total of " + overallElapsed + "ms (wall clock time)" );
             coexpressions.setElapsedWallTimeElapsed( overallElapsed );
-
+            
             StopWatch watch = new StopWatch();
             watch.start();
             log.info( "Starting postprocessing" );
