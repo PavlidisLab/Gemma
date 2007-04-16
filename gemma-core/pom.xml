@@ -404,6 +404,12 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
+			<groupId>prefuse</groupId>
+			<artifactId>prefuse</artifactId>
+			<version>beta</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
 			<groupId>jfree</groupId>
 			<artifactId>jfreechart</artifactId>
 			<version>1.0.2</version>
