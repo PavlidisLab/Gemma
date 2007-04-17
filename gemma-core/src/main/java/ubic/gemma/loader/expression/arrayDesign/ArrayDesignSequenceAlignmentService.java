@@ -196,7 +196,7 @@ public class ArrayDesignSequenceAlignmentService {
 
     /**
      * @param sequencesToBlat
-     * @param taxon whose database will be queries
+     * @param taxon whose database will be queried
      * @return Map of biosequences to collections of blat results.
      */
     private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
