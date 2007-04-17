@@ -1,0 +1,69 @@
+/*
+ * The Gemma project.
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ */
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package ubic.gemma.model.common.description;
+
+/**
+ * @see ubic.gemma.model.common.description.OntologyEntry
+ */
+public class OntologyEntryImpl extends ubic.gemma.model.common.description.OntologyEntry {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1168949780694791726L;
+
+    @Override
+    public String toString() {
+        return "Id:" + this.getId() + " Accession " + this.getAccession() + " Category:" + this.getCategory()
+                + " Value:" + this.getValue();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof DatabaseEntry ) ) {
+            return false;
+        }
+        final DatabaseEntry that = ( DatabaseEntry ) object;
+        if ( this.getId() == null || that.getId() == null || !getId().equals( that.getId() ) ) {
+            return this.getAccession().equals( that.getAccession() );
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        if ( getId() != null ) {
+            hashCode = 29 * hashCode + getId().hashCode();
+        } else {
+            hashCode = 29 * this.getAccession().hashCode();
+        }
+
+        return hashCode;
+    }
+}
