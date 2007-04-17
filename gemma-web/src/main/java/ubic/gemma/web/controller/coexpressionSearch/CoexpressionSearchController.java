@@ -116,8 +116,11 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
     protected Object formBackingObject( HttpServletRequest request ) {
 
         CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
-
-        if ( request.getParameter( "searchString" ) != null ) {
+        
+        if (request.getParameter( "id" ) != null) {
+            loadGETParameters( request, csc );
+        }
+        else if ( request.getParameter( "searchString" ) != null  ) {
             loadGETParameters( request, csc );
         } else {
             loadCookie( request, csc );
@@ -143,17 +146,20 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
 
-        Cookie cookie = new CoexpressionSearchCookie( csc );
-        response.addCookie( cookie );
-
         Collection<Gene> genesFound = new HashSet<Gene>();
 
         // find the genes specified by the search
+        // if an id is specified, find the identified gene
         // if there is no exact search specified, do an inexact search
         // if exact search is on, find only by official symbol
         // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
         // none, do inexact search.
-        if ( csc.getExactSearch() == null ) {
+        if (csc.getId() != null) {
+            Gene g = geneService.load( Long.parseLong( csc.getId() ) );
+            genesFound.add( g);
+            csc.setExactSearch( g.getOfficialName() );
+        }
+        else if ( csc.getExactSearch() == null ) {
             genesFound.addAll( searchService.geneDbSearch( csc.getSearchString() ) );
             genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
         } else if ( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
@@ -171,6 +177,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
             }
         }
+        
+        Cookie cookie = new CoexpressionSearchCookie( csc );
+        response.addCookie( cookie );
         // filter genes by Taxon
 
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
@@ -445,8 +454,10 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
                     // save the gene name. If the gene id is on, then convert the ID to a gene first
                     String searchString = cookie.getString( "searchString" );
-
                     csc.setSearchString( searchString );
+                    
+                    String id = cookie.getString( "id" );
+                    csc.setId( id );
 
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
@@ -463,7 +474,11 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
      * @param csc
      */
     private void loadGETParameters( HttpServletRequest request, CoexpressionSearchCommand csc ) {
-        if ( request == null || ( request.getParameter( "searchString" ) == null ) ) return;
+        if ( request == null) {
+            return;
+        }
+        if ( ( request.getParameter( "searchString" ) == null ) && (request.getParameter( "id" ) == null) ) return;
+        
 
         Map params = request.getParameterMap();
 
@@ -488,7 +503,10 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             String searchString = ( ( String[] ) params.get( "searchString" ) )[0];
 
             csc.setSearchString( searchString );
-
+        }
+        if (params.get( "id" ) != null)  {
+            String id = ( ( String[] ) params.get( "id" ) )[0];
+            csc.setId( id );
         }
 
     }
@@ -501,7 +519,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
      */
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
-        if ( request.getParameter( "searchString" ) != null ) {
+        if ( request.getParameter( "searchString" ) != null || request.getParameter("id") != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
 

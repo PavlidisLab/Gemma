@@ -174,7 +174,8 @@ public class CoexpressionWrapper extends TableDecorator {
         includeList.add( "stringency" );
         extractParameters( paramList, includeList );
         // add in the current gene with exactSearch
-        paramList.add( "searchString=" + object.getGeneName() );
+        //paramList.add( "searchString=" + object.getGeneName() );
+        paramList.add( "id=" + object.getGeneId() );
         paramList.add( "exactSearch=on" );
 
         // put in the tmm link

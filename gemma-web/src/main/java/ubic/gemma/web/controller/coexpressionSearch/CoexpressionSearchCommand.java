@@ -41,6 +41,8 @@ public class CoexpressionSearchCommand implements Serializable {
     
     private String eeSearchString = null;
 
+    private String id = null;
+    
     private boolean suppressVisualizations;
     
     private Taxon taxon;
@@ -53,6 +55,20 @@ public class CoexpressionSearchCommand implements Serializable {
     
     private Gene sourceGene;
     
+    /**
+     * @return the id
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( String id ) {
+        this.id = id;
+    }
+
     /**
      * @return the sourceGene
      */

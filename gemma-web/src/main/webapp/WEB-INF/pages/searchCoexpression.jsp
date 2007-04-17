@@ -38,7 +38,7 @@ Results for
 	<h4>
 
 			<a href="/Gemma/searchCoexpression.html?
-			searchString=${coexpressionSearchCommand.searchString}&
+			searchString=${sourceGene.officialSymbol}&
 			stringency=${ coexpressionSearchCommand.stringency}&
 			taxon=${coexpressionSearchCommand.taxon.scientificName}&
 			eeSearchString=${coexpressionSearchCommand.eeSearchString}&
