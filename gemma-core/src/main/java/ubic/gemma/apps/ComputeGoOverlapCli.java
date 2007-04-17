@@ -96,14 +96,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         String goID = "GO:0007268";
         String commonName = "mouse";
-
-        Collection<Gene> masterGenes = getGeneObject( goID, commonName );
-
-        Set<Gene> allGenes = new HashSet<Gene>( masterGenes );
-        // a hashset containing all genes (master genes and coexpressed genes)
-
-        Set<Gene> coExpGenes = new HashSet<Gene>();
-        // a hashset containing all genes (master genes and coexpressed genes)
+        
+        
+        Collection<Gene> masterGenes = getGeneObject( goID, commonName );   
 
         final int stringincy = 6;
 
@@ -130,14 +125,10 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
             // for each gene get the coexpressed genes and also add the genes to the allGenes Set
 
-            geneExpMap.put( gene, foundGenes );
-            allGenes.addAll( foundGenes );
-            coExpGenes.addAll( foundGenes );
+            geneExpMap.put( gene, foundGenes );           
 
         }
 
-        log.debug( "Total coexpressed genes:" + coExpGenes.size() );
-        // log.debug( "The following genes: " + allGenes.size() );
 
         // new GOTermOverlap code
         Set<OntologyEntry> allGOTerms = new HashSet<OntologyEntry>();
@@ -147,12 +138,15 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         Collection<Gene> mouseGenes = geneService.getGenesByTaxon( taxon );
         Map<Gene, HashSet<OntologyEntry>> mouseGeneGOMap = new HashMap<Gene, HashSet<OntologyEntry>>();
 
+        log.debug( "I'm here" );
+        
         for ( Gene gene : mouseGenes ) {
             HashSet<OntologyEntry> GOTerms = getGOTerms( gene );
             mouseGeneGOMap.put( gene, GOTerms );
             allGOTerms.addAll( GOTerms );
         }
-
+        
+        mouseGenes = null;
         // Calculating the proabability of each term
         int total = allGOTerms.size();
 
