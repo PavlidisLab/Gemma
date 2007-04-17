@@ -503,7 +503,9 @@ public class LinkAnalysis {
         Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.length; i < n; i++ ) {
             Link m = ( Link ) links[i];
-            double w = m.getWeight();
+            Double w = m.getWeight();
+
+            assert w != null;
 
             DesignElement p1 = this.metricMatrix.getProbeForRow( dataMatrix.getRowElement( m.getx() ) );
             DesignElement p2 = this.metricMatrix.getProbeForRow( dataMatrix.getRowElement( m.gety() ) );

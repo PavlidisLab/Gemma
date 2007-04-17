@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -82,6 +81,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .withDescription(
                         "Taxon common name (e.g., human); blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .create( 't' );
+
         addOption( taxonOption );
 
         addOption( blatScoreThreshold );
