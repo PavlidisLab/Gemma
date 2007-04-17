@@ -1,0 +1,846 @@
+ID   1433B_HUMAN             Reviewed;         246 AA.
+AC   P31946;
+DT   01-JUL-1993, integrated into UniProtKB/Swiss-Prot.
+DT   23-JAN-2007, sequence version 3.
+DT   03-APR-2007, entry version 86.
+DE   14-3-3 protein beta/alpha (Protein kinase C inhibitor protein 1)
+DE   (KCIP-1) (Protein 1054).
+GN   Name=YWHAB;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+OC   Catarrhini; Hominidae; Homo.
+OX   NCBI_TaxID=9606;
+RN   [1]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RC   TISSUE=Keratinocyte;
+RX   MEDLINE=93294871; PubMed=8515476; DOI=10.1006/jmbi.1993.1346;
+RA   Leffers H., Madsen P., Rasmussen H.H., Honore B., Andersen A.H.,
+RA   Walbum E., Vandekerckhove J., Celis J.E.;
+RT   "Molecular cloning and expression of the transformation sensitive
+RT   epithelial marker stratifin. A member of a protein family that has
+RT   been involved in the protein kinase C signalling pathway.";
+RL   J. Mol. Biol. 231:982-998(1993).
+RN   [2]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA].
+RX   MEDLINE=21638749; PubMed=11780052; DOI=10.1038/414865a;
+RA   Deloukas P., Matthews L.H., Ashurst J.L., Burton J., Gilbert J.G.R.,
+RA   Jones M., Stavrides G., Almeida J.P., Babbage A.K., Bagguley C.L.,
+RA   Bailey J., Barlow K.F., Bates K.N., Beard L.M., Beare D.M.,
+RA   Beasley O.P., Bird C.P., Blakey S.E., Bridgeman A.M., Brown A.J.,
+RA   Buck D., Burrill W.D., Butler A.P., Carder C., Carter N.P.,
+RA   Chapman J.C., Clamp M., Clark G., Clark L.N., Clark S.Y., Clee C.M.,
+RA   Clegg S., Cobley V.E., Collier R.E., Connor R.E., Corby N.R.,
+RA   Coulson A., Coville G.J., Deadman R., Dhami P.D., Dunn M.,
+RA   Ellington A.G., Frankland J.A., Fraser A., French L., Garner P.,
+RA   Grafham D.V., Griffiths C., Griffiths M.N.D., Gwilliam R., Hall R.E.,
+RA   Hammond S., Harley J.L., Heath P.D., Ho S., Holden J.L., Howden P.J.,
+RA   Huckle E., Hunt A.R., Hunt S.E., Jekosch K., Johnson C.M., Johnson D.,
+RA   Kay M.P., Kimberley A.M., King A., Knights A., Laird G.K., Lawlor S.,
+RA   Lehvaeslaiho M.H., Leversha M.A., Lloyd C., Lloyd D.M., Lovell J.D.,
+RA   Marsh V.L., Martin S.L., McConnachie L.J., McLay K., McMurray A.A.,
+RA   Milne S.A., Mistry D., Moore M.J.F., Mullikin J.C., Nickerson T.,
+RA   Oliver K., Parker A., Patel R., Pearce T.A.V., Peck A.I.,
+RA   Phillimore B.J.C.T., Prathalingam S.R., Plumb R.W., Ramsay H.,
+RA   Rice C.M., Ross M.T., Scott C.E., Sehra H.K., Shownkeen R., Sims S.,
+RA   Skuce C.D., Smith M.L., Soderlund C., Steward C.A., Sulston J.E.,
+RA   Swann R.M., Sycamore N., Taylor R., Tee L., Thomas D.W., Thorpe A.,
+RA   Tracey A., Tromans A.C., Vaudin M., Wall M., Wallis J.M.,
+RA   Whitehead S.L., Whittaker P., Willey D.L., Williams L., Williams S.A.,
+RA   Wilming L., Wray P.W., Hubbard T., Durbin R.M., Bentley D.R., Beck S.,
+RA   Rogers J.;
+RT   "The DNA sequence and comparative analysis of human chromosome 20.";
+RL   Nature 414:865-871(2001).
+RN   [3]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RC   TISSUE=Skin;
+RX   PubMed=15489334; DOI=10.1101/gr.2596504;
+RG   The MGC Project Team;
+RT   "The status, quality, and expansion of the NIH full-length cDNA
+RT   project: the Mammalian Gene Collection (MGC).";
+RL   Genome Res. 14:2121-2127(2004).
+RN   [4]
+RP   PROTEIN SEQUENCE OF 3-20.
+RC   TISSUE=Platelet;
+RX   MEDLINE=22608298; PubMed=12665801; DOI=10.1038/nbt810;
+RA   Gevaert K., Goethals M., Martens L., Van Damme J., Staes A.,
+RA   Thomas G.R., Vandekerckhove J.;
+RT   "Exploring proteomes and analyzing protein processing by mass
+RT   spectrometric identification of sorted N-terminal peptides.";
+RL   Nat. Biotechnol. 21:566-569(2003).
+RN   [5]
+RP   INTERACTION WITH SSH1.
+RX   PubMed=15159416; DOI=10.1083/jcb.200401136;
+RA   Nagata-Ohashi K., Ohta Y., Goto K., Chiba S., Mori R., Nishita M.,
+RA   Ohashi K., Kousaka K., Iwamatsu A., Niwa R., Uemura T., Mizuno K.;
+RT   "A pathway of neuregulin-induced activation of cofilin-phosphatase
+RT   Slingshot and cofilin in lamellipodia.";
+RL   J. Cell Biol. 165:465-471(2004).
+RN   [6]
+RP   SUBCELLULAR LOCATION [LARGE SCALE ANALYSIS], AND MASS SPECTROMETRY.
+RX   PubMed=17081065; DOI=10.1021/pr060363j;
+RA   Chi A., Valencia J.C., Hu Z.-Z., Watabe H., Yamaguchi H.,
+RA   Mangini N.J., Huang H., Canfield V.A., Cheng K.C., Yang F., Abe R.,
+RA   Yamagishi S., Shabanowitz J., Hearing V.J., Wu C., Appella E.,
+RA   Hunt D.F.;
+RT   "Proteomic and bioinformatic characterization of the biogenesis and
+RT   function of melanosomes.";
+RL   J. Proteome Res. 5:3135-3144(2006).
+CC   -!- FUNCTION: Adapter protein implicated in the regulation of a large
+CC       spectrum of both general and specialized signaling pathway. Binds
+CC       to a large number of partners, usually by recognition of a
+CC       phosphoserine or phosphothreonine motif. Binding generally results
+CC       in the modulation of the activity of the binding partner.
+CC   -!- SUBUNIT: Homodimer. Interacts with SSH1.
+CC   -!- INTERACTION:
+CC       Q3HKR3:-; NbExp=1; IntAct=EBI-359815, EBI-1048950;
+CC       Q86W90:AKAP13; NbExp=1; IntAct=EBI-359815, EBI-1046538;
+CC       O43521:BCL2L11; NbExp=1; IntAct=EBI-359815, EBI-526406;
+CC       P15056:BRAF; NbExp=1; IntAct=EBI-359815, EBI-365980;
+CC       P46527:CDKN1B; NbExp=1; IntAct=EBI-359815, EBI-519280;
+CC       Q9P2M7:CGN; NbExp=1; IntAct=EBI-359815, EBI-79537;
+CC       P68400:CSNK2A1; NbExp=1; IntAct=EBI-359815, EBI-347804;
+CC       Q13627-2:DYRK1A; NbExp=3; IntAct=EBI-359815, EBI-1053621;
+CC       Q9Y2J2:EPB41L3; NbExp=1; IntAct=EBI-359815, EBI-310986;
+CC       Q9NVQ6:FAM82C; NbExp=1; IntAct=EBI-359815, EBI-1056589;
+CC       Q5PRF9:FLJ10211; NbExp=1; IntAct=EBI-359815, EBI-1047489;
+CC       Q96F86:FLJ21128; NbExp=1; IntAct=EBI-359815, EBI-997311;
+CC       Q9Y4H2:IRS2; NbExp=1; IntAct=EBI-359815, EBI-1049582;
+CC       Q02241:KIF23; NbExp=1; IntAct=EBI-359815, EBI-306852;
+CC       P33176:KIF5B; NbExp=1; IntAct=EBI-359815, EBI-355878;
+CC       Q07866:KNS2; NbExp=1; IntAct=EBI-359815, EBI-721019;
+CC       Q6PKG0:LARP1; NbExp=1; IntAct=EBI-359815, EBI-1052114;
+CC       P27448:MARK3; NbExp=1; IntAct=EBI-359815, EBI-707595;
+CC       Q6WCQ1:MRIP; NbExp=1; IntAct=EBI-359815, EBI-1022605;
+CC       Q7Z401:MYCPBP; NbExp=1; IntAct=EBI-359815, EBI-1046479;
+CC       Q9Y2A7:NCKAP1; NbExp=1; IntAct=EBI-359815, EBI-389845;
+CC       Q9H4L5:OSBPL3; NbExp=1; IntAct=EBI-359815, EBI-1051317;
+CC       Q8TEW0:PARD3; NbExp=1; IntAct=EBI-359815, EBI-81968;
+CC       O94921:PFTK1; NbExp=5; IntAct=EBI-359815, EBI-1043945;
+CC       Q9UBF8:PIK4CB; NbExp=1; IntAct=EBI-359815, EBI-1053214;
+CC       Q9H0H5:RACGAP1; NbExp=1; IntAct=EBI-359815, EBI-717233;
+CC       P04049:RAF1; NbExp=4; IntAct=EBI-359815, EBI-365996;
+CC       Q9P0K7:RAI14; NbExp=1; IntAct=EBI-359815, EBI-1023749;
+CC       Q9Y6M7:SLC4A7; NbExp=1; IntAct=EBI-359815, EBI-1044546;
+CC       Q9UQ35:SRRM2; NbExp=1; IntAct=EBI-359815, EBI-1050142;
+CC       Q5VXL0:TJP2; NbExp=1; IntAct=EBI-359815, EBI-1042602;
+CC       P40818:USP8; NbExp=1; IntAct=EBI-359815, EBI-1050865;
+CC   -!- SUBCELLULAR LOCATION: Cytoplasm. Melanosome. Note=Identified by
+CC       mass spectrometry in melanosome fractions from stage I to stage
+CC       IV.
+CC   -!- ALTERNATIVE PRODUCTS:
+CC       Event=Alternative initiation; Named isoforms=2;
+CC       Name=Long;
+CC         IsoId=P31946-1; Sequence=Displayed;
+CC       Name=Short;
+CC         IsoId=P31946-2; Sequence=VSP_018632;
+CC         Note=Contains a N-acetylmethionine at position 1 (By
+CC         similarity);
+CC   -!- PTM: Isoform alpha differs from isoform beta in being
+CC       phosphorylated (By similarity).
+CC   -!- PTM: Isoform Short contains a N-acetylmethionine at position 1 (By
+CC       similarity).
+CC   -!- SIMILARITY: Belongs to the 14-3-3 family.
+CC   -----------------------------------------------------------------------
+CC   Copyrighted by the UniProt Consortium, see http://www.uniprot.org/terms
+CC   Distributed under the Creative Commons Attribution-NoDerivs License
+CC   -----------------------------------------------------------------------
+DR   EMBL; X57346; CAA40621.1; -; mRNA.
+DR   EMBL; AL008725; CAA15497.1; -; Genomic_DNA.
+DR   EMBL; BC001359; AAH01359.1; -; mRNA.
+DR   PIR; S34755; S34755.
+DR   UniGene; Hs.651212; -.
+DR   PDB; 2BQ0; X-ray; A/B=1-239.
+DR   PDB; 2C23; X-ray; A=1-239.
+DR   DIP; DIP:743N; -.
+DR   IntAct; P31946; -.
+DR   Cornea-2DPAGE; P31946; HUMAN.
+DR   OGP; P31946; -.
+DR   REPRODUCTION-2DPAGE; P31946; HUMAN.
+DR   Ensembl; ENSG00000166913; Homo sapiens.
+DR   KEGG; hsa:7529; -.
+DR   H-InvDB; HIX0015846; -.
+DR   HGNC; HGNC:12849; YWHAB.
+DR   HPA; CAB003759; -.
+DR   MIM; 601289; gene.
+DR   Reactome; REACT_498.3; Insulin receptor mediated signaling.
+DR   Reactome; REACT_578.1; Apoptosis.
+DR   ArrayExpress; P31946; -.
+DR   GermOnline; ENSG00000166913; Homo sapiens.
+DR   GO; GO:0048471; C:perinuclear region of cytoplasm; IDA:UniProtKB.
+DR   GO; GO:0005515; F:protein binding; IPI:UniProtKB.
+DR   InterPro; IPR000308; 14-3-3.
+DR   Gene3D; G3DSA:1.20.190.20; 14-3-3; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   ProDom; PD000600; 14-3-3; 1.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+KW   3D-structure; Acetylation; Alternative initiation;
+KW   Direct protein sequencing; Phosphorylation.
+FT   INIT_MET      1      1       Removed (By similarity).
+FT   CHAIN         2    246       14-3-3 protein beta/alpha.
+FT                                /FTId=PRO_0000000003.
+FT   MOD_RES       2      2       N-acetylthreonine (By similarity).
+FT   MOD_RES     186    186       Phosphoserine (By similarity).
+FT   VAR_SEQ       1      2       Missing (in isoform Short).
+FT                                /FTId=VSP_018632.
+FT   HELIX         4     16
+FT   HELIX        20     31
+FT   HELIX        39     66
+FT   HELIX        74    104
+FT   HELIX       106    109
+FT   HELIX       113    132
+FT   HELIX       137    160
+FT   HELIX       166    181
+FT   HELIX       186    201
+FT   HELIX       202    206
+FT   TURN        209    211
+FT   HELIX       212    230
+SQ   SEQUENCE   246 AA;  28082 MW;  6BE1A9BF97468017 CRC64;
+     MTMDKSELVQ KAKLAEQAER YDDMAAAMKA VTEQGHELSN EERNLLSVAY KNVVGARRSS
+     WRVISSIEQK TERNEKKQQM GKEYREKIEA ELQDICNDVL ELLDKYLIPN ATQPESKVFY
+     LKMKGDYFRY LSEVASGDNK QTTVSNSQQA YQEAFEISKK EMQPTHPIRL GLALNFSVFY
+     YEILNSPEKA CSLAKTAFDE AIAELDTLNE ESYKDSTLIM QLLRDNLTLW TSENQGDEGD
+     AGEGEN
+//
+ID   1433E_HUMAN             Reviewed;         255 AA.
+AC   P62258; P29360; P42655; Q63631;
+DT   05-JUL-2004, integrated into UniProtKB/Swiss-Prot.
+DT   05-JUL-2004, sequence version 1.
+DT   03-APR-2007, entry version 39.
+DE   14-3-3 protein epsilon (14-3-3E).
+GN   Name=YWHAE;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+OC   Catarrhini; Hominidae; Homo.
+OX   NCBI_TaxID=9606;
+RN   [1]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RX   MEDLINE=95372385; PubMed=7644510;
+RA   Conklin D.S., Galaktionov K., Beach D.;
+RT   "14-3-3 proteins associate with cdc25 phosphatases.";
+RL   Proc. Natl. Acad. Sci. U.S.A. 92:7892-7896(1995).
+RN   [2]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RC   TISSUE=Heart;
+RA   Luk S.C.W., Lee C.Y., Waye M.M.Y.;
+RL   Submitted (JUN-1995) to the EMBL/GenBank/DDBJ databases.
+RN   [3]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RX   MEDLINE=96300316; PubMed=8684458; DOI=10.1038/382308a0;
+RA   Jin D.-Y., Lyu M.S., Kozak C.A., Jeang K.-T.;
+RT   "Function of 14-3-3 proteins.";
+RL   Nature 382:308-308(1996).
+RN   [4]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RC   TISSUE=Liver;
+RX   MEDLINE=97011338; PubMed=8858348;
+RA   Chong S.S., Tanigami A., Roschke A.V., Ledbetter D.H.;
+RT   "14-3-3 epsilon has no homology to LIS1 and lies telomeric to it on
+RT   chromosome 17p13.3 outside the Miller-Dieker syndrome chromosome
+RT   region.";
+RL   Genome Res. 6:735-741(1996).
+RN   [5]
+RP   NUCLEOTIDE SEQUENCE [GENOMIC DNA].
+RA   Tanigami A., Chong S.S., Ledbetter D.H.;
+RT   "14-3-3 epsilon genomic sequence.";
+RL   Submitted (AUG-1998) to the EMBL/GenBank/DDBJ databases.
+RN   [6]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RC   TISSUE=Placenta;
+RX   PubMed=15489334; DOI=10.1101/gr.2596504;
+RG   The MGC Project Team;
+RT   "The status, quality, and expansion of the NIH full-length cDNA
+RT   project: the Mammalian Gene Collection (MGC).";
+RL   Genome Res. 14:2121-2127(2004).
+RN   [7]
+RP   PROTEIN SEQUENCE OF 1-19.
+RC   TISSUE=Platelet;
+RX   MEDLINE=22608298; PubMed=12665801; DOI=10.1038/nbt810;
+RA   Gevaert K., Goethals M., Martens L., Van Damme J., Staes A.,
+RA   Thomas G.R., Vandekerckhove J.;
+RT   "Exploring proteomes and analyzing protein processing by mass
+RT   spectrometric identification of sorted N-terminal peptides.";
+RL   Nat. Biotechnol. 21:566-569(2003).
+RN   [8]
+RP   PROTEIN SEQUENCE OF 1-19; 30-50 AND 131-170, ACETYLATION AT MET-1, AND
+RP   MASS SPECTROMETRY.
+RC   TISSUE=B-cell lymphoma;
+RA   Bienvenut W.V.;
+RL   Unpublished observations (MAY-2005).
+RN   [9]
+RP   INTERACTION WITH HCV CORE PROTEIN.
+RX   MEDLINE=20111292; PubMed=10644344;
+RX   DOI=10.1128/JVI.74.4.1736-1741.2000;
+RA   Aoki H., Hayashi J., Moriyama M., Arakawa Y., Hino O.;
+RT   "Hepatitis C virus core protein interacts with 14-3-3 protein and
+RT   activates the kinase Raf-1.";
+RL   J. Virol. 74:1736-1741(2000).
+RN   [10]
+RP   SUBCELLULAR LOCATION [LARGE SCALE ANALYSIS], AND MASS SPECTROMETRY.
+RX   PubMed=17081065; DOI=10.1021/pr060363j;
+RA   Chi A., Valencia J.C., Hu Z.-Z., Watabe H., Yamaguchi H.,
+RA   Mangini N.J., Huang H., Canfield V.A., Cheng K.C., Yang F., Abe R.,
+RA   Yamagishi S., Shabanowitz J., Hearing V.J., Wu C., Appella E.,
+RA   Hunt D.F.;
+RT   "Proteomic and bioinformatic characterization of the biogenesis and
+RT   function of melanosomes.";
+RL   J. Proteome Res. 5:3135-3144(2006).
+CC   -!- FUNCTION: Adapter protein implicated in the regulation of a large
+CC       spectrum of both general and specialized signaling pathway. Binds
+CC       to a large number of partners, usually by recognition of a
+CC       phosphoserine or phosphothreonine motif. Binding generally results
+CC       in the modulation of the activity of the binding partner.
+CC   -!- SUBUNIT: Homodimer. Interacts with NDEL1 (By similarity).
+CC       Interacts with HCV core protein.
+CC   -!- INTERACTION:
+CC       P46527:CDKN1B; NbExp=1; IntAct=EBI-356498, EBI-519280;
+CC       O94921:PFTK1; NbExp=3; IntAct=EBI-356498, EBI-1043945;
+CC   -!- SUBCELLULAR LOCATION: Cytoplasm (By similarity). Melanosome.
+CC       Note=Identified by mass spectrometry in melanosome fractions from
+CC       stage I to stage IV.
+CC   -!- SIMILARITY: Belongs to the 14-3-3 family.
+CC   -----------------------------------------------------------------------
+CC   Copyrighted by the UniProt Consortium, see http://www.uniprot.org/terms
+CC   Distributed under the Creative Commons Attribution-NoDerivs License
+CC   -----------------------------------------------------------------------
+DR   EMBL; U20972; AAC50175.1; -; mRNA.
+DR   EMBL; U28936; AAA75301.1; -; mRNA.
+DR   EMBL; U43399; AAC50625.1; -; mRNA.
+DR   EMBL; U43430; AAD00026.1; -; mRNA.
+DR   EMBL; U54778; AAC50710.1; -; mRNA.
+DR   EMBL; AB017103; BAA32538.1; -; Genomic_DNA.
+DR   EMBL; BC000179; AAH00179.1; -; mRNA.
+DR   EMBL; BC001440; AAH01440.1; -; mRNA.
+DR   PIR; I38947; I38947.
+DR   UniGene; Hs.513851; -.
+DR   PDB; 2BR9; X-ray; A=1-233.
+DR   IntAct; P62258; -.
+DR   OGP; P42655; -.
+DR   REPRODUCTION-2DPAGE; P62258; HUMAN.
+DR   Ensembl; ENSG00000108953; Homo sapiens.
+DR   KEGG; hsa:7531; -.
+DR   HGNC; HGNC:12851; YWHAE.
+DR   MIM; 605066; gene.
+DR   LinkHub; P62258; -.
+DR   ArrayExpress; P62258; -.
+DR   GermOnline; ENSG00000108953; Homo sapiens.
+DR   RZPD-ProtExp; I0402; -.
+DR   RZPD-ProtExp; RZPDo839G0348; -.
+DR   GO; GO:0019899; F:enzyme binding; IPI:UniProtKB.
+DR   GO; GO:0007242; P:intracellular signaling cascade; TAS:ProtInc.
+DR   InterPro; IPR000308; 14-3-3.
+DR   Gene3D; G3DSA:1.20.190.20; 14-3-3; 1.
+DR   PANTHER; PTHR18860; 14-3-3; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   ProDom; PD000600; 14-3-3; 1.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+KW   3D-structure; Acetylation; Direct protein sequencing;
+KW   Host-virus interaction.
+FT   CHAIN         1    255       14-3-3 protein epsilon.
+FT                                /FTId=PRO_0000058618.
+FT   MOD_RES       1      1       N-acetylmethionine.
+FT   HELIX         4     17
+FT   HELIX        20     31
+FT   HELIX        39     73
+FT   HELIX        76    106
+FT   HELIX       108    111
+FT   HELIX       115    135
+FT   HELIX       138    162
+FT   HELIX       168    183
+FT   HELIX       188    204
+FT   HELIX       205    208
+FT   TURN        211    213
+FT   HELIX       214    231
+SQ   SEQUENCE   255 AA;  29174 MW;  07817CCBD1F75B26 CRC64;
+     MDDREDLVYQ AKLAEQAERY DEMVESMKKV AGMDVELTVE ERNLLSVAYK NVIGARRASW
+     RIISSIEQKE ENKGGEDKLK MIREYRQMVE TELKLICCDI LDVLDKHLIP AANTGESKVF
+     YYKMKGDYHR YLAEFATGND RKEAAENSLV AYKAASDIAM TELPPTHPIR LGLALNFSVF
+     YYEILNSPDR ACRLAKAAFD DAIAELDTLS EESYKDSTLI MQLLRDNLTL WTSDMQGDGE
+     EQNKEALQDV EDENQ
+//
+ID   1433F_HUMAN             Reviewed;         246 AA.
+AC   Q04917;
+DT   01-OCT-1993, integrated into UniProtKB/Swiss-Prot.
+DT   23-JAN-2007, sequence version 4.
+DT   03-APR-2007, entry version 78.
+DE   14-3-3 protein eta (Protein AS1).
+GN   Name=YWHAH; Synonyms=YWHA1;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+OC   Catarrhini; Hominidae; Homo.
+OX   NCBI_TaxID=9606;
+RN   [1]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RC   TISSUE=Brain;
+RX   MEDLINE=94032477; PubMed=8218406; DOI=10.1016/0167-4781(93)90053-G;
+RA   Swanson K.D., Dhar M.S., Joshi J.G.;
+RT   "The human and bovine 14-3-3 eta protein mRNAs are highly conserved in
+RT   both their translated and untranslated regions.";
+RL   Biochim. Biophys. Acta 1216:145-148(1993).
+RN   [2]
+RP   NUCLEOTIDE SEQUENCE [GENOMIC DNA].
+RC   TISSUE=Brain;
+RX   MEDLINE=92251832; PubMed=1578511;
+RA   Ichimura-Ohshima Y., Morii K., Ichimura T., Araki K., Takahashi Y.,
+RA   Isobe T., Minoshima S., Fukuyama R., Shimizu N., Kuwano R.;
+RT   "cDNA cloning and chromosome assignment of the gene for human brain
+RT   14-3-3 protein eta chain.";
+RL   J. Neurosci. Res. 31:600-605(1992).
+RN   [3]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RA   Leffers H., Tommerup N., Celis J.E.;
+RL   Submitted (MAR-1994) to the EMBL/GenBank/DDBJ databases.
+RN   [4]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RX   MEDLINE=96123461; PubMed=8561965;
+RA   Muratake T., Hayashi S., Ichimura Y., Morii K., Kuwano R.,
+RA   Ichikawa T., Kumanishi T., Isobe T., Watanabe M., Kondo H.;
+RT   "The effect on methamphetamine on the mRNA level for 14.3.3 eta chain
+RT   in the human cultured cells.";
+RL   Mol. Neurobiol. 11:223-230(1995).
+RN   [5]
+RP   NUCLEOTIDE SEQUENCE [GENOMIC DNA].
+RX   MEDLINE=96411648; PubMed=8812417; DOI=10.1006/geno.1996.0426;
+RA   Muratake T., Hayashi S., Ichikawa T., Kumanishi T., Ichimura Y.,
+RA   Kuwano R., Isobe T., Wang Y., Minoshima S., Shimizu N., Takahashi Y.;
+RT   "Structural organization and chromosomal assignment of the human 14-3-
+RT   3 eta chain gene (YWHAH).";
+RL   Genomics 36:63-69(1996).
+RN   [6]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RX   PubMed=15461802; DOI=10.1186/gb-2004-5-10-r84;
+RA   Collins J.E., Wright C.L., Edwards C.A., Davis M.P., Grinham J.A.,
+RA   Cole C.G., Goward M.E., Aguado B., Mallya M., Mokrab Y., Huckle E.J.,
+RA   Beare D.M., Dunham I.;
+RT   "A genome annotation-driven approach to cloning the human ORFeome.";
+RL   Genome Biol. 5:RESEARCH84.1-RESEARCH84.11(2004).
+RN   [7]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA].
+RX   MEDLINE=20057165; PubMed=10591208; DOI=10.1038/990031;
+RA   Dunham I., Hunt A.R., Collins J.E., Bruskiewich R., Beare D.M.,
+RA   Clamp M., Smink L.J., Ainscough R., Almeida J.P., Babbage A.K.,
+RA   Bagguley C., Bailey J., Barlow K.F., Bates K.N., Beasley O.P.,
+RA   Bird C.P., Blakey S.E., Bridgeman A.M., Buck D., Burgess J.,
+RA   Burrill W.D., Burton J., Carder C., Carter N.P., Chen Y., Clark G.,
+RA   Clegg S.M., Cobley V.E., Cole C.G., Collier R.E., Connor R.,
+RA   Conroy D., Corby N.R., Coville G.J., Cox A.V., Davis J., Dawson E.,
+RA   Dhami P.D., Dockree C., Dodsworth S.J., Durbin R.M., Ellington A.G.,
+RA   Evans K.L., Fey J.M., Fleming K., French L., Garner A.A.,
+RA   Gilbert J.G.R., Goward M.E., Grafham D.V., Griffiths M.N.D., Hall C.,
+RA   Hall R.E., Hall-Tamlyn G., Heathcott R.W., Ho S., Holmes S.,
+RA   Hunt S.E., Jones M.C., Kershaw J., Kimberley A.M., King A.,
+RA   Laird G.K., Langford C.F., Leversha M.A., Lloyd C., Lloyd D.M.,
+RA   Martyn I.D., Mashreghi-Mohammadi M., Matthews L.H., Mccann O.T.,
+RA   Mcclay J., Mclaren S., McMurray A.A., Milne S.A., Mortimore B.J.,
+RA   Odell C.N., Pavitt R., Pearce A.V., Pearson D., Phillimore B.J.C.T.,
+RA   Phillips S.H., Plumb R.W., Ramsay H., Ramsey Y., Rogers L., Ross M.T.,
+RA   Scott C.E., Sehra H.K., Skuce C.D., Smalley S., Smith M.L.,
+RA   Soderlund C., Spragon L., Steward C.A., Sulston J.E., Swann R.M.,
+RA   Vaudin M., Wall M., Wallis J.M., Whiteley M.N., Willey D.L.,
+RA   Williams L., Williams S.A., Williamson H., Wilmer T.E., Wilming L.,
+RA   Wright C.L., Hubbard T., Bentley D.R., Beck S., Rogers J., Shimizu N.,
+RA   Minoshima S., Kawasaki K., Sasaki T., Asakawa S., Kudoh J.,
+RA   Shintani A., Shibuya K., Yoshizaki Y., Aoki N., Mitsuyama S.,
+RA   Roe B.A., Chen F., Chu L., Crabtree J., Deschamps S., Do A., Do T.,
+RA   Dorman A., Fang F., Fu Y., Hu P., Hua A., Kenton S., Lai H., Lao H.I.,
+RA   Lewis J., Lewis S., Lin S.-P., Loh P., Malaj E., Nguyen T., Pan H.,
+RA   Phan S., Qi S., Qian Y., Ray L., Ren Q., Shaull S., Sloan D., Song L.,
+RA   Wang Q., Wang Y., Wang Z., White J., Willingham D., Wu H., Yao Z.,
+RA   Zhan M., Zhang G., Chissoe S., Murray J., Miller N., Minx P.,
+RA   Fulton R., Johnson D., Bemis G., Bentley D., Bradshaw H., Bourne S.,
+RA   Cordes M., Du Z., Fulton L., Goela D., Graves T., Hawkins J.,
+RA   Hinds K., Kemp K., Latreille P., Layman D., Ozersky P., Rohlfing T.,
+RA   Scheet P., Walker C., Wamsley A., Wohldmann P., Pepin K., Nelson J.,
+RA   Korf I., Bedell J.A., Hillier L.W., Mardis E., Waterston R.,
+RA   Wilson R., Emanuel B.S., Shaikh T., Kurahashi H., Saitta S.,
+RA   Budarf M.L., McDermid H.E., Johnson A., Wong A.C.C., Morrow B.E.,
+RA   Edelmann L., Kim U.J., Shizuya H., Simon M.I., Dumanski J.P.,
+RA   Peyrard M., Kedra D., Seroussi E., Fransson I., Tapia I., Bruder C.E.,
+RA   O'Brien K.P., Wilkinson P., Bodenteich A., Hartman K., Hu X.,
+RA   Khan A.S., Lane L., Tilahun Y., Wright H.;
+RT   "The DNA sequence of human chromosome 22.";
+RL   Nature 402:489-495(1999).
+RN   [8]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RC   TISSUE=Lymph;
+RX   PubMed=15489334; DOI=10.1101/gr.2596504;
+RG   The MGC Project Team;
+RT   "The status, quality, and expansion of the NIH full-length cDNA
+RT   project: the Mammalian Gene Collection (MGC).";
+RL   Genome Res. 14:2121-2127(2004).
+RN   [9]
+RP   NUCLEOTIDE SEQUENCE [MRNA] OF 27-225.
+RC   TISSUE=Keratinocyte;
+RX   MEDLINE=93294871; PubMed=8515476; DOI=10.1006/jmbi.1993.1346;
+RA   Leffers H., Madsen P., Rasmussen H.H., Honore B., Andersen A.H.,
+RA   Walbum E., Vandekerckhove J., Celis J.E.;
+RT   "Molecular cloning and expression of the transformation sensitive
+RT   epithelial marker stratifin. A member of a protein family that has
+RT   been involved in the protein kinase C signalling pathway.";
+RL   J. Mol. Biol. 231:982-998(1993).
+RN   [10]
+RP   PROTEIN SEQUENCE OF 2-10.
+RC   TISSUE=Platelet;
+RX   MEDLINE=22608298; PubMed=12665801; DOI=10.1038/nbt810;
+RA   Gevaert K., Goethals M., Martens L., Van Damme J., Staes A.,
+RA   Thomas G.R., Vandekerckhove J.;
+RT   "Exploring proteomes and analyzing protein processing by mass
+RT   spectrometric identification of sorted N-terminal peptides.";
+RL   Nat. Biotechnol. 21:566-569(2003).
+RN   [11]
+RP   PROTEIN SEQUENCE OF 2-10; 29-50; 62-69; 126-132; 144-155; 163-172 AND
+RP   218-227, CLEAVAGE OF INITIATOR METHIONINE, ACETYLATION AT GLY-2, AND
+RP   MASS SPECTROMETRY.
+RC   TISSUE=Platelet;
+RA   Bienvenut W.V.;
+RL   Unpublished observations (AUG-2005).
+RN   [12]
+RP   INTERACTION WITH AR; ESR1; ESR2; MC2R; NRIP1; NR3C1; PPARBP AND THRA.
+RX   MEDLINE=21168078; PubMed=11266503; DOI=10.1210/me.15.4.501;
+RA   Zilliacus J., Holter E., Wakui H., Tazawa H., Treuter E.,
+RA   Gustafsson J.-A.;
+RT   "Regulation of glucocorticoid receptor activity by 14-3-3-dependent
+RT   intracellular relocalization of the corepressor RIP140.";
+RL   Mol. Endocrinol. 15:501-511(2001).
+CC   -!- FUNCTION: Adapter protein implicated in the regulation of a large
+CC       spectrum of both general and specialized signaling pathway. Binds
+CC       to a large number of partners, usually by recognition of a
+CC       phosphoserine or phosphothreonine motif. Binding generally results
+CC       in the modulation of the activity of the binding partner.
+CC   -!- SUBUNIT: Homodimer (By similarity). Interacts with many nuclear
+CC       hormone receptors and cofactors including AR, ESR1, ESR2, MC2R,
+CC       NR3C1, NRIP1, PPARBP and THRA.
+CC   -!- INTERACTION:
+CC       O60565:GREM1; NbExp=2; IntAct=EBI-306940, EBI-944395;
+CC       Q14103-4:HNRPD; NbExp=1; IntAct=EBI-306940, EBI-432545;
+CC       Q96L34:MARK4; NbExp=1; IntAct=EBI-306940, EBI-302319;
+CC       Q8TEW0:PARD3; NbExp=1; IntAct=EBI-306940, EBI-81968;
+CC       Q9NPB6:PARD6A; NbExp=1; IntAct=EBI-306940, EBI-81876;
+CC       Q9BYG5:PARD6B; NbExp=1; IntAct=EBI-306940, EBI-295391;
+CC       O94921:PFTK1; NbExp=3; IntAct=EBI-306940, EBI-1043945;
+CC       P41743:PRKCI; NbExp=1; IntAct=EBI-306940, EBI-286199;
+CC   -!- TISSUE SPECIFICITY: Expressed mainly in the brain and present in
+CC       other tissues albeit at lower levels.
+CC   -!- SIMILARITY: Belongs to the 14-3-3 family.
+CC   -----------------------------------------------------------------------
+CC   Copyrighted by the UniProt Consortium, see http://www.uniprot.org/terms
+CC   Distributed under the Creative Commons Attribution-NoDerivs License
+CC   -----------------------------------------------------------------------
+DR   EMBL; L20422; AAA35483.1; -; mRNA.
+DR   EMBL; X80536; CAA56676.1; -; Genomic_DNA.
+DR   EMBL; X78138; CAA55017.1; -; mRNA.
+DR   EMBL; X57345; CAA40620.1; -; mRNA.
+DR   EMBL; D78577; BAA11418.1; -; Genomic_DNA.
+DR   EMBL; S80794; AAB36036.1; -; mRNA.
+DR   EMBL; CR456612; CAG30498.1; -; mRNA.
+DR   EMBL; Z82248; CAB05112.1; -; Genomic_DNA.
+DR   EMBL; BC003047; AAH03047.1; -; mRNA.
+DR   PIR; S34756; S34756.
+DR   PIR; S38509; S38509.
+DR   UniGene; Hs.226755; -.
+DR   PDB; 2C63; X-ray; A/B/C/D=1-246.
+DR   PDB; 2C74; X-ray; A/B=1-246.
+DR   DIP; DIP:27566N; -.
+DR   IntAct; Q04917; -.
+DR   Ensembl; ENSG00000128245; Homo sapiens.
+DR   KEGG; hsa:7533; -.
+DR   H-InvDB; HIX0016401; -.
+DR   HGNC; HGNC:12853; YWHAH.
+DR   MIM; 113508; gene.
+DR   ArrayExpress; Q04917; -.
+DR   GermOnline; ENSG00000128245; Homo sapiens.
+DR   RZPD-ProtExp; IOH4929; -.
+DR   RZPD-ProtExp; W2863; -.
+DR   GO; GO:0005737; C:cytoplasm; ISS:ProtInc.
+DR   GO; GO:0005737; C:cytoplasm; ISS:UniProtKB.
+DR   GO; GO:0003779; F:actin binding; ISS:ProtInc.
+DR   GO; GO:0035259; F:glucocorticoid receptor binding; IPI:UniProtKB.
+DR   GO; GO:0005159; F:insulin-like growth factor receptor binding; ISS:UniProtKB.
+DR   GO; GO:0019904; F:protein domain specific binding; ISS:UniProtKB.
+DR   GO; GO:0008426; F:protein kinase C inhibitor activity; ISS:UniProtKB.
+DR   GO; GO:0016563; F:transcriptional activator activity; IDA:UniProtKB.
+DR   GO; GO:0007010; P:cytoskeleton organization and biogenesis; ISS:ProtInc.
+DR   GO; GO:0006713; P:glucocorticoid catabolic process; IDA:UniProtKB.
+DR   GO; GO:0042921; P:glucocorticoid receptor signaling pathway; IDA:UniProtKB.
+DR   GO; GO:0006886; P:intracellular protein transport; ISS:UniProtKB.
+DR   GO; GO:0043066; P:negative regulation of apoptosis; ISS:ProtInc.
+DR   GO; GO:0050774; P:negative regulation of dendrite morphogenesis; ISS:UniProtKB.
+DR   GO; GO:0006469; P:negative regulation of protein kinase activity; ISS:UniProtKB.
+DR   GO; GO:0045941; P:positive regulation of transcription; IDA:UniProtKB.
+DR   GO; GO:0007088; P:regulation of mitosis; ISS:ProtInc.
+DR   GO; GO:0045664; P:regulation of neuron differentiation; ISS:UniProtKB.
+DR   GO; GO:0009966; P:regulation of signal transduction; ISS:UniProtKB.
+DR   GO; GO:0048167; P:regulation of synaptic plasticity; ISS:UniProtKB.
+DR   InterPro; IPR000308; 14-3-3.
+DR   Gene3D; G3DSA:1.20.190.20; 14-3-3; 1.
+DR   PANTHER; PTHR18860; 14-3-3; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   ProDom; PD000600; 14-3-3; 1.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+KW   3D-structure; Acetylation; Direct protein sequencing; Phosphorylation.
+FT   INIT_MET      1      1       Removed.
+FT   CHAIN         2    246       14-3-3 protein eta.
+FT                                /FTId=PRO_0000058623.
+FT   MOD_RES       2      2       N-acetylglycine.
+FT   CONFLICT    144    144       N -> T (in Ref. 9).
+FT   CONFLICT    157    157       A -> G (in Ref. 1).
+FT   CONFLICT    237    237       Q -> L (in Ref. 1).
+FT   HELIX         3     15
+FT   HELIX        19     30
+FT   HELIX        38     72
+FT   HELIX        75    105
+FT   TURN        106    110
+FT   HELIX       116    136
+FT   HELIX       139    163
+FT   HELIX       169    184
+FT   HELIX       189    205
+FT   HELIX       206    209
+FT   TURN        212    214
+FT   HELIX       215    233
+SQ   SEQUENCE   246 AA;  28219 MW;  D70FBC100C45D6E5 CRC64;
+     MGDREQLLQR ARLAEQAERY DDMASAMKAV TELNEPLSNE DRNLLSVAYK NVVGARRSSW
+     RVISSIEQKT MADGNEKKLE KVKAYREKIE KELETVCNDV LSLLDKFLIK NCNDFQYESK
+     VFYLKMKGDY YRYLAEVASG EKKNSVVEAS EAAYKEAFEI SKEQMQPTHP IRLGLALNFS
+     VFYYEIQNAP EQACLLAKQA FDDAIAELDT LNEDSYKDST LIMQLLRDNL TLWTSDQQDE
+     EAGEGN
+//
+ID   1433G_HUMAN             Reviewed;         247 AA.
+AC   P61981; O70457; P35214; Q6FH52; Q9UDP2; Q9UN99;
+DT   07-JUN-2004, integrated into UniProtKB/Swiss-Prot.
+DT   23-JAN-2007, sequence version 2.
+DT   03-APR-2007, entry version 40.
+DE   14-3-3 protein gamma (Protein kinase C inhibitor protein 1) (KCIP-1).
+GN   Name=YWHAG;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+OC   Catarrhini; Hominidae; Homo.
+OX   NCBI_TaxID=9606;
+RN   [1]
+RP   NUCLEOTIDE SEQUENCE [MRNA], PHOSPHORYLATION, AND INTERACTION WITH
+RP   RAF1.
+RC   TISSUE=Vascular smooth muscle;
+RX   MEDLINE=99360936; PubMed=10433554; DOI=10.1089/104454999315105;
+RA   Autieri M.V., Carbone C.J.;
+RT   "14-3-3gamma interacts with and is phosphorylated by multiple protein
+RT   kinase C isoforms in PDGF-stimulated human vascular smooth muscle
+RT   cells.";
+RL   DNA Cell Biol. 18:555-564(1999).
+RN   [2]
+RP   NUCLEOTIDE SEQUENCE [MRNA], AND TISSUE SPECIFICITY.
+RC   TISSUE=Fetal brain;
+RX   MEDLINE=99417686; PubMed=10486217; DOI=10.1006/geno.1999.5887;
+RA   Horie M., Suzuki M., Takahashi E., Tanigami A.;
+RT   "Cloning, expression, and chromosomal mapping of the human 14-3-3gamma
+RT   gene (YWHAG) to 7q11.23.";
+RL   Genomics 60:241-243(1999).
+RN   [3]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RA   Ebert L., Schick M., Neubert P., Schatten R., Henze S., Korn B.;
+RT   "Cloning of human full open reading frames in Gateway(TM) system entry
+RT   vector (pDONR201).";
+RL   Submitted (JUN-2004) to the EMBL/GenBank/DDBJ databases.
+RN   [4]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA].
+RX   MEDLINE=22737999; PubMed=12853948; DOI=10.1038/nature01782;
+RA   Hillier L.W., Fulton R.S., Fulton L.A., Graves T.A., Pepin K.H.,
+RA   Wagner-McPherson C., Layman D., Maas J., Jaeger S., Walker R.,
+RA   Wylie K., Sekhon M., Becker M.C., O'Laughlin M.D., Schaller M.E.,
+RA   Fewell G.A., Delehaunty K.D., Miner T.L., Nash W.E., Cordes M., Du H.,
+RA   Sun H., Edwards J., Bradshaw-Cordum H., Ali J., Andrews S., Isak A.,
+RA   Vanbrunt A., Nguyen C., Du F., Lamar B., Courtney L., Kalicki J.,
+RA   Ozersky P., Bielicki L., Scott K., Holmes A., Harkins R., Harris A.,
+RA   Strong C.M., Hou S., Tomlinson C., Dauphin-Kohlberg S.,
+RA   Kozlowicz-Reilly A., Leonard S., Rohlfing T., Rock S.M.,
+RA   Tin-Wollam A.-M., Abbott A., Minx P., Maupin R., Strowmatt C.,
+RA   Latreille P., Miller N., Johnson D., Murray J., Woessner J.P.,
+RA   Wendl M.C., Yang S.-P., Schultz B.R., Wallis J.W., Spieth J.,
+RA   Bieri T.A., Nelson J.O., Berkowicz N., Wohldmann P.E., Cook L.L.,
+RA   Hickenbotham M.T., Eldred J., Williams D., Bedell J.A., Mardis E.R.,
+RA   Clifton S.W., Chissoe S.L., Marra M.A., Raymond C., Haugen E.,
+RA   Gillett W., Zhou Y., James R., Phelps K., Iadanoto S., Bubb K.,
+RA   Simms E., Levy R., Clendenning J., Kaul R., Kent W.J., Furey T.S.,
+RA   Baertsch R.A., Brent M.R., Keibler E., Flicek P., Bork P., Suyama M.,
+RA   Bailey J.A., Portnoy M.E., Torrents D., Chinwalla A.T., Gish W.R.,
+RA   Eddy S.R., McPherson J.D., Olson M.V., Eichler E.E., Green E.D.,
+RA   Waterston R.H., Wilson R.K.;
+RT   "The DNA sequence of human chromosome 7.";
+RL   Nature 424:157-164(2003).
+RN   [5]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RC   TISSUE=Endometrial tumor;
+RX   PubMed=15489334; DOI=10.1101/gr.2596504;
+RG   The MGC Project Team;
+RT   "The status, quality, and expansion of the NIH full-length cDNA
+RT   project: the Mammalian Gene Collection (MGC).";
+RL   Genome Res. 14:2121-2127(2004).
+RN   [6]
+RP   PROTEIN SEQUENCE OF 2-12.
+RC   TISSUE=Platelet;
+RX   MEDLINE=22608298; PubMed=12665801; DOI=10.1038/nbt810;
+RA   Gevaert K., Goethals M., Martens L., Van Damme J., Staes A.,
+RA   Thomas G.R., Vandekerckhove J.;
+RT   "Exploring proteomes and analyzing protein processing by mass
+RT   spectrometric identification of sorted N-terminal peptides.";
+RL   Nat. Biotechnol. 21:566-569(2003).
+RN   [7]
+RP   PROTEIN SEQUENCE OF 2-10; 13-19; 29-42; 62-69; 133-143 AND 218-227,
+RP   CLEAVAGE OF INITIATOR METHIONINE, ACETYLATION AT VAL-2, AND MASS
+RP   SPECTROMETRY.
+RC   TISSUE=Platelet;
+RA   Bienvenut W.V., Claeys D.;
+RL   Unpublished observations (NOV-2005).
+RN   [8]
+RP   INTERACTION WITH SSH1.
+RX   PubMed=15159416; DOI=10.1083/jcb.200401136;
+RA   Nagata-Ohashi K., Ohta Y., Goto K., Chiba S., Mori R., Nishita M.,
+RA   Ohashi K., Kousaka K., Iwamatsu A., Niwa R., Uemura T., Mizuno K.;
+RT   "A pathway of neuregulin-induced activation of cofilin-phosphatase
+RT   Slingshot and cofilin in lamellipodia.";
+RL   J. Cell Biol. 165:465-471(2004).
+CC   -!- FUNCTION: Adapter protein implicated in the regulation of a large
+CC       spectrum of both general and specialized signaling pathway. Binds
+CC       to a large number of partners, usually by recognition of a
+CC       phosphoserine or phosphothreonine motif. Binding generally results
+CC       in the modulation of the activity of the binding partner.
+CC   -!- SUBUNIT: Homodimer. Interacts with RAF1 and SSH1.
+CC   -!- INTERACTION:
+CC       Q3HKR3:-; NbExp=1; IntAct=EBI-359832, EBI-1048950;
+CC       Q8NBE6:-; NbExp=1; IntAct=EBI-359832, EBI-1051631;
+CC       Q92625:ANKS1A; NbExp=1; IntAct=EBI-359832, EBI-1048612;
+CC       P10398:ARAF; NbExp=1; IntAct=EBI-359832, EBI-365961;
+CC       Q9UQB8:BAIAP2; NbExp=1; IntAct=EBI-359832, EBI-347952;
+CC       Q6ICG6:bK268H5.1; NbExp=1; IntAct=EBI-359832, EBI-1053969;
+CC       P15056:BRAF; NbExp=1; IntAct=EBI-359832, EBI-365980;
+CC       P46527:CDKN1B; NbExp=1; IntAct=EBI-359832, EBI-519280;
+CC       Q9P2M7:CGN; NbExp=1; IntAct=EBI-359832, EBI-79537;
+CC       Q7Z460:CLASP1; NbExp=1; IntAct=EBI-359832, EBI-913476;
+CC       Q9Y2J2:EPB41L3; NbExp=1; IntAct=EBI-359832, EBI-310986;
+CC       Q8IUD2:ERC1; NbExp=1; IntAct=EBI-359832, EBI-1044755;
+CC       Q9NVQ6:FAM82C; NbExp=1; IntAct=EBI-359832, EBI-1056589;
+CC       Q5PRF9:FLJ10211; NbExp=1; IntAct=EBI-359832, EBI-1047489;
+CC       Q96F86:FLJ21128; NbExp=1; IntAct=EBI-359832, EBI-997311;
+CC       Q92538:GBF1; NbExp=1; IntAct=EBI-359832, EBI-359050;
+CC       P08069:IGF1R; NbExp=1; IntAct=EBI-359832, EBI-475981;
+CC       Q9Y4H2:IRS2; NbExp=1; IntAct=EBI-359832, EBI-1049582;
+CC       Q02241:KIF23; NbExp=1; IntAct=EBI-359832, EBI-306852;
+CC       P33176:KIF5B; NbExp=1; IntAct=EBI-359832, EBI-355878;
+CC       O60282:KIF5C; NbExp=1; IntAct=EBI-359832, EBI-717170;
+CC       Q9H0B6:KLC2; NbExp=1; IntAct=EBI-359832, EBI-726994;
+CC       Q9NSK0:KLC4; NbExp=1; IntAct=EBI-359832, EBI-949319;
+CC       Q07866:KNS2; NbExp=1; IntAct=EBI-359832, EBI-721019;
+CC       Q15323:KRTHA1; NbExp=1; IntAct=EBI-359832, EBI-948001;
+CC       Q14525:KRTHA3B; NbExp=1; IntAct=EBI-359832, EBI-1049638;
+CC       P78386:KRTHB5; NbExp=1; IntAct=EBI-359832, EBI-1049371;
+CC       Q6PKG0:LARP1; NbExp=1; IntAct=EBI-359832, EBI-1052114;
+CC       Q14739:LBR; NbExp=1; IntAct=EBI-359832, EBI-1055147;
+CC       Q9Y383:LUC7L2; NbExp=1; IntAct=EBI-359832, EBI-352851;
+CC       P27448:MARK3; NbExp=1; IntAct=EBI-359832, EBI-707595;
+CC       P55196:MLLT4; NbExp=1; IntAct=EBI-359832, EBI-365875;
+CC       Q6WCQ1:MRIP; NbExp=1; IntAct=EBI-359832, EBI-1022605;
+CC       Q7Z401:MYCPBP; NbExp=1; IntAct=EBI-359832, EBI-1046479;
+CC       Q9H4L5:OSBPL3; NbExp=1; IntAct=EBI-359832, EBI-1051317;
+CC       O96013:PAK4; NbExp=1; IntAct=EBI-359832, EBI-713738;
+CC       Q8TEW0:PARD3; NbExp=1; IntAct=EBI-359832, EBI-81968;
+CC       Q9UBF8:PIK4CB; NbExp=1; IntAct=EBI-359832, EBI-1053214;
+CC       Q86W92:PPFIBP1; NbExp=1; IntAct=EBI-359832, EBI-1045582;
+CC       Q15276:RABEP1; NbExp=1; IntAct=EBI-359832, EBI-447043;
+CC       Q9H0H5:RACGAP1; NbExp=1; IntAct=EBI-359832, EBI-717233;
+CC       P04049:RAF1; NbExp=1; IntAct=EBI-359832, EBI-365996;
+CC       Q9P0K7:RAI14; NbExp=1; IntAct=EBI-359832, EBI-1023749;
+CC       Q8NEM2:SHCBP1; NbExp=1; IntAct=EBI-359832, EBI-744700;
+CC       P18583:SON; NbExp=1; IntAct=EBI-359832, EBI-1053513;
+CC       Q9UQ35:SRRM2; NbExp=1; IntAct=EBI-359832, EBI-1050142;
+CC       Q5VXL0:TJP2; NbExp=1; IntAct=EBI-359832, EBI-1042602;
+CC   -!- SUBCELLULAR LOCATION: Cytoplasm (By similarity).
+CC   -!- TISSUE SPECIFICITY: Highly expressed in brain, skeletal muscle,
+CC       and heart.
+CC   -!- PTM: Phosphorylated by various PKC isozymes.
+CC   -!- SIMILARITY: Belongs to the 14-3-3 family.
+CC   -----------------------------------------------------------------------
+CC   Copyrighted by the UniProt Consortium, see http://www.uniprot.org/terms
+CC   Distributed under the Creative Commons Attribution-NoDerivs License
+CC   -----------------------------------------------------------------------
+DR   EMBL; AF142498; AAD48408.1; -; mRNA.
+DR   EMBL; AB024334; BAA85184.1; -; mRNA.
+DR   EMBL; CR541904; CAG46702.1; -; mRNA.
+DR   EMBL; CR541925; CAG46723.1; -; mRNA.
+DR   EMBL; AC006388; -; NOT_ANNOTATED_CDS; Genomic_DNA.
+DR   EMBL; BC020963; AAH20963.1; -; mRNA.
+DR   UniGene; Hs.520974; -.
+DR   PDB; 2B05; X-ray; A/B/C/D/E/F=1-247.
+DR   IntAct; P61981; -.
+DR   Cornea-2DPAGE; P61981; HUMAN.
+DR   REPRODUCTION-2DPAGE; P61981; HUMAN.
+DR   Ensembl; ENSG00000170027; Homo sapiens.
+DR   KEGG; hsa:7532; -.
+DR   HGNC; HGNC:12852; YWHAG.
+DR   MIM; 605356; gene.
+DR   ArrayExpress; P61981; -.
+DR   GermOnline; ENSG00000170027; Homo sapiens.
+DR   RZPD-ProtExp; IOH11213; -.
+DR   RZPD-ProtExp; RZPDo834F1133; -.
+DR   RZPD-ProtExp; RZPDo834H0133; -.
+DR   RZPD-ProtExp; T4084; -.
+DR   GO; GO:0005159; F:insulin-like growth factor receptor binding; IPI:UniProtKB.
+DR   GO; GO:0005080; F:protein kinase C binding; IPI:UniProtKB.
+DR   GO; GO:0008426; F:protein kinase C inhibitor activity; NAS:UniProtKB.
+DR   GO; GO:0006469; P:negative regulation of protein kinase activity; NAS:UniProtKB.
+DR   GO; GO:0045664; P:regulation of neuron differentiation; IMP:UniProtKB.
+DR   GO; GO:0009966; P:regulation of signal transduction; NAS:UniProtKB.
+DR   GO; GO:0048167; P:regulation of synaptic plasticity; IMP:UniProtKB.
+DR   InterPro; IPR000308; 14-3-3.
+DR   Gene3D; G3DSA:1.20.190.20; 14-3-3; 1.
+DR   PANTHER; PTHR18860; 14-3-3; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   ProDom; PD000600; 14-3-3; 1.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+KW   3D-structure; Acetylation; Direct protein sequencing; Phosphorylation.
+FT   INIT_MET      1      1       Removed.
+FT   CHAIN         2    247       14-3-3 protein gamma.
+FT                                /FTId=PRO_0000058606.
+FT   MOD_RES       2      2       N-acetylvaline.
+FT   CONFLICT      4      4       R -> P (in Ref. 1).
+FT   CONFLICT     19     19       R -> G (in Ref. 1).
+FT   CONFLICT     78     78       Missing (in Ref. 1).
+FT   CONFLICT     89     89       I -> V (in Ref. 1).
+FT   CONFLICT    104    104       L -> V (in Ref. 1).
+FT   CONFLICT    109    109       I -> Y (in Ref. 1).
+FT   CONFLICT    119    122       SKVF -> RKDL (in Ref. 1).
+FT   CONFLICT    144    145       AT -> GD (in Ref. 1).
+FT   CONFLICT    157    158       AH -> R (in Ref. 1).
+FT   CONFLICT    200    202       AFD -> EFE (in Ref. 1).
+FT   CONFLICT    214    214       D -> E (in Ref. 1).
+FT   CONFLICT    240    240       D -> DH (in Ref. 1).
+FT   HELIX         3     15
+FT   HELIX        19     30
+FT   HELIX        38     72
+FT   HELIX        75    105
+FT   TURN        106    110
+FT   HELIX       116    136
+FT   HELIX       139    163
+FT   HELIX       169    184
+FT   HELIX       189    205
+FT   HELIX       207    209
+FT   TURN        212    214
+FT   HELIX       215    232
+SQ   SEQUENCE   247 AA;  28303 MW;  B0D16C6DE1F4455D CRC64;
+     MVDREQLVQK ARLAEQAERY DDMAAAMKNV TELNEPLSNE ERNLLSVAYK NVVGARRSSW
+     RVISSIEQKT SADGNEKKIE MVRAYREKIE KELEAVCQDV LSLLDNYLIK NCSETQYESK
+     VFYLKMKGDY YRYLAEVATG EKRATVVESS EKAYSEAHEI SKEHMQPTHP IRLGLALNYS
+     VFYYEIQNAP EQACHLAKTA FDDAIAELDT LNEDSYKDST LIMQLLRDNL TLWTSDQQDD
+     DGGEGNN
