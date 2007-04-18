@@ -379,6 +379,7 @@ public class GeneCoExpressionAnalysis {
                 ObjectMatrix2DNamed coExpressedData = queryGene2coExpressedData.get(queryGeneId);
                 
                 for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
+                	if(coExpressedGeneId.equals(queryGeneId)) continue;
                     Object[] dedvJ = gene2dedvs.get( (Long)coExpressedGeneId  ).toArray();
                     //"shift" is used to code two integer (X,Y) into one bigger integer X*shift+Y 
                     int shift = dedvI.length > dedvJ.length ? dedvI.length : dedvJ.length;
@@ -425,6 +426,7 @@ public class GeneCoExpressionAnalysis {
             DenseDoubleMatrix2DNamed correlationDataMatrix = queryGene2correlationData.get(queryGeneId);
             String queryGeneName = geneNames.get(queryGeneId);
             for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
+            	if(coExpressedGeneId.equals(queryGeneId)) continue;
             	String coExpressedGeneName = geneNames.get(coExpressedGeneId);
                 output.print( "\t" + queryGeneName + "_" + coExpressedGeneName );
                 totalExpressionValuesInOneExperssionExperiment++;
@@ -440,6 +442,7 @@ public class GeneCoExpressionAnalysis {
                 DenseDoubleMatrix2DNamed correlationDataMatrix = queryGene2correlationData.get(queryGeneId);
                 int colIndex = correlationDataMatrix.getColIndexByName(allEEs[ee]);
                 for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
+                	if(coExpressedGeneId.equals(queryGeneId)) continue;
                     int rowIndex = correlationDataMatrix.getRowIndexByName(coExpressedGeneId);
                     if(Double.isNaN(correlationDataMatrix.getQuick(rowIndex,colIndex))) missing++;
                 }
@@ -451,6 +454,7 @@ public class GeneCoExpressionAnalysis {
                 DenseDoubleMatrix2DNamed correlationDataMatrix = queryGene2correlationData.get(queryGeneId);
                 int colIndex = correlationDataMatrix.getColIndexByName(allEEs[ee]);
                 for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
+                	if(coExpressedGeneId.equals(queryGeneId)) continue;
                     int rowIndex = correlationDataMatrix.getRowIndexByName(coExpressedGeneId);
                     if(Double.isNaN(correlationDataMatrix.getQuick(rowIndex,colIndex))) 
                         output.print( "\t" );
@@ -503,8 +507,8 @@ public class GeneCoExpressionAnalysis {
                 String queryGeneName = geneNames.get(queryGeneId);
                 
                 for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
+                	if(coExpressedGeneId.equals(queryGeneId)) continue;
                     int rowIndex = correlationDataMatrix.getRowIndexByName(coExpressedGeneId);
-
                     String coExpressedGeneName = geneNames.get(coExpressedGeneId);
                 	String colName =  queryGeneName + "_" + coExpressedGeneName;
                     int col = dataMatrix.getColIndexByName( colName );
