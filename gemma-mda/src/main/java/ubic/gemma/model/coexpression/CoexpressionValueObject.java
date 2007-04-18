@@ -304,6 +304,33 @@ public class CoexpressionValueObject {
             return null;
         }
     }
+    
+    /**
+     * Function to return the max of negative or positive link count.
+     * This is used for sorting.
+     * @return
+     */
+    public Integer getMaxLinkCount() {
+        Integer positiveLinks = this.getPositiveLinkCount();
+        Integer negativeLinks = this.getNegativeLinkCount();
+        
+        if (positiveLinks == null && negativeLinks == null) {
+            return 0;
+        }
+        if (positiveLinks == null) {
+            return negativeLinks;
+        }
+        if (negativeLinks == null) {
+            return positiveLinks;
+        }
+        
+        if (positiveLinks >= negativeLinks) {
+            return positiveLinks;
+        }
+        else {
+            return negativeLinks;
+        }
+    }
 
     /**
      * @return the geneType

@@ -755,8 +755,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         public int compare( Object o1, Object o2 ) {
             CoexpressionValueObject v1 = ( ( CoexpressionValueObject ) o1 );
             CoexpressionValueObject v2 = ( ( CoexpressionValueObject ) o2 );
-            int o1Size = v1.getExpressionExperimentValueObjects().size();
-            int o2Size = v2.getExpressionExperimentValueObjects().size();
+            int o1Size = v1.getMaxLinkCount();
+            int o2Size = v2.getMaxLinkCount();
             if ( o1Size > o2Size ) {
                 return -1;
             } else if ( o1Size < o2Size ) {
