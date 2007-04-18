@@ -272,7 +272,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 		}else{			
 			coExpressedGenes = this.getCoExpressedGenes(queryGenes);
 		}
-        HashSet<Gene> allGenes = new HashSet<Gene>();
+		Collection<Gene> allGenes = new HashSet<Gene>();
         allGenes.addAll(queryGenes);
         allGenes.addAll(coExpressedGenes);
         log.info( "Start the Query for " + queryGenes.size() + " genes" );
