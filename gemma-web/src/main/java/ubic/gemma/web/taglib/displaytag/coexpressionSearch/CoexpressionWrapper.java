@@ -172,6 +172,7 @@ public class CoexpressionWrapper extends TableDecorator {
         // include just taxon params
         includeList.add( "taxon" );
         includeList.add( "stringency" );
+        includeList.add( "eeSearchString" );
         extractParameters( paramList, includeList );
         // add in the current gene with exactSearch
         //paramList.add( "searchString=" + object.getGeneName() );

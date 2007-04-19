@@ -229,9 +229,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
 
         // At this point, only one gene has been found
-        // set command object to reflect this
-        csc.setSearchString( genesFound.iterator().next().getOfficialSymbol() );
-        csc.setGeneIdSearch( "false" );
 
         // find coexpressed genes
 
@@ -248,6 +245,10 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
         csc.setSourceGene( sourceGene );
+        
+        // set command object to reflect that only one gene has been found
+        csc.setSearchString( sourceGene.getOfficialSymbol());
+        csc.setGeneIdSearch( "false" );
 
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );

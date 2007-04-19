@@ -178,6 +178,7 @@ Results for
 								</option>
 							</c:forEach>
 						</select>		
+						
 						<input id="searchStringTextInput" disabled style="display:none" type="text" size=15
 							name="<c:out value="${status.expression}"/>"
 							value="${status.value}" />
@@ -202,7 +203,7 @@ Results for
 					<spring:bind path="coexpressionSearchCommand.searchString">
 						<input type="text" size=15
 							name="<c:out value="${status.expression}"/>"
-							value="<c:out value="${status.value}"/>" />
+							value="<c:out value="${sourceGene.officialSymbol}"/>" />
 					</spring:bind>
 					<spring:bind path="coexpressionSearchCommand.exactSearch">
 						<input id="exactSearchCheckbox" type="checkbox" name="${status.expression}" 
