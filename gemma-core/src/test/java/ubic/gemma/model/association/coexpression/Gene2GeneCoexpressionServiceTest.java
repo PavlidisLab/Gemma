@@ -156,7 +156,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     //    
     private boolean validate( Collection g2g, CoexpressionCollectionValueObject p2p ) {
 
-        int actualLinkCount = p2p.getNegativeStringencyLinkCount() + p2p.getPositiveStringencyLinkCount();
+        int actualLinkCount = p2p.getGeneCoexpressionType().getNegativeStringencyLinkCount() + p2p.getGeneCoexpressionType().getPositiveStringencyLinkCount();
 
         if ( g2g.size() == actualLinkCount ) return true;
 

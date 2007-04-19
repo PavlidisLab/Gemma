@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -49,8 +50,9 @@ public class CoexpressionValueObject {
     private Collection<Long> nonspecificEE;
     private int possibleOverlap;
     private Collection<OntologyEntry> goOverlap;
-
     private List<Integer> experimentBitList = new ArrayList<Integer>();
+    private Collection<String> nonSpecificGenes = new HashSet<String>();
+    private boolean hybridizesWithQueryGene;
 
     public String getExperimentBitList() {
         return StringUtils.join( experimentBitList, "," );
@@ -395,5 +397,48 @@ public class CoexpressionValueObject {
 
     public void setPossibleOverlap( int possibleOverlap ) {
         this.possibleOverlap = possibleOverlap;
+    }
+
+    public Collection<Long> getProbes() {
+        Collection<Long> results = new HashSet<Long>();
+
+        for ( Map<Long, Double> obj : pValues.values() ) {
+            results.addAll( obj.keySet() );
+        }
+
+        return results;
+
+    }
+
+    /**
+     * @return the nonSpecificGenes
+     */
+    public Collection<String> getNonSpecificGenes() {
+        return nonSpecificGenes;
+    }
+
+    /**
+     * @param nonSpecificGenes the nonSpecificGenes to set
+     */
+    public void setNonSpecificGenes( Collection<String> nonSpecificGenes ) {
+        this.nonSpecificGenes = nonSpecificGenes;
+    }
+    
+    public void addNonSpecificGene(String gene){
+        this.nonSpecificGenes.add( gene );
+    }
+
+    /**
+     * @return the hybridizesWithQueryGene
+     */
+    public boolean isHybridizesWithQueryGene() {
+        return hybridizesWithQueryGene;
+    }
+
+    /**
+     * @param hybridizesWithQueryGene the hybridizesWithQueryGene to set
+     */
+    public void setHybridizesWithQueryGene( boolean hybridizesWithQueryGene ) {
+        this.hybridizesWithQueryGene = hybridizesWithQueryGene;
     }
 }

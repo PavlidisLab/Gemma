@@ -94,7 +94,7 @@ public class MetaLinkFinder {
     		System.out.println(i+"/"+genes.size()+"\t"+gene.getName());
     		//Get the gene->eeIds map
     		CoexpressionCollectionValueObject coexpressed = (CoexpressionCollectionValueObject)geneService.getCoexpressedGenes(gene, null, STRINGENCY);
-    		Map<Long, Collection<Long>> geneEEMap = coexpressed.getSpecificExpressionExperiments();
+    		Map<Long, Collection<Long>> geneEEMap = coexpressed.getGeneCoexpressionType().getSpecificExpressionExperiments();
 			this.count(gene.getId(),geneEEMap);
 			i++;
      	}

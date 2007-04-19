@@ -19,7 +19,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
  * 
- * @author jsantos
+ * @author jsantos, klc
  * @version $Id $
  */
 public class CoexpressionWrapper extends TableDecorator {
@@ -52,7 +52,7 @@ public class CoexpressionWrapper extends TableDecorator {
         CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
         if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "-";
 
-        String overlap = "" + ( ( cvo.getGoOverlap().size() ) * 100 ) / cvo.getPossibleOverlap() + "";
+        String overlap = "" +   cvo.getGoOverlap().size() + "/" + cvo.getPossibleOverlap() + "";
         /*
          * <br /> <span style = 'font-size:smaller'> "; int i = 0; for(OntologyEntry oe: cvo.getGoOverlap()){ if ( ++i %
          * 5 == 0 ) { overlap += "<br />"; } overlap += oe.getAccession() + " "; } return overlap + "</span>";
@@ -89,7 +89,7 @@ public class CoexpressionWrapper extends TableDecorator {
 
             if ( !object.getExpressionExperiments().isEmpty() )
                 count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2PositiveLinks(),
-                        positiveLinks );
+                        positiveLinks, object.getNonSpecificGenes(), object.isHybridizesWithQueryGene() );
 
             count += "</span>";
         }
@@ -102,29 +102,61 @@ public class CoexpressionWrapper extends TableDecorator {
             count += negativeLinks.toString();
             if ( !object.getExpressionExperiments().isEmpty() )
                 count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2NegativeLinks(),
-                        negativeLinks );
+                        negativeLinks, object.getNonSpecificGenes(), object.isHybridizesWithQueryGene() );
 
             count += "</span>";
         }
         return count;
     }
 
+    public String getSimpleLinkCount() {
+        String count = "";
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Integer positiveLinks = object.getPositiveLinkCount();
+        Integer negativeLinks = object.getNegativeLinkCount();
+
+        if ( positiveLinks != null && positiveLinks != 0 ) {
+            count += "<span class='positiveLink' >";
+            count += positiveLinks.toString();
+
+            count += "</span>";
+        }
+
+        if ( negativeLinks != null && negativeLinks != 0 ) {
+            if ( count.length() > 0 ) {
+                count += "/";
+            }
+            count += "<span class='negativeLink' >";
+            count += negativeLinks.toString();
+            count += "</span>";
+        }
+        return count;
+    }
     private String getNonSpecificString( Collection<Long> allNonSpecific, Collection<Long> contributingEE,
-            Integer numTotalLinks ) {
+            Integer numTotalLinks, Collection<String> nonSpecificGenes, boolean hybridizesWithQueryGene ) {
         int nonSpecific = 0;
         String nonSpecificList = "";
-
+        String hybridizes = "";
+        
         for ( Long id : contributingEE ) {
             if ( allNonSpecific.contains( id ) ) {
-                nonSpecific++;
-                nonSpecificList += id + " ";
+                nonSpecific++;               
             }
         }
 
+        for(String gene : nonSpecificGenes)
+            nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
+        
+        if (nonSpecificList.length() > 1)
+            nonSpecificList = nonSpecificList.substring( 0, nonSpecificList.length() - 2); //remove trailing ' ,'
+        
+        if (hybridizesWithQueryGene)
+            hybridizes = "*";
+        
         if ( nonSpecific == 0 ) return "";
 
         return "<i> <span style = 'font-size:smaller' title='" + nonSpecificList + "' >  ( "
-                + ( numTotalLinks - nonSpecific ) + " )  </span> </i>";
+                + ( numTotalLinks - nonSpecific ) + hybridizes + " )  </span> </i>";
     }
 
     /**

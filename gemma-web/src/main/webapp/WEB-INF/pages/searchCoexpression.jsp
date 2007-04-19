@@ -297,6 +297,7 @@ Results for
 		</tr>
 		
 	</table>
+</form>
 
 <c:if test="${coexpressedGenes != null}">
 <c:if test="${numLinkedExpressionExperiments != 0}">
@@ -365,7 +366,6 @@ Results for
 		</script>
 				
 	
-
 <display:table name="coexpressedGenes"
 	class="list" sort="list" requestURI="" id="foundGenes" 
 	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
@@ -375,11 +375,148 @@ Results for
 	<display:column property="linkCount" sortable="true" sortProperty="maxLinkCount" 
 		title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
 					<img src='/Gemma/images/help.png' /> </a>" />	
-	<display:column property="goOverlap" sortable="true" title="go overlap % <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
+	<display:column property="goOverlap" sortable="true" title="GO overlap <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
 					<img src='/Gemma/images/help.png' /> </a>"  />
 	<display:column property="experimentBitImage" sortable="false" title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
 					<img src='/Gemma/images/help.png' /> </a>" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
-</form>
+
+
+<!--  ================ Predicted Gene Results ================== -->
+
+<c:if test="${coexpressedPredictedGenes != null}">
+
+<c:if test="${numLinkedPredictedExpressionExperiments != 0}">
+
+<!-- Toggles for the expand/hide datasetList table -->
+<span class="predictedDatasetList" onclick="return toggleVisibility('predictedDatasetList')">
+	<img src="/Gemma/images/chart_organisation_add.png" />
+</span>
+<span class="predictedDatasetList" style="display:none" onclick="return toggleVisibility('predictedDatasetList')">
+	<img src="/Gemma/images/chart_organisation_delete.png" />
+</span>
+</c:if>
+<b> 
+
+<c:out value="${numUsedPredictedExpressionExperiments}" />  datasets that had relevent Predicted Gene Coexpression data  
+
+<c:if test="${numLinkedPredictedExpressionExperiments != 0}">
+<a href="#" onclick="return toggleVisibility('predictedDatasetList')" >(details)</a> 
+</c:if>
+</b>
+
+<br />
+<div class="predictedDatasetList" style="display:none">
+	
+	<display:table pagesize="100" name="predictedExpressionExperiments" sort="list" defaultsort="2" class="list" requestURI="" id="predictedExpressionExperimentList"
+		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+
+			<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"   titleKey="expressionExperiment.rawLinkcount" />
+
+			<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending" titleKey="expressionExperiment.linkcount" />
+			
+			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+
+			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+
+			<authz:authorize ifAnyGranted="admin">
+	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+			</authz:authorize>
+		
+
+ 			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>
+</div>
+</c:if>
+
+<br />	
+					
+
+<display:table name="coexpressedPredictedGenes"
+	class="list" sort="list" requestURI="" id="predictedFoundGenes" 
+	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
+	pagesize="200">
+	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
+	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
+	<display:column property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount" 
+		title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>" />	
+	<display:column property="goOverlap" sortable="true" title="GO overlap <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>"  />
+	<display:column property="experimentBitImage" sortable="false" title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>" />
+	<display:setProperty name="basic.empty.showtable" value="false" />
+</display:table>
+
+
+<!--  ================ Probe Aligned Region Results ================== -->
+
+<c:if test="${coexpressedAlignedRegions != null}">
+
+<c:if test="${numLinkedAlignedExpressionExperiments != 0}">
+
+<!-- Toggles for the expand/hide datasetList table -->
+<span class="alignedDatasetList" onclick="return toggleVisibility('alignedDatasetList')">
+	<img src="/Gemma/images/chart_organisation_add.png" />
+</span>
+<span class="alignedDatasetList" style="display:none" onclick="return toggleVisibility('alignedDatasetList')">
+	<img src="/Gemma/images/chart_organisation_delete.png" />
+</span>
+</c:if>
+<b> 
+
+<c:out value="${numUsedAlignedExpressionExperiments}" />  datasets had relevent Probe Aligned Region Coexpression data  
+
+<c:if test="${numLinkedAlignedExpressionExperiments != 0}">
+<a href="#" onclick="return toggleVisibility('alignedDatasetList')" >(details)</a> 
+</c:if>
+</b>
+
+<br />
+<div class="alignedDatasetList" style="display:none">
+	
+	<display:table pagesize="100" name="alignedExpressionExperiments" sort="list" defaultsort="2" class="list" requestURI="" id="alignedExpressionExperimentList"
+		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+
+			<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"   titleKey="expressionExperiment.rawLinkcount" />
+
+			<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending" titleKey="expressionExperiment.linkcount" />
+			
+			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+
+			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+
+			<authz:authorize ifAnyGranted="admin">
+	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+			</authz:authorize>
+		
+
+ 			<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>
+</div>
+</c:if>
+
+<br />	
+					
+
+<display:table name="coexpressedAlignedRegions"
+	class="list" sort="list" requestURI="" id="alignedFoundGenes" 
+	decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" 
+	pagesize="200">
+	<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
+	<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
+	<display:column property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount" 
+		title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>" />	
+	<display:column property="goOverlap" sortable="true" title="GO overlap <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>"  />
+	<display:column property="experimentBitImage" sortable="false" title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
+					<img src='/Gemma/images/help.png' /> </a>" />
+	<display:setProperty name="basic.empty.showtable" value="false" />
+</display:table>

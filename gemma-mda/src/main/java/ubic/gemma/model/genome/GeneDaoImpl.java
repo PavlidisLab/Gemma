@@ -20,8 +20,6 @@
  */
 package ubic.gemma.model.genome;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,11 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -50,6 +43,7 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -194,126 +188,158 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     @SuppressWarnings("unchecked")
-    private void postProcessing( Map<Long, CoexpressionValueObject> geneMap,
+    private void postProcessing( GeneMap geneMap, CoexpressionCollectionValueObject coexpressions ) throws Exception {
+
+        postProcessGeneImpls( geneMap.getGeneImplMap(), coexpressions );
+
+        postProcessProbeAlignedRegions( geneMap.getProbeAlignedRegionMap(), coexpressions );
+
+        postProcessPredictedGenes( geneMap.getPredictedGeneMap(), coexpressions );
+
+    }
+
+    private void postProcessPredictedGenes( Map<Long, CoexpressionValueObject> genes,
+            CoexpressionCollectionValueObject coexpressions ) {
+
+        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
+
+        for ( Long geneId : genes.keySet() ) {
+            CoexpressionValueObject coExValObj = genes.get( geneId );
+            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions
+                    .getPredictedCoexpressionType() );
+
+            coExValObj.computeExperimentBits( allEEIds );
+            if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
+                coexpressions.getPredictedCoexpressionData().add( coExValObj );
+
+                if ( coExValObj.getPositiveLinkCount() != null )
+                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
+                            .getPredictedCoexpressionType() );
+                else
+                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
+                            .getPredictedCoexpressionType() );
+            }
+        }
+        coexpressions.getPredictedCoexpressionType().setNumberOfGenes( genes.size() );
+    }
+
+    private void postProcessProbeAlignedRegions( Map<Long, CoexpressionValueObject> genes,
+            CoexpressionCollectionValueObject coexpressions ) {
+
+        int numStringencyProbeAlignedRegions = 0;
+        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
+
+        for ( Long geneId : genes.keySet() ) {
+            CoexpressionValueObject coExValObj = genes.get( geneId );
+
+            coExValObj.computeExperimentBits( allEEIds );
+            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions
+                    .getProbeAlignedCoexpressionType() );
+
+            if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
+                numStringencyProbeAlignedRegions++;
+                coexpressions.getProbeAlignedCoexpressionData().add( coExValObj );
+
+                if ( coExValObj.getPositiveLinkCount() != null )
+                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
+                            .getProbeAlignedCoexpressionType() );
+                else
+                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
+                            .getProbeAlignedCoexpressionType() );
+            }
+
+        }
+
+        coexpressions.getProbeAlignedCoexpressionType().setNumberOfGenes( genes.size() );
+    }
+
+    private void postProcessGeneImpls( Map<Long, CoexpressionValueObject> genes,
             CoexpressionCollectionValueObject coexpressions ) throws Exception {
 
-        // add count of original matches to coexpression data
-        coexpressions.setLinkCount( geneMap.size() );
-
-        // filter out stringency failures
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
-        // count the number of genes, predictedGenes, and probeAlignedRegions, both filtered and unfiltered by
-        // stringency
-        int numGenes = 0; // GeneImpl
-        int numPredictedGenes = 0;
-        int numProbeAlignedRegions = 0;
-
-        // counts
         int numStringencyGenes = 0;
-        int numStringencyPredictedGenes = 0;
-        int numStringencyProbeAlignedRegions = 0;
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getSpecificExpressionExperiments();
 
         Map<Long, Collection<Gene>> querySpecificity = getGenes( coexpressions.getQueryGeneProbes() );
         coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
         Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
 
-        List<Long> allEEIds = new ArrayList<Long>();
-        for ( ExpressionExperimentValueObject eevo : coexpressions.getExpressionExperiments() ) {
-            allEEIds.add( eevo.getId() );
-        }
-        Collections.sort( allEEIds );
+        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getGeneCoexpressionType()
+                .getSpecificExpressionExperiments();
+        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
 
-        for ( Long geneId : geneMap.keySet() ) {
-            CoexpressionValueObject coExValObj = geneMap.get( geneId );
+        for ( Long geneId : genes.keySet() ) {
+            CoexpressionValueObject coExValObj = genes.get( geneId );
 
             // determine which EE's that contributed to this gene's coexpression were non-specific
             // an ee is specific iff the ee is specific for the query gene and the target gene.
             Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
-            Collection<Long> specificEE = new HashSet( allSpecificEE.get( geneId ) ); // get the EE's that are
+            Collection<Long> specificEE = new HashSet<Long>( allSpecificEE.get( geneId ) ); // get the EE's that are
             // specific for the target
             // gene
             specificEE.retainAll( allQuerySpecificEE ); // get the EE's that are specific for both the target and
             // the query gene
             nonspecificEE.removeAll( specificEE );
             coExValObj.setNonspecificEE( nonspecificEE );
-
             coExValObj.computeExperimentBits( allEEIds );
 
+            // figure out which genes where culprits for making this gene non-specific
+            Collection<Long> probes = coExValObj.getProbes();
+            for ( Long eeID : nonspecificEE ) {
+                for ( Long probeID : probes ) {
+                    if ( coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) != null ) {
+                        for ( Long geneID : coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) ) {
+                            coExValObj.addNonSpecificGene( genes.get( geneID ).getGeneName() );
+                            if ( geneID == coexpressions.getQueryGene().getId() )
+                                coExValObj.setHybridizesWithQueryGene( true );
+                        }
+                    }
+                }
+
+            }
+            coExValObj.getNonSpecificGenes().remove( coExValObj.getGeneOfficialName() );
+
             boolean added = false;
-            if ( coExValObj.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
-                numGenes++;
 
-                incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions );
+            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions.getGeneCoexpressionType() );
 
-                if ( coExValObj.getPositiveLinkCount() != null ) {
-                    numStringencyGenes++;
-                    positiveLinkCount++;
-                    added = true;
-                    // add in coexpressions that match stringency
-                    coexpressions.getCoexpressionData().add( coExValObj );
-                    // add in expression experiments that match stringency
-                    // update the link count for that EE
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions );
-                }
-
-                if ( coExValObj.getNegativeLinkCount() != null ) {
-                    negativeLinkCount++;
-                    // add in expression experiments that match stringency
-                    // update the link count for that EE
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions );
-
-                    if ( added ) continue; // no point in adding or counting the same element twice
-                    coexpressions.getCoexpressionData().add( coExValObj );
-                    numStringencyGenes++;
-
-                }
-
-            } else if ( coExValObj.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
-                numPredictedGenes++;
-                if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                    numStringencyPredictedGenes++;
-                    coexpressions.getPredictedCoexpressionData().add( coExValObj );
-                }
-            } else if ( coExValObj.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
-                numProbeAlignedRegions++;
-                if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                    numStringencyProbeAlignedRegions++;
-                    coexpressions.getAlignedCoexpressionData().add( coExValObj );
-                }
-            } else {
-                log
-                        .warn( "Coexpression is of unknown type. Not gene, probealignedRegion or predictedGene.  Official name: "
-                                + coExValObj.getGeneOfficialName() );
+            if ( coExValObj.getPositiveLinkCount() != null ) {
+                numStringencyGenes++;
+                positiveLinkCount++;
+                added = true;
+                // add in coexpressions that match stringency
+                coexpressions.getCoexpressionData().add( coExValObj );
+                // add in expression experiments that match stringency
+                // update the link count for that EE
+                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
+                        .getGeneCoexpressionType() );
             }
 
+            if ( coExValObj.getNegativeLinkCount() != null ) {
+                negativeLinkCount++;
+                // add in expression experiments that match stringency
+                // update the link count for that EE
+                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
+                        .getGeneCoexpressionType() );
+
+                if ( added ) continue; // no point in adding or counting the same element twice
+                coexpressions.getCoexpressionData().add( coExValObj );
+                numStringencyGenes++;
+
+            }
         }
 
         // add count of pruned matches to coexpression data
-        coexpressions.setPositiveStringencyLinkCount( positiveLinkCount );
-        coexpressions.setNegativeStringencyLinkCount( negativeLinkCount );
-        // add the distinct set of expression experiments involved
-        // in the query to coexpression data
-        // add the counts for genes, predicted genes, and probe-aligned region
-        coexpressions.setNumGenes( numGenes );
-        coexpressions.setNumPredictedGenes( numPredictedGenes );
-        coexpressions.setNumProbeAlignedRegions( numProbeAlignedRegions );
-        coexpressions.setNumStringencyGenes( numStringencyGenes );
-        coexpressions.setNumStringencyPredictedGenes( numStringencyPredictedGenes );
-        coexpressions.setNumStringencyProbeAlignedRegions( numStringencyProbeAlignedRegions );
+        coexpressions.getGeneCoexpressionType().setPositiveStringencyLinkCount( positiveLinkCount );
+        coexpressions.getGeneCoexpressionType().setNegativeStringencyLinkCount( negativeLinkCount );
+        coexpressions.getGeneCoexpressionType().setNumberOfGenes( genes.size() );
     }
 
     /**
      * @param contributingEEs
      * @param coexpressions
      */
-    private void incrementEEContributions( Collection<Long> contributingEEs,
-            CoexpressionCollectionValueObject coexpressions ) {
+    private void incrementEEContributions( Collection<Long> contributingEEs, CoexpressionTypeValueObject coexpressions ) {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
@@ -336,7 +362,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     private void incrementRawEEContributions( Collection<Long> contributingEEs,
-            CoexpressionCollectionValueObject coexpressions ) {
+            CoexpressionTypeValueObject coexpressions ) {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
@@ -436,20 +462,20 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
                 + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "
                 + " INNER JOIN GENE2CS gcout ON gcout.CS=dedvout.DESIGN_ELEMENT_FK"
-                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE"
-                + " where " + eeClause + " gcIn.GENE=:id ";
+                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE" + " where " + eeClause
+                + " gcIn.GENE=:id ";
 
         return query;
     }
-    
-    
+
     /**
      * @param p2pClassName
      * @param in
      * @param out
      * @return
      */
-    private synchronized String getFastNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
+    private synchronized String getFastNativeQueryString( String p2pClassName, String in, String out,
+            Collection<Long> eeIds ) {
         String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
@@ -460,17 +486,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
-        
 
         String query = "SELECT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM "
-                + " GENE2CS gcIn "
-                + " INNER JOIN "
-                + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM " + " GENE2CS gcIn "
+                + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
-                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE"
-                + " where " + eeClause + " gcIn.GENE=:id ";
+                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE" + " where " + eeClause
+                + " gcIn.GENE=:id ";
 
         return query;
     }
@@ -481,13 +504,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param geneMap
      * @param scroll
      */
-    private void processCoexpQueryResult( Map<Long, CoexpressionValueObject> geneMap, ScrollableResults scroll,
+    private void processCoexpQueryResult( GeneMap geneMap, ScrollableResults scroll,
             CoexpressionCollectionValueObject coexpressions ) {
         CoexpressionValueObject vo;
         Long geneId = scroll.getLong( 0 );
         // check to see if geneId is already in the geneMap
 
-        if ( geneMap.containsKey( geneId ) ) {
+        if ( geneMap.contains( geneId ) ) {
             vo = geneMap.get( geneId );
         } else {
             vo = new CoexpressionValueObject();
@@ -496,38 +519,44 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             vo.setGeneOfficialName( scroll.getString( 2 ) );
             vo.setGeneType( scroll.getString( 8 ) );
             vo.setStringencyFilterValue( coexpressions.getStringency() );
-            geneMap.put( geneId, vo );
+            geneMap.put( vo );
         }
 
         // add the expression experiment
         Long eeID = scroll.getLong( 3 );
-        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
+        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( vo.getGeneType(), eeID );
 
         if ( eeVo == null ) {
             eeVo = new ExpressionExperimentValueObject();
             eeVo.setId( eeID );
-            coexpressions.addExpressionExperiment( eeVo );
+            coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
         }
 
         vo.addExpressionExperimentValueObject( eeVo );
+        coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
 
         Long probeID = scroll.getLong( 7 );
         vo.addScore( eeID, scroll.getDouble( 5 ), probeID );
         vo.addPValue( eeID, scroll.getDouble( 4 ), probeID );
 
-        coexpressions.addSpecifityInfo( eeID, probeID, geneId );
-        coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 6 ) );
+        if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
+            coexpressions.getGeneCoexpressionType().addSpecifityInfo( eeID, probeID, geneId );
+            coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 6 ) );
+        } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
+            coexpressions.getPredictedCoexpressionType().addSpecifityInfo( eeID, probeID, geneId );
+        } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
+            coexpressions.getProbeAlignedCoexpressionType().addSpecifityInfo( eeID, probeID, geneId );
+        }
     }
 
     /**
      * @param geneMap
      * @param queryObject
      */
-    private void processCoexpQuery( int qn, Map<Long, CoexpressionValueObject> geneMap,
-            org.hibernate.Query queryObject, CoexpressionCollectionValueObject coexpressions ) {
-        log.info( "Waiting for query  " + qn + " result" );
+    private void processCoexpQuery( GeneMap geneMap, org.hibernate.Query queryObject,
+            CoexpressionCollectionValueObject coexpressions ) {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        log.info( "Query " + qn + " results ready" );
+
         while ( scroll.next() ) {
             processCoexpQueryResult( geneMap, scroll, coexpressions );
         }
@@ -757,130 +786,43 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         log.info( "Gene: " + gene.getName() );
 
         final String p2pClassName = getP2PClassName( givenG );
-
-        final Map<Long, CoexpressionValueObject> geneMap = new ConcurrentHashMap<Long, CoexpressionValueObject>();
-
+        final GeneMap geneMap = new GeneMap();
         final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
+
         coexpressions.setStringency( stringency );
         coexpressions.setQueryGene( gene );
 
-        try {
-            final Collection<Long> eeIds = getEEIds( ees );
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
 
-            FutureTask<Boolean> firstQueryThread = new FutureTask<Boolean>( new Callable<Boolean>() {
-                @SuppressWarnings("synthetic-access")
-                public Boolean call() throws FileNotFoundException, IOException {
-                    StopWatch watch = new StopWatch();
-                    watch.start();
-                    log.info( "Starting first query" );
+        final Collection<Long> eeIds = getEEIds( ees );
 
-                    try {
-                        // do query joining coexpressed genes through the firstVector to the secondVector
-                        // eeIds is an argument because the native SQL query needs to be built with the knowledge
-                        // of the number of expressionExperimentId arguments.
-                        String queryString = "";
-                        //if (p2pClassName.equalsIgnoreCase( "HumanProbeCoExpressionImpl" ) ){
-                            queryString = getFastNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );          
-                        //}
-                        //else {
-                        //    queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
-                        //}
-                        Session session = getSessionFactory().openSession();
-                        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
-                        processCoexpQuery( 1, geneMap, queryObject, coexpressions );
-                        session.close();
-                        watch.stop();
-                        Long elapsed = watch.getTime();
-                        coexpressions.setFirstQueryElapsedTime( elapsed );
-                        log.info( "Elapsed time for first query: " + elapsed );
-                    } catch ( Exception e ) {
-                        log.error( e, e );
-                        return false;
-                    }
-                    return true;
-                }
-            } );
-/*
-            FutureTask<Boolean> secondQueryThread = new FutureTask<Boolean>( new Callable<Boolean>() {
-                @SuppressWarnings("synthetic-access")
-                public Boolean call() throws FileNotFoundException, IOException {
-                    StopWatch watch = new StopWatch();
-                    watch.start();
-                    log.info( "Starting second query" );
+        String queryString = "";
+        queryString = getFastNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
 
-                    try {
-                        String queryString = "";
-                        //if (p2pClassName.equalsIgnoreCase( "HumanProbeCoExpressionImpl" ) ){
-                            queryString = getFastNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );          
-                        //}
-                        //else {
-                        //    queryString = getNativeQueryString( p2pClassName, "secondVector", "firstVector", eeIds );
-                        //}
-                        Session session = getSessionFactory().openSession();
-                        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
-                        processCoexpQuery( 2, geneMap, queryObject, coexpressions );
-                        session.close();
-                        watch.stop();
-                        Long elapsed = watch.getTime();
-                        coexpressions.setSecondQueryElapsedTime( elapsed );
+        Session session = getSessionFactory().openSession();
+        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+        processCoexpQuery( geneMap, queryObject, coexpressions );
+        session.close();
 
-                        log.info( "Elapsed time for second query: " + elapsed );
-                    } catch ( Exception e ) {
-                        log.error( e, e );
-                        return false;
-                    }
-                    return true;
-                };
-            } );
-*/
-            ExecutorService executor = Executors.newCachedThreadPool();
-//            executor.execute( secondQueryThread );
-            executor.execute( firstQueryThread );
-            executor.shutdown();
+        overallWatch.stop();
+        Long overallElapsed = overallWatch.getTime();
+        log.info( "Query took a total of " + overallElapsed + "ms (wall clock time)" );
+        coexpressions.setElapsedWallTimeElapsed( overallElapsed );
 
-            // wait...
-            StopWatch overallWatch = new StopWatch();
-            overallWatch.start();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        log.info( "Starting postprocessing" );
+        postProcessing( geneMap, coexpressions );
 
-            int ticks = 0;
-            while ( !firstQueryThread.isDone()  ) {
-                try {
-                    Thread.sleep( 100 );
-                    if ( ++ticks % 10 == 0 ) {
-                        log.info( "Waiting..." );
-                    }
-                } catch ( InterruptedException ie ) {
-                    throw new RuntimeException( ie );
-                }
+        watch.stop();
+        Long elapsed = watch.getTime();
+        coexpressions.setPostProcessTime( elapsed );
+        log.info( "Done postprocessing" );
+        log.info( "Elapsed time for postprocessing: " + elapsed );
 
-            }
-            log.info( "Retrieving expression experiment details..." );
-            // fill in names of eeVos separately to speed up queries.
-            fillInExpressionExperimentNames( coexpressions );
-            log.info( "Done retrieving expression experiment details." );  
-            overallWatch.stop();
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "Query threads took a total of " + overallElapsed + "ms (wall clock time)" );
-            coexpressions.setElapsedWallTimeElapsed( overallElapsed );
-            
-            StopWatch watch = new StopWatch();
-            watch.start();
-            log.info( "Starting postprocessing" );
-            postProcessing( geneMap, coexpressions );
-
-            watch.stop();
-            Long elapsed = watch.getTime();
-            coexpressions.setPostProcessTime( elapsed );
-            log.info( "Done postprocessing" );
-            log.info( "Elapsed time for postprocessing: " + elapsed );
-            // log.info( "Non-Specific EEs: " + coexpressions. );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
         return coexpressions;
     }
-
-
 
     /**
      * Gets a count of the CompositeSequences related to the gene identified by the given id.
@@ -1115,15 +1057,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return returnVal;
     }
 
-
     /**
      * Quickly retrieves the short name and name of the given expression experiment ID
+     * 
      * @param id
      * @return
      * @throws Exception
      */
-    private String[] getExpressionExperimentInfo(Long id) throws Exception {
-        
+    private String[] getExpressionExperimentInfo( Long id ) throws Exception {
+
         final String query = "select ee.shortName, ee.name from ExpressionExperimentImpl ee where ee.id = :id";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
@@ -1132,47 +1074,123 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             ScrollableResults resultRows = queryObject.scroll();
             resultRows.first();
             results[0] = resultRows.getString( 0 );
-            results[1] = resultRows.getString( 1 );         
+            results[1] = resultRows.getString( 1 );
             return results;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        
-/*        final String query = "select ee.SHORT_NAME as name ,i.NAME as shortName from EXPRESSION_EXPERIMENT ee, INVESTIGATION i WHERE i.ID=ee.ID and ee.ID = :id";
-        try {
-            org.hibernate.SQLQuery queryObject = super.getSession().createSQLQuery( query );
-            queryObject.addScalar( "name", new StringType() );
-            queryObject.addScalar( "shortName", new StringType() );
-            queryObject.setLong( "id", id );
-            String[] results = new String[2];
-            ScrollableResults resultRows = queryObject.scroll();
-            resultRows.first();
-            results[0] = resultRows.getString( 0 );
-            results[1] = resultRows.getString( 1 );         
-            return results;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }*/
+
+        /*
+         * final String query = "select ee.SHORT_NAME as name ,i.NAME as shortName from EXPRESSION_EXPERIMENT ee,
+         * INVESTIGATION i WHERE i.ID=ee.ID and ee.ID = :id"; try { org.hibernate.SQLQuery queryObject =
+         * super.getSession().createSQLQuery( query ); queryObject.addScalar( "name", new StringType() );
+         * queryObject.addScalar( "shortName", new StringType() ); queryObject.setLong( "id", id ); String[] results =
+         * new String[2]; ScrollableResults resultRows = queryObject.scroll(); resultRows.first(); results[0] =
+         * resultRows.getString( 0 ); results[1] = resultRows.getString( 1 ); return results; } catch (
+         * org.hibernate.HibernateException ex ) { throw super.convertHibernateAccessException( ex ); }
+         */
     }
-    
+
     /**
      * Function to fill in the names of the expression experiments. This is for speed.
+     * 
      * @param coexpressions
      */
     private void fillInExpressionExperimentNames( final CoexpressionCollectionValueObject coexpressions ) {
         Collection<ExpressionExperimentValueObject> eeVos = coexpressions.getExpressionExperiments();
         for ( ExpressionExperimentValueObject eeVo : eeVos ) {
             try {
-                String[] results = getExpressionExperimentInfo(eeVo.getId());
-                eeVo.setShortName( results[0]);
-                eeVo.setName(results[1] );
-
+                String[] results = getExpressionExperimentInfo( eeVo.getId() );
+                eeVo.setShortName( results[0] );
+                eeVo.setName( results[1] );
 
             } catch ( Exception e ) {
                 eeVo.setShortName( "Unavailable" );
-                eeVo.setName("Unavailable" );
-            }       
+                eeVo.setName( "Unavailable" );
+            }
         }
+    }
+
+    private class GeneMap {
+
+        private Map<Long, CoexpressionValueObject> geneImplMap;
+        private Map<Long, CoexpressionValueObject> predictedMap;
+        private Map<Long, CoexpressionValueObject> probeAlignedMap;
+
+        public GeneMap() {
+
+            super();
+            geneImplMap = new HashMap<Long, CoexpressionValueObject>();
+            predictedMap = new HashMap<Long, CoexpressionValueObject>();
+            probeAlignedMap = new HashMap<Long, CoexpressionValueObject>();
+
+        }
+
+        public boolean contains( Long id ) {
+
+            return geneImplMap.containsKey( id ) || predictedMap.containsKey( id ) || probeAlignedMap.containsKey( id );
+
+        }
+
+        private void addGeneImpl( CoexpressionValueObject cvo ) {
+
+            if ( geneImplMap.containsKey( cvo.getGeneId() ) ) return;
+
+            geneImplMap.put( cvo.getGeneId(), cvo );
+        }
+
+        private void addPredictedGene( CoexpressionValueObject cvo ) {
+
+            if ( geneImplMap.containsKey( cvo.getGeneId() ) ) return;
+
+            predictedMap.put( cvo.getGeneId(), cvo );
+        }
+
+        private void addProbeAlignedGene( CoexpressionValueObject cvo ) {
+
+            if ( geneImplMap.containsKey( cvo.getGeneId() ) ) return;
+
+            probeAlignedMap.put( cvo.getGeneId(), cvo );
+        }
+
+        public CoexpressionValueObject get( Long id ) {
+
+            if ( geneImplMap.containsKey( id ) ) return geneImplMap.get( id );
+
+            if ( predictedMap.containsKey( id ) ) return predictedMap.get( id );
+
+            if ( probeAlignedMap.containsKey( id ) ) return probeAlignedMap.get( id );
+
+            return null;
+        }
+
+        public void put( CoexpressionValueObject cvo ) {
+
+            if ( cvo.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
+                addGeneImpl( cvo );
+            } else if ( cvo.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
+                addPredictedGene( cvo );
+            } else if ( cvo.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
+                addProbeAlignedGene( cvo );
+            } else
+                log.warn( "There was a coexpressed gene of invalid type. Skipping...  " + cvo.getGeneType() );
+
+            return;
+
+        }
+
+        public Map<Long, CoexpressionValueObject> getGeneImplMap() {
+            return geneImplMap;
+        }
+
+        public Map<Long, CoexpressionValueObject> getProbeAlignedRegionMap() {
+            return probeAlignedMap;
+        }
+
+        public Map<Long, CoexpressionValueObject> getPredictedGeneMap() {
+            return predictedMap;
+        }
+
     }
 
 }
