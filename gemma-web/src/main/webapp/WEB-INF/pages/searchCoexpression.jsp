@@ -383,6 +383,7 @@ Results for
 </display:table>
 
 
+<authz:authorize ifAnyGranted="admin">
 
 <!--  ================ Predicted Gene Results ================== -->
 
@@ -520,3 +521,4 @@ Results for
 					<img src='/Gemma/images/help.png' /> </a>" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
+</authz:authorize>
