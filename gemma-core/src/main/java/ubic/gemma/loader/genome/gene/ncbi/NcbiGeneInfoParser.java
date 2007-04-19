@@ -49,7 +49,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements
 	/**
 	 * 
 	 */
-	private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 14;
+	private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 15;
 
 	private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
 
@@ -71,7 +71,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements
 		String[] fields = StringUtils.splitPreserveAllTokens(line, '\t');
 
 		if (fields.length != NCBI_GENEINFO_FIELDS_PER_ROW) {
-			if (fields.length == 13) {
+			if (fields.length == 13 || fields.length == 14) {
 				// backwards compatibility
 				// old format, hopefully okay
 			} else {
