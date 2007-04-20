@@ -52,7 +52,7 @@ public class CoexpressionWrapper extends TableDecorator {
         CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
         if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "-";
 
-        String overlap = "" +   cvo.getGoOverlap().size() + "/" + cvo.getPossibleOverlap() + "";
+        String overlap = "" + cvo.getGoOverlap().size() + "/" + cvo.getPossibleOverlap() + "";
         /*
          * <br /> <span style = 'font-size:smaller'> "; int i = 0; for(OntologyEntry oe: cvo.getGoOverlap()){ if ( ++i %
          * 5 == 0 ) { overlap += "<br />"; } overlap += oe.getAccession() + " "; } return overlap + "</span>";
@@ -88,8 +88,7 @@ public class CoexpressionWrapper extends TableDecorator {
             count += positiveLinks.toString();
 
             if ( !object.getExpressionExperiments().isEmpty() )
-                count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2PositiveLinks(),
-                        positiveLinks, object.getNonSpecificGenes(), object.isHybridizesWithQueryGene() );
+                count += getNonSpecificString( object, object.getEEContributing2PositiveLinks(), positiveLinks );
 
             count += "</span>";
         }
@@ -101,8 +100,7 @@ public class CoexpressionWrapper extends TableDecorator {
             count += "<span class='negativeLink' >";
             count += negativeLinks.toString();
             if ( !object.getExpressionExperiments().isEmpty() )
-                count += getNonSpecificString( object.getNonspecificEE(), object.getEEContributing2NegativeLinks(),
-                        negativeLinks, object.getNonSpecificGenes(), object.isHybridizesWithQueryGene() );
+                count += getNonSpecificString( object, object.getEEContributing2NegativeLinks(), negativeLinks );
 
             count += "</span>";
         }
@@ -132,27 +130,34 @@ public class CoexpressionWrapper extends TableDecorator {
         }
         return count;
     }
-    private String getNonSpecificString( Collection<Long> allNonSpecific, Collection<Long> contributingEE,
-            Integer numTotalLinks, Collection<String> nonSpecificGenes, boolean hybridizesWithQueryGene ) {
+
+    private String getNonSpecificString( CoexpressionValueObject cvo, Collection<Long> contributingEE,
+            Integer numTotalLinks ) {
+
+        Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
+        Collection<String> nonSpecificGenes = cvo.getNonSpecificGenes();
+        boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
+        String coexpressedGeneName = cvo.getGeneName();
+
         int nonSpecific = 0;
         String nonSpecificList = "";
         String hybridizes = "";
-        
+
         for ( Long id : contributingEE ) {
-            if ( allNonSpecific.contains( id ) ) {
-                nonSpecific++;               
+            if ( allNonSpecificEE.contains( id ) ) {
+                nonSpecific++;
             }
         }
 
-        for(String gene : nonSpecificGenes)
-            nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
-        
-        if (nonSpecificList.length() > 1)
-            nonSpecificList = nonSpecificList.substring( 0, nonSpecificList.length() - 2); //remove trailing ' ,'
-        
-        if (hybridizesWithQueryGene)
-            hybridizes = "*";
-        
+        for ( String gene : nonSpecificGenes ) {
+            if ( !gene.equalsIgnoreCase( coexpressedGeneName ) )    //no point in displaying itself
+                nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
+        }
+        if ( nonSpecificList.length() > 1 )
+            nonSpecificList = nonSpecificList.substring( 0, nonSpecificList.length() - 2 ); // remove trailing ' ,'
+
+        if ( hybridizesWithQueryGene ) hybridizes = "*";
+
         if ( nonSpecific == 0 ) return "";
 
         return "<i> <span style = 'font-size:smaller' title='" + nonSpecificList + "' >  ( "
@@ -186,8 +191,8 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getExperimentBitImage() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
         int width = object.getExperimentBitList().length() - 1; // probably okay
-        return "<span  style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width + "&height=10&color=black&spacing=0&data="
-                + object.getExperimentBitList() + "\" /></span>";
+        return "<span  style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
+                + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
     }
 
     /**
@@ -207,7 +212,7 @@ public class CoexpressionWrapper extends TableDecorator {
         includeList.add( "eeSearchString" );
         extractParameters( paramList, includeList );
         // add in the current gene with exactSearch
-        //paramList.add( "searchString=" + object.getGeneName() );
+        // paramList.add( "searchString=" + object.getGeneName() );
         paramList.add( "id=" + object.getGeneId() );
         paramList.add( "exactSearch=on" );
 
