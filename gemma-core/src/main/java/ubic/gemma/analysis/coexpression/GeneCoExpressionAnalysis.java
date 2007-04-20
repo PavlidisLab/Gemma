@@ -32,11 +32,15 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import cern.colt.list.DoubleArrayList;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
+import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
+import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -67,7 +71,7 @@ public class GeneCoExpressionAnalysis {
     private Map<Long, Double> dedv2cachedMeanValue = new HashMap<Long, Double>();
     private Map<Long, Double> dedv2cachedSTDValue = new HashMap<Long, Double>();
     
-    //The next two NamedMatrix: coExpressedGenes X expression_experiments
+    //The dimension of next two NamedMatrix in the map: coExpressedGenes X expression_experiments
     //The following map save the correlation data between query gene and each coExpressedGene in all EEs
     private Map<Long, DenseDoubleMatrix2DNamed> queryGene2correlationData = new HashMap<Long, DenseDoubleMatrix2DNamed>();
     //The following map save the DesignElementDataVectors (Encapulated in ExpressedData) involved in the correlation caculation
@@ -83,6 +87,7 @@ public class GeneCoExpressionAnalysis {
     //The following two maps are only used for the output.
     private Map<Long, String> geneNames = new HashMap<Long, String>();
     private Map<Long, String> eeNames = new HashMap<Long, String>();
+    private Map<Long, Integer> eeSampleSizes = new HashMap<Long, Integer>();
     
     private static Log log = LogFactory.getLog( GeneCoExpressionAnalysis.class.getName() );
     private ExpressionExperimentService eeService = null;
@@ -140,7 +145,16 @@ public class GeneCoExpressionAnalysis {
      * @param dedvs
      */
     private void distributeDesignElementDataVector( Set<DesignElementDataVector> dedvs ) {
-
+    	//First, get the sample sizes for Expression Experiments
+        for ( DesignElementDataVector dedv : dedvs ) {
+        	ExpressionExperiment ee = dedv.getExpressionExperiment();
+        	if(!eeSampleSizes.containsKey(ee.getId())){
+        		int sampleSize = getSampleSize(dedv);
+        		eeSampleSizes.put(ee.getId(), new Integer(sampleSize));
+        	}
+        }
+        //Second, distribute the dedvs to different buckets according to ee and genes, which will be used to caculate the correlation
+        //between genes in every expression experiments
         for ( DesignElementDataVector dedv : dedvs ) {
             ExpressionExperiment ee = dedv.getExpressionExperiment();
             if ( ee.getId() == null ) {
@@ -283,6 +297,12 @@ public class GeneCoExpressionAnalysis {
         return corr;
     }
 
+    private int getSampleSize(DesignElementDataVector dedv){
+        byte[] bytes = dedv.getData();
+        ByteArrayConverter bac = new ByteArrayConverter();
+        double[] val = bac.byteArrayToDoubles( bytes );
+    	return val.length;
+    }
     /**
      * @param devI
      * @param devJ
@@ -410,7 +430,39 @@ public class GeneCoExpressionAnalysis {
             }
         }
     }
-
+    public double calculateMatrixEffectSize(){
+    	double matrixEffectSize = 0.0;
+    	CorrelationEffectMetaAnalysis metaAnalysis = new CorrelationEffectMetaAnalysis( true, false );
+        DoubleArrayList correlations = new DoubleArrayList();
+        DoubleArrayList sampleSizes = new DoubleArrayList();
+        for(Long queryGeneId:queryGene2correlationData.keySet()){
+            DenseDoubleMatrix2DNamed correlationDataMatrix = queryGene2correlationData.get(queryGeneId);
+            String queryGeneName = geneNames.get(queryGeneId);
+            for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
+            	if(coExpressedGeneId.equals(queryGeneId)) continue;
+                int rowIndex = correlationDataMatrix.getRowIndexByName(coExpressedGeneId);
+                for(Long eeId:eeSampleSizes.keySet()){
+                	Integer eeSampleSize = eeSampleSizes.get(eeId);
+                	int colIndex = correlationDataMatrix.getColIndexByName(eeId);
+                	double correlation = correlationDataMatrix.getQuick(rowIndex,colIndex);
+                    if(!Double.isNaN(correlation) && eeSampleSize > 3){
+                    	correlations.add(correlation);
+                    	sampleSizes.add(eeSampleSize);
+                    }
+                }
+                if(correlations.size() > eeSampleSizes.keySet().size()/2) {
+                	metaAnalysis.run(correlations, sampleSizes);
+                	double effectSize = metaAnalysis.getE();
+                	matrixEffectSize = matrixEffectSize + effectSize;
+                	//log.info("Effect Size " + queryGeneName + "_" + geneNames.get(coExpressedGeneId) + ":" + effectSize + ":"+correlations.size()+":"+metaAnalysis.getP());
+                }
+            	correlations.clear();
+            	sampleSizes.clear();
+            }
+        }
+        log.info("Matrix Effect Size: " + matrixEffectSize);;
+    	return matrixEffectSize;
+    }
     /**
      * @param output
      * @param presencePercent
