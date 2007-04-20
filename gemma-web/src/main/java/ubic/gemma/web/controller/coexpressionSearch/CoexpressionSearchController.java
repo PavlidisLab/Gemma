@@ -179,8 +179,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
         }
         
-        Cookie cookie = new CoexpressionSearchCookie( csc );
-        response.addCookie( cookie );
         // filter genes by Taxon
 
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
@@ -335,6 +333,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
         int numSourceGeneGoTerms = computeGoOverlap( csc, coexpressedGenes );
          
+        
+        Cookie cookie = new CoexpressionSearchCookie( csc );
+        response.addCookie( cookie );
         
         Long numPositiveCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType().getPositiveStringencyLinkCount() );
         Long numNegativeCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType().getNegativeStringencyLinkCount() );
