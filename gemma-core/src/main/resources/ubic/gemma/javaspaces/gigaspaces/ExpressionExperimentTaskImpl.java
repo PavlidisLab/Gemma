@@ -78,6 +78,8 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         result.setAnswer( datasets.size() );
         result.setTaskID( counter );
 
+        log.info( "task execution complete ... returning result " + result.getAnswer() + " with id "
+                + result.getTaskID() );
         return result;
     }
 
