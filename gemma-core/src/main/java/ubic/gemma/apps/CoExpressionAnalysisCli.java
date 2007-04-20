@@ -188,17 +188,34 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @param queryGenes
      * @return
      */
-	Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMap(Collection<Gene> allGenes, Collection<ExpressionExperiment> allEEs){
+	Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMap(Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes, Collection<ExpressionExperiment> allEEs){
     	Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
     	int count = 0;
     	int CHUNK_LIMIT = 30;
-    	int total = allGenes.size();
+    	int total = coExpressedGenes.size();
     	Collection<Gene> genesInOneChunk = new HashSet<Gene>();
-
-    	log.info("Start the Query for "+ allGenes.size() + " genes");
+    	log.info("Start the Query for "+ queryGenes.size() + " query genes");
+    	dedv2genes.putAll(dedvService.getVectors(allEEs, queryGenes));
+    	//get the EEs which don't have the query gene measurement and remove them from the allEEs
+    	//The reason of using eeIds to filter is the lazy loading problem for getting EE from dedv
+    	Collection<Long> eeIds = new HashSet<Long>();
+    	Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+    	for(DesignElementDataVector dedv:dedv2genes.keySet()){
+    		ExpressionExperiment ee = dedv.getExpressionExperiment();
+    		eeIds.add(ee.getId());
+    	}
+    	for(ExpressionExperiment ee:allEEs){
+    		if(eeIds.contains(ee.getId())){
+    			ees.add(ee);
+    		}
+    	}
+    	allEEs.clear();
+    	allEEs.addAll(ees);
+    	log.info("Get " + allEEs.size() + " expression experiments for analysis");
+    	log.info("Start the Query for "+ coExpressedGenes.size() + " coexpressed genes");
         StopWatch qWatch = new StopWatch();
         qWatch.start();
-    	for(Gene gene:allGenes){
+    	for(Gene gene:coExpressedGenes){
     		genesInOneChunk.add(gene);
     		count++;
     		total--;
@@ -210,7 +227,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     		}
     	}
         qWatch.stop();
-        log.info("\nQuery takes " + qWatch.getTime() + " to get " + dedv2genes.size() + " DEDVs for " + allGenes.size() + " genes");
+        log.info("\nQuery takes " + qWatch.getTime() + " to get " + dedv2genes.size() + " DEDVs for " + coExpressedGenes.size() + " genes");
         
         return dedv2genes;
 	}
@@ -229,7 +246,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
 
         Taxon taxon = getTaxon();
-        Collection<ExpressionExperiment> allEE = eeService.findByTaxon( taxon );
+        Collection<ExpressionExperiment> allEEs = eeService.findByTaxon( taxon );
 		Collection<String> queryGeneNames = new HashSet<String>();
 		Collection<String> coExpressedGeneNames = new HashSet<String>();
 		boolean readingQueryGene = true;
@@ -272,13 +289,10 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 		}else{			
 			coExpressedGenes = this.getCoExpressedGenes(queryGenes);
 		}
-		Collection<Gene> allGenes = new HashSet<Gene>();
-        allGenes.addAll(queryGenes);
-        allGenes.addAll(coExpressedGenes);
         log.info( "Start the Query for " + queryGenes.size() + " genes" );
-        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = getDedv2GenesMap(allGenes, allEE);
-        if(dedv2genes.size() == 0 || queryGenes.size() == 0 || coExpressedGenes.size() == 0 || allEE.size() == 0) return null;
-        GeneCoExpressionAnalysis coExperssion = new GeneCoExpressionAnalysis( (Set)queryGenes, (Set)coExpressedGenes, (Set)new HashSet(allEE));
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = getDedv2GenesMap(queryGenes, coExpressedGenes, allEEs);
+        if(dedv2genes.size() == 0 || queryGenes.size() == 0 || coExpressedGenes.size() == 0 || allEEs.size() == 0) return null;
+        GeneCoExpressionAnalysis coExperssion = new GeneCoExpressionAnalysis( (Set)queryGenes, (Set)coExpressedGenes, (Set)new HashSet(allEEs));
 
         coExperssion.setDedv2Genes(dedv2genes);
         coExperssion.setExpressionExperimentService( eeService );
@@ -289,7 +303,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         } catch ( Exception e ) {
             return e;
         }
-
+        coExperssion.calculateMatrixEffectSize();
         return null;
     }
 
