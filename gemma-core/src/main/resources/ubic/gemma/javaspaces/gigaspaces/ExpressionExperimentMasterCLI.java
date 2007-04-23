@@ -134,7 +134,7 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli {
                     res = proxy.execute( accession, platformOnly, doMatching );
                     stopwatch.stop();
                     long wt = stopwatch.getTime();
-                    log.info( "Submitted Job " + res.getTaskID() + " in " + wt
+                    log.info( "Job " + res.getTaskID() + " completed in " + wt
                             + " ms.  Result expression experiment id is " + res.getAnswer() + "." );
                 }
             }
