@@ -97,20 +97,19 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
         for ( int i = 0; i < 2; i++ ) {
             StopWatch stopwatch = new StopWatch();
             stopwatch.start();
-
-            // TODO remove me - using this test expression experiment
-            // ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-            // String name = "_" + RandomUtils.nextLong();
-            // ee.setName( "Expression Experiment - " + name + "from " + this.getClass().getName() );
-            // ee.setShortName( name );
-            // Result res = proxy.execute( ee );
-
             // TODO read values from command line
             Result res = proxy.execute( "GSE3434", false, false );
+
             stopwatch.stop();
             long wt = stopwatch.getTime();
             log.info( "Submitted Job " + res.getTaskID() + " in " + wt + " ms.  Result expression experiment id is "
                     + res.getAnswer() + "." );
+
+            /*
+             * Terminate the VM after you get the result. This is needed because of the timeout millis that is set in
+             * the spring context.
+             */
+            if ( res != null ) System.exit( 0 );
 
         }
     }
