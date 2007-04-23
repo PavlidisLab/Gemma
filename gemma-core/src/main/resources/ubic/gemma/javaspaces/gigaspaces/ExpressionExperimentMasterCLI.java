@@ -18,18 +18,19 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.apps.LoadExpressionDataCli;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
+public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentMasterCLI.class );
 
@@ -38,11 +39,11 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.apps.LoadExpressionDataCli#buildOptions()
      */
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
+        super.buildOptions();
 
     }
 
@@ -65,12 +66,17 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.apps.LoadExpressionDataCli#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( this.getClass().getName(), args );
         try {
+
+            if ( accessions == null && accessionFile == null ) {
+                return new IllegalArgumentException(
+                        "You must specific either a file or accessions on the command line" );
+            }
             init();
             start();
         } catch ( Exception e ) {
@@ -89,35 +95,62 @@ public class ExpressionExperimentMasterCLI extends AbstractSpringAwareCLI {
     }
 
     /**
-     * 
-     *
+     * Invokes the gigaspace task.
      */
     protected void start() {
-        ExpressionExperimentTask proxy = ( ExpressionExperimentTask ) this.getBean( "proxy" );
-        for ( int i = 0; i < 2; i++ ) {
-            StopWatch stopwatch = new StopWatch();
-            stopwatch.start();
-            // TODO read values from command line
-            Result res = proxy.execute( "GSE3434", false, false );
 
-            stopwatch.stop();
-            long wt = stopwatch.getTime();
-            log.info( "Submitted Job " + res.getTaskID() + " in " + wt + " ms.  Result expression experiment id is "
-                    + res.getAnswer() + "." );
+        log.debug( "Got accession(s) from command line " + accessions );
+
+        ExpressionExperimentTask proxy = ( ExpressionExperimentTask ) this.getBean( "proxy" );
+
+        Result res = null;
+        if ( accessions != null ) {
+            String[] accsToRun = StringUtils.split( accessions, ',' );
+
+            for ( String accession : accsToRun ) {
+
+                log.info( "processing accession " + accession );
+                StopWatch stopwatch = new StopWatch();
+                stopwatch.start();
+
+                accession = StringUtils.strip( accession );
+
+                if ( StringUtils.isBlank( accession ) ) {
+                    continue;
+                }
+
+                if ( platformOnly ) {
+                    // TODO add back in
+                    throw new IllegalArgumentException( "\'Platform Only\' (y) unsupported at this time." );
+                    // Collection designs = geoService.fetchAndLoad( accession, true, true );
+                    // for ( Object object : designs ) {
+                    // assert object instanceof ArrayDesign;
+                    // successObjects.add( ( ( Describable ) object ).getName()
+                    // + " ("
+                    // + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next()
+                    // .getAccession() + ")" );
+                    // }
+                } else {
+                    res = proxy.execute( accession, platformOnly, doMatching );
+                    stopwatch.stop();
+                    long wt = stopwatch.getTime();
+                    log.info( "Submitted Job " + res.getTaskID() + " in " + wt
+                            + " ms.  Result expression experiment id is " + res.getAnswer() + "." );
+                }
+            }
 
             /*
-             * Terminate the VM after you get the result. This is needed because of the timeout millis that is set in
-             * the spring context.
+             * Terminate the VM after you get the result. This is needed else the VM will wait for the timeout millis
+             * that is set in the spring context.
              */
-            if ( res != null ) System.exit( 0 );
-
+            System.exit( 0 );
         }
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
+     * @see ubic.gemma.apps.LoadExpressionDataCli#processOptions()
      */
     @Override
     protected void processOptions() {
