@@ -48,12 +48,12 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
-    private String accessionFile = null;
-    private String accessions = null;
-    private boolean platformOnly = false;
-    private boolean doMatching = true;
-    private boolean force = false;
-    private ExpressionExperimentService eeService;
+    protected String accessionFile = null;
+    protected String accessions = null;
+    protected boolean platformOnly = false;
+    protected boolean doMatching = true;
+    protected boolean force = false;
+    protected ExpressionExperimentService eeService;
 
     /*
      * (non-Javadoc)
@@ -183,7 +183,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     }
 
     @SuppressWarnings("unchecked")
-    private void processAccession( GeoDatasetService geoService, String accession ) {
+    protected void processAccession( GeoDatasetService geoService, String accession ) {
         try {
 
             if ( force ) {
@@ -209,7 +209,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
      * 
      * @param accession
      */
-    private void removeIfExists( String accession ) {
+    protected void removeIfExists( String accession ) {
         DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
         acDbe.setAccession( accession );
         ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
