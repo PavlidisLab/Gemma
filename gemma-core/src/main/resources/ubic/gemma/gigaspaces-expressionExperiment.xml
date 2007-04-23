@@ -55,7 +55,7 @@
 			The Time for waiting to take the result from the space by the master
 		-->
 		<property name="timeoutMillis">
-			<value>60000</value>
+			<value>60000000</value>
 		</property>
 
 		<!--
