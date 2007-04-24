@@ -18,10 +18,17 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import java.rmi.RemoteException;
+
+import net.jini.core.event.RemoteEvent;
+import net.jini.core.event.RemoteEventListener;
+import net.jini.core.event.UnknownEventException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springmodules.javaspaces.JavaSpaceTemplate;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
@@ -30,7 +37,7 @@ import ubic.gemma.apps.LoadExpressionDataCli;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli {
+public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentMasterCLI.class );
 
@@ -131,7 +138,13 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli {
                     // .getAccession() + ")" );
                     // }
                 } else {
+
+                    /* configure this client to be receive notifications */
+                    JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
+                    jsTemplate.notify( new LoggingEntry(), this, 600000, null );
+
                     res = proxy.execute( accession, platformOnly, doMatching );
+
                     stopwatch.stop();
                     long wt = stopwatch.getTime();
                     log.info( "Job " + res.getTaskID() + " completed in " + wt
@@ -155,5 +168,17 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli {
     @Override
     protected void processOptions() {
         super.processOptions();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
+     */
+    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
+        log.info( "id: " + remoteEvent.getID() );
+        log.info( "registration object: " + remoteEvent.getRegistrationObject() );
+        log.info( "sequence number: " + remoteEvent.getSequenceNumber() );
+
     }
 }
