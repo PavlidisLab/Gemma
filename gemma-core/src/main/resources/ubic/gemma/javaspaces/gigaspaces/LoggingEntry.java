@@ -30,7 +30,8 @@ public class LoggingEntry implements Entry {
      * 
      */
     private static final long serialVersionUID = 1L;
-    private String message = null;
+
+    public String message = null;
 
     /**
      * 
