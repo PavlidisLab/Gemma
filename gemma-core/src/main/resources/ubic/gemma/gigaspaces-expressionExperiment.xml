@@ -104,6 +104,9 @@
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
 	</bean>
 </beans>
 
