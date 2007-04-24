@@ -141,7 +141,7 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
 
                     /* configure this client to be receive notifications */
                     JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
-                    jsTemplate.notify( new LoggingEntry(), this, 600000, null );
+                    jsTemplate.notify( new LoggingEntry(), this, 60000, null );
 
                     res = proxy.execute( accession, platformOnly, doMatching );
 
