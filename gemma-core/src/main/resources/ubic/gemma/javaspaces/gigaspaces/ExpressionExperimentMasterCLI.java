@@ -35,6 +35,8 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
 
+import com.j_spaces.core.client.EntryArrivedRemoteEvent;
+
 /**
  * @author keshav
  * @version $Id$
@@ -189,6 +191,8 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+
+        log.info( "notify type: " + ( ( EntryArrivedRemoteEvent ) remoteEvent ).getNotifyType() );
 
     }
 }
