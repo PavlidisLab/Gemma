@@ -147,8 +147,8 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
 
                     stopwatch.stop();
                     long wt = stopwatch.getTime();
-                    log.info( "Job " + res.getTaskID() + " completed in " + wt
-                            + " ms.  Result expression experiment id is " + res.getAnswer() + "." );
+                    log.info( "Job with id " + res.getTaskID() + " completed in " + wt
+                            + " ms.  Number of expression experiments persisted: " + res.getAnswer() + "." );
                 }
             }
 
