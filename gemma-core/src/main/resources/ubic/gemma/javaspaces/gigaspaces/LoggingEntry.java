@@ -30,7 +30,7 @@ public class LoggingEntry implements Entry {
      * 
      */
     private static final long serialVersionUID = 1L;
-    String message = null;
+    private String message = null;
 
     /**
      * 
@@ -47,4 +47,10 @@ public class LoggingEntry implements Entry {
         this.message = message;
     }
 
+    /**
+     * @return
+     */
+    public String getMessage() {
+        return message;
+    }
 }
