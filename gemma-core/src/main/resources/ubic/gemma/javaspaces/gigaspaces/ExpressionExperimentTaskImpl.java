@@ -20,9 +20,12 @@ package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
 
+import net.jini.core.lease.Lease;
+
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -39,6 +42,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
+    private GigaSpacesTemplate gigaSpacesTemplate = null;
 
     /*
      * (non-Javadoc)
@@ -70,6 +74,24 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
 
+        // TODO - This is a test. Remove it when finished.
+        // LoggingEntry entry = null;
+        // for ( int i = 0; i < 5; i++ ) {
+        //
+        // entry = ( LoggingEntry ) gigaSpacesTemplate.read( entry, 60000 );
+        // if ( entry == null ) {
+        // log.info( "Could not find entry " + entry + ". Writing a new entry." );
+        // entry = new LoggingEntry();
+        // entry.message = String.valueOf( "new " + i );
+        // gigaSpacesTemplate.write( entry, Lease.DURATION, 60000 );
+        //
+        // } else {
+        // log.info( "Updating entry." );
+        // entry.message = String.valueOf( "updated " + i );
+        // gigaSpacesTemplate.update( entry, Lease.DURATION, 60000 );
+        // }
+        // }
+
         Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
 
         // TODO figure out what to store in the result for collections
@@ -96,5 +118,12 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
         this.geoDatasetService = geoDatasetService;
         this.geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    }
+
+    /**
+     * @param gigaSpacesTemplate
+     */
+    public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
+        this.gigaSpacesTemplate = gigaSpacesTemplate;
     }
 }
