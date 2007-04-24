@@ -18,6 +18,8 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import java.io.IOException;
+import java.rmi.MarshalledObject;
 import java.rmi.RemoteException;
 
 import net.jini.core.event.RemoteEvent;
@@ -140,9 +142,12 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
                 } else {
 
                     /* configure this client to be receive notifications */
-                    JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
-                    jsTemplate.notify( new LoggingEntry(), this, 60000, null );
-
+                    try {
+                        JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
+                        jsTemplate.notify( new LoggingEntry(), this, 60000, new MarshalledObject( new LoggingEntry() ) );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
                     res = proxy.execute( accession, platformOnly, doMatching );
 
                     stopwatch.stop();
@@ -177,8 +182,13 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
         log.info( "id: " + remoteEvent.getID() );
-        log.info( "registration object: " + remoteEvent.getRegistrationObject() );
         log.info( "sequence number: " + remoteEvent.getSequenceNumber() );
+        try {
+            log.info( "registration object: "
+                    + ( ( LoggingEntry ) remoteEvent.getRegistrationObject().get() ).getMessage() );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
 
     }
 }
