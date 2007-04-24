@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +59,7 @@ public class GeneController extends BaseMultiActionController {
     private Gene2GOAssociationService gene2GOAssociationService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
+
 
     /**
      * @param arrayDesignMapResultService the arrayDesignMapResultService to set
@@ -149,6 +151,10 @@ public class GeneController extends BaseMultiActionController {
 
         ModelAndView mav = new ModelAndView( "gene.detail" );
 
+        Collection<Gene> geneList = new ArrayList<Gene>();
+        geneList.add( gene );
+
+        
         Collection ontos = gene2GOAssociationService.findByGene( gene );
         mav.addObject( "gene", gene );
 
@@ -159,9 +165,12 @@ public class GeneController extends BaseMultiActionController {
 
         mav.addObject( "numOntologyEntries", ontos.size() );
 
+        Map gene2cs = geneService.getCompositeSequenceMap( geneList );  
+        
         // Get the composite sequences
         Long compositeSequenceCount = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
+        
         return mav;
     }
 

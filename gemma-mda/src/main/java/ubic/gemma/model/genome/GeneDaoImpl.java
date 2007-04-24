@@ -1193,4 +1193,62 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequenceMap(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
+        
+        Map<Long, Collection<Long>> geneMap = new HashMap<Long,Collection<Long>>();
+        
+        if (genes == null || genes.size() == 0) {
+            return null;
+        }
+        
+        Collection<Long> geneIdList = new ArrayList<Long>();
+        
+        for ( Object object : genes ) {
+            Gene gene = (Gene) object;
+            geneIdList.add( gene.getId() );
+            // add to gene map
+            if (!geneMap.containsKey( gene.getId() )) {
+                Collection<Long> csIds = new HashSet<Long>();
+                geneMap.put( gene.getId(), csIds );
+            }
+        }
+        
+        
+        String queryString = "SELECT GENE as geneId,CS as csId FROM GENE2CS WHERE " + 
+             " GENE in (" +
+             StringUtils.join( geneIdList.iterator(), "," ) + 
+             ")";
+
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+    
+        queryObject.addScalar( "csId", new LongType() );
+        queryObject.addScalar( "geneId", new LongType() );
+        
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+        //
+        
+        while ( scroll.next() ) {
+            Long geneId = scroll.getLong( 0 );
+            Long csId = scroll.getLong( 1 );
+            
+            if (geneMap.containsKey( geneId )) {
+                Collection<Long> csIds = geneMap.get( geneId );
+                csIds.add( csId );
+            }
+            else {
+                Collection<Long> csIds = new HashSet<Long>();
+                csIds.add( csId );
+                geneMap.put( geneId, csIds );
+            }
+        }
+        session.close();
+        return geneMap;
+    }
+
 }
