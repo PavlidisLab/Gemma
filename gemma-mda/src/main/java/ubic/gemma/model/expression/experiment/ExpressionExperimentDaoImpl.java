@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.math.BigInteger;
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -38,6 +39,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.BlobType;
+import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -593,8 +596,49 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt )
-            throws Exception {
-    	return new HashMap();
+    throws Exception {
+
+    	Map <DesignElementDataVector, Object> dedv2genes = new HashMap<DesignElementDataVector, Object>();
+
+//  	String queryString = "SELECT * FROM DESIGN_ELEMENT_DATA_VECTOR WHERE " + 
+//  	" DESIGN_ELEMENT_FK in (" +
+//  	StringUtils.join( designElements.iterator(), "," ) + ") + AND QUANTITATION_TYPE_FK = " + quantitationType.getId(); 
+
+    	String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE " + 
+    	" QUANTITATION_TYPE_FK = " + qt.getId(); 
+    	Session session = getSessionFactory().openSession();
+    	org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+    	
+    	queryObject.addScalar( "dedvId", new LongType() );
+    	queryObject.addScalar( "dedvData", new BlobType() );
+    	queryObject.addScalar( "csId", new LongType() );
+    	queryObject.addScalar( "dedvRank", new DoubleType() );
+
+    	ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+    	Collection<Long> csIds = cs2gene.keySet();
+    	while ( scroll.next() ) {
+    		Long dedvId = scroll.getLong(0);
+    		Blob dedvData = scroll.getBlob(1);
+    		byte data[] = dedvData.getBytes((long)1, (int)dedvData.length());
+    		Long csId = scroll.getLong( 2 );
+    		Double rank = scroll.getDouble( 3 );
+
+    		if(csIds.contains(csId)){
+    			DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+    			vector.setId(dedvId);
+    			vector.setData( data );
+    			//vector.setDesignElement( cs );
+    			vector.setQuantitationType( qt );
+    			vector.setRank(rank);
+    			//vector.setExpressionExperiment( expressionExperiment );
+    			//vector.setBioAssayDimension( bioAssayDimension );
+    			dedv2genes.put(vector, cs2gene.get(csId) );
+    		}
+    		
+    	}
+    	session.clear();
+    	session.close();
+    	return dedv2genes;
     }
 
 
