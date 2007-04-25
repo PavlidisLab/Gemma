@@ -18,14 +18,12 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
-import java.io.IOException;
 import java.rmi.MarshalledObject;
 import java.rmi.RemoteException;
 
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
-import net.jini.core.lease.Lease;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -36,10 +34,7 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
 
-import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
-import com.j_spaces.core.client.NotifyDelegator;
-import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * @author keshav
@@ -149,17 +144,12 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
 
                     /* configure this client to be receive notifications */
                     try {
-                        // JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
-                        // jsTemplate.notify( new LoggingEntry(), this, 60000, new MarshalledObject( new LoggingEntry()
-                        // ) );
+                        JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
+                        jsTemplate.notify( new LoggingEntry(), this, 60000, new MarshalledObject( new LoggingEntry() ) );
 
-                        NotifyDelegator notifyDelegator = new NotifyDelegator( ( IJSpace ) template.getSpace(),
-                                new LoggingEntry(), null, this, Lease.DURATION, null, true,
-                                NotifyModifiers.NOTIFY_UPDATE );
-
-                        log.info( "Notification registered. Registration id: "
-                                + notifyDelegator.getEventRegistration().getID() + " ; Sequence number: "
-                                + notifyDelegator.getEventRegistration().getSequenceNumber() );
+                        // NotifyDelegator notifyDelegator = new NotifyDelegator( ( IJSpace ) template.getSpace(),
+                        // new LoggingEntry(), null, this, Lease.DURATION, null, true,
+                        // NotifyModifiers.NOTIFY_ALL );
 
                     } catch ( Exception e ) {
                         throw new RuntimeException( e );
@@ -200,16 +190,14 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
 
         log.info( "notified ..." );
 
-        log.info( "id: " + remoteEvent.getID() );
-        log.info( "sequence number: " + remoteEvent.getSequenceNumber() );
         try {
-            log.info( "registration object: "
-                    + ( ( LoggingEntry ) remoteEvent.getRegistrationObject().get() ).getMessage() );
+            log.info( "id: " + remoteEvent.getID() );
+            log.info( "sequence number: " + remoteEvent.getSequenceNumber() );
+            log.info( "registration object: " + ( ( LoggingEntry ) remoteEvent.getRegistrationObject().get() ).message );
+            log.info( "notify type: " + ( ( EntryArrivedRemoteEvent ) remoteEvent ).getNotifyType() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-
-        log.info( "notify type: " + ( ( EntryArrivedRemoteEvent ) remoteEvent ).getNotifyType() );
 
     }
 }
