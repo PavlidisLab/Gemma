@@ -32,6 +32,8 @@ import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
+import com.j_spaces.core.LeaseProxy;
+
 /**
  * @author keshav
  * @version $Id$
@@ -74,23 +76,35 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
 
-        // TODO - This is a test. Remove it when finished.
-        // LoggingEntry entry = null;
-        // for ( int i = 0; i < 5; i++ ) {
-        //
-        // entry = ( LoggingEntry ) gigaSpacesTemplate.read( entry, 60000 );
-        // if ( entry == null ) {
-        // log.info( "Could not find entry " + entry + ". Writing a new entry." );
-        // entry = new LoggingEntry();
-        // entry.message = String.valueOf( "new " + i );
-        // gigaSpacesTemplate.write( entry, Lease.DURATION, 60000 );
-        //
-        // } else {
-        // log.info( "Updating entry." );
-        // entry.message = String.valueOf( "updated " + i );
-        // gigaSpacesTemplate.update( entry, Lease.DURATION, 60000 );
-        // }
-        // }
+        // TODO - test - emove it when finished.
+        LoggingEntry entry = null;
+
+        for ( int i = 0; i < 5; i++ ) {
+            for ( int j = 0; j < 10000; j++ ) {
+                // wait
+            }
+
+            if ( entry == null ) {
+                log.info( "Could not find entry.  Writing a new entry." );
+                entry = new LoggingEntry();
+                // entry.message = String.valueOf( i );
+                gigaSpacesTemplate.write( entry, Lease.FOREVER, 60000 );
+
+            } else {
+                log.info( "Updating entry: " + entry );
+                try {
+                    entry = ( LoggingEntry ) gigaSpacesTemplate.read( entry, 60000 );
+                    String uid = entry.__getEntryUID();
+                    log.debug( "uid " + uid );
+                    // entry.message = String.valueOf( i );
+
+                    gigaSpacesTemplate.update( entry, Lease.FOREVER, 60000 );
+                } catch ( Exception e ) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        // end test
 
         Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
 
