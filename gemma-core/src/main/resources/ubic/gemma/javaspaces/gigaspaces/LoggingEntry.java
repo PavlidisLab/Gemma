@@ -40,4 +40,12 @@ public class LoggingEntry extends MetaDataEntry {
     public LoggingEntry() {
 
     }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage( String message ) {
+        this.message = message;
+    }
 }

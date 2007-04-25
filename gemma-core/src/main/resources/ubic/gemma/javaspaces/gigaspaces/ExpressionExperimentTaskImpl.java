@@ -74,7 +74,8 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
 
-        // TODO - test - remove it when finished.
+        // TODO - this is a test test - will move into fetchAndLoad or into interceptor
+        // when finished.
         Lease[] lease = new Lease[10];
         LoggingEntry entry = null;
 
@@ -87,15 +88,13 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
                 entry = new LoggingEntry();
-                entry.message = String.valueOf( i );
+                entry.setMessage( String.valueOf( "Logging started ..." ) );
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
                 log.info( "Updating entry: " + entry );
                 try {
                     entry = ( LoggingEntry ) gigaSpacesTemplate.read( entry, 1000 );
-                    log.debug( "previous message " + entry.message );
-                    entry.message = String.valueOf( i );
-                    log.debug( "new message " + entry.message );
+                    entry.setMessage( String.valueOf( i ) + "% complete" );
                     gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
                 } catch ( Exception e ) {
                     e.printStackTrace();
