@@ -435,6 +435,7 @@ public class GeneCoExpressionAnalysis {
     	CorrelationEffectMetaAnalysis metaAnalysis = new CorrelationEffectMetaAnalysis( true, false );
         DoubleArrayList correlations = new DoubleArrayList();
         DoubleArrayList sampleSizes = new DoubleArrayList();
+        DoubleArrayList effectSizes = new DoubleArrayList();
         for(Long queryGeneId:queryGene2correlationData.keySet()){
             DenseDoubleMatrix2DNamed correlationDataMatrix = queryGene2correlationData.get(queryGeneId);
             String queryGeneName = geneNames.get(queryGeneId);
@@ -454,11 +455,17 @@ public class GeneCoExpressionAnalysis {
                 	metaAnalysis.run(correlations, sampleSizes);
                 	double effectSize = metaAnalysis.getE();
                 	matrixEffectSize = matrixEffectSize + effectSize;
-                	//log.info("Effect Size " + queryGeneName + "_" + geneNames.get(coExpressedGeneId) + ":" + effectSize + ":"+correlations.size()+":"+metaAnalysis.getP());
+                	effectSizes.add(effectSize);
+                	if(effectSize > 0.90)
+                		log.info("Effect Size " + queryGeneName + "_" + geneNames.get(coExpressedGeneId) + ":" + effectSize + ":"+correlations.size()+":"+metaAnalysis.getP());
                 }
             	correlations.clear();
             	sampleSizes.clear();
             }
+        }
+        effectSizes.sort();
+        for(int i = 0; i < 30; i++){
+        	System.err.println(effectSizes.get(effectSizes.size() - i - 1));
         }
         log.info("Matrix Effect Size: " + matrixEffectSize);;
     	return matrixEffectSize;
