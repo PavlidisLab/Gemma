@@ -18,7 +18,6 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
-import java.rmi.MarshalledObject;
 import java.rmi.RemoteException;
 
 import net.jini.core.event.RemoteEvent;
@@ -34,9 +33,8 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
 
-import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
-import com.j_spaces.core.client.NotifyDelegator;
+import com.j_spaces.core.client.ExternalEntry;
 import com.j_spaces.core.client.NotifyModifiers;
 
 /**
@@ -147,13 +145,9 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
 
                     /* configure this client to be receive notifications */
                     try {
-                        // JavaSpaceTemplate jsTemplate = ( ( JavaSpaceTemplate ) template );
-                        // jsTemplate.notify( new LoggingEntry(), this, 60000, new MarshalledObject( new LoggingEntry()
-                        // ) );
 
-                        NotifyDelegator notifyDelegator = new NotifyDelegator( ( IJSpace ) template.getSpace(),
-                                new LoggingEntry(), null, this, Lease.FOREVER,
-                                new MarshalledObject( new LoggingEntry() ), true, NotifyModifiers.NOTIFY_ALL );
+                        template.addNotifyDelegatorListener( this, new LoggingEntry(), null, true, Lease.FOREVER,
+                                NotifyModifiers.NOTIFY_ALL );
 
                     } catch ( Exception e ) {
                         throw new RuntimeException( e );
@@ -195,13 +189,15 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
         log.info( "notified ..." );
 
         try {
-            log.info( "entry: " + remoteEvent );
-            log.info( "id: " + remoteEvent.getID() );
-            log.info( "sequence number: " + remoteEvent.getSequenceNumber() );
-            log.info( "marshalled object: " + remoteEvent.getRegistrationObject().get() );
-            log.info( "notify type: " + ( ( EntryArrivedRemoteEvent ) remoteEvent ).getNotifyType() );
-            log.info( "entry: " + ( LoggingEntry ) ( ( EntryArrivedRemoteEvent ) remoteEvent ).getEntry() );
-            log.info( "message: " + ( ( LoggingEntry ) remoteEvent.getRegistrationObject().get() ).message );
+            EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
+
+            log.info( "event: " + arrivedRemoteEvent );
+            ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
+            log.info( "entry: " + entry );
+            log.info( "id: " + arrivedRemoteEvent.getID() );
+            log.info( "sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
+            log.info( "notify type: " + arrivedRemoteEvent.getNotifyType() );
+            log.info( "message: " + entry.getFieldValue( "message" ) );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
