@@ -352,6 +352,17 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetDesignElementDataVectors(Map,
+     *      QuantitationType)
+     */
+    @Override
+    protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt ) throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectors( cs2gene, qt );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection)
      */
     @Override

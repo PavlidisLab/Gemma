@@ -589,6 +589,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
 
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt )
+            throws Exception {
+    	return new HashMap();
+    }
+
 
     /*
      * (non-Javadoc)
@@ -846,8 +854,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
     }
-
-    /*
+    
+     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection)
