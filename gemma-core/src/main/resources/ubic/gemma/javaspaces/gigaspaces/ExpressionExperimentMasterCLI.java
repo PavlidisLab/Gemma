@@ -18,6 +18,7 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import java.rmi.MarshalledObject;
 import java.rmi.RemoteException;
 
 import net.jini.core.event.RemoteEvent;
@@ -151,7 +152,8 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
                         // ) );
 
                         NotifyDelegator notifyDelegator = new NotifyDelegator( ( IJSpace ) template.getSpace(),
-                                new LoggingEntry(), null, this, Lease.FOREVER, null, true, NotifyModifiers.NOTIFY_ALL );
+                                new LoggingEntry(), null, this, Lease.FOREVER,
+                                new MarshalledObject( new LoggingEntry() ), true, NotifyModifiers.NOTIFY_ALL );
 
                     } catch ( Exception e ) {
                         throw new RuntimeException( e );
@@ -193,10 +195,13 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
         log.info( "notified ..." );
 
         try {
+            log.info( "entry: " + remoteEvent );
             log.info( "id: " + remoteEvent.getID() );
             log.info( "sequence number: " + remoteEvent.getSequenceNumber() );
-            // log.info( "registration object: " + ( ( LoggingEntry ) remoteEvent.getRegistrationObject().get() ) );
+            log.info( "marshalled object: " + remoteEvent.getRegistrationObject().get() );
             log.info( "notify type: " + ( ( EntryArrivedRemoteEvent ) remoteEvent ).getNotifyType() );
+            log.info( "entry: " + ( LoggingEntry ) ( ( EntryArrivedRemoteEvent ) remoteEvent ).getEntry() );
+            log.info( "message: " + ( ( LoggingEntry ) remoteEvent.getRegistrationObject().get() ).message );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
