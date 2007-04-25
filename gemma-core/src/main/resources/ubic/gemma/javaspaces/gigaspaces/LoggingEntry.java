@@ -33,6 +33,8 @@ public class LoggingEntry implements Entry {
 
     public String message = null;
 
+    transient public String mUID;
+
     /**
      * 
      *
@@ -53,5 +55,13 @@ public class LoggingEntry implements Entry {
      */
     public String getMessage() {
         return message;
+    }
+
+    public void __setEntryUID( String inUid ) {
+        this.mUID = inUid;
+    }
+
+    public String __getEntryUID() {
+        return mUID;
     }
 }
