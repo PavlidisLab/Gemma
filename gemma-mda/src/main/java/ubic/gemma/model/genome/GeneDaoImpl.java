@@ -1226,8 +1226,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Session session = getSessionFactory().openSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
     
-        queryObject.addScalar( "csId", new LongType() );
         queryObject.addScalar( "geneId", new LongType() );
+        queryObject.addScalar( "csId", new LongType() );
         
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
