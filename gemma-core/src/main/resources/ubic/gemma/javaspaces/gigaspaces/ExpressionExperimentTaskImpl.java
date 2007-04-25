@@ -80,8 +80,9 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         LoggingEntry entry = null;
 
         for ( int i = 0; i < 5; i++ ) {
+
             for ( int j = 0; j < 10000; j++ ) {
-                // wait
+                // delay
             }
 
             if ( entry == null ) {
