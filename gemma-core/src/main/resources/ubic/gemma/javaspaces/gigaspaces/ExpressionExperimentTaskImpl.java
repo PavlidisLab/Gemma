@@ -32,8 +32,6 @@ import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
-import com.j_spaces.core.LeaseProxy;
-
 /**
  * @author keshav
  * @version $Id$
@@ -89,18 +87,15 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
                 entry = new LoggingEntry();
-                // entry.message = String.valueOf( i );
+                entry.message = String.valueOf( i );
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
-                log.debug( "expiration " + lease[i].getExpiration() );
-
             } else {
                 log.info( "Updating entry: " + entry );
                 try {
                     entry = ( LoggingEntry ) gigaSpacesTemplate.read( entry, 1000 );
-                    String uid = entry.__getEntryUID();
-                    log.debug( "uid " + uid );
-                    // entry.message = String.valueOf( i );
-
+                    log.debug( "previous message " + entry.message );
+                    entry.message = String.valueOf( i );
+                    log.debug( "new message " + entry.message );
                     gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
                 } catch ( Exception e ) {
                     e.printStackTrace();
