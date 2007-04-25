@@ -31,6 +31,9 @@ public class LoggingEntry extends MetaDataEntry {
      */
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Must be public for JavaSpaces reasons.
+     */
     public String message = null;
 
     /**
@@ -41,11 +44,28 @@ public class LoggingEntry extends MetaDataEntry {
 
     }
 
+    /**
+     * @return
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * @param message
+     */
     public void setMessage( String message ) {
         this.message = message;
+    }
+
+    /**
+     * Implemented to programmatically allow for indexing of attributes. This indexing speeds up read and take
+     * operations.
+     * 
+     * @return
+     */
+    public static String[] __getSpaceIndexedFields() {
+        String[] indexedFields = { "message" };
+        return indexedFields;
     }
 }
