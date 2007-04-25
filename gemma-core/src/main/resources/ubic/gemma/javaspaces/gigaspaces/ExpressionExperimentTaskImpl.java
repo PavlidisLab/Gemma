@@ -81,10 +81,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
 
         for ( int i = 0; i < 5; i++ ) {
 
-            for ( int j = 0; j < 10000; j++ ) {
-                // delay
-            }
-
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
                 entry = new LoggingEntry();
