@@ -90,10 +90,9 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
 
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
-                entry = ( GigaspacesProgressJobImpl ) ProgressManager.createGigaspacesProgressJob( null, "test",
-                        "testing" );
-                //  
-                log.info( "Logging started ..." );
+                entry = ( GigaspacesProgressJobImpl ) ProgressManager.createGigaspacesProgressJob( null,
+                        SecurityContextHolder.getContext().getAuthentication().getName(), "Logging Server Task" );
+
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
                 log.info( "Updating entry: " + entry );
@@ -118,7 +117,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         result.setAnswer( datasets.size() );
         result.setTaskID( counter );
 
-        log.info( "task execution complete ... returning result " + result.getAnswer() + " with id "
+        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
         return result;
     }
