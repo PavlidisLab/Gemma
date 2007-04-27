@@ -123,6 +123,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>javaspaces</groupId>
+			<artifactId>JSpaces-dl</artifactId>
+			<version>0.8</version>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 	<build>
 		<directory>target</directory>
