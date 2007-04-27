@@ -30,6 +30,7 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.javaspaces.gigaspaces.GigaspacesProgressJobImpl;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.JobInfoDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -172,6 +173,64 @@ public class ProgressManager {
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
             newJob = new ProgressJobImpl( createdJobI, description );
+
+            // if no user is set then the userName should be a sessionId
+
+            if ( createdJobI.getUser() == null ) newJob.setTrackingId( userId );
+
+            currentJob.set( createdJobI.getId() );
+
+            newJob.setPhase( 0 );
+
+            // keep track of these jobs
+            usersJobs.add( newJob ); // adds to the progressJobs collection
+            progressJobsById.put( createdJobI.getId(), newJob );
+            if ( taskId != null ) progressJobsByTaskId.put( taskId, newJob );
+
+        } else {
+            Long oldId = currentJob.get();
+            newJob = progressJobsById.get( oldId );
+
+            assert newJob != null : "newJob is unexpectedly null in progress Manager"; // This should not be the case!
+            newJob.setPhase( newJob.getPhase() + 1 );
+            newJob.setDescription( description );
+        }
+
+        ProgressManager.dump();
+
+        return newJob;
+    }
+    
+    /**
+     * @param UserId This could be a user name or some kind of sessionID that the user is using. If a user name is not
+     *        used then the HTTPSessionID must be used for anonymous users. If it is not used there will be no way for
+     *        the Ajax call back to get the progress job that it wants to observer. todo: should session id's be
+     *        persisted to the database for anonymous users?
+     * @param description (description of the job)
+     * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
+     *         job assciated with it that progress job will be returned.
+     */
+    public static synchronized ProgressJob createGigaspacesProgressJob( String taskId, String userId, String description ) {
+
+        Collection<ProgressJob> usersJobs;
+        ProgressJob newJob;
+
+        if ( !progressJobs.containsKey( userId ) ) {
+            log.debug( "Creating new progress job(s) with key " + userId );
+            progressJobs.put( userId, new Vector<ProgressJob>() );
+        } else {
+            log.debug( "Already have job with key " + userId );
+        }
+
+        usersJobs = progressJobs.get( userId );
+
+        // No job currently assciated with this thread or the job assciated with the thread is no longer valid
+        if ( ( currentJob.get() == null ) || ( progressJobsById.get( currentJob.get() ) == null ) ) {
+            JobInfo jobI = createnewJobInfo( taskId, userId, description );
+
+            JobInfo createdJobI = jobInfoDao.create( jobI );
+
+            newJob = new GigaspacesProgressJobImpl( createdJobI, description );
 
             // if no user is set then the userName should be a sessionId
 
