@@ -16,15 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.javaspaces.gigaspaces;
+package ubic.gemma.util.progress;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Observer;
 
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressJob;
 
 import com.j_spaces.core.client.MetaDataEntry;
 

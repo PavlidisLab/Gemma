@@ -30,7 +30,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.javaspaces.gigaspaces.GigaspacesProgressJobImpl;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.JobInfoDao;
 import ubic.gemma.model.common.auditAndSecurity.User;

@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
+import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
 import ubic.gemma.util.progress.ProgressData;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
