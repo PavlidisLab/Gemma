@@ -108,7 +108,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
                 try {
                     entry = ( GigaspacesProgressJobImpl ) gigaSpacesTemplate.read( entry, 1000 );
                     // entry.setMessage( String.valueOf( i ) + "% complete" );
-                    log.info( String.valueOf( i ) + " % complete" );
+                    log.info( String.valueOf( i ) + "% complete" );
                     gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
                 } catch ( Exception e ) {
                     e.printStackTrace();
