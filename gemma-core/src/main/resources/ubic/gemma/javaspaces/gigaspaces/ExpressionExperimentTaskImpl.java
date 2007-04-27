@@ -19,30 +19,45 @@
 package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
+import java.util.Enumeration;
 
 import net.jini.core.lease.Lease;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.progress.ProgressAppender;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * @author keshav
  * @version $Id$
  */
 public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
-    private Log log = LogFactory.getLog( this.getClass() );
+    private Log log = LogFactory.getLog( this.getClass().getName() );
 
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
     private GigaSpacesTemplate gigaSpacesTemplate = null;
+
+    // progress framework stuff
+    Logger log4jLogger;
+    Level oldLevel;
+
+    public ExpressionExperimentTaskImpl() {
+        this.initializeLogging();
+    }
 
     /*
      * (non-Javadoc)
@@ -77,20 +92,23 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         // TODO - this is a test test - will move into fetchAndLoad or into interceptor
         // when finished.
         Lease[] lease = new Lease[10];
-        LoggingEntry entry = null;
-
+        // LoggingEntry entry = null;
+        GigaspacesProgressJobImpl entry = null;
         for ( int i = 0; i < 5; i++ ) {
 
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
-                entry = new LoggingEntry();
-                entry.setMessage( String.valueOf( "Logging started ..." ) );
+                entry = ( GigaspacesProgressJobImpl ) ProgressManager.createGigaspacesProgressJob( null, "test",
+                        "testing" );
+                // entry.setMessage( String.valueOf( "Logging started ..." ) );
+                log.info( "Logging started ..." );
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
                 log.info( "Updating entry: " + entry );
                 try {
-                    entry = ( LoggingEntry ) gigaSpacesTemplate.read( entry, 1000 );
-                    entry.setMessage( String.valueOf( i ) + "% complete" );
+                    entry = ( GigaspacesProgressJobImpl ) gigaSpacesTemplate.read( entry, 1000 );
+                    // entry.setMessage( String.valueOf( i ) + "% complete" );
+                    log.info( String.valueOf( i ) + " % complete" );
                     gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
                 } catch ( Exception e ) {
                     e.printStackTrace();
@@ -132,5 +150,31 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
+    }
+
+    public void initializeLogging() {
+        String loggerName = "ubic.gemma";
+        log4jLogger = LogManager.exists( loggerName );
+
+        Enumeration<Appender> appenders = log4jLogger.getAllAppenders();
+
+        Appender progressAppender = null;
+        for ( ; appenders.hasMoreElements(); ) {
+            Appender appender = appenders.nextElement();
+            if ( appender instanceof ProgressAppender ) {
+                progressAppender = appender;
+            }
+        }
+
+        if ( progressAppender == null ) {
+            log.warn( "There is no progress appender configured; adding one." );
+            log4jLogger.addAppender( new ProgressAppender() );
+        }
+
+        oldLevel = log4jLogger.getLevel();
+
+        log4jLogger.setLevel( Level.INFO );
+
+        // job = ProgressManager.createProgressJob( null, "test", "testing" );
     }
 }
