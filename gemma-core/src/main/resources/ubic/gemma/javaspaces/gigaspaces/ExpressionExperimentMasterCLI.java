@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
+import ubic.gemma.util.progress.ProgressData;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;
@@ -146,8 +147,8 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
                     /* configure this client to be receive notifications */
                     try {
 
-                        template.addNotifyDelegatorListener( this, new LoggingEntry(), null, true, Lease.FOREVER,
-                                NotifyModifiers.NOTIFY_ALL );
+                        template.addNotifyDelegatorListener( this, new GigaspacesProgressJobImpl(), null, true,
+                                Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
                     } catch ( Exception e ) {
                         throw new RuntimeException( e );
@@ -197,7 +198,7 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
             log.info( "id: " + arrivedRemoteEvent.getID() );
             log.info( "sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
             log.info( "notify type: " + arrivedRemoteEvent.getNotifyType() );
-            log.info( "message: " + entry.getFieldValue( "message" ) );
+            log.info( "message: " + ( ( ProgressData ) entry.getFieldValue( "pData" ) ).getDescription() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
