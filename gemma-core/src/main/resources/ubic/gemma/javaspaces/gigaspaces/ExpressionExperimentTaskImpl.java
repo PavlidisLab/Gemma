@@ -19,16 +19,13 @@
 package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
-import java.util.Enumeration;
 
 import net.jini.core.lease.Lease;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
@@ -36,7 +33,6 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.progress.ProgressAppender;
 import ubic.gemma.util.progress.ProgressManager;
 
 /**
@@ -54,10 +50,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     // progress framework stuff
     Logger log4jLogger;
     Level oldLevel;
-
-    public ExpressionExperimentTaskImpl() {
-        this.initializeLogging();
-    }
 
     /*
      * (non-Javadoc)
@@ -89,7 +81,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
 
-        // TODO - this is a test test - will move into fetchAndLoad or into interceptor
+        // TODO - this is a test - will move into fetchAndLoad or into interceptor
         // when finished.
         Lease[] lease = new Lease[10];
         // LoggingEntry entry = null;
@@ -100,7 +92,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
                 log.info( "Could not find entry.  Writing a new entry." );
                 entry = ( GigaspacesProgressJobImpl ) ProgressManager.createGigaspacesProgressJob( null, "test",
                         "testing" );
-                // entry.setMessage( String.valueOf( "Logging started ..." ) );
+                //  
                 log.info( "Logging started ..." );
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
@@ -151,31 +143,5 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
-    }
-
-    public void initializeLogging() {
-        String loggerName = "ubic.gemma";
-        log4jLogger = LogManager.exists( loggerName );
-
-        Enumeration<Appender> appenders = log4jLogger.getAllAppenders();
-
-        Appender progressAppender = null;
-        for ( ; appenders.hasMoreElements(); ) {
-            Appender appender = appenders.nextElement();
-            if ( appender instanceof ProgressAppender ) {
-                progressAppender = appender;
-            }
-        }
-
-        if ( progressAppender == null ) {
-            log.warn( "There is no progress appender configured; adding one." );
-            log4jLogger.addAppender( new ProgressAppender() );
-        }
-
-        oldLevel = log4jLogger.getLevel();
-
-        log4jLogger.setLevel( Level.INFO );
-
-        // job = ProgressManager.createProgressJob( null, "test", "testing" );
     }
 }
