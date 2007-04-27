@@ -200,18 +200,18 @@ public class ProgressManager {
 
         return newJob;
     }
-    
+
     /**
      * @param UserId This could be a user name or some kind of sessionID that the user is using. If a user name is not
      *        used then the HTTPSessionID must be used for anonymous users. If it is not used there will be no way for
      *        the Ajax call back to get the progress job that it wants to observer. todo: should session id's be
      *        persisted to the database for anonymous users?
      * @param description (description of the job)
-     * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
-     *         job assciated with it that progress job will be returned.
+     * @return Use this static method for creating ProgressJobs, specifically the GigaspacesProgressJobImpl. If the
+     *         currently running thread already has a progress job assciated with it that progress job will be returned.
      */
     public static synchronized ProgressJob createGigaspacesProgressJob( String taskId, String userId, String description ) {
-
+        // TODO refactor/consolidate with method createProgressJob
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
