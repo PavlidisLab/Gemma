@@ -229,9 +229,25 @@ public class GigaspacesProgressJobImpl extends MetaDataEntry implements Progress
             this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.progress.ProgressJob#addObserver(java.util.Observer)
+     */
     public void addObserver( Observer O ) {
         // TODO Auto-generated method stub
-
     }
+
+    // /**
+    // * Implemented to programmatically allow for indexing of attributes. This indexing speeds up read and take
+    // * operations.
+    // *
+    // * @return String[]
+    // */
+    // public static String[] __getSpaceIndexedFields() {
+    // TODO must implement equals and hashCode in ProgressData before adding this back in.
+    // String[] indexedFields = { "pData" };
+    // return indexedFields;
+    // }
 
 }
