@@ -25,8 +25,6 @@ import net.jini.core.lease.Lease;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
@@ -47,10 +45,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
     private GigaSpacesTemplate gigaSpacesTemplate = null;
-
-    // progress framework stuff
-    Logger log4jLogger;
-    Level oldLevel;
 
     /*
      * (non-Javadoc)
