@@ -32,7 +32,6 @@ public class AllPersistenceTests {
         // $JUnit-BEGIN$
         suite.addTestSuite( GenomePersisterTest.class );
         suite.addTestSuite( PersisterTest.class );
-        suite.addTestSuite( CrudUtilsTest.class );
         suite.addTestSuite( BlatAssociationPersisterTest.class );
         // $JUnit-END$
         return suite;

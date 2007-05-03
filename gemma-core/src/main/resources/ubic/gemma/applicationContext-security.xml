@@ -357,8 +357,6 @@
                 ubic.gemma.model.common.description.DatabaseEntryService.findOrCreate=user,admin
                 ubic.gemma.model.common.description.DatabaseEntryService.update=user,admin 
                 ubic.gemma.model.common.description.DatabaseEntryService.remove=user,admin
-                ubic.gemma.model.common.description.OntologyEntryService.findOrCreate=user,admin 
-                ubic.gemma.model.common.description.OntologyEntryService.remove=user,admin
                 ubic.gemma.model.common.auditAndSecurity.PersonService.create=user,admin 
                 ubic.gemma.model.common.auditAndSecurity.PersonService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.PersonService.remove=user,admin 

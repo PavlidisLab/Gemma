@@ -1037,9 +1037,7 @@ public class GeoFamilyParser implements Parser {
 
         if ( !haveReadSampleDataHeader ) {
             haveReadSampleDataHeader = true;
-            // previousNumTokens = null;
             initializeQuantitationTypes();
-
             return;
         }
 

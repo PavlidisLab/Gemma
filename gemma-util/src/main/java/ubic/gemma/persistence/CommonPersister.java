@@ -42,8 +42,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.LocalFileService;
-import ubic.gemma.model.common.description.OntologyEntry;
-import ubic.gemma.model.common.description.OntologyEntryService;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementService;
 import ubic.gemma.model.common.protocol.Hardware;
@@ -64,7 +63,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
  * @spring.property name="protocolService" ref="protocolService"
  * @spring.property name="softwareService" ref="softwareService"
  * @spring.property name="hardwareService" ref="hardwareService"
- * @spring.property name="ontologyEntryService" ref="ontologyEntryService"
  * @spring.property name="personService" ref="personService"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="localFileService" ref="localFileService"
@@ -96,7 +94,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
     protected MeasurementService measurementService;
 
-    protected OntologyEntryService ontologyEntryService;
+    // protected OntologyEntryService ontologyEntryService;
 
     protected PersonService personService;
 
@@ -111,6 +109,8 @@ abstract public class CommonPersister extends AbstractPersister {
     protected SoftwareService softwareService;
 
     protected BibliographicReferenceService bibliographicReferenceService;
+
+    // protected TermRelationshipService termRelationshipService;
 
     Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
 
@@ -135,8 +135,8 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistQuantitationType( ( QuantitationType ) entity );
         } else if ( entity instanceof ExternalDatabase ) {
             return persistExternalDatabase( ( ExternalDatabase ) entity );
-        } else if ( entity instanceof OntologyEntry ) {
-            return persistOntologyEntry( ( OntologyEntry ) entity ); // important: check before DatabasEntry
+            // } else if ( entity instanceof OntologyEntry ) {
+            // return persistOntologyEntry( ( OntologyEntry ) entity ); // important: check before DatabasEntry
         } else if ( entity instanceof DatabaseEntry ) {
             return persistDatabaseEntry( ( DatabaseEntry ) entity );
         } else if ( entity instanceof LocalFile ) {
@@ -215,13 +215,6 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param ontologyEntryService The ontologyEntryService to set.
-     */
-    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
-        this.ontologyEntryService = ontologyEntryService;
-    }
-
-    /**
      * @param personService The personService to set.
      */
     public void setPersonService( PersonService personService ) {
@@ -267,28 +260,28 @@ abstract public class CommonPersister extends AbstractPersister {
         return ( Organization ) persistContact( affiliation );
     }
 
-    /**
-     * Fill in the categoryTerm and valueTerm associations of characteristics
-     * 
-     * @param Characteristics Collection of Characteristics
-     */
-    protected void fillInOntologyEntries( Collection<Characteristic> characteristics ) {
-        for ( Characteristic characteristic : characteristics ) {
-            fillInOntologyEntries( characteristic );
-        }
-    }
+    // /**
+    // * Fill in the categoryTerm and valueTerm associations of characteristics
+    // *
+    // * @param Characteristics Collection of Characteristics
+    // */
+    // protected void fillInOntologyEntries( Collection<Characteristic> characteristics ) {
+    // for ( Characteristic characteristic : characteristics ) {
+    // fillInOntologyEntries( characteristic );
+    // }
+    // }
 
-    /**
-     * Fill in the categoryTerm and valueTerm associations of a characteristic
-     * 
-     * @param characteristic
-     */
-    private void fillInOntologyEntries( Characteristic characteristic ) {
-        if ( log.isDebugEnabled() ) log.debug( "Filling in " + characteristic );
-        characteristic.setCategoryTerm( persistOntologyEntry( characteristic.getCategoryTerm() ) );
-        characteristic.setValueTerm( persistOntologyEntry( characteristic.getValueTerm() ) );
-        fillInOntologyEntries( characteristic.getConstituents() ); // recurse
-    }
+    // /**
+    // * Fill in the categoryTerm and valueTerm associations of a characteristic
+    // *
+    // * @param characteristic
+    // */
+    // private void fillInOntologyEntries( Characteristic characteristic ) {
+    // if ( log.isDebugEnabled() ) log.debug( "Filling in " + characteristic );
+    // characteristic.setCategoryTerm( persistOntologyEntry( characteristic.getCategoryTerm() ) );
+    // characteristic.setValueTerm( persistOntologyEntry( characteristic.getValueTerm() ) );
+    // fillInOntologyEntries( characteristic.getConstituents() ); // recurse
+    // }
 
     /**
      * @param protocol
@@ -300,8 +293,8 @@ abstract public class CommonPersister extends AbstractPersister {
             return;
         }
 
-        OntologyEntry type = protocol.getType();
-        type = persistOntologyEntry( type );
+        Characteristic type = protocol.getType();
+        type = persistCharacteristicAssociations( type );
         protocol.setType( type );
 
         for ( Software software : protocol.getSoftwareUsed() ) {
@@ -342,8 +335,8 @@ abstract public class CommonPersister extends AbstractPersister {
             if ( software == null )
                 throw new IllegalStateException( "Must have software associated with SoftwareApplication" );
 
-            OntologyEntry type = software.getType();
-            type = persistOntologyEntry( type );
+            Characteristic type = software.getType();
+            type = persistCharacteristicAssociations( type );
             software.setType( type );
 
             softwareApplication.setSoftware( softwareService.findOrCreate( software ) );
@@ -355,8 +348,8 @@ abstract public class CommonPersister extends AbstractPersister {
             if ( hardware == null )
                 throw new IllegalStateException( "Must have hardware associated with HardwareApplication" );
 
-            OntologyEntry type = hardware.getType();
-            persistOntologyEntry( type );
+            Characteristic type = hardware.getType();
+            type = persistCharacteristicAssociations( type );
             hardware.setType( type );
 
             HardwareApplication.setHardware( hardwareService.findOrCreate( hardware ) );
@@ -461,7 +454,7 @@ abstract public class CommonPersister extends AbstractPersister {
             }
         }
 
-        hardware.setType( persistOntologyEntry( hardware.getType() ) );
+        hardware.setType( persistCharacteristicAssociations( hardware.getType() ) );
 
         if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
             for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
@@ -496,30 +489,12 @@ abstract public class CommonPersister extends AbstractPersister {
      * 
      * @param ontologyEntry
      */
-    public OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
-        if ( ontologyEntry == null ) return null;
-        if ( !isTransient( ontologyEntry ) ) {
-            return ontologyEntry;
-        }
+    public Characteristic persistCharacteristicAssociations( Characteristic ontologyEntry ) {
 
-        if ( log.isTraceEnabled() ) log.trace( "Persisting " + ontologyEntry );
+        if ( ontologyEntry instanceof VocabCharacteristic )
+            ( ( VocabCharacteristic ) ontologyEntry ).setSource( this
+                    .persistExternalDatabase( ( ( VocabCharacteristic ) ontologyEntry ).getSource() ) );
 
-        ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
-
-        OntologyEntry existingOntologyEntry = ontologyEntryService.find( ontologyEntry );
-
-        if ( existingOntologyEntry != null ) {
-            return existingOntologyEntry;
-        }
-
-        /*
-         * Note: we do this instead of persistCollectionElements because with the latter we get
-         * NonUniqueObjectException.
-         */
-        for ( OntologyEntry oe : ontologyEntry.getAssociations() ) {
-            oe = persistOntologyEntry( oe );
-        }
-        ontologyEntry = ontologyEntryService.create( ontologyEntry );
         return ontologyEntry;
     }
 
@@ -626,4 +601,5 @@ abstract public class CommonPersister extends AbstractPersister {
     protected void clearCommonCache() {
         this.quantitationTypeCache.clear();
     }
+
 }

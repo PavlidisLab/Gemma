@@ -163,7 +163,7 @@ public class HttpFetcher extends AbstractFetcher {
     protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
         Collection<LocalFile> result = new HashSet<LocalFile>();
         File file = new File( outputFileName );
-        log.info( "Downlaoded: " + file.getCanonicalPath() );
+        log.info( "Downloaded: " + file.getCanonicalPath() );
         LocalFile newFile = LocalFile.Factory.newInstance();
         newFile.setLocalURL( file.toURI().toURL() );
         newFile.setRemoteURL( new URL( seekFile ) );

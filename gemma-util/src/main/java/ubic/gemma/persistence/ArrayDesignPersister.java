@@ -30,7 +30,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.designElement.ReporterService;
 
 /**

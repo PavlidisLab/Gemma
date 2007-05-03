@@ -78,4 +78,56 @@ public class MatrixWriter<T> {
         writer.write( buf.toString() );
     }
 
+    /**
+     * @param writer
+     * @param matrix
+     * @param writeHeader
+     * @throws IOException
+     */
+    public void writeJSON( Writer writer, ExpressionDataMatrix<T> matrix, boolean writeHeader ) throws IOException {
+        int columns = matrix.columns();
+        int rows = matrix.rows();
+
+        StringBuffer buf = new StringBuffer();
+
+        buf.append( "{ 'numRows' : " + matrix.rows() + ", 'rows': " );
+
+        buf.append( "[" );
+        // if ( writeHeader ) {
+        // // TO do get gene.
+        // buf.append( "{ 'id' : \"Probe\",\"Sequence\"" );
+        // for ( int i = 0; i < columns; i++ ) {
+        // buf.append( ",\"" + matrix.getBioMaterialForColumn( i ).getName() + "." );
+        // for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
+        // buf.append( ( ( BioAssay ) ba ).getName() + "." );
+        // }
+        // buf.append("\"");
+        // }
+        // buf.append( "}\n" );
+        // }
+
+        for ( int j = 0; j < rows; j++ ) {
+
+            if ( j > 0 ) buf.append( "," );
+            buf.append( "{" );
+            buf.append( "'id' : \"" + matrix.getDesignElementForRow( j ).getName() + "\"" );
+            BioSequence biologicalCharacteristic = ( ( CompositeSequence ) matrix.getDesignElementForRow( j ) )
+                    .getBiologicalCharacteristic();
+            if ( biologicalCharacteristic != null )
+                buf.append( ", 'sequence' : \"" + biologicalCharacteristic.getName() + "\"" );
+
+            buf.append( ", 'data' : [" );
+            for ( int i = 0; i < columns; i++ ) {
+                T val = matrix.get( j, i );
+                if ( i > 0 ) buf.append( "," );
+                buf.append( val );
+            }
+
+            buf.append( "]}\n" );
+
+        }
+        buf.append( "\n]}" );
+        writer.write( buf.toString() );
+    }
+
 }

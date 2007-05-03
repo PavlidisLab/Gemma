@@ -26,17 +26,22 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.view.AbstractView;
 
 /**
- * Simply prints text to the client. The model must have a parameter "text" which holds the text to be written.
+ * Simply prints text to the client. The model must have a parameter matching TEXT_PARAM which holds the text to be written.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class TextView extends AbstractView {
 
+    /**
+     * Name of parameter used to retrieve the text from the model.
+     */
+    public static final String TEXT_PARAM = "text";
+
     @Override
     protected void renderMergedOutputModel( Map model, HttpServletRequest request, HttpServletResponse response )
             throws Exception {
-        String textToRender = ( String ) model.get( "text" );
+        String textToRender = ( String ) model.get( TEXT_PARAM );
         response.setContentType( "text/plain" );
         response.setContentLength( textToRender.getBytes().length );
         response.getOutputStream().print( textToRender );

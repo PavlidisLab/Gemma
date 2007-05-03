@@ -28,8 +28,8 @@ import java.util.Map;
 import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.LocalFile; 
 import ubic.gemma.model.common.protocol.ProtocolApplication;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -191,9 +191,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         persistCollectionElements( experimentalFactor.getAnnotations() );
 
-        OntologyEntry category = experimentalFactor.getCategory();
+        Characteristic category = experimentalFactor.getCategory();
         if ( category != null ) {
-            experimentalFactor.setCategory( persistOntologyEntry( category ) );
+            experimentalFactor.setCategory( persistCharacteristicAssociations(  category ) );
         }
         return experimentalFactor;
     }
@@ -239,8 +239,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 throw new IllegalStateException(
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
-            OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
-            factorValue.setOntologyEntry( persistOntologyEntry( ontologyEntry ) );
+            Characteristic ontologyEntry = factorValue.getOntologyEntry();
+            factorValue.setOntologyEntry( persistCharacteristicAssociations( ontologyEntry ) );
         } else if ( factorValue.getValue() != null ) {
             if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
                 throw new IllegalStateException(
@@ -329,13 +329,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         assert entity.getSourceTaxon() != null;
 
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
-        entity.setMaterialType( persistOntologyEntry( entity.getMaterialType() ) );
+        entity.setMaterialType( persistCharacteristicAssociations( entity.getMaterialType() ) );
         entity.setSourceTaxon( persistTaxon( entity.getSourceTaxon() ) );
 
         for ( Treatment treatment : entity.getTreatments() ) {
 
-            OntologyEntry action = treatment.getAction();
-            treatment.setAction( persistOntologyEntry( action ) );
+            Characteristic action = treatment.getAction();
+            treatment.setAction( persistCharacteristicAssociations( action ) );
             log.debug( treatment + " action: " + action );
 
             for ( ProtocolApplication protocolApplication : treatment.getProtocolApplications() ) {
@@ -343,7 +343,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         }
 
-        fillInOntologyEntries( entity.getCharacteristics() ); // characteristics themselves should cascade
+      //  fillInOntologyEntries( entity.getCharacteristics() ); // characteristics themselves should cascade
 
         return bioMaterialService.findOrCreate( entity );
     }
@@ -354,7 +354,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private Compound persistCompound( Compound compound ) {
         if ( compound == null ) return null;
-        compound.setCompoundIndices( persistOntologyEntry( compound.getCompoundIndices() ) );
+        compound.setCompoundIndices( persistCharacteristicAssociations( compound.getCompoundIndices() ) );
         if ( compound.getIsSolvent() == null )
             throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
         return compoundService.findOrCreate( compound );

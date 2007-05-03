@@ -27,9 +27,10 @@ import java.util.HashSet;
 
 import org.hibernate.Criteria;
 
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -46,7 +47,8 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      */
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
-        Collection<OntologyEntry> ontos = null;
+        Collection<VocabCharacteristic> ontos = null;
+
         final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
 
         try {
@@ -70,13 +72,13 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         Collection<String> goIDs = new HashSet<String>();
         if ( goTerms.size() == 0 ) return goIDs;
 
-        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.accession in (:goIDs) and geneAss.gene.taxon = :taxon";
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.termUri in (:goIDs) and geneAss.gene.taxon = :taxon";
 
         // need to turn the collection of goTerms into a collection of GOId's
 
         for ( Object obj : goTerms ) {
-            OntologyEntry oe = ( OntologyEntry ) obj;
-            goIDs.add( oe.getAccession() );
+            VocabCharacteristic oe = ( VocabCharacteristic ) obj;
+            goIDs.add( oe.getTermUri() );
         }
 
         Collection<Gene> results;

@@ -77,9 +77,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             FactorValue fv = ( FactorValue ) object;
             sb.append( "\tID=" + fv.getId() + " Value=" + fv.getValue() );
             if ( fv.getMeasurement() != null ) sb.append( " Measurement=" + fv.getMeasurement().getValue() );
-            if ( fv.getOntologyEntry() != null )
-                sb.append( " OntologyEntry=" + fv.getOntologyEntry().getCategory() + " : "
-                        + fv.getOntologyEntry().getValue() );
+            if ( fv.getOntologyEntry() != null ) sb.append( fv.getOntologyEntry() );
             sb.append( "\n" );
         }
         log.error( sb.toString() );

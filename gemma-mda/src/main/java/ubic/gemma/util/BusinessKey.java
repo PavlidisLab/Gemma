@@ -31,9 +31,10 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -175,11 +176,7 @@ public class BusinessKey {
         }
 
         if ( experimentalFactor.getCategory() != null ) {
-            // FIXME this might not be complete.
-            queryObject.createCriteria( "category" ).add(
-                    Restrictions.eq( "accession", experimentalFactor.getCategory().getAccession() ) ).createCriteria(
-                    "externalDatabase" ).add(
-                    Restrictions.eq( "name", experimentalFactor.getCategory().getExternalDatabase().getName() ) );
+            attachCriteria( queryObject, experimentalFactor.getCategory(), "category" );
         }
     }
 
@@ -221,16 +218,29 @@ public class BusinessKey {
     /**
      * @param queryObject
      * @param ontologyEntry
+     * @param propertyName
      */
-    public static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
-        if ( StringUtils.isNotBlank( ontologyEntry.getAccession() ) && ontologyEntry.getExternalDatabase() != null ) {
-            queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
-                    "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
-        } else if ( StringUtils.isNotBlank( ontologyEntry.getCategory() )
-                && StringUtils.isNotBlank( ontologyEntry.getValue() ) ) {
-            queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
-                    Restrictions.ilike( "value", ontologyEntry.getValue() ) );
+    private static void attachCriteria( Criteria queryObject, VocabCharacteristic ontologyEntry, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, ontologyEntry );
+    }
+
+    /**
+     * @param queryObject
+     * @param ontologyEntry
+     */
+    public static void addRestrictions( Criteria queryObject, VocabCharacteristic ontologyEntry ) {
+        queryObject.add( Restrictions.eq( "termUri", ontologyEntry.getTermUri() ) );
+
+    }
+
+    public static void addRestrictions( Criteria queryObject, Characteristic ontologyEntry ) {
+        if ( ontologyEntry instanceof VocabCharacteristic ) {
+            addRestrictions( queryObject, ( VocabCharacteristic ) ontologyEntry );
+        } else {
+            queryObject.add( Restrictions.eq( "value", ontologyEntry.getValue() ) );
         }
+
     }
 
     /**
@@ -273,7 +283,7 @@ public class BusinessKey {
      * @param ontologyEntry The object used to create the criteria
      * @param propertyName Often this will be 'ontologyEntry'
      */
-    public static void attachCriteria( Criteria queryObject, OntologyEntry ontologyEntry, String propertyName ) {
+    public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
     }
@@ -392,13 +402,14 @@ public class BusinessKey {
     /**
      * @param ontologyEntry
      */
-    public static void checkKey( OntologyEntry ontologyEntry ) {
-        if ( ( StringUtils.isBlank( ontologyEntry.getAccession() ) || ontologyEntry.getExternalDatabase() == null )
-                && ( StringUtils.isBlank( ontologyEntry.getCategory() ) || StringUtils.isBlank( ontologyEntry
-                        .getValue() ) ) ) {
-            throw new IllegalArgumentException(
-                    "Either accession+externalDatabase, or category+value must be filled in." );
+    public static void checkKey( Characteristic ontologyEntry ) {
+
+        if ( ontologyEntry instanceof VocabCharacteristic ) {
+            if ( ( ( VocabCharacteristic ) ontologyEntry ).getTermUri() == null ) throw new IllegalArgumentException();
+        } else {
+            if ( ontologyEntry.getValue() == null ) throw new IllegalArgumentException();
         }
+
     }
 
     /**
@@ -477,6 +488,14 @@ public class BusinessKey {
     public static void checkValidKey( Gene2GOAssociation gene2GOAssociation ) {
         checkValidKey( gene2GOAssociation.getGene() );
         checkValidKey( gene2GOAssociation.getOntologyEntry() );
+    }
+
+    /**
+     * @param ontologyEntry
+     */
+    private static void checkValidKey( VocabCharacteristic ontologyEntry ) {
+        // TODO Auto-generated method stub
+
     }
 
     /**
@@ -607,8 +626,8 @@ public class BusinessKey {
      * @param ontologyEntry
      * @return
      */
-    public static Criteria createQueryObject( Session session, OntologyEntry ontologyEntry ) {
-        Criteria queryObject = session.createCriteria( OntologyEntry.class );
+    public static Criteria createQueryObject( Session session, Characteristic ontologyEntry ) {
+        Criteria queryObject = session.createCriteria( Characteristic.class );
         checkKey( ontologyEntry );
         addRestrictions( queryObject, ontologyEntry );
         return queryObject;

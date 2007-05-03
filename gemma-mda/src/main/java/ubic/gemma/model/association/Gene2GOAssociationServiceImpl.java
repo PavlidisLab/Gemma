@@ -21,8 +21,7 @@ package ubic.gemma.model.association;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import ubic.gemma.model.common.description.OntologyEntry;
+ 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -46,14 +45,16 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
     @Override
     protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
 
-        OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
-
-        if ( searchOnto == null ) return new ArrayList();
-
-        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
-        searchOntologies.add( searchOnto );
-
-        return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );
+        throw new UnsupportedOperationException("not fixed yet");
+        
+//        OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
+//
+//        if ( searchOnto == null ) return new ArrayList();
+//
+//        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
+//        searchOntologies.add( searchOnto );
+//
+//        return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );
 
     }
 

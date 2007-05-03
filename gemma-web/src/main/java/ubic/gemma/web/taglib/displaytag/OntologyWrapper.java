@@ -4,7 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.ontology.GeneOntologyService; 
 
 /**
  * used for proper decoration of the ontologyEntry
@@ -35,10 +36,10 @@ public class OntologyWrapper extends TableDecorator {
     // }
 
     public String getAccession() {
-        OntologyEntry oe = ( OntologyEntry ) getCurrentRowObject();
+        Characteristic oe = ( Characteristic ) getCurrentRowObject();
 
         return "<a target='_blank' href='http://amigo.geneontology.org/cgi-bin/amigo/go.cgi?view=details&query="
-                + oe.getAccession() + "'>" + oe.getAccession() + "</a>";
+                + GeneOntologyService.asRegularGoId( oe ) + "'>" + GeneOntologyService.asRegularGoId( oe ) + "</a>";
 
     }
 

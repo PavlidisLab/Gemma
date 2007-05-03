@@ -45,7 +45,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#load(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}.
+     * {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}.
      */
     public final void testLoad() throws Exception {
         SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
@@ -83,7 +83,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
     /**
      * @throws Exception
-     *         {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#load(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}.
+     *         {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}.
      */
     public final void testLoadB() throws Exception {
         SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this

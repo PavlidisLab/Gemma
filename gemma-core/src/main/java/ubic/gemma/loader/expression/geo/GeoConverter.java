@@ -52,6 +52,7 @@ import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.loader.expression.geo.util.GeoConstants;
+import ubic.gemma.loader.expression.mage.MgedOntologyHelper;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -63,7 +64,7 @@ import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -278,36 +279,42 @@ public class GeoConverter implements Converter {
 
             characteristic = trimString( characteristic );
 
-            gemmaChar.setCategory( "GEO Sample characteristic" );
+            // switch this to use MGED? Doing automatically is not easy. Or a more formal ONtology structure.
+            // Characteristic ci = Characteristic.Factory.newInstance();
+            // ci.setTerm( term ); // GEO:SampleCharacteristic OR MGED BioMaterialCharacteristic.
+            // ci.setProperties( properties ); // has_value
+
+            // Category is a term. Value is a term, or a data value.
+
+            gemmaChar.setDescription( "GEO Sample characteristic" );
             gemmaChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( gemmaChar );
         }
 
-        if ( channel.getSourceName() != null ) {
+        if ( StringUtils.isNotBlank( channel.getSourceName() ) ) {
+            // this is really a BioMaterialCharacteristic, too, but difficult to automatically convert.
             Characteristic sourceChar = Characteristic.Factory.newInstance();
-            sourceChar.setCategory( "GEO Sample source" );
+            sourceChar.setDescription( "GEO Sample source" );
             String characteristic = trimString( channel.getSourceName() );
             sourceChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( sourceChar );
         }
 
-        if ( channel.getOrganism() != null ) {
+        if ( StringUtils.isNotBlank( channel.getOrganism() ) ) {
             Taxon taxon = Taxon.Factory.newInstance();
             taxon.setScientificName( channel.getOrganism() );
             bioMaterial.setSourceTaxon( taxon );
         }
 
         if ( channel.getMolecule() != null ) {
-            Characteristic moleculeChar = Characteristic.Factory.newInstance();
-            moleculeChar.setCategory( "GEO Sample molecule" );
-            String characteristic = trimString( channel.getMolecule().toString() );
-            moleculeChar.setValue( characteristic );
-            bioMaterial.getCharacteristics().add( moleculeChar );
+            // this we can convert automatically pretty easily.
+            Characteristic c = channel.getMoleculeAsCharacteristic();
+            bioMaterial.getCharacteristics().add( c );
         }
 
-        if ( channel.getLabel() != null ) {
+        if ( StringUtils.isNotBlank( channel.getLabel() ) ) {
             Characteristic labelChar = Characteristic.Factory.newInstance();
-            labelChar.setCategory( "GEO Sample label" );
+            labelChar.setDescription( "GEO Sample label" );
             String characteristic = trimString( channel.getLabel() );
             labelChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( labelChar );
@@ -815,7 +822,6 @@ public class GeoConverter implements Converter {
             descIter = descriptions.iterator();
         }
 
-        // much faster than hashset to add to when it gets large. (because equals isn't implemented right... FIXME)
         Collection compositeSequences = new ArrayList( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
@@ -845,7 +851,9 @@ public class GeoConverter implements Converter {
             BioSequence bs = createMinimalBioSequence( taxon );
 
             boolean isRefseq = false;
-            if ( externalDb.getName().equals( "Genbank" ) && StringUtils.isNotBlank( externalAccession ) ) {
+            // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
+            if ( externalDb != null && externalDb.getName().equals( "Genbank" )
+                    && StringUtils.isNotBlank( externalAccession ) ) {
                 // http://www.ncbi.nlm.nih.gov/RefSeq/key.html#accessions : "RefSeq accession numbers can be
                 // distinguished from GenBank accessions by their prefix distinct format of [2 characters|underbar]"
                 isRefseq = externalAccession.matches( "^[A-Z]{2}_" );
@@ -1038,22 +1046,27 @@ public class GeoConverter implements Converter {
      * @param repType
      * @return
      */
-    private OntologyEntry convertReplicatationType( ReplicationType repType ) {
-        OntologyEntry result = OntologyEntry.Factory.newInstance();
+    private VocabCharacteristic convertReplicatationType( ReplicationType repType ) {
+        VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
 
         if ( !repType.equals( VariableType.other ) ) {
             mged.setName( "MGED Ontology" );
             mged.setType( DatabaseType.ONTOLOGY );
-            result.setExternalDatabase( mged );
+            result.setSource( mged );
         }
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
             result.setValue( "biological_replicate" );
+            result.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "biological_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateExtract ) ) {
             result.setValue( "technical_replicate" );
+            result.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateLabeledExtract ) ) {
-            result.setValue( "technical_replicate" ); // MGED doesn't have a term to distinguish these.
+            result.setValue( "technical_replicate" );
+            result.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have a
+            // term to distinguish
+            // these.
         } else {
             throw new IllegalStateException();
         }
@@ -1073,7 +1086,7 @@ public class GeoConverter implements Converter {
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
         result.setName( replication.getType().toString() );
         result.setDescription( replication.getDescription() );
-        OntologyEntry term = convertReplicatationType( replication.getType() );
+        VocabCharacteristic term = convertReplicatationType( replication.getType() );
 
         result.setCategory( term );
         return result;
@@ -1363,11 +1376,10 @@ public class GeoConverter implements Converter {
         if ( series.getKeyWords().size() > 0 ) {
             for ( String keyWord : series.getKeyWords() ) {
                 // design.setDescription( design.getDescription() + " Keyword: " + keyWord );
-                OntologyEntry o = OntologyEntry.Factory.newInstance();
-                o.setCategory( "GEO Keyword" );
+                Characteristic o = Characteristic.Factory.newInstance();
+                o.setDescription( "GEO Keyword" );
                 o.setValue( keyWord );
                 o.setDescription( "Keyword from GEO series definition file." );
-                o.setExternalDatabase( this.geoDatabase );
             }
         }
 
@@ -1768,7 +1780,7 @@ public class GeoConverter implements Converter {
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
         result.setName( variable.getType().toString() );
         result.setDescription( variable.getDescription() );
-        OntologyEntry term = convertVariableType( variable.getType() );
+        Characteristic term = convertVariableType( variable.getType() );
         result.setCategory( term );
         return result;
 
@@ -1781,7 +1793,7 @@ public class GeoConverter implements Converter {
     private FactorValue convertVariableToFactorValue( GeoVariable variable ) {
         log.info( "Converting variable " + variable );
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        factorValue.setValue( variable.getDescription() );
+        factorValue.setValue( variable.getDescription() ); // really want to find ontology term for this, if possible.
         return factorValue;
     }
 
@@ -1801,69 +1813,93 @@ public class GeoConverter implements Converter {
      * @param variable
      * @return
      */
-    private OntologyEntry convertVariableType( VariableType varType ) {
-        OntologyEntry categoryTerm = OntologyEntry.Factory.newInstance();
+    private Characteristic convertVariableType( VariableType varType ) {
+        VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
 
         if ( !varType.equals( VariableType.other ) ) {
             mged.setName( "MGED Ontology" );
             mged.setType( DatabaseType.ONTOLOGY );
-            categoryTerm.setExternalDatabase( mged );
+            categoryTerm.setSource( mged );
         }
 
         if ( varType.equals( VariableType.age ) ) {
             categoryTerm.setValue( "Age" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
         } else if ( varType.equals( VariableType.agent ) ) {
             categoryTerm.setValue( "Agent" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Agent" );
         } else if ( varType.equals( VariableType.cellLine ) ) {
             categoryTerm.setValue( "CellLine" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellLine" );
         } else if ( varType.equals( VariableType.cellType ) ) {
             categoryTerm.setValue( "CellType" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellType" );
         } else if ( varType.equals( VariableType.developmentStage ) ) {
             categoryTerm.setValue( "DevelopmentalStage" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DevelopmentalStage" );
         } else if ( varType.equals( VariableType.diseaseState ) ) {
             categoryTerm.setValue( "DiseaseState" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DiseaseState" );
         } else if ( varType.equals( VariableType.dose ) ) {
             categoryTerm.setValue( "Dose" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Dose" );
         } else if ( varType.equals( VariableType.gender ) ) {
             categoryTerm.setValue( "Sex" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Sex" );
         } else if ( varType.equals( VariableType.genotypeOrVariation ) ) {
             categoryTerm.setValue( "IndividualGeneticCharacteristics" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "IndividualGeneticCharacteristics" );
         } else if ( varType.equals( VariableType.growthProtocol ) ) {
             categoryTerm.setValue( "GrowthCondition" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "GrowthCondition" );
         } else if ( varType.equals( VariableType.individual ) ) {
             categoryTerm.setValue( "Individiual" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Individiual" );
         } else if ( varType.equals( VariableType.infection ) ) {
             categoryTerm.setValue( "Phenotype" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Phenotype" );
         } else if ( varType.equals( VariableType.isolate ) ) {
             categoryTerm.setValue( "Age" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
         } else if ( varType.equals( VariableType.metabolism ) ) {
             categoryTerm.setValue( "Metabolism" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Metabolism" );
         } else if ( varType.equals( VariableType.other ) ) {
             categoryTerm.setValue( "Other" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Other" );
         } else if ( varType.equals( VariableType.protocol ) ) {
             categoryTerm.setValue( "Protocol" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Protocol" );
         } else if ( varType.equals( VariableType.shock ) ) {
             categoryTerm.setValue( "EnvironmentalStress" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
         } else if ( varType.equals( VariableType.species ) ) {
             categoryTerm.setValue( "Organism" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Organism" );
         } else if ( varType.equals( VariableType.specimen ) ) {
             categoryTerm.setValue( "BioSample" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "BioSample" );
         } else if ( varType.equals( VariableType.strain ) ) {
             categoryTerm.setValue( "StrainOrLine" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "StrainOrLine" );
         } else if ( varType.equals( VariableType.stress ) ) {
             categoryTerm.setValue( "EnvironmentalStress" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
         } else if ( varType.equals( VariableType.temperature ) ) {
             categoryTerm.setValue( "Temperature" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Temperature" );
         } else if ( varType.equals( VariableType.time ) ) {
             categoryTerm.setValue( "Time" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Time" );
         } else if ( varType.equals( VariableType.tissue ) ) {
             categoryTerm.setValue( "OrganismPart" );
+            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "OrganismPart" );
         } else {
             throw new IllegalStateException();
         }
 
-        log.debug( "Category term: " + categoryTerm.getValue() + " " );
+        log.debug( "Category term: " + categoryTerm.getName() + " " );
         return categoryTerm;
 
     }

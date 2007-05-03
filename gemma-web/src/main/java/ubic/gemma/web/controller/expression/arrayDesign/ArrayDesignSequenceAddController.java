@@ -37,7 +37,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
@@ -131,7 +130,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         ProgressManager.destroyProgressJob( job );
 
         return startJob( commandObject, request );
-       
+
     }
 
     public void setArrayDesignSequenceProcessingService(

@@ -46,7 +46,7 @@ import org.compass.spring.web.mvc.CompassSearchResults;
 
 import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -413,12 +413,12 @@ public class SearchService {
     }
 
     /**
-     * Does a compass style search on ArrayDesigns
+     * Does a compass style search on
      * 
      * @param query
      * @return
      */
-    public Collection<OntologyEntry> compassOntologySearch( String searchString ) {
+    public Collection<Characteristic> compassOntologySearch( String searchString ) {
 
         final String query = searchString.trim();
         CompassSearchResults searchResults;
@@ -454,12 +454,12 @@ public class SearchService {
      * @param anOntology
      * @return
      */
-    protected Collection<OntologyEntry> convert2OntologyList( CompassHit[] anOntology ) {
+    protected Collection<Characteristic> convert2OntologyList( CompassHit[] anOntology ) {
 
-        Collection<OntologyEntry> converted = new HashSet<OntologyEntry>( anOntology.length );
+        Collection<Characteristic> converted = new HashSet<Characteristic>( anOntology.length );
 
         for ( int i = 0; i < anOntology.length; i++ )
-            converted.add( ( OntologyEntry ) anOntology[i].getData() );
+            converted.add( ( Characteristic ) anOntology[i].getData() );
 
         return converted;
 

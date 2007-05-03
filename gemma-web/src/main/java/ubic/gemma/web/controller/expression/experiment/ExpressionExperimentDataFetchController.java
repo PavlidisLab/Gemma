@@ -68,6 +68,8 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
         String qt = request.getParameter( "qt" );
+        String maxRows = request.getParameter( "maxRows" );
+        String format = request.getParameter("type");
         Long qtId = null;
         if ( StringUtils.isNotBlank( qt ) ) {
             try {
@@ -76,19 +78,41 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
                 //
             }
         }
+        
+        int maxRowsInt = -1;
+        if ( StringUtils.isNotBlank( maxRows ) ) {
+            try {
+                 maxRowsInt = Integer.parseInt( maxRows );
+            } catch ( NumberFormatException e ) {
+                //
+            }
+        }
 
+        String usedFormat = "text";
+        
+        if (StringUtils.isNotBlank( format )) {
+            // FIXME validate.
+            usedFormat = format;
+        }
+        
+        
         QuantitationType qType = quantitationTypeService.load( qtId );
 
-        log.info( "Fetching vectors" );
+        log.debug( "Fetching vectors" );
+        // FIXME only get maxRows if defined; validate maxRows is positive.
         Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( qType );
-        log.info( "Thawing " + vectors.size() + " vectors" );
+        log.debug( "Thawing " + vectors.size() + " vectors" );
 
+        
+        if (usedFormat.equals( "text" )) {
+        
         response.setContentType( "text/plain" );
         MatrixWriter writer = new MatrixWriter();
 
         int BATCH_SIZE = 200;
         Collection<DesignElementDataVector> batch = new HashSet<DesignElementDataVector>();
         boolean firstBatch = true;
+        int count = 0;
         for ( DesignElementDataVector v : vectors ) {
             batch.add( v );
             if ( batch.size() == BATCH_SIZE ) {
@@ -96,13 +120,40 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
                 response.getWriter().flush();
                 firstBatch = false;
             }
+            if (maxRowsInt > 0 && ++count == maxRowsInt) {
+                break;
+            }
         }
 
         if ( batch.size() > 0 ) {
             writeBatch( response, writer, batch, firstBatch );
         }
         response.getWriter().flush();
+        } else if (usedFormat.equals("json")) {
+            response.setContentType( "text/plain" );
+            MatrixWriter writer = new MatrixWriter();
 
+            int BATCH_SIZE = 200;
+            Collection<DesignElementDataVector> batch = new HashSet<DesignElementDataVector>();
+            boolean firstBatch = true;
+            int count = 0;
+            for ( DesignElementDataVector v : vectors ) {
+                batch.add( v );
+                if ( batch.size() == BATCH_SIZE ) {
+                    writeJsonBatch( response, writer, batch, firstBatch );
+                    response.getWriter().flush();
+                    firstBatch = false;
+                }
+                if (maxRowsInt > 0 && ++count == maxRowsInt) {
+                    break;
+                }
+            }
+
+            if ( batch.size() > 0 ) {
+                writeJsonBatch( response, writer, batch, firstBatch );
+            }
+            response.getWriter().flush();
+        }
         return null;
     }
 
@@ -119,6 +170,15 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
         designElementDataVectorService.thaw( batch );
         ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( batch );
         writer.write( response.getWriter(), expressionDataMatrix, firstBatch );
+        batch.clear();
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void writeJsonBatch( HttpServletResponse response, MatrixWriter writer,
+            Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
+        designElementDataVectorService.thaw( batch );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( batch );
+        writer.writeJSON( response.getWriter(), expressionDataMatrix, firstBatch );
         batch.clear();
     }
 

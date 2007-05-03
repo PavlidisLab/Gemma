@@ -13,8 +13,7 @@
 
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<title><fmt:message key="gene.details" />
-</title>
+<title><fmt:message key="gene.details" /></title>
 
 <h2>
 	<fmt:message key="gene.details" />
@@ -24,7 +23,7 @@
 </h2>
 <table width="100%" cellspacing="10">
 	<tr>
-		<td valign="top">
+		<td align="right" valign="top">
 			<b> <fmt:message key="gene.officialSymbol" /> </b>
 		</td>
 		<td>
@@ -41,7 +40,7 @@
 	</tr>
 
 	<tr>
-		<td valign="top">
+		<td align="right" valign="top">
 			<b> <fmt:message key="gene.officialName" /> </b>
 		</td>
 		<td>
@@ -58,7 +57,7 @@
 	</tr>
 
 	<tr>
-		<td valign="top">
+		<td align="right" valign="top">
 			<b> <fmt:message key="gene.ncbi" /> </b>
 		</td>
 		<td>
@@ -79,7 +78,7 @@
 	</tr>
 
 	<tr>
-		<td valign="top">
+		<td align="right" valign="top">
 			<b> <fmt:message key="gene.description" /> </b>
 		</td>
 		<td>
@@ -87,7 +86,7 @@
 			<%
 			if ( gene.getDescription() != null ) {
 			%>
-			<div class="clob">
+			<div class="clob" style="height:20px;">
 				<jsp:getProperty name="gene" property="description" />
 			</div>
 			<%
@@ -99,7 +98,7 @@
 	</tr>
 
 	<tr>
-		<td valign="top">
+		<td align="right" valign="top">
 			<b> <fmt:message key="gene.taxon" /> </b>
 		</td>
 		<td>
@@ -114,7 +113,7 @@
 	</tr>
 
 	<tr>
-		<td valign="top">
+		<td align="right" valign="top">
 			<b> <fmt:message key="gene.aliases" /> </b>
 		</td>
 		<td>
@@ -134,25 +133,40 @@
 			%>
 		</td>
 	</tr>
+	<tr>
+		<td align="right" valign="top">
+			<b>Probes</b><a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Number of probes for this gene on expression platforms in Gemma'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+		<td>
+			<c:out
+					value="${compositeSequenceCount}" />
+			<a
+				href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><img src="<c:url value='/images/magnifier.png'/>" /></a>
+		</td>
+	</tr>
 </table>
+
 
 <c:if test="${numOntologyEntries > 0 }">
 	<h3>
-		<fmt:message key="gene.ontology" />
+		<fmt:message key="gene.ontology" /> terms <a class="helpLink" href="?"
+							onclick="showHelpTip(event, 'Only Gene Ontology terms that are directly attached to this gene are shown. Implicit associations (i.e., with parent terms in the GO hierarchy) are not listed.'); return false"><img
+								src="/Gemma/images/help.png" /> </a>
 
 	</h3>
 </c:if>
 
+<div id="tableContainer" class="tableContainer">
 <display:table name="ontologyEntries" class="list" requestURI=""
-	id="ontologyEntriesList" pagesize="10"
+	id="ontologyEntriesList" pagesize="100"
 	decorator="ubic.gemma.web.taglib.displaytag.OntologyWrapper">
-	<display:column property="accession" sortable="true" maxWords="20" />
 	<display:column property="value" sortable="true" maxWords="20" />
-	<display:column property="category" sortable="true" maxWords="20" />
 	<display:column property="description" sortable="true" maxWords="20" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
-
+</div>
 
 
 
@@ -198,11 +212,4 @@ if ( gene.getProducts().size() > 0 ) {
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>
 </div>
-
-<br />
-There are
-<b> <a
-	href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><c:out
-			value="${compositeSequenceCount}" /> </a> </b>
-composite sequences associated with this gene.
-<br />
+ 

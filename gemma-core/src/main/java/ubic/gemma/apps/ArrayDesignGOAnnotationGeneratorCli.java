@@ -35,12 +35,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -48,6 +47,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.OntologyTools;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file
@@ -67,7 +69,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     Gene2GOAssociationService gene2GoAssociationService;
     GeneService geneService;
     CompositeSequenceService compositeSequenceService;
-    GeneOntologyService oeService;
+    GeneOntologyService goService;
 
     // file info
     String batchFileName;
@@ -325,7 +327,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
             String geneNames = null;
             String geneDescriptions = null;
-            Collection<OntologyEntry> goTerms = new ArrayList<OntologyEntry>();
+            Collection<OntologyTerm> goTerms = new ArrayList<OntologyTerm>();
 
             // Might be mulitple genes for a given cs. Need to hash it into one.
             for ( Gene gene : genes ) {
@@ -360,8 +362,8 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         return compositeSequencesProcessed;
     }
 
-    private Collection<OntologyEntry> addGoTerms( Collection<OntologyEntry> goTerms, Gene gene ) {
-        Collection<OntologyEntry> terms = getGoTerms( gene );
+    private Collection<OntologyTerm> addGoTerms( Collection<OntologyTerm> goTerms, Gene gene ) {
+        Collection<OntologyTerm> terms = getGoTerms( gene );
         goTerms.addAll( terms );
         return terms;
     }
@@ -394,7 +396,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * @throws IOException Adds one line at a time to the annotation file
      */
     protected void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
-            Collection<OntologyEntry> goTerms ) throws IOException {
+            Collection<OntologyTerm> goTerms ) throws IOException {
 
         if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
 
@@ -412,14 +414,14 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         boolean wrote = false;
 
-        for ( OntologyEntry oe : goTerms ) {
+        for ( OntologyTerm oe : goTerms ) {
 
             if ( oe == null ) continue;
 
             if ( wrote )
-                writer.write( "|" + oe.getAccession() );
+                writer.write( "|" + GeneOntologyService.asRegularGoId( oe ) );
             else
-                writer.write( oe.getAccession() );
+                writer.write( GeneOntologyService.asRegularGoId( oe ) );
 
             wrote = true;
 
@@ -435,32 +437,35 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * @return the goTerms for a given gene, as configured
      */
     @SuppressWarnings("unchecked")
-    protected Collection<OntologyEntry> getGoTerms( Gene gene ) {
+    protected Collection<OntologyTerm> getGoTerms( Gene gene ) {
 
-        Collection<OntologyEntry> ontos = new HashSet<OntologyEntry>( gene2GoAssociationService.findByGene( gene ) );
+        Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GoAssociationService
+                .findByGene( gene ) );
 
-        if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return ontos;
+        Collection<OntologyTerm> results = OntologyTools.getOntologyTerms( ontos );
 
-        if ( this.shortAnnotations ) return ontos;
+        if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return results;
+
+        if ( this.shortAnnotations ) return results;
 
         if ( this.longAnnotations ) {
-            Collection<OntologyEntry> oes = oeService.getAllParents( ontos );
-            ontos.addAll( oes );
+            Collection<OntologyTerm> oes = goService.getAllParents( results );
+            results.addAll( oes );
         } else if ( this.biologicalProcessAnnotations ) {
-            Collection<OntologyEntry> toRemove = new HashSet<OntologyEntry>();
+            Collection<OntologyTerm> toRemove = new HashSet<OntologyTerm>();
 
-            for ( OntologyEntry ont : ontos ) {
-                if ( ( ont == null ) || ( ont.getCategory() == null ) ) continue;
+            for ( OntologyTerm ont : results ) {
+                if ( ( ont == null ) ) continue; // / shouldn't happen!
 
-                if ( !ont.getCategory().equalsIgnoreCase( BIOLOGICAL_PROCESS ) ) toRemove.add( ont );
+                if ( !goService.isBiologicalProcess( ont ) ) toRemove.add( ont );
             }
 
-            for ( OntologyEntry toRemoveOnto : toRemove ) {
-                ontos.remove( toRemoveOnto );
+            for ( OntologyTerm toRemoveOnto : toRemove ) {
+                results.remove( toRemoveOnto );
             }
         }
 
-        return ontos;
+        return results;
     }
 
     /**
@@ -515,7 +520,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
 
-        oeService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
+        goService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
 
     }
 

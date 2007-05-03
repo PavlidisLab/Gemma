@@ -34,7 +34,6 @@ import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
-import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -42,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**

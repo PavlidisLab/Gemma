@@ -28,8 +28,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * @author klc The coexpressionValueObject is used for storing the results of each gene that is coexpressed with the
@@ -49,7 +49,7 @@ public class CoexpressionValueObject {
     private Integer stringencyFilterValue;
     private Collection<Long> nonspecificEE;
     private int possibleOverlap;
-    private Collection<OntologyEntry> goOverlap;
+    private Collection<OntologyTerm> goOverlap;
     private List<Integer> experimentBitList = new ArrayList<Integer>();
     private Collection<String> nonSpecificGenes = new HashSet<String>();
     private boolean hybridizesWithQueryGene;
@@ -383,11 +383,11 @@ public class CoexpressionValueObject {
         return expressionExperimentValueObjects.keySet();
     }
 
-    public Collection<OntologyEntry> getGoOverlap() {
+    public Collection<OntologyTerm> getGoOverlap() {
         return goOverlap;
     }
 
-    public void setGoOverlap( Collection<OntologyEntry> goOverlap ) {
+    public void setGoOverlap( Collection<OntologyTerm> goOverlap ) {
         this.goOverlap = goOverlap;
     }
 

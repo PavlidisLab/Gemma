@@ -20,16 +20,15 @@ package ubic.gemma.analysis.report;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.lang.time.DateUtils;
 
@@ -40,7 +39,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -54,11 +52,11 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class WhatsNewService {
-    
+
     private String WHATS_NEW_FILE = "WhatsNew";
     private String WHATS_NEW_DIR = "WhatsNew";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-    
+
     AuditEventService auditEventService;
     ExpressionExperimentService expressionExperimentService = null;
     ArrayDesignService arrayDesignService = null;
@@ -94,90 +92,85 @@ public class WhatsNewService {
     }
 
     /**
-     * save the report from the date specified. This will be the report that will be 
-     * used by the WhatsNew box.
+     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
+     * 
      * @param date
      */
-    public void saveReport( Date date) {
-        WhatsNew wn = getReport(date);
+    public void saveReport( Date date ) {
+        WhatsNew wn = getReport( date );
         initDirectories( true );
-        saveFile(wn);
+        saveFile( wn );
     }
-    
+
     /**
-     * save the report from last week. This will be the report that will be 
-     * used by the WhatsNew box.
+     * save the report from last week. This will be the report that will be used by the WhatsNew box.
+     * 
      * @param date
      */
-    public void generateWeeklyReport( ) {
+    public void generateWeeklyReport() {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         date = DateUtils.addDays( date, -7 );
-        saveReport(date);
+        saveReport( date );
     }
-    
+
     /**
      * Retrieve the latest WhatsNew report.
+     * 
      * @return WhatsNew the latest WhatsNew report cache.
      */
-    public WhatsNew retrieveReport () {
+
+    @SuppressWarnings("unchecked")
+    public WhatsNew retrieveReport() {
         WhatsNew wn = new WhatsNew();
 
         try {
-            File newObjects = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".new");
-            File updatedObjects = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".updated");
-            if ( !newObjects.exists() && !updatedObjects.exists()) {
+            File newObjects = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".new" );
+            File updatedObjects = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".updated" );
+            if ( !newObjects.exists() && !updatedObjects.exists() ) {
                 return null;
             }
-            
+
             // load up all new objects
-            if (newObjects.exists()) {
-                FileInputStream fis = new FileInputStream(newObjects );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                Collection<AuditableObject> aos = ( Collection ) ois.readObject();   
-                ois.close();
-                fis.close();
-                
+            if ( newObjects.exists() ) {
+                Collection<AuditableObject> aos = loadAuditableObjects( newObjects );
+
                 Collection<Long> newEeIds = new ArrayList<Long>();
                 for ( AuditableObject object : aos ) {
-                    if (object.type.equalsIgnoreCase( "ArrayDesign" )) {
+                    if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
                         wn.addNewObjects( arrayDesignService.load( object.id ) );
                     }
-                    if (object.type.equalsIgnoreCase( "ExpressionExperiment" )) {
+                    if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
                         newEeIds.add( object.id );
                     }
-                    if (object.date != null) {
-                        wn.setDate(object.date );
+                    if ( object.date != null ) {
+                        wn.setDate( object.date );
                     }
                 }
-                if (newEeIds.size() > 0) {
+                if ( newEeIds.size() > 0 ) {
                     wn.addNewObjects( expressionExperimentService.load( newEeIds ) );
                 }
 
             }
-            
+
             // load up all updated objects
-            if (updatedObjects.exists()) {
-                FileInputStream fis = new FileInputStream(updatedObjects );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                Collection<AuditableObject> aos = ( Collection ) ois.readObject();   
-                ois.close();
-                fis.close();
-                
+            if ( updatedObjects.exists() ) {
+                Collection<AuditableObject> aos = loadAuditableObjects( updatedObjects );
+
                 Collection<Long> updatedEeIds = new ArrayList<Long>();
                 for ( AuditableObject object : aos ) {
-                    if (object.type.equalsIgnoreCase( "ArrayDesign" )) {
+                    if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
                         ArrayDesign ad = arrayDesignService.load( object.id );
                         wn.addUpdatedObjects( ad );
                     }
-                    if (object.type.equalsIgnoreCase( "ExpressionExperiment" )) {
+                    if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
                         updatedEeIds.add( object.id );
                     }
-                    if (object.date != null) {
-                        wn.setDate(object.date );
+                    if ( object.date != null ) {
+                        wn.setDate( object.date );
                     }
                 }
-                if (updatedEeIds.size() > 0) {
+                if ( updatedEeIds.size() > 0 ) {
                     wn.addUpdatedObjects( expressionExperimentService.load( updatedEeIds ) );
                 }
             }
@@ -187,13 +180,34 @@ public class WhatsNewService {
 
         return wn;
     }
-    
+
+    /**
+     * @param newObjects
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<AuditableObject> loadAuditableObjects( File newObjects ) throws FileNotFoundException,
+            IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream( newObjects );
+        ObjectInputStream ois = new ObjectInputStream( fis );
+        Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
+        ois.close();
+        fis.close();
+        return aos;
+    }
+
+    /**
+     * @param deleteFiles
+     */
     private void initDirectories( boolean deleteFiles ) {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + "/" + WHATS_NEW_DIR );
-        File f = new File( HOME_DIR + "/" + WHATS_NEW_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + WHATS_NEW_DIR );
+        File f = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR );
         Collection<File> files = new ArrayList<File>();
         File[] fileArray = f.listFiles();
         for ( File file : fileArray ) {
@@ -204,12 +218,18 @@ public class WhatsNewService {
             FileTools.deleteFiles( files );
         }
     }
-    
+
+    /**
+     * @param wn
+     * @return
+     */
     private boolean saveFile( WhatsNew wn ) {
         try {
             // remove file first
-            File newOutput = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".new" );
-            File updatedOutput = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".updated" );
+            File newOutput = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
+                    + WHATS_NEW_FILE + ".new" );
+            File updatedOutput = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
+                    + WHATS_NEW_FILE + ".updated" );
             if ( newOutput.exists() ) {
                 newOutput.delete();
             }
@@ -218,7 +238,7 @@ public class WhatsNewService {
             }
             Calendar c = Calendar.getInstance();
             Date date = c.getTime();
-            
+
             Collection<ArrayDesign> ads = wn.getNewArrayDesigns();
             Collection<ExpressionExperiment> ees = wn.getNewExpressionExperiments();
             // save the IDs for new Auditables
@@ -237,7 +257,7 @@ public class WhatsNewService {
                 ao.id = ee.getId();
                 newObjects.add( ao );
             }
-            
+
             // save the ids for updated Auditables
             ads = wn.getUpdatedArrayDesigns();
             ees = wn.getUpdatedExpressionExperiments();
@@ -258,18 +278,18 @@ public class WhatsNewService {
                 updatedObjects.add( ao );
             }
             // save information into a map
-            //Map<String,Collection> auditableSave = new HashMap<String,Collection>();
-            //auditableSave.put( "newAuditables", newObjects );
-            //auditableSave.put( "updatedAuditables", updatedObjects );
+            // Map<String,Collection> auditableSave = new HashMap<String,Collection>();
+            // auditableSave.put( "newAuditables", newObjects );
+            // auditableSave.put( "updatedAuditables", updatedObjects );
             FileOutputStream fos = new FileOutputStream( newOutput );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( newObjects );            
+            oos.writeObject( newObjects );
             oos.flush();
             oos.close();
-            
+
             fos = new FileOutputStream( updatedOutput );
             oos = new ObjectOutputStream( fos );
-            oos.writeObject( updatedObjects );            
+            oos.writeObject( updatedObjects );
             oos.flush();
             oos.close();
         } catch ( Throwable e ) {
@@ -278,6 +298,5 @@ public class WhatsNewService {
 
         return true;
     }
-    
 
 }

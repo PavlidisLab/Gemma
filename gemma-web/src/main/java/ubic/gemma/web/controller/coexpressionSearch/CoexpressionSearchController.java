@@ -42,12 +42,10 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
-import ubic.gemma.model.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.coexpression.CoexpressionValueObject; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -55,6 +53,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.ProgressJob;
@@ -73,7 +73,11 @@ import ubic.gemma.web.util.MessageUtil;
  * {@link species} sets the type of species to search. {@link keywords} restrict the search.
  * 
  * @author keshav
+<<<<<<< CoexpressionSearchController.java
  * @version $Id$
+=======
+ * @version $Id$
+>>>>>>> 1.58.2.1
  * @spring.bean id="coexpressionSearchController"
  * @spring.property name = "commandName" value="coexpressionSearchCommand"
  * @spring.property name = "commandClass" value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
@@ -596,7 +600,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             if ( i++ > MAX_OVERLAP ) break;
         }
 
-        Map<Long, Collection<OntologyEntry>> overlap = geneOntologyService.calculateGoTermOverlap( csc.getSourceGene(),
+        Map<Long, Collection<OntologyTerm>> overlap = geneOntologyService.calculateGoTermOverlap( csc.getSourceGene(),
                 overlapIds );
 
         Integer numSourceGeneGoTerms;

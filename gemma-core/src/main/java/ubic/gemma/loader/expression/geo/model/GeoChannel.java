@@ -21,6 +21,10 @@ package ubic.gemma.loader.expression.geo.model;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.loader.expression.mage.MgedOntologyHelper;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.
  * 
@@ -29,31 +33,31 @@ import java.util.HashSet;
  */
 public class GeoChannel {
 
-    private int channelNumber = -1;
+      private int channelNumber = -1;
 
     private String organism = null;
 
-    private channelMolecule molecule;
+    private ChannelMolecule molecule;
 
-    public enum channelMolecule {
+    public enum ChannelMolecule {
         totalRNA, polyARNA, cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other
     };
 
-    public static channelMolecule convertStringToMolecule( String string ) {
+    public static ChannelMolecule convertStringToMolecule( String string ) {
         if ( string.equals( "total RNA" ) ) {
-            return channelMolecule.totalRNA;
+            return ChannelMolecule.totalRNA;
         } else if ( string.equals( "polyA RNA" ) ) {
-            return channelMolecule.polyARNA;
+            return ChannelMolecule.polyARNA;
         } else if ( string.equals( "cytoplasmic RNA" ) ) {
-            return channelMolecule.cytoplasmicRNA;
+            return ChannelMolecule.cytoplasmicRNA;
         } else if ( string.equals( "nuclear RNA" ) ) {
-            return channelMolecule.nuclearRNA;
+            return ChannelMolecule.nuclearRNA;
         } else if ( string.equals( "genomic DNA" ) ) {
-            return channelMolecule.genomicDNA;
+            return ChannelMolecule.genomicDNA;
         } else if ( string.equals( "protein" ) ) {
-            return channelMolecule.protein;
+            return ChannelMolecule.protein;
         } else if ( string.equals( "other" ) ) {
-            return channelMolecule.other;
+            return ChannelMolecule.other;
         } else {
             throw new IllegalArgumentException( "Unknown channel molecule " + string );
         }
@@ -157,14 +161,60 @@ public class GeoChannel {
     /**
      * @return Returns the molecule.
      */
-    public channelMolecule getMolecule() {
+    public ChannelMolecule getMolecule() {
         return this.molecule;
+    }
+
+    /**
+     * Convert the molecule into a MGED Ontology-based VocabCharacteristic. If "other" we just return a plain text
+     * Characteristic.
+     * 
+     * @return
+     */
+    public Characteristic getMoleculeAsCharacteristic() {
+
+        VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
+        result.setDescription( "MaterialType" );
+        switch ( this.molecule ) {
+            case cytoplasmicRNA:
+                result.setValue( "cytoplasmic_RNA" );
+                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "cytoplasmic_RNA" );
+                break;
+            case polyARNA:
+                result.setValue( "polyA_RNA" );
+                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "polyA_RNA" );
+                break;
+            case genomicDNA:
+                result.setValue( "genomic_DNA" );
+                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "genomic_DNA" );
+                break;
+            case totalRNA:
+                result.setValue( "total_RNA" );
+                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "total_RNA" );
+                break;
+            case nuclearRNA:
+                result.setValue( "nuclear_RNA" );
+                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "nuclear_RNA" );
+                break;
+            case protein:
+                result.setValue( "protein" );
+                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "protein" );
+                break;
+            case other:
+                Characteristic c = Characteristic.Factory.newInstance();
+                c.setValue( "Other material type" );
+                return c;
+            default:
+                break;
+        }
+
+        return result;
     }
 
     /**
      * @param molecule The molecule to set.
      */
-    public void setMolecule( channelMolecule molecule ) {
+    public void setMolecule( ChannelMolecule molecule ) {
         this.molecule = molecule;
     }
 

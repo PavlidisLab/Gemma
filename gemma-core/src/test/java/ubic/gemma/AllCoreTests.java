@@ -20,14 +20,12 @@ package ubic.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.sequence.ProbeMapperTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
 import ubic.gemma.datastructure.matrix.AllExpressionMatrixTests;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.NCBIGene2GOAssociationParserTest;
-import ubic.gemma.loader.description.AllDescriptionLoaderTests;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
 import ubic.gemma.loader.expression.arrayDesign.AllArrayDesignTests;
 import ubic.gemma.loader.expression.arrayExpress.DataFileFetcherIntegrationTest;
@@ -38,8 +36,8 @@ import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.persistence.AllPersistenceTests;
-import ubic.gemma.persistence.CrudUtilsTest;
 import ubic.gemma.persistence.GenomePersisterTest;
 import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.scheduler.SchedulerFactoryBeanTest;
@@ -79,8 +77,6 @@ public class AllCoreTests {
 
         suite.addTest( AllExpressionMatrixTests.suite() );
 
-        suite.addTest( AllDescriptionLoaderTests.suite() );
-
         suite.addTestSuite( HttpFetcherTest.class );
         suite.addTestSuite( AbstractFetcherTest.class );
 
@@ -96,7 +92,6 @@ public class AllCoreTests {
 
         suite.addTestSuite( ProgressAppenderTest.class );
         suite.addTestSuite( PersisterTest.class );
-        suite.addTestSuite( CrudUtilsTest.class );
         suite.addTestSuite( GenomePersisterTest.class );
         suite.addTestSuite( SchedulerFactoryBeanTest.class );
 

@@ -60,7 +60,7 @@ public class BioMaterialWrapper extends TableDecorator {
            for ( FactorValue value : factorValues ) {
                if (value.getOntologyEntry() != null)
                { 
-                   factorValueString += value.getOntologyEntry().getValue() + " - " + value.getValue() + "<br>";
+                   factorValueString += value.getOntologyEntry()  + " - " + value.getValue() + "<br>";
                }
                else {
                    factorValueString +=  value.getValue() + "<br>";      

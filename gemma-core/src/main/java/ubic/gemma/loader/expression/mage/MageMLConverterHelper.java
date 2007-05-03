@@ -103,10 +103,12 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementKind;
 import ubic.gemma.model.common.measurement.MeasurementType;
@@ -267,7 +269,7 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @return
      */
-    public ubic.gemma.model.common.description.OntologyEntry convertAction( OntologyEntry mageObj ) {
+    public ubic.gemma.model.common.description.VocabCharacteristic convertAction( OntologyEntry mageObj ) {
         return convertOntologyEntry( mageObj );
     }
 
@@ -653,14 +655,16 @@ public class MageMLConverterHelper {
             // explicitly conver the taxon over.
             boolean found = false;
             for ( Characteristic character : result.getCharacteristics() ) {
-                if ( character.getCategory().equals( "Organism" ) ) {
-                    String scientificName = character.getValue();
-                    Taxon t = Taxon.Factory.newInstance();
-                    t.setScientificName( scientificName );
-                    result.setSourceTaxon( t );
-                    found = true;
-                    break;
-                }
+
+                // FIXME
+                // if ( character.getCategory().equals( "Organism" ) ) {
+                // String scientificName = character.getValue();
+                // Taxon t = Taxon.Factory.newInstance();
+                // t.setScientificName( scientificName );
+                // result.setSourceTaxon( t );
+                // found = true;
+                // break;
+                // }
             }
 
             if ( !found && log.isWarnEnabled() ) {
@@ -690,8 +694,8 @@ public class MageMLConverterHelper {
         assert mageObj != null;
         if ( associationName.equals( "Characteristics" ) ) {
             specialConvertBioMaterialBioCharacteristics( mageObj, gemmaObj );
-        } else if ( associationName.equals( "MaterialType" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+        } else if ( associationName.equals( "MaterialType" ) ) { // characteristic
+            simpleFillIn( associatedObject, gemmaObj, getter, "MaterialType", Characteristic.class );
         } else if ( associationName.equals( "QualityControlStatistics" ) ) {
             assert associatedObject instanceof List;
             // we don't support
@@ -828,7 +832,7 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @return
      */
-    public ubic.gemma.model.common.description.OntologyEntry convertCategory( OntologyEntry mageObj ) {
+    public ubic.gemma.model.common.description.VocabCharacteristic convertCategory( OntologyEntry mageObj ) {
         return convertOntologyEntry( mageObj );
     }
 
@@ -1249,8 +1253,8 @@ public class MageMLConverterHelper {
             descBuf.append( " " );
             List<OntologyEntry> annotations = description.getAnnotations();
             for ( OntologyEntry element : annotations ) {
-                ubic.gemma.model.common.description.OntologyEntry ontologyEntry = convertOntologyEntry( element );
-                log.debug( "Got association for describable: " + ontologyEntry.getValue() );
+                ubic.gemma.model.common.description.VocabCharacteristic ontologyEntry = convertOntologyEntry( element );
+                log.debug( "Got association for describable: " + ontologyEntry.getTermUri() );
                 // gemmaObj.addAnnotation( ontologyEntry );
             }
 
@@ -1580,7 +1584,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Softwares" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Type" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            simpleFillIn( associatedObject, gemmaObj, getter, "Type", Characteristic.class );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -1664,7 +1668,7 @@ public class MageMLConverterHelper {
      * @return an OntologyEntry correspondingi the the MaterialType.
      * @see convertOntologyEntry
      */
-    public ubic.gemma.model.common.description.OntologyEntry convertMaterialType( OntologyEntry mageObj ) {
+    public ubic.gemma.model.common.description.VocabCharacteristic convertMaterialType( OntologyEntry mageObj ) {
         return convertOntologyEntry( mageObj );
     }
 
@@ -1786,28 +1790,30 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @return
      */
-    public ubic.gemma.model.common.description.OntologyEntry convertOntologyEntry( OntologyEntry mageObj ) {
+    public ubic.gemma.model.common.description.VocabCharacteristic convertOntologyEntry( OntologyEntry mageObj ) {
         if ( mageObj == null ) return null;
 
-        ubic.gemma.model.common.description.OntologyEntry result = ubic.gemma.model.common.description.OntologyEntry.Factory
+        ubic.gemma.model.common.description.VocabCharacteristic result = ubic.gemma.model.common.description.VocabCharacteristic.Factory
                 .newInstance();
-        result.setAccession( mageObj.getOntologyReference() == null ? null : mageObj.getOntologyReference()
-                .getAccession() );
-        result.setAccession( StringUtils.replace( result.getAccession(), MGED_ONTOLOGY_URL, "" ) );
 
-        result.setCategory( mageObj.getCategory() );
-
-        result.setDescription( mageObj.getDescription() );
-        result.setValue( mageObj.getValue() );
+        // FIXME
+        // result.setAccession( mageObj.getOntologyReference() == null ? null : mageObj.getOntologyReference()
+        // .getAccession() );
+        // result.setAccession( StringUtils.replace( result.getAccession(), MGED_ONTOLOGY_URL, "" ) );
+        //
+        // result.setCategory( mageObj.getCategory() );
+        //
+        // result.setDescription( mageObj.getDescription() );
+        // result.setValue( mageObj.getValue() );
         convertAssociations( mageObj, result );
-        if ( result.getExternalDatabase() == null ) { // Maybe its in MO (often the case)
+        if ( result.getSource() == null ) { // Maybe its in MO (often the case)
             if ( mgedOntologyHelper.classExists( StringUtils.capitalize( mageObj.getCategory() ) ) ) {
-                result.setExternalDatabase( this.getMAGEOntologyDatabaseObject() );
+                result.setSource( this.getMAGEOntologyDatabaseObject() );
                 log.debug( "Automatically identified MO as database for " + result );
             } else {
                 log.warn( "Using 'unknown' for source of OntologyEntry " + result + " (Converted from MAGE "
                         + mageObj.getCategory() + " " + mageObj.getValue() + ")" );
-                result.setExternalDatabase( this.getUnknownDatabaseObject() );
+                result.setSource( this.getUnknownDatabaseObject() );
             }
         }
         return result;
@@ -1819,7 +1825,7 @@ public class MageMLConverterHelper {
      * @param getter
      */
     public void convertOntologyEntryAssociations( OntologyEntry mageObj,
-            ubic.gemma.model.common.description.OntologyEntry gemmaObj, Method getter ) {
+            ubic.gemma.model.common.description.Characteristic gemmaObj, Method getter ) {
         Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
@@ -1828,8 +1834,34 @@ public class MageMLConverterHelper {
             // specialConvertOntologyEntryAssociations( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "OntologyReference" ) ) {
             assert associatedObject instanceof org.biomage.Description.DatabaseEntry;
-            specialConvertOntologyEntryDatabaseEntry( ( org.biomage.Description.DatabaseEntry ) associatedObject,
-                    gemmaObj );
+
+            // FIXME
+            // specialConvertOntologyEntryDatabaseEntry( ( org.biomage.Description.DatabaseEntry ) associatedObject,
+            // gemmaObj );
+        } else {
+            log.warn( "Unsupported or unknown association: " + associationName );
+        }
+    }
+    
+    /**
+     * 
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     */
+    public void convertOntologyEntryAssociations( OntologyEntry mageObj,
+            ubic.gemma.model.common.description.VocabCharacteristic gemmaObj, Method getter ) {
+        Object associatedObject = intializeConversion( mageObj, getter );
+        String associationName = getterToPropertyName( getter );
+        if ( associatedObject == null ) return;
+        if ( associationName.equals( "Associations" ) ) {
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            // specialConvertOntologyEntryAssociations( ( List ) associatedObject, gemmaObj );
+        } else if ( associationName.equals( "OntologyReference" ) ) {
+            assert associatedObject instanceof org.biomage.Description.DatabaseEntry;
+            // FIXME
+            // specialConvertOntologyEntryDatabaseEntry( ( org.biomage.Description.DatabaseEntry ) associatedObject,
+            // gemmaObj );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -2086,7 +2118,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Softwares" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "SoftwareUsed" );
         } else if ( associationName.equals( "Type" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            simpleFillIn( associatedObject, gemmaObj, getter, "Type", Characteristic.class );
         } else if ( associationName.equals( "ParameterTypes" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else {
@@ -2363,7 +2395,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Softwares" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Type" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            simpleFillIn( associatedObject, gemmaObj, getter, "Type", Characteristic.class );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2439,7 +2471,7 @@ public class MageMLConverterHelper {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Action" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            simpleFillIn( associatedObject, gemmaObj, getter, "Action", Characteristic.class );
         } else if ( associationName.equals( "ActionMeasurement" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "CompoundMeasurement" ) ) {
@@ -2460,7 +2492,7 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @return
      */
-    public ubic.gemma.model.common.description.OntologyEntry convertType( OntologyEntry mageObj ) {
+    public ubic.gemma.model.common.description.VocabCharacteristic convertType( OntologyEntry mageObj ) {
         return convertOntologyEntry( mageObj );
     }
 
@@ -2482,7 +2514,7 @@ public class MageMLConverterHelper {
      * @return
      * @see convertOntologyEntry
      */
-    public ubic.gemma.model.common.description.OntologyEntry convertValue( OntologyEntry mageObj ) {
+    public ubic.gemma.model.common.description.VocabCharacteristic convertValue( OntologyEntry mageObj ) {
         return convertOntologyEntry( mageObj );
     }
 
@@ -2753,8 +2785,6 @@ public class MageMLConverterHelper {
         if ( gemmaSetter == null ) return;
 
         try {
-            // PropertyUtils.setProperty(setterObj, propertyName, settee); // this would work if we didn't have this
-            // Impl vs. base problem.
             if ( log.isDebugEnabled() ) {
                 log.debug( "Setting " + settee + " on " + setterObj );
             }
@@ -2871,9 +2901,10 @@ public class MageMLConverterHelper {
             gemmaSetter = ReflectionUtil.getBaseForImpl( setter ).getMethod( "set" + propertyName,
                     new Class[] { setee } );
         } catch ( SecurityException e ) {
-            log.error( e );
+            throw new RuntimeException( e );
         } catch ( NoSuchMethodException e ) {
-            log.error( "No such setter: " + "set" + propertyName + "(" + setee.getSimpleName() + ")", e );
+            throw new RuntimeException( "No such setter: " + "set" + propertyName + "("
+                    + setee.getClass().getSimpleName() + ")", e );
         }
         return gemmaSetter;
     }
@@ -3246,6 +3277,20 @@ public class MageMLConverterHelper {
      */
     private void simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter,
             String actualGemmaAssociationName ) {
+        simpleFillIn( associatedMageObject, gemmaObj, getter, actualGemmaAssociationName, null );
+
+    }
+
+    /**
+     * @param associatedMageObject
+     * @param gemmaObj
+     * @param getter
+     * @param actualGemmaAssociationName
+     * @param actualArgumentClass - example, sometimes we get a VocabCharacteristic but setter wants a Characteristic.
+     * @see simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter, String actualGemmaAssociationName )
+     */
+    private void simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter,
+            String actualGemmaAssociationName, Class actualArgumentClass ) {
 
         if ( associatedMageObject == null ) return;
         String associationName = getterToPropertyName( getter );
@@ -3258,7 +3303,13 @@ public class MageMLConverterHelper {
                     mageAssociatedType );
             if ( gemmaAssociatedObj == null ) return;
 
-            Class gemmaClass = ReflectionUtil.getBaseForImpl( gemmaAssociatedObj.getClass() );
+            Class gemmaClass;
+            if ( actualArgumentClass != null ) {
+                gemmaClass = actualArgumentClass;
+            } else {
+                gemmaClass = ReflectionUtil.getBaseForImpl( gemmaAssociatedObj.getClass() );
+            }
+
             // inferredGemmaAssociationName = convertAssociationName( actualGemmaAssociationName,
             // gemmaAssociatedObj );
             // log.info( "Filling in " + gemmaObj.getClass().getSimpleName() + "." + inferredGemmaAssociationName );
@@ -3378,29 +3429,29 @@ public class MageMLConverterHelper {
         }
 
         if ( log.isDebugEnabled() ) log.debug( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM." );
-        for ( Element elm : elmList ) {
-            Characteristic bioCharacteristic = Characteristic.Factory.newInstance();
-            bioCharacteristic.setCategory( elm.getName() );
-            bioCharacteristic.setValue( elm.valueOf( "@value" ) );
-
-            specialFillInCharacteristicOntologyEntries( bioCharacteristic, elm );
-
-            List subList = elm.selectNodes( "child::node()" );
-            Collection<Characteristic> bcConstituents = bioCharacteristic.getConstituents();
-            if ( subList.size() > 0 ) {
-                for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
-                    Element elmSub = ( Element ) subIter.next();
-                    Characteristic bcConstitutent = Characteristic.Factory.newInstance();
-                    bcConstitutent.setCategory( elmSub.getName() );
-                    bcConstitutent.setValue( elmSub.valueOf( "@value" ) );
-                    if ( log.isDebugEnabled() )
-                        log.debug( " CAT: " + bcConstitutent.getCategory() + " VAL: " + bcConstitutent.getValue() );
-                    bcConstituents.add( bcConstitutent );
-                }
-                bioCharacteristic.setConstituents( bcConstituents );
-            }
-            gemmaObj.getCharacteristics().add( bioCharacteristic );
-        }
+        // for ( Element elm : elmList ) {
+        // VocabCharacteristic bioCharacteristic = VocabCharacteristic.Factory.newInstance();
+        // bioCharacteristic.setCategory( elm.getName() );
+        // bioCharacteristic.setValue( elm.valueOf( "@value" ) );
+        //
+        // specialFillInCharacteristicOntologyEntries( bioCharacteristic, elm );
+        //
+        // List subList = elm.selectNodes( "child::node()" );
+        // Collection<Characteristic> bcConstituents = bioCharacteristic.getConstituents();
+        // if ( subList.size() > 0 ) {
+        // for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
+        // Element elmSub = ( Element ) subIter.next();
+        // VocabCharacteristic bcConstitutent = VocabCharacteristic.Factory.newInstance();
+        // bcConstitutent.setCategory( elmSub.getName() );
+        // bcConstitutent.setValue( elmSub.valueOf( "@value" ) );
+        // if ( log.isDebugEnabled() )
+        // log.debug( " CAT: " + bcConstitutent.getCategory() + " VAL: " + bcConstitutent.getValue() );
+        // bcConstituents.add( bcConstitutent );
+        // }
+        // bioCharacteristic.setConstituents( bcConstituents );
+        // }
+        // gemmaObj.getCharacteristics().add( bioCharacteristic );
+        // }
     }
 
     /**
@@ -3438,17 +3489,17 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * In Gemma, an OntologyEntry is a DatabaseEntry, while in Mage, an OntologyEntry hasa DatabaseEntry.
+     * In Gemma we don't use database entries for ontology term instances. We call them characteristics.
      * 
      * @param associatedObject
      * @param gemmaObj
      */
     private void specialConvertOntologyEntryDatabaseEntry( org.biomage.Description.DatabaseEntry databaseEntry,
-            ubic.gemma.model.common.description.OntologyEntry gemmaObj ) {
+            VocabCharacteristic gemmaObj ) {
         ExternalDatabase ed = convertDatabase( databaseEntry.getDatabase() );
         assert ed != null : "Null externalDatabase for MAGE version of " + gemmaObj;
-        gemmaObj.setExternalDatabase( ed );
-        gemmaObj.setAccession( databaseEntry.getAccession() );
+        gemmaObj.setSource( ed );
+        gemmaObj.setTermUri( databaseEntry.getAccession() ); // FIXME make sure this is the URI.
     }
 
     /**
@@ -3505,112 +3556,114 @@ public class MageMLConverterHelper {
             return;
         }
 
-        if ( characteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
-
-        boolean isCategoryMo = false;
-        boolean isValueMo = false;
-        boolean hasCategoryAcc = false;
-        boolean hasValueAcc = false;
-        String categoryDb = elm.valueOf( "@CategoryDatabaseIdentifier" );
-        String categoryAcc = elm.valueOf( "@CategoryDatabaseAccession" );
-        String valueDb = elm.valueOf( "@ValueDatabaseIdentifier" );
-        String valueAcc = elm.valueOf( "@ValueDatabaseAccession" );
-
-        if ( categoryDb.length() > 0 ) {
-            isCategoryMo = this.mgedOntologyAliases.contains( categoryDb );
-            if ( isCategoryMo ) {
-                categoryDb = MGED_DATABASE_IDENTIFIER;
-            }
-        } else if ( mgedOntologyHelper.classExists( characteristic.getCategory() ) ) {
-            isCategoryMo = true;
-            categoryDb = MGED_DATABASE_IDENTIFIER;
-        } else {
-            log.debug( "No category database for '" + characteristic.getCategory() + "'" );
-        }
-
-        if ( categoryAcc.length() > 0 ) {
-            if ( isCategoryMo ) {
-                categoryAcc = formMgedOntologyAccession( categoryAcc );
-            }
-        } else if ( isCategoryMo ) {
-            categoryAcc = formMgedOntologyAccession( characteristic.getCategory() );
-        } else {
-            hasCategoryAcc = false;
-            if ( log.isDebugEnabled() )
-                log.debug( "No category accession value for '" + characteristic.getCategory() + "'" );
-        }
-
-        if ( characteristic.getValue().length() > 0 ) {
-            if ( valueDb.length() > 0 ) {
-                isValueMo = this.mgedOntologyAliases.contains( valueDb );
-                if ( isValueMo ) {
-                    valueDb = MGED_DATABASE_IDENTIFIER;
-                }
-            } else if ( isCategoryMo
-                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ) != null
-                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ).contains(
-                            characteristic.getValue() ) ) {
-                isValueMo = true;
-                valueDb = MGED_DATABASE_IDENTIFIER;
-
-            } else if ( isCategoryMo ) {
-                String instanceCategory = this.mgedOntologyHelper.getClassNameForInstance( characteristic.getValue() );
-                if ( instanceCategory != null ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "'" + characteristic.getValue() + "' is actually an instance of '"
-                                + instanceCategory + "', not '" + characteristic.getCategory()
-                                + "', but we just go with the flow." );
-                    isValueMo = true;
-                    valueDb = MGED_DATABASE_IDENTIFIER;
-                } else {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "No value database available for '" + characteristic.getValue() + "'" );
-                }
-
-            } else {
-                if ( log.isDebugEnabled() )
-                    log.debug( "No value database available for '" + characteristic.getValue() + "'" );
-            }
-
-            if ( valueAcc.length() > 0 ) {
-                if ( isValueMo ) {
-                    valueAcc = formMgedOntologyAccession( valueAcc );
-                }
-            } else if ( isValueMo ) {
-                valueAcc = formMgedOntologyAccession( characteristic.getValue() );
-            } else {
-                hasValueAcc = false;
-            }
-        }
-
-        if ( hasCategoryAcc ) {
-            ExternalDatabase categoryExternalDatabase = ExternalDatabase.Factory.newInstance();
-            categoryExternalDatabase.setName( categoryDb );
-            ubic.gemma.model.common.description.OntologyEntry categoryOntologyEntry = ubic.gemma.model.common.description.OntologyEntry.Factory
-                    .newInstance();
-            categoryOntologyEntry.setAccession( categoryAcc );
-            categoryOntologyEntry.setExternalDatabase( categoryExternalDatabase );
-            categoryOntologyEntry.setCategory( characteristic.getCategory() );
-            categoryOntologyEntry.setValue( characteristic.getCategory() );
-            characteristic.setCategoryTerm( categoryOntologyEntry );
-        }
-
-        if ( hasValueAcc ) {
-            ExternalDatabase valueExternalDatabase = ExternalDatabase.Factory.newInstance();
-            valueExternalDatabase.setName( valueDb );
-            ubic.gemma.model.common.description.OntologyEntry valueOntologyEntry = ubic.gemma.model.common.description.OntologyEntry.Factory
-                    .newInstance();
-            valueOntologyEntry.setAccession( valueAcc );
-            valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
-            valueOntologyEntry.setCategory( characteristic.getValue() );
-            valueOntologyEntry.setValue( characteristic.getValue() );
-            characteristic.setValueTerm( valueOntologyEntry );
-        }
-
-        if ( log.isDebugEnabled() )
-            log.debug( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
-                    + "'   CatDb: '" + categoryDb + "'  ValDb: '" + valueDb + "'   CatAcc: '" + categoryAcc
-                    + "'   ValAcc: " + valueAcc );
+        // if ( characteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
+        //
+        // boolean isCategoryMo = false;
+        // boolean isValueMo = false;
+        // boolean hasCategoryAcc = false;
+        // boolean hasValueAcc = false;
+        // String categoryDb = elm.valueOf( "@CategoryDatabaseIdentifier" );
+        // String categoryAcc = elm.valueOf( "@CategoryDatabaseAccession" );
+        // String valueDb = elm.valueOf( "@ValueDatabaseIdentifier" );
+        // String valueAcc = elm.valueOf( "@ValueDatabaseAccession" );
+        //
+        // if ( categoryDb.length() > 0 ) {
+        // isCategoryMo = this.mgedOntologyAliases.contains( categoryDb );
+        // if ( isCategoryMo ) {
+        // categoryDb = MGED_DATABASE_IDENTIFIER;
+        // }
+        // } else if ( mgedOntologyHelper.classExists( characteristic.getCategory() ) ) {
+        // isCategoryMo = true;
+        // categoryDb = MGED_DATABASE_IDENTIFIER;
+        // } else {
+        // log.debug( "No category database for '" + characteristic.getCategory() + "'" );
+        // }
+        //
+        // if ( categoryAcc.length() > 0 ) {
+        // if ( isCategoryMo ) {
+        // categoryAcc = formMgedOntologyAccession( categoryAcc );
+        // }
+        // } else if ( isCategoryMo ) {
+        // categoryAcc = formMgedOntologyAccession( characteristic.getCategory() );
+        // } else {
+        // hasCategoryAcc = false;
+        // if ( log.isDebugEnabled() )
+        // log.debug( "No category accession value for '" + characteristic.getCategory() + "'" );
+        // }
+        //
+        // if ( characteristic.getValue().length() > 0 ) {
+        // if ( valueDb.length() > 0 ) {
+        // isValueMo = this.mgedOntologyAliases.contains( valueDb );
+        // if ( isValueMo ) {
+        // valueDb = MGED_DATABASE_IDENTIFIER;
+        // }
+        // } else if ( isCategoryMo
+        // && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ) != null
+        // && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ).contains(
+        // characteristic.getValue() ) ) {
+        // isValueMo = true;
+        // valueDb = MGED_DATABASE_IDENTIFIER;
+        //
+        // } else if ( isCategoryMo ) {
+        // String instanceCategory = this.mgedOntologyHelper.getClassNameForInstance( characteristic.getValue() );
+        // if ( instanceCategory != null ) {
+        // if ( log.isDebugEnabled() )
+        // log.debug( "'" + characteristic.getValue() + "' is actually an instance of '"
+        // + instanceCategory + "', not '" + characteristic.getCategory()
+        // + "', but we just go with the flow." );
+        // isValueMo = true;
+        // valueDb = MGED_DATABASE_IDENTIFIER;
+        // } else {
+        // if ( log.isDebugEnabled() )
+        // log.debug( "No value database available for '" + characteristic.getValue() + "'" );
+        // }
+        //
+        // } else {
+        // if ( log.isDebugEnabled() )
+        // log.debug( "No value database available for '" + characteristic.getValue() + "'" );
+        // }
+        //
+        // if ( valueAcc.length() > 0 ) {
+        // if ( isValueMo ) {
+        // valueAcc = formMgedOntologyAccession( valueAcc );
+        // }
+        // } else if ( isValueMo ) {
+        // valueAcc = formMgedOntologyAccession( characteristic.getValue() );
+        // } else {
+        // hasValueAcc = false;
+        // }
+        // }
+        //
+        // if ( hasCategoryAcc ) {
+        // ExternalDatabase categoryExternalDatabase = ExternalDatabase.Factory.newInstance();
+        // categoryExternalDatabase.setName( categoryDb );
+        // ubic.gemma.model.common.description.VocabCharacteristic categoryOntologyEntry =
+        // ubic.gemma.model.common.description.VocabCharacteristic.Factory
+        // .newInstance();
+        // categoryOntologyEntry.setAccession( categoryAcc );
+        // categoryOntologyEntry.setExternalDatabase( categoryExternalDatabase );
+        // categoryOntologyEntry.setCategory( characteristic.getCategory() );
+        // categoryOntologyEntry.setValue( characteristic.getCategory() );
+        // characteristic.setCategoryTerm( categoryOntologyEntry );
+        // }
+        //
+        // if ( hasValueAcc ) {
+        // ExternalDatabase valueExternalDatabase = ExternalDatabase.Factory.newInstance();
+        // valueExternalDatabase.setName( valueDb );
+        // ubic.gemma.model.common.description.VocabCharacteristic valueOntologyEntry =
+        // ubic.gemma.model.common.description.VocabCharacteristic.Factory
+        // .newInstance();
+        // valueOntologyEntry.setAccession( valueAcc );
+        // valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
+        // valueOntologyEntry.setCategory( characteristic.getValue() );
+        // valueOntologyEntry.setValue( characteristic.getValue() );
+        // characteristic.setValueTerm( valueOntologyEntry );
+        // }
+        //
+        // if ( log.isDebugEnabled() )
+        // log.debug( "Category: '" + characteristic.getCategory() + "' Value: '" + characteristic.getValue()
+        // + "' CatDb: '" + categoryDb + "' ValDb: '" + valueDb + "' CatAcc: '" + categoryAcc
+        // + "' ValAcc: " + valueAcc );
     }
 
     /**

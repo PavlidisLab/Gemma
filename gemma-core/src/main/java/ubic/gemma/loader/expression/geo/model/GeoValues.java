@@ -149,9 +149,16 @@ public class GeoValues {
      *        the order isn't the same for two samples.
      * @param quantitationTypeIndex Identifies the quantitation type.
      * @param designElement
-     * @param value The data point to be stored.
+     * @param value The data point to be stored.  
      */
     public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
+
+        // we really don't allow null values at this stage.
+        if (value == null) {
+            throw new IllegalArgumentException();
+        }
+        assert value != null : "Attempted to add null for sample=" + sample + " qtype=" + quantitationTypeIndex + " de="
+                + designElement;
 
         if ( sample.getPlatforms().size() > 1 ) {
             throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );

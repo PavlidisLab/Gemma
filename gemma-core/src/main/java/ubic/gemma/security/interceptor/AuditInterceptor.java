@@ -214,7 +214,7 @@ public class AuditInterceptor implements MethodInterceptor {
         assert auditable != null;
         AuditTrail at = auditable.getAuditTrail();
         this.auditTrailDao.thaw( at );
-        
+
         if ( at == null ) {
             log.warn( "No audit trail for update method call" );
             addCreateAuditEvent( auditable );
@@ -254,7 +254,7 @@ public class AuditInterceptor implements MethodInterceptor {
         assert d != null;
         AuditTrail at = d.getAuditTrail();
         this.auditTrailDao.thaw( at );
-        
+
         if ( at == null || at.getEvents().size() == 0 ) {
             log.warn( "No audit trail for update method call, performing 'create'" );
             addCreateAuditEvent( d );
@@ -285,13 +285,13 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
             for ( Object object2 : ( Collection<?> ) returnValue ) {
-                if ( object2 instanceof Auditable ) processAfter( m, ( Auditable ) object2 );
+                if ( object2 instanceof Auditable ) processAfter( m, ( Auditable ) object2, null );
             }
         } else if ( !Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
             return; // no need to look at it!
         } else {
             Auditable d = ( Auditable ) returnValue;
-            processAfter( m, d );
+            processAfter( m, d, null );
         }
 
     }
@@ -323,7 +323,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param m
      * @param d
      */
-    private void processAfter( Method m, Auditable returnValue ) {
+    private void processAfter( Method m, Auditable returnValue, Object owner ) {
 
         if ( returnValue == null ) return;
 
@@ -347,25 +347,32 @@ public class AuditInterceptor implements MethodInterceptor {
 
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
-            // processAssociations( m, returnValue );
+            processAssociations( m, returnValue, owner );
         }
 
     }
 
     /**
+     * Given an object, recursively examine its associations for Auditables that need their AuditTrails to be
+     * initialized or updated.
+     * 
      * @param m
      * @param object
      */
-    private void processAssociations( Method m, Object object ) {
+    private void processAssociations( Method m, Object object, Object owner ) {
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
+        if (persister == null) {
+            throw new IllegalArgumentException("Not persister for " + object.getClass().getName());
+        }
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
         try {
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
 
-                // if ( log.isTraceEnabled() ) log.trace( "Checking " + propertyNames[j] + " for cascade audit" );
+                if ( log.isTraceEnabled() )
+                    log.trace( "Checking property " + propertyNames[j] + " of " + object + " for cascade audit" );
 
                 /*
                  * If the action being taken will result in a hibernate cascade, we need to update the audit information
@@ -373,9 +380,7 @@ public class AuditInterceptor implements MethodInterceptor {
                  * actions. Low-level hibernate activities (like cascading updates) are not seen.
                  */
                 if ( !crudUtils.needCascade( m, cs ) ) {
-                    if ( log.isTraceEnabled() )
-                    // log.trace( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
-                        continue;
+                    if ( log.isTraceEnabled() ) continue;
                 }
 
                 PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );
@@ -386,20 +391,25 @@ public class AuditInterceptor implements MethodInterceptor {
                 Class<?> propertyType = descriptor.getPropertyType();
 
                 if ( Auditable.class.isAssignableFrom( propertyType ) ) {
-
+                    if ( owner != null && owner == associatedObject ) continue; // break vicious cycle in bidirectional
+                    // relation
                     if ( log.isTraceEnabled() )
-                        log.trace( "Processing audit for " + propertyNames[j] + ", Cascade=" + cs );
-                    processAfter( m, ( Auditable ) associatedObject );
+                        log.trace( "Processing audit for property " + propertyNames[j] + ", Cascade=" + cs );
+                    processAfter( m, ( Auditable ) associatedObject, object );
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                     Collection associatedObjects = ( Collection ) associatedObject;
 
                     for ( Object object2 : associatedObjects ) {
+
+                        if ( owner != null && owner == object2 ) continue; // break vicious cycle in bidirectional
+                        // relation
+
                         if ( Auditable.class.isAssignableFrom( object2.getClass() ) ) {
                             if ( log.isTraceEnabled() ) {
                                 log.trace( "Processing audit for member " + object2 + " of collection "
                                         + propertyNames[j] + ", Cascade=" + cs );
                             }
-                            processAfter( m, ( Auditable ) object2 );
+                            processAfter( m, ( Auditable ) object2, object );
                         }
                     }
                 }

@@ -61,6 +61,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.ontology.CharacteristicUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -549,7 +550,7 @@ class FactorValueComparator implements Comparator<FactorValue> {
         if ( arg0.getMeasurement() != null && arg1.getMeasurement() != null ) {
             return ( new MeasurementComparator() ).compare( arg0.getMeasurement(), arg1.getMeasurement() );
         } else if ( arg0.getOntologyEntry() != null && arg1.getOntologyEntry() != null ) {
-            return arg0.getOntologyEntry().getValue().compareTo( arg1.getOntologyEntry().getValue() );
+            return CharacteristicUtils.compare( arg0.getOntologyEntry(), arg1.getOntologyEntry() );
         } else if ( arg0.getValue() != null && arg1.getValue() != null ) {
             return arg0.getValue().compareTo( arg1.getValue() );
         } else {

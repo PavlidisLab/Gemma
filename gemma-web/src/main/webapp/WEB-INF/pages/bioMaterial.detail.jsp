@@ -85,7 +85,7 @@
         </h3>
         <display:table name="bioMaterial.characteristics" defaultsort="1" class="list" requestURI="" id="characteristicList"
         pagesize="30" >
-            <display:column sortable="true" property="category" maxWords="100" />
+            <display:column sortable="true" property="description" maxWords="100" />
             <display:column sortable="true"  property="value" maxWords="100" />
         </display:table>
 	    		

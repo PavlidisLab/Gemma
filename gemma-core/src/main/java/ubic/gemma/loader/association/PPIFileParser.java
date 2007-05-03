@@ -21,7 +21,8 @@ package ubic.gemma.loader.association;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.basecode.util.StringUtil;
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.ProteinProteinInteraction;
 import ubic.gemma.model.association.ProteinProteinInteractionDao;
@@ -34,7 +35,7 @@ import ubic.gemma.model.genome.gene.GeneProductDao;
  * Class to parse a file of protein-protein interactions (retrieved from BIND). Format: (read whole row)
  * 
  * <pre>
- *            pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
+ *              pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
  * </pre>
  * 
  * @author anshu
@@ -62,7 +63,7 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
         System.out.println( line );
-        String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != PPI_FIELDS_PER_ROW ) {
             throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length

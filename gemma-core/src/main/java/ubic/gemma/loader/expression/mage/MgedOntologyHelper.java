@@ -51,6 +51,11 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class MgedOntologyHelper {
 
+    
+    public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#";
+    
+    // FIXME this is really no longer valid because the DAML is not supported. Use OWL instead.
+    
     private static int enumID = 0;
 
     private static Log log = LogFactory.getLog( MgedOntologyHelper.class.getName() );

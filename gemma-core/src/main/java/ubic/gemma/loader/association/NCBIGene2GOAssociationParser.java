@@ -33,8 +33,8 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.common.description.ExternalDatabase; 
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
@@ -43,34 +43,34 @@ import ubic.gemma.util.ConfigUtils;
  * This parses GO annotations from NCBI. See {@ink ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
  * 
  * <pre>
- *                                   tax_id:
- *                                   the unique identifier provided by NCBI Taxonomy
- *                                   for the species or strain/isolate
- *                                  
- *                                   GeneID:
- *                                   the unique identifier for a gene
- *                                   --note:  for genomes previously available from LocusLink,
- *                                   the identifiers are equivalent
- *                                  
- *                                   GO ID:
- *                                   the GO ID, formatted as GO:0000000
- *                                  
- *                                   Evidence:
- *                                   the evidence code in the gene_association file
- *                                  
- *                                   Qualifier: 
- *                                   a qualifier for the relationship between the gene
- *                                   and the GO term
- *                                  
- *                                   GO term:
- *                                   the term indicated by the GO ID
- *                                  
- *                                   PubMed:
- *                                   pipe-delimited set of PubMed uids reported as evidence
- *                                   for the association
- *                                  
- *                                   Category:
- *                                   the GO category (Function, Process, or Component)
+ *                                    tax_id:
+ *                                    the unique identifier provided by NCBI Taxonomy
+ *                                    for the species or strain/isolate
+ *                                   
+ *                                    GeneID:
+ *                                    the unique identifier for a gene
+ *                                    --note:  for genomes previously available from LocusLink,
+ *                                    the identifiers are equivalent
+ *                                   
+ *                                    GO ID:
+ *                                    the GO ID, formatted as GO:0000000
+ *                                   
+ *                                    Evidence:
+ *                                    the evidence code in the gene_association file
+ *                                   
+ *                                    Qualifier: 
+ *                                    a qualifier for the relationship between the gene
+ *                                    and the GO term
+ *                                   
+ *                                    GO term:
+ *                                    the term indicated by the GO ID
+ *                                   
+ *                                    PubMed:
+ *                                    pipe-delimited set of PubMed uids reported as evidence
+ *                                    for the association
+ *                                   
+ *                                    Category:
+ *                                    the GO category (Function, Process, or Component)
  * </pre>
  * 
  * @author keshav
@@ -82,6 +82,8 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
 
     protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationParser.class );
 
+    private static final String GO_BASE_URI = "http://purl.org/obo/owl/GO#";
+
     private final int TAX_ID = ConfigUtils.getInt( "gene2go.tax_id" );
 
     private final int EVIDENCE_CODE = ConfigUtils.getInt( "gene2go.evidence_code" );
@@ -89,8 +91,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
     private final int GENE_ID = ConfigUtils.getInt( "gene2go.gene_id" );
 
     private final int GO_ID = ConfigUtils.getInt( "gene2go.go_id" );
-
-    private final int GO_CATEGORY = ConfigUtils.getInt( "gene2go.go_category" );
 
     BlockingQueue<Gene2GOAssociation> queue;
 
@@ -145,12 +145,11 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
         gene.setNcbiId( values[GENE_ID] );
 
         gene.setTaxon( t );
-        OntologyEntry oe = OntologyEntry.Factory.newInstance();
-        oe.setAccession( values[GO_ID] );
-
-        oe.setCategory( values[GO_CATEGORY] );
-
-        oe.setExternalDatabase( goDb );
+        VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
+        String value = values[GO_ID].replace( ":", "_" );
+        oe.setTermUri( GO_BASE_URI + value );
+        oe.setValue( value );
+        oe.setSource( goDb );
 
         g2GOAss.setSource( ncbiGeneDb );
 

@@ -19,10 +19,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject; 
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -31,6 +29,8 @@ import ubic.gemma.model.genome.PredictedGeneImpl;
 import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 import cern.colt.list.ObjectArrayList;
 
 /**
@@ -437,9 +437,9 @@ public class MetaLinkFinder {
     	Collection<Long> geneIds = new HashSet<Long>();
     	geneIds.add(gene2.getId());
     	try{
-    		Map<Long, Collection<OntologyEntry>> overlapMap = MetaLinkFinder.geneOntologyService.calculateGoTermOverlap(gene1, geneIds);
+    		Map<Long, Collection<OntologyTerm>> overlapMap = MetaLinkFinder.geneOntologyService.calculateGoTermOverlap(gene1, geneIds);
     		if(overlapMap != null){
-    			Collection<OntologyEntry> overlapGOTerms = overlapMap.get(gene2.getId()); 
+    			Collection<OntologyTerm> overlapGOTerms = overlapMap.get(gene2.getId()); 
     			if(overlapGOTerms != null) res = overlapGOTerms.size();
     		}
     	}catch(Exception e){
