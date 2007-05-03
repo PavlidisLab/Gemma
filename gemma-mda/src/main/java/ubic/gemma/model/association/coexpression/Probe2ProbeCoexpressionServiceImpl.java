@@ -88,13 +88,13 @@ public class Probe2ProbeCoexpressionServiceImpl extends
             throws java.lang.Exception {
 
         if ( toDelete instanceof RatProbeCoExpression )
-            this.getRatProbeCoExpressionDao().remove( toDelete );
+            this.getRatProbeCoExpressionDao().remove( ( RatProbeCoExpression ) toDelete );
         else if ( toDelete instanceof MouseProbeCoExpression )
-            this.getMouseProbeCoExpressionDao().remove( toDelete );
+            this.getMouseProbeCoExpressionDao().remove( ( MouseProbeCoExpression ) toDelete );
         else if ( toDelete instanceof HumanProbeCoExpression )
-            this.getHumanProbeCoExpressionDao().remove( toDelete );
+            this.getHumanProbeCoExpressionDao().remove( ( HumanProbeCoExpression ) toDelete );
         else if ( toDelete instanceof OtherProbeCoExpression )
-            this.getOtherProbeCoExpressionDao().remove( toDelete );
+            this.getOtherProbeCoExpressionDao().remove( ( OtherProbeCoExpression ) toDelete );
         else
             throw new IllegalArgumentException( "Collection contains objects that it can't persist:"
                     + toDelete.getClass() + " no service method for persisting." );
