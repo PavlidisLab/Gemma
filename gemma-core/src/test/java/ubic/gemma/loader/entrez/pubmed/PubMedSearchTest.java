@@ -54,6 +54,22 @@ public class PubMedSearchTest extends TestCase {
         }
     }
     
+    public void testSearchAndRetrievIdsByHTTP() throws Exception {
+        try {
+            PubMedSearch pms = new PubMedSearch();
+            Collection<String> searchTerms = new HashSet<String>();
+            searchTerms.add( "brain" );
+            searchTerms.add( "hippocampus" );
+            searchTerms.add( "habenula" );
+            searchTerms.add( "glucose" );
+            Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
+            assertEquals( 4, actualResult.size() ); // at least, this was the result on 8/10/2006.
+        } catch ( java.net.UnknownHostException e ) {
+            log.warn( "Test skipped due to unknown host exception" );
+            return;
+        }
+    }
+    
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */

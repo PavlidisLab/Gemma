@@ -277,8 +277,8 @@
 		</dependency>
 		<dependency>
 			<groupId>mage</groupId>
-			<artifactId>mage</artifactId>
-			<version>1.1</version>
+			<artifactId>MAGEstk</artifactId>
+			<version>2006-07-v1.x-compatible</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>

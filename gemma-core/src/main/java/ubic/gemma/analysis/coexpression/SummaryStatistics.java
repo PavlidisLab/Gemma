@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -133,8 +133,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
         Map<Long, Integer> counts = new HashMap<Long, Integer>();
         int i = 0;
         for ( Gene gene : genes ) {
-            Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
-                    .getCompositeSequencesByGeneId( gene.getId() );
+            Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( gene.getId() );
             counts.put( gene.getId(), compositeSequences.size() );
             if ( ++i % 1000 == 0 ) {
                 log.info( "Processed " + i + " genes" );
@@ -155,8 +154,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
     public void genesPerProbe( Taxon taxon ) {
         ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         Collection<ArrayDesign> ads = adService.loadAll();
-        CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
-                .getBean( "compositeSequenceGeneMapperService" );
+     
         Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
         int i = 0;
         Collection<BioSequence> seenSeqs = new HashSet<BioSequence>();
@@ -173,7 +171,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
                 if ( seenSeqs.contains( bs ) ) continue;
 
                 Integer numGenes = 0;
-                Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( cs );
+                Collection<Gene> genes = compositeSequenceService.getGenes( cs );
 
                 if ( genes == null )
                     numGenes = 0;

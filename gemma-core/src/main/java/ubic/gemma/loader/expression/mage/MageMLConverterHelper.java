@@ -99,6 +99,7 @@ import org.biomage.QuantitationType.PresentAbsent;
 import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
+import org.biomage.tools.ontology.OntologyHelper;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -229,7 +230,7 @@ public class MageMLConverterHelper {
     /**
      * 
      */
-    private MgedOntologyHelper mgedOntologyHelper;
+    private OntologyHelper mgedOntologyHelper;
 
     /**
      * Places where, according to the current configuration, local MAGE bioDataCube external files are stored.
@@ -1842,9 +1843,8 @@ public class MageMLConverterHelper {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
     }
-    
+
     /**
-     * 
      * @param mageObj
      * @param gemmaObj
      * @param getter
@@ -3049,13 +3049,17 @@ public class MageMLConverterHelper {
      * 
      */
     private void initMGEDOntology() {
-        URL ontologyDaml = this.getClass().getResource( "MGEDOntology.daml" );
+        // URL ontologyDaml = this.getClass().getResource( "MGEDOntology.daml" );
 
         log.info( "Reading MGED Ontology" );
-        File test = new File( ontologyDaml.getFile() );
-        assert test.canRead() : "Could not read MGED Ontology DAML file";
-        mgedOntologyHelper = new MgedOntologyHelper( ontologyDaml.getFile() );
-
+        // File test = new File( ontologyDaml.getFile() );
+        // assert test.canRead() : "Could not read MGED Ontology DAML file";
+        // mgedOntologyHelper = new MgedOntologyHelper( ontologyDaml.getFile() );
+        try {
+            mgedOntologyHelper = new OntologyHelper( MGED_ONTOLOGY_URL );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**

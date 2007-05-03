@@ -44,7 +44,7 @@ import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.spring.web.mvc.CompassSearchResults;
 
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

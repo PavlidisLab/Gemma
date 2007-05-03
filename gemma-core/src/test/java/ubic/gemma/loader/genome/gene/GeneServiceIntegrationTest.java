@@ -1,11 +1,27 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.loader.genome.gene;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
-
 import ubic.gemma.apps.Blat;
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -23,6 +39,10 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+/**
+ * @author pavlidis
+ * @version $Id$
+ */
 public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     ArrayDesignProbeMapperServiceIntegrationTest pTest = new ArrayDesignProbeMapperServiceIntegrationTest();
 
@@ -38,10 +58,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         Gene g = geneCollection.iterator().next();
 
-        CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
-                .getBean( "compositeSequenceGeneMapperService" );
-
-        long count = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( g.getId() );
+        long count = geneService.getCompositeSequenceCountById( g.getId() );
         assert ( count != 0 );
     }
 
@@ -54,11 +71,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         Gene g = geneCollection.iterator().next();
 
-        CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
-                .getBean( "compositeSequenceGeneMapperService" );
-
-        Collection<CompositeSequence> compSequences = compositeSequenceGeneMapperService
-                .getCompositeSequencesByGeneId( g.getId() );
+        Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
         assert ( compSequences.size() != 0 );
     }
 

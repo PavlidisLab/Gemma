@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -63,7 +62,7 @@ public class GeneController extends BaseMultiActionController {
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private GeneOntologyService geneOntologyService;
- 
+
     /**
      * @return Returns the bibliographicReferenceService.
      */
@@ -152,13 +151,14 @@ public class GeneController extends BaseMultiActionController {
         mav.addObject( "numOntologyEntries", ontos.size() );
 
         // Get the composite sequences
-        Long compositeSequenceCount = compositeSequenceGeneMapperService.getCompositeSequenceCountByGeneId( id );
+        Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         return mav;
     }
 
     /**
      * Provide the human-readable text for each GO term.
+     * 
      * @param ontos
      */
     private void fillInTermNames( Collection<VocabCharacteristic> ontos ) {
@@ -213,11 +213,7 @@ public class GeneController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        // ModelAndView mav = new ModelAndView( "compositeSequences" );
-
-        Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
-                .getCompositeSequencesByGeneId( id );
-        // mav.addObject( "compositeSequences", compositeSequences );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
 
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 

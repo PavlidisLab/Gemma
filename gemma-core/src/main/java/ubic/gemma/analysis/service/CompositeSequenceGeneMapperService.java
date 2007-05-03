@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.genome;
+package ubic.gemma.analysis.service;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -30,7 +30,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
@@ -39,7 +38,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.bean id="compositeSequenceGeneMapperService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="geneDao" ref="geneDao"
  */
 public class CompositeSequenceGeneMapperService {
     private Log log = LogFactory.getLog( this.getClass() );
@@ -48,13 +46,12 @@ public class CompositeSequenceGeneMapperService {
 
     CompositeSequenceService compositeSequenceService;
 
-    GeneDao geneDao = null;
-
     /**
      * @param officialSymbols
      * @param arrayDesigns to look in
      * @return LinkedHashMap<Gene, Collection<CompositeSequence>>
      */
+    @SuppressWarnings("unchecked")
     public LinkedHashMap<Gene, Collection<CompositeSequence>> getCompositeSequencesForGenesByOfficialSymbols(
             Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
 
@@ -68,7 +65,7 @@ public class CompositeSequenceGeneMapperService {
             log.debug( "official symbol: " + officialSymbol );
             Collection<Gene> genes = genesMap.get( officialSymbol );
             for ( Gene g : genes ) {
-                Collection<CompositeSequence> compositeSequences = this.getCompositeSequencesByGeneId( g.getId() );
+                Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
                 for ( CompositeSequence sequence : compositeSequences ) {
                     if ( arrayDesigns.contains( sequence.getArrayDesign() ) ) {
                         if ( compositeSequencesForGeneMap.get( g ) == null ) {
@@ -90,7 +87,7 @@ public class CompositeSequenceGeneMapperService {
      * @return LinkedHashMap
      */
     @SuppressWarnings("unchecked")
-    public LinkedHashMap<String, Collection<Gene>> findGenesByOfficialSymbols( Collection<String> officialSymbols ) {
+    protected LinkedHashMap<String, Collection<Gene>> findGenesByOfficialSymbols( Collection<String> officialSymbols ) {
 
         LinkedHashMap<String, Collection<Gene>> geneMap = new LinkedHashMap<String, Collection<Gene>>();
         for ( String officialSymbol : officialSymbols ) {
@@ -106,43 +103,6 @@ public class CompositeSequenceGeneMapperService {
     }
 
     /**
-     * @param compositeSequence
-     * @return Collection<Gene>
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<Gene> getGenesForCompositeSequence( CompositeSequence compositeSequence ) {
-        return compositeSequenceService.getGenes( compositeSequence );
-    }
-
-    /**
-     * @param id
-     * @return Collection<CompositeSequence>
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequence> getCompositeSequencesByGeneId( long id ) {
-        // TODO change name to getCompositeSequenceByGene(Gene gene)
-        return this.geneDao.getCompositeSequencesById( id );
-    }
-
-    /**
-     * @param id
-     * @return Collection<CompositeSequence>
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
-        return this.geneDao.getCompositeSequences( gene, arrayDesign );
-    }
-
-    /**
-     * @param id
-     * @return long
-     * @throws Exception
-     */
-    public long getCompositeSequenceCountByGeneId( long id ) {
-        return this.geneDao.getCompositeSequenceCountById( id );
-    }
-
-    /**
      * @param geneService The geneService to set.
      */
     public void setGeneService( GeneService geneService ) {
@@ -154,13 +114,6 @@ public class CompositeSequenceGeneMapperService {
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param geneDao The geneDao to set.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
     }
 
 }

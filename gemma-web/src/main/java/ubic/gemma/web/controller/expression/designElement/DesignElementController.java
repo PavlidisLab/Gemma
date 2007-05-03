@@ -29,12 +29,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
@@ -47,7 +48,7 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.property name="methodNameResolver" ref="designElementActions"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
- * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
+ * @spring.property name="geneService" ref="geneService"
  * @spring.property name="searchService" ref="searchService"
  */
 public class DesignElementController extends BaseMultiActionController {
@@ -56,18 +57,16 @@ public class DesignElementController extends BaseMultiActionController {
     private ArrayDesignService arrayDesignService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService;
     private CompositeSequenceService compositeSequenceService;
-    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
+    private GeneService geneService;
 
-    /**
-     * @param compositeSequenceGeneMapperService the compositeSequenceGeneMapperService to set
-     */
-    public void setCompositeSequenceGeneMapperService(
-            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
-        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     /**
-     * FIXME move this into the compositesequencecontroller or the arraydesigncontroller - it's confusing having a 'designelementcontroller'
+     * FIXME move this into the compositesequencecontroller or the arraydesigncontroller - it's confusing having a
+     * 'designelementcontroller'
+     * 
      * @param request
      * @param response
      * @return
@@ -108,12 +107,10 @@ public class DesignElementController extends BaseMultiActionController {
             for ( Gene gene : geneResults ) {
 
                 if ( arrayDesign == null ) {
-                    Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService
-                            .getCompositeSequencesByGeneId( gene.getId() );
+                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequencesById( gene.getId() );
                     searchResults.addAll( geneCs );
                 } else {
-                    Collection<CompositeSequence> geneCs = compositeSequenceGeneMapperService.getCompositeSequences(
-                            gene, arrayDesign );
+                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequences( gene, arrayDesign );
                     searchResults.addAll( geneCs );
                 }
 

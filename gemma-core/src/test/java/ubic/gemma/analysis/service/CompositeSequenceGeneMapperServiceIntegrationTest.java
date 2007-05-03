@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.expression.arrayDesign;
+package ubic.gemma.analysis.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
-import ubic.gemma.genome.CompositeSequenceGeneMapperService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
@@ -111,7 +113,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
             // first load small two-color
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "platform" ) );
-             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
+            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
                     true, true );
             ad = ads.iterator().next();
 
@@ -231,7 +233,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         if ( cs == null ) return;
 
-        Collection<Gene> genes = compositeSequenceGeneMapperService.getGenesForCompositeSequence( cs );
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
 
         log.info( "Found " + genes.size() + " gene(s) for " + cs.getName() );
 
@@ -255,8 +257,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         Iterator iter = genes.iterator();
         Gene g = ( Gene ) iter.next();
 
-        Collection<CompositeSequence> compositeSequences = compositeSequenceGeneMapperService
-                .getCompositeSequencesByGeneId( g.getId() );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
 
         log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
                 + " ... " );

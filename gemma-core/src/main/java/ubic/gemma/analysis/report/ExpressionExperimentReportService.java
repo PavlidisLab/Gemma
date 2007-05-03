@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ubic.gemma.expression.experiment;
+package ubic.gemma.analysis.report;
 
 import java.io.File;
 import java.io.FileInputStream;

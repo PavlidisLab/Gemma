@@ -253,12 +253,24 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
      */
     @Override
     protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
         return this.getGeneDao().getCompositeSequenceMap( genes );
+    }
+
+    @Override
+    protected long handleGetCompositeSequenceCountById( Long id ) throws Exception {
+        return this.getGeneDao().getCompositeSequenceCountById( id );
+    }
+
+    @Override
+    protected Collection handleGetCompositeSequencesById( Long id ) throws Exception {
+        return this.getGeneDao().getCompositeSequencesById( id );
     }
 
 }

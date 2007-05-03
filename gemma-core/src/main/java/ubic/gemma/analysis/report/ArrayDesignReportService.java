@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.expression.arrayDesign;
+package ubic.gemma.analysis.report;
 
 import java.io.File;
 import java.io.FileInputStream;
