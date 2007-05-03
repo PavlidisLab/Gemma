@@ -44,7 +44,6 @@ import ubic.gemma.model.common.description.BibliographicReference;
 public class PubMedSearch {
     protected static final Log log = LogFactory.getLog( PubMedSearch.class );
     private String uri;
-
     private static final int CHUNK_SIZE = 10; // don't retrive too many at once, it isn't nice.
 
     /**
@@ -83,7 +82,6 @@ public class PubMedSearch {
         URL toBeGotten = new URL( StringUtils.chomp( builder.toString() ) );
         log.info( "Fetching " + toBeGotten );
 
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         ESearchXMLParser parser = new ESearchXMLParser();
         Collection<String> ids = parser.parse( toBeGotten.openStream() );
 
@@ -93,7 +91,32 @@ public class PubMedSearch {
 
         return results;
     }
-    
+
+    /**
+     * 
+     * @param searchTerms
+     * @return The PubMed ids (as strings) for the search results.
+     * @throws IOException
+     * @throws SAXException
+     * @throws ParserConfigurationException
+     */
+    public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms ) throws IOException,
+            SAXException, ParserConfigurationException {
+        StringBuilder builder = new StringBuilder();
+        builder.append( uri );
+        builder.append( "&term=" );
+        for ( String string : searchTerms ) {
+            builder.append( string );
+            builder.append( "+" );
+        }
+        URL toBeGotten = new URL( StringUtils.chomp( builder.toString() ) );
+        log.info( "Fetching " + toBeGotten );
+
+        ESearchXMLParser parser = new ESearchXMLParser();
+        Collection<String> ids = parser.parse( toBeGotten.openStream() );
+        return ids;
+    }
+
     /**
      * For an integer pubmed id
      * 
@@ -104,9 +127,7 @@ public class PubMedSearch {
     public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
             throws IOException, SAXException, ParserConfigurationException {
 
-        Collection<String> ids = searchTerms;
-
-        Collection<BibliographicReference> results = fetchById( ids );
+        Collection<BibliographicReference> results = fetchById( searchTerms );
 
         log.info( "Fetched " + results.size() + " references" );
 
@@ -119,16 +140,14 @@ public class PubMedSearch {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         Collection<Integer> ints = new HashSet<Integer>();
         int count = 0;
-        
+
         for ( String str : ids ) {
             log.info( "Fetching pubmed " + str );
-            
+
             ints.add( Integer.parseInt( str ) );
 
             count++;
-            
 
-            
             if ( count >= CHUNK_SIZE ) {
                 results.addAll( fetcher.retrieveByHTTP( ints ) );
                 ints = new HashSet<Integer>();
