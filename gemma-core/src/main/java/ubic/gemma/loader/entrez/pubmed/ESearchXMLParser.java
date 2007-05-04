@@ -51,7 +51,19 @@ public class ESearchXMLParser {
      * @throws ParserConfigurationException
      */
     public Collection<String> parse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+        Document document = openAndParse( is );
+        return extractIds( document );
+    }
+    
 
+    /**
+     * @param is
+     * @return
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     */
+    private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
         if ( is.available() == 0 ) {
             throw new IOException( "XML stream contains no data." );
         }
@@ -62,9 +74,18 @@ public class ESearchXMLParser {
 
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.parse( is );
-        return extractIds( document );
+        return document;
     }
 
+    public int getCount( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+        Document document = openAndParse( is );
+        NodeList idList = document.getElementsByTagName( "Count" );
+        Node item = idList.item( 0 );
+        String value = XMLUtils.getTextValue( ( Element ) item );
+        log.debug( "Got " + value );
+        return Integer.parseInt( value );
+    }
+    
     /**
      * @param document
      * @return
