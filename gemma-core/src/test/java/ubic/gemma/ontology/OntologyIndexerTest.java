@@ -18,15 +18,14 @@
  */
 package ubic.gemma.ontology;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
-import com.hp.hpl.jena.query.larq.LARQ;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 import junit.framework.TestCase;
 
@@ -41,15 +40,23 @@ public class OntologyIndexerTest extends TestCase {
     public final void testIndexing() throws Exception {
         String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
         OntModel model = OntologyLoader.getMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
-        IndexLARQ index = OntologyIndexer.indexOntology( url );
-        OntologySearch.matchClasses( model, index, "bedding" );
+        IndexLARQ index = OntologyIndexer.indexOntology( url, "mged", model );
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "bedding" );
+        assertEquals( 1, name.size() );
     }
-    
-    
+
     public final void testIndexingDbModel() throws Exception {
-        String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.getMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
-        IndexLARQ index = OntologyIndexer.indexOntology( url );
-        OntologySearch.matchClasses( model, index, "bedding" );
+        // MESH must be loaded into the DB for this to work in a reasonable amount of time!
+        String url = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
+        OntModel model = OntologyLoader.loadPersistentModel( url, false );
+
+        // should be a one-time process
+        // log.info( "Indexing..." );
+        // IndexLARQ index = OntologyIndexer.indexOntology( url, "mage" );
+        IndexLARQ index = OntologyIndexer.getSubjectIndex( "mage" );
+
+        log.info( "Searching ... " );
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "anatomy" );
+        assertEquals( 7, name.size() );
     }
 }

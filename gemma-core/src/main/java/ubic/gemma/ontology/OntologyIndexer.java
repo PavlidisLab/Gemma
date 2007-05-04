@@ -18,12 +18,19 @@
  */
 package ubic.gemma.ontology;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.FSDirectory;
 
+import ubic.gemma.util.ConfigUtils;
+
+import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.query.larq.IndexBuilderSubject;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
-import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.util.FileManager;
 
@@ -33,22 +40,39 @@ import com.hp.hpl.jena.util.FileManager;
  */
 public class OntologyIndexer {
 
+    /**
+     * Location under gemma.appdata.home where indexes will be stored
+     */
+    private static final String INDEX_DIR = "compass";
+
     private static Log log = LogFactory.getLog( OntologyIndexer.class.getName() );
 
-    public static IndexLARQ indexOntology( String url ) {
-        IndexLARQ index = buildSubjectIndex( url );
+    /**
+     * Create an index from an existing OntModel. Any existing index will be overwritten.
+     * 
+     * @param url
+     * @param name
+     * @param model
+     * @return
+     */
+    public static IndexLARQ indexOntology( String url, String name, OntModel model ) {
+        IndexLARQ index = index( url, name, model );
         return index;
     }
 
-    static IndexLARQ buildSubjectIndex( String datafile ) {
-        // ---- Read and index all literal strings.
-        // IndexBuilderString larqBuilder = new IndexBuilderString(/* file */);
+    /**
+     * Create an index from an existing OntModel. Any existing index will be overwritten.
+     * 
+     * @param datafile or uri
+     * @param name used to refer to this index later
+     * @param model
+     * @return
+     */
+    private static IndexLARQ index( String datafile, String name, OntModel model ) {
 
-        // ---- Read and index all subjects
+        File indexdir = getIndexPath( name );
 
-        Model model = ModelFactory.createDefaultModel();
-
-        IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( /* file */);
+        IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( indexdir );
         model.register( larqSubjectBuilder );
         FileManager.get().readModel( model, datafile );
 
@@ -56,8 +80,39 @@ public class OntologyIndexer {
         model.unregister( larqSubjectBuilder );
 
         IndexLARQ index = larqSubjectBuilder.getIndex();
-
         return index;
+    }
+
+    /**
+     * @param name
+     * @return
+     */
+    public static IndexLARQ getSubjectIndex( String name ) {
+        log.info( "Loading index: " + name );
+        File indexdir = getIndexPath( name );
+        try {
+            FSDirectory directory = FSDirectory.getDirectory( indexdir, false );
+            if ( IndexReader.indexExists( directory ) ) {
+                IndexReader reader = IndexReader.open( directory );
+                return new IndexLARQ( reader );
+            } else {
+                throw new IllegalArgumentException( "No index with name " + name );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @param name
+     * @return
+     */
+    private static File getIndexPath( String name ) {
+        String path = ConfigUtils.getString( "gemma.appdata.home" ) + File.separator + INDEX_DIR + File.separator
+                + "gemma" + File.separator + "ontology" + File.separator + name;
+
+        File indexdir = new File( path );
+        return indexdir;
     }
 
 }

@@ -24,6 +24,8 @@ import java.util.HashSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.hp.hpl.jena.ontology.OntClass;
+import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -31,9 +33,8 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 import com.hp.hpl.jena.query.larq.LARQ;
-import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
-import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 
 /**
  * @author pavlidis
@@ -43,7 +44,7 @@ public class OntologySearch {
 
     private static Log log = LogFactory.getLog( OntologySearch.class.getName() );
 
-    public static void performQuery( Model model, IndexLARQ index, String queryString ) {
+    public static void performQuery( OntModel model, IndexLARQ index, String queryString ) {
         // Make globally available
         LARQ.setDefaultIndex( index );
 
@@ -57,28 +58,39 @@ public class OntologySearch {
         qExec.close();
     }
 
-    public static Collection<OntologyTerm> matchClasses( Model model, IndexLARQ index, String string ) {
+    /**
+     * Find classes that match the query string
+     * 
+     * @param model that goes with the index
+     * @param index to search
+     * @param queryString
+     * @return Collection of OntologyTerm objects
+     */
+    public static Collection<OntologyTerm> matchClasses( OntModel model, IndexLARQ index, String queryString ) {
 
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-        NodeIterator iterator = index.searchModelByIndex( model, string );
+        NodeIterator iterator = index.searchModelByIndex( model, queryString );
+
         while ( iterator.hasNext() ) {
-            Resource r = ( Resource ) iterator.next();
+            RDFNode r = ( RDFNode ) iterator.next();
+            r = r.inModel( model );
             if ( r.isURIResource() ) {
-                log.info( "found: " + r );
-                
+                try {
+                    OntClass cl = ( OntClass ) r.as( OntClass.class );
+                    OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
+                    if ( !results.contains( impl2 ) )
+                        results.add( impl2 );
+                    else
+                        continue;
+                    log.info( impl2 );
+                } catch ( Exception e ) {
+                    log.debug( e );
+                }
             }
 
-            // OntClass impl = new OntClassImpl( r.asNode(), new EnhGraph( model.getGraph(), new GraphPersonality() ) );
-            //
-            // OntologyTermImpl impl2 = new OntologyTermImpl( impl, null );
-            // results.add( impl2 );
-            // log.info( impl2 );
         }
         return results;
         //
-        // String query = "PREFIX pf: <http://jena.hpl.hp.com/ARQ/property#> SELECT * { ?lit pf:textMatch '" + string
-        // + "' . ?lit ?p ?o }";
-        // performQuery( model, index, query );
 
     }
 }

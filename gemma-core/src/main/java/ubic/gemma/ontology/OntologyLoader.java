@@ -315,6 +315,7 @@ public class OntologyLoader {
      * @return
      */
     private static OntModel persistModelIfNecessary( String url, boolean force ) {
+        log.info( "Getting model ..." );
         OntModel model = getRDBModel( url );
         if ( model.isEmpty() ) {
             log.info( url + ": New ontology, loading..." );
