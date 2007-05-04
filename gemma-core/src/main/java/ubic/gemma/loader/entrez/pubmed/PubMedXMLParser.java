@@ -32,10 +32,13 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dom4j.Attribute;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -46,9 +49,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  * Simple class to parse XML in the format defined by
  * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object
  * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -179,6 +179,24 @@ public class PubMedXMLParser {
                 Node article = articles.item( i );
 
                 BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+
+                NodeIterator meshHeadingIt = org.apache.xpath.XPathAPI.selectNodeIterator( article,
+                        "child::MedlineCitation/descendant::" + "MeshHeading" );
+                Node meshNode = null;
+                while ( ( meshNode = meshHeadingIt.nextNode() ) != null ) {
+                    Node descriptor = org.apache.xpath.XPathAPI.selectSingleNode( meshNode, "DescriptorName" );
+                    Attr dmajorTopic = ( Attr ) descriptor.getAttributes().getNamedItem( "MajorTopicYN" );
+                    String d = XMLUtils.getTextValue( ( Element ) descriptor );
+                    boolean dmajorB = dmajorTopic.getValue().equals( "Y" );
+                    log.info( d + " MajorTopic=" + dmajorB );
+                    Node qualifier = org.apache.xpath.XPathAPI.selectSingleNode( meshNode, "QualifierName" );
+                    if ( qualifier != null ) {
+                        String q = XMLUtils.getTextValue( ( Element ) qualifier );
+                        Attr qmajorTopic = ( Attr ) qualifier.getAttributes().getNamedItem( "MajorTopicYN" );
+                        boolean qmajorB = qmajorTopic.getValue().equals( "Y" );
+                        log.info( "qual: " + q + " MajorTopic=" + qmajorB );
+                    }
+                }
 
                 Node abstractNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
                         "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT );
