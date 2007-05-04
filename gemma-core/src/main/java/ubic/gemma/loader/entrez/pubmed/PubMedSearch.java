@@ -20,6 +20,7 @@ package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -93,6 +94,7 @@ public class PubMedSearch {
     }
 
     /**
+     * Gets all the pubmed ID's that would be returned given a list of input terms, using two eUtil calls.
      * 
      * @param searchTerms
      * @return The PubMed ids (as strings) for the search results.
@@ -103,16 +105,43 @@ public class PubMedSearch {
     public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms ) throws IOException,
             SAXException, ParserConfigurationException {
         StringBuilder builder = new StringBuilder();
-        builder.append( uri );
-        builder.append( "&term=" );
-        for ( String string : searchTerms ) {
-            builder.append( string );
-            builder.append( "+" );
+        for ( String word : searchTerms ) {
+            // space them out, then let the overloaded method urlencode them
+            builder.append( word );
+            builder.append( " " );
         }
-        URL toBeGotten = new URL( StringUtils.chomp( builder.toString() ) );
-        log.info( "Fetching " + toBeGotten );
+        return searchAndRetrieveIdsByHTTP( builder.toString() );
+    }
 
+    
+    /**
+     * Gets all the pubmed ID's that would be returned from a pubmed search string, using two eUtil calls.
+     * 
+     * @param searchQuery - what would normally be typed into pubmed search box for example "Neural Pathways"[MeSH]
+     * @return The PubMed ids (as strings) for the search results.
+     * @throws IOException
+     * @throws SAXException
+     * @throws ParserConfigurationException
+     */
+    public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery ) throws IOException, SAXException,
+            ParserConfigurationException {
         ESearchXMLParser parser = new ESearchXMLParser();
+        // encode it
+        searchQuery = URLEncoder.encode( searchQuery, "UTF-8" );
+
+        // build URL
+        String URLString = uri + "&term=" + searchQuery;
+        // builder.append("&retmax=" + 70000);
+        URL toBeGotten = new URL( URLString );
+        log.info( "Fetching Count" + toBeGotten );
+        // parse how many
+        int count = parser.getCount( toBeGotten.openStream() );
+
+        //now get them all
+        URLString += "&retmax=" + count;
+        toBeGotten = new URL( URLString );
+        log.info( "Fetching " + count + " ID's from:" + toBeGotten );
+
         Collection<String> ids = parser.parse( toBeGotten.openStream() );
         return ids;
     }
