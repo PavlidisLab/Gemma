@@ -48,5 +48,6 @@ public class CharacteristicUtils {
         return ca.compareTo( cb );
 
     }
-
+    
+  
 }

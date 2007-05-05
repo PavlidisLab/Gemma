@@ -52,8 +52,8 @@ public class OntologyIndexerTest extends TestCase {
 
         // should be a one-time process
         // log.info( "Indexing..." );
-        // IndexLARQ index = OntologyIndexer.indexOntology( url, "mage" );
-        IndexLARQ index = OntologyIndexer.getSubjectIndex( "mage" );
+        IndexLARQ index = OntologyIndexer.indexOntology( url, "mesh", model );
+        index = OntologyIndexer.getSubjectIndex( "mesh" );
 
         log.info( "Searching ... " );
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "anatomy" );

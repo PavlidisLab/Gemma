@@ -82,7 +82,7 @@ public class OntologySearch {
                         results.add( impl2 );
                     else
                         continue;
-                    log.info( impl2 );
+                    log.debug( impl2 );
                 } catch ( Exception e ) {
                     log.debug( e );
                 }

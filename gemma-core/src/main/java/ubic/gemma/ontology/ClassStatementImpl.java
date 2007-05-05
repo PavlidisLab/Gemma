@@ -41,6 +41,7 @@ public class ClassStatementImpl extends AbstractStatement implements ClassStatem
 
     @Override
     protected CharacteristicProperty makeProperty() {
+        assert object != null;
         Property p = Property.Factory.newInstance();
         p.setTermUri( this.getProperty().getUri() );
         p.setValue( this.getProperty().getLabel() );

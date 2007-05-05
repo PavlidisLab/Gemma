@@ -228,14 +228,12 @@ public class OntologyLoader {
      * less memory.
      * 
      * @param url
-     * @param force
+     * @param force model to be loaded into the database, even if it already exists there.
      * @return
      * @throws IOException
      */
     public static OntModel loadPersistentModel( String url, boolean force ) throws IOException {
         return persistModelIfNecessary( url, force );
-        // Collection<OntologyResource> result = initialize( url, model );
-        // return result;
     }
 
     /**

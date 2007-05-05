@@ -31,6 +31,20 @@ public class VocabCharacteristicBuilder {
         return toAddTo;
     }
 
+    /**
+     * Generate an instance of a VocabCharacteristic for a given term. You can use this to create VCs when there are no
+     * properties to attach.
+     * 
+     * @param term
+     * @return
+     */
+    public static VocabCharacteristic makeInstance( OntologyTerm term ) {
+        VocabCharacteristic v = VocabCharacteristic.Factory.newInstance();
+        v.setValue( term.getTerm() );
+        v.setTermUri( term.getUri() );
+        return v;
+    }
+
     // /**
     // * @param statements
     // * @return

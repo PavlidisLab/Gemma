@@ -76,4 +76,22 @@ public class PubMedXMLParserTest extends TestCase {
             }
         }
     }
+
+    public void testParseMesh() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
+    }
 }

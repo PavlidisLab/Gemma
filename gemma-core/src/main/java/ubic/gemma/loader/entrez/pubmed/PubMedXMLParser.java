@@ -42,8 +42,25 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicImpl;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.ontology.ChainedStatement;
+import ubic.gemma.ontology.ChainedStatementImpl;
+import ubic.gemma.ontology.ChainedStatementObject;
+import ubic.gemma.ontology.ChainedStatementObjectImpl;
+import ubic.gemma.ontology.CharacteristicStatement;
+import ubic.gemma.ontology.ClassStatement;
+import ubic.gemma.ontology.ClassStatementImpl;
+import ubic.gemma.ontology.DataStatement;
+import ubic.gemma.ontology.DataStatementImpl;
+import ubic.gemma.ontology.InstanceStatement;
+import ubic.gemma.ontology.InstanceStatementImpl;
+import ubic.gemma.ontology.MeshService;
+import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.VocabCharacteristicBuilder;
 
 /**
  * Simple class to parse XML in the format defined by
@@ -185,17 +202,36 @@ public class PubMedXMLParser {
                 Node meshNode = null;
                 while ( ( meshNode = meshHeadingIt.nextNode() ) != null ) {
                     Node descriptor = org.apache.xpath.XPathAPI.selectSingleNode( meshNode, "DescriptorName" );
-                    Attr dmajorTopic = ( Attr ) descriptor.getAttributes().getNamedItem( "MajorTopicYN" );
                     String d = XMLUtils.getTextValue( ( Element ) descriptor );
-                    boolean dmajorB = dmajorTopic.getValue().equals( "Y" );
-                    log.info( d + " MajorTopic=" + dmajorB );
-                    Node qualifier = org.apache.xpath.XPathAPI.selectSingleNode( meshNode, "QualifierName" );
-                    if ( qualifier != null ) {
-                        String q = XMLUtils.getTextValue( ( Element ) qualifier );
-                        Attr qmajorTopic = ( Attr ) qualifier.getAttributes().getNamedItem( "MajorTopicYN" );
-                        boolean qmajorB = qmajorTopic.getValue().equals( "Y" );
-                        log.info( "qual: " + q + " MajorTopic=" + qmajorB );
+                    boolean dmajorB = isMajorHeading( descriptor );
+
+                    OntologyTerm term = MeshService.find( d );
+                    if ( term == null ) {
+                        log.warn( "No MESH term found for: " + d );
+                        continue;
                     }
+                    VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
+
+                    NodeIterator qualifierIt = org.apache.xpath.XPathAPI.selectNodeIterator( meshNode, "QualifierName" );
+
+                    Node qualifier = null;
+                    while ( ( qualifier = qualifierIt.nextNode() ) != null ) {
+                        String q = XMLUtils.getTextValue( ( Element ) qualifier );
+
+                        boolean qmajorB = isMajorHeading( qualifier );
+                        OntologyTerm qualTerm = MeshService.find( q );
+
+                        if ( qualTerm == null ) {
+                            log.warn( "No MESH term found for: " + q );
+                            continue;
+                        }
+
+                        CharacteristicStatement cs = MeshService.getQualifierStatement( term, qualTerm, qmajorB );
+                        VocabCharacteristicBuilder.addStatement( vc, cs );
+                    }
+
+                    bibRef.getAnnotations().add( vc );
+                    log.info( vc );
                 }
 
                 Node abstractNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
@@ -244,6 +280,11 @@ public class PubMedXMLParser {
             throw new RuntimeException( e );
         }
         return result;
+    }
+
+    private boolean isMajorHeading( Node descriptor ) {
+        Attr dmajorTopic = ( Attr ) descriptor.getAttributes().getNamedItem( "MajorTopicYN" );
+        return dmajorTopic.getValue().equals( "Y" );
     }
 
     /**
