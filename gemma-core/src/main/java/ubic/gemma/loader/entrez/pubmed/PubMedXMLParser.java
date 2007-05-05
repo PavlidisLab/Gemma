@@ -32,7 +32,6 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dom4j.Attribute;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,22 +41,10 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CharacteristicImpl;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.ChainedStatement;
-import ubic.gemma.ontology.ChainedStatementImpl;
-import ubic.gemma.ontology.ChainedStatementObject;
-import ubic.gemma.ontology.ChainedStatementObjectImpl;
 import ubic.gemma.ontology.CharacteristicStatement;
-import ubic.gemma.ontology.ClassStatement;
-import ubic.gemma.ontology.ClassStatementImpl;
-import ubic.gemma.ontology.DataStatement;
-import ubic.gemma.ontology.DataStatementImpl;
-import ubic.gemma.ontology.InstanceStatement;
-import ubic.gemma.ontology.InstanceStatementImpl;
 import ubic.gemma.ontology.MeshService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.ontology.VocabCharacteristicBuilder;
@@ -65,7 +52,8 @@ import ubic.gemma.ontology.VocabCharacteristicBuilder;
 /**
  * Simple class to parse XML in the format defined by
  * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object
- * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase.
+ * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and Characteristics (for
+ * MESH)
  * 
  * @author pavlidis
  * @version $Id$
