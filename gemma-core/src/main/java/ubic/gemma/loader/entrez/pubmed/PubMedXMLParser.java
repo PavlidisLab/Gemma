@@ -185,42 +185,7 @@ public class PubMedXMLParser {
 
                 BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
 
-                NodeIterator meshHeadingIt = org.apache.xpath.XPathAPI.selectNodeIterator( article,
-                        "child::MedlineCitation/descendant::" + "MeshHeading" );
-                Node meshNode = null;
-                while ( ( meshNode = meshHeadingIt.nextNode() ) != null ) {
-                    Node descriptor = org.apache.xpath.XPathAPI.selectSingleNode( meshNode, "DescriptorName" );
-                    String d = XMLUtils.getTextValue( ( Element ) descriptor );
-                    boolean dmajorB = isMajorHeading( descriptor );
-
-                    OntologyTerm term = MeshService.find( d );
-                    if ( term == null ) {
-                        log.warn( "No MESH term found for: " + d );
-                        continue;
-                    }
-                    VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
-
-                    NodeIterator qualifierIt = org.apache.xpath.XPathAPI.selectNodeIterator( meshNode, "QualifierName" );
-
-                    Node qualifier = null;
-                    while ( ( qualifier = qualifierIt.nextNode() ) != null ) {
-                        String q = XMLUtils.getTextValue( ( Element ) qualifier );
-
-                        boolean qmajorB = isMajorHeading( qualifier );
-                        OntologyTerm qualTerm = MeshService.find( q );
-
-                        if ( qualTerm == null ) {
-                            log.warn( "No MESH term found for: " + q );
-                            continue;
-                        }
-
-                        CharacteristicStatement cs = MeshService.getQualifierStatement( term, qualTerm, qmajorB );
-                        VocabCharacteristicBuilder.addStatement( vc, cs );
-                    }
-
-                    bibRef.getAnnotations().add( vc );
-                    log.info( vc );
-                }
+                processMESH( article, bibRef );
 
                 Node abstractNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
                         "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT );
@@ -268,6 +233,63 @@ public class PubMedXMLParser {
             throw new RuntimeException( e );
         }
         return result;
+    }
+
+    /**
+     * @param article
+     * @param bibRef
+     * @throws TransformerException
+     * @throws IOException
+     */
+    private void processMESH( Node article, BibliographicReference bibRef ) throws TransformerException, IOException {
+        NodeIterator meshHeadingIt = org.apache.xpath.XPathAPI.selectNodeIterator( article,
+                "child::MedlineCitation/descendant::" + "MeshHeading" );
+        Node meshNode = null;
+        while ( ( meshNode = meshHeadingIt.nextNode() ) != null ) {
+            Node descriptor = org.apache.xpath.XPathAPI.selectSingleNode( meshNode, "DescriptorName" );
+            String d = XMLUtils.getTextValue( ( Element ) descriptor );
+            boolean dmajorB = isMajorHeading( descriptor );
+
+            OntologyTerm term = MeshService.find( d );
+            if ( term == null ) {
+                log.warn( "No MESH term found for: " + d );
+                continue;
+            }
+            VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
+
+            processQualifiers( meshNode, term, vc );
+
+            bibRef.getAnnotations().add( vc );
+            log.info( vc );
+        }
+    }
+
+    /**
+     * @param meshNode
+     * @param term
+     * @param vc
+     * @throws TransformerException
+     * @throws IOException
+     */
+    private void processQualifiers( Node meshNode, OntologyTerm term, VocabCharacteristic vc )
+            throws TransformerException, IOException {
+        NodeIterator qualifierIt = org.apache.xpath.XPathAPI.selectNodeIterator( meshNode, "QualifierName" );
+
+        Node qualifier = null;
+        while ( ( qualifier = qualifierIt.nextNode() ) != null ) {
+            String q = XMLUtils.getTextValue( ( Element ) qualifier );
+
+            boolean qmajorB = isMajorHeading( qualifier );
+            OntologyTerm qualTerm = MeshService.find( q );
+
+            if ( qualTerm == null ) {
+                log.warn( "No MESH term found for: " + q );
+                continue;
+            }
+
+            CharacteristicStatement cs = MeshService.getQualifierStatement( term, qualTerm, qmajorB );
+            VocabCharacteristicBuilder.addStatement( vc, cs );
+        }
     }
 
     private boolean isMajorHeading( Node descriptor ) {
