@@ -284,7 +284,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
 
         } else {
-        //    ees = expressionExperimentService.load( possibleEEs );
+            ees = expressionExperimentService.load( possibleEEs );
         }
         csc.setToUseEE( ees );
         numExpressionExperiments = ees.size();
@@ -371,7 +371,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         
         mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
         mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
-        mav.addObject( "numSearchedExpressionExperiments", csc.getToUseEE().size() );
+        mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
        
 
         mav.addObject( "numGenes", numGenes );
