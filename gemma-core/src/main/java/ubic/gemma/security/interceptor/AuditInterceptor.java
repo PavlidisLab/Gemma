@@ -275,7 +275,7 @@ public class AuditInterceptor implements MethodInterceptor {
         if ( returnValue == null ) return;
 
         if ( log.isTraceEnabled() ) {
-            if ( returnValue instanceof Collection ) {
+            if ( returnValue instanceof Collection && ( ( Collection ) returnValue ).size() > 0 ) {
                 log.trace( "After: " + m.getName() + " on Collection of "
                         + ( ( Collection ) returnValue ).iterator().next().getClass().getSimpleName() );
             } else {
@@ -362,8 +362,8 @@ public class AuditInterceptor implements MethodInterceptor {
     private void processAssociations( Method m, Object object, Object owner ) {
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
-        if (persister == null) {
-            throw new IllegalArgumentException("Not persister for " + object.getClass().getName());
+        if ( persister == null ) {
+            throw new IllegalArgumentException( "Not persister for " + object.getClass().getName() );
         }
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
@@ -376,8 +376,8 @@ public class AuditInterceptor implements MethodInterceptor {
 
                 /*
                  * If the action being taken will result in a hibernate cascade, we need to update the audit information
-                 * for the child objects. This is because this interceptor is expected to be triggered by service
-                 * actions. Low-level hibernate activities (like cascading updates) are not seen.
+                 * for the child objects. (This is because this interceptor is only triggered by service actions.)
+                 * Otherwise, low-level hibernate activities (like cascading updates) are not seen.
                  */
                 if ( !crudUtils.needCascade( m, cs ) ) {
                     if ( log.isTraceEnabled() ) continue;

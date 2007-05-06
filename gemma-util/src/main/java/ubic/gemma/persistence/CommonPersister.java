@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.orm.hibernate3.HibernateTemplate;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -392,7 +394,19 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Object persistBibliographicReference( BibliographicReference reference ) {
         reference.setPubAccession( ( DatabaseEntry ) persist( reference.getPubAccession() ) );
-        return this.bibliographicReferenceService.findOrCreate( reference );
+        final BibliographicReference perReference = this.bibliographicReferenceService.findOrCreate( reference );
+
+        // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.update( perReference );
+                perReference.getAuthors().size();
+                return null;
+            }
+        } );
+
+        return perReference;
     }
 
     /**

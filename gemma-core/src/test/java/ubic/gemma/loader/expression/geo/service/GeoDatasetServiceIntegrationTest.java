@@ -65,6 +65,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
 
         init();
+        endTransaction();
     }
 
     @SuppressWarnings("unchecked")
@@ -210,6 +211,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                 "GSE1133", false, true );
         ee = results.iterator().next(); // fixme, need to delete both.
+        eeService.thawLite( ee );
         assertNotNull( ee.getPrimaryPublication() );
         assertEquals( "6062-7", ee.getPrimaryPublication().getPages() );
         assertEquals( 2, results.size() );
@@ -308,7 +310,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                 "GDS22", false, true );
+
         ee = results.iterator().next();
+        eeService.thawLite( ee );
         assertEquals( 80, ee.getBioAssays().size() );
         assertEquals( 410, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
@@ -523,7 +527,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         expressionExperimentService.thaw( newee );
 
         ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
-
+        eeService.thawLite( ee );
         Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );
         //
         // QuantitationType qt = null;

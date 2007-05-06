@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-
 import java.math.BigInteger;
 import java.sql.Blob;
 import java.util.ArrayList;
@@ -478,11 +477,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }, true );
     }
 
+    /**
+     * @param expressionExperiment
+     * @param session
+     */
     private void thawPrimaryReference( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
         if ( expressionExperiment.getPrimaryPublication() != null ) {
             session.update( expressionExperiment.getPrimaryPublication() );
             session.update( expressionExperiment.getPrimaryPublication().getPubAccession() );
             session.update( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
+            expressionExperiment.getPrimaryPublication().getAuthors().size();
         }
     }
 
@@ -495,6 +499,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 session.update( expressionExperiment );
                 Hibernate.initialize( expressionExperiment );
                 expressionExperiment.getBioAssays().size();
+                for ( QuantitationType type : expressionExperiment.getQuantitationTypes() ) {
+                    session.update( type );
+                    session.evict( type );
+                }
                 expressionExperiment.getAuditTrail().getEvents().size();
                 thawPrimaryReference( expressionExperiment, session );
                 if ( expressionExperiment.getAccession() != null )
@@ -503,9 +511,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
                     Hibernate.initialize( ba.getArrayDesignUsed() );
-                }
-                for ( QuantitationType type : expressionExperiment.getQuantitationTypes() ) {
-                    session.update( type );
                 }
                 return null;
             }
@@ -593,55 +598,54 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
 
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt )
-    throws Exception {
+    protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt ) throws Exception {
 
-    	Map <DesignElementDataVector, Object> dedv2genes = new HashMap<DesignElementDataVector, Object>();
+        Map<DesignElementDataVector, Object> dedv2genes = new HashMap<DesignElementDataVector, Object>();
 
-//  	String queryString = "SELECT * FROM DESIGN_ELEMENT_DATA_VECTOR WHERE " + 
-//  	" DESIGN_ELEMENT_FK in (" +
-//  	StringUtils.join( designElements.iterator(), "," ) + ") + AND QUANTITATION_TYPE_FK = " + quantitationType.getId(); 
+        // String queryString = "SELECT * FROM DESIGN_ELEMENT_DATA_VECTOR WHERE " +
+        // " DESIGN_ELEMENT_FK in (" +
+        // StringUtils.join( designElements.iterator(), "," ) + ") + AND QUANTITATION_TYPE_FK = " +
+        // quantitationType.getId();
 
-    	String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE " + 
-    	" QUANTITATION_TYPE_FK = " + qt.getId(); 
-    	Session session = getSessionFactory().openSession();
-    	org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-    	
-    	queryObject.addScalar( "dedvId", new LongType() );
-    	queryObject.addScalar( "dedvData", new BlobType() );
-    	queryObject.addScalar( "csId", new LongType() );
-    	queryObject.addScalar( "dedvRank", new DoubleType() );
+        String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE "
+                + " QUANTITATION_TYPE_FK = " + qt.getId();
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
 
-    	ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-    	Collection<Long> csIds = cs2gene.keySet();
-    	while ( scroll.next() ) {
-    		Long dedvId = scroll.getLong(0);
-    		Blob dedvData = scroll.getBlob(1);
-    		byte data[] = dedvData.getBytes((long)1, (int)dedvData.length());
-    		Long csId = scroll.getLong( 2 );
-    		Double rank = scroll.getDouble( 3 );
+        queryObject.addScalar( "dedvId", new LongType() );
+        queryObject.addScalar( "dedvData", new BlobType() );
+        queryObject.addScalar( "csId", new LongType() );
+        queryObject.addScalar( "dedvRank", new DoubleType() );
 
-    		if(csIds.contains(csId)){
-    			DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-    			vector.setId(dedvId);
-    			vector.setData( data );
-    			//vector.setDesignElement( cs );
-    			vector.setQuantitationType( qt );
-    			vector.setRank(rank);
-    			//vector.setExpressionExperiment( expressionExperiment );
-    			//vector.setBioAssayDimension( bioAssayDimension );
-    			dedv2genes.put(vector, cs2gene.get(csId) );
-    		}
-    		
-    	}
-    	session.clear();
-    	session.close();
-    	return dedv2genes;
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        Collection<Long> csIds = cs2gene.keySet();
+        while ( scroll.next() ) {
+            Long dedvId = scroll.getLong( 0 );
+            Blob dedvData = scroll.getBlob( 1 );
+            byte data[] = dedvData.getBytes( ( long ) 1, ( int ) dedvData.length() );
+            Long csId = scroll.getLong( 2 );
+            Double rank = scroll.getDouble( 3 );
+
+            if ( csIds.contains( csId ) ) {
+                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                vector.setId( dedvId );
+                vector.setData( data );
+                // vector.setDesignElement( cs );
+                vector.setQuantitationType( qt );
+                vector.setRank( rank );
+                // vector.setExpressionExperiment( expressionExperiment );
+                // vector.setBioAssayDimension( bioAssayDimension );
+                dedv2genes.put( vector, cs2gene.get( csId ) );
+            }
+
+        }
+        session.clear();
+        session.close();
+        return dedv2genes;
     }
-
 
     /*
      * (non-Javadoc)
@@ -899,8 +903,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
-     /*
+
+    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection)
