@@ -47,7 +47,7 @@ public class GigaspacesUtil {
      * @param testing
      * @param compassOn
      * @param isWebApp
-     * @return
+     * @return boolean
      */
     private static boolean beanFactoryContainsGigaspaces( boolean testing, boolean compassOn, boolean isWebApp ) {
 
@@ -58,10 +58,10 @@ public class GigaspacesUtil {
     }
 
     /**
-     * First checks if the bean exists in the context, then if it is running.
+     * Checks if space is running at specified url.
      * 
      * @param ctx
-     * @return
+     * @return boolean
      */
     public static boolean isSpaceRunning( String url ) {
 
@@ -82,6 +82,7 @@ public class GigaspacesUtil {
      * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the bean factory.
      * 
      * @param ctx
+     * @return BeanFactory
      */
     public static BeanFactory addGigaspacesToBeanFactory( String url, boolean testing, boolean compassOn,
             boolean isWebApp ) {
@@ -104,7 +105,7 @@ public class GigaspacesUtil {
 
             paths.add( GIGASPACES_EXPRESSION_EXPERIMENT_BEAN_FACTORY );
             // FIXME this could be dangerous as all beans are reloaded.
-            // just add a new "resource".
+            // What aboud adding a new "resource".
             ctx = new ClassPathXmlApplicationContext( paths.toArray( new String[] {} ) );
 
         }
