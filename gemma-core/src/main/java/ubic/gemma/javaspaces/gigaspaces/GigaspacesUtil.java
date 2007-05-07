@@ -18,9 +18,17 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springmodules.javaspaces.DelegatingWorker;
+
+import ubic.gemma.util.SpringContextUtil;
 
 import com.j_spaces.core.client.FinderException;
 import com.j_spaces.core.client.SpaceFinder;
@@ -31,7 +39,24 @@ import com.j_spaces.core.client.SpaceFinder;
  */
 public class GigaspacesUtil {
 
+    private static final String GIGASPACES_EXPRESSION_EXPERIMENT_BEAN_FACTORY = "classpath*:/ubic/gemma/gigaspaces-expressionExperiment.xml";
     private static Log log = LogFactory.getLog( GigaspacesUtil.class );
+
+    /**
+     * Determines if the (@link BeanFactory) contains gigaspaces beans.
+     * 
+     * @param testing
+     * @param compassOn
+     * @param isWebApp
+     * @return
+     */
+    private static boolean beanFactoryContainsGigaspaces( boolean testing, boolean compassOn, boolean isWebApp ) {
+
+        BeanFactory factory = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
+
+        return factory.containsBean( "gigaspacesTemplate" );
+
+    }
 
     /**
      * First checks if the bean exists in context, then if it is running.
@@ -59,13 +84,32 @@ public class GigaspacesUtil {
      * 
      * @param ctx
      */
-    public static void startSpace( BeanFactory ctx, String url ) {
+    public static BeanFactory addGigaspacesBeanFactory( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
 
-        throw new UnsupportedOperationException( "Method not yet implemented!" );
+        if ( !isSpaceRunning( url ) ) {
+            throw new RuntimeException( "Cannot add Gigaspaces BeanFactory.  Space not started at " + url );
+        }
 
-        // if ( !isSpaceRunning( url ) ) {
-        //
-        // }
+        BeanFactory ctx = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
+
+        if ( !beanFactoryContainsGigaspaces( testing, compassOn, isWebApp ) ) {
+
+            String[] locations = SpringContextUtil.getConfigLocations( testing, compassOn, isWebApp );
+
+            List<String> paths = new ArrayList<String>( Arrays.asList( locations ) );
+
+            paths.add( GIGASPACES_EXPRESSION_EXPERIMENT_BEAN_FACTORY );
+            // FIXME this could be dangerous as all beans are reloaded.
+            // just add a new "resource".
+            ctx = new ClassPathXmlApplicationContext( paths.toArray( new String[] {} ) );
+
+        }
+
+        else {
+            log.info( "Bean factory unchanged.  Gigaspaces beans already existed." );
+        }
+
+        return ctx;
 
     }
 
@@ -82,11 +126,24 @@ public class GigaspacesUtil {
     /**
      * Tests if workers are listening to the space at the given url.
      * 
-     * @param default_remoting_space
+     * @param url
      */
-    public static void areWorkersListening( String default_remoting_space ) {
-        throw new UnsupportedOperationException( "Method not yet implemented!" );
+    public static boolean areWorkersListening( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
 
+        if ( !isSpaceRunning( url ) ) {
+            throw new RuntimeException( "Space not running at: " + url );
+        }
+
+        if ( !beanFactoryContainsGigaspaces( testing, compassOn, isWebApp ) ) {
+            throw new RuntimeException( "Application context does not contain Gigaspaces beans." );
+        }
+
+        // TODO finish this - should be task specific (cannot just use a dummy task)
+        BeanFactory factory = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
+
+        // factory.getBean( "" )
+
+        return false;
     }
 
 }
