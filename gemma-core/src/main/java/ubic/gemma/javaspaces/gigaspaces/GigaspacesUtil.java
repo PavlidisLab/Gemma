@@ -113,37 +113,27 @@ public class GigaspacesUtil {
 
     }
 
-    /**
-     * Stop the space at the given url.
-     * 
-     * @param ctx
-     */
-    public static void stopSpace( BeanFactory ctx, String url ) {
-        throw new UnsupportedOperationException( "Method not yet implemented!" );
-
-    }
-
-    /**
-     * Tests if workers are listening to the space at the given url.
-     * 
-     * @param url
-     */
-    public static boolean areWorkersListening( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
-
-        if ( !isSpaceRunning( url ) ) {
-            throw new RuntimeException( "Space not running at: " + url );
-        }
-
-        if ( !beanFactoryContainsGigaspaces( testing, compassOn, isWebApp ) ) {
-            throw new RuntimeException( "Application context does not contain Gigaspaces beans." );
-        }
-
-        // TODO finish this - should be task specific (cannot just use a dummy task)
-        BeanFactory factory = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
-
-        // factory.getBean( "" )
-
-        return false;
-    }
+    // /**
+    // * Tests if workers are listening to the space at the given url.
+    // *
+    // * @param url
+    // */
+    // public static boolean areWorkersListening( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
+    //
+    // if ( !isSpaceRunning( url ) ) {
+    // throw new RuntimeException( "Space not running at: " + url );
+    // }
+    //
+    // if ( !beanFactoryContainsGigaspaces( testing, compassOn, isWebApp ) ) {
+    // throw new RuntimeException( "Application context does not contain Gigaspaces beans." );
+    // }
+    //
+    // // TODO finish this - should be task specific (cannot just use a dummy task)
+    // BeanFactory factory = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
+    //
+    //        // factory.getBean( "" )
+    //
+    //        return false;
+    //    }
 
 }
