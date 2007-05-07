@@ -29,14 +29,12 @@ import ubic.gemma.util.SpringContextUtil;
  */
 public class GigaspacesUtilTest extends BaseSpringContextTest {
 
-    private static final String DEFAULT_REMOTING_SPACE = "rmi://localhost:10098/./remotingSpace";
-
     /**
      * Tests if space is running.
      */
     public void testIsSpaceRunning() {
 
-        boolean isRunning = GigaspacesUtil.isSpaceRunning( DEFAULT_REMOTING_SPACE );
+        boolean isRunning = GigaspacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( isRunning )
             assertTrue( isRunning );
@@ -55,7 +53,8 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
 
         assertFalse( ctx.containsBean( "gigaspacesTemplate" ) );
 
-        ctx = GigaspacesUtil.addGigaspacesToBeanFactory( DEFAULT_REMOTING_SPACE, true, true, false );
+        ctx = GigaspacesUtil
+                .addGigaspacesToBeanFactory( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), true, true, false );
 
         assertTrue( ctx.containsBean( "gigaspacesTemplate" ) );
     }
