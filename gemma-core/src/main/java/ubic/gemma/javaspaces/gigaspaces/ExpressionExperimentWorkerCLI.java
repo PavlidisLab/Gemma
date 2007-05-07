@@ -21,6 +21,7 @@ package ubic.gemma.javaspaces.gigaspaces;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
@@ -54,6 +55,13 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
     }
 
     protected void init() throws Exception {
+
+        ctx = GigaspacesUtil.addGigaspacesToBeanFactory( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), false, true,
+                false );
+
+        if ( !ctx.containsBean( "gigaspacesTemplate" ) )
+            throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start worker." );
+
         template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
         iTestBeanWorker = ( DelegatingWorker ) this.getBean( "testBeanWorker" );
     }

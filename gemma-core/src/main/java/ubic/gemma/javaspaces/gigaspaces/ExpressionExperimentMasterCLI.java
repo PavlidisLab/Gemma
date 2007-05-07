@@ -104,6 +104,12 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
      * @throws Exception
      */
     protected void init() throws Exception {
+        ctx = GigaspacesUtil.addGigaspacesToBeanFactory( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), false, true,
+                false );
+
+        if ( !ctx.containsBean( "gigaspacesTemplate" ) )
+            throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start worker." );
+
         template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
     }
 
