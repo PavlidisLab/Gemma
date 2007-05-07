@@ -80,7 +80,7 @@ public class GigaspacesUtil {
     }
 
     /**
-     * Start the space at the given url.
+     * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the bean factory.
      * 
      * @param ctx
      */
@@ -131,9 +131,9 @@ public class GigaspacesUtil {
     // // TODO finish this - should be task specific (cannot just use a dummy task)
     // BeanFactory factory = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
     //
-    //        // factory.getBean( "" )
+    // // factory.getBean( "" )
     //
-    //        return false;
-    //    }
+    // return false;
+    // }
 
 }
