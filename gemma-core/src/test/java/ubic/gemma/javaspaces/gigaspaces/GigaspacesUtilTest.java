@@ -47,9 +47,9 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * Tests starting the space at the specified url.
+     * Tests gigaspaces beans to the {@link org.springframework.beans.factory.BeanFactory}
      */
-    public void testStartSpace() {
+    public void testAddGigaspacesBeanFactory() {
 
         BeanFactory ctx = SpringContextUtil.getApplicationContext( true, true, false );
 
