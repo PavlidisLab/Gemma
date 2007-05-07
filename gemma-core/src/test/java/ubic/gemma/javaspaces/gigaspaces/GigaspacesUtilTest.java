@@ -18,9 +18,10 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.SpringContextUtil;
 
 /**
  * @author keshav
@@ -50,25 +51,29 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
      */
     public void testStartSpace() {
 
-        ApplicationContext ctx = this.getContext();
+        BeanFactory ctx = SpringContextUtil.getApplicationContext( true, true, false );
 
-        GigaspacesUtil.startSpace( ctx, DEFAULT_REMOTING_SPACE );
+        assertFalse( ctx.containsBean( "gigaspacesTemplate" ) );
+
+        ctx = GigaspacesUtil.addGigaspacesBeanFactory( DEFAULT_REMOTING_SPACE, true, true, false );
+
+        assertTrue( ctx.containsBean( "gigaspacesTemplate" ) );
     }
 
-    /**
-     * Tests stopping the space at the specified url.
-     */
-    public void testStopSpace() {
-
-        ApplicationContext ctx = this.getContext();
-        GigaspacesUtil.stopSpace( ctx, DEFAULT_REMOTING_SPACE );
-    }
-
-    /**
-     * Tests checking for workers listening for space at specified url.
-     */
-    public void testAreWorkersListening() {
-
-        GigaspacesUtil.areWorkersListening( DEFAULT_REMOTING_SPACE );
-    }
+    // /**
+    // * Tests stopping the space at the specified url.
+    // */
+    // public void testStopSpace() {
+    //
+    // ApplicationContext ctx = this.getContext();
+    // GigaspacesUtil.stopSpace( ctx, DEFAULT_REMOTING_SPACE );
+    // }
+    //
+    // /**
+    // * Tests checking for workers listening for space at specified url.
+    // */
+    // public void testAreWorkersListening() {
+    //
+    // GigaspacesUtil.areWorkersListening( DEFAULT_REMOTING_SPACE );
+    // }
 }
