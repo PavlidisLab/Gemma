@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springmodules.javaspaces.DelegatingWorker;
 
 import ubic.gemma.util.SpringContextUtil;
 
@@ -59,7 +58,7 @@ public class GigaspacesUtil {
     }
 
     /**
-     * First checks if the bean exists in context, then if it is running.
+     * First checks if the bean exists in the context, then if it is running.
      * 
      * @param ctx
      * @return
@@ -71,8 +70,8 @@ public class GigaspacesUtil {
             SpaceFinder.find( url );
         } catch ( FinderException e ) {
             running = false;
-            log.error( "Error finding space at: " + url + ".  Exception is: " );
-            e.printStackTrace();
+            log.error( "Error finding space at: " + url + "." );
+            // e.printStackTrace();
         } finally {
             return running;
         }
@@ -84,13 +83,18 @@ public class GigaspacesUtil {
      * 
      * @param ctx
      */
-    public static BeanFactory addGigaspacesBeanFactory( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
-
-        if ( !isSpaceRunning( url ) ) {
-            throw new RuntimeException( "Cannot add Gigaspaces BeanFactory.  Space not started at " + url );
-        }
+    public static BeanFactory addGigaspacesToBeanFactory( String url, boolean testing, boolean compassOn,
+            boolean isWebApp ) {
 
         BeanFactory ctx = SpringContextUtil.getApplicationContext( testing, compassOn, isWebApp );
+
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Cannot add Gigaspaces to BeanFactory.  Space not started at " + url
+                    + ".  Returning context without gigaspaces beans." );
+
+            return ctx;
+
+        }
 
         if ( !beanFactoryContainsGigaspaces( testing, compassOn, isWebApp ) ) {
 

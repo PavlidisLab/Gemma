@@ -49,13 +49,13 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
     /**
      * Tests gigaspaces beans to the {@link org.springframework.beans.factory.BeanFactory}
      */
-    public void testAddGigaspacesBeanFactory() {
+    public void testAddGigaspacesToBeanFactory() {
 
         BeanFactory ctx = SpringContextUtil.getApplicationContext( true, true, false );
 
         assertFalse( ctx.containsBean( "gigaspacesTemplate" ) );
 
-        ctx = GigaspacesUtil.addGigaspacesBeanFactory( DEFAULT_REMOTING_SPACE, true, true, false );
+        ctx = GigaspacesUtil.addGigaspacesToBeanFactory( DEFAULT_REMOTING_SPACE, true, true, false );
 
         assertTrue( ctx.containsBean( "gigaspacesTemplate" ) );
     }
