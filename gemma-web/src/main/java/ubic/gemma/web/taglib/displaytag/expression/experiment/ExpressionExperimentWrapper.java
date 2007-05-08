@@ -402,9 +402,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( eeVo == null ) return "Expression Experiment unavailable";
 
-        if ( eeVo.isSpecific() ) return "yes";
+        if ( eeVo.isSpecific() ) return "&bull;";
 
-        return "no";
+        return "";
     }
 
 }

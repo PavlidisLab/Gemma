@@ -315,10 +315,10 @@ Results for
 </c:if>
 <b> 
 
-<c:out value="${numUsedExpressionExperiments}" />  datasets had relevent coexpression data  
-<!--  <br /> &emsp;&nbsp;&nbsp;
-<c:out value="${numLinkedExpressionExperiments}" /> datasets met stringency criteria 
-  -->
+<c:out value="${numUsedExpressionExperiments}" /> datasets had relevent coexpression data  
+<br /> &emsp;&nbsp;
+<c:out value="${numQuerySpecificEEs}" /> datasets probes for <c:out value="${sourceGene.officialSymbol}"/> without detected cross-hybridization potential.
+
 <c:if test="${numLinkedExpressionExperiments != 0}">
 <a href="#" onclick="return toggleVisibility('datasetList')" >(details)</a> 
 </c:if>
@@ -332,11 +332,14 @@ Results for
 
 			<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"   titleKey="expressionExperiment.rawLinkcount" />
 
-			<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending" titleKey="expressionExperiment.linkcount" />
+			<display:column property="coexpressionLinkCount" sortable="true" defaultorder="ascending" titleKey="expressionExperiment.linkcount" />
 			
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 
 			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+	
+			<display:column property="specific" sortable="true" titleKey="expressionExperiment.specific" />
+			
 
 			<authz:authorize ifAnyGranted="admin">
 	 			<display:column property="arrayDesignLink" sortable="true" title="Arrays" />

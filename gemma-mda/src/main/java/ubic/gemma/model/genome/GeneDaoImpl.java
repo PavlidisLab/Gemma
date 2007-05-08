@@ -283,6 +283,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coExValObj.setNonspecificEE( nonspecificEE );
             coExValObj.computeExperimentBits( allEEIds );
 
+            if (coExValObj.getGeneName().equalsIgnoreCase( "RPL27" ))
+                log.debug( "at gene rpl27" );
+                
             // figure out which genes where culprits for making this gene non-specific
             Collection<Long> probes = coExValObj.getProbes();
             for ( Long eeID : nonspecificEE ) {

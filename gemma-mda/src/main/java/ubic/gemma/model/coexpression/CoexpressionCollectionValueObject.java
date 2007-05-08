@@ -109,7 +109,7 @@ public class CoexpressionCollectionValueObject {
                     Collection<Long> genes = probe2geneMap.get( probeID );
 
                     if ( ( genes.size() == 1 ) && ( genes.iterator().next() == queryGene.getId() ) ) {
-                        log.info( "Expression Experiment: + " + eeID + " is specific" );
+                        log.debug( "Expression Experiment: + " + eeID + " is specific" );
                         specificEE.add( eeID );
                     }
                 }

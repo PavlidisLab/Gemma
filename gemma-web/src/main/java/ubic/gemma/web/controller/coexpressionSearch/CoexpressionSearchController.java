@@ -331,7 +331,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Collection<ExpressionExperimentValueObject> predictedEEVos = retreiveEEFromDB( coexpressions.getPredictedCoexpressionType().getExpressionExperimentIds(), coexpressions.getPredictedCoexpressionType() );
         Collection<ExpressionExperimentValueObject> alignedEEVos = retreiveEEFromDB( coexpressions.getProbeAlignedCoexpressionType().getExpressionExperimentIds(), coexpressions.getProbeAlignedCoexpressionType() );
 
-
+        // Sort the Expression Experiments by contributing links.
+ 
+        
         if ( coexpressedGenes.size() == 0 ) {
             this.saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
@@ -372,7 +374,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
         mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
         mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
-       
+        mav.addObject(  "numQuerySpecificEEs", coexpressions.getQueryGeneSpecificExpressionExperiments().size() );
 
         mav.addObject( "numGenes", numGenes );
         mav.addObject( "numPredictedGenes", numPredictedGenes );
@@ -414,7 +416,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             eeVo.setSpecific( coexpressions.getExpressionExperiment( eeVo.getId() ).isSpecific() );
         }
         
-        return eeVos;
+        List<ExpressionExperimentValueObject> eeList = new ArrayList<ExpressionExperimentValueObject>(eeVos);
+        Collections.sort( eeList, new ExpressionExperimentComparator() );
+        return eeList;
         
     }
     /**
@@ -793,7 +797,26 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
         }
     }
+    
+   
+    class  ExpressionExperimentComparator implements Comparator {
 
+        public int compare( Object o1, Object o2 ) {
+            ExpressionExperimentValueObject v1 = ( ( ExpressionExperimentValueObject ) o1 );
+            ExpressionExperimentValueObject v2 = ( ( ExpressionExperimentValueObject ) o2 );
+            Long o1Size = v1.getCoexpressionLinkCount();
+            Long o2Size = v2.getCoexpressionLinkCount();
+            if ( o1Size > o2Size ) {
+                return -1;
+            } else if ( o1Size < o2Size ) {
+                return 1;
+            } else {
+                return 0;               
+            }
+        }
+    }
+
+    
     public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
         this.geneOntologyService = geneOntologyService;
     }

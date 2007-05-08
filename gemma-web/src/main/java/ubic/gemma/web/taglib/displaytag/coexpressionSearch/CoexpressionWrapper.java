@@ -190,8 +190,20 @@ public class CoexpressionWrapper extends TableDecorator {
 
     public String getExperimentBitImage() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        
+        //wanted to put the EE short names in the title but sadly all the short names are null at this point.  
+        //Not worth the effort to put it in as we have to edit some hql queries. ;(
+//        String eeList = "";
+//        for(ExpressionExperimentValueObject evo : object.getExpressionExperimentValueObjects())
+//           eeList += StringUtils.abbreviate(evo.getShortName(),6) + ", ";
+//        
+//        if ( eeList.length() > 1 )
+//            eeList= eeList.substring( 0, eeList.length() - 2 ); // remove trailing ' ,'
+//        title='" + eeList + "'
+
+        
         int width = object.getExperimentBitList().length() - 1; // probably okay
-        return "<span  style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
+        return "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
                 + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
     }
 
