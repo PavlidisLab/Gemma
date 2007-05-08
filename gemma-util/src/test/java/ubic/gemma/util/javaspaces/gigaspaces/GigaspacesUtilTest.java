@@ -51,15 +51,16 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
      */
     public void testAddGigaspacesToBeanFactory() {
 
-        BeanFactory withoutGigaspacesCtx = SpringContextUtil.getApplicationContext( true, false, false, false );
+        ApplicationContext withoutGigaspacesCtx = ( ApplicationContext ) SpringContextUtil.getApplicationContext( true,
+                false, false, false );
 
         assertFalse( withoutGigaspacesCtx.containsBean( "gigaspacesTemplate" ) );
 
         GigaspacesUtil gigaspacesUtil = new GigaspacesUtil();
 
-        gigaspacesUtil.setBeanFactory( withoutGigaspacesCtx );
+        gigaspacesUtil.setApplicationContext( withoutGigaspacesCtx );
 
-        BeanFactory updatedCtx = gigaspacesUtil.addGigaspacesToBeanFactory(
+        BeanFactory updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext(
                 GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), true, true, false );
 
         /* verify that we have the new gigaspaces beans */
