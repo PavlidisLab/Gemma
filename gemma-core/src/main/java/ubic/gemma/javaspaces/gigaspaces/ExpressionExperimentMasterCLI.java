@@ -29,9 +29,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
 import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
 import ubic.gemma.util.progress.ProgressData;
 
@@ -48,6 +50,8 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
     private static Log log = LogFactory.getLog( ExpressionExperimentMasterCLI.class );
 
     private GigaSpacesTemplate template;
+
+    private ExpressionExperimentTask proxy = null;
 
     /*
      * (non-Javadoc)
@@ -105,10 +109,16 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
      */
     protected void init() throws Exception {
 
-        if ( !ctx.containsBean( "gigaspacesTemplate" ) )
-            throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start worker." );
+        GigaspacesUtil gigaspacesUtil = ( GigaspacesUtil ) this.getBean( "gigaspacesUtil" );
+        ApplicationContext updatedContext = gigaspacesUtil
+                .addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
-        template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
+            throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start master." );
+
+        template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
+
+        proxy = ( ExpressionExperimentTask ) updatedContext.getBean( "proxy" );
     }
 
     /**
@@ -117,8 +127,6 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
     protected void start() {
 
         log.debug( "Got accession(s) from command line " + accessions );
-
-        ExpressionExperimentTask proxy = ( ExpressionExperimentTask ) this.getBean( "proxy" );
 
         Result res = null;
         if ( accessions != null ) {
