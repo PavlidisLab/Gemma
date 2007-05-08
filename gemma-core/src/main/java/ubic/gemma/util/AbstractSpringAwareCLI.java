@@ -44,6 +44,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     private static final String COMPASS_ON = "compassOn";
 
+    private static final String GIGASPACES_ON = "gigaspacesOn";
+
     protected BeanFactory ctx = null;
     PersisterHelper ph = null;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
@@ -145,7 +147,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * check if using test or production contexts
      */
     void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ), false );
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ),
+                hasOption( GIGASPACES_ON ), false );
 
         CompassUtils.deleteCompassLocks();
 

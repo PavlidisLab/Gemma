@@ -408,12 +408,15 @@ public abstract class AbstractCLI {
                 .create( "logger" );
         Option compassOnOpt = new Option( "compassOn", false,
                 "Turn on compass indexing (Does not turn on index mirroring)" );
+        Option gigaspacesOnOpt = new Option( "gigaspacesOn", false,
+                "All use of the gigaspaces compute-server for large jobs." );
 
         options.addOption( otherLogOpt );
         options.addOption( logOpt );
         options.addOption( helpOpt );
         options.addOption( testOpt );
         options.addOption( compassOnOpt );
+        options.addOption( gigaspacesOnOpt );
     }
 
     /**
