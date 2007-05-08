@@ -150,7 +150,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      * @return
      */
     private Object getStandardLocations() {
-        return SpringContextUtil.getConfigLocations( false, false, this.isWebapp() );
+        return SpringContextUtil.getConfigLocations( false, false, false, this.isWebapp() );
     }
 
     /**
@@ -179,7 +179,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
     @Override
     protected String[] getConfigLocations() {
-        return SpringContextUtil.getConfigLocations( true, false, this.isWebapp() );
+        return SpringContextUtil.getConfigLocations( true, false, false, this.isWebapp() );
     }
 
     /**
