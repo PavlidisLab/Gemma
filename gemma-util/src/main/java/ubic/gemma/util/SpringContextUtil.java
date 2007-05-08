@@ -28,6 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
+
 /**
  * Methods to create Spring contexts. For tests see ubic.gemma.testing.
  * 
@@ -42,9 +44,10 @@ public class SpringContextUtil {
      * @param testing If true, it will get a test configured-BeanFactory
      * @return BeanFactory
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean isWebApp ) {
+    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn,
+            boolean isWebApp ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations( testing, compassOn, isWebApp );
+            String[] paths = getConfigLocations( testing, compassOn, gigaspacesOn, isWebApp );
             ctx = new ClassPathXmlApplicationContext( paths );
             if ( ctx != null ) {
                 log.info( "Got context" );
@@ -61,7 +64,7 @@ public class SpringContextUtil {
      * @return
      */
     public static String[] getConfigLocations() {
-        return getConfigLocations( false, false, true );
+        return getConfigLocations( false, false, false, true );
     }
 
     /**
@@ -70,11 +73,12 @@ public class SpringContextUtil {
      * @param testing - if true, it will use the test configuration.
      * @return
      */
-    public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean isWebapp ) {
+    public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean gigaspacesOn,
+            boolean isWebapp ) {
         if ( testing ) {
             return getTestConfigLocations( compassOn, isWebapp );
         }
-        return getStandardConfigLocations( compassOn, isWebapp );
+        return getStandardConfigLocations( compassOn, gigaspacesOn, isWebapp );
 
     }
 
@@ -114,13 +118,18 @@ public class SpringContextUtil {
      * @param isWebapp
      * @return
      */
-    private static String[] getStandardConfigLocations( boolean compassOn, boolean isWebapp ) {
+    private static String[] getStandardConfigLocations( boolean compassOn, boolean gigaspacesOn, boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
 
         if ( compassOn ) {
             CompassUtils.turnOnCompass( false, paths );
         }
+
+        if ( gigaspacesOn ) {
+            GigaspacesUtil.addGigaspacesContext( paths );
+        }
+
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }
