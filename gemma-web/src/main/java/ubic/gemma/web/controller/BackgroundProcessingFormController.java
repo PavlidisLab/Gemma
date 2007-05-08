@@ -48,7 +48,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      */
     public final static String JOB_ATTRIBUTE = "taskId";
 
-    TaskRunningService taskRunningService;
+    protected TaskRunningService taskRunningService;
 
     /**
      * @param taskRunningService the taskRunningService to set
