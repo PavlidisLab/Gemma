@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import junit.framework.TestCase;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
 
 /**
  * @author pavlidis
@@ -82,6 +83,14 @@ public class PubMedXMLParserTest extends TestCase {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
+            Collection<MedicalSubjectHeading> meshTerms = br.getMeshTerms();
+            assertEquals( 16, meshTerms.size() );
+            // for ( MedicalSubjectHeading heading : meshTerms ) {
+            // log.info( heading.getTerm() + " " + heading.getIsMajorHeading() );
+            // for ( MedicalSubjectHeading q : heading.getQualifiers() ) {
+            // log.info( " qualifier: " + q.getTerm() + " " + q.getIsMajorHeading() );
+            // }
+            // }
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
                 log.warn( "Test skipped due to connection exception" );
