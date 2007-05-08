@@ -54,7 +54,8 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
         ApplicationContext withoutGigaspacesCtx = ( ApplicationContext ) SpringContextUtil.getApplicationContext( true,
                 false, false, false );
 
-        assertFalse( withoutGigaspacesCtx.containsBean( "gigaspacesTemplate" ) );
+        String gigaspacesTemplate = "gigaspacesTemplate";
+        assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
         GigaspacesUtil gigaspacesUtil = new GigaspacesUtil();
 
@@ -64,8 +65,11 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
                 .getSpaceUrl() );
 
         /* verify that we have the new gigaspaces beans */
-        assertTrue( updatedCtx.containsBean( "gigaspacesTemplate" ) );
-
+        if ( !GigaspacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) )
+            assertFalse( updatedCtx.containsBean( gigaspacesTemplate ) );
+        else {
+            assertTrue( updatedCtx.containsBean( gigaspacesTemplate ) );
+        }
         /* make sure we haven't lost the other beans */
         assertTrue( updatedCtx.containsBean( "sessionFactory" ) );
     }
