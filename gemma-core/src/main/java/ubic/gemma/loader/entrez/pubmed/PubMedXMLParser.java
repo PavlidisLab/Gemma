@@ -217,10 +217,10 @@ public class PubMedXMLParser {
 
                 bibRef.setPublicationDate( extractPublicationDate( article ) );
 
-                Node dbEntryNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "/descendant::" + PMID_ELEMENT );
+                Node dbEntryNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "child::MedlineCitation/descendant::" + PMID_ELEMENT );
                 DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
                 dbEntry.setAccession( XMLUtils.getTextValue( ( Element ) dbEntryNode ) );
-
+                
                 ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
                 exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
                 dbEntry.setExternalDatabase( exDb );
