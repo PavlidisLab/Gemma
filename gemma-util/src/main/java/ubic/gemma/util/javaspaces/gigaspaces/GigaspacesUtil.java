@@ -23,10 +23,9 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
@@ -37,23 +36,18 @@ import com.j_spaces.core.client.SpaceFinder;
  * @author keshav
  * @version $Id$
  */
-public class GigaspacesUtil implements BeanFactoryAware {
+public class GigaspacesUtil implements ApplicationContextAware {
 
     private static Log log = LogFactory.getLog( GigaspacesUtil.class );
 
-    private BeanFactory beanFactory = null;
+    private ApplicationContext applicationContext = null;
 
     /**
-     * Determines if the (@link BeanFactory) contains gigaspaces beans.
-     * 
-     * @param testing
-     * @param compassOn
-     * @param isWebApp
-     * @return boolean
+     * Determines if the (@link ApplicationContext) contains gigaspaces beans.
      */
-    private boolean beanFactoryContainsGigaspaces() {
+    private boolean contextContainsGigaspaces() {
 
-        return beanFactory.containsBean( "gigaspacesTemplate" );
+        return applicationContext.containsBean( "gigaspacesTemplate" );
 
     }
 
@@ -78,7 +72,7 @@ public class GigaspacesUtil implements BeanFactoryAware {
     }
 
     /**
-     * Add the gigaspaces contexts to the other spring contexts
+     * Add the gigaspaces contexts to the other spring contexts.
      * 
      * @param paths
      */
@@ -87,30 +81,33 @@ public class GigaspacesUtil implements BeanFactoryAware {
     }
 
     /**
-     * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the bean factory
-     * if they do not exist. If space is not running, returns the original context.
+     * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the context if
+     * they do not exist. If the space is not running, returns the original context.
      * 
      * @param ctx
-     * @return BeanFactory
+     * @return ApplicatonContext
      */
-    public BeanFactory addGigaspacesToBeanFactory( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
+    public ApplicationContext addGigaspacesToApplicationContext( String url, boolean testing, boolean compassOn,
+            boolean isWebApp ) {
 
         if ( !isSpaceRunning( url ) ) {
-            log.error( "Cannot add Gigaspaces to BeanFactory. Space not started at " + url
+            log.error( "Cannot add Gigaspaces to application context. Space not started at " + url
                     + ". Returning context without gigaspaces beans." );
 
-            return beanFactory;
+            return applicationContext;
 
         }
 
-        if ( !beanFactoryContainsGigaspaces() ) {
+        if ( !contextContainsGigaspaces() ) {
 
             GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
             XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
             xmlReader.loadBeanDefinitions( new ClassPathResource( "ubic/gemma/gigaspaces-expressionExperiment.xml" ) );
             // PropertiesBeanDefinitionReader propReader = new PropertiesBeanDefinitionReader( genericCtx );
             // propReader.loadBeanDefinitions(new ClassPathResource("otherBeans.properties"));
-            genericCtx.setParent( ( ApplicationContext ) beanFactory );
+
+            genericCtx.setParent( applicationContext );
+
             genericCtx.refresh();
 
             return genericCtx;
@@ -118,15 +115,21 @@ public class GigaspacesUtil implements BeanFactoryAware {
         }
 
         else {
-            log.info( "Bean factory unchanged. Gigaspaces beans already existed." );
+            log.info( "Application context unchanged. Gigaspaces beans already exist." );
         }
 
-        return beanFactory;
+        return applicationContext;
 
     }
 
-    public void setBeanFactory( BeanFactory beanFactory ) throws BeansException {
-        this.beanFactory = beanFactory;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+     */
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.applicationContext = applicationContext;
+
     }
 
 }
