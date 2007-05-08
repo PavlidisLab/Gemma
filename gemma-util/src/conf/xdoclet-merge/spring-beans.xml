@@ -1,0 +1,3 @@
+<bean id="gigaspacesUtil" class="ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil">
+	
+</bean>

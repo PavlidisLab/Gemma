@@ -183,7 +183,8 @@
 									<fileset dir="${basedir}/src/main/java/" includes="**/*.java" />
 									<springxml
 										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma"
-										destinationFile="applicationContext-persisterBeans.xml" useIds="true" />
+										mergeDir="${basedir}/src/conf/xdoclet-merge" destinationFile="applicationContext-persisterBeans.xml" 
+										useIds="true" />
 								</springdoclet>
 							</tasks>
 						</configuration>
