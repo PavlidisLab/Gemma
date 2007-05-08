@@ -40,8 +40,6 @@ import ubic.gemma.web.util.MessageUtil;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="abstractGigaspacesFormController"
- * @spring.property name="gigaspacesUtil" value="gigaspacesUtil"
  */
 public abstract class AbstractGigaspacesFormController extends BackgroundProcessingFormController {
 
@@ -64,6 +62,8 @@ public abstract class AbstractGigaspacesFormController extends BackgroundProcess
      * @return ApplicationContext
      */
     public ApplicationContext addGigaspacesToApplicationContext() {
+        if ( gigaspacesUtil == null ) gigaspacesUtil = new GigaspacesUtil();
+
         return gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
@@ -99,12 +99,4 @@ public abstract class AbstractGigaspacesFormController extends BackgroundProcess
         mnv.addObject( "taskId", taskId );
         return mnv;
     }
-
-    /**
-     * @param gigaspacesUtil
-     */
-    public void setGigaspacesUtil( GigaspacesUtil gigaspacesUtil ) {
-        this.gigaspacesUtil = gigaspacesUtil;
-    }
-
 }
