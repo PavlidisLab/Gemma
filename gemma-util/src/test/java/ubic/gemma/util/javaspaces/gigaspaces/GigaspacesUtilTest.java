@@ -18,8 +18,12 @@
  */
 package ubic.gemma.util.javaspaces.gigaspaces;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.ApplicationContext;
+
 import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.SpringContextUtil;
 
 /**
  * @author keshav
@@ -42,20 +46,27 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
 
     }
 
-    // /**
-    // * Tests gigaspaces beans to the {@link org.springframework.beans.factory.BeanFactory}
-    // */
-    // public void testAddGigaspacesToBeanFactory() {
-    //
-    // BeanFactory ctx = SpringContextUtil.getApplicationContext( true, true, false );
-    //
-    // assertFalse( ctx.containsBean( "gigaspacesTemplate" ) );
-    //
-    // GigaspacesUtil gigaspacesUtil = new GigaspacesUtil();
-    // ctx = gigaspacesUtil
-    // .addGigaspacesToBeanFactory( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), true, true, false );
-    //
-    // assertTrue( ctx.containsBean( "gigaspacesTemplate" ) );
-    // }
+    /**
+     * Tests gigaspaces beans to the {@link org.springframework.beans.factory.BeanFactory}
+     */
+    public void testAddGigaspacesToBeanFactory() {
+
+        BeanFactory withoutGigaspacesCtx = SpringContextUtil.getApplicationContext( true, false, false, false );
+
+        assertFalse( withoutGigaspacesCtx.containsBean( "gigaspacesTemplate" ) );
+
+        GigaspacesUtil gigaspacesUtil = new GigaspacesUtil();
+
+        gigaspacesUtil.setBeanFactory( withoutGigaspacesCtx );
+
+        BeanFactory updatedCtx = gigaspacesUtil.addGigaspacesToBeanFactory(
+                GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), true, true, false );
+
+        /* verify that we have the new gigaspaces beans */
+        assertTrue( updatedCtx.containsBean( "gigaspacesTemplate" ) );
+
+        /* make sure we haven't lost the other beans */
+        assertTrue( updatedCtx.containsBean( "sessionFactory" ) );
+    }
 
 }
