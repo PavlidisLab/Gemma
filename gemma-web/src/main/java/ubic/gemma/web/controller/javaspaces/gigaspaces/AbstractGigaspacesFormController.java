@@ -59,6 +59,15 @@ public abstract class AbstractGigaspacesFormController extends BackgroundProcess
             SecurityContext securityContext, HttpServletRequest request, Object command, MessageUtil messenger );
 
     /**
+     * Controllers extending this class must implement this method. The implementation should call
+     * injectGigaspacesUtil(GigaspacesUtil gigaspacesUtil) to "inject" a spring loaded GigaspacesUtil into this abstract
+     * class.
+     * 
+     * @param gigaspacesUtil
+     */
+    abstract protected void setGigaspacesUtil( GigaspacesUtil gigaspacesUtil );
+
+    /**
      * @return ApplicationContext
      */
     public ApplicationContext addGigaspacesToApplicationContext() {
@@ -98,5 +107,12 @@ public abstract class AbstractGigaspacesFormController extends BackgroundProcess
         ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
         mnv.addObject( "taskId", taskId );
         return mnv;
+    }
+
+    /**
+     * @param gigaspacesUtil
+     */
+    protected void injectGigaspacesUtil( GigaspacesUtil gigaspacesUtil ) {
+        this.gigaspacesUtil = gigaspacesUtil;
     }
 }
