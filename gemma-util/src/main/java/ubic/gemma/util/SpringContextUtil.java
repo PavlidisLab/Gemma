@@ -127,7 +127,7 @@ public class SpringContextUtil {
         }
 
         if ( gigaspacesOn ) {
-            GigaspacesUtil.addGigaspacesContext( paths );
+            GigaspacesUtil.addGigaspacesContextToPaths( paths );
         }
 
         addCommonConfig( isWebapp, paths );

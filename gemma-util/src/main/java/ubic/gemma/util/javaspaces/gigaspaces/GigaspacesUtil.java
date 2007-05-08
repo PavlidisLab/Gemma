@@ -76,7 +76,7 @@ public class GigaspacesUtil implements ApplicationContextAware {
      * 
      * @param paths
      */
-    public static void addGigaspacesContext( List<String> paths ) {
+    public static void addGigaspacesContextToPaths( List<String> paths ) {
         paths.add( "classpath*:ubic/gemma/gigaspaces-expressionExperiment.xml" );
     }
 
