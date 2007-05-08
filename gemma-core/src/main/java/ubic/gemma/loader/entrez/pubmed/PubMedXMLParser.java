@@ -43,17 +43,12 @@ import org.xml.sax.SAXException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.CharacteristicStatement;
-import ubic.gemma.ontology.MeshService;
-import ubic.gemma.ontology.OntologyTerm;
-import ubic.gemma.ontology.VocabCharacteristicBuilder;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
 
 /**
  * Simple class to parse XML in the format defined by
  * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object
- * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and Characteristics (for
- * MESH)
+ * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and MESH.
  * 
  * @author pavlidis
  * @version $Id$
@@ -220,7 +215,7 @@ public class PubMedXMLParser {
                 Node dbEntryNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "child::MedlineCitation/descendant::" + PMID_ELEMENT );
                 DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
                 dbEntry.setAccession( XMLUtils.getTextValue( ( Element ) dbEntryNode ) );
-                
+
                 ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
                 exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
                 dbEntry.setExternalDatabase( exDb );
@@ -250,17 +245,21 @@ public class PubMedXMLParser {
             String d = XMLUtils.getTextValue( ( Element ) descriptor );
             boolean dmajorB = isMajorHeading( descriptor );
 
-            OntologyTerm term = MeshService.find( d );
-            if ( term == null ) {
-                log.warn( "No MESH term found for: " + d );
-                continue;
-            }
-            VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
+            // OntologyTerm term = MeshService.find( d );
+            // if ( term == null ) {
+            // log.warn( "No MESH term found for: " + d );
+            // continue;
+            // }
+            // VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
+            MedicalSubjectHeading vc = MedicalSubjectHeading.Factory.newInstance();
+            vc.setTerm( d );
+            vc.setIsMajorHeading( dmajorB );
 
-            processQualifiers( meshNode, term, vc );
+            processQualifiers( meshNode, vc );
 
-            bibRef.getAnnotations().add( vc );
-            log.info( vc );
+            bibRef.getMeshTerms().add( vc );
+            // bibRef.getAnnotations().add( vc );
+            // log.info( vc );
         }
     }
 
@@ -271,8 +270,7 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private void processQualifiers( Node meshNode, OntologyTerm term, VocabCharacteristic vc )
-            throws TransformerException, IOException {
+    private void processQualifiers( Node meshNode, MedicalSubjectHeading vc ) throws TransformerException, IOException {
         NodeIterator qualifierIt = org.apache.xpath.XPathAPI.selectNodeIterator( meshNode, "QualifierName" );
 
         Node qualifier = null;
@@ -280,15 +278,21 @@ public class PubMedXMLParser {
             String q = XMLUtils.getTextValue( ( Element ) qualifier );
 
             boolean qmajorB = isMajorHeading( qualifier );
-            OntologyTerm qualTerm = MeshService.find( q );
 
-            if ( qualTerm == null ) {
-                log.warn( "No MESH term found for: " + q );
-                continue;
-            }
+            MedicalSubjectHeading qual = MedicalSubjectHeading.Factory.newInstance();
+            qual.setIsMajorHeading( qmajorB );
+            qual.setTerm( q );
 
-            CharacteristicStatement cs = MeshService.getQualifierStatement( term, qualTerm, qmajorB );
-            VocabCharacteristicBuilder.addStatement( vc, cs );
+            // OntologyTerm qualTerm = MeshService.find( q );
+            //
+            // if ( qualTerm == null ) {
+            // log.warn( "No MESH term found for: " + q );
+            // continue;
+            // }
+            //
+            // CharacteristicStatement cs = MeshService.getQualifierStatement( term, qualTerm, qmajorB );
+            // VocabCharacteristicBuilder.addStatement( vc, cs );
+            vc.getQualifiers().add( qual );
         }
     }
 
