@@ -104,12 +104,13 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         }
         // end test
 
-        Collection datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching );
+        Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
+                doSampleMatching );
 
-        // TODO figure out what to store in the result for collections
         counter++;
         Result result = new Result();
-        result.setAnswer( datasets.size() );
+        // result.setAnswer( datasets.size() );
+        result.setAnswer( datasets );
         result.setTaskID( counter );
 
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "

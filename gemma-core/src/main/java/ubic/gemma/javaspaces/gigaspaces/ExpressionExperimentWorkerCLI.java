@@ -56,9 +56,6 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
 
     protected void init() throws Exception {
 
-        ctx = GigaspacesUtil.addGigaspacesToBeanFactory( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), false, true,
-                false );
-
         if ( !ctx.containsBean( "gigaspacesTemplate" ) )
             throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start worker." );
 
