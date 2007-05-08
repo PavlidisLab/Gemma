@@ -25,6 +25,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 
 import com.j_spaces.core.client.FinderException;
 import com.j_spaces.core.client.SpaceFinder;
@@ -82,45 +86,44 @@ public class GigaspacesUtil implements BeanFactoryAware {
         paths.add( "classpath*:ubic/gemma/gigaspaces-expressionExperiment.xml" );
     }
 
-    // /**
-    // * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the bean factory
-    // * if they do not exist. If space is not running, returns the original context.
-    // *
-    // * @param ctx
-    // * @return BeanFactory
-    // */
-    // public BeanFactory addGigaspacesToBeanFactory( String url, boolean testing, boolean compassOn, boolean isWebApp )
-    // {
-    //
-    // if ( !isSpaceRunning( url ) ) {
-    // log.error( "Cannot add Gigaspaces to BeanFactory. Space not started at " + url
-    // + ". Returning context without gigaspaces beans." );
-    //
-    // return beanFactory;
-    //
-    // }
-    //
-    // if ( !beanFactoryContainsGigaspaces() ) {
-    //
-    // // FIXME I cannot get the locations from the beanFactory directly
-    // String[] locations = SpringContextUtil.getConfigLocations( testing, compassOn, isWebApp );
-    //
-    // List<String> paths = new ArrayList<String>( Arrays.asList( locations ) );
-    //
-    // paths.add( GIGASPACES_EXPRESSION_EXPERIMENT_BEAN_FACTORY );
-    // // FIXME this could be dangerous (not to mention slow) as all beans are reloaded.
-    // // What aboud adding a new "resource".
-    // beanFactory = new ClassPathXmlApplicationContext( paths.toArray( new String[] {} ) );
-    //
-    // }
-    //
-    // else {
-    // log.info( "Bean factory unchanged. Gigaspaces beans already existed." );
-    // }
-    //
-    // return beanFactory;
-    //
-    // }
+    /**
+     * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the bean factory
+     * if they do not exist. If space is not running, returns the original context.
+     * 
+     * @param ctx
+     * @return BeanFactory
+     */
+    public BeanFactory addGigaspacesToBeanFactory( String url, boolean testing, boolean compassOn, boolean isWebApp ) {
+
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Cannot add Gigaspaces to BeanFactory. Space not started at " + url
+                    + ". Returning context without gigaspaces beans." );
+
+            return beanFactory;
+
+        }
+
+        if ( !beanFactoryContainsGigaspaces() ) {
+
+            GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
+            XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
+            xmlReader.loadBeanDefinitions( new ClassPathResource( "ubic/gemma/gigaspaces-expressionExperiment.xml" ) );
+            // PropertiesBeanDefinitionReader propReader = new PropertiesBeanDefinitionReader( genericCtx );
+            // propReader.loadBeanDefinitions(new ClassPathResource("otherBeans.properties"));
+            genericCtx.setParent( ( ApplicationContext ) beanFactory );
+            genericCtx.refresh();
+
+            return genericCtx;
+
+        }
+
+        else {
+            log.info( "Bean factory unchanged. Gigaspaces beans already existed." );
+        }
+
+        return beanFactory;
+
+    }
 
     public void setBeanFactory( BeanFactory beanFactory ) throws BeansException {
         this.beanFactory = beanFactory;
