@@ -84,11 +84,10 @@ public class GigaspacesUtil implements ApplicationContextAware {
      * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the context if
      * they do not exist. If the space is not running, returns the original context.
      * 
-     * @param ctx
+     * @param url
      * @return ApplicatonContext
      */
-    public ApplicationContext addGigaspacesToApplicationContext( String url, boolean testing, boolean compassOn,
-            boolean isWebApp ) {
+    public ApplicationContext addGigaspacesToApplicationContext( String url ) {
 
         if ( !isSpaceRunning( url ) ) {
             log.error( "Cannot add Gigaspaces to application context. Space not started at " + url
