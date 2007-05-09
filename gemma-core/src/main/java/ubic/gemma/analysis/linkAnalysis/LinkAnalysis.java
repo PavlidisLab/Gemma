@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,44 +35,35 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
-import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
-import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.TaxonUtility;
-import cern.colt.Sorting;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
 /**
+ * Handles running a linkAnalysis. Results are made available at the end.
+ * 
  * @author xiangwan
+ * @author paul (refactoring)
  * @version $Id$
  */
 public class LinkAnalysis {
-    private static final int LINK_BATCH_SIZE = 1000;
+
     protected static final Log log = LogFactory.getLog( LinkAnalysis.class );
     private MatrixRowPairAnalysis metricMatrix;
     private DoubleArrayList cdf;
     private ObjectArrayList keep;
     private ExpressionDataDoubleMatrix dataMatrix = null;
     private Collection<DesignElementDataVector> dataVectors = null;
-    private Probe2ProbeCoexpressionService ppService = null;
-    private DesignElementDataVectorService deService = null;
+
     private CompositeSequenceService csService = null;
 
     private Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
@@ -82,21 +72,18 @@ public class LinkAnalysis {
 
     private Taxon taxon = null;
     private int uniqueGenesInDataset = 0;
-    private double upperTailCut;
-    private double lowerTailCut;
 
     private NumberFormat form;
-    private String metric = "pearson";
-    private double tooSmallToKeep = 0.5;
-    private boolean absoluteValue = false;
-    private double fwe = 0.01;
-    private double cdfCut = 0.01; // 1.0 means, keep everything.
 
-    private boolean useDB = true;
+    private LinkAnalysisConfig config;
 
-    public LinkAnalysis() {
+    /**
+     * @param config
+     */
+    public LinkAnalysis( LinkAnalysisConfig config ) {
         this.form = NumberFormat.getInstance();
         if ( form instanceof DecimalFormat ) ( ( DecimalFormat ) form ).applyPattern( "0.###E0" );
+        this.config = config;
     }
 
     /**
@@ -105,9 +92,8 @@ public class LinkAnalysis {
     public void analyze() throws Exception {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
-        assert this.ppService != null;
         assert this.taxon != null;
-        assert this.deService != null;
+
         log.debug( "Taxon: " + this.taxon.getCommonName() );
 
         this.init();
@@ -119,7 +105,7 @@ public class LinkAnalysis {
         this.calculateDistribution();
         this.writeDistribution();
         this.getLinks();
-        this.saveLinks();
+
     }
 
     /**
@@ -135,18 +121,6 @@ public class LinkAnalysis {
         this.metricMatrix = null;
     }
 
-    public void setAbsoluteValue() {
-        this.absoluteValue = true;
-    }
-
-    public void setCdfCut( double cdfCut ) {
-        this.cdfCut = cdfCut;
-    }
-
-    public void setCsService( CompositeSequenceService csService ) {
-        this.csService = csService;
-    }
-
     public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
         this.dataMatrix = paraDataMatrix;
     }
@@ -155,32 +129,8 @@ public class LinkAnalysis {
         this.dataVectors = vectors;
     }
 
-    public void setDEService( DesignElementDataVectorService deService ) {
-        this.deService = deService;
-    }
-
-    public void setFwe( double fwe ) {
-        this.fwe = fwe;
-    }
-
-    public void setMetric( String metric ) {
-        this.metric = metric;
-    }
-
-    public void setPPService( Probe2ProbeCoexpressionService ppService ) {
-        this.ppService = ppService;
-    }
-
     public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
-    }
-
-    public void setTooSmallToKeep( double tooSmallToKeep ) {
-        this.tooSmallToKeep = tooSmallToKeep;
-    }
-
-    public void setUseDB( boolean value ) {
-        this.useDB = value;
     }
 
     public void writeDistribution() throws IOException {
@@ -226,19 +176,20 @@ public class LinkAnalysis {
      * Compute the distribution of similarity metrics for the entire matrix.
      */
     private void calculateDistribution() {
-        if ( metric.equals( "pearson" ) ) {
-            metricMatrix = MatrixRowPairAnalysisFactory.pearson( this.dataMatrix, this.tooSmallToKeep );
-        } else if ( metric.equals( "spearmann" ) ) {
+        if ( config.getMetric().equals( "pearson" ) ) {
+            metricMatrix = MatrixRowPairAnalysisFactory
+                    .pearson( this.dataMatrix, config.getCorrelationCacheThreshold() );
+        } else if ( config.getMetric().equals( "spearmann" ) ) {
             throw new UnsupportedOperationException( "Spearmann not supported" );
             // metricMatrix = MatrixRowPairAnalysisFactory.spearman(dataMatrix,
             // tooSmallToKeep);
         }
 
         metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
-        metricMatrix.setUseAbsoluteValue( this.absoluteValue );
+        metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
         metricMatrix.calculateMetrics();
         log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
-                + " values in the correlation matrix with values over " + this.tooSmallToKeep );
+                + " values in the correlation matrix with values over " + config.getCorrelationCacheThreshold() );
 
     }
 
@@ -247,24 +198,24 @@ public class LinkAnalysis {
      */
     private void chooseCutPoints() {
         cdf = Stats.cdf( metricMatrix.getHistogramArrayList() );
-        if ( cdfCut <= 0.0 ) {
-            upperTailCut = 1.0;
-            lowerTailCut = -1.0;
+        if ( config.getCdfCut() <= 0.0 ) {
+            config.setUpperTailCut( 1.0 );
+            config.setLowerTailCut( -1.0 );
             return;
         }
 
-        if ( cdfCut >= 1.0 ) {
-            upperTailCut = 0.0;
-            lowerTailCut = 0.0;
+        if ( config.getCdfCut() >= 1.0 ) {
+            config.setUpperTailCut( 0.0 );
+            config.setLowerTailCut( 0.0 );
             return;
         }
 
-        double cdfTailCut = cdfCut;
+        double cdfTailCut = config.getCdfCut();
         double cdfUpperCutScore = 0.0;
         double cdfLowerCutScore = 0.0;
 
         // find the lower tail cutpoint, if we have to.
-        if ( !this.absoluteValue ) {
+        if ( !config.isAbsoluteValue() ) {
             cdfTailCut /= 2.0;
             // find the lower cut point. Roundoff could be a problem...really
             // need two cdfs or do it directly from
@@ -291,8 +242,8 @@ public class LinkAnalysis {
         // get the cutpoint based on statistical signficance.
         double maxP = 1.0;
         double scoreAtP = 0.0;
-        if ( fwe != 0.0 ) {
-            maxP = fwe / uniqueGenesInDataset; // bonferroni.
+        if ( config.getFwe() != 0.0 ) {
+            maxP = config.getFwe() / uniqueGenesInDataset; // bonferroni.
             scoreAtP = CorrelationStats.correlationForPvalue( maxP, this.dataMatrix.columns() );
             log.info( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
                     + " for " + uniqueGenesInDataset + " unique items (if all " + this.dataMatrix.columns()
@@ -301,19 +252,19 @@ public class LinkAnalysis {
         this.metricMatrix.setPValueThreshold( maxP ); // this is the corrected
         // value.
 
-        upperTailCut = Math.max( scoreAtP, cdfUpperCutScore );
-        log.info( "Final upper cut is " + form.format( upperTailCut ) );
+        config.setUpperTailCut( Math.max( scoreAtP, cdfUpperCutScore ) );
+        log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
 
-        if ( !this.absoluteValue ) {
-            lowerTailCut = Math.min( -scoreAtP, cdfLowerCutScore );
-            log.info( "Final lower cut is " + form.format( lowerTailCut ) );
+        if ( !config.isAbsoluteValue() ) {
+            config.setLowerTailCut( Math.min( -scoreAtP, cdfLowerCutScore ) );
+            log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
         }
 
-        metricMatrix.setUpperTailThreshold( upperTailCut );
-        if ( absoluteValue ) {
-            metricMatrix.setLowerTailThreshold( upperTailCut );
+        metricMatrix.setUpperTailThreshold( config.getUpperTailCut() );
+        if ( config.isAbsoluteValue() ) {
+            metricMatrix.setLowerTailThreshold( config.getUpperTailCut() );
         } else {
-            metricMatrix.setLowerTailThreshold( lowerTailCut );
+            metricMatrix.setLowerTailThreshold( config.getLowerTailCut() );
         }
 
     }
@@ -379,9 +330,9 @@ public class LinkAnalysis {
         if ( this.uniqueGenesInDataset == 0 ) return;
 
         // estimate the correlation needed to reach significance.
-        double scoreP = CorrelationStats.correlationForPvalue( this.fwe / this.uniqueGenesInDataset, this.dataMatrix
-                .columns() ) - 0.001;
-        if ( scoreP > this.tooSmallToKeep ) this.tooSmallToKeep = scoreP;
+        double scoreP = CorrelationStats.correlationForPvalue( config.getFwe() / this.uniqueGenesInDataset,
+                this.dataMatrix.columns() ) - 0.001;
+        if ( scoreP > config.getCorrelationCacheThreshold() ) config.setCorrelationCacheThreshold( scoreP );
     }
 
     /**
@@ -390,140 +341,12 @@ public class LinkAnalysis {
      */
     private void outputOptions() {
         log.info( "Current Settings" );
-        log.info( "AbsouteValue Setting:" + this.absoluteValue );
-        log.info( "cdfCut:" + this.cdfCut );
-        log.info( "cacheCut:" + this.tooSmallToKeep );
+        log.info( "AbsouteValue Setting:" + config.isAbsoluteValue() );
+        log.info( "cdfCut:" + config.getCdfCut() );
+        log.info( "cacheCut:" + config.getCorrelationCacheThreshold() );
         log.info( "Unique Items:" + this.uniqueGenesInDataset );
-        log.info( "fwe:" + this.fwe );
-        log.info( "useDB:" + this.useDB );
-    }
-
-    /**
-     * @param numColumns
-     * @param p2plinks
-     * @param i
-     * @param w
-     * @param v1
-     * @param v2
-     * @return
-     */
-    private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
-            DesignElementDataVector v1, DesignElementDataVector v2 ) {
-
-        if ( taxon == null ) {
-            throw new IllegalStateException( "Taxon cannot be null" );
-        }
-
-        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, v1 );
-
-        ppCoexpression.setFirstVector( v1 );
-        ppCoexpression.setSecondVector( v2 );
-
-        p2plinks.add( ppCoexpression );
-
-        if ( i % LINK_BATCH_SIZE == 0 ) {
-            this.ppService.create( p2plinks );
-            p2plinks.clear();
-        }
-    }
-
-    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, DesignElementDataVector v1 ) {
-        Probe2ProbeCoexpression ppCoexpression;
-        if ( TaxonUtility.isMouse( taxon ) ) {
-            ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
-        } else if ( TaxonUtility.isRat( taxon ) ) {
-            ppCoexpression = RatProbeCoExpression.Factory.newInstance();
-        } else if ( TaxonUtility.isHuman( taxon ) ) {
-            ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
-        } else {
-            ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
-        }
-        ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
-        ppCoexpression.setQuantitationType( v1.getQuantitationType() );
-        return ppCoexpression;
-    }
-
-    /**
-     * Persist the links to the database.
-     */
-    private void saveLinks() {
-
-        if ( !this.useDB ) {
-            return;
-        }
-
-        /*
-         * Delete old links for this expressionexperiment
-         */
-
-        ExpressionExperiment expressionExperiment = p2v.values().iterator().next().getExpressionExperiment();
-        log.info( "Deleting any old links for " + expressionExperiment + " ..." );
-        ppService.deleteLinks( expressionExperiment );
-
-        log.info( "Start submitting data to database." );
-        StopWatch watch = new StopWatch();
-        watch.start();
-        Object[] links = keep.elements();
-        int numColumns = dataMatrix.columns();
-
-        saveLinks( numColumns, links );
-
-        // now create 'reversed' links, by sorting by the 'y' coordinate.
-        log.info( "Sorting links to create flipped set" );
-        Sorting.quickSort( links, new Comparator() {
-            public int compare( Object arg0, Object arg1 ) {
-                Link a = ( Link ) arg0;
-                Link b = ( Link ) arg1;
-
-                if ( a.gety() < b.gety() ) {
-                    return -1;
-                } else if ( a.gety() > b.gety() ) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-
-            }
-        } );
-
-        log.info( "Saving flipped links" );
-        saveLinks( numColumns, links );
-
-        watch.stop();
-        log.info( "Seconds to insert " + this.keep.size() + " links plus flipped versions:"
-                + ( double ) watch.getTime() / 1000.0 );
-    }
-
-    /**
-     * @param c
-     * @param links
-     */
-    private void saveLinks( int c, Object[] links ) {
-        Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
-        for ( int i = 0, n = links.length; i < n; i++ ) {
-            Link m = ( Link ) links[i];
-            Double w = m.getWeight();
-
-            assert w != null;
-
-            DesignElement p1 = this.metricMatrix.getProbeForRow( dataMatrix.getRowElement( m.getx() ) );
-            DesignElement p2 = this.metricMatrix.getProbeForRow( dataMatrix.getRowElement( m.gety() ) );
-
-            DesignElementDataVector v1 = p2v.get( p1 );
-            DesignElementDataVector v2 = p2v.get( p2 );
-
-            persist( c, p2plinkBatch, i, w, v1, v2 );
-
-            if ( i > 0 && i % 50000 == 0 ) {
-                log.info( i + " links loaded into the database" );
-            }
-
-        }
-        if ( p2plinkBatch.size() > 0 ) {
-            this.ppService.create( p2plinkBatch );
-            p2plinkBatch.clear();
-        }
+        log.info( "fwe:" + config.getFwe() );
+        log.info( "useDB:" + config.isUseDb() );
     }
 
     /**
@@ -547,6 +370,29 @@ public class LinkAnalysis {
             writer.write( "\n" );
         }
         writer.close();
+    }
+
+    public ExpressionDataDoubleMatrix getDataMatrix() {
+        return dataMatrix;
+    }
+
+    public ObjectArrayList getKeep() {
+        return keep;
+    }
+
+    public MatrixRowPairAnalysis getMetricMatrix() {
+        return metricMatrix;
+    }
+
+    public Map<CompositeSequence, DesignElementDataVector> getP2v() {
+        return p2v;
+    }
+
+    /**
+     * @return
+     */
+    public Taxon getTaxon() {
+        return this.taxon;
     }
 
 }

@@ -3,3 +3,4 @@ surefire*
 surefire-classloader.properties
 
 cobertura.ser
+pom.properties
