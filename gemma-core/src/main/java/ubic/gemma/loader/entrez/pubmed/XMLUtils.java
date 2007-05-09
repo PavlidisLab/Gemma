@@ -20,6 +20,12 @@ package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
 
+import javax.xml.transform.TransformerException;
+
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 /**
  * Handy methods for dealing with XML.
  * 
@@ -54,5 +60,28 @@ public class XMLUtils {
             }
         }
         return value.toString();
+    }
+
+    /**
+     * Useful if you only have a single child you care about.
+     * 
+     * @param parent
+     * @param elementName
+     * @return String value of the child.
+     * @throws IOException
+     * @throws TransformerException
+     */
+    public static String extractOneChild( Node parent, String elementName ) throws IOException, TransformerException {
+        NodeList jNodes = parent.getChildNodes();
+        for ( int q = 0; q < jNodes.getLength(); q++ ) {
+            Node jitem = jNodes.item( q );
+            if ( !( jitem instanceof Element ) ) {
+                continue;
+            }
+            if ( jitem.getNodeName().equals( elementName ) ) {
+                return getTextValue( ( Element ) jitem );
+            }
+        }
+        return null;
     }
 }

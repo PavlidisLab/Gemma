@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -39,7 +38,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -60,20 +58,13 @@ import ubic.gemma.model.expression.biomaterial.Compound;
  */
 public class PubMedXMLParser {
 
-    private static final String MEDLINE_RECORD_AUTHOR_XPATH = "AuthorList/Author";
-
     private static final String ERROR_TAG = "Error";
-
-    private static final String MEDLINE_PAGINATION_ELEMENT = "Pagination/MedlinePgn";
-
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
-    private static final String PUB_STATUS_ELEMENT = "PubStatus";
-    private static final String PUBMED_PUB_DATE_ELEMENT = "PubMedPubDate";
-    // private static final String ABSTRACT_ELEMENT = "Abstract";
-    private static final String TITLE_ELEMENT = "//ArticleTitle";
     protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
 
     DocumentBuilder builder;
+
+    DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
 
     /**
      * @param is
@@ -91,6 +82,7 @@ public class PubMedXMLParser {
             factory.setValidating( false );
             builder = factory.newDocumentBuilder();
             Document document = builder.parse( is );
+
             log.debug( "done parsing" );
             return extractBibRefs( document );
         } catch ( IOException e ) {
@@ -107,15 +99,13 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private String extractAuthorList( Node article ) throws IOException, TransformerException {
-
-        NodeList authorList = org.apache.xpath.XPathAPI.selectNodeList( article, MEDLINE_RECORD_AUTHOR_XPATH );
-
+    private String extractAuthorList( NodeList authorList ) throws IOException, TransformerException {
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
-
             Node item = authorList.item( i );
-
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
             NodeList nl = item.getChildNodes();
             for ( int j = 0; j < nl.getLength(); j++ ) {
 
@@ -162,65 +152,132 @@ public class PubMedXMLParser {
         log.debug( articles.getLength() + " articles found in document" );
 
         try {
-            for ( int i = 0; i < articles.getLength(); i++ ) {
-
+            int i = 0;
+            for ( ; i < articles.getLength(); i++ ) {
+                BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
                 Node record = articles.item( i );
 
-                Node article = org.apache.xpath.XPathAPI.selectSingleNode( record, "Article" );
+                Node article = processRecord( bibRef, record );
 
-                BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+                assert article != null;
 
-                processMESH( record, bibRef );
+                Node journal = processArticle( bibRef, article );
 
-                Node abstractNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "Abstract/AbstractText" );
-                if ( abstractNode != null ) {
-                    bibRef.setAbstractText( XMLUtils.getTextValue( ( Element ) abstractNode ) );
-                }
+                processJournalInfo( bibRef, journal );
 
-                Node pagesNode = org.apache.xpath.XPathAPI.selectSingleNode( article, MEDLINE_PAGINATION_ELEMENT );
-                bibRef.setPages( XMLUtils.getTextValue( ( Element ) pagesNode ) );
-
-                Node titleNode = org.apache.xpath.XPathAPI.selectSingleNode( article, TITLE_ELEMENT );
-                bibRef.setTitle( XMLUtils.getTextValue( ( Element ) titleNode ) );
-
-                Node volumeNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "Journal/JournalIssue/Volume" );
-                bibRef.setVolume( XMLUtils.getTextValue( ( Element ) volumeNode ) );
-
-                Node issueNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "Journal/JournalIssue/Issue" );
-                bibRef.setIssue( XMLUtils.getTextValue( ( Element ) issueNode ) );
-
-                Node publicationNode = org.apache.xpath.XPathAPI.selectSingleNode( record,
-                        "MedlineJournalInfo/MedlineTA" );
-                bibRef.setPublication( XMLUtils.getTextValue( ( Element ) publicationNode ) );
-
-                bibRef.setAuthorList( extractAuthorList( article ) );
-
-                bibRef.setPublicationDate( extractPublicationDate( article ) );
-
-                bibRef.setChemicals( extractChemicals( record ) );
-
-                bibRef.setKeywords( extractKeywords( record ) );
-
-                bibRef.setPublicationTypes( extractPublicationTypes( record ) );
-
-                Node dbEntryNode = org.apache.xpath.XPathAPI.selectSingleNode( record, "PMID" );
-                DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-                dbEntry.setAccession( XMLUtils.getTextValue( ( Element ) dbEntryNode ) );
-                ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
-                exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
-                dbEntry.setExternalDatabase( exDb );
-
-                bibRef.setPubAccession( dbEntry );
                 result.add( bibRef );
 
-                if ( i > 0 && i % 100 == 0 ) {
+                if ( i > 0 && i % 1000 == 0 ) {
                     log.info( "Processed " + i + " articles" );
                 }
             }
+            log.info( "Processed " + i + " articles" );
         } catch ( TransformerException e ) {
             throw new RuntimeException( e );
         }
         return result;
+    }
+
+    private NodeList processJournalInfo( BibliographicReference bibRef, Node journal ) throws IOException,
+            TransformerException {
+        NodeList journalNodes = journal.getChildNodes();
+        for ( int j = 0; j < journalNodes.getLength(); j++ ) {
+            Node item = journalNodes.item( j );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "JournalIssue" ) ) {
+                NodeList journalIssueNodes = item.getChildNodes();
+                for ( int k = 0; k < journalIssueNodes.getLength(); k++ ) {
+                    Node jitem = journalIssueNodes.item( k );
+                    if ( !( jitem instanceof Element ) ) {
+                        continue;
+                    }
+                    String jname = jitem.getNodeName();
+                    if ( jname.equals( "Volume" ) ) {
+                        bibRef.setVolume( XMLUtils.getTextValue( ( Element ) jitem ) );
+                    } else if ( jname.equals( "Issue" ) ) {
+                        bibRef.setIssue( XMLUtils.getTextValue( ( Element ) jitem ) );
+                    } else if ( jname.equals( "PubDate" ) ) {
+                        bibRef.setPublicationDate( extractPublicationDate( jitem ) );
+                    }
+                }
+            }
+        }
+        return journalNodes;
+    }
+
+    private Node processRecord( BibliographicReference bibRef, Node record ) throws TransformerException, IOException {
+        Node article = null;
+
+        NodeList recordNodes = record.getChildNodes();
+        for ( int p = 0; p < recordNodes.getLength(); p++ ) {
+            Node item = recordNodes.item( p );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "Article" ) ) {
+                article = item;
+            } else if ( name.equals( "ChemicalList" ) ) {
+                bibRef.setChemicals( extractChemicals( item ) );
+            } else if ( name.equals( "MeshHeadingList" ) ) {
+                processMESH( item, bibRef );
+            } else if ( name.equals( "KeywordList" ) ) {
+                bibRef.setKeywords( extractKeywords( item ) );
+            } else if ( name.equals( "MedlineJournalInfo" ) ) {
+                NodeList jNodes = item.getChildNodes();
+                for ( int q = 0; q < jNodes.getLength(); q++ ) {
+                    Node jitem = jNodes.item( q );
+                    if ( !( jitem instanceof Element ) ) {
+                        continue;
+                    }
+                    if ( jitem.getNodeName().equals( "MedlineTA" ) ) {
+                        bibRef.setPublication( XMLUtils.getTextValue( ( Element ) jitem ) );
+                    }
+                }
+            } else if ( name.equals( "PMID" ) ) {
+                processAccession( bibRef, item );
+            }
+        }
+        return article;
+    }
+
+    private Node processArticle( BibliographicReference bibRef, Node article ) throws IOException, TransformerException {
+        NodeList childNodes = article.getChildNodes();
+        Node journal = null;
+        for ( int j = 0; j < childNodes.getLength(); j++ ) {
+            Node item = childNodes.item( j );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "ArticleTitle" ) ) {
+                bibRef.setTitle( XMLUtils.getTextValue( ( Element ) item ) );
+            } else if ( name.equals( "Journal" ) ) {
+                journal = item;
+            } else if ( name.equals( "AuthorList" ) ) {
+                bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
+            } else if ( name.equals( "Pagination" ) ) {
+                bibRef.setPages( XMLUtils.extractOneChild( item, "MedlinePgn" ) );
+            } else if ( name.equals( "Abstract" ) ) {
+                bibRef.setAbstractText( XMLUtils.extractOneChild( item, "AbstractText" ) );
+            } else if ( name.equals( "PublicationTypeList" ) ) {
+                bibRef.setPublicationTypes( extractPublicationTypes( item ) );
+            }
+        }
+        return journal;
+    }
+
+    private void processAccession( BibliographicReference bibRef, Node record ) throws IOException {
+        String accession = XMLUtils.getTextValue( ( Element ) record );
+        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+        dbEntry.setAccession( accession );
+        ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
+        exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
+        dbEntry.setExternalDatabase( exDb );
+        bibRef.setPubAccession( dbEntry );
     }
 
     /**
@@ -229,16 +286,16 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private Collection<PublicationType> extractPublicationTypes( Node article ) throws TransformerException,
+    private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) throws TransformerException,
             IOException {
-        NodeIterator pubtypeNodeIt = org.apache.xpath.XPathAPI.selectNodeIterator( article,
-                "//PublicationTypeList/PublicationType" );
-
-        Node pubtypeNode = null;
         Collection<PublicationType> publicationTypes = new HashSet<PublicationType>();
-        while ( ( pubtypeNode = pubtypeNodeIt.nextNode() ) != null ) {
-
-            String type = XMLUtils.getTextValue( ( Element ) pubtypeNode );
+        NodeList childNodes = pubtypeList.getChildNodes();
+        for ( int i = 0; i < childNodes.getLength(); i++ ) {
+            Node item = childNodes.item( i );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String type = XMLUtils.getTextValue( ( Element ) item );
             PublicationType pt = PublicationType.Factory.newInstance();
             pt.setType( type );
             publicationTypes.add( pt );
@@ -247,15 +304,13 @@ public class PubMedXMLParser {
     }
 
     /**
-     * @param record
+     * @param keywordNode
      * @return
      * @throws TransformerException
      * @throws IOException
      */
-    private Collection<Keyword> extractKeywords( Node record ) throws TransformerException, IOException {
+    private Collection<Keyword> extractKeywords( Node keywordNode ) throws TransformerException, IOException {
         Collection<Keyword> keywords = new HashSet<Keyword>();
-        Node keywordNode = org.apache.xpath.XPathAPI.selectSingleNode( record, "KeywordList" );
-        if ( keywordNode == null ) return keywords;
         NodeList childNodes = keywordNode.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
             Node item = childNodes.item( i );
@@ -274,16 +329,13 @@ public class PubMedXMLParser {
     }
 
     /**
-     * @param record
+     * @param chemNodes
      * @return
      * @throws TransformerException
      * @throws IOException
      */
-    private Collection<Compound> extractChemicals( Node record ) throws TransformerException, IOException {
+    private Collection<Compound> extractChemicals( Node chemNodes ) throws TransformerException, IOException {
         Collection<Compound> compounds = new HashSet<Compound>();
-        Node chemNodes = org.apache.xpath.XPathAPI.selectSingleNode( record, "ChemicalList" );
-        if ( chemNodes == null ) return compounds;
-
         NodeList childNodes = chemNodes.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
             Node chemNode = childNodes.item( i );
@@ -313,19 +365,15 @@ public class PubMedXMLParser {
     }
 
     /**
-     * @param record
+     * @param meshHeadings
      * @param bibRef
      * @throws TransformerException
      * @throws IOException
      */
-    private void processMESH( Node record, BibliographicReference bibRef ) throws TransformerException, IOException {
-        // NodeIterator meshHeadingIt = org.apache.xpath.XPathAPI.selectNodeIterator( article,
-        // "//MeshHeadingList/MeshHeading" );
-        Node meshHeadings = org.apache.xpath.XPathAPI.selectSingleNode( record, "MeshHeadingList" );
-        if ( meshHeadings == null ) return;
+    private void processMESH( Node meshHeadings, BibliographicReference bibRef ) throws TransformerException,
+            IOException {
         NodeList childNodes = meshHeadings.getChildNodes();
 
-        // while ( ( meshNode = childNodes.nextNode() ) != null ) {
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
             Node meshNode = childNodes.item( i );
             NodeList termNodes = meshNode.getChildNodes();
@@ -410,35 +458,57 @@ public class PubMedXMLParser {
     /**
      * Get the date this was put in pubmed.
      * 
-     * @param doc
+     * @param dateNode
      * @return
      * @throws IOException
      */
-    private Date extractPublicationDate( Node article ) throws IOException, TransformerException {
-        Date d = extractJournalIssueDate( article );
-        if ( d == null ) d = extractPubmedPubdate( article );
+    private Date extractPublicationDate( Node dateNode ) throws IOException, TransformerException {
+        Date d = extractJournalIssueDate( dateNode );
+        // if ( d == null ) d = extractPubmedPubdate( dateNode );
         return d;
     }
 
     /**
-     * @param article
+     * @param dateNode
      * @return
      * @throws TransformerException
      * @throws IOException
      */
-    private Date extractJournalIssueDate( Node article ) throws TransformerException, IOException {
-        // get it from the journal information.
+    private Date extractJournalIssueDate( Node dateNode ) throws TransformerException, IOException {
 
-        Node dateNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "Journal/JournalIssue/PubDate" );
-        Node dn = org.apache.xpath.XPathAPI.selectSingleNode( dateNode, "Day" );
-        Node y = org.apache.xpath.XPathAPI.selectSingleNode( dateNode, "Year" );
-        Node m = org.apache.xpath.XPathAPI.selectSingleNode( dateNode, "Month" );
-        Node medLineDate = org.apache.xpath.XPathAPI.selectSingleNode( dateNode, "MedlineDate" );
-        String yearText = XMLUtils.getTextValue( ( Element ) y );
-        String medLineText = XMLUtils.getTextValue( ( Element ) medLineDate );
-        String monthText = XMLUtils.getTextValue( ( Element ) m );
-        String dayText = XMLUtils.getTextValue( ( Element ) dn );
-        DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
+        String yearText = null;// = XMLUtils.getTextValue( ( Element ) y );
+        String medLineText = null;// = XMLUtils.getTextValue( ( Element ) medLineDate );
+        String monthText = null;// = XMLUtils.getTextValue( ( Element ) m );
+        String dayText = null;// = XMLUtils.getTextValue( ( Element ) dn );
+
+        NodeList childNodes = dateNode.getChildNodes();
+        for ( int i = 0; i < childNodes.getLength(); i++ ) {
+            Node c = childNodes.item( i );
+            if ( !( c instanceof Element ) ) {
+                continue;
+            }
+            String t = XMLUtils.getTextValue( ( Element ) c );
+            if ( c.getNodeName().equals( "Year" ) ) {
+                yearText = t;
+            } else if ( c.getNodeName().equals( "Month" ) ) {
+                monthText = t;
+            } else if ( c.getNodeName().equals( "Day" ) ) {
+                dayText = t;
+            } else if ( c.getNodeName().equals( "MedlineDate" ) ) {
+                medLineText = t;
+            }
+        }
+
+        //        
+        // Node dn = ( Node ) dayExpression.evaluate( dateNode, XPathConstants.NODE );
+        // Node y = ( Node ) yearExpression.evaluate( dateNode, XPathConstants.NODE );
+        // Node m = ( Node ) monthExpression.evaluate( dateNode, XPathConstants.NODE );
+        // Node medLineDate = ( Node ) medlineDateExpression.evaluate( dateNode, XPathConstants.NODE );
+        // String yearText = XMLUtils.getTextValue( ( Element ) y );
+        // String medLineText = XMLUtils.getTextValue( ( Element ) medLineDate );
+        // String monthText = XMLUtils.getTextValue( ( Element ) m );
+        // String dayText = XMLUtils.getTextValue( ( Element ) dn );
+
         df.setLenient( true );
 
         if ( yearText == null && medLineText != null ) {
@@ -458,69 +528,69 @@ public class PubMedXMLParser {
         }
     }
 
-    /**
-     * This is a fallback that should not get used.
-     * 
-     * @param article
-     * @return
-     * @throws TransformerException
-     * @throws IOException
-     * @deprecated
-     */
-    private Date extractPubmedPubdate( Node article ) throws TransformerException, IOException {
-        NodeList dateList = org.apache.xpath.XPathAPI.selectNodeList( article, "/descendant::"
-                + PUBMED_PUB_DATE_ELEMENT );
-        int year = 0;
-        int month = 0;
-        int day = 0;
-        int hour = 0;
-        int minute = 0;
-
-        boolean found = false;
-        for ( int i = 0; i < dateList.getLength(); i++ ) {
-            Node item = dateList.item( i );
-
-            if ( item instanceof Element ) {
-                Element ele = ( Element ) item;
-                if ( ele.hasAttribute( PUB_STATUS_ELEMENT ) && ele.getAttribute( PUB_STATUS_ELEMENT ).equals( "pubmed" ) ) {
-
-                    NodeList dateNodes = ele.getChildNodes();
-
-                    for ( int j = 0; j < dateNodes.getLength(); j++ ) {
-                        Node dateitem = dateNodes.item( j );
-
-                        if ( dateitem instanceof Element ) {
-                            Element elem = ( Element ) dateitem;
-
-                            int num = Integer.parseInt( XMLUtils.getTextValue( elem ) );
-
-                            if ( elem.getTagName().equals( "Year" ) ) {
-                                year = num;
-                            } else if ( elem.getTagName().equals( "Month" ) ) {
-                                month = num - 1; // pubmed dates appear to be numbered from 1.
-                            } else if ( elem.getTagName().equals( "Day" ) ) {
-                                day = num;
-                            } else if ( elem.getTagName().equals( "Hour" ) ) {
-                                hour = num;
-                            } else if ( elem.getTagName().equals( "Minute" ) ) {
-                                minute = num;
-                            } else {
-                                assert false : "What are we doing here!";
-                            }
-                        }
-                    }
-
-                    found = true;
-
-                }
-            }
-        }
-
-        if ( !found ) return null;
-        Calendar c = Calendar.getInstance();
-        c.set( year, month, day, hour, minute );
-        Date d = c.getTime();
-        return d;
-    }
+    // /**
+    // * This is a fallback that should not get used.
+    // *
+    // * @param article
+    // * @return
+    // * @throws TransformerException
+    // * @throws IOException
+    // * @deprecated
+    // */
+    // private Date extractPubmedPubdate( Node dateNode ) throws TransformerException, IOException {
+    // NodeList dateList = org.apache.xpath.XPathAPI.selectNodeList( article, "/descendant::"
+    // + PUBMED_PUB_DATE_ELEMENT );
+    // int year = 0;
+    // int month = 0;
+    // int day = 0;
+    // int hour = 0;
+    // int minute = 0;
+    //
+    // boolean found = false;
+    // for ( int i = 0; i < dateList.getLength(); i++ ) {
+    // Node item = dateList.item( i );
+    //
+    // if ( item instanceof Element ) {
+    // Element ele = ( Element ) item;
+    // if ( ele.hasAttribute( PUB_STATUS_ELEMENT ) && ele.getAttribute( PUB_STATUS_ELEMENT ).equals( "pubmed" ) ) {
+    //
+    // NodeList dateNodes = ele.getChildNodes();
+    //
+    // for ( int j = 0; j < dateNodes.getLength(); j++ ) {
+    // Node dateitem = dateNodes.item( j );
+    //
+    // if ( dateitem instanceof Element ) {
+    // Element elem = ( Element ) dateitem;
+    //
+    // int num = Integer.parseInt( XMLUtils.getTextValue( elem ) );
+    //
+    // if ( elem.getTagName().equals( "Year" ) ) {
+    // year = num;
+    // } else if ( elem.getTagName().equals( "Month" ) ) {
+    // month = num - 1; // pubmed dates appear to be numbered from 1.
+    // } else if ( elem.getTagName().equals( "Day" ) ) {
+    // day = num;
+    // } else if ( elem.getTagName().equals( "Hour" ) ) {
+    // hour = num;
+    // } else if ( elem.getTagName().equals( "Minute" ) ) {
+    // minute = num;
+    // } else {
+    // assert false : "What are we doing here!";
+    // }
+    // }
+    // }
+    //
+    // found = true;
+    //
+    // }
+    // }
+    // }
+    //
+    // if ( !found ) return null;
+    // Calendar c = Calendar.getInstance();
+    // c.set( year, month, day, hour, minute );
+    // Date d = c.getTime();
+    // return d;
+    // }
 
 }

@@ -138,6 +138,7 @@ public class PubMedXMLParserTest extends TestCase {
                     // log.info( c.getName() );
                     actualNumberofCompounds++;
                 }
+                assertTrue( reference.getPublicationTypes().size() > 0 );
             }
 
             assertEquals( expectedNumberofKeywords, actualNumberofKeywords );
