@@ -45,6 +45,8 @@ public abstract class AbstractGigaspacesFormController extends BackgroundProcess
 
     private GigaspacesUtil gigaspacesUtil = null;
 
+    protected ApplicationContext updatedContext = null;
+
     /**
      * Runs the job in a {@link JavaSpace}.
      * 
@@ -91,7 +93,7 @@ public abstract class AbstractGigaspacesFormController extends BackgroundProcess
 
         String taskId = TaskRunningService.generateTaskId();
 
-        ApplicationContext updatedContext = addGigaspacesToApplicationContext();
+        updatedContext = addGigaspacesToApplicationContext();
         BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
             job = getSpaceRunner( taskId, context, request, command, this.getMessageUtil() );
