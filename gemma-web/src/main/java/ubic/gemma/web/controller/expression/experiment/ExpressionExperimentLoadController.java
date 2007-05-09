@@ -33,14 +33,17 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask;
+import ubic.gemma.javaspaces.gigaspaces.Result;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingFormController;
+import ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaspacesFormController;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -54,8 +57,9 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
+ * @spring.property name="gigaspacesUtil" ref="gigaspacesUtil"
  */
-public class ExpressionExperimentLoadController extends BackgroundProcessingFormController {
+public class ExpressionExperimentLoadController extends AbstractGigaspacesFormController {
 
     GeoDatasetService geoDatasetService;
 
@@ -80,6 +84,16 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
         }
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaspacesFormController#setGigaspacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil)
+     */
+    @Override
+    public void setGigaspacesUtil( GigaspacesUtil gigaspacesUtil ) {
+        this.injectGigaspacesUtil( gigaspacesUtil );
     }
 
     /**
@@ -146,6 +160,95 @@ public class ExpressionExperimentLoadController extends BackgroundProcessingForm
                 } else {
                     Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
                             doSampleMatching );
+                    if ( result.size() == 1 ) {
+                        ExpressionExperiment loaded = result.iterator().next();
+                        this.saveMessage( "Successfully loaded " + loaded );
+                        model.put( "expressionExperiment", loaded );
+                        ProgressManager.destroyProgressJob( job );
+                        return new ModelAndView( new RedirectView(
+                                "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                        + result.iterator().next().getId() ) );
+                    } else {
+                        // model.put( "expressionExeriments", result );
+                        this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
+                        ProgressManager.destroyProgressJob( job );
+                        for ( ExpressionExperiment ee : result )
+                            list += ee.getId() + ",";
+                        return new ModelAndView( new RedirectView(
+                                "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
+                    }
+
+                }
+
+            }
+        };
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaspacesFormController#getSpaceRunner(java.lang.String,
+     *      org.acegisecurity.context.SecurityContext, javax.servlet.http.HttpServletRequest, java.lang.Object,
+     *      ubic.gemma.web.util.MessageUtil)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
+            HttpServletRequest request, Object command, MessageUtil messenger ) {
+
+        final ExpressionExperimentTask eeTaskProxy = ( ExpressionExperimentTask ) updatedContext.getBean( "proxy" );
+
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+
+            @SuppressWarnings("unchecked")
+            public ModelAndView call() throws Exception {
+
+                SecurityContextHolder.setContext( securityContext );
+                Map<Object, Object> model = new HashMap<Object, Object>();
+                ExpressionExperimentLoadCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadCommand ) command );
+
+                String accesionNum = expressionExperimentLoadCommand.getAccession();
+
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                        .getAuthentication().getName(), "Loading " + expressionExperimentLoadCommand.getAccession() );
+
+                // put the accession number in a safer form
+                accesionNum = StringUtils.strip( accesionNum );
+                accesionNum = StringUtils.upperCase( accesionNum );
+
+                log.info( "Loading " + accesionNum );
+
+                if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
+                    geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+                }
+
+                boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+                String list = "";
+                if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
+                    job.updateProgress( "Loading platforms only." );
+                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true,
+                            doSampleMatching );
+                    this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
+                    model.put( "arrayDesigns", arrayDesigns );
+                    ProgressManager.destroyProgressJob( job );
+
+                    if ( arrayDesigns.size() == 1 ) {
+                        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
+                                + arrayDesigns.iterator().next().getId() ) );
+                    } else {
+                        for ( ArrayDesign ad : arrayDesigns )
+                            list += ad.getId() + ",";
+                        return new ModelAndView(
+                                new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
+                    }
+
+                } else {
+                    // Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
+                    // doSampleMatching );
+
+                    Result res = eeTaskProxy.execute( accesionNum, false, doSampleMatching );
+                    Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
+                    log.info( "result " + result );
+
                     if ( result.size() == 1 ) {
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
