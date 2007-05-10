@@ -514,9 +514,26 @@ public class PubMedXMLParser {
         if ( yearText == null && medLineText != null ) {
             String[] yearmo = medLineText.split( "\\s" );
             if ( yearmo.length == 2 ) {
+                // 1983 Aug
                 yearText = yearmo[0];
                 monthText = yearmo[1];
                 monthText = monthText.replaceAll( "-\\w+", "" );
+            } else if ( yearmo.length == 4 ) {
+                // 1983 Aug 31-Sep 6
+                yearText = yearmo[0];
+                monthText = yearmo[1];
+                dayText = yearmo[2].replaceAll( "-\\w+", "" );
+            } else if ( yearmo.length == 3 ) {
+                // 1983 Jul 9-16
+                yearText = yearmo[0];
+                monthText = yearmo[1];
+                dayText = yearmo[2].replaceAll( "-\\w+", "" );
+            } else if ( yearmo.length == 1 ) {
+                // 1983-84
+                yearText = yearmo[0];
+                yearText = yearText.replaceAll( "-\\w+", "" );
+            } else {
+                log.warn( "No data information from medline text: " + medLineText );
             }
         }
 
