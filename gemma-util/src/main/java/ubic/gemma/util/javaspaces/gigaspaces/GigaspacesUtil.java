@@ -101,7 +101,7 @@ public class GigaspacesUtil implements ApplicationContextAware {
 
             GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
             XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
-            xmlReader.loadBeanDefinitions( new ClassPathResource( "ubic/gemma/gigaspaces-expressionExperiment.xml" ) );
+            xmlReader.loadBeanDefinitions( new ClassPathResource( "ubic/gemma/gigaspaces.xml" ) );
             // PropertiesBeanDefinitionReader propReader = new PropertiesBeanDefinitionReader( genericCtx );
             // propReader.loadBeanDefinitions(new ClassPathResource("otherBeans.properties"));
 

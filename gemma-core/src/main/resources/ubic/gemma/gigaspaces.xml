@@ -41,7 +41,7 @@
 			<ref local="taskBean" />
 		</property>
 		<property name="businessInterface">
-			<value>ubic.gemma.javaspaces.gigaspaces.Task</value>
+			<value>ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask</value>
 		</property>
 	</bean>
 	<bean id="javaSpaceInterceptor"
@@ -52,10 +52,15 @@
 			<value>true</value>
 		</property>
 		<!--
-			The Time for waiting to take the result from the space by the master
+			The master will take the result from the space when it is available.  This
+			sets the time the master will wait for a result before timing out.
+			
+			This has been set to an extremely large value to make the effects negligible.  
+			That is, the master will never time out based on this setting.  Instead, the 
+			master should terminate itself programmatically after receiving the result. 
 		-->
 		<property name="timeoutMillis">
-			<value>3000</value>
+			<value>600000000</value>
 		</property>
 
 		<!--
@@ -83,7 +88,7 @@
 		<property name="proxyInterfaces">
 			<list>
 				<value>
-					ubic.gemma.javaspaces.gigaspaces.Task
+					ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask
 				</value>
 			</list>
 		</property>
@@ -92,7 +97,16 @@
 		Simple test target
 	-->
 	<bean id="taskBean"
-		class="ubic.gemma.javaspaces.gigaspaces.TaskImpl">
+		class="ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTaskImpl">
+		<property name="expressionExperimentService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="geoDatasetService">
+			<ref bean="geoDatasetService" />
+		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
 	</bean>
 </beans>
 
