@@ -33,10 +33,16 @@ import com.j_spaces.core.client.FinderException;
 import com.j_spaces.core.client.SpaceFinder;
 
 /**
+ * A utility class to test gigaspaces features such as if the space is running, whether to add the gigaspaces beans to
+ * the spring context, whether workers are available, etc. This class is {@link ApplicationContextAware} and therefore
+ * knows about the context that creates it.
+ * 
  * @author keshav
  * @version $Id$
  */
 public class GigaspacesUtil implements ApplicationContextAware {
+
+    private static final String GIGASPACES_SPRING_CONTEXT = "ubic/gemma/gigaspaces.xml";
 
     private static Log log = LogFactory.getLog( GigaspacesUtil.class );
 
@@ -77,7 +83,7 @@ public class GigaspacesUtil implements ApplicationContextAware {
      * @param paths
      */
     public static void addGigaspacesContextToPaths( List<String> paths ) {
-        paths.add( "classpath*:ubic/gemma/gigaspaces-expressionExperiment.xml" );
+        paths.add( "classpath*:" + GIGASPACES_SPRING_CONTEXT );
     }
 
     /**
@@ -101,7 +107,7 @@ public class GigaspacesUtil implements ApplicationContextAware {
 
             GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
             XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
-            xmlReader.loadBeanDefinitions( new ClassPathResource( "ubic/gemma/gigaspaces.xml" ) );
+            xmlReader.loadBeanDefinitions( new ClassPathResource( GIGASPACES_SPRING_CONTEXT ) );
             // PropertiesBeanDefinitionReader propReader = new PropertiesBeanDefinitionReader( genericCtx );
             // propReader.loadBeanDefinitions(new ClassPathResource("otherBeans.properties"));
 
