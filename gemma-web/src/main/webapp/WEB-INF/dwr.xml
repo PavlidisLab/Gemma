@@ -24,6 +24,26 @@
 			  <param name="force" value="true"/>
 		  </convert>
         
+         <create creator="new" javascript="MgedOntologyService">
+            <param name="class" value="ubic.gemma.ontology.MgedOntologyService"/>
+            <param name="force" value="true"/>
+            <include method="getTerm" />
+            <include method="getBioMaterialTerms" />
+        </create>
+        
+        <convert converter="bean" match="ubic.gemma.ontology.OntologyDataList">
+			  <param name="force" value="true"/>
+		  </convert>
+		  
+		  <convert converter="bean" match="ubic.gemma.ontology.OntologyData">
+			  <param name="force" value="true"/>
+		  </convert>
+		  
+		   <convert converter="bean" match="ubic.gemma.ontology.OntologyTreeNode">
+			  <param name="force" value="true"/>
+		  </convert>
+		  
+        
          
     </allow>
 </dwr>
