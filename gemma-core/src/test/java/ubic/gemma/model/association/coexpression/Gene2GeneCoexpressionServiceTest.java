@@ -29,18 +29,15 @@ import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.search.SearchService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author klc
  */
-
 public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     private Gene2GeneCoexpressionService g2gCoexpressionS;
@@ -48,8 +45,6 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     private ProtocolService protocolS;
     private GeneService geneS;
     private TaxonService taxonS;
-    private SearchService searchS;
-    private ExpressionExperimentService eeS;
 
     private Analysis analysis;
     private Gene firstGene;
@@ -64,8 +59,6 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         protocolS = ( ProtocolService ) this.getBean( "protocolService" );
         geneS = ( GeneService ) this.getBean( "geneService" );
         taxonS = ( TaxonService ) this.getBean( "taxonService" );
-        searchS = ( SearchService ) this.getBean( "searchService" );
-        eeS = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         analysis = ExpressionAnalysis.Factory.newInstance();
         // analysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
@@ -156,7 +149,8 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     //    
     private boolean validate( Collection g2g, CoexpressionCollectionValueObject p2p ) {
 
-        int actualLinkCount = p2p.getGeneCoexpressionType().getNegativeStringencyLinkCount() + p2p.getGeneCoexpressionType().getPositiveStringencyLinkCount();
+        int actualLinkCount = p2p.getGeneCoexpressionType().getNegativeStringencyLinkCount()
+                + p2p.getGeneCoexpressionType().getPositiveStringencyLinkCount();
 
         if ( g2g.size() == actualLinkCount ) return true;
 

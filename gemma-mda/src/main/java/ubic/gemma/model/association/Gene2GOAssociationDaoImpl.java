@@ -30,7 +30,6 @@ import org.hibernate.Criteria;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -47,19 +46,16 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      */
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
-        Collection<VocabCharacteristic> ontos = null;
-
         final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "gene", gene );
-            ontos = queryObject.list();
+            return queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return ontos;
     }
 
     /*

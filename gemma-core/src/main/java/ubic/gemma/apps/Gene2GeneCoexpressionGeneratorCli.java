@@ -52,8 +52,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * @author klc
+ * @version $Id$
  */
-
 public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
     private static final int DEFAULT_STRINGINCY = 2;
@@ -297,6 +297,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
     }
 
+    @SuppressWarnings("unchecked")
     private void processGeneFile( String fileName ) {
 
         Collection<String> geneIds = processFile( fileName );

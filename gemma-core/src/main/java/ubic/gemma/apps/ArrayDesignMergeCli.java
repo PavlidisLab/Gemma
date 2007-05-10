@@ -108,10 +108,10 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
      * @param arrayDesign
      */
     private void merge( ArrayDesign arrayDesign ) {
-        
-        Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
-        boolean mergeWithExisting = existingMergees.size() > 0;
-        
+
+        // Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
+        // boolean mergeWithExisting = existingMergees.size() > 0;
+
         // FIXME refactor this into a separate service.
 
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
@@ -188,7 +188,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
         Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
         boolean mergeWithExisting = existingMergees.size() > 0;
-       
+
         StringBuilder mergeeList = new StringBuilder();
         for ( String s : otherArrayDesignNames ) {
             mergeeList.append( s + ", " );

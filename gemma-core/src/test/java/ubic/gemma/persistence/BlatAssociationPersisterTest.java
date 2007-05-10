@@ -25,40 +25,32 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Test prompted by bug 507: making a blat association creates new genes, but the gene products are reused.
- *
+ * 
  * @author pavlidis
  * @version $Id$
  */
 public class BlatAssociationPersisterTest extends BaseSpringContextTest {
 
     /*
-     * Create a gene and some gene products for it
-     * 
-     * Create a BlatAssociation that points to a template that matches of one of the gene products
-     * 
-     * Persist the BlatAssociation and make sure we don't get extra genes or gene products.
-     * 
+     * Create a gene and some gene products for it Create a BlatAssociation that points to a template that matches of
+     * one of the gene products Persist the BlatAssociation and make sure we don't get extra genes or gene products.
      */
-    
 
     public void testBlatAssociationPersistingDoesntCreateNewGenes() throws Exception {
-        PersisterHelper ph = this.persisterHelper;
-        
+        // PersisterHelper ph = this.persisterHelper;
+
         Gene g = this.getTestPeristentGene();
-        GeneProduct gp = this.getTestPersistentGeneProduct( g);
+        GeneProduct gp = this.getTestPersistentGeneProduct( g );
         g.getProducts().add( gp );
-        
-        GeneProduct gpcopy = GeneProduct.Factory.newInstance();
-      //  gpcopy.
-        
-        Gene gcopy = Gene.Factory.newInstance();
-        
-        
-        
+
+        // GeneProduct gpcopy = GeneProduct.Factory.newInstance();
+        // gpcopy.
+
+        // Gene gcopy = Gene.Factory.newInstance();
+
         BlatAssociation ba = BlatAssociation.Factory.newInstance();
-       // ba.setGeneProduct(  );
-        
-        
+        // ba.setGeneProduct( );
+
     }
-    
+
 }

@@ -69,6 +69,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
+    @SuppressWarnings("unchecked")
     public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
 
         log.info( "executing task " + this.getClass().getName() );
@@ -104,7 +105,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         }
         // end test
 
-        Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
+         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
                 doSampleMatching );
 
         counter++;

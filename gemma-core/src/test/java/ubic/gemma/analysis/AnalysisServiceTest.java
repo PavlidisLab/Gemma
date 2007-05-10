@@ -34,134 +34,129 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author klc
- *
+ * @version $Id$
  */
 public class AnalysisServiceTest extends BaseSpringContextTest {
 
-   private AnalysisService analysisS;
-   private ExpressionExperimentService eeS;
-   
-   //Test Data
-   Analysis eAnalysis1;
-   Analysis eAnalysis2;
-   Analysis eAnalysis3;
-   Analysis eAnalysis4;
-   
-   ExpressionExperiment e1;
-   ExpressionExperiment e2;
-   ExpressionExperiment e3;
-   
-   
-   public void onSetUpInTransaction() throws Exception{
-       super.onSetUpInTransaction();
-       
-       e1 = ExpressionExperiment.Factory.newInstance();
-       e1.setName( "test e1" );       
-       e1 = eeS.create( e1 );
-       
-       e2 = ExpressionExperiment.Factory.newInstance();
-       e2.setName("test e2");
-       e2 = eeS.create( e2 );
-       
-       e3 = ExpressionExperiment.Factory.newInstance();
-       e3.setName( "test e3" );
-       e3 = eeS.create( e3 );
-       
-       Collection<Investigation> investigations = new HashSet<Investigation>();
-       
-       eAnalysis1 = ExpressionAnalysis.Factory.newInstance();
-       investigations.add( e1 );
-       eAnalysis1.setAnalyzedInvestigation( investigations);
-       eAnalysis1.setName( "TestAnalysis1" );
-       eAnalysis1.setDescription( "An analysis Test 1");
-       eAnalysis1 = analysisS.create( eAnalysis1 );
-   
-       eAnalysis2 = ExpressionAnalysis.Factory.newInstance();
-       investigations = new HashSet<Investigation>();
-       investigations.add( e1 );
-       investigations.add( e2 );
-       eAnalysis2.setAnalyzedInvestigation( investigations);
-       eAnalysis2.setName( "TestAnalysis2" );
-       eAnalysis2.setDescription( "An analysis Test 2");
-       eAnalysis2 = analysisS.create( eAnalysis2 );
-       
+    private AnalysisService analysisS;
+    private ExpressionExperimentService eeS;
 
-       eAnalysis4 = ExpressionAnalysis.Factory.newInstance();
-       investigations = new HashSet<Investigation>();
-       investigations.add( e1 );
-       investigations.add( e2 );
-       investigations.add( e3 );
-       
-       eAnalysis4.setAnalyzedInvestigation( investigations);
-       eAnalysis4.setName( "Test" );
-       eAnalysis4.setDescription( "An analysis Test 4");
-       eAnalysis4 = analysisS.create( eAnalysis4 );
-       
-       eAnalysis3 = ExpressionAnalysis.Factory.newInstance();
-       investigations = new HashSet<Investigation>();
-       investigations.add( e1 );
-       investigations.add( e2 );
-       investigations.add( e3 );
-       eAnalysis3.setAnalyzedInvestigation( investigations);
-       eAnalysis3.setName( "TestAnalysis3" );
-       eAnalysis3.setDescription( "An analysis Test 3");
-       eAnalysis3 = analysisS.create( eAnalysis3 );
+    // Test Data
+    Analysis eAnalysis1;
+    Analysis eAnalysis2;
+    Analysis eAnalysis3;
+    Analysis eAnalysis4;
 
-       
-       
-   }
-    
-    /**
-     * 
-     */
-    public void testFindByInvestigations(){
-        Collection investigations = new ArrayList();
+    ExpressionExperiment e1;
+    ExpressionExperiment e2;
+    ExpressionExperiment e3;
+
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+
+        e1 = ExpressionExperiment.Factory.newInstance();
+        e1.setName( "test e1" );
+        e1 = eeS.create( e1 );
+
+        e2 = ExpressionExperiment.Factory.newInstance();
+        e2.setName( "test e2" );
+        e2 = eeS.create( e2 );
+
+        e3 = ExpressionExperiment.Factory.newInstance();
+        e3.setName( "test e3" );
+        e3 = eeS.create( e3 );
+
+        Collection<Investigation> investigations = new HashSet<Investigation>();
+
+        eAnalysis1 = ExpressionAnalysis.Factory.newInstance();
+        investigations.add( e1 );
+        eAnalysis1.setAnalyzedInvestigation( investigations );
+        eAnalysis1.setName( "TestAnalysis1" );
+        eAnalysis1.setDescription( "An analysis Test 1" );
+        eAnalysis1 = analysisS.create( eAnalysis1 );
+
+        eAnalysis2 = ExpressionAnalysis.Factory.newInstance();
+        investigations = new HashSet<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
-        
-        Map results = analysisS.findByInvestigations( investigations );
-        assertEquals(3, results.keySet().size());      
-        
+        eAnalysis2.setAnalyzedInvestigation( investigations );
+        eAnalysis2.setName( "TestAnalysis2" );
+        eAnalysis2.setDescription( "An analysis Test 2" );
+        eAnalysis2 = analysisS.create( eAnalysis2 );
+
+        eAnalysis4 = ExpressionAnalysis.Factory.newInstance();
+        investigations = new HashSet<Investigation>();
+        investigations.add( e1 );
+        investigations.add( e2 );
+        investigations.add( e3 );
+
+        eAnalysis4.setAnalyzedInvestigation( investigations );
+        eAnalysis4.setName( "Test" );
+        eAnalysis4.setDescription( "An analysis Test 4" );
+        eAnalysis4 = analysisS.create( eAnalysis4 );
+
+        eAnalysis3 = ExpressionAnalysis.Factory.newInstance();
+        investigations = new HashSet<Investigation>();
+        investigations.add( e1 );
+        investigations.add( e2 );
+        investigations.add( e3 );
+        eAnalysis3.setAnalyzedInvestigation( investigations );
+        eAnalysis3.setName( "TestAnalysis3" );
+        eAnalysis3.setDescription( "An analysis Test 3" );
+        eAnalysis3 = analysisS.create( eAnalysis3 );
+
     }
-    
+
     /**
      * 
      */
-    public void testFindByInvestion(){
-        
+    public void testFindByInvestigations() {
+        Collection<Investigation> investigations = new ArrayList<Investigation>();
+        investigations.add( e1 );
+        investigations.add( e2 );
+
+        Map results = analysisS.findByInvestigations( investigations );
+        assertEquals( 3, results.keySet().size() );
+
+    }
+
+    /**
+     * 
+     */
+    public void testFindByInvestion() {
+
         Collection results = analysisS.findByInvestigation( e1 );
-        assertEquals(4,results.size());
-        
+        assertEquals( 4, results.size() );
+
         results = analysisS.findByInvestigation( e2 );
         assertEquals( 3, results.size() );
-        
+
         results = analysisS.findByInvestigation( e3 );
         assertEquals( 2, results.size() );
-        
+
     }
-    
+
     /**
      * 
      */
-    public void testFindByUniqueInvestigations(){
-        Collection investigations = new ArrayList();
+    public void testFindByUniqueInvestigations() {
+        Collection<Investigation> investigations = new ArrayList<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
-        
+
         Analysis results = analysisS.findByUniqueInvestigations( investigations );
-        assertEquals(e2.getId(), results.getId());      
-        
-        
+        assertEquals( e2.getId(), results.getId() );
+
     }
-    
-    public void testFindByNameExact(){
-        
+
+    public void testFindByNameExact() {
+
         Analysis result = analysisS.findByName( "Test" );
         assertEquals( "Test", result.getName() );
     }
-    
-    public void testFindByNameRecent(){
-        
+
+    public void testFindByNameRecent() {
+
         Analysis result = analysisS.findByName( "TestA" );
         assertEquals( "TestAnalysis3", result.getName() );
     }
@@ -176,9 +171,8 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
     /**
      * @param ees the expressionExperimentService to set
      */
-    public void setExpressionExperimentService(ExpressionExperimentService ees) {
+    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
         this.eeS = ees;
     }
-    
-    
+
 }

@@ -67,6 +67,8 @@ public class PubMedService {
         try {
             File[] files = directory.listFiles();
             for ( File file : files ) {
+                if ( !file.getAbsolutePath().contains( ".xml" ) ) continue;
+
                 log.info( "Loading: " + file );
                 InputStream s = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
                 this.loadFromFile( s );

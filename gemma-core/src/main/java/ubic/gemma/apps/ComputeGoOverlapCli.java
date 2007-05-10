@@ -35,7 +35,6 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -57,8 +56,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
      */
 
     protected void buildOptions() {
-        // TODO Auto-generated method stub
-
     }
 
     // A list of service beans
@@ -68,7 +65,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private TaxonService taxonService;
 
     private Map<Gene, Set<OntologyTerm>> geneOntologyTerms = new HashMap<Gene, Set<OntologyTerm>>();
-    private Map<Gene, Integer> goSetSize = new HashMap<Gene, Integer>();
 
     // a hashmap for each gene and its GO terms + parents
 
@@ -213,19 +209,19 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return overlapTerms;
     }
 
-    private void printResults( Map<Gene, Map<Gene, Integer>> masterTermCountMap ) {
-
-        for ( Gene g : masterTermCountMap.keySet() ) {
-            log.info( "Master Gene: " + g.getOfficialSymbol() );
-            Map<Gene, Integer> coexpressed = masterTermCountMap.get( g );
-            for ( Gene coexpG : coexpressed.keySet() ) {
-                log.info( "-------- Coexpressed Gene:" + coexpG.getOfficialSymbol() + "   OverLap: "
-                        + coexpressed.get( coexpG ) );
-
-            }
-            log.info( "=============" );
-        }
-    }
+    // private void printResults( Map<Gene, Map<Gene, Integer>> masterTermCountMap ) {
+    //
+    // for ( Gene g : masterTermCountMap.keySet() ) {
+    // log.info( "Master Gene: " + g.getOfficialSymbol() );
+    // Map<Gene, Integer> coexpressed = masterTermCountMap.get( g );
+    // for ( Gene coexpG : coexpressed.keySet() ) {
+    // log.info( "-------- Coexpressed Gene:" + coexpG.getOfficialSymbol() + " OverLap: "
+    // + coexpressed.get( coexpG ) );
+    //
+    // }
+    // log.info( "=============" );
+    //        }
+    //    }
 
     /**
      * @param geneOntologyTerms
@@ -267,49 +263,50 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return ontologyTermCount;
     }
 
-    private Map<Gene, Double> computeNewOverlap( Collection<OntologyTerm> masterGO, Collection<Gene> coExpGene,
-            Map<OntologyTerm, Double> GOProbMap, Map<Gene, HashSet<OntologyTerm>> mouseGeneGOMap ) {
-
-        Map<Gene, Double> ontologyTermCount = new HashMap<Gene, Double>();
-
-        if ( ( masterGO == null ) || ( masterGO.isEmpty() ) ) return null;
-
-        // for each Go term associated with the master gene compare the GO term for each coexpressed gene
-        for ( Gene gene : coExpGene ) {
-            Collection<OntologyTerm> coExpGO = mouseGeneGOMap.get( gene );
-            Integer count = 0;
-            double threshold = 1;
-
-            if ( ( coExpGO == null ) || coExpGO.isEmpty() )
-                count = -1;
-
-            else {
-
-                for ( OntologyTerm ontoM : masterGO ) {
-                    for ( OntologyTerm ontoC : coExpGO ) {
-
-                        if ( ontoM.equals( ontoC ) ) {
-                            double pValue = GOProbMap.get( ontoM );
-                            if ( pValue < threshold ) threshold = pValue;
-                        }
-                    }
-                }
-                // the count value tells us the number of GO term matches of the coexpressed gene with the master gene
-                // put count into a table with the pair of genes
-            }
-
-            double score = -1 * ( StrictMath.log10( threshold ) );
-            log.debug( "Term score: " + score );
-            ontologyTermCount.put( gene, score );
-        }
-
-        return ontologyTermCount;
-    }
+    // private Map<Gene, Double> computeNewOverlap( Collection<OntologyTerm> masterGO, Collection<Gene> coExpGene,
+    // Map<OntologyTerm, Double> GOProbMap, Map<Gene, HashSet<OntologyTerm>> mouseGeneGOMap ) {
+    //
+    // Map<Gene, Double> ontologyTermCount = new HashMap<Gene, Double>();
+    //
+    // if ( ( masterGO == null ) || ( masterGO.isEmpty() ) ) return null;
+    //
+    // // for each Go term associated with the master gene compare the GO term for each coexpressed gene
+    // for ( Gene gene : coExpGene ) {
+    // Collection<OntologyTerm> coExpGO = mouseGeneGOMap.get( gene );
+    // Integer count = 0;
+    // double threshold = 1;
+    //
+    // if ( ( coExpGO == null ) || coExpGO.isEmpty() )
+    // count = -1;
+    //
+    // else {
+    //
+    // for ( OntologyTerm ontoM : masterGO ) {
+    // for ( OntologyTerm ontoC : coExpGO ) {
+    //
+    // if ( ontoM.equals( ontoC ) ) {
+    // double pValue = GOProbMap.get( ontoM );
+    // if ( pValue < threshold ) threshold = pValue;
+    // }
+    // }
+    // }
+    // // the count value tells us the number of GO term matches of the coexpressed gene with the master gene
+    // // put count into a table with the pair of genes
+    // }
+    //
+    // double score = -1 * ( StrictMath.log10( threshold ) );
+    // log.debug( "Term score: " + score );
+    // ontologyTermCount.put( gene, score );
+    // }
+    //
+    // return ontologyTermCount;
+    // }
 
     /**
      * @param Take a gene and return a set of all GO terms including the parents of each GO term
      * @param geneOntologyTerms
      */
+    @SuppressWarnings("unchecked")
     private Set<OntologyTerm> getGOTerms( Gene gene ) {
 
         // log.debug( "I'm here: " + gene.getOfficialSymbol() );
@@ -344,6 +341,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
      * @param ids
      * @return a set of gene objects associated with the query GOID
      */
+    @SuppressWarnings("unchecked")
     private Collection<Gene> getGeneObject( String goID, String commonName ) {
         Taxon taxon = taxonService.findByCommonName( commonName );
         return gene2GOAssociationService.findByGOTerm( goID, taxon );

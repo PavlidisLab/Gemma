@@ -440,36 +440,38 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return "OTHER_PROBE_CO_EXPRESSION";
     }
 
-    /**
-     * @param p2pClassName
-     * @param in
-     * @param out
-     * @return
-     */
-    private synchronized String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
-        String inKey = in.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
-        String outKey = out.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
-        String eeClause = "";
-        if ( eeIds.size() > 0 ) {
-            eeClause += " dedvin.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds.iterator(), "," );
-            eeClause += ") AND ";
-        }
-
-        String p2pClass = getP2PTableNameForClassName( p2pClassName );
-        String query = "SELECT  DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut, geneout.class as geneType  FROM "
-                + " GENE2CS gcIn "
-                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS " + " INNER JOIN "
-                + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
-                + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "
-                + " INNER JOIN GENE2CS gcout ON gcout.CS=dedvout.DESIGN_ELEMENT_FK"
-                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE" + " where " + eeClause
-                + " gcIn.GENE=:id ";
-
-        return query;
-    }
+    // /**
+    // * @param p2pClassName
+    // * @param in
+    // * @param out
+    // * @return
+    // */
+    // private synchronized String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long>
+    // eeIds ) {
+    // String inKey = in.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
+    // String outKey = out.equals( "firstVector" ) ? "FIRST_VECTOR_FK" : "SECOND_VECTOR_FK";
+    // String eeClause = "";
+    // if ( eeIds.size() > 0 ) {
+    // eeClause += " dedvin.EXPRESSION_EXPERIMENT_FK in (";
+    // eeClause += StringUtils.join( eeIds.iterator(), "," );
+    // eeClause += ") AND ";
+    // }
+    //
+    // String p2pClass = getP2PTableNameForClassName( p2pClassName );
+    // String query = "SELECT DISTINCT geneout.ID as id, geneout.NAME as genesymb, "
+    // + "geneout.OFFICIAL_NAME as genename, dedvout.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue,
+    // coexp.SCORE as score, "
+    // + "dedvin.DESIGN_ELEMENT_FK as csIdIn, dedvout.DESIGN_ELEMENT_FK as csIdOut, geneout.class as geneType FROM "
+    // + " GENE2CS gcIn "
+    // + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvin ON dedvin.DESIGN_ELEMENT_FK=gcIn.CS " + " INNER JOIN "
+    // + p2pClass + " coexp ON dedvin.ID=coexp." + inKey + " "
+    // + " INNER JOIN DESIGN_ELEMENT_DATA_VECTOR dedvout on dedvout.ID=coexp." + outKey + " "
+    // + " INNER JOIN GENE2CS gcout ON gcout.CS=dedvout.DESIGN_ELEMENT_FK"
+    // + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcout.GENE" + " where " + eeClause
+    //                + " gcIn.GENE=:id ";
+    //
+    //        return query;
+    //    }
 
     /**
      * @param p2pClassName
@@ -1060,59 +1062,59 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return returnVal;
     }
 
-    /**
-     * Quickly retrieves the short name and name of the given expression experiment ID
-     * 
-     * @param id
-     * @return
-     * @throws Exception
-     */
-    private String[] getExpressionExperimentInfo( Long id ) throws Exception {
+    // /**
+    // * Quickly retrieves the short name and name of the given expression experiment ID
+    // *
+    // * @param id
+    // * @return
+    // * @throws Exception
+    // */
+    // private String[] getExpressionExperimentInfo( Long id ) throws Exception {
+    //
+    // final String query = "select ee.shortName, ee.name from ExpressionExperimentImpl ee where ee.id = :id";
+    // try {
+    // org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+    // queryObject.setLong( "id", id );
+    // String[] results = new String[2];
+    // ScrollableResults resultRows = queryObject.scroll();
+    // resultRows.first();
+    // results[0] = resultRows.getString( 0 );
+    // results[1] = resultRows.getString( 1 );
+    // return results;
+    // } catch ( org.hibernate.HibernateException ex ) {
+    // throw super.convertHibernateAccessException( ex );
+    // }
+    //
+    // /*
+    // * final String query = "select ee.SHORT_NAME as name ,i.NAME as shortName from EXPRESSION_EXPERIMENT ee,
+    // * INVESTIGATION i WHERE i.ID=ee.ID and ee.ID = :id"; try { org.hibernate.SQLQuery queryObject =
+    // * super.getSession().createSQLQuery( query ); queryObject.addScalar( "name", new StringType() );
+    // * queryObject.addScalar( "shortName", new StringType() ); queryObject.setLong( "id", id ); String[] results =
+    // * new String[2]; ScrollableResults resultRows = queryObject.scroll(); resultRows.first(); results[0] =
+    // * resultRows.getString( 0 ); results[1] = resultRows.getString( 1 ); return results; } catch (
+    // * org.hibernate.HibernateException ex ) { throw super.convertHibernateAccessException( ex ); }
+    //         */
+    //    }
 
-        final String query = "select ee.shortName, ee.name from ExpressionExperimentImpl ee where ee.id = :id";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
-            queryObject.setLong( "id", id );
-            String[] results = new String[2];
-            ScrollableResults resultRows = queryObject.scroll();
-            resultRows.first();
-            results[0] = resultRows.getString( 0 );
-            results[1] = resultRows.getString( 1 );
-            return results;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-
-        /*
-         * final String query = "select ee.SHORT_NAME as name ,i.NAME as shortName from EXPRESSION_EXPERIMENT ee,
-         * INVESTIGATION i WHERE i.ID=ee.ID and ee.ID = :id"; try { org.hibernate.SQLQuery queryObject =
-         * super.getSession().createSQLQuery( query ); queryObject.addScalar( "name", new StringType() );
-         * queryObject.addScalar( "shortName", new StringType() ); queryObject.setLong( "id", id ); String[] results =
-         * new String[2]; ScrollableResults resultRows = queryObject.scroll(); resultRows.first(); results[0] =
-         * resultRows.getString( 0 ); results[1] = resultRows.getString( 1 ); return results; } catch (
-         * org.hibernate.HibernateException ex ) { throw super.convertHibernateAccessException( ex ); }
-         */
-    }
-
-    /**
-     * Function to fill in the names of the expression experiments. This is for speed.
-     * 
-     * @param coexpressions
-     */
-    private void fillInExpressionExperimentNames( final CoexpressionCollectionValueObject coexpressions ) {
-        Collection<ExpressionExperimentValueObject> eeVos = coexpressions.getExpressionExperiments();
-        for ( ExpressionExperimentValueObject eeVo : eeVos ) {
-            try {
-                String[] results = getExpressionExperimentInfo( eeVo.getId() );
-                eeVo.setShortName( results[0] );
-                eeVo.setName( results[1] );
-
-            } catch ( Exception e ) {
-                eeVo.setShortName( "Unavailable" );
-                eeVo.setName( "Unavailable" );
-            }
-        }
-    }
+    // /**
+    // * Function to fill in the names of the expression experiments. This is for speed.
+    // *
+    // * @param coexpressions
+    // */
+    // private void fillInExpressionExperimentNames( final CoexpressionCollectionValueObject coexpressions ) {
+    // Collection<ExpressionExperimentValueObject> eeVos = coexpressions.getExpressionExperiments();
+    // for ( ExpressionExperimentValueObject eeVo : eeVos ) {
+    // try {
+    // String[] results = getExpressionExperimentInfo( eeVo.getId() );
+    // eeVo.setShortName( results[0] );
+    // eeVo.setName( results[1] );
+    //
+    // } catch ( Exception e ) {
+    // eeVo.setShortName( "Unavailable" );
+    // eeVo.setName( "Unavailable" );
+    //            }
+    //        }
+    //    }
 
     private class GeneMap {
 

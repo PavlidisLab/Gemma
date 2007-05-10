@@ -45,22 +45,22 @@ public class GeneOntologyServiceTest extends TestCase {
 
     public final void testGetTermForId() throws Exception {
         String id = "GO:0000119";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
         assertNotNull( termForId );
         assertEquals( "mediator complex", termForId.getTerm() );
     }
-    
-   public final void testGetDefinition() throws Exception {
-       String id = "GO:0032477";
-       String definition = gos.getTermDefinition(  id );
-       assertNotNull( definition );
-       log.info(definition);
-       assertTrue(definition.startsWith("A homodimeric complex that possess"));
-   }
+
+    public final void testGetDefinition() throws Exception {
+        String id = "GO:0032477";
+        String definition = gos.getTermDefinition( id );
+        assertNotNull( definition );
+        log.info( definition );
+        assertTrue( definition.startsWith( "A homodimeric complex that possess" ) );
+    }
 
     public final void testGetChildren() throws Exception {
         String id = "GO:0000109";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getChildren( termForId );
 
@@ -72,7 +72,7 @@ public class GeneOntologyServiceTest extends TestCase {
 
     public final void testGetAllChildren() throws Exception {
         String id = "GO:0045239";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllChildren( termForId );
 
@@ -84,7 +84,7 @@ public class GeneOntologyServiceTest extends TestCase {
 
     public final void testGetAllChildrenB() throws Exception {
         String id = "GO:0005759";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllChildren( termForId );
 
@@ -96,7 +96,7 @@ public class GeneOntologyServiceTest extends TestCase {
 
     public final void testGetParents() throws Exception {
         String id = "GO:0005762"; // large mito.ribo. subunit.
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getParents( termForId );
 
@@ -108,7 +108,7 @@ public class GeneOntologyServiceTest extends TestCase {
 
     public final void testAllParents() throws Exception {
         String id = "GO:0005762";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllParents( termForId );
 

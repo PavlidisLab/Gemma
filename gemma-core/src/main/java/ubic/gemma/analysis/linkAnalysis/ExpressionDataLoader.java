@@ -39,6 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author xiangwan
+ * @version $Id$
  */
 public class ExpressionDataLoader {
 
@@ -63,7 +64,7 @@ public class ExpressionDataLoader {
             this.getValidDesignmentDataVector();
             this.experimentName = this.experiment.getName();
         }
-        Set rowsToUse = new HashSet( this.getActiveProbeIdSet() );
+        Set<String> rowsToUse = new HashSet<String>( this.getActiveProbeIdSet() );
         try {
             this.geneAnnotations = new GeneAnnotations( this.actualExperimentsPath + paraGOFile, rowsToUse, null, null );
         } catch ( IOException e ) {
@@ -73,7 +74,7 @@ public class ExpressionDataLoader {
     }
 
     private Collection<String> getActiveProbeIdSet() {
-        Collection probeIdSet = new HashSet<String>();
+        Collection<String> probeIdSet = new HashSet<String>();
         for ( DesignElementDataVector dataVector : this.designElementDataVectors ) {
             DesignElement designElement = dataVector.getDesignElement();
             String probeId = ( ( CompositeSequence ) designElement ).getName();
@@ -101,7 +102,6 @@ public class ExpressionDataLoader {
             log.error( "File for output expression data " + this.analysisResultsPath + paraFileName
                     + "could not be opened" );
         }
-        Collection<DesignElementDataVector> dataVectors = this.experiment.getDesignElementDataVectors();
 
         try {
             writer.write( "Experiment Name: " + this.experimentName + "\n" );
@@ -112,7 +112,6 @@ public class ExpressionDataLoader {
 
             for ( DesignElementDataVector dataVector : this.designElementDataVectors ) {
                 DesignElement designElement = dataVector.getDesignElement();
-                CompositeSequence compSequence = ( CompositeSequence ) designElement;
                 String probId = ( ( CompositeSequence ) designElement ).getName();
                 byte[] expressionByteData = dataVector.getData();
                 ByteArrayConverter byteConverter = new ByteArrayConverter();

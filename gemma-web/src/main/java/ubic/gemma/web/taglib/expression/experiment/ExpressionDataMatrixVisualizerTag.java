@@ -45,12 +45,12 @@ import ubic.gemma.model.genome.Gene;
  */
 public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
-    private static final int MAX_GENE_NAME_LENGTH = 25;
-    
+    // private static final int MAX_GENE_NAME_LENGTH = 25;
+
     private static final int MAX_GENE_NAME_CELL_LENGTH = 100;
 
-    private static final int MAX_GENE_SYMBOL_LENGTH = 12;
-    
+    // private static final int MAX_GENE_SYMBOL_LENGTH = 12;
+
     private static final int MAX_GENE_SYMBOL_CELL_LENGTH = 15;
 
     private static final double IMAGE_HEADER_EM_HEIGHT = 8.5;
@@ -204,12 +204,12 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 if ( !StringUtils.isEmpty( symbol ) ) {
                     String symbolTrimmed = symbol;
                     geneStringLength += symbolTrimmed.length();
-                    int abbreviationLength = symbol.length() - (geneStringLength - MAX_GENE_SYMBOL_CELL_LENGTH );
-                    if ( (geneStringLength > MAX_GENE_SYMBOL_CELL_LENGTH ) && (abbreviationLength > 3) ) {
+                    int abbreviationLength = symbol.length() - ( geneStringLength - MAX_GENE_SYMBOL_CELL_LENGTH );
+                    if ( ( geneStringLength > MAX_GENE_SYMBOL_CELL_LENGTH ) && ( abbreviationLength > 3 ) ) {
                         symbolTrimmed = StringUtils.abbreviate( symbol, abbreviationLength );
                     }
-                    //if (StringUtils.abbreviate( symbol, MAX_GENE_SYMBOL_LENGTH );
- 
+                    // if (StringUtils.abbreviate( symbol, MAX_GENE_SYMBOL_LENGTH );
+
                     buf.append( "<a title=\"" + symbol + "\" href=\"/Gemma/gene/showGene.html?id=" + gene.getId()
                             + "\">" + symbolTrimmed + "</a>" );
                 }
@@ -218,7 +218,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                     buf.append( "&nbsp;<a title=\"More genes not shown\">...</a>" );
                     break;
                 }
-                if ( it.hasNext() && geneStringLength > MAX_GENE_SYMBOL_CELL_LENGTH) {
+                if ( it.hasNext() && geneStringLength > MAX_GENE_SYMBOL_CELL_LENGTH ) {
                     break;
                 }
                 if ( it.hasNext() ) {
@@ -270,15 +270,14 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 if ( StringUtils.isNotBlank( name ) ) {
                     String nameTrimmed = name;
                     nameLength += name.length();
-                    int abbreviationLength = name.length() - (nameLength - MAX_GENE_NAME_CELL_LENGTH );
-                    if ( (nameLength > MAX_GENE_NAME_CELL_LENGTH) && abbreviationLength > 3 ) {
+                    int abbreviationLength = name.length() - ( nameLength - MAX_GENE_NAME_CELL_LENGTH );
+                    if ( ( nameLength > MAX_GENE_NAME_CELL_LENGTH ) && abbreviationLength > 3 ) {
                         nameTrimmed = StringUtils.abbreviate( name, abbreviationLength );
                     }
-                    buf.append( "<a title=\"" + name + " [" + gene.getOfficialSymbol() + "]\">"
-                            + nameTrimmed + "</a>" );
+                    buf.append( "<a title=\"" + name + " [" + gene.getOfficialSymbol() + "]\">" + nameTrimmed + "</a>" );
                 }
 
-                if ( (geneNum < geneList.size() - 1) && nameLength > MAX_GENE_SYMBOL_CELL_LENGTH) {
+                if ( ( geneNum < geneList.size() - 1 ) && nameLength > MAX_GENE_SYMBOL_CELL_LENGTH ) {
                     break;
                 }
                 if ( StringUtils.isNotBlank( name ) && geneNum < geneList.size() - 1

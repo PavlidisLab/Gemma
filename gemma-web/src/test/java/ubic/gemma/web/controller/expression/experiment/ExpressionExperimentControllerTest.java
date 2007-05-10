@@ -22,8 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

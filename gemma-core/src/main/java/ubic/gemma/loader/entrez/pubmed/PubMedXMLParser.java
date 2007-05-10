@@ -513,17 +513,23 @@ public class PubMedXMLParser {
 
         if ( yearText == null && medLineText != null ) {
             String[] yearmo = medLineText.split( "\\s" );
-            yearText = ( yearmo[0] );
-            monthText = ( yearmo[1] );
-            monthText = monthText.replaceAll( "-\\w+", "" );
+            if ( yearmo.length == 2 ) {
+                yearText = yearmo[0];
+                monthText = yearmo[1];
+                monthText = monthText.replaceAll( "-\\w+", "" );
+            }
+        }
+
+        if ( monthText == null ) {
+            monthText = "Jan"; // arbitrary...
         }
 
         String dateString = monthText + " " + ( dayText == null ? "1" : dayText ) + ", " + yearText;
+
         try {
             return df.parse( dateString );
         } catch ( ParseException e ) {
-
-            log.warn( "Could not parse date " + dateString );
+            log.warn( "Could not parse date " + dateString + " from medlinetext=" + medLineText );
             return null;
         }
     }

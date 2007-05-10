@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
@@ -49,7 +50,7 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
 /**
- * @author unknown
+ * @author xwan
  * @version $Id$
  */
 public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
@@ -110,11 +111,11 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
 
     private String arrayDesignName = null;
     private String outFileName = null;
-    private HashMap<DesignElement, DoubleArrayList> rankData = new HashMap<DesignElement, DoubleArrayList>();
-    private HashMap<DesignElement, DoubleArrayList> presentAbsentData = new HashMap<DesignElement, DoubleArrayList>();
+    private Map<DesignElement, DoubleArrayList> rankData = new HashMap<DesignElement, DoubleArrayList>();
+    private Map<DesignElement, DoubleArrayList> presentAbsentData = new HashMap<DesignElement, DoubleArrayList>();
     private DesignElementDataVectorService devService = null;
     private ExpressionExperimentService eeService = null;
-    private HashMap<Object, Set> probeToGeneAssociation = null;
+    private Map<Object, Set> probeToGeneAssociation = null;
 
     protected void processOptions() {
         super.processOptions();
@@ -126,9 +127,9 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         }
     }
 
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
         Option ADOption = OptionBuilder.hasArg().isRequired().withArgName( "arrayDesign" ).withDescription(
                 "Array Design Short Name (GPLXXX) " ).withLongOpt( "arrayDesign" ).create( 'a' );
         addOption( ADOption );
@@ -137,6 +138,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         addOption( OutOption );
     }
 
+    @SuppressWarnings("unchecked")
     private QuantitationType getQuantitationType( ExpressionExperiment ee, StandardQuantitationType requiredQT,
             boolean isPreferedQT ) {
         QuantitationType qtf = null;
@@ -165,6 +167,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         return qtf;
     }
 
+    @SuppressWarnings("unchecked")
     String processEEForPercentage( ExpressionExperiment ee ) {
         // eeService.thaw( ee );
         QuantitationType qt = this.getQuantitationType( ee, StandardQuantitationType.PRESENTABSENT, false );
@@ -196,20 +199,22 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         return null;
     }
 
-    private HashMap<Object, Set> getDevToGeneAssociation( Object[] allVectors, int start, int end ) // From start to
+    // From start to
     // end-1
-    {
+    @SuppressWarnings("unchecked")
+    private Map<Object, Set> getDevToGeneAssociation( Object[] allVectors, int start, int end ) {
         Collection<DesignElementDataVector> someVectors = new HashSet<DesignElementDataVector>();
-        HashMap<Object, Set> returnAssocation = null;
+        Map<Object, Set> returnAssocation = null;
         for ( int i = start; i < end; i++ ) {
             someVectors.add( ( DesignElementDataVector ) allVectors[i] );
         }
-        returnAssocation = ( HashMap ) this.devService.getGenes( someVectors );
+        returnAssocation = this.devService.getGenes( someVectors );
         return returnAssocation;
     }
 
-    private HashMap<Object, Set> getProbeToGeneAssociation( Collection<DesignElementDataVector> dataVectors ) {
-        HashMap<Object, Set> association = new HashMap<Object, Set>();
+    @SuppressWarnings("unchecked")
+    private Map<Object, Set> getProbeToGeneAssociation( Collection<DesignElementDataVector> dataVectors ) {
+        Map<Object, Set> association = new HashMap<Object, Set>();
         Object[] allVectors = dataVectors.toArray();
         int ChunkNum = 1000;
         int end = allVectors.length > ChunkNum ? ChunkNum : allVectors.length;
@@ -226,7 +231,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
                 association.putAll( this.getDevToGeneAssociation( allVectors, start, end ) );
             }
         }
-        HashMap<Object, Set> probeToGeneAssociation = new HashMap<Object, Set>();
+        Map<Object, Set> probeToGeneAssociation = new HashMap<Object, Set>();
 
         for ( Object dev : association.keySet() ) {
             Set<Gene> mappedGenes = association.get( dev );
@@ -303,9 +308,9 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         return numberofArrays;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
-        // TODO Auto-generated method stub
         Exception err = processCommandLine( "AffYPlatFormAnalysisCli ", args );
         if ( err != null ) {
             return err;
@@ -382,7 +387,6 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        // TODO Auto-generated method stub
         AffyPlatFormAnalysisCli analysis = new AffyPlatFormAnalysisCli();
         StopWatch watch = new StopWatch();
         watch.start();
