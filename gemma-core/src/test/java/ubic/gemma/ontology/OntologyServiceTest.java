@@ -1,5 +1,5 @@
 /*
- * The Gemma-ONT_REV project
+ * The Gemma project
  * 
  * Copyright (c) 2007 University of British Columbia
  * 
