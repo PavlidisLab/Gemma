@@ -41,7 +41,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractGigaspacesFormController extends BackgroundProcessingFormController {
+public abstract class AbstractGigaSpacesFormController extends BackgroundProcessingFormController {
 
     private GigaspacesUtil gigaspacesUtil = null;
 
