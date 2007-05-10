@@ -56,7 +56,7 @@ import ubic.gemma.util.TaxonUtility;
  * 
  * @spring.bean id="linkAnalysisService"
  * @spring.property name="vectorService" ref="designElementDataVectorService"
- * @spring.property name="eeService" ref="expressionExperimentService";
+ * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
  * @author Paul
  * @version $Id$
