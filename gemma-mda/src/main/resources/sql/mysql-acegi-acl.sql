@@ -18,7 +18,8 @@ CREATE TABLE acl_permission (
   acl_object_identity int(11) NOT NULL,
   recipient varchar(100) NOT NULL,
   mask int(11) NOT NULL,
-  PRIMARY KEY  (id)
+  PRIMARY KEY  (id),
+  KEY acl_obj_identity_key (acl_object_identity)
 ) TYPE=InnoDB;
 
 --- (id, object identity (of form class:getId()), parent object, acl class)
