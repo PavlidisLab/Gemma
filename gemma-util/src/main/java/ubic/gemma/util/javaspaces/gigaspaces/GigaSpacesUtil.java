@@ -49,7 +49,7 @@ public class GigaSpacesUtil implements ApplicationContextAware {
     private ApplicationContext applicationContext = null;
 
     /**
-     * Determines if the (@link ApplicationContext) contains gigaspaces beans.
+     * Determines if the {@link ApplicationContext} contains gigaspaces beans.
      */
     private boolean contextContainsGigaspaces() {
 
