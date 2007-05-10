@@ -27,6 +27,9 @@ import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import com.j_spaces.core.client.MetaDataEntry;
 
 /**
+ * This {@link ProgressJob} is used to log information on the compute server and return this information to the client.
+ * See {@link ProgressJob} for further information on the logging of long running tasks.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -50,7 +53,6 @@ public class GigaspacesProgressJobImpl extends MetaDataEntry implements Progress
      */
     @Override
     public String toString() {
-        // return "TrackingId: " + trackingId + " JobID: " + jInfo.getId() + " TaskID: " + jInfo.getTaskId();
         return pData.toString();
     }
 

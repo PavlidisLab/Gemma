@@ -30,12 +30,15 @@ import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
 
 /**
+ * This command line interface is used to take {@link ExpressionExperimentTask} tasks from the {@link JavaSpace} and
+ * returns the results.
+ * 
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
+public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAwareCLI {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentWorkerCLI.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentGigaspacesWorkerCLI.class );
 
     // member for gigaspaces template
     private GigaSpacesTemplate template;
@@ -55,6 +58,11 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
 
     }
 
+    /**
+     * Initializes the spring beans.
+     * 
+     * @throws Exception
+     */
     protected void init() throws Exception {
 
         GigaspacesUtil gigaspacesUtil = ( GigaspacesUtil ) this.getBean( "gigaspacesUtil" );
@@ -68,6 +76,9 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
         iTestBeanWorker = ( DelegatingWorker ) updatedContext.getBean( "testBeanWorker" );
     }
 
+    /**
+     * Starts the thread for this worker.
+     */
     protected void start() {
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
@@ -77,6 +88,8 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
     }
 
     /**
+     * Starts the command line interface.
+     * 
      * @param args
      */
     public static void main( String[] args ) {
@@ -84,7 +97,7 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        ExpressionExperimentWorkerCLI p = new ExpressionExperimentWorkerCLI();
+        ExpressionExperimentGigaspacesWorkerCLI p = new ExpressionExperimentGigaspacesWorkerCLI();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -95,6 +108,11 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( this.getClass().getName(), args );
@@ -108,6 +126,11 @@ public class ExpressionExperimentWorkerCLI extends AbstractSpringAwareCLI {
         return err;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
+     */
     @Override
     protected void processOptions() {
         super.processOptions();

@@ -51,12 +51,12 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    public Result execute( ExpressionExperiment expressionExperiment ) {
+    public GigaSpacesResult execute( ExpressionExperiment expressionExperiment ) {
 
         ExpressionExperiment persistedExpressionExperiment = expressionExperimentService.create( expressionExperiment );
         Long id = persistedExpressionExperiment.getId();
         counter++;
-        Result result = new Result();
+        GigaSpacesResult result = new GigaSpacesResult();
         result.setTaskID( counter );
         result.setAnswer( id );
 
@@ -69,7 +69,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
-    public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
+    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
 
         log.info( "executing task " + this.getClass().getName() );
 
@@ -108,7 +108,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
                 doSampleMatching );
 
         counter++;
-        Result result = new Result();
+        GigaSpacesResult result = new GigaSpacesResult();
         // result.setAnswer( datasets.size() );
         result.setAnswer( datasets );
         result.setTaskID( counter );

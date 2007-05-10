@@ -21,23 +21,33 @@ package ubic.gemma.javaspaces.gigaspaces;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
+ * A task interface to wrap {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} type jobs. Tasks of this
+ * type are submitted to a {@link JavaSpace} and taken from the space by a worker, run on a compute server, and the
+ * results are returned to the space.
+ * 
  * @author keshav
  * @version $Id$
  */
 public interface ExpressionExperimentTask {
 
     /**
+     * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
+     * This method performs some action on the given {@link ExpressionExperiment}.
+     * 
      * @param expressionExperiment
      * @return Result
      */
-    public Result execute( ExpressionExperiment expressionExperiment );
+    public GigaSpacesResult execute( ExpressionExperiment expressionExperiment );
 
     /**
+     * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
+     * This method is useful for invoking methods from {@link GeoDataset}.
+     * 
      * @param geoAccession
      * @param loadPlatformOnly
      * @param doSampleMatching
      * @return Result
      */
-    public Result execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
 
 }

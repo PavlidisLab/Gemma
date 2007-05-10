@@ -34,7 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask;
-import ubic.gemma.javaspaces.gigaspaces.Result;
+import ubic.gemma.javaspaces.gigaspaces.GigaSpacesResult;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -245,7 +245,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaspacesFormCo
                     // Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
                     // doSampleMatching );
 
-                    Result res = eeTaskProxy.execute( accesionNum, false, doSampleMatching );
+                    GigaSpacesResult res = eeTaskProxy.execute( accesionNum, false, doSampleMatching );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
                     log.info( "result " + result );
 

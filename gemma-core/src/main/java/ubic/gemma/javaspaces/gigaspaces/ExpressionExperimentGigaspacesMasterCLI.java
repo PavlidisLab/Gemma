@@ -42,12 +42,16 @@ import com.j_spaces.core.client.ExternalEntry;
 import com.j_spaces.core.client.NotifyModifiers;
 
 /**
+ * This command line interface (CLI) serves as a handy tool/test to submit a task (@see ExpressionExperimentTask) to a
+ * {@link JavaSpace}. The CLI implements {@link RemoteEventListener} to be able to receive notifications from the
+ * server side.
+ * 
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
+public class ExpressionExperimentGigaspacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentMasterCLI.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentGigaspacesMasterCLI.class );
 
     private GigaSpacesTemplate template;
 
@@ -65,11 +69,13 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
     }
 
     /**
+     * Starts the command line interface.
+     * 
      * @param args
      */
     public static void main( String[] args ) {
         log.info( "Running GigaSpaces Master ... \n" );
-        ExpressionExperimentMasterCLI p = new ExpressionExperimentMasterCLI();
+        ExpressionExperimentGigaspacesMasterCLI p = new ExpressionExperimentGigaspacesMasterCLI();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -105,6 +111,8 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
     }
 
     /**
+     * Initialization of spring beans.
+     * 
      * @throws Exception
      */
     protected void init() throws Exception {
@@ -122,13 +130,13 @@ public class ExpressionExperimentMasterCLI extends LoadExpressionDataCli impleme
     }
 
     /**
-     * Invokes the gigaspace task.
+     * Submits the task to the space and retrieves the result.
      */
     protected void start() {
 
         log.debug( "Got accession(s) from command line " + accessions );
 
-        Result res = null;
+        GigaSpacesResult res = null;
         if ( accessions != null ) {
             String[] accsToRun = StringUtils.split( accessions, ',' );
 

@@ -21,16 +21,14 @@ package ubic.gemma.javaspaces.gigaspaces;
 import java.io.Serializable;
 
 /**
- * Title: Spring based Master Worker example Description: This class describes the result of the TaskImpl which was
- * executed by the worker
+ * This class describes the result of the task executed by a worker.
  * <p>
- * The example demonstrates the Master Worker pattern using the GigaSpaces Spring based remote invocation.
+ * The is used in the Master Worker pattern using the GigaSpaces Spring based remote invocation.
  * 
  * @author keshav
  * @version $Id$
- * @since 5.1
  */
-public class Result implements Serializable {
+public class GigaSpacesResult implements Serializable {
     /**
      * The task id
      */
@@ -43,7 +41,7 @@ public class Result implements Serializable {
     /**
      * Constructor
      */
-    public Result() {
+    public GigaSpacesResult() {
     }
 
     public Object getAnswer() {
