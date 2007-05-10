@@ -26,6 +26,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
+ * A test class for {@link GigaspacesUtil}.
+ * 
  * @author keshav
  * @version $Id$
  */
