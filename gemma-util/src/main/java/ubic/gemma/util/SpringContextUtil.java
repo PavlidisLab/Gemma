@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 
 /**
  * Methods to create Spring contexts. For tests see ubic.gemma.testing.
@@ -127,7 +127,7 @@ public class SpringContextUtil {
         }
 
         if ( gigaspacesOn ) {
-            GigaspacesUtil.addGigaspacesContextToPaths( paths );
+            GigaSpacesUtil.addGigaspacesContextToPaths( paths );
         }
 
         addCommonConfig( isWebapp, paths );

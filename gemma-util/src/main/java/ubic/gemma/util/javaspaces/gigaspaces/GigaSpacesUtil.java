@@ -40,11 +40,11 @@ import com.j_spaces.core.client.SpaceFinder;
  * @author keshav
  * @version $Id$
  */
-public class GigaspacesUtil implements ApplicationContextAware {
+public class GigaSpacesUtil implements ApplicationContextAware {
 
     private static final String GIGASPACES_SPRING_CONTEXT = "ubic/gemma/gigaspaces.xml";
 
-    private static Log log = LogFactory.getLog( GigaspacesUtil.class );
+    private static Log log = LogFactory.getLog( GigaSpacesUtil.class );
 
     private ApplicationContext applicationContext = null;
 

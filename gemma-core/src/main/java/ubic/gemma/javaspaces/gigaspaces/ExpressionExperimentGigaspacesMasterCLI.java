@@ -33,7 +33,7 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
-import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
 import ubic.gemma.util.progress.ProgressData;
 
@@ -117,7 +117,7 @@ public class ExpressionExperimentGigaspacesMasterCLI extends LoadExpressionDataC
      */
     protected void init() throws Exception {
 
-        GigaspacesUtil gigaspacesUtil = ( GigaspacesUtil ) this.getBean( "gigaspacesUtil" );
+        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaspacesUtil" );
         ApplicationContext updatedContext = gigaspacesUtil
                 .addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 

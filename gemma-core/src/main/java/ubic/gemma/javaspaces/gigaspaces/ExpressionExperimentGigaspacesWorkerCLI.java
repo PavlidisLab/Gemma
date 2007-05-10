@@ -27,7 +27,7 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.SecurityUtil;
-import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 
 /**
  * This command line interface is used to take {@link ExpressionExperimentTask} tasks from the {@link JavaSpace} and
@@ -65,7 +65,7 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
      */
     protected void init() throws Exception {
 
-        GigaspacesUtil gigaspacesUtil = ( GigaspacesUtil ) this.getBean( "gigaspacesUtil" );
+        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaspacesUtil" );
         ApplicationContext updatedContext = gigaspacesUtil
                 .addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 

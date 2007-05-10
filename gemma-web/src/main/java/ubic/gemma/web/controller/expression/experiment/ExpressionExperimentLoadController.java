@@ -39,7 +39,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -89,10 +89,10 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaspacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil)
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaspacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
      */
     @Override
-    public void setGigaspacesUtil( GigaspacesUtil gigaspacesUtil ) {
+    public void setGigaspacesUtil( GigaSpacesUtil gigaspacesUtil ) {
         this.injectGigaspacesUtil( gigaspacesUtil );
     }
 

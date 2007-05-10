@@ -29,7 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
-import ubic.gemma.util.javaspaces.gigaspaces.GigaspacesUtil;
+import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
 import ubic.gemma.web.controller.TaskRunningService;
@@ -43,7 +43,7 @@ import ubic.gemma.web.util.MessageUtil;
  */
 public abstract class AbstractGigaSpacesFormController extends BackgroundProcessingFormController {
 
-    private GigaspacesUtil gigaspacesUtil = null;
+    private GigaSpacesUtil gigaspacesUtil = null;
 
     protected ApplicationContext updatedContext = null;
 
@@ -62,18 +62,18 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
 
     /**
      * Controllers extending this class must implement this method. The implementation should call
-     * injectGigaspacesUtil(GigaspacesUtil gigaspacesUtil) to "inject" a spring loaded GigaspacesUtil into this abstract
+     * injectGigaspacesUtil(GigaSpacesUtil gigaspacesUtil) to "inject" a spring loaded GigaSpacesUtil into this abstract
      * class.
      * 
      * @param gigaspacesUtil
      */
-    abstract protected void setGigaspacesUtil( GigaspacesUtil gigaspacesUtil );
+    abstract protected void setGigaspacesUtil( GigaSpacesUtil gigaspacesUtil );
 
     /**
      * @return ApplicationContext
      */
     public ApplicationContext addGigaspacesToApplicationContext() {
-        if ( gigaspacesUtil == null ) gigaspacesUtil = new GigaspacesUtil();
+        if ( gigaspacesUtil == null ) gigaspacesUtil = new GigaSpacesUtil();
 
         return gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
@@ -114,7 +114,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
     /**
      * @param gigaspacesUtil
      */
-    protected void injectGigaspacesUtil( GigaspacesUtil gigaspacesUtil ) {
+    protected void injectGigaspacesUtil( GigaSpacesUtil gigaspacesUtil ) {
         this.gigaspacesUtil = gigaspacesUtil;
     }
 }

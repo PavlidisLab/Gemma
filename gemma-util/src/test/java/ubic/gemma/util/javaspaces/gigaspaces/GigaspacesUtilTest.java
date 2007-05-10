@@ -26,7 +26,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
- * A test class for {@link GigaspacesUtil}.
+ * A test class for {@link GigaSpacesUtil}.
  * 
  * @author keshav
  * @version $Id$
@@ -38,7 +38,7 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
      */
     public void testIsSpaceRunning() {
 
-        boolean isRunning = GigaspacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        boolean isRunning = GigaSpacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( isRunning )
             assertTrue( isRunning );
@@ -59,7 +59,7 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
-        GigaspacesUtil gigaspacesUtil = new GigaspacesUtil();
+        GigaSpacesUtil gigaspacesUtil = new GigaSpacesUtil();
 
         gigaspacesUtil.setApplicationContext( withoutGigaspacesCtx );
 
@@ -67,7 +67,7 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
                 .getSpaceUrl() );
 
         /* verify that we have the new gigaspaces beans */
-        if ( !GigaspacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) )
+        if ( !GigaSpacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) )
             assertFalse( updatedCtx.containsBean( gigaspacesTemplate ) );
         else {
             assertTrue( updatedCtx.containsBean( gigaspacesTemplate ) );
