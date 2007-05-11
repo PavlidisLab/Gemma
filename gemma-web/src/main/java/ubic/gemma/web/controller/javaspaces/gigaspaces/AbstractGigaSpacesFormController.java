@@ -43,7 +43,7 @@ import ubic.gemma.web.util.MessageUtil;
  */
 public abstract class AbstractGigaSpacesFormController extends BackgroundProcessingFormController {
 
-    private GigaSpacesUtil gigaspacesUtil = null;
+    private GigaSpacesUtil gigaSpacesUtil = null;
 
     protected ApplicationContext updatedContext = null;
 
@@ -62,20 +62,20 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
 
     /**
      * Controllers extending this class must implement this method. The implementation should call
-     * injectGigaspacesUtil(GigaSpacesUtil gigaspacesUtil) to "inject" a spring loaded GigaSpacesUtil into this abstract
+     * injectGigaspacesUtil(GigaSpacesUtil gigaSpacesUtil) to "inject" a spring loaded GigaSpacesUtil into this abstract
      * class.
      * 
-     * @param gigaspacesUtil
+     * @param gigaSpacesUtil
      */
-    abstract protected void setGigaspacesUtil( GigaSpacesUtil gigaspacesUtil );
+    abstract protected void setGigaSpacesUtil( GigaSpacesUtil gigaSpacesUtil );
 
     /**
      * @return ApplicationContext
      */
     public ApplicationContext addGigaspacesToApplicationContext() {
-        if ( gigaspacesUtil == null ) gigaspacesUtil = new GigaSpacesUtil();
+        if ( gigaSpacesUtil == null ) gigaSpacesUtil = new GigaSpacesUtil();
 
-        return gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        return gigaSpacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     /*
@@ -112,9 +112,9 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
     }
 
     /**
-     * @param gigaspacesUtil
+     * @param gigaSpacesUtil
      */
     protected void injectGigaspacesUtil( GigaSpacesUtil gigaspacesUtil ) {
-        this.gigaspacesUtil = gigaspacesUtil;
+        this.gigaSpacesUtil = gigaspacesUtil;
     }
 }
