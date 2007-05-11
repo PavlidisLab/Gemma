@@ -31,7 +31,7 @@ import ubic.gemma.util.SpringContextUtil;
  * @author keshav
  * @version $Id$
  */
-public class GigaspacesUtilTest extends BaseSpringContextTest {
+public class GigaSpacesUtilTest extends BaseSpringContextTest {
 
     /**
      * Tests if space is running.
@@ -74,6 +74,13 @@ public class GigaspacesUtilTest extends BaseSpringContextTest {
         }
         /* make sure we haven't lost the other beans */
         assertTrue( updatedCtx.containsBean( "sessionFactory" ) );
+    }
+
+    /**
+     * Test logging space statistics.
+     */
+    public void testGetSpaceInformation() {
+        GigaSpacesUtil.logSpaceStatistics( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
 }
