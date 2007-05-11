@@ -129,7 +129,7 @@
 <!-- ==================================================== -->
 <bean id="dwrController" class="org.springframework.web.servlet.mvc.ServletWrappingController">
 	<property name="servletClass">
-		<value>org.directwebremoting.DwrServlet</value>
+		<value>org.directwebremoting.servlet.DwrServlet</value>
 	</property>
 	<property name="initParameters">
 		<props>

@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE dwr PUBLIC
-    "-//GetAhead Limited//DTD Direct Web Remoting 1.0//EN"
-    "http://www.getahead.ltd.uk/dwr/dwr10.dtd">
+ <!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://getahead.org/dwr//dwr20.dtd">
     <!-- 
         Configuration for AJAX via Direct Web Remoting (dwr).
+        $Id$
     -->
 <dwr>
     <allow>
@@ -16,31 +15,25 @@
         
         <create creator="new" javascript="HttpProgressMonitor">
             <param name="class" value="ubic.gemma.util.progress.HttpProgressMonitor"/>
-            <param name="force" value="true"/>
             <include method="getProgressStatus" />
         </create>
         
         <convert converter="bean" match="ubic.gemma.util.progress.ProgressData">
-			  <param name="force" value="true"/>
 		  </convert>
         
          <create creator="new" javascript="MgedOntologyService">
             <param name="class" value="ubic.gemma.ontology.MgedOntologyService"/>
-            <param name="force" value="true"/>
             <include method="getTerm" />
             <include method="getBioMaterialTerms" />
         </create>
         
         <convert converter="bean" match="ubic.gemma.ontology.OntologyDataList">
-			  <param name="force" value="true"/>
 		  </convert>
 		  
 		  <convert converter="bean" match="ubic.gemma.ontology.OntologyData">
-			  <param name="force" value="true"/>
 		  </convert>
 		  
 		   <convert converter="bean" match="ubic.gemma.ontology.OntologyTreeNode">
-			  <param name="force" value="true"/>
 		  </convert>
 		  
         

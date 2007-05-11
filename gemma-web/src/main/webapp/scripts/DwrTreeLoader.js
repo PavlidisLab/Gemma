@@ -25,7 +25,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         		argument: {callback: callback, node: node}
             };
            var proxy = new Ext.data.DWRProxy( this.dataUrl, cb);
-           this.transId =  proxy.load(params, this, "foo", this );
+           this.transId = proxy.load(params, this, "foo", this );
             
         } else {
             // if the load is cancelled, make sure we notify 
@@ -40,6 +40,14 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         this.transId = false;
         this.processResponse(data, this.node, "foo" ); // no callback.
         this.fireEvent("load", this, this.node, data);
+     //   return this.node;
+    },
+    
+    abort : function(){
+        if(this.isLoading()){
+        // FIXME do something 
+        //    Ext.lib.Ajax.abort(this.transId);
+        }
     },
     
     createNode : function(attr){
@@ -71,7 +79,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
     
      handleFailure : function(response){
         this.transId = false;
-        this.fireEvent("loadexception", this, node, response);
+        this.fireEvent("loadexception", this, this.node, response);
 //        if(typeof a.callback == "function"){
 //            a.callback(this, a.node);
 //        }
