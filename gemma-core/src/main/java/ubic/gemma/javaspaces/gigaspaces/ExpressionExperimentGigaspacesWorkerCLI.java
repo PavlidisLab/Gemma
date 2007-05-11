@@ -65,7 +65,7 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
      */
     protected void init() throws Exception {
 
-        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaspacesUtil" );
+        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
         ApplicationContext updatedContext = gigaspacesUtil
                 .addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
