@@ -16,7 +16,7 @@
 		cellspacing="0" cellpadding="0" defaultsort="1" class="table"
 		pagesize="50" requestURI="">
 
-		<display:column property="username" escapeXml="true"
+		<display:column property="userName" escapeXml="true"
 			style="width: 30%" titleKey="user.username" sortable="true" />
 	<%-- 	<display:column titleKey="activeUsers.fullName" sortable="true">
 			<c:out value="${user.firstName} ${user.lastName}" escapeXml="true" />

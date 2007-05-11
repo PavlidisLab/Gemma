@@ -2,7 +2,7 @@ Ext.data.DWRProxy = function(dwrCall, config){
   Ext.data.DWRProxy.superclass.constructor.call(this);
   this.dwrCall = dwrCall;
   //this.args = args;
-	this.pagingAndSort = (config.pagingAndSort!=undefined ? config.pagingAndSort : true);
+	this.pagingAndSort = (config.pagingAndSort!=undefined ? config.pagingAndSort : false);
 	this.success = config.success;
 	this.failure = config.failure;
 };
@@ -15,15 +15,16 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
       else sort = '';
       var delegate = this.loadResponse.createDelegate(this, [reader, callback, scope, arg], true);
       var callParams = new Array();
-      if(arg.arg) {
+      if(arg !== undefined && arg.arg) {
         callParams = arg.arg.slice();
-			}
+	  }
 			
-			if(this.pagingAndSort) {
+	  // currently these need to be set when using grid? But must not be defined if we are using a tree.
+	  if(this.pagingAndSort) {
       	callParams.push(params.start);
       	callParams.push(params.limit);
       	callParams.push(sort);
-			}
+	  }
 			
       callParams.push(delegate);
       this.dwrCall.apply(this, callParams);
@@ -32,16 +33,23 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
     }
   },
 
-  loadResponse : function(listRange, reader, callback, scope, arg) {
+  loadResponse : function(data, reader, callback, scope, arg) {
     var result;
     try {
-      result = reader.read(listRange);
+          result = reader.read(data);
     } catch(e) {
-      this.fireEvent("loadexception", this, null, response, e);
+//    	if (typeof this.failure == "function" ) {
+//    		failure();
+//    	}
+      this.fireEvent("loadexception", this, null, data, e);
+      if (typeof callback == "function") {
       callback.call(scope, null, arg, false);
+      }
       return;
     }
+     if (typeof callback == "function") {
     callback.call(scope, result, arg, true);
+     }
   },
 
   update : function(dataSet){},

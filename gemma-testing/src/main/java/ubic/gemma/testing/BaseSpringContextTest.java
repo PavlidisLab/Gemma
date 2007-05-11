@@ -52,7 +52,7 @@ import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
-import uk.ltd.getahead.dwr.create.SpringCreator;
+import org.directwebremoting.spring.SpringCreator;
 
 /**
  * Override this test class for tests that need the container and use the database and you want to leave the database

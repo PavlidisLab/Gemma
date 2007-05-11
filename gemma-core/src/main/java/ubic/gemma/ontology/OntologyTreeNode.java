@@ -17,17 +17,17 @@
  *
  */
 
-
 package ubic.gemma.ontology;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author klc
- *
  */
 
 public class OntologyTreeNode {
 
-    
     private boolean expanded;
     private boolean isTarget;
     private boolean draggable;
@@ -35,18 +35,39 @@ public class OntologyTreeNode {
     private boolean allowChildren;
     private boolean allowDrop;
     private boolean leaf;
-    private String  text;
-    
-    public OntologyTreeNode(){
+    private String text;
+    private String id;
+    private List<OntologyTreeNode> children;
+    private String uiProvider;
+
+    public OntologyTreeNode( String id ) {
         this.expanded = false;
         this.isTarget = false;
         this.draggable = false;
         this.allowDrag = false;
         this.allowChildren = false;
-        this.allowDrop = false;  
+        this.allowDrop = false;
         this.leaf = false;
         this.text = "ME";
-        
+        this.id = id;
+        children = new ArrayList<OntologyTreeNode>();
+
+    }
+
+    public void appendChild( OntologyTreeNode child ) {
+        this.children.add( child );
+    }
+
+    public List<OntologyTreeNode> getChildren() {
+        return children;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId( String id ) {
+        this.id = id;
     }
 
     /**
@@ -159,5 +180,13 @@ public class OntologyTreeNode {
      */
     public void setText( String text ) {
         this.text = text;
+    }
+
+    public String getUiProvider() {
+        return uiProvider;
+    }
+
+    public void setUiProvider( String uiProvider ) {
+        this.uiProvider = uiProvider;
     }
 }

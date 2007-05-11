@@ -60,8 +60,12 @@ public class MgedOntologyService {
         
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
         
-        nodes.add( new OntologyTreeNode() );
-        nodes.add( new OntologyTreeNode() );
+        OntologyTreeNode ontologyTreeNodeA = new OntologyTreeNode( "foo" );
+        
+        ontologyTreeNodeA.appendChild( new OntologyTreeNode("oobly") );
+        
+        nodes.add( ontologyTreeNodeA );
+        nodes.add( new OntologyTreeNode( "bar" ) );
         return nodes;
     }
 
