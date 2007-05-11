@@ -288,7 +288,7 @@ public class LinkAnalysisService {
         this.eeService = eeService;
     }
 
-    public void setPPService( Probe2ProbeCoexpressionService ppService ) {
+    public void setPpService( Probe2ProbeCoexpressionService ppService ) {
         this.ppService = ppService;
     }
 
