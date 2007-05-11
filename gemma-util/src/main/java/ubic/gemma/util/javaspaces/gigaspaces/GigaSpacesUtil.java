@@ -18,7 +18,11 @@
  */
 package ubic.gemma.util.javaspaces.gigaspaces;
 
+import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,8 +33,11 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
+import com.j_spaces.core.IJSpace;
+import com.j_spaces.core.admin.StatisticsAdmin;
 import com.j_spaces.core.client.FinderException;
 import com.j_spaces.core.client.SpaceFinder;
+import com.j_spaces.core.exception.StatisticsNotAvailable;
 
 /**
  * A utility class to test gigaspaces features such as if the space is running, whether to add the gigaspaces beans to
@@ -125,6 +132,42 @@ public class GigaSpacesUtil implements ApplicationContextAware {
 
         return applicationContext;
 
+    }
+
+    /**
+     * Returns the {@link StatisticsAdmin}
+     * 
+     * @param url
+     */
+    public static StatisticsAdmin getStatisticsAdmin( String url ) {
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Cannot add Gigaspaces to application context. Space not started at " + url
+                    + ". Returning context without gigaspaces beans." );
+        }
+        try {
+            IJSpace space = ( IJSpace ) SpaceFinder.find( url );
+            StatisticsAdmin admin = ( StatisticsAdmin ) space.getAdmin();
+            return admin;
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    public static void logSpaceStatistics( String url ) {
+        StatisticsAdmin admin = getStatisticsAdmin( url );
+        try {
+            Map statsMap = admin.getStatistics();
+            Collection keys = statsMap.keySet();
+            Iterator iter = keys.iterator();
+            while ( iter.hasNext() ) {
+                log.debug( statsMap.get( iter.next() ) );
+            }
+        } catch ( StatisticsNotAvailable e ) {
+            throw new RuntimeException( e );
+        } catch ( RemoteException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /*
