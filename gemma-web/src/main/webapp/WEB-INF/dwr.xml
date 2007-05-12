@@ -1,54 +1,62 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
- <!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://getahead.org/dwr//dwr20.dtd">
-    <!-- 
-        Configuration for AJAX via Direct Web Remoting (dwr).
-        $Id$
-    -->
+<!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://getahead.org/dwr//dwr20.dtd">
+<!-- 
+	Configuration for AJAX via Direct Web Remoting (dwr).
+	$Id$
+-->
 <dwr>
-    <allow>
-        <convert converter="bean" match="ubic.gemma.*" />
-        <create creator="spring" javascript="userService"  >
-            <param name="beanName" value="userService" />
-            <include method="getUser" />
-            <include method="getUsers" />
-        </create>        
-        
-        <create creator="new" javascript="HttpProgressMonitor">
-            <param name="class" value="ubic.gemma.util.progress.HttpProgressMonitor"/>
-            <include method="getProgressStatus" />
-        </create>
-        
-        <convert converter="bean" match="ubic.gemma.util.progress.ProgressData">
-		  </convert>
-        
-         <create creator="new" javascript="MgedOntologyService">
-            <param name="class" value="ubic.gemma.ontology.MgedOntologyService"/>
-            <include method="getTerm" />
-            <include method="getBioMaterialTerms" />
-        </create>
-        
-         <create creator="spring" javascript="Gene2GOAssociationService">
-            <param name="beanName" value="gene2GOAssociationService" />
-            <include method="findByGene" />
-        </create>
-        
-        <convert converter="object" match="ubic.gemma.model.genome.Gene">
-        	<param name="include" value="id" />
-        	<param name="force" value="true" />
-        </convert>
-        
-        <convert converter="bean" match="ubic.gemma.model.common.description.VocabCharacteristic"></convert>
-        
-        <convert converter="bean" match="ubic.gemma.ontology.OntologyDataList">
-		  </convert>
-		  
-		  <convert converter="bean" match="ubic.gemma.ontology.OntologyData">
-		  </convert>
-		  
-		   <convert converter="bean" match="ubic.gemma.ontology.OntologyTreeNode">
-		  </convert>
-		  
-        
-         
-    </allow>
+	<allow>
+		<convert converter="bean" match="ubic.gemma.*" />
+		<create creator="spring" javascript="userService">
+			<param name="beanName" value="userService" />
+			<include method="getUser" />
+			<include method="getUsers" />
+		</create>
+
+		<create creator="new" javascript="HttpProgressMonitor">
+			<param name="class"
+				value="ubic.gemma.util.progress.HttpProgressMonitor" />
+			<include method="getProgressStatus" />
+		</create>
+
+		<convert converter="bean"
+			match="ubic.gemma.util.progress.ProgressData">
+		</convert>
+
+		<create creator="new" javascript="MgedOntologyService">
+			<param name="class"
+				value="ubic.gemma.ontology.MgedOntologyService" />
+			<include method="getTerm" />
+			<include method="getBioMaterialTerms" />
+		</create>
+
+		<create creator="spring" javascript="GeneServicesDelegator">
+			<param name="beanName" value="geneServicesDelegator" />
+			<include method="findGOTerms" />
+		</create>
+
+		<convert converter="bean"
+			match="ubic.gemma.web.remote.GeneDelegator">
+			<param name="include" value="id" />
+		</convert>
+
+		<convert converter="bean"
+			match="ubic.gemma.model.common.description.VocabCharacteristic">
+		</convert>
+
+		<convert converter="bean"
+			match="ubic.gemma.ontology.OntologyDataList">
+		</convert>
+
+		<convert converter="bean"
+			match="ubic.gemma.ontology.OntologyData">
+		</convert>
+
+		<convert converter="bean"
+			match="ubic.gemma.ontology.OntologyTreeNode">
+		</convert>
+
+
+
+	</allow>
 </dwr>

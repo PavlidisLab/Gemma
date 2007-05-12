@@ -32,6 +32,7 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {load:function (params, reader
 loadResponse:function (data, reader, callback, scope, arg) {
 	var result;
 	try {
+	alert(dwr.util.toDescriptiveString(data, 5));
 		result = reader.read(data);
 	}
 	catch (e) {
@@ -96,7 +97,15 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {getJsonAccessor:funct
 		}
 	}
 	var records = [];
-	var root = o.data, c = root.length, totalRecords = c, success = true;
+	var root;
+	if (o.data !== undefined) {
+		root = o.data;
+	} else {
+		root = o;
+	}
+	var c = root.length;
+	var totalRecords = c;
+	var success = true;
 	if (this.meta.totalProperty) {
 		var v = parseInt(this.getTotal(o), 10);
 		if (!isNaN(v)) {

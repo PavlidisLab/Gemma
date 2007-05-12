@@ -9,7 +9,8 @@
 		<ref bean="velocityEngine" />
 	</property>
 </bean>
-<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+<bean id="mailSender"
+	class="org.springframework.mail.javamail.JavaMailSenderImpl">
 	<property name="host">
 		<value>${mail.host}</value>
 	</property>
@@ -22,7 +23,8 @@
 </bean>
 
 <!-- Configure Velocity for sending e-mail -->
-<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+<bean id="velocityEngine"
+	class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
 	<property name="velocityProperties">
 		<props>
 			<prop key="resource.loader">class</prop>
@@ -32,7 +34,8 @@
 		</props>
 	</property>
 </bean>
-<bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage" singleton="false">
+<bean id="mailMessage"
+	class="org.springframework.mail.SimpleMailMessage" singleton="false">
 	<property name="from">
 		<value>${mail.from.address}</value>
 	</property>
@@ -44,7 +47,8 @@
 	Variables are listed in a resource. If the resource is in your classpath, list in in 'locations'.
 	Other config files can be added by defining PropertiesConfiguration instances  
 	==================================================== -->
-<bean id="buildProperties" class="org.apache.commons.configuration.PropertiesConfiguration"
+<bean id="buildProperties"
+	class="org.apache.commons.configuration.PropertiesConfiguration"
 	dependency-check="none">
 	<constructor-arg index="0">
 		<value>build.properties</value>
@@ -78,9 +82,13 @@
 	</property>
 	<property name="hibernateProperties">
 		<props>
-			<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+			<prop key="hibernate.dialect">
+				org.hibernate.dialect.MySQLDialect
+			</prop>
 			<prop key="hibernate.cache.use_query_cache">false</prop>
-			<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+			<prop key="hibernate.cache.provider_class">
+				org.hibernate.cache.EhCacheProvider
+			</prop>
 			<prop key="hibernate.cache.query_cache_factory">
 				org.hibernate.cache.StandardQueryCacheFactory
 			</prop>
@@ -109,13 +117,16 @@
 <!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 <bean id="conversion.service"
-	class="org.springframework.binding.convert.support.DefaultConversionService" autowire="byType" />
+	class="org.springframework.binding.convert.support.DefaultConversionService"
+	autowire="byType" />
 
 <!-- A formatter registry, a thread-safe cache for Formatters: a thread-safe, lighter weight alt. to PropertyEditors! -->
 <bean id="formatter.locator"
-	class="org.springframework.binding.format.support.ThreadLocalFormatterLocator" autowire="byType" />
+	class="org.springframework.binding.format.support.ThreadLocalFormatterLocator"
+	autowire="byType" />
 
 <!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
 <bean id="thread.cleanupBroadcaster"
 	class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
+
 

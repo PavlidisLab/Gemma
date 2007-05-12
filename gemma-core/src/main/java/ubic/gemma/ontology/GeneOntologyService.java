@@ -604,7 +604,7 @@ public class GeneOntologyService implements InitializingBean {
         this.geneService = geneService;
     }
 
-    protected boolean isReady() {
+    public boolean isReady() {
         return ready.get();
     }
 

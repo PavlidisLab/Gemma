@@ -15,7 +15,7 @@
 		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 		
 	<script type='text/javascript'
-		src='/Gemma/dwr/interface/Gene2GOAssociationService.js'></script>
+		src='/Gemma/dwr/interface/GeneServicesDelegator.js'></script>
 		
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
@@ -42,7 +42,7 @@ var GridUI = function() {
 		  ]);
 
 		  ds = new Ext.data.Store({
-		    proxy: new Ext.data.DWRProxy(Gene2GOAssociationService.findByGene ),
+		    proxy: new Ext.data.DWRProxy(GeneServicesDelegator.findGOTerms ),
 		    reader: new Ext.data.ListRangeReader( 
 					{id:'id'}, recordType),
 		    remoteSort: true
