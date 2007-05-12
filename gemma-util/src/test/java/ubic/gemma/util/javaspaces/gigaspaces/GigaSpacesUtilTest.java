@@ -79,8 +79,15 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
     /**
      * Test logging space statistics.
      */
-    public void testGetSpaceInformation() {
+    public void testLogSpaceStatistics() {
         GigaSpacesUtil.logSpaceStatistics( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+    }
+
+    /**
+     * Tests logging the configuration report.
+     */
+    public void testGetSpaceContainerAdmin() {
+        GigaSpacesUtil.logRuntimeConfigurationReport();
     }
 
 }
