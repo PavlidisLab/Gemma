@@ -18,6 +18,9 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import net.jini.core.lease.Lease;
+import net.jini.space.JavaSpace;
+
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,9 +28,12 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
+
+import com.j_spaces.core.IJSpace;
 
 /**
  * This command line interface is used to take {@link ExpressionExperimentTask} tasks from the {@link JavaSpace} and
@@ -74,6 +80,12 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
 
         template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
         iTestBeanWorker = ( DelegatingWorker ) updatedContext.getBean( "testBeanWorker" );
+        IJSpace space = ( IJSpace ) template.getSpace();
+        Lease lease = space.write( new GemmaSpacesGenericEntry(), null, 60000000 );
+        if ( lease == null ) log.error( "Null Lease returned" );
+        // TODO set lease time to large number so it never expires (or only when the
+        // worker shuts down. That is, do some "worker cleanup" when it shuts down.
+        // This includes removing entries it has written to the space, etc.)?
     }
 
     /**
@@ -85,6 +97,7 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
 
         itbThread = new Thread( iTestBeanWorker );
         itbThread.start();
+
     }
 
     /**
