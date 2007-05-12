@@ -33,7 +33,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
+import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
+
 import com.j_spaces.core.IJSpace;
+import com.j_spaces.core.admin.IJSpaceContainerAdmin;
 import com.j_spaces.core.admin.StatisticsAdmin;
 import com.j_spaces.core.client.FinderException;
 import com.j_spaces.core.client.SpaceFinder;
@@ -135,14 +138,14 @@ public class GigaSpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Returns the {@link StatisticsAdmin}
+     * Returns the {@link StatisticsAdmin}, which is useful for administration statistics.
      * 
      * @param url
      */
     public static StatisticsAdmin getStatisticsAdmin( String url ) {
         if ( !isSpaceRunning( url ) ) {
-            log.error( "Cannot add Gigaspaces to application context. Space not started at " + url
-                    + ". Returning context without gigaspaces beans." );
+            log.error( "Space not started at " + url + ". Cannot get statistics admin." );
+            return null;
         }
         try {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
@@ -154,20 +157,69 @@ public class GigaSpacesUtil implements ApplicationContextAware {
 
     }
 
+    /**
+     * Logs the space statistics from the {@link StatisticsAdmin}.
+     * 
+     * @param url
+     */
     public static void logSpaceStatistics( String url ) {
         StatisticsAdmin admin = getStatisticsAdmin( url );
-        try {
-            Map statsMap = admin.getStatistics();
-            Collection keys = statsMap.keySet();
-            Iterator iter = keys.iterator();
-            while ( iter.hasNext() ) {
-                log.debug( statsMap.get( iter.next() ) );
+
+        if ( admin != null ) {
+            try {
+                Map statsMap = admin.getStatistics();
+                Collection keys = statsMap.keySet();
+                Iterator iter = keys.iterator();
+                while ( iter.hasNext() ) {
+                    log.debug( statsMap.get( iter.next() ) );
+                }
+            } catch ( StatisticsNotAvailable e ) {
+                throw new RuntimeException( e );
+            } catch ( RemoteException e ) {
+                throw new RuntimeException( e );
             }
-        } catch ( StatisticsNotAvailable e ) {
-            throw new RuntimeException( e );
-        } catch ( RemoteException e ) {
+        }
+        log.error( "Statistics unavailable." );
+    }
+
+    /**
+     * Returns the {@link IJSpaceContainerAdmin}, which is useful to obtain space information such as the runtime
+     * configuration report
+     * 
+     * @param url
+     * @return {@link IJSpaceContainerAdmin}
+     */
+    public static IJSpaceContainerAdmin getContainerSpaceAdmin( String url ) {
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Space not started at " + url + ". Cannot get container admin." );
+            return null;
+        }
+        try {
+            IJSpace space = ( IJSpace ) SpaceFinder.find( url );
+            IJSpaceContainerAdmin admin = ( IJSpaceContainerAdmin ) space.getContainer();
+            return admin;
+        } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * Logs the runtime configuration report. This report contains information about the space, including the system
+     * environment configuration.
+     */
+    public static void logRuntimeConfigurationReport() {
+        IJSpaceContainerAdmin admin = ( IJSpaceContainerAdmin ) GigaSpacesUtil
+                .getContainerSpaceAdmin( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+
+        if ( admin != null ) {
+            try {
+                log.info( "Runtime configuration report: " + admin.getRuntimeConfigReport() );
+            } catch ( RemoteException e ) {
+                e.printStackTrace();
+            }
+        }
+
+        log.error( "Runtime configuration report unavailable." );
     }
 
     /*
