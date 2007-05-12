@@ -23,11 +23,15 @@ import com.j_spaces.core.client.MetaDataEntry;
 /**
  * This class is handy for testing the javaspaces notifications mechanism. It wraps messages on the server side and
  * sends them back to the client.
+ * <p>
+ * This class can also be used by workers (in a master-worker pattern) to "register" themselves with a space. Workers
+ * are actually automatically registered with a space when the worker is started, but this class servers the purpose of
+ * allowing clients to detect both which workers and how many are registered with a given space.
  * 
  * @author keshav
  * @version $Id$
  */
-public class JavaSpacesLoggingEntry extends MetaDataEntry {
+public class GemmaSpacesGenericEntry extends MetaDataEntry {
 
     /**
      * 
@@ -38,16 +42,19 @@ public class JavaSpacesLoggingEntry extends MetaDataEntry {
      * Must be public for JavaSpaces reasons.
      */
     public String message = null;
+    public String host = null;
 
     /**
      * 
      *
      */
-    public JavaSpacesLoggingEntry() {
+    public GemmaSpacesGenericEntry() {
 
     }
 
     /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
      * @return String
      */
     public String getMessage() {
@@ -55,6 +62,8 @@ public class JavaSpacesLoggingEntry extends MetaDataEntry {
     }
 
     /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
      * @param message
      */
     public void setMessage( String message ) {
@@ -70,5 +79,23 @@ public class JavaSpacesLoggingEntry extends MetaDataEntry {
     public static String[] __getSpaceIndexedFields() {
         String[] indexedFields = { "message" };
         return indexedFields;
+    }
+
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @return String
+     */
+    public String getHost() {
+        return host;
+    }
+
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @param host
+     */
+    public void setHost( String host ) {
+        this.host = host;
     }
 }
