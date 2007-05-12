@@ -20,10 +20,15 @@ package ubic.gemma.util.javaspaces.gigaspaces;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
 import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
+import ubic.gemma.javaspaces.gigaspaces.masterworker.Command;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
+
+import com.j_spaces.core.IJSpace;
 
 /**
  * A test class for {@link GigaSpacesUtil}.
@@ -88,6 +93,37 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
      */
     public void testGetSpaceContainerAdmin() {
         GigaSpacesUtil.logRuntimeConfigurationReport();
+    }
+
+    public void testIsWorkerRunning() {
+
+        // TODO move me into GigaSpacesUtil - this is how you check to see if workers are registered.
+        // You will also want the worker to be "smart" such that when it shuts down, all entries
+        // it writes to the space are removed. Make sure you set the lease time to a large number
+        // so the GemmaSpacesGenericEntry does not expire.
+        GigaSpacesUtil gigaspacesUtil = new GigaSpacesUtil();
+        gigaspacesUtil.setApplicationContext( this.applicationContext );
+        ApplicationContext updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
+
+        GigaSpacesTemplate gigaspacesTemplate = ( GigaSpacesTemplate ) updatedCtx.getBean( "gigaspacesTemplate" );
+        IJSpace space = ( IJSpace ) gigaspacesTemplate.getSpace();
+
+        try {
+            int count = space.count( new GemmaSpacesGenericEntry(), null );
+            log.info( "count: " + count );
+
+            Object[] commandObjects = space.readMultiple( new GemmaSpacesGenericEntry(), null, 120000 );
+
+            for ( int i = 0; i < commandObjects.length; i++ ) {
+                GemmaSpacesGenericEntry entry = ( GemmaSpacesGenericEntry ) commandObjects[i];
+                log.info( "entry: " + entry );
+            }
+
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
     }
 
 }
