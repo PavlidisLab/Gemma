@@ -88,14 +88,14 @@
     <filter>
         <filter-name>exportFilter</filter-name>
         <filter-class>org.displaytag.filter.ResponseOverrideFilter</filter-class>
-    </filter>
+    </filter><!--
     
     <filter>
         <filter-name>compressionFilter</filter-name>
         <filter-class>ubic.gemma.web.filter.GZIPFilter</filter-class>
     </filter>
 
-    <filter-mapping>
+    --><filter-mapping>
         <filter-name>encodingFilter</filter-name>
         <url-pattern>/j_security_check</url-pattern>
     </filter-mapping>
@@ -145,7 +145,7 @@
     <filter-mapping>
         <filter-name>exportFilter</filter-name>
         <url-pattern>*.html</url-pattern>
-    </filter-mapping>
+    </filter-mapping><!--
     
     <filter-mapping>
         <filter-name>compressionFilter</filter-name>
@@ -164,7 +164,7 @@
         <url-pattern>*.html</url-pattern>
     </filter-mapping>
     
-    <filter-mapping>
+    --><filter-mapping>
         <filter-name>rewriteFilter</filter-name>
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>

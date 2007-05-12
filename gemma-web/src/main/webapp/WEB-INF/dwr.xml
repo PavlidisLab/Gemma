@@ -27,6 +27,18 @@
             <include method="getBioMaterialTerms" />
         </create>
         
+         <create creator="spring" javascript="Gene2GOAssociationService">
+            <param name="beanName" value="gene2GOAssociationService" />
+            <include method="findByGene" />
+        </create>
+        
+        <convert converter="object" match="ubic.gemma.model.genome.Gene">
+        	<param name="include" value="id" />
+        	<param name="force" value="true" />
+        </convert>
+        
+        <convert converter="bean" match="ubic.gemma.model.common.description.VocabCharacteristic"></convert>
+        
         <convert converter="bean" match="ubic.gemma.ontology.OntologyDataList">
 		  </convert>
 		  

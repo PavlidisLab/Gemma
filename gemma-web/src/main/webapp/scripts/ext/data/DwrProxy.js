@@ -2,33 +2,28 @@
 Ext.data.DWRProxy = function (dwrCall, config) {
 	Ext.data.DWRProxy.superclass.constructor.call(this);
 	this.dwrCall = dwrCall;
-  //this.args = args;
-	this.pagingAndSort = (config.pagingAndSort !== undefined ? config.pagingAndSort : false);
+	
+	if (config !== undefined) {
+   	this.pagingAndSort = (config.pagingAndSort !== undefined ? config.pagingAndSort : false);
 	this.success = config.success;
 	this.failure = config.failure;
+	}
 };
 Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {load:function (params, reader, callback, scope, arg) {
 	if (this.fireEvent("beforeload", this, params) !== false) {
-		var sort;
-		if (params.sort && params.dir) {
-			sort = params.sort + " " + params.dir;
-		} else {
-			sort = "";
-		}
 		var delegate = this.loadResponse.createDelegate(this, [reader, callback, scope, arg], true);
-		var callParams = new Array();
-		if (arg !== undefined && arg.arg) {
-			callParams = arg.arg.slice();
-		}
-			
-	  // currently these need to be set when using grid? But must not be defined if we are using a tree.
-		if (this.pagingAndSort) {
-			callParams.push(params.start);
-			callParams.push(params.limit);
-			callParams.push(sort);
-		}
-		callParams.push(delegate);
-		return this.dwrCall.apply(this, callParams);
+ //		var callParams = new Javascript::Array();
+//		if (arg !== undefined ) {
+//			callParams = arg;
+//		}
+//		
+//		for(var i = 0 ; i < params.length; i++){
+//			callParams.push(params[i]);
+//		}
+//			
+//	    callParams.push(delegate);
+	    params.push(delegate);
+		return this.dwrCall.apply(this, params);
 	} else {
 		callback.call(scope || this, null, arg, false);
 	}

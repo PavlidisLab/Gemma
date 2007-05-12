@@ -5,11 +5,107 @@
 <jsp:useBean id="gene" scope="request"
 	class="ubic.gemma.model.genome.GeneImpl" />
 
+<script
+		src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
+		type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>"
+		type="text/javascript"></script>
+	
+	<script type="text/javascript"
+		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+		
+	<script type='text/javascript'
+		src='/Gemma/dwr/interface/Gene2GOAssociationService.js'></script>
+		
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+
 <script type="text/javascript"
 	src="<c:url value="/scripts/scrolltable.js"/>"></script>
 <link rel="stylesheet" type="text/css"
 	href="<c:url value='/styles/scrolltable.css'/>" />
 
+<link href="<c:url value='/styles/ext-all.css'/>" media="screen"
+		rel="stylesheet" type="text/css" />
+
+<script type="text/javascript">
+
+var GridUI = function() {
+    var ds;
+	var grid; //component
+	var columnModel; // definition of the columns
+	function initDataSource() {
+		var recordType = Ext.data.Record.create([
+    	  {name: "id", type: "int"},
+		  {name: "value", type: "string"},
+		  {name: "description", type: "string"},
+		  ]);
+
+		  ds = new Ext.data.Store({
+		    proxy: new Ext.data.DWRProxy(Gene2GOAssociationService.findByGene ),
+		    reader: new Ext.data.ListRangeReader( 
+					{id:'id'}, recordType),
+		    remoteSort: true
+		  });
+		
+			ds.on("load", function () {
+			});		
+	}
+	
+	function getColumnModel() {
+		if(!columnModel) {
+			columnModel = new Ext.grid.ColumnModel(
+				[
+					{
+						header: 'Value',
+						width: 250,
+						sortable: true,
+						dataIndex: 'value'
+					},
+					{
+						header: 'Description',
+						width: 250,
+						sortable: true,
+						dataIndex: 'description'
+					} 															
+				]);
+		}
+		return columnModel;
+	}	
+	
+	function buildGrid() {				
+		grid = new Ext.grid.Grid(
+			'go-grid',
+			{
+				ds: ds,
+				cm: getColumnModel(),
+				autoSizeColumns: true,
+				selModel: new Ext.grid.RowSelectionModel({singleSelect:true})
+			}
+		);
+		
+		
+		grid.render();
+	}
+			
+
+	return {
+		init : function() {
+		    var geneid = dwr.util.getValue("gene");
+            var g = { id : geneid };
+			initDataSource();
+			ds.load( { params : [ g ] });			
+			buildGrid();
+		},
+		
+		getStore: function() {
+			return ds;
+		}
+	}
+}();
+Ext.onReady(GridUI.init, GridUI, true);	
+	
+</script>
 
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -149,15 +245,23 @@
 </table>
 
 
-<c:if test="${numOntologyEntries > 0 }">
+
+
 	<h3>
 		<fmt:message key="gene.ontology" /> terms <a class="helpLink" href="?"
 							onclick="showHelpTip(event, 'Only Gene Ontology terms that are directly attached to this gene are shown. Implicit associations (i.e., with parent terms in the GO hierarchy) are not listed.'); return false"><img
 								src="/Gemma/images/help.png" /> </a>
 
 	</h3>
-</c:if>
+	
+	
+ 
+<div id="go-grid"  class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:620px;"></div>
+<input type = "hidden" name="gene" id="gene" value= "${gene.id}"/> 
 
+
+<%-- 
+<c:if test="${numOntologyEntries > 0 }">
 <div id="tableContainer" class="tableContainer">
 <display:table name="ontologyEntries" class="list" requestURI=""
 	id="ontologyEntriesList" pagesize="100"
@@ -167,8 +271,8 @@
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 </div>
-
-
+</c:if>
+--%>
 
 
 <%

@@ -19,7 +19,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         if(this.fireEvent("beforeload", this, node, callback) !== false){
             var params = this.getParams(node);
             var cb = {
-                success: this.handleResponse,
+                success: this.read,
                 failure: this.handleFailure,
                 scope: this,
         		argument: {callback: callback, node: node}
@@ -40,7 +40,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         this.transId = false;
         this.processResponse(data, this.node, "foo" ); // no callback.
         this.fireEvent("load", this, this.node, data);
-     //   return this.node;
+        return this.node; // need to complete the Reader interface but this isn't really used?
     },
     
     abort : function(){
@@ -65,8 +65,11 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
  
     processResponse : function(data, node, callback){
         try {
+        	node.attributes.children = [];
 	        for(var i = 0, len = data.length; i < len; i++){
-               node.appendChild( this.createNode(data[i]) );
+	        	newnode =  this.createNode(data[i]);
+               node.appendChild( newnode );
+               node.attributes.children[i] = newnode; // ??
 	        }
 	        if(typeof callback == "function"){
                 callback(this, node);

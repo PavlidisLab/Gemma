@@ -30,7 +30,9 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -557590340503789274L;
-
+    
+    
+    
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {

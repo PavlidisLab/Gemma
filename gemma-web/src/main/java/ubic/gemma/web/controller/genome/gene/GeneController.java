@@ -47,7 +47,6 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.bean id="geneController"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
- * @spring.property name="compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
@@ -57,7 +56,6 @@ import ubic.gemma.web.controller.BaseMultiActionController;
 public class GeneController extends BaseMultiActionController {
     private GeneService geneService = null;
     private BibliographicReferenceService bibliographicReferenceService = null;
-    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
     private Gene2GOAssociationService gene2GOAssociationService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
@@ -89,14 +87,6 @@ public class GeneController extends BaseMultiActionController {
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /**
-     * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
-     */
-    public void setCompositeSequenceGeneMapperService(
-            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
-        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 
     /**
@@ -142,14 +132,16 @@ public class GeneController extends BaseMultiActionController {
         ModelAndView mav = new ModelAndView( "gene.detail" );
         mav.addObject( "gene", gene );
 
+        /*
         Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( gene );
         if ( ontos.size() != 0 ) {
             fillInTermNames( ontos );
             mav.addObject( "ontologyEntries", ontos );
         }
-
+        
         mav.addObject( "numOntologyEntries", ontos.size() );
-
+*/
+        
         // Get the composite sequences
         Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
