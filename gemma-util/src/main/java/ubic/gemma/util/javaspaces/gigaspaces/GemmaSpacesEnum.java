@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.javaspaces.gigaspaces;
+package ubic.gemma.util.javaspaces.gigaspaces;
 
 /**
  * An enumeration of java spaces used by Gemma.

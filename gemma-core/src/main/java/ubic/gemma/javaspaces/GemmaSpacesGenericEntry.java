@@ -25,7 +25,7 @@ import com.j_spaces.core.client.MetaDataEntry;
  * sends them back to the client.
  * <p>
  * This class can also be used by workers (in a master-worker pattern) to "register" themselves with a space. Workers
- * are actually automatically registered with a space when the worker is started, but this class servers the purpose of
+ * are actually automatically registered with a space when the worker is started, but this class serves the purpose of
  * allowing clients to detect both which workers and how many are registered with a given space.
  * 
  * @author keshav

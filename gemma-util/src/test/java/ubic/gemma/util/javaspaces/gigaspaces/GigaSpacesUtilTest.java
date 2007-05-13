@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
-import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.javaspaces.gigaspaces.masterworker.Command;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;

@@ -33,6 +33,7 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
+import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
 import ubic.gemma.util.progress.ProgressData;

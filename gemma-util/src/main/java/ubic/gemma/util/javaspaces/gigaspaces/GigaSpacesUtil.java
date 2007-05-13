@@ -33,7 +33,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
-import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
 
 import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.admin.IJSpaceContainerAdmin;

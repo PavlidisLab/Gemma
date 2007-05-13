@@ -28,7 +28,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.javaspaces.gigaspaces.GemmaSpacesEnum;
+import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
