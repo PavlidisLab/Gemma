@@ -20,14 +20,9 @@ package ubic.gemma.util.javaspaces.gigaspaces;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
-import ubic.gemma.javaspaces.gigaspaces.masterworker.Command;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
-
-import com.j_spaces.core.IJSpace;
 
 /**
  * A test class for {@link GigaSpacesUtil}.
