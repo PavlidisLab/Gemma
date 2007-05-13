@@ -63,9 +63,7 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
-        GigaSpacesUtil gigaspacesUtil = new GigaSpacesUtil();
-
-        gigaspacesUtil.setApplicationContext( withoutGigaspacesCtx );
+        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
 
         BeanFactory updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
