@@ -94,35 +94,28 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
         GigaSpacesUtil.logRuntimeConfigurationReport();
     }
 
-    public void testIsWorkerRunning() {
+    /**
+     * 
+     *
+     */
+    public void testAreWorkersRegistered() {
 
-        // TODO move me into GigaSpacesUtil - this is how you check to see if workers are registered.
-        // You will also want the worker to be "smart" such that when it shuts down, all entries
-        // it writes to the space are removed. Make sure you set the lease time to a large number
-        // so the GemmaSpacesGenericEntry does not expire.
-        GigaSpacesUtil gigaspacesUtil = new GigaSpacesUtil();
-        gigaspacesUtil.setApplicationContext( this.applicationContext );
+        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
         ApplicationContext updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
 
-        GigaSpacesTemplate gigaspacesTemplate = ( GigaSpacesTemplate ) updatedCtx.getBean( "gigaspacesTemplate" );
-        IJSpace space = ( IJSpace ) gigaspacesTemplate.getSpace();
+        /*
+         * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test is
+         * check the areWorkersRegistered code in GigaSpacesUtil.
+         */
+        boolean workersRunning = false;
 
-        try {
-            int count = space.count( new GemmaSpacesGenericEntry(), null );
-            log.info( "count: " + count );
+        workersRunning = gigaspacesUtil.areWorkersRegistered( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        if ( workersRunning == false )
+            assertFalse( workersRunning );
 
-            Object[] commandObjects = space.readMultiple( new GemmaSpacesGenericEntry(), null, 120000 );
-
-            for ( int i = 0; i < commandObjects.length; i++ ) {
-                GemmaSpacesGenericEntry entry = ( GemmaSpacesGenericEntry ) commandObjects[i];
-                log.info( "entry: " + entry );
-            }
-
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-
+        else
+            assertTrue( workersRunning );
     }
 
 }

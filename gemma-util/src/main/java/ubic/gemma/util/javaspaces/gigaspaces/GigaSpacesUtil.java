@@ -19,6 +19,7 @@
 package ubic.gemma.util.javaspaces.gigaspaces;
 
 import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
+import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
 
 import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.admin.IJSpaceContainerAdmin;
@@ -137,7 +139,8 @@ public class GigaSpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Returns the {@link StatisticsAdmin}, which is useful for administration statistics.
+     * First checks if the space is running at the given url. If it is running, returns the {@link StatisticsAdmin},
+     * which is useful for administration statistics. If the space is not running, returns null.
      * 
      * @param url
      */
@@ -182,8 +185,9 @@ public class GigaSpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Returns the {@link IJSpaceContainerAdmin}, which is useful to obtain space information such as the runtime
-     * configuration report
+     * First checks to see if the space is running at the given url. If the space is running, returns the
+     * {@link IJSpaceContainerAdmin}, which is useful to obtain space information such as the runtime configuration
+     * report. If the space is not running, returns null.
      * 
      * @param url
      * @return {@link IJSpaceContainerAdmin}
@@ -219,6 +223,79 @@ public class GigaSpacesUtil implements ApplicationContextAware {
         }
 
         log.error( "Runtime configuration report unavailable." );
+    }
+
+    /**
+     * @param url
+     * @return int
+     */
+    public int numWorkersRegistered( String url ) {
+        int count = 0;
+
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Space not started at " + url + ". Returning a count of 0 (workers registered)." );
+            return count;
+        }
+
+        try {
+            IJSpace space = ( IJSpace ) SpaceFinder.find( url );
+
+            count = space.count( new GemmaSpacesGenericEntry(), null );
+            log.info( "count: " + count );
+        } catch ( Exception e ) {
+            log.error( "Could not check for workers registered.  Assuming 0 workers are registered." );
+            e.printStackTrace();
+            return 0;
+        }
+
+        return count;
+    }
+
+    /**
+     * Returns a list of all the registered workers.
+     * 
+     * @param url
+     * @return List<GemmaSpacesGenericEntry>
+     */
+    public List<GemmaSpacesGenericEntry> getRegisteredWorkers( String url ) {
+
+        GemmaSpacesGenericEntry[] workerEntries = null;
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Space not started at " + url + ". Returning a count of 0 (workers registered)." );
+            return null;
+        }
+
+        try {
+            IJSpace space = ( IJSpace ) SpaceFinder.find( url );
+
+            Object[] commandObjects = space.readMultiple( new GemmaSpacesGenericEntry(), null, 120000 );
+            workerEntries = new GemmaSpacesGenericEntry[commandObjects.length];
+
+            for ( int i = 0; i < commandObjects.length; i++ ) {
+                GemmaSpacesGenericEntry entry = ( GemmaSpacesGenericEntry ) commandObjects[i];
+                workerEntries[i] = entry;
+                log.debug( "entry: " + entry );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
+        return Arrays.asList( workerEntries );
+    }
+
+    /**
+     * Returns true if workers are registered with the space at the given url.
+     * 
+     * @param url
+     * @return boolean
+     */
+    public boolean areWorkersRegistered( String url ) {
+        boolean registered = false;
+
+        if ( numWorkersRegistered( url ) > 0 ) registered = true;
+
+        return registered;
+
     }
 
     /*
