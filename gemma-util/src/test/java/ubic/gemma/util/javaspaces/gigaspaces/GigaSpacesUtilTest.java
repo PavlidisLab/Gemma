@@ -88,8 +88,7 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * 
-     *
+     * Tests the areWorkersRegistered functinality.
      */
     public void testAreWorkersRegistered() {
 
@@ -98,8 +97,8 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
                 .getSpaceUrl() );
 
         /*
-         * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test is
-         * check the areWorkersRegistered code in GigaSpacesUtil.
+         * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test
+         * checks the areWorkersRegistered code in GigaSpacesUtil.
          */
         boolean workersRunning = false;
 
