@@ -168,11 +168,4 @@ public class DesignElementDataVectorServiceImpl extends
     protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
         return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
     }
-
-    @Override
-    protected void handleShuffle( QuantitationType qt ) throws Exception {
-        // TODO Auto-generated method stub
-        this.getDesignElementDataVectorDao().shuffle( qt );
-    }
-
 }

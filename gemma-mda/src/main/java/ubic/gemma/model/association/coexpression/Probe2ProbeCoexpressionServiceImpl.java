@@ -178,4 +178,10 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         return this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
     }
 
+    @Override
+    protected void handleShuffle( QuantitationType qt, String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        this.getProbe2ProbeCoexpressionDao().shuffle( qt, taxon );
+    }
+
 }
