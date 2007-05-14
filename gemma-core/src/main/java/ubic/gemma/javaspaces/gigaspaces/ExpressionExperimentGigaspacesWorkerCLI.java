@@ -28,9 +28,9 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.util.javaspaces.GemmaSpacesGenericEntry;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 

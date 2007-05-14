@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.javaspaces;
+package ubic.gemma.util.javaspaces;
 
 import com.j_spaces.core.client.MetaDataEntry;
 

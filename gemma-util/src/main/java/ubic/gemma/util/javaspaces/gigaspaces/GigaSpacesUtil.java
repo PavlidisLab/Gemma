@@ -34,7 +34,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
-import ubic.gemma.javaspaces.GemmaSpacesGenericEntry;
+import ubic.gemma.util.javaspaces.GemmaSpacesGenericEntry;
 
 import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.admin.IJSpaceContainerAdmin;
