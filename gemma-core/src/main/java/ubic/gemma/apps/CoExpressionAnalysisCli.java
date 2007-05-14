@@ -18,6 +18,7 @@
  */
 package ubic.gemma.apps;
 
+import java.awt.Composite;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,8 +50,12 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.reader.StringMatrixReader;
 import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -70,6 +75,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
     private DesignElementDataVectorService dedvService;
     private ExpressionExperimentService eeService;
+    private CompositeSequenceService csService;
     private GeneService geneService;
     private String geneList = null;
     private String taxonName = null;
@@ -115,6 +121,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
+        csService = (CompositeSequenceService) this.getBean( "compositeSequenceService" );
     }
 
     /**
@@ -188,7 +195,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @param queryGenes
      * @return
      */
-	Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMap(Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes, Collection<ExpressionExperiment> allEEs){
+	Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMapOldVersion(Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes, Collection<ExpressionExperiment> allEEs){
     	Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
     	int count = 0;
     	int CHUNK_LIMIT = 30;
@@ -231,7 +238,68 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         
         return dedv2genes;
 	}
-
+	Map<DesignElementDataVector, Collection<Gene>> getDesignElementDataVector(Map<Long, Collection<Gene>> cs2gene, QuantitationType qt, ExpressionExperiment ee){
+		Map<DesignElementDataVector, Collection<Gene>> dedv2genes = eeService.getDesignElementDataVectors(cs2gene, qt);
+		for(DesignElementDataVector dedv:dedv2genes.keySet()){
+			dedv.setExpressionExperiment(ee);
+		}
+    	return dedv2genes;
+	}
+	//For small number of queryGenes.
+	Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMap(Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes, Collection<ExpressionExperiment> allEEs){
+        StopWatch qWatch = new StopWatch();
+        qWatch.start();
+    	Map<DesignElementDataVector, Collection<Gene>> dedv2queryGenes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+    	Map<DesignElementDataVector, Collection<Gene>> dedv2coExpressedGenes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+    	//ArrayList<Object> saved = new ArrayList<Object>();
+    	log.info("Start the Query for "+ queryGenes.size() + " query genes");
+    	dedv2queryGenes.putAll(dedvService.getVectors(allEEs, queryGenes));
+    	
+    	Collection<Gene> allGenes = new HashSet<Gene>();
+    	allGenes.addAll(queryGenes);
+    	allGenes.addAll(coExpressedGenes);
+    	Map<Long, Collection<Long>> gene2cs = geneService.getCompositeSequenceMap(allGenes);
+    	Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
+    	for(Gene gene:allGenes){
+    		Collection<Long> csIds = gene2cs.get(gene.getId());
+    		for(Long csId:csIds){
+    			Collection<Gene> genes = cs2gene.get(csId);
+    			if(genes == null){
+    				genes = new HashSet<Gene>();
+    				cs2gene.put(csId, genes);
+    			}
+    			genes.add(gene);
+    		}
+    	}
+    	log.info("Got " + cs2gene.keySet().size() + " composite sequences");
+    	Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+    	Collection<Long> eeIds = new HashSet<Long>();
+    	log.info("loading designElementDataVector from expression experiments");
+    	int count = 0;
+    	for(DesignElementDataVector dedv:dedv2queryGenes.keySet()){
+    		ExpressionExperiment ee = dedv.getExpressionExperiment();
+    		QuantitationType qt = dedv.getQuantitationType();
+			
+    		if(!eeIds.contains(ee.getId())){
+    			Map<DesignElementDataVector, Collection<Gene>> dedvs = getDesignElementDataVector(cs2gene, qt, ee);
+    			dedv2coExpressedGenes.putAll(dedvs);
+    			count = count + dedvs.keySet().size();
+    			eeIds.add(ee.getId());
+    		}
+    	}
+    	for(ExpressionExperiment ee:allEEs){
+    		if(eeIds.contains(ee.getId())){
+    			ees.add(ee);
+    		}
+    	}
+    	allEEs.clear();
+    	allEEs.addAll(ees);
+    	log.info("Get " + allEEs.size() + " expression experiments for analysis");
+        dedv2coExpressedGenes.putAll(dedv2queryGenes);
+        qWatch.stop();
+        log.info("Query takes " + qWatch.getTime() + " to get " + dedv2coExpressedGenes.keySet().size()+":" +count  + " DEDVs for " + (coExpressedGenes.size()+queryGenes.size()) + " genes");
+        return dedv2coExpressedGenes;
+	}
     /*
      * (non-Javadoc)
      * 

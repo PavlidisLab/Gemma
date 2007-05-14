@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -116,7 +117,7 @@ public class LinkGraphClustering{
     		ex.printStackTrace();
     	}
     }
-    public void collectTreeNodes(ObjectArrayList leafNodes, ObjectArrayList internalNodes, TreeNode root){
+    public static void collectTreeNodes(ObjectArrayList leafNodes, ObjectArrayList internalNodes, TreeNode root){
     	assert(leafNodes != null && internalNodes != null);
     	//dept first search for leaf node order
     	Stack<Object> stack = new Stack<Object>();
@@ -152,8 +153,9 @@ public class LinkGraphClustering{
     	*/
     	return;
     }
-    public TreeNode selectMaximalCluster(){
-    	TreeNode res = (TreeNode)this.eligibleNodes.get(0);
+    public ObjectArrayList selectClusterBasedOnSize(int clusterNum){
+    	ObjectArrayList res = new ObjectArrayList(); 
+    	/*TreeNode res = (TreeNode)this.eligibleNodes.get(0);
     	int level = res.level;
     	for(int i = 1; i < this.eligibleNodes.size(); i++){
     		TreeNode iter = (TreeNode)this.eligibleNodes.get(i);
@@ -161,10 +163,26 @@ public class LinkGraphClustering{
     			level = iter.level;
     			res = iter;
     		}
-    	}
+    	}*/
+    	TreeNode.setSorting(TreeNode.LEVEL);
+    	this.eligibleNodes.sort();
+    	res.addAllOfFromTo(this.eligibleNodes, 0, clusterNum - 1);
+    	TreeNode.reSetSorting();
+    	this.eligibleNodes.sort();
     	return res;
     }
+    public TreeNode selectMaximalCluster(){
+    	TreeNode.setSorting(TreeNode.LEVEL);
+    	this.eligibleNodes.sort();
+    	TreeNode.reSetSorting();
+    	TreeNode res = (TreeNode)this.eligibleNodes.getQuick(0);
+    	this.eligibleNodes.sort();
+    	return res;
+    }
+    //Find the root node of the cluster that contains the link with maximum occurrences in the database
     public TreeNode selectClusterWithMaximalBits(int level){
+    	/***Get all leaf nodes and add them into the closed table*********/
+    	/** if maintaining the closed table to save all merged nodes, this search wouldn't be needed***/
     	for(int i = 0; i < this.eligibleNodes.size(); i++){
     		TreeNode oneNode = (TreeNode)this.eligibleNodes.get(i);
     		if(oneNode.child != null){
@@ -178,17 +196,28 @@ public class LinkGraphClustering{
     	this.closedNodes.sort();
     	TreeNode.reSetSorting();
     	TreeNode res = (TreeNode)this.closedNodes.get(0);
+    	//get the root node
     	while(res.parent != null){
     		res = res.parent;
     	}
     	return res;
     }
-    public void selectClustersToSave(){
-    	TreeNode root = selectMaximalCluster();
-    	saveToTreeViewFile("cluster", root);
+    public ObjectArrayList selectClustersToSave(int num){
+    	ObjectArrayList treeNodes = selectClusterBasedOnSize(num);
+    	TreeNode root = (TreeNode)treeNodes.getQuick(0);
+    	saveToTreeViewFile("clusterSize", root);
     	root = selectClusterWithMaximalBits(10);
     	saveToTreeViewFile("clusterBits", root);
-
+    	saveClusters("cluster", treeNodes);
+    	return treeNodes;
+    }
+    public void saveClusters(String pre, ObjectArrayList treeNodes){
+    	String prefix = pre;
+    	if(prefix == null || prefix.length() == 0) prefix = "cluster";
+    	for(int i = 0; i < treeNodes.size(); i++){
+    		TreeNode treeNode = (TreeNode)treeNodes.getQuick(i);
+    		saveToTreeViewFile(prefix+(i+1), treeNode);
+    	}
     }
     private long[] getMissingMask(ObjectArrayList leafNodes){
     	TreeNode oneNode = (TreeNode)leafNodes.get(0);
@@ -238,7 +267,7 @@ public class LinkGraphClustering{
     		cdtOut.write("\n");
     		for(int i = 0; i < leafNodes.size(); i++){
     			TreeNode child = (TreeNode)leafNodes.get(i);
-				cdtOut.write(nodeNames.get(child) + "\t" + MetaLinkFinder.getLinkName(child.id) + "\t" + MetaLinkFinder.getLinkName(child.id)+"_"+MetaLinkFinder.countBits(child.mask) + "\t"+ 1);    			
+				cdtOut.write(nodeNames.get(child) + "\t" + MetaLinkFinder.getLinkName(child.id) + "\t" + MetaLinkFinder.getLinkName(child.id)+"\t"+ 1);    			
 				for(int j = 0; j < MetaLinkFinder.linkCount.getBitNum(); j++){
 					if(MetaLinkFinder.checkBits(missingMask, j))
 					{
@@ -307,7 +336,7 @@ public class LinkGraphClustering{
     private void init(int rows, int cols){
         for(int i = 0; i < rows; i++)
             for(int j = i+1; j < cols; j++){
-                if(MetaLinkFinder.linkCount.bitCount( i, j ) >= this.Threshold){
+                if(MetaLinkFinder.linkCount.bitCount( i, j ) >= this.Threshold && !MetaLinkFinder.filter(i, j)){
                 	long[] mask = MetaLinkFinder.linkCount.getAllBits(i, j);
                     TreeNode oneNode = new TreeNode(MetaLinkFinder.generateId(i,j), mask, null );
                     if(this.fake == null){
@@ -332,7 +361,7 @@ public class LinkGraphClustering{
 
     public void run(){
     	this.init();
-    	run((int)((1.5)*this.Threshold));
+    	run((int)((2)*this.Threshold));
     }
     private void run(int stopStringency){
     	int i = 0;

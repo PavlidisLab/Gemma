@@ -22,6 +22,9 @@ package ubic.gemma.apps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import javax.swing.JFrame;
+
+import no.uib.cipr.matrix.GivensRotation;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -31,16 +34,21 @@ import cern.colt.list.ObjectArrayList;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
+import ubic.gemma.analysis.linkAnalysis.GraphVisualization;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
+import ubic.gemma.analysis.ontology.GeneOntologyService;
+import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.visualization.GraphViewer;
 
 /**
  * @author xwan
@@ -61,13 +69,11 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option writeLinkMatrix = OptionBuilder.withDescription(
-                "If generating the new link matrix, Otherwise reading the link matrix from file" ).withLongOpt(
-                "linkMatrix" ).create( 'l' );
+        Option writeLinkMatrix = OptionBuilder.withDescription( "Giving this option will generate the new link matrix, Otherwise reading the link matrix from file" ).withLongOpt( "linkMatrix" ).create(
+                'l' );
         addOption( writeLinkMatrix );
-        Option writeTree = OptionBuilder.withDescription(
-                "If generating the new clustering tree, Otherwise reading the tree from file" ).withLongOpt(
-                "clusteringTree" ).create( 'c' );
+        Option writeTree = OptionBuilder.withDescription( "Giving this option will generate the new clustering tree, Otherwise reading the tree from file" ).withLongOpt( "clusteringTree" )
+                .create( 'c' );
         addOption( writeTree );
         Option matrixFile = OptionBuilder.hasArg().withArgName( "Bit Matrixfile" ).isRequired().withDescription(
                 "The file for saving bit matrix" ).withLongOpt( "matrixfile" ).create( 'm' );
@@ -77,13 +83,13 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 .withDescription( "The File for Saving the Expression Experiment Mapping" ).withLongOpt( "mapfile" )
                 .create( 'e' );
         addOption( mapFile );
-
+        
         Option treeFile = OptionBuilder.hasArg().withArgName( "Clustering Tree File" ).isRequired().withDescription(
-                "The file for saving clustering tree" ).withLongOpt( "treefile" ).create( 't' );
+        "The file for saving clustering tree" ).withLongOpt( "treefile" ).create( 't' );
         addOption( treeFile );
 
         Option specie = OptionBuilder.hasArg().withArgName( "The name of specie" ).isRequired().withDescription(
-                "The name of specie" ).withLongOpt( "specie" ).create( 's' );
+        "The name of specie" ).withLongOpt( "specie" ).create( 's' );
         addOption( specie );
 
     }
@@ -105,7 +111,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'e' ) ) {
             this.eeMapFile = getOptionValue( 'e' );
         }
-
+        
         if ( hasOption( 't' ) ) {
             this.treeFile = getOptionValue( 't' );
         }
@@ -114,6 +120,8 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             taxon = this.getTaxon( specieName );
         }
     }
+
+
 
     private Taxon getTaxon( String name ) {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -126,7 +134,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         return taxon;
     }
 
-    void test() {
+    private void test() {
         CompressedNamedBitMatrix matrix = new CompressedNamedBitMatrix( 21, 11, 125 );
         for ( int i = 0; i < 21; i++ )
             matrix.addRowName( new Long( i ) );
@@ -146,8 +154,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         matrix.set( 20, 10, 24 );
         matrix.toFile( "test.File" );
     }
-
-    void interactiveQuery() {
+    void interactiveQuery(){
         BufferedReader bfr = new BufferedReader( new InputStreamReader( System.in ) );
         String geneName;
         int count = 0;
@@ -175,7 +182,6 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             System.out.println( "IO error:" + ioe );
         }
     }
-
     /*
      * (non-Javadoc)
      * 
@@ -183,71 +189,94 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
+//        GraphVisualization graphVisualization1 = new GraphVisualization(new Object[0]);
+//        graphVisualization1.run();
+//        if(1== 1) return null;
         Exception err = processCommandLine( "Link Analysis Data Loader", args );
         if ( err != null ) {
             return err;
         }
         try {
-            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                    .getBean( "expressionExperimentService" );
+        	ExpressionExperimentService eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
             GeneService geneService = ( GeneService ) this.getBean( "geneService" );
             GeneOntologyService geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
+            Gene2GOAssociationService gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
 
+            
             MetaLinkFinder linkFinder = new MetaLinkFinder();
-            linkFinder.setEeService( eeService );
-            linkFinder.setGeneService( geneService );
-            linkFinder.setGeneOntologyService( geneOntologyService );
-            if ( taxon == null ) {
-                return new Exception( "The input specie couldn't be found" );
+            linkFinder.setEeService(eeService);
+            linkFinder.setGeneService(geneService);
+            linkFinder.setGeneOntologyService(geneOntologyService);
+            linkFinder.setGene2GoAssociationService(gene2GoAssociationService);
+            if(taxon == null){
+            	return new Exception("The input specie couldn't be found");
             }
-
             StopWatch watch = new StopWatch();
 
             // load the link matrix
             if ( this.writeLinkMatrix ) {
-                watch.start();
+            	watch.start();
                 linkFinder.find( taxon );
                 if ( !linkFinder.toFile( this.matrixFile, this.eeMapFile ) ) {
                     log.info( "Couldn't save the results into the files " );
                     return null;
                 }
-                log.info( "Spend " + watch.getTime() / 1000 + " to generate link matrix" );
+                log.info( "Spend " + watch.getTime()/1000 + " to generate link matrix" );
             } else {
-                watch.start();
+            	watch.start();
                 if ( !linkFinder.fromFile( this.matrixFile, this.eeMapFile ) ) {
                     log.info( "Couldn't load the data from the files " );
                     return null;
                 }
                 watch.stop();
-                log.info( "Spend " + watch.getTime() / 1000 + " to load the data matrix" );
+                log.info( "Spend " + watch.getTime()/1000 + " to load the data matrix" );
             }
             System.err.println( "Finish Loading!" );
             watch.reset();
             watch.start();
 
-            LinkGraphClustering clustering = new LinkGraphClustering( 6 );
-            // clustering.testSerilizable();
-            if ( this.writeClusteringTree ) {
-                clustering.run();
-                clustering.saveToFile( this.treeFile );
-            } else {
-                clustering.readTreeFromFile( this.treeFile );
+            LinkGraphClustering clustering = new LinkGraphClustering(6);
+        	//clustering.testSerilizable();
+            if(this.writeClusteringTree){
+            	clustering.run();
+            	clustering.saveToFile( this.treeFile );
+            }else{
+            	clustering.readTreeFromFile( this.treeFile );
             }
-            clustering.selectClustersToSave();
-
-            // Select clusters for frequent linkset finder
-            TreeNode testNode = clustering.selectClusterWithMaximalBits( 6 );
-            testNode = clustering.selectMaximalCluster();
+            ObjectArrayList savedClusters = clustering.selectClustersToSave(20);
+            GraphViewer gviewer = new GraphViewer(savedClusters, true);
+            gviewer.run();
+            
             ObjectArrayList leafNodes = new ObjectArrayList();
-            clustering.collectTreeNodes( leafNodes, new ObjectArrayList(), testNode );
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6 );
-            freFinder.find( leafNodes );
+//            for(int i = 0; i < savedClusters.size(); i++){
+//            	//if(i < 3) continue;
+//            	TreeNode clusterRoot = (TreeNode) savedClusters.getQuick(i);
+//            	leafNodes.clear();
+//            	LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), clusterRoot);
+//            	System.err.println("Cluster"+(i+1)+"_" + leafNodes.size() +" :");
+//            	GraphVisualization graphVisualization = new GraphVisualization(leafNodes.toList().toArray());
+//            	if(i == 6 || i == 7)
+//            		graphVisualization.run();
+//            }
+
+
+            //Select clusters for frequent linkset finder
+            TreeNode testNode = clustering.selectClusterWithMaximalBits(6);
+            leafNodes.clear();
+            //testNode = clustering.selectMaximalCluster();
+            LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), testNode);
+            GraphViewer gviewer1 = new GraphViewer(leafNodes, false);
+            gviewer1.run();
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6, 6 );
+            freFinder.find(leafNodes);
             watch.stop();
-            log.info( "Spend " + watch.getTime() / 1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
+            log.info( "Spend " + watch.getTime()/1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
             /*
-             * MetaLinkFinder.saveLinkMatrix("linkMatrix.txt", 6); System.err.println( "Output some stats" );
-             * MetaLinkFinder.outputStat(); interactiveQuery();
-             */
+            MetaLinkFinder.saveLinkMatrix("linkMatrix.txt", 6);
+            System.err.println( "Output some stats" );
+            MetaLinkFinder.outputStat();
+            interactiveQuery();
+            */
         } catch ( Exception e ) {
             log.error( e );
             return e;
