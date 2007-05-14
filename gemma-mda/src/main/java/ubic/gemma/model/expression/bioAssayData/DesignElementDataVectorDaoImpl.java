@@ -542,4 +542,10 @@ public class DesignElementDataVectorDaoImpl extends
         } );
 
     }
+
+    @Override
+    protected void handleShuffle( QuantitationType qt ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
 }
