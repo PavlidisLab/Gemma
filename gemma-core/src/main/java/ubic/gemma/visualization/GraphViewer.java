@@ -83,12 +83,12 @@ import cern.colt.list.ObjectArrayList;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
-import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.ontology.OntologyTerm;
 
 public class GraphViewer implements PropertyChangeListener,ActionListener, WindowListener  {
 	private JFileChooser ed = null;
-	private Map<OntologyEntry, Integer> goTermsCounter = null;
+	private Map<OntologyTerm, Integer> goTermsCounter = null;
 	private static String SelectedGoTerm = "";
 	
 	private Visualization vis = new Visualization();;
@@ -275,10 +275,10 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 			treeIds.add(((TreeNode)treeNode).id);
 		}
 		goTermsCounter = MetaLinkFinder.computeGOOverlap(treeIds, 20);
-		for(OntologyEntry ontologyEntry:goTermsCounter.keySet()){
-			int num = goTermsCounter.get(ontologyEntry);
-			System.err.println("("+num+") " + ontologyEntry.getValue()+":"+ ontologyEntry.getDescription());
-			if(SelectedGoTerm.length() == 0) SelectedGoTerm = ontologyEntry.getValue();
+		for(OntologyTerm ontologyTerm:goTermsCounter.keySet()){
+			int num = goTermsCounter.get(ontologyTerm);
+			System.err.println("("+num+") " + ontologyTerm.getTerm()+":"+ ontologyTerm.getComment());
+			if(SelectedGoTerm.length() == 0) SelectedGoTerm = ontologyTerm.getTerm();
 		}
 		Map<Long, Node> gene2Node = new HashMap<Long, Node>();
 		g = new Graph();
@@ -296,9 +296,9 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 					else node.setString(NODETYPE, "N");
 
 					String goTerms = "";
-					Collection<OntologyEntry> goEntries = MetaLinkFinder.getGoTerms(gene);
-					for(OntologyEntry ontologyEntry:goEntries){
-						goTerms = goTerms + ontologyEntry.getValue()+";";
+					Collection<OntologyTerm> goEntries = MetaLinkFinder.getGoTerms(gene);
+					for(OntologyTerm ontologyTerm:goEntries){
+						goTerms = goTerms + ontologyTerm.getTerm()+";";
 					}
 					node.setString(NODEATTR, new String(goTerms));
 					gene2Node.put(gene.getId(), node);
@@ -410,11 +410,11 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 			group.add(button1);
 			group.add(button2);
 		}else{
-			for(OntologyEntry ontologyEntry:goTermsCounter.keySet()){
-				int num = goTermsCounter.get(ontologyEntry);
+			for(OntologyTerm ontologyTerm:goTermsCounter.keySet()){
+				int num = goTermsCounter.get(ontologyTerm);
 				//info.add(new JLabel("("+num+") " + ontologyEntry.getValue()+":"+ ontologyEntry.getDescription()));
-				JRadioButton button = new JRadioButton("("+num+") " + ontologyEntry.getValue());
-				button.setActionCommand(ontologyEntry.getValue());
+				JRadioButton button = new JRadioButton("("+num+") " + ontologyTerm.getTerm());
+				button.setActionCommand(ontologyTerm.getTerm());
 				button.addActionListener(action);
 				info.add(button);
 				group.add(button);

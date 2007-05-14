@@ -22,33 +22,26 @@ package ubic.gemma.apps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import javax.swing.JFrame;
-
-import no.uib.cipr.matrix.GivensRotation;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
-import cern.colt.list.ObjectArrayList;
-
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
-import ubic.gemma.analysis.linkAnalysis.GraphVisualization;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
-import ubic.gemma.analysis.ontology.GeneOntologyService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.visualization.GraphViewer;
+import cern.colt.list.ObjectArrayList;
 
 /**
  * @author xwan
@@ -267,7 +260,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), testNode);
             GraphViewer gviewer1 = new GraphViewer(leafNodes, false);
             gviewer1.run();
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6, 6 );
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6);
             freFinder.find(leafNodes);
             watch.stop();
             log.info( "Spend " + watch.getTime()/1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );

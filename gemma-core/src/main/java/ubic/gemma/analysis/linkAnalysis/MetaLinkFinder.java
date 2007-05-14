@@ -19,12 +19,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.analysis.ontology.GeneOntologyService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -438,7 +438,7 @@ public class MetaLinkFinder {
     	return true;
     }
     //rank: the number of top ranked GO terms to return
-    public static Map<OntologyEntry, Integer> computeGOOverlap(Collection<Long> treeIds, int rank){
+    public static Map<OntologyTerm, Integer> computeGOOverlap(Collection<Long> treeIds, int rank){
     	Collection<Gene> genes = new HashSet<Gene>();
     	for(Long treeId:treeIds){
             int row = (int)(treeId/shift);
@@ -446,49 +446,49 @@ public class MetaLinkFinder {
             genes.add(getRowGene(row));
             genes.add(getColGene(col));
     	}
-    	Map<OntologyEntry, Integer> res = new HashMap<OntologyEntry, Integer>();
+    	Map<OntologyTerm, Integer> res = new HashMap<OntologyTerm, Integer>();
     	ObjectArrayList counter = new ObjectArrayList(rank);
     	for(int i = 0; i < counter.size(); i++) counter.add(new Integer(0));
     	for(Gene gene:genes){
-    		Collection<OntologyEntry> goEntries = MetaLinkFinder.getGoTerms(gene);
-    		for(OntologyEntry goEntry:goEntries){
+    		Collection<OntologyTerm> goEntries = MetaLinkFinder.getGoTerms(gene);
+    		for(OntologyTerm goEntry:goEntries){
     			Integer goNum = new Integer(1);
 				if(res.containsKey(goEntry)){
     				goNum = res.get(goEntry);
     				goNum = goNum + 1;
     				res.put(goEntry, goNum);
     			}else{
-    				res.put((OntologyEntry) goEntry, goNum);
+    				res.put((OntologyTerm) goEntry, goNum);
     			}
     		}
     	}
     	if(rank >= res.keySet().size()) return res;
-    	for(OntologyEntry ontologyEntry:res.keySet()){
-    		Integer goNum = res.get(ontologyEntry);
+    	for(OntologyTerm ontologyTerm:res.keySet()){
+    		Integer goNum = res.get(ontologyTerm);
     		counter.add(goNum);
     	}
     	counter.sort();
     	Integer threshold = (Integer)counter.get(counter.size() - rank);
-    	Collection<OntologyEntry> removed = new HashSet<OntologyEntry>();
-    	for(OntologyEntry ontologyEntry:res.keySet()){
-    		Integer goNum = res.get(ontologyEntry);
+    	Collection<OntologyTerm> removed = new HashSet<OntologyTerm>();
+    	for(OntologyTerm ontologyTerm:res.keySet()){
+    		Integer goNum = res.get(ontologyTerm);
     		if(goNum < threshold)
-    			removed.add(ontologyEntry);
+    			removed.add(ontologyTerm);
     	}
-    	for(OntologyEntry ontologyEntry:removed)
-    		res.remove(ontologyEntry);	
+    	for(OntologyTerm ontologyTerm:removed)
+    		res.remove(ontologyTerm);	
     	return res;
     }
-    public static Collection<OntologyEntry> getGoTerms(Gene gene){
-    	Collection<OntologyEntry> annotatedGoEntries = MetaLinkFinder.gene2GoAssociationService.findByGene(gene); 
-    	Collection<OntologyEntry> allGoEntriesInBP = new HashSet<OntologyEntry>();
-    	Collection<OntologyEntry> useless = new HashSet<OntologyEntry>();
-    	for(OntologyEntry entry:annotatedGoEntries){
-    		if(entry.getCategory().toUpperCase().contains("BIOLOGICAL_PROCESS")){
-    			Collection<OntologyEntry> parentEntries = MetaLinkFinder.geneOntologyService.getAllParents(entry);
+    public static Collection<OntologyTerm> getGoTerms(Gene gene){
+    	Collection<OntologyTerm> annotatedGoEntries = MetaLinkFinder.gene2GoAssociationService.findByGene(gene); 
+    	Collection<OntologyTerm> allGoEntriesInBP = new HashSet<OntologyTerm>();
+    	Collection<OntologyTerm> useless = new HashSet<OntologyTerm>();
+    	for(OntologyTerm entry:annotatedGoEntries){
+    		if(entry.getLabel().toUpperCase().contains("BIOLOGICAL_PROCESS")){
+    			Collection<OntologyTerm> parentEntries = MetaLinkFinder.geneOntologyService.getAllParents(entry);
    				allGoEntriesInBP.add(entry);
-   				for(OntologyEntry parentEntry:parentEntries){
-   					if(parentEntry.getAccession() != null && !parentEntry.getAccession().contains("GO:0008150")){
+   				for(OntologyTerm parentEntry:parentEntries){
+   					if(geneOntologyService.asRegularGoId( parentEntry ) != null && !geneOntologyService.asRegularGoId( parentEntry ).contains("GO:0008150")){
    						allGoEntriesInBP.add(parentEntry);
    					}
    				}
@@ -501,9 +501,9 @@ public class MetaLinkFinder {
     	Collection<Long> geneIds = new HashSet<Long>();
     	geneIds.add(gene2.getId());
     	try{
-    		Map<Long, Collection<OntologyEntry>> overlapMap = MetaLinkFinder.geneOntologyService.calculateGoTermOverlap(gene1, geneIds);
+    		Map<Long, Collection<OntologyTerm>> overlapMap = MetaLinkFinder.geneOntologyService.calculateGoTermOverlap(gene1, geneIds);
     		if(overlapMap != null){
-    			Collection<OntologyEntry> overlapGOTerms = overlapMap.get(gene2.getId()); 
+    			Collection<OntologyTerm> overlapGOTerms = overlapMap.get(gene2.getId()); 
     			if(overlapGOTerms != null) res = overlapGOTerms.size();
     		}
     	}catch(Exception e){
