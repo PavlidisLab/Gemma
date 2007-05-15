@@ -18,9 +18,9 @@
 
 
 <title><fmt:message key="mainMenu.title" /></title>
-<table class="datasummary">
+<table class="datasummary" >
 	<tr>
-		<td colspan=2>
+		<td colspan="2">
 			<b>Data Summary</b>
 		</td>
 	</tr>

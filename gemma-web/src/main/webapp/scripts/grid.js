@@ -69,7 +69,7 @@ var GridUI = function() {
 	return {
 		init : function() {
 			initDataSource();
-			ds.load({params:{start:0, limit:22}});			
+			ds.load(null);			
 			buildGrid();
 		},
 		

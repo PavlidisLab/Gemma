@@ -6,7 +6,7 @@
 
 
 <span class="left"><a href="http://www.ubc.ca"><img style="padding:0 20px" src="<c:url value="/styles/antisense/images/logo_ubc.jpg"/>" /></a></span>
-<span class="left">Copyright &copy; 2004 - 2007 &nbsp;|&nbsp;Gemma version ${appConfig["version"]} </span>
+<span class="left">Copyright &copy; 2007 &nbsp;|&nbsp;Gemma version ${appConfig["version"]} </span>
 <c:if test="${pageContext.request.remoteUser != null}">
 	<span class="right"> | <fmt:message key="user.status" /> <authz:authentication operation="username" /> | <a
 		href="<c:url value="/logout.html"/>"> <fmt:message key="user.logout" /> </a> </span>

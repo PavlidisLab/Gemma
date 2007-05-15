@@ -1,13 +1,14 @@
 Ext.tree.DwrTreeLoader = function(config){
+	//Ext.tree.DwrTreeLoader.superclass.constructor.call(this);
     this.baseParams = {};
     this.requestMethod = "POST";
     Ext.apply(this, config);
-    
-    this.events = {
+    	
+    this.addEvents({
         "beforeload" : true,
         "load" : true,
         "loadexception" : true
-    };
+    });
 };
  
 
@@ -15,9 +16,9 @@ Ext.tree.DwrTreeLoader = function(config){
 Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
 
     requestData : function(node, callback){
-    	this.node = node;
         if(this.fireEvent("beforeload", this, node, callback) !== false){
-            var params = this.getParams(node);
+            var args = [];
+            args.push(node);
             var cb = {
                 success: this.read,
                 failure: this.handleFailure,
@@ -25,7 +26,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         		argument: {callback: callback, node: node}
             };
            var proxy = new Ext.data.DWRProxy( this.dataUrl, cb);
-           this.transId = proxy.load(params, this, "foo", this );
+           this.transId = proxy.load(null, this, "foo", this, args );
             
         } else {
             // if the load is cancelled, make sure we notify 
@@ -36,11 +37,13 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         }
     },
     
-    read : function( data ){
+    read : function( data, attr ){
+    	var node = attr[0];
         this.transId = false;
-        this.processResponse(data, this.node, "foo" ); // no callback.
-        this.fireEvent("load", this, this.node, data);
-        return this.node; // need to complete the Reader interface but this isn't really used?
+        this.processResponse(data, node, "foo" ); // no callback.
+        this.fireEvent("load", this, node, data);
+        node.fireEvent("load", this, data);
+       // return node; // need to complete the Reader interface but this isn't really used?
     },
     
     abort : function(){
@@ -50,27 +53,40 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         }
     },
     
-    createNode : function(attr){
+    createNode : function(data){
         if(this.applyLoader !== false){
-            attr.loader = this;
+            data.loader = this;
         }
-        if(typeof attr.uiProvider == 'string'){
+        if(data.uiProvider !== undefined && typeof data.uiProvider == 'string'){
         	// I'm not sure what valid settings of this would be.
-           attr.uiProvider = this.uiProviders[attr.uiProvider] || eval(attr.uiProvider);
+           data.uiProvider = this.uiProviders[data.uiProvider] || eval(data.uiProvider);
         }
-        return(attr.leaf ?
-                        new Ext.tree.TreeNode(attr) : 
-                        new Ext.tree.AsyncTreeNode(attr));  
+        
+        var n = (data.leaf ?
+                        new Ext.tree.TreeNode(data) : 
+                        new Ext.tree.TreeNode(data));  
+                        
+        if (n.attributes.children !== undefined ) {
+        	 for(var i = 0, len = n.attributes.children.length; i < len; i++){
+	           var newnode =  this.createNode(n.attributes.children[i]);
+               n.appendChild( newnode );
+	        }
+        }
+        
+      
+        return n;
+       
     },
  
     processResponse : function(data, node, callback){
         try {
-        	node.attributes.children = [];
 	        for(var i = 0, len = data.length; i < len; i++){
-	        	newnode =  this.createNode(data[i]);
-               node.appendChild( newnode );
-               node.attributes.children[i] = newnode; // ??
+	        	var newnode =  this.createNode(data[i]);
+	        	if (newnode) {
+	            	node.appendChild( newnode );
+	        	}
 	        }
+            node.loadComplete(true, true, "foo");
 	        if(typeof callback == "function"){
                 callback(this, node);
             }

@@ -10,11 +10,18 @@
 		<title><decorator:title /> | <fmt:message key="webapp.name" />
 		</title>
 
+
+		<link href="<c:url value='/styles/ext-all.css'/>" media="screen"
+			rel="stylesheet" type="text/css" />
+			
 		<link rel="stylesheet" type="text/css" media="all"
 			href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 		<link rel="stylesheet" type="text/css" media="print"
 			href="<c:url value='/styles/${appConfig["theme"]}/print.css'/>" />
 		<!--[if gte IE 6]><link rel="stylesheet" type="text/css" media="screen" href="/styles/css/ie-standards.css" /><![endif]-->
+
+
+
 		<script type="text/javascript"
 			src="<c:url value='/scripts/helptip.js'/>"></script>
 		<script type="text/javascript"
@@ -33,7 +40,7 @@
 		<div id="page">
 
 			<div id="header" class="clearfix">
-				<jsp:include page="/common/header.jsp" />
+				<jsp:include page="/common/header.inner.jsp" />
 			</div>
 
 			<div id="content" class="clearfix">

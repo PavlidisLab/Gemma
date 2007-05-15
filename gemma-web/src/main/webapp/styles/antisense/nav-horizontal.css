@@ -12,10 +12,10 @@
     }
     div#nav div.wrapper {
         position: absolute;
-        left: 0;
+        left: 60px;
         bottom: 0;
     }
-
+    
     div#nav ul {
         width: auto;
 

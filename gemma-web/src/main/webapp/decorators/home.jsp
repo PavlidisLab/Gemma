@@ -11,7 +11,8 @@
 		<%@ include file="/common/meta.jsp"%>
 		<title><decorator:title /> | <fmt:message key="webapp.name" />
 		</title>
-
+		
+		<link href="<c:url value='/styles/ext-all.css'/>" media="screen" rel="stylesheet" type="text/css" />
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 		<link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/${appConfig["theme"]}/print.css'/>" />
 		<!--[if gte IE 6]><link rel="stylesheet" type="text/css" media="screen" href="/styles/css/ie-standards.css" /><![endif]-->
@@ -27,7 +28,7 @@
 
 		<div id="page">
 
-			<div id="header" class="clearfix">
+			<div id="homeheader" class="clearfix">
 				<jsp:include page="/common/header.jsp" />
 			</div>
 

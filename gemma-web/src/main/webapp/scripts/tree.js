@@ -1,19 +1,16 @@
 Ext.onReady(function(){
-    // shorthand
-    var Tree = Ext.tree;
-    
-    var tree = new Tree.TreePanel('tree-div', {
+
+    var tree = new Ext.tree.TreePanel('tree-div', {
         animate:true, 
-        loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTerms}),
-        enableDD:true,
-        containerScroll: true
+        loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTerms})
     });
 
     // set the root node
-    var root = new Tree.AsyncTreeNode({
-        text: 'Ext JS',
+    var root = new Ext.tree.AsyncTreeNode({
+        text: 'Top of the tree',
         draggable:false,
-        id:'source'
+        allowChildre:true,
+        id:'root'
     });
     tree.setRootNode(root);
 
