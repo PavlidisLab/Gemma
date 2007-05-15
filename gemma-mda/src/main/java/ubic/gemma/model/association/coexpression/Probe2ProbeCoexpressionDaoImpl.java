@@ -320,7 +320,13 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     @Override
-    protected void handleShuffle( QuantitationType qt, String taxon ) throws Exception {
+    protected void handleShuffle( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected void handleShuffle( String taxon ) throws Exception {
         // TODO Auto-generated method stub
         
     }
