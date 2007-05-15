@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  * @see ubic.gemma.model.expression.designElement.CompositeSequenceService
  */
-public class CompositeSequenceServiceImpl extends
+public class CompositeSequenceServiceImpl extends 
         ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase {
 
     Log log = LogFactory.getLog( this.getClass() );
@@ -262,6 +262,14 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected Map handleGetGenes( Collection sequences ) throws Exception {
         return this.getCompositeSequenceDao().getGenes( sequences );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoad(java.lang.Long)
+     */
+    @Override
+    protected CompositeSequence handleLoad( Long id ) throws Exception {
+     return ( CompositeSequence ) this.getCompositeSequenceDao().load( id );
     }
 
 }
