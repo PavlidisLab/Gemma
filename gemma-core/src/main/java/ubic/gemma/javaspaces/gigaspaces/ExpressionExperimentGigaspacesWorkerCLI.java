@@ -22,6 +22,7 @@ import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
@@ -47,12 +48,17 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
 
     private static Log log = LogFactory.getLog( ExpressionExperimentGigaspacesWorkerCLI.class );
 
-    // member for gigaspaces template
     private GigaSpacesTemplate template;
-    // The delegator worker
+
     private DelegatingWorker iTestBeanWorker;
 
     private Thread itbThread;
+
+    private IJSpace space = null;
+
+    private GemmaSpacesGenericEntry genericEntry = null;
+
+    private Long workerRegistrationId = null;
 
     /*
      * (non-Javadoc)
@@ -72,6 +78,10 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
      */
     protected void init() throws Exception {
 
+        /* register the shutdown hook so cleanup occurs even if VM is incorrectly terminated */
+        ShutdownHook shutdownHook = new ShutdownHook();
+        Runtime.getRuntime().addShutdownHook( shutdownHook );
+
         GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
         ApplicationContext updatedContext = gigaspacesUtil
                 .addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
@@ -81,8 +91,13 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
 
         template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
         iTestBeanWorker = ( DelegatingWorker ) updatedContext.getBean( "testBeanWorker" );
-        IJSpace space = ( IJSpace ) template.getSpace();
-        Lease lease = space.write( new GemmaSpacesGenericEntry(), null, 60000000 );
+        space = ( IJSpace ) template.getSpace();
+
+        workerRegistrationId = RandomUtils.nextLong();
+        genericEntry = new GemmaSpacesGenericEntry();
+        genericEntry.message = ExpressionExperimentTaskImpl.class.getSimpleName();
+        genericEntry.registrationId = workerRegistrationId;
+        Lease lease = space.write( genericEntry, null, 60000000 );
         if ( lease == null ) log.error( "Null Lease returned" );
         // TODO set lease time to large number so it never expires (or only when the
         // worker shuts down. That is, do some "worker cleanup" when it shuts down.
@@ -148,6 +163,28 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
     @Override
     protected void processOptions() {
         super.processOptions();
+    }
+
+    /**
+     * A worker shutdown hook.
+     * 
+     * @author keshav
+     */
+    public class ShutdownHook extends Thread {
+        // TODO move me to a base task.
+        public void run() {
+            log.info( "Worker shut down.  Running shutdown hook ... cleaning up registered entries for this worker." );
+            if ( space != null ) {
+                try {
+                    space.clear( genericEntry, null );// FIXME use take, not clear
+                } catch ( Exception e ) {
+
+                    log.error( "Error clearing the generic entry " + genericEntry + "for task " + genericEntry.message
+                            + "from space." );
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }
