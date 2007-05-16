@@ -110,4 +110,17 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
             assertTrue( workersRunning );
     }
 
+    /**
+     * Tests the number of workers registered.
+     */
+    public void testNumWorkersRegistered() {
+        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
+        ApplicationContext updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
+
+        int count = gigaspacesUtil.numWorkersRegistered( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        log.info( count );
+
+    }
+
 }
