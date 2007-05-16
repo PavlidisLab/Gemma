@@ -28,11 +28,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.LongType;
+import org.hibernate.Session;
+import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -318,11 +324,304 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         return ( Integer ) result;
 
     }
+     public class Link{
+		private Long id = 0L;
+		private Double score = 0.0;
+		private Double pvalue = 0.0;
+		private Long second_vector_fk = 0L;
+		private Long first_vector_fk = 0L;
+		private Long quantitation_type_fk = 0L;
+		private Long source_fk = 0L;
+		private Long souce_analysis_fk = 0L;
+		private Long human_gene_co_expression = 0L;
+		private Long first_design_element_fk = 0L;
+		private Long second_design_element_fk = 0L;
+		private Long expression_experiment_fk = 0L;
+		Link(){
+		}
+		public Long getExpression_experiment_fk() {
+			return expression_experiment_fk;
+		}
+		public void setExpression_experiment_fk(Long expression_experiment_fk) {
+			this.expression_experiment_fk = expression_experiment_fk;
+		}
+		public Long getFirst_design_element_fk() {
+			return first_design_element_fk;
+		}
+		public void setFirst_design_element_fk(Long first_design_element_fk) {
+			this.first_design_element_fk = first_design_element_fk;
+		}
+		public Long getFirst_vector_fk() {
+			return first_vector_fk;
+		}
+		public void setFirst_vector_fk(Long first_vector_fk) {
+			this.first_vector_fk = first_vector_fk;
+		}
+		public Long getHuman_gene_co_expression() {
+			return human_gene_co_expression;
+		}
+		public void setHuman_gene_co_expression(Long human_gene_co_expression) {
+			this.human_gene_co_expression = human_gene_co_expression;
+		}
+		public Long getId() {
+			return id;
+		}
+		public void setId(Long id) {
+			this.id = id;
+		}
+		public Double getPvalue() {
+			return pvalue;
+		}
+		public void setPvalue(Double pvalue) {
+			this.pvalue = pvalue;
+		}
+		public Long getQuantitation_type_fk() {
+			return quantitation_type_fk;
+		}
+		public void setQuantitation_type_fk(Long quantitation_type_fk) {
+			this.quantitation_type_fk = quantitation_type_fk;
+		}
+		public Double getScore() {
+			return score;
+		}
+		public void setScore(Double score) {
+			this.score = score;
+		}
+		public Long getSecond_design_element_fk() {
+			return second_design_element_fk;
+		}
+		public void setSecond_design_element_fk(Long second_design_element_fk) {
+			this.second_design_element_fk = second_design_element_fk;
+		}
+		public Long getSecond_vector_fk() {
+			return second_vector_fk;
+		}
+		public void setSecond_vector_fk(Long second_vector_fk) {
+			this.second_vector_fk = second_vector_fk;
+		}
+		public Long getSouce_analysis_fk() {
+			return souce_analysis_fk;
+		}
+		public void setSouce_analysis_fk(Long souce_analysis_fk) {
+			this.souce_analysis_fk = souce_analysis_fk;
+		}
+		public Long getSource_fk() {
+			return source_fk;
+		}
+		public void setSource_fk(Long source_fk) {
+			this.source_fk = source_fk;
+		}
+		public String toString(){
+			String res = "( " +	id + "," + score + "," + pvalue + "," + second_vector_fk + "," + first_vector_fk + "," + quantitation_type_fk
+			+ "," +	source_fk + "," + souce_analysis_fk + "," + human_gene_co_expression + "," + first_design_element_fk + "," + second_design_element_fk
+			+ "," + expression_experiment_fk + ") ";
+			return res;
+		}
+    }
+    private String getTableName(String taxon){
+        int tableIndex = -1;
+        String[] tableNames = new String[] { "HUMAN_PROBE_CO_EXPRESSION", "MOUSE_PROBE_CO_EXPRESSION",
+                "RAT_PROBE_CO_EXPRESSION", "OTHER_PROBE_CO_EXPRESSION" };
+        
+        if(taxon.equalsIgnoreCase("human"))
+        	tableIndex = 0;
+        else if(taxon.equalsIgnoreCase("mouse"))
+        	tableIndex = 1;
+        else if(taxon.equalsIgnoreCase("rat"))
+        	tableIndex = 2;
+        else
+        	tableIndex = 3;
+        return tableNames[tableIndex];
+    }
+    
+    private Map<Long, Collection<Long>> getCs2GenesMap(Collection<Long> csIds){
+    	Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+    	if(csIds == null || csIds.size() == 0) return cs2genes;
+    	int count = 0;
+    	int CHUNK_LIMIT = 300;
+    	int total = csIds.size();
+    	Collection<Long> idsInOneChunk = new HashSet<Long>();
+        Session session = getSessionFactory().openSession();
+        
+    	for(Long csId:csIds){
+    		idsInOneChunk.add(csId);
+    		count++;
+    		total--;
+    		if(count == CHUNK_LIMIT || total == 0){
+    			String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE " + 
+    			" CS in (" +
+    			StringUtils.join( idsInOneChunk.iterator(), "," ) + 
+    			")";
+    			
+    	        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+    	        queryObject.addScalar( "id", new LongType() );
+    	        queryObject.addScalar( "geneId", new LongType() );
 
+    	        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+    	        while ( scroll.next() ) {
+    	        	Long id = scroll.getLong( 0 );
+    	        	Long geneId = scroll.getLong( 1 );
+	        		Collection<Long> geneIds = cs2genes.get(id);
+	        		if(geneIds == null){
+	        			geneIds = new HashSet<Long>();
+	        			cs2genes.put( id, geneIds );
+	        		}
+   	        		geneIds.add(geneId);
+    	        }
+    			count = 0;
+    			idsInOneChunk.clear();
+    		}
+    	}
+    	session.close();
+    	return cs2genes;
+    }
+
+    private Collection<Link> getLinks(ExpressionExperiment expressionExperiment, String taxon){
+        String queryString = "SELECT * FROM " + getTableName(taxon) + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId();
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        
+        queryObject.addScalar( "ID", new LongType() );
+        queryObject.addScalar( "SCORE", new DoubleType() );
+        queryObject.addScalar( "PVALUE", new DoubleType() );
+        queryObject.addScalar( "SECOND_VECTOR_FK", new LongType() );
+        queryObject.addScalar( "FIRST_VECTOR_FK", new LongType() );
+        queryObject.addScalar( "QUANTITATION_TYPE_FK", new LongType() );
+        queryObject.addScalar( "SOURCE_FK", new LongType() );
+        queryObject.addScalar( "SOURCE_ANALYSIS_FK", new LongType() );
+        queryObject.addScalar( "HUMAN_GENE_CO_EXPRESSION_FK", new LongType() );
+        queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+        queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+        queryObject.addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
+
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        Collection<Link> links = new ArrayList<Link>();
+        while ( scroll.next() ) {
+        		Long id = scroll.getLong(0);
+        		Double score = scroll.getDouble(1);
+        		Double pvalue = scroll.getDouble(2);
+        		Long second_vector_fk = scroll.getLong(3);
+        		Long first_vector_fk = scroll.getLong(4);
+        		Long quantitation_type_fk = scroll.getLong(5);
+        		Long source_fk = scroll.getLong(6);
+        		Long souce_analysis_fk = scroll.getLong(7);
+        		Long human_gene_co_expression = scroll.getLong(8);
+        		Long first_design_element_fk = scroll.getLong(9);
+        		Long second_design_element_fk = scroll.getLong(10);
+        		Long expression_experiment_fk = scroll.getLong(11);
+        		
+        		Link oneLink = new Link();
+        		oneLink.setId(id);
+        		oneLink.setScore(score);
+        		oneLink.setPvalue(pvalue);
+        		oneLink.setSecond_vector_fk(second_vector_fk);
+        		oneLink.setFirst_vector_fk(first_vector_fk);
+        		oneLink.setQuantitation_type_fk(quantitation_type_fk);
+        		oneLink.setSource_fk(source_fk);
+        		oneLink.setSouce_analysis_fk(souce_analysis_fk);
+        		oneLink.setHuman_gene_co_expression(human_gene_co_expression);
+        		oneLink.setFirst_design_element_fk(first_design_element_fk);
+        		oneLink.setSecond_design_element_fk(second_design_element_fk);
+        		oneLink.setExpression_experiment_fk(expression_experiment_fk);
+        		links.add(oneLink);
+        }
+        session.close();
+        return links;
+    }
+    private Collection<Link> shuffleLinks(Collection<Link> links,Map<Long, Collection<Long>> cs2genes){
+    	Collection<Link> specificLinks = new ArrayList<Link>();
+    	Collection<Link> nonRedudantLinks = new ArrayList<Link>();
+    	Collection<Long> mergedCsIds = new HashSet<Long>();
+    	long maximumId = 0;
+    	for(Link link:links){
+    		Collection<Long> firstGene = cs2genes.get(link.getFirst_design_element_fk());
+    		Collection<Long> secondGene = cs2genes.get(link.getSecond_design_element_fk());
+    		if(firstGene == null || secondGene == null){
+    			log.error("inconsistent links for csId " + link.getFirst_design_element_fk() + ", " + link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
+    			continue;
+    		}
+    		if(firstGene.size() > 1 || secondGene.size() > 1) continue; //non-specific
+    		if(link.getFirst_design_element_fk() > maximumId) maximumId = link.getFirst_design_element_fk();
+    		if(link.getSecond_design_element_fk() > maximumId) maximumId = link.getSecond_design_element_fk();
+    		specificLinks.add(link);
+    	}
+    	maximumId = maximumId + 1;
+    	if(maximumId*maximumId > Long.MAX_VALUE){
+    		log.warn("The maximum key value is too big. the redundant detection may not correct");
+    		maximumId = (long)Math.sqrt((double)Long.MAX_VALUE);
+    	}
+    	//remove redundancy
+    	for(Link link:specificLinks){
+    		Long forwardMerged = link.getFirst_design_element_fk()*maximumId + link.getSecond_design_element_fk();
+    		Long backwardMerged = link.getSecond_design_element_fk()*maximumId + link.getFirst_design_element_fk();
+    		if(!mergedCsIds.contains(forwardMerged) && !mergedCsIds.contains(backwardMerged)){
+    			nonRedudantLinks.add(link);
+    			mergedCsIds.add(forwardMerged);
+    		}
+    	}
+    	//Do shuffling
+    	Random random = new Random();
+    	Object[] linksInArray = nonRedudantLinks.toArray();
+    	for(int i = linksInArray.length - 1; i >= 0; i--){
+    		int pos = random.nextInt(i+1);
+    		Long tmpId = ((Link)linksInArray[pos]).getSecond_design_element_fk();
+    		((Link)linksInArray[pos]).setSecond_design_element_fk(((Link)linksInArray[i]).getSecond_design_element_fk());
+    		((Link)linksInArray[i]).setSecond_design_element_fk(tmpId);
+    	}
+    	return nonRedudantLinks;
+    }
+    private void saveLinks(Collection<Link> links, String taxon){
+        Session session = getSessionFactory().openSession();
+        String  queryString = "INSERT INTO " + getTableName(taxon) + "() " + " VALUES ";
+        for(Link link:links){
+        	queryString = queryString + link + " , ";
+        }
+        queryString = queryString + ";";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString ); // for native query.
+        queryObject.executeUpdate();
+		session.flush();
+		session.clear();
+    }
+    private void saveShuffledLinks(Collection<Link> shuffledLinks, ExpressionExperiment expressionExperiment, String taxon){
+    	if(shuffledLinks == null || shuffledLinks.size() == 0) return;
+    	//delete links first
+        String queryString = "DELETE FROM " + getTableName(taxon) + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId();
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        //queryObject.executeUpdate();
+        session.flush();
+        
+    	int count = 0;
+    	int CHUNK_LIMIT = 300;
+    	int total = shuffledLinks.size();
+    	Collection<Link> linksInOneChunk = new ArrayList<Link>();
+    	for(Link link:shuffledLinks){
+    		linksInOneChunk.add(link);
+    		count++;
+    		total--;
+    		if(count == CHUNK_LIMIT || total == 0){
+    			//saveLinks(linksInOneChunk,taxon);
+    			queryString = "INSERT INTO " + getTableName(taxon) + "() " + " VALUES " + StringUtils.join(linksInOneChunk.iterator(), ",")+";"; 
+    			queryObject = session.createSQLQuery( queryString ); // for native query.
+    			session.flush();
+    			count = 0;
+    			linksInOneChunk.clear();
+    		}
+    	}
+    	session.close();
+    }
     @Override
     protected void handleShuffle( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
         // TODO Auto-generated method stub
-        
+        Set<Long> csIds = new HashSet<Long>();
+        Collection<Link> links = getLinks(expressionExperiment, taxon);
+        for(Link link:links){
+        	csIds.add(link.getFirst_design_element_fk());
+        	csIds.add(link.getSecond_design_element_fk());
+        }
+        Map<Long, Collection<Long>> cs2genes = getCs2GenesMap(csIds);
+        Collection<Link> shuffledLinks = shuffleLinks(links, cs2genes);
+        saveShuffledLinks(shuffledLinks,expressionExperiment ,taxon);
     }
 
     @Override
