@@ -627,6 +627,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @Override
     protected void handleShuffle( String taxon ) throws Exception {
         // TODO Auto-generated method stub
-        
+        // for all EE.
     }
 }
