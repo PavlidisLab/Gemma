@@ -117,5 +117,13 @@ public class GeneOntologyServiceTest extends TestCase {
         }
         assertEquals( 28, terms.size() );
     }
+    
+    public final void testAsRegularGoId() throws Exception {
+        String id = "GO:0005762";
+        OntologyTerm termForId = GeneOntologyService.getTermForId( id );
+        assertNotNull(termForId);
+        String formatedId = GeneOntologyService.asRegularGoId( termForId );
+        assertEquals(id, formatedId);
+    }
 
 }
