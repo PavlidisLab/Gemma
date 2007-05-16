@@ -20,12 +20,17 @@
 package ubic.gemma.ontology;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * @author klc
  */
 
+/**
+ * @author klc
+ *
+ */
 public class OntologyTreeNode {
 
     private boolean expanded;
@@ -40,7 +45,9 @@ public class OntologyTreeNode {
     private List<OntologyTreeNode> children;
     private String uiProvider;
 
-    public OntologyTreeNode( String id ) {
+ 
+    public OntologyTreeNode( ) {
+        super();
         this.expanded = false;
         this.isTarget = false;
         this.draggable = false;
@@ -49,9 +56,27 @@ public class OntologyTreeNode {
         this.allowDrop = false;
         this.leaf = false;
         this.text = "ME";
-        this.id = id;
+        this.id = "21";
         children = new ArrayList<OntologyTreeNode>();
 
+    }
+    
+    public OntologyTreeNode(String id) { 
+        this();
+        this.id = id;
+
+    }
+    
+    /**
+     * @param term
+     * Doesn't fill in the child assocations
+     */
+    public OntologyTreeNode(OntologyTerm term){
+        this();
+        
+        this.id = term.getUri();
+        this.text = term.getTerm(); 
+       
     }
 
     public void appendChild( OntologyTreeNode child ) {

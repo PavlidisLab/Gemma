@@ -19,20 +19,55 @@
 
 package ubic.gemma.ontology;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
+
+import ubic.gemma.util.ConfigUtils;
+
+import com.hp.hpl.jena.ontology.OntModelSpec;
 
 /**
+ * Holds a complete copy of the GeneOntology. This gets loaded on startup.
+ * 
  * @author klc
+ * @version $Id: MgedOntologyService.java
+ * @spring.bean id="mgedOntologyService"
  */
-public class MgedOntologyService {
 
-    protected static final Log logger = LogFactory.getLog( MgedOntologyService.class );
+public class MgedOntologyService implements InitializingBean {
 
-    // public
+    protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
+
+    // map of uris to terms
+    private static Map<String, OntologyTerm> terms;
+    
+
+    private static final AtomicBoolean ready = new AtomicBoolean( false );
+
+    private static final AtomicBoolean running = new AtomicBoolean( false );
+
+    private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
+    private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    
+    
+    public void afterPropertiesSet() throws Exception {
+        log.debug( "entering AfterpropertiesSet" );
+        if ( running.get() ) {
+            log.warn( "MGED initialization is already running" );
+            return;
+        }
+        init();
+    }
 
     public OntologyDataList getTerm(int start, int count, String orderBy ) {
 
@@ -60,13 +95,109 @@ public class MgedOntologyService {
         
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
         
-        OntologyTreeNode ontologyTreeNodeA = new OntologyTreeNode( "foo" );
+        String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
+        OntologyTerm term = terms.get( id );
+        OntologyTreeNode node = new OntologyTreeNode(term);
+        node.setAllowChildren( true );
         
-        ontologyTreeNodeA.appendChild( new OntologyTreeNode("oobly") );
+        Collection<OntologyTerm> children =  term.getChildren( true );
+        if ((children != null) && (!children.isEmpty())){
+            for(OntologyTerm ot : children){
+                OntologyTreeNode child = new OntologyTreeNode(ot);
+                node.appendChild( child );
+            }
+        }
+
         
-        nodes.add( ontologyTreeNodeA );
-        nodes.add( new OntologyTreeNode( "bar" ) );
+        nodes.add(node );
         return nodes;
     }
+    
+    protected synchronized void init() {
+
+        boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
+
+        // if loading ontologies is disabled in the configuration, return
+        if ( !loadOntology ) {
+            log.info( "Loading Mged is disabled" );
+            return;
+        }
+
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+
+                running.set( true );
+                terms = new HashMap<String, OntologyTerm>();
+                log.info( "Loading mged Ontology..." );
+                StopWatch loadTime = new StopWatch();
+                loadTime.start();
+                //
+                try {
+                    loadTermsInNameSpace( MGED_URL );
+                    log.info( "Gene Ontology Molecular Function loaded, total of " + terms.size() + " items in "
+                            + loadTime.getTime() / 1000 + "s" );
+
+
+                    ready.set( true );
+                    running.set( false );
+
+                    log.info( "Done loading GO" );
+                    loadTime.stop();
+                } catch ( Exception e ) {
+                    log.error( e, e );
+                    ready.set( false );
+                    running.set( false );
+                }
+            }
+
+        } );
+
+        synchronized ( running ) {
+            if ( running.get() ) return;
+            loadThread.start();
+        }
+
+    }
+
+    /**
+     * @param url
+     * @throws IOException
+     */
+    protected void loadTermsInNameSpace( String url ) throws IOException {
+        Collection<OntologyResource> terms = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM );
+        addTerms( terms );
+    }
+
+    /**
+     * Primarily here for testing.
+     * 
+     * @param is
+     * @throws IOException
+     */
+    protected void loadTermsInNameSpace( InputStream is ) throws IOException {
+        Collection<OntologyResource> terms = OntologyLoader.loadMemoryModel( is, null, OntModelSpec.OWL_MEM );
+        addTerms( terms );
+    }
+
+    private void addTerms( Collection<OntologyResource> newTerms ) {
+        if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
+        for ( OntologyResource term : newTerms ) {
+            if ( term.getUri() == null ) continue;
+            if ( term instanceof OntologyTerm ) 
+                terms.put( term.getUri(), ( OntologyTerm ) term );
+        }
+    }
+
+    /**
+     * Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
+     * getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
+     * 
+     * @returns boolean
+     */
+    public synchronized boolean isGeneOntologyLoaded() {
+
+        return ready.get();
+    }
+    
 
 }

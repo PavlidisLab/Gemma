@@ -552,7 +552,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     public static String asRegularGoId( OntologyTerm term ) {
         String uri = term.getUri();
-        return uri.replaceAll( ".*(#.+)", "" ).replace( "_", ":" );
+        return uri.replaceAll( ".*?#", "" ).replace( "_", ":" );
     }
 
     /**
@@ -561,7 +561,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     public static String asRegularGoId( Characteristic term ) {
         String uri = term.getValue();
-        return uri.replaceAll( ".*(#.+)", "" ).replace( "_", ":" );
+        return uri.replaceAll( ".*?#", "" ).replace( "_", ":" );
     }
 
     /**
