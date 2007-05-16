@@ -49,7 +49,6 @@ import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
-import ubic.gemma.ontology.OntologyTools;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file
@@ -126,7 +125,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     public static void main( String[] args ) {
         ArrayDesignGOAnnotationGeneratorCli p = new ArrayDesignGOAnnotationGeneratorCli();
         try {
-           
+
             Exception ex = p.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
@@ -147,13 +146,13 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( err != null ) return err;
 
         int n = 0;
-        while (! goService.isReady()){
-           n++;
-            if ((n % 1000) == 0){
-                log.info("Waiting for ontologies to load");               
+        while ( !goService.isReady() ) {
+            n++;
+            if ( ( n % 1000 ) == 0 ) {
+                log.info( "Waiting for ontologies to load" );
             }
         }
-           
+
         try {
             if ( batchFileName == null ) {
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
@@ -451,10 +450,9 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GoAssociationService
                 .findByGene( gene ) );
 
-        
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-        for(VocabCharacteristic vc : ontos ) {          
-            results.add( this.goService.getTermForId( vc.getValue()) );
+        for ( VocabCharacteristic vc : ontos ) {
+            results.add( this.goService.getTermForId( vc.getValue() ) );
         }
 
         if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return results;
