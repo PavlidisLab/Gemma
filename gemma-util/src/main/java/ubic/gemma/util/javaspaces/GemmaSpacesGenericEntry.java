@@ -43,6 +43,7 @@ public class GemmaSpacesGenericEntry extends MetaDataEntry {
      */
     public String message = null;
     public String host = null;
+    public Long registrationId = null;
 
     /**
      * 
@@ -97,5 +98,23 @@ public class GemmaSpacesGenericEntry extends MetaDataEntry {
      */
     public void setHost( String host ) {
         this.host = host;
+    }
+
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @return Long
+     */
+    public Long getRegistrationId() {
+        return registrationId;
+    }
+
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @param registrationId
+     */
+    public void setRegistrationId( Long registrationId ) {
+        this.registrationId = registrationId;
     }
 }
