@@ -66,7 +66,7 @@ public class BioMaterialFormController extends BaseFormController {
         Long id = Long.parseLong( id_param );
 
         if ( !id.equals( null ) )
-            ba = bioMaterialService.findById( id );
+            ba = bioMaterialService.load( id );
         else
             ba = BioMaterial.Factory.newInstance();
 

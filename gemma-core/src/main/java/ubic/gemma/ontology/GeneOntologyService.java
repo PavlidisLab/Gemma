@@ -105,6 +105,7 @@ public class GeneOntologyService implements InitializingBean {
      * @return null if not found
      */
     public static OntologyTerm getTermForId( String goId ) {
+        if ( terms == null ) return null;
         return terms.get( toUri( goId ) );
     }
 
@@ -116,7 +117,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     public String getTermName( String goId ) {
         OntologyTerm t = getTermForId( goId );
-        if (t == null) return "[Not available]"; // not ready yet?
+        if ( t == null ) return "[Not available]"; // not ready yet?
         return t.getTerm();
     }
 

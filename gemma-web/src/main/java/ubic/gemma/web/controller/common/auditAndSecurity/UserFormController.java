@@ -95,7 +95,7 @@ public class UserFormController extends UserAuthenticatingController {
             try {
                 log.debug( "Creating new " + user );
                 user = new UserUpdateCommand( this.getUserService().create( user.asUser() ) );
-            } catch ( UserExistsException e ) {
+            } catch (  UserExistsException e ) {
                 log.warn( e.getMessage() );
 
                 errors.rejectValue( "userName", "errors.existing.user", new Object[] { user.getUserName(),

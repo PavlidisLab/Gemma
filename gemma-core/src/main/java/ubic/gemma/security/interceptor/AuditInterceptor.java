@@ -96,7 +96,7 @@ public class AuditInterceptor implements MethodInterceptor {
     public void before( Method method, Object[] args, Object target ) {
         Auditable d = null;
 
-        if ( args != null ) { // some don't take args, like 'loadAll' methods.
+        if ( args != null && args.length > 0 ) { // some don't take args, like 'loadAll' methods.
 
             Object object = args[0];
 

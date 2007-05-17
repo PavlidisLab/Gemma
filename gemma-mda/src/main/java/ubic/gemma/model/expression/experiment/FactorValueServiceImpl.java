@@ -23,8 +23,6 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 /**
- * <hr>
- * 
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -70,6 +68,16 @@ public class FactorValueServiceImpl extends ubic.gemma.model.expression.experime
     @Override
     protected FactorValue handleCreate( FactorValue factorValue ) throws Exception {
         return this.getFactorValueDao().create( factorValue );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleLoad(java.lang.Long)
+     */
+    @Override
+    protected FactorValue handleLoad( Long id ) throws Exception {
+        return this.getFactorValueDao().load( id );
     }
 
 }

@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,6 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
-import ubic.gemma.web.taglib.displaytag.StringComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -67,6 +67,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
     private ExpressionExperimentReportService expressionExperimentReportService = null;
     private SearchService searchService;
+
+    private static final Boolean AJAX = true;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -139,7 +141,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return redirectToList( request );
         }
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) {
             return redirectToList( request );
         }
@@ -203,7 +205,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
         Long id = Long.parseLong( idStr );
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         Map m = expressionExperimentService.getQuantitationTypeCountById( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -229,31 +231,37 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
         Long id = Long.parseLong( idStr );
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
 
-        request.setAttribute( "id", id );
-        
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
         for ( BioAssay assay : bioAssays ) {
             Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if (materials != null) {
+            if ( materials != null ) {
                 bioMaterials.addAll( materials );
             }
         }
-        
-        Long numBioMaterials = new Long(bioMaterials.size()); 
-        
+
         ModelAndView mav = new ModelAndView( "bioMaterials" );
-        mav.addObject( "numBioMaterials" , numBioMaterials  );
+        if ( AJAX ) {
+            StringBuilder buf = new StringBuilder();
+            for ( BioMaterial bm : bioMaterials ) {
+                buf.append( bm.getId() );
+                buf.append( "," );
+            }
+            mav.addObject( "bioMaterialIdList", buf.toString().replaceAll( ",$", "" ) );
+        }
+
+        Long numBioMaterials = new Long( bioMaterials.size() );
+        mav.addObject( "numBioMaterials", numBioMaterials );
         mav.addObject( "bioMaterials", bioMaterials );
-        
+
         return mav;
     }
-    
+
     /**
      * shows a list of BioAssays for an expression experiment subset
      * 
@@ -296,7 +304,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new EntityNotFoundException( identifierNotFound );
         }
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
@@ -336,7 +344,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
                     .getFilteredExpressionExperimentValueObjects( null );
             expressionExperiments.addAll( eeValObjectCol );
-            // expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
         }
         // if ids are specified, then display only those expressionExperiments
         else {
@@ -354,10 +361,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
                     .getFilteredExpressionExperimentValueObjects( eeList );
             expressionExperiments.addAll( eeValObjectCol );
-            // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
         // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new StringComparator() {
+        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {
                 String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
                 String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
@@ -456,7 +462,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
         // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new StringComparator() {
+        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {
                 String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
                 String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
@@ -492,7 +498,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new EntityNotFoundException( identifierNotFound );
         }
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }

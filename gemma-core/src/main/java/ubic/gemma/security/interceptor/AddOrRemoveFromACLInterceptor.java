@@ -178,7 +178,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
 
         assert args != null;
-        assert args.length == 1;
         Object persistentObject = getPersistentObject( retValue, m, args );
 
         Session sess = crudUtils.getSessionFactory().openSession();
@@ -241,9 +240,9 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     private Object getPersistentObject( Object retValue, Method m, Object[] args ) {
         if ( CrudUtils.methodIsDelete( m ) || CrudUtils.methodIsUpdate( m ) ) {
+            assert args.length > 0;
             return args[0];
         }
-        // assert retValue != null : "Null return value from method " + m.getName();
         return retValue;
     }
 

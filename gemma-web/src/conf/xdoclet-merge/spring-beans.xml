@@ -1,7 +1,7 @@
 <!--
 	This document is a "merge file" used by XDoclet to automagically generate a spring beans configuration file 
-	for the web application.  The generated web-context will have the name action-servlet.xml and is
-	located in the WEB-INF diretory.
+	for the web application.  The generated web-context will have the name action-servlet.xml 
+	(name is configured in the gemma-web/pom.xml) and is put in the WEB-INF diretory.
 	
 	Beans defined in this file are used only for web client interaction.
 	
@@ -76,8 +76,9 @@
 			<prop key="/whatsnew/*">whatsNewController</prop>
 			<prop key="/blatTrack.html">blatResultTrackController</prop>
 			<prop key="/maintenanceMode.html">maintenanceModeController</prop>
-			<prop key="/ontology.html">ontologyController </prop>
-			
+			<prop key="/ontology.html">ontologyController</prop>
+			<prop key="/bioMaterial/annotator.html">bioMaterialController</prop>
+
 		</props>
 	</property>
 </bean>
@@ -90,9 +91,286 @@
 		</list>
 	</property>
 </bean>
+<bean id="dwrController" class="org.directwebremoting.spring.DwrController">
+	<property name="configurators">
+		<list>
+			<ref bean="dwrConfiguration" />
+		</list>
+	</property>
+	<property name="debug" value="true" />
+</bean>
+<!--  ============================================ -->
+<!--             DWR CONFIGURATION                 -->
+<!--  ============================================ -->
+<bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
+	<property name="creators">
+		<map>
+			<entry key="GeneController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="geneController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>findGOTerms</value>
+							<value>getProducts</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="BioMaterialController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="bioMaterialController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getBioMaterials</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="CompositeSequenceController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="compositeSequenceController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getBlatMappingSummary</value>
+							<value>getCsSummaries</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ArrayDesignController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="arrayDesignController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getCsSummaries</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="userService">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="userService" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getUser</value>
+							<value>getUsers</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="HttpProgressMonitor">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.create.NewCreator">
+							<property name="className" value="ubic.gemma.util.progress.HttpProgressMonitor" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getProgressStatus</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="MgedOntologyService">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.create.NewCreator">
+							<property name="className" value="ubic.gemma.ontology.MgedOntologyService" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getTerm</value>
+							<value>getBioMaterialTerms</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+		</map>
+	</property>
+	<property name="converters">
+		<map>
+			<entry key="ubic.gemma.web.remote.EntityDelegator">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.description.VocabCharacteristic">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>value</value>
+							<value>description</value>
+							<value>termUri</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.description.Characteristic">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>value</value>
+							<value>description</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.Taxon">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>commonName</value>
+							<value>scientificName</value>
+							<value>ncbiId</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.gene.GeneProductValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.gene.GeneProductType">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.gene.GeneValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.gene.GeneProduct">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>name</value>
+							<value>description</value>
+							<value>type</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.Gene">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>name</value>
+							<value>officialSymbol</value>
+							<value>officialName</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.expression.biomaterial.BioMaterial">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>name</value>
+							<value>characteristics</value>
+							<value>description</value>
+							<value>bioAssaysUsedIn</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.util.progress.ProgressData">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.ontology.*">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.analysis.sequence.BlatResultGeneSummary">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>geneProductMap</value>
+							<value>geneProducts</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.sequenceAnalysis.BlatResult">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="excludes">
+						<list>
+							<value>querySequence</value>
+							<value>targetAlignedRegions</value>
+							<value>queryAlignedRegions</value>
+							<value>searchedDatabase</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.Chromosome">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>name</value>
+							<value>taxon</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+		</map>
+	</property>
+</bean>
 <!-- ==================================================== -->
 <!-- 
-	Interceptor to keep Hibernate sessions available in views. 
+	openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views. 
 	Use this instead of the Filter configured in web.xml. Note that we don't 
 	need a special AndroMDA interceptor, this takes advantage 
 	of the sessionFactory that is already set up in the Spring context.
@@ -124,19 +402,7 @@
 		</props>
 	</property>
 </bean>
-<!-- ==================================================== -->
-<!--          AJAX (DWR)                                  -->
-<!-- ==================================================== -->
-<bean id="dwrController" class="org.springframework.web.servlet.mvc.ServletWrappingController">
-	<property name="servletClass">
-		<value>org.directwebremoting.servlet.DwrServlet</value>
-	</property>
-	<property name="initParameters">
-		<props>
-			<prop key="debug">true</prop>
-		</props>
-	</property>
-</bean>
+
 <!-- ==================================================== -->
 <!-- Action resolvers for MultiActionControllers -->
 <!-- ==================================================== -->
@@ -250,6 +516,7 @@
 			<prop key="/bioMaterial/showAllBioMaterials.html">showAll</prop>
 			<!--  <prop key="/bioMaterial/deleteBioMaterial.html">delete</prop> -->
 			<prop key="/bioMaterial/showBioMaterial.html">show</prop>
+			<prop key="/bioMaterial/annotate.html">annot</prop>
 		</props>
 	</property>
 </bean>
@@ -374,13 +641,4 @@
 		<value>expressionExperiment</value>
 	</property>
 </bean>
-<!--  ============================================== -->
-<!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
-<bean id="conversion.service" class="org.springframework.binding.convert.support.DefaultConversionService"
-	autowire="byType" />
-<!-- A formatter registry, a thread-safe cache for Formatters: a thread-safe, lighter weight alt. to PropertyEditors! -->
-<bean id="formatter.locator" class="org.springframework.binding.format.support.ThreadLocalFormatterLocator"
-	autowire="byType" />
-<!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
-<bean id="thread.cleanupBroadcaster" class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
-<!--  add more NamedBeanValidators here -->
+

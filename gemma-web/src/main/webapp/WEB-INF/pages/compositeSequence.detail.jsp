@@ -2,6 +2,7 @@
 <jsp:useBean id="compositeSequence" scope="request"
 	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
 <title><fmt:message key="compositeSequence.title" />
 </title>
 
@@ -230,6 +231,10 @@
 			<div>
 				&nbsp;
 			</div>
+			
+			<div id="blatres-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:430px; height:250px;"></div>
+		<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
+			
 			<display:table name="blatResults" requestURI="" id="blatResult"
 				style="width:100%;" pagesize="200"
 				decorator="ubic.gemma.web.taglib.displaytag.expression.designElement.CompositeSequenceWrapper"

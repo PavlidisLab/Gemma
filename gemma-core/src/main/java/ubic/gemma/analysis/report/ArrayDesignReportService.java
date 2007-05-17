@@ -150,8 +150,10 @@ public class ArrayDesignReportService {
             oos.flush();
             oos.close();
         } catch ( Throwable e ) {
+            log.error( "Cannot write to file." );
             return;
         }
+        log.info( "Done making report." );
     }
 
     public void generateAllArrayDesignReport() {
@@ -190,6 +192,7 @@ public class ArrayDesignReportService {
             // cannot write to file. Just fail gracefully.
             log.error( "Cannot write to file." );
         }
+        log.info( "Done making reports" );
     }
 
     /**

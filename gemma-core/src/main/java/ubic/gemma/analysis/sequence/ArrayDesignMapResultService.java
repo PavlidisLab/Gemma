@@ -47,7 +47,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
  * @spring.property name="arrayDesignService" ref ="arrayDesignService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="blatResultService" ref="blatResultService"
- * 
  * @author Paul
  * @version $Id$
  */
@@ -59,7 +58,6 @@ public class ArrayDesignMapResultService {
     private BlatAssociationService blatAssociationService;
     private ArrayDesignService arrayDesignService;
     private CompositeSequenceService compositeSequenceService;
-
 
     /**
      * @param compositeSequenceService the compositeSequenceService to set
@@ -90,26 +88,26 @@ public class ArrayDesignMapResultService {
      * @param arrayDesign
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
-        Collection sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
+        Collection<Object[]> sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
         return getSummaryMapValueObjects( sequenceData );
     }
 
     /**
      * FIXME this is only public so we can use it in the DesignElementController; need refactoring (see
-     * CompositeSequenceService)
+     * CompositeSequenceService) Function to get a collection of CompositeSequenceMapValueObjects that contain
+     * information about a composite sequence and related tables.
      * 
-     * Function to get a collection of CompositeSequenceMapValueObjects that contain information about
-     * a composite sequence and related tables. 
-     * 
-     * @param rawSummaryData
+     * @param rawSummaryData - raw results from SQL query to get CS information.
      * @return
      */
-    public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection sequenceData ) {
+    public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection<Object[]> sequenceData ) {
         HashMap<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
         HashMap<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
         for ( Object o : sequenceData ) {
             Object[] row = ( Object[] ) o;
+
             Long csId = ( ( BigInteger ) row[0] ).longValue();
             String csName = ( String ) row[1];
             String bioSequenceName = ( String ) row[2];
@@ -129,6 +127,9 @@ public class ArrayDesignMapResultService {
             String geneName = ( String ) row[11];
             String geneAccession = ( String ) row[12];
 
+            String arrayDesignShortName = ( String ) row[13];
+            BigInteger arrayDesignId = ( BigInteger ) row[14];
+
             CompositeSequenceMapValueObject vo;
             if ( summary.containsKey( csId ) ) {
                 vo = summary.get( csId );
@@ -136,9 +137,11 @@ public class ArrayDesignMapResultService {
                 vo = new CompositeSequenceMapValueObject();
                 summary.put( csId, vo );
             }
+            vo.setArrayDesignId( arrayDesignId.longValue() );
 
             vo.setCompositeSequenceId( csId.toString() );
             vo.setCompositeSequenceName( csName );
+            vo.setArrayDesignName( arrayDesignShortName );
 
             // fill in value object
             if ( bioSequenceName != null && vo.getBioSequenceName() == null ) {
@@ -204,8 +207,8 @@ public class ArrayDesignMapResultService {
     }
 
     /**
-     * 
-     * Non-HQL version of the composite sequence data summary query. Returns a summary of the composite sequence data and related tables.
+     * Non-HQL version of the composite sequence data summary query. Returns a summary of the composite sequence data
+     * and related tables.
      * 
      * @param compositeSequences
      * @return
@@ -249,7 +252,5 @@ public class ArrayDesignMapResultService {
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
-
-
 
 }

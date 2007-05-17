@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.biomaterial;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,16 +28,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="bioMaterialController"  
+ * @spring.bean id="bioMaterialController"
  * @spring.property name = "bioMaterialService" ref="bioMaterialService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="methodNameResolver" ref="bioMaterialActions"
  */
 public class BioMaterialController extends BaseMultiActionController {
@@ -43,11 +50,15 @@ public class BioMaterialController extends BaseMultiActionController {
 
     private BioMaterialService bioMaterialService = null;
 
-    private final String messagePrefix = "BioMaterial with id ";
-    private final String identifierNotFound = "Must provide a valid BioMaterial identifier";
+    private ExpressionExperimentService expressionExperimentService;
+
+    private boolean AJAX = true;
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
 
     /**
-     * 
      * @param bioMaterialService
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
@@ -69,24 +80,78 @@ public class BioMaterialController extends BaseMultiActionController {
 
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
+            throw new EntityNotFoundException( "Must provide a biomaterial id" );
         }
 
-        BioMaterial bioMaterial = bioMaterialService.findById( id );
+        BioMaterial bioMaterial = bioMaterialService.load( id );
         if ( bioMaterial == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-        
+
         this.saveMessage( request, "biomaterial with id " + id + " found" );
         request.setAttribute( "id", id );
         return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
     }
-    
-    
-    
-    
-    
-    
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    public ModelAndView annot( HttpServletRequest request, HttpServletResponse response ) {
+
+        log.debug( request.getParameter( "eeid" ) );
+
+        Long id = Long.parseLong( request.getParameter( "eeid" ) );
+
+        if ( id == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( "Must provide an expression experiment id" );
+        }
+
+        Collection<BioMaterial> bioMaterials = getBioMaterialsForEE( id );
+
+        ModelAndView mav = new ModelAndView( "bioMaterialAnnotator" );
+        if ( AJAX ) {
+            StringBuilder buf = new StringBuilder();
+            for ( BioMaterial bm : bioMaterials ) {
+                buf.append( bm.getId() );
+                buf.append( "," );
+            }
+            mav.addObject( "bioMaterialIdList", buf.toString().replaceAll( ",$", "" ) );
+        }
+
+        Long numBioMaterials = new Long( bioMaterials.size() );
+        mav.addObject( "numBioMaterials", numBioMaterials );
+        mav.addObject( "bioMaterials", bioMaterials );
+        return mav;
+    }
+
+    /**
+     * @param id of experiment
+     * @return
+     */
+    public Collection<BioMaterial> getBioMaterialsForEE( Long id ) {
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( "Expression experiment with id=" + id + " not found" );
+        }
+
+        expressionExperimentService.thawLite( expressionExperiment );
+        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
+        Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
+        for ( BioAssay assay : bioAssays ) {
+            Collection<BioMaterial> materials = assay.getSamplesUsed();
+            if ( materials != null ) {
+                bioMaterials.addAll( materials );
+            }
+        }
+        return bioMaterials;
+    }
+
+    public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
+        return bioMaterialService.load( ids );
+    }
 
     /**
      * @param request
@@ -98,47 +163,4 @@ public class BioMaterialController extends BaseMultiActionController {
         return new ModelAndView( "bioMaterials" ).addObject( "bioMaterials", bioMaterialService.loadAll() );
     }
 
-    /**
-     * TODO add delete to the model
-     * 
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */ 
-    // @SuppressWarnings("unused")
-    // public ModelAndView delete(HttpServletRequest request,
-    // HttpServletResponse response) {
-    // String name = request.getParameter("name");
-    //
-    // if (name == null) {
-    // // should be a validation error.
-    // throw new EntityNotFoundException("Must provide a name");
-    // }
-    //
-    // BioAssay bioAssay = bioAssayService
-    // .findByName(name);
-    // if (bioAssay == null) {
-    // throw new EntityNotFoundException(bioAssay
-    // + " not found");
-    // }
-    //
-    // return doDelete(request, bioAssay);
-    // }
-    /**
-     * TODO add doDelete to the model
-     * 
-     * @param request
-     * @param bioAssay
-     * @return ModelAndView
-     */
-    // private ModelAndView doDelete(HttpServletRequest request,
-    // BioAssay bioAssay) {
-    // bioAssayService.delete(bioAssay);
-    // log.info("Expression Experiment with name: "
-    // + bioAssay.getName() + " deleted");
-    // addMessage(request, "bioAssay.deleted",
-    // new Object[] { bioAssay.getName() });
-    // return new ModelAndView("bioAssays",
-    // "bioAssay", bioAssay);
-    // }
 }

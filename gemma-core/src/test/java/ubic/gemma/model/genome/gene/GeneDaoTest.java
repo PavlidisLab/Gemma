@@ -78,26 +78,6 @@ public class GeneDaoTest extends BaseSpringContextTest {
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetCoexpressedElements() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setName( "test_genedao" );
-        Collection elements = geneDao.getCoexpressedElements( gene );
-        assertNotNull( elements );
-    }
-
-    @SuppressWarnings("unchecked")
-    public void testGetCoexpressedElementsById() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setName( "test_genedao" );
-        Collection elements = geneDao.getCoexpressedElementsById( ( long ) 1 );
-        assertNotNull( elements );
-    }
-
-    @SuppressWarnings("unchecked")
     public void testGetCoexpressedGenes() {
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();

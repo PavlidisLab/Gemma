@@ -51,8 +51,8 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindByName(java.lang.String)
      */
     @Override
-    protected ExperimentalFactor handleFindById( Long id ) throws Exception {
-        return this.getExperimentalFactorDao().findById( id );
+    protected ExperimentalFactor handleLoad( Long id ) throws Exception {
+        return ( ExperimentalFactor ) this.getExperimentalFactorDao().load( id );
     }
 
     /*

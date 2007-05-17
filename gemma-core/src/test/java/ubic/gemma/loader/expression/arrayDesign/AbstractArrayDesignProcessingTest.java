@@ -64,7 +64,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, false,
+            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
                     true );
             ad = ads.iterator().next();
 

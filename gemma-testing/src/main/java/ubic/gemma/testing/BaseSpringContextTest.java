@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.web.MockServletContext;
@@ -173,8 +174,14 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      * @return
      */
     protected Object getBean( String name ) {
-        if ( isTestEnvDisabled() ) return getContext( getStandardLocations() ).getBean( name );
-        return getContext( getConfigLocations() ).getBean( name );
+        try {
+            if ( isTestEnvDisabled() ) return getContext( getStandardLocations() ).getBean( name );
+            return getContext( getConfigLocations() ).getBean( name );
+        } catch ( BeansException e ) {
+            throw new RuntimeException( e );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     @Override

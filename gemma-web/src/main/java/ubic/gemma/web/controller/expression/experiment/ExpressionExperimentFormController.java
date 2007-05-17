@@ -50,7 +50,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -92,7 +92,7 @@ import com.sdicons.json.parser.JSONParser;
  * @spring.property name = "bioAssayService" ref="bioAssayService"
  * @spring.property name = "bioMaterialService" ref="bioMaterialService"
  * @spring.property name = "contactService" ref="contactService"
- * @spring.property name = "externalDatabaseDao" ref="externalDatabaseDao"
+ * @spring.property name = "externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name = "persisterHelper" ref="persisterHelper"
  * @spring.property name = "validator" ref="expressionExperimentValidator"
@@ -111,14 +111,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
     QuantitationTypeService quantitationTypeService;
     DesignElementDataVectorService designElementDataVectorService;
 
-    private ExternalDatabaseDao externalDatabaseDao = null;
+    private ExternalDatabaseService externalDatabaseService = null;
 
-    // FIXME Use ExternalDatabaseService instead of ExternalDatabaseDao. Methods have been put in model for service
-    // but when I use them I get NonUniqueObjectException. This seems to be documented here:
-    // http://saloon.javaranch.com/cgi-bin/ubb/ultimatebb.cgi?ubb=get_topic&f=78&t=000475.
-    // It works if you call the dao layer directly from your controller (I know we are not supposed to do this, but it
-    // works).
-    // Will fix this later.
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+    }
 
     /**
      * @param persisterHelper the persisterHelper to set
@@ -163,7 +160,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         log.debug( id );
         ExpressionExperimentEditCommand obj;
         if ( id != null ) {
-            ee = expressionExperimentService.findById( id );
+            ee = expressionExperimentService.load( id );
             qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
             obj = new ExpressionExperimentEditCommand( ee, qts );
         } else {
@@ -282,7 +279,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
             /* external database */
             ExternalDatabase ed = ( expressionExperiment.getAccession().getExternalDatabase() );
-            ed = externalDatabaseDao.findOrCreate( ed );
+            ed = externalDatabaseService.findOrCreate( ed );
             expressionExperiment.getAccession().setExternalDatabase( ed );
         }
     }
@@ -292,13 +289,20 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @throws TokenStreamException
      * @throws RecognitionException
      */
-    private void updateBioMaterialMap( HttpServletRequest request ) throws TokenStreamException, RecognitionException {
+    private void updateBioMaterialMap( HttpServletRequest request ) {
         // parse JSON-serialized map
         String jsonSerialization = request.getParameter( "assayToMaterialMap" );
         // convert back to a map
         JSONParser parser = new JSONParser( new StringInputStream( jsonSerialization ) );
 
-        Map<String, JSONValue> bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
+        Map<String, JSONValue> bioAssayMap = null;
+        try {
+            bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
+        } catch ( TokenStreamException e ) {
+            throw new RuntimeException( e );
+        } catch ( RecognitionException e ) {
+            throw new RuntimeException( e );
+        }
 
         Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<BioAssay, BioMaterial>();
         // set the bioMaterial - bioAssay associations if they are different
@@ -323,7 +327,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 }
             }
 
-            BioAssay bioAssay = bioAssayService.findById( bioAssayId );
+            BioAssay bioAssay = bioAssayService.load( bioAssayId );
             Collection<BioMaterial> bMats = bioAssay.getSamplesUsed();
             Collection<Long> oldBioMaterials = new ArrayList<Long>();
             for ( BioMaterial material : bMats ) {
@@ -355,7 +359,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
                         newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                     } else {
-                        newMaterial = bioMaterialService.findById( newBioMaterialId );
+                        newMaterial = bioMaterialService.load( newBioMaterialId );
                     }
 
                     bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
@@ -371,7 +375,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 if ( newBioMaterials.contains( oldBioMaterialId ) ) {
                     continue;
                 } else {
-                    BioMaterial oldMaterial = bioMaterialService.findById( oldBioMaterialId );
+                    BioMaterial oldMaterial = bioMaterialService.load( oldBioMaterialId );
                     deleteAssociations.put( bioAssay, oldMaterial );
                 }
             }
@@ -564,7 +568,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<Object, Object> referenceData = new HashMap<Object, Object>();
-        Collection<ExternalDatabase> edCol = externalDatabaseDao.loadAll();
+        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
 
         Collection<ExternalDatabase> keepers = new HashSet<ExternalDatabase>();
         for ( ExternalDatabase database : edCol ) {
@@ -595,13 +599,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     public void setContactService( ContactService contactService ) {
         this.contactService = contactService;
-    }
-
-    /**
-     * @param externalDatabaseDao
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**

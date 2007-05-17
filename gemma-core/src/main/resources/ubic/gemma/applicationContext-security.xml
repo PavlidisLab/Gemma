@@ -268,12 +268,12 @@
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.create=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.findOrCreate=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.findById=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExperimentalDesignService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.update=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalFactorService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalFactorService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExperimentalFactorService.findById=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExperimentalFactorService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.FactorValueService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.FactorValueService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.experiment.FactorValueService.delete=user,admin
@@ -303,7 +303,7 @@
                 ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin 
                 ubic.gemma.model.expression.bioAssay.BioAssayService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.expression.bioAssay.BioAssayService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssay.BioAssayService.findById=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.bioAssay.BioAssayService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssay.BioAssayService.update=user,admin
                 ubic.gemma.model.expression.bioAssay.BioAssayService.findBioAssayDimensions=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
@@ -316,7 +316,7 @@
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.remove=user,admin
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.findById=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.biomaterial.BioMaterialService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.biomaterial.TreatmentService.getTreatments=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.biomaterial.TreatmentService.saveTreatment=user,admin 

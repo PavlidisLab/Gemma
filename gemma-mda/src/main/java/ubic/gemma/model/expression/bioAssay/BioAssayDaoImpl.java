@@ -84,7 +84,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
 
-            return ( Integer ) queryObject.iterate().next();
+            return (( Long ) queryObject.iterate().next()).intValue();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

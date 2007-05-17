@@ -49,9 +49,9 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
         ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies();
 
-        assertNotNull( svc.findById( ee.getId() ) );
+        assertNotNull( svc.load( ee.getId() ) );
         svc.delete( ee );
-        assertEquals( svc.findById( ee.getId() ), null );
+        assertEquals( svc.load( ee.getId() ), null );
 
         // designElementDataVectors.size(); // lazy-load...
         sess.getTransaction().commit();

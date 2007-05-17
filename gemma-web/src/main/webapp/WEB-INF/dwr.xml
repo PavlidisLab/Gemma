@@ -3,10 +3,13 @@
 <!-- 
 	Configuration for AJAX via Direct Web Remoting (dwr).
 	$Id$
+	
+	This file is deprecated in favor of spring bean configuration. This file is ignored!
 -->
 <dwr>
 	<allow>
 		<convert converter="bean" match="ubic.gemma.*" />
+
 		<create creator="spring" javascript="userService">
 			<param name="beanName" value="userService" />
 			<include method="getUser" />
@@ -14,47 +17,35 @@
 		</create>
 
 		<create creator="new" javascript="HttpProgressMonitor">
-			<param name="class"
-				value="ubic.gemma.util.progress.HttpProgressMonitor" />
+			<param name="class" value="ubic.gemma.util.progress.HttpProgressMonitor" />
 			<include method="getProgressStatus" />
 		</create>
 
-		<convert converter="bean"
-			match="ubic.gemma.util.progress.ProgressData">
-		</convert>
+		<convert converter="bean" match="ubic.gemma.util.progress.ProgressData"></convert>
 
 		<create creator="new" javascript="MgedOntologyService">
-			<param name="class"
-				value="ubic.gemma.ontology.MgedOntologyService" />
+			<param name="class" value="ubic.gemma.ontology.MgedOntologyService" />
 			<include method="getTerm" />
 			<include method="getBioMaterialTerms" />
-		</create>
+		</create><!--
 
-		<create creator="spring" javascript="GeneServicesDelegator">
-			<param name="beanName" value="geneServicesDelegator" />
+
+		<create creator="spring" javascript="GeneController">
+			<param name="beanName" value="geneController" />
 			<include method="findGOTerms" />
 		</create>
 
-		<convert converter="bean"
-			match="ubic.gemma.web.remote.GeneDelegator">
+		<convert converter="bean" match="ubic.gemma.web.remote.GeneDelegator">
 			<param name="include" value="id" />
-		</convert>
+		</convert>-->
 
-		<convert converter="bean"
-			match="ubic.gemma.model.common.description.VocabCharacteristic">
-		</convert>
+		<convert converter="bean" match="ubic.gemma.model.common.description.VocabCharacteristic"></convert>
 
-		<convert converter="bean"
-			match="ubic.gemma.ontology.OntologyDataList">
-		</convert>
+		<convert converter="bean" match="ubic.gemma.ontology.OntologyDataList"></convert>
 
-		<convert converter="bean"
-			match="ubic.gemma.ontology.OntologyData">
-		</convert>
+		<convert converter="bean" match="ubic.gemma.ontology.OntologyData"></convert>
 
-		<convert converter="bean"
-			match="ubic.gemma.ontology.OntologyTreeNode">
-		</convert>
+		<convert converter="bean" match="ubic.gemma.ontology.OntologyTreeNode"></convert>
 
 
 

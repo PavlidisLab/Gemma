@@ -32,7 +32,9 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.BlatResultGeneSummary;
+import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -45,6 +47,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
+import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author joseph
@@ -53,10 +56,12 @@ import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="blatResultService" ref="blatResultService"
  * @spring.property name="methodNameResolver" ref="compositeSequenceActions"
+ * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
  */
 public class CompositeSequenceController extends BaseMultiActionController {
     private CompositeSequenceService compositeSequenceService = null;
     private BlatResultService blatResultService = null;
+    private ArrayDesignMapResultService arrayDesignMapResultService = null;
 
     public void setBlatResultService( BlatResultService blatResultService ) {
         this.blatResultService = blatResultService;
@@ -70,6 +75,19 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
+     * Exposed for AJAX calls.
+     * 
+     * @param ids
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
+        Collection compositeSequences = compositeSequenceService.load( ids );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+    }
+
+    /**
      * @param request
      * @param response
      * @param errors
@@ -78,7 +96,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
     @SuppressWarnings("unchecked")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
-        CompositeSequence cs = getCompositeSequenceForId( request, id );
+        CompositeSequence cs = compositeSequenceService.load( id );
         if ( cs == null ) {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
             return new ModelAndView( "mainMenu.html" );
@@ -93,17 +111,18 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
-     * The difference between this and 'show' is the view, and this method is more ajax-aware.
+     * The difference between this and 'show' is the view, and this method is more ajax-aware. (don't know why this is
+     * called 'abbreviated'). Probably these methods could be combined.
      * 
      * @param request
      * @param response
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unchecked" })
+    @SuppressWarnings("unchecked")
     public ModelAndView showAbbreviated( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
-        CompositeSequence cs = getCompositeSequenceForId( request, id );
+        CompositeSequence cs = compositeSequenceService.load( id );
         if ( cs == null ) {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
             return new ModelAndView( "mainMenu.html" );
@@ -173,6 +192,17 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
+     * Exposed for AJAX calls.
+     * 
+     * @param csd
+     * @return
+     */
+    public Collection<BlatResultGeneSummary> getBlatMappingSummary( EntityDelegator csd ) {
+        CompositeSequence cs = compositeSequenceService.load( csd.getId() );
+        return this.getBlatMappingSummary( cs ).values();
+    }
+
+    /**
      * @param cs
      * @return
      */
@@ -211,27 +241,14 @@ public class CompositeSequenceController extends BaseMultiActionController {
         return blatResults;
     }
 
-    /**
-     * @param request
-     * @param id
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private CompositeSequence getCompositeSequenceForId( HttpServletRequest request, Long id ) {
-        Collection<Long> csIds = new ArrayList<Long>();
-        csIds.add( id );
-
-        Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( csIds );
-
-        if ( compositeSequences.size() == 0 ) return null;
-        CompositeSequence cs = compositeSequences.iterator().next();
-        return cs;
-    }
-
     @Override
     protected void initBinder( ServletRequest request, ServletRequestDataBinder binder ) throws Exception {
         super.initBinder( request, binder );
         binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
+    }
+
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
     }
 
 }

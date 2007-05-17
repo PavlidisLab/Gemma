@@ -50,8 +50,8 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
     }
 
     @Override
-    protected ExperimentalDesign handleFindById( Long id ) throws Exception {
-        return this.getExperimentalDesignDao().findById( id );
+    protected ExperimentalDesign handleLoad( Long id ) throws Exception {
+        return ( ExperimentalDesign ) this.getExperimentalDesignDao().load( id );
     }
 
     @Override

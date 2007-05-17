@@ -117,8 +117,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     @Override
     protected Collection handleGetGenesByAccession( String search ) throws Exception {
         Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp where gene.products.id=bs2gp.geneProduct.id "
-                + " and bs2gp.bioSequence.sequenceDatabaseEntry.accession like :search ";
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp"
+                + " inner join bs2gp.bioSequence bs "
+                + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct " + " and de.accession = :search ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search );
@@ -139,7 +140,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     @Override
     protected Collection handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl as gene,  BioSequence2GeneProductImpl as bs2gp where gene.products.id=bs2gp.geneProduct.id "
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
                 + " and bs2gp.bioSequence.name like :search ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -222,7 +223,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         Collection<BioSequence> bioSequences = null;
-        final String queryString = "select distinct bioSequence from BioSequenceImpl bioSequence where bioSequence.id in (:ids)";
+        final String queryString = "select distinct bs from BioSequenceImpl bs where bs.id in (:ids)";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );

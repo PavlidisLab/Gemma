@@ -46,4 +46,4 @@
 
 	<!-- a place holder for the tree. requires the unique id to be passed in the javascript function, and width and height ! -->
 	<div id="tree-div" class="x-grid-mso"
-		style="border: 1px solid #c3daf9; overflow: hidden; width:520px; height 500px;"></div>
+		style="overflow: hidden; width:520px;"></div>

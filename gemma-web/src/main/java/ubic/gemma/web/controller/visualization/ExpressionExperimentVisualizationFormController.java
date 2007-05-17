@@ -127,7 +127,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         ExpressionExperimentVisualizationCommand eevc = new ExpressionExperimentVisualizationCommand();
 
         if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
-            ee = expressionExperimentService.findById( id );
+            ee = expressionExperimentService.load( id );
         } else {
             ee = ExpressionExperiment.Factory.newInstance();
         }
@@ -287,7 +287,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         Long id = eevc.getExpressionExperimentId();
 
-        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
         if ( expressionExperiment == null ) {
             return processErrors( request, response, command, errors, "No expression experiment with id " + id
                     + " found" );
@@ -479,7 +479,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Id was not valid Long integer", e );
         }
-        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
+        ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
         Iterator iter = types.iterator();
         while ( iter.hasNext() ) {

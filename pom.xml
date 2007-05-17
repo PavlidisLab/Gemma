@@ -65,18 +65,11 @@
 			<name>Kiran Keshav</name>
 			<id>keshav</id>
 			<email>keshav@cu-genome.org</email>
-			<organization>University of British Columbia</organization>
 		</developer>
 		<developer>
 			<name>Kelsey Hamer</name>
 			<id>kelsey</id>
 			<email>kesley@bioinformatics.ubc.ca</email>
-			<organization>University of British Columbia</organization>
-		</developer>
-		<developer>
-			<name>Joseph Roy Santos</name>
-			<id>joseph</id>
-			<email>joseph@bioinformatics.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
 	</developers>

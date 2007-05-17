@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.util.QueryUtils;
 
 /**
  * @author pavlidis
@@ -131,7 +132,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
-        final String queryString = "select distinct compositeSequence from CompositeSequenceImpl compositeSequence where compositeSequence.id in (:ids)";
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
@@ -141,34 +142,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             throw super.convertHibernateAccessException( ex );
         }
         return compositeSequences;
-    }
-
-    /**
-     * FIXME duplicated code from ArrayDesignDao
-     * 
-     * @param id
-     * @param queryString
-     * @return
-     */
-    private Collection nativeQueryByIdReturnCollection( Long id, final String queryString ) {
-        try {
-
-            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setLong( "id", id );
-            return queryObject.list();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    private Collection nativeQuery( final String queryString ) {
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            return queryObject.list();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-
     }
 
     /*
@@ -191,7 +164,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             nativeQueryString = nativeQueryString + " LIMIT " + numResults;
         }
 
-        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
+        Collection retVal = QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
         return retVal;
     }
 
@@ -203,7 +176,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetRawSummary( Collection compositeSequences, Integer numResults ) throws Exception {
+    protected Collection handleGetRawSummary( Collection compositeSequences, Integer limit ) throws Exception {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
         StringBuilder buf = new StringBuilder();
 
@@ -219,12 +192,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
 
-        if ( numResults != null && numResults != 0 ) {
-            nativeQueryString = nativeQueryString + " LIMIT " + numResults;
+        if ( limit != null && limit != 0 ) {
+            nativeQueryString = nativeQueryString + " LIMIT " + limit;
         }
 
-        Collection retVal = nativeQuery( nativeQueryString );
-        return retVal;
+        return QueryUtils.nativeQuery( getSession(), nativeQueryString );
     }
 
     /*
@@ -233,7 +205,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
+    protected Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -243,8 +215,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         if ( numResults != null && numResults != 0 ) {
             nativeQueryString = nativeQueryString + " LIMIT " + numResults;
         }
-        Collection retVal = nativeQueryByIdReturnCollection( id, nativeQueryString );
-        return retVal;
+        return QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
+
     }
 
     /*
@@ -252,7 +224,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     private static final String nativeBaseSummaryQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, ssr.ID,"
             + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
-            + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi "
+            + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId "
             + " from "
             + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
             + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
@@ -260,7 +232,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
             + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
             + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-            + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID) ";
+            + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
+            + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
 
     /*
      * (non-Javadoc)

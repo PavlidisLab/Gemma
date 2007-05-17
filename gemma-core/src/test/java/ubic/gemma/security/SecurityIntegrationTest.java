@@ -103,7 +103,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
         SecurityService securityService = new SecurityService();
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
-        securityService.changePermission( ad, 1 );
+        securityService.changePermission( ad, SecurityService.PRIVATE_MASK );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */

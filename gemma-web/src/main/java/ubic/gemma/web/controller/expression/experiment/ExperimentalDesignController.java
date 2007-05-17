@@ -64,7 +64,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( identifierNotFound );
         }
 
-        ExperimentalDesign experimentalDesign = experimentalDesignService.findById( id );
+        ExperimentalDesign experimentalDesign = experimentalDesignService.load( id );
         if ( experimentalDesign == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }

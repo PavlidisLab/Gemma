@@ -67,7 +67,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
 
             if ( request.getParameter( "id" ) != null ) {
                 Long id = Long.parseLong( request.getParameter( "id" ) );
-                ed = experimentalDesignService.findById( id );
+                ed = experimentalDesignService.load( id );
             } else {
                 ed = ExperimentalDesign.Factory.newInstance();
             }

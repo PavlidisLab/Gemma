@@ -132,19 +132,18 @@ public class CompositeSequenceWrapper extends TableDecorator {
 
         String retVal = "";
         for ( GeneProduct product : geneProducts ) {
-            Collection<Gene> genes = object.getGenes( product );
-            for ( Gene gene : genes ) {
-                String shortName = StringUtils.abbreviate( gene.getOfficialSymbol(), 20 );
-                if ( gene.getNcbiId() != null ) {
-                    retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName
-                            + "</span>&nbsp;<a target='_blank' href=\"" + LinkUtils.getNcbiUrl( gene )
-                            + "\"><img height=10 width=10 src=\"" + LinkUtils.NCBI_ICON
-                            + "\" alt=\"NCBI\" /></a>&nbsp;" + LinkUtils.getGemmaGeneLink( gene ) + "<br />";
-                } else {
-                    retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName + "</span>" + "&nbsp;"
-                            + LinkUtils.getGemmaGeneLink( gene ) + "<br />";
-                }
+            Gene gene = object.getGene( product );
+            String shortName = StringUtils.abbreviate( gene.getOfficialSymbol(), 20 );
+            if ( gene.getNcbiId() != null ) {
+                retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName
+                        + "</span>&nbsp;<a target='_blank' href=\"" + LinkUtils.getNcbiUrl( gene )
+                        + "\"><img height=10 width=10 src=\"" + LinkUtils.NCBI_ICON + "\" alt=\"NCBI\" /></a>&nbsp;"
+                        + LinkUtils.getGemmaGeneLink( gene ) + "<br />";
+            } else {
+                retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName + "</span>" + "&nbsp;"
+                        + LinkUtils.getGemmaGeneLink( gene ) + "<br />";
             }
+
         }
         return retVal;
     }

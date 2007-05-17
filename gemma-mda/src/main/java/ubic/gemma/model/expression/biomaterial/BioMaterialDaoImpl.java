@@ -18,10 +18,14 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author pavlidis
@@ -30,7 +34,7 @@ import org.hibernate.criterion.Restrictions;
  */
 public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase {
 
-    private static Log log = LogFactory.getLog( BioMaterialDaoImpl.class.getName() );
+     private static Log log = LogFactory.getLog( BioMaterialDaoImpl.class.getName() );
 
     /*
      * (non-Javadoc)
@@ -130,5 +134,24 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             
             return newMaterial;
 
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleLoad(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<BioMaterial> bs = null;
+        final String queryString = "select distinct b from BioMaterialImpl b where b.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            bs = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return bs;
     }
 }

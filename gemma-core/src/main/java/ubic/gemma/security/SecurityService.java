@@ -69,8 +69,8 @@ public class SecurityService {
     private BasicAclExtendedDao basicAclExtendedDao = null;
     private SecurableDao securableDao = null;
 
-    private final int PUBLIC_MASK = 6;
-    private final int PRIVATE_MASK = 0;
+    public static final int PUBLIC_MASK = 6;
+    public static final int PRIVATE_MASK = 0;
     private static final String ADMINISTRATOR = "administrator";
     private static final String ACCESSOR_PREFIX = "get";
 

@@ -122,16 +122,7 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByName( name );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindById(java.lang.Long)
-     */
-    @Override
-    protected ExpressionExperiment handleFindById( Long id ) throws Exception {
-        return this.getExpressionExperimentDao().findById( id );
-    }
-
+  
     /*
      * (non-Javadoc)
      * 
@@ -230,12 +221,6 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected long handleGetDesignElementDataVectorCountById( long id ) throws Exception {
         return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
-    }
-
-    @Override
-    protected ExpressionExperimentValueObject handleToExpressionExperimentValueObject(
-            ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().toExpressionExperimentValueObject( expressionExperiment );
     }
 
     @Override

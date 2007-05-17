@@ -1,5 +1,20 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2007 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.analysis.report;
 
@@ -131,7 +146,7 @@ public class ExpressionExperimentReportService {
         String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ExpressionExperiment tempEe = expressionExperimentService.findById( eeVo.getId() );
+            ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
             eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
             eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
@@ -176,12 +191,11 @@ public class ExpressionExperimentReportService {
 
             try {
                 // remove file first
-                File f = new File( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "." + eeVo.getId() );
+                File f = new File( getReportPath( eeVo.getId() ) );
                 if ( f.exists() ) {
                     f.delete();
                 }
-                FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY
-                        + "." + eeVo.getId() );
+                FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
                 ObjectOutputStream oos = new ObjectOutputStream( fos );
                 oos.writeObject( eeVo );
                 oos.flush();
@@ -271,11 +285,12 @@ public class ExpressionExperimentReportService {
                 return ( name.startsWith( EE_LINK_SUMMARY + "." ) );
             }
         };
-        File fDir = new File( HOME_DIR + "/" + EE_REPORT_DIR );
+        File fDir = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
         String[] filenames = fDir.list( filter );
         for ( String objectFile : filenames ) {
             try {
-                FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + objectFile );
+                FileInputStream fis = new FileInputStream( HOME_DIR + File.separatorChar + EE_REPORT_DIR
+                        + File.separatorChar + objectFile );
                 ObjectInputStream ois = new ObjectInputStream( fis );
                 eeValueObjects = ( Collection ) ois.readObject();
                 ois.close();
@@ -298,10 +313,9 @@ public class ExpressionExperimentReportService {
             Long id = ( Long ) object;
 
             try {
-                File f = new File( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "." + id );
+                File f = new File( getReportPath( id ) );
                 if ( f.exists() ) {
-                    FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY
-                            + "." + id );
+                    FileInputStream fis = new FileInputStream( getReportPath( id ) );
                     ObjectInputStream ois = new ObjectInputStream( fis );
                     eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject() );
                     ois.close();
@@ -323,10 +337,9 @@ public class ExpressionExperimentReportService {
 
         ExpressionExperimentValueObject eeVo = null;
         try {
-            File f = new File( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "." + id );
+            File f = new File( getReportPath( id ) );
             if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( HOME_DIR + "/" + EE_REPORT_DIR + "/" + EE_LINK_SUMMARY + "."
-                        + id );
+                FileInputStream fis = new FileInputStream( getReportPath( id ) );
                 ObjectInputStream ois = new ObjectInputStream( fis );
                 eeVo = ( ExpressionExperimentValueObject ) ois.readObject();
                 ois.close();
@@ -338,12 +351,20 @@ public class ExpressionExperimentReportService {
         return eeVo;
     }
 
+    /**
+     * @param id
+     * @return
+     */
+    private String getReportPath( long id ) {
+        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
+    }
+
     private void initDirectories( boolean deleteFiles ) {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + "/" + EE_REPORT_DIR );
-        File f = new File( HOME_DIR + "/" + EE_REPORT_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
+        File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
         Collection<File> files = new ArrayList<File>();
         File[] fileArray = f.listFiles();
         for ( File file : fileArray ) {

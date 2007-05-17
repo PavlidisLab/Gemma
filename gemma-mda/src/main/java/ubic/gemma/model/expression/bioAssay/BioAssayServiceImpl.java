@@ -81,8 +81,8 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findById(Long)
      */
     @Override
-    protected BioAssay handleFindById( Long id ) throws Exception {
-        return this.getBioAssayDao().findById( id );
+    protected BioAssay handleLoad( Long id ) throws Exception {
+        return ( BioAssay ) this.getBioAssayDao().load( id );
     }
 
     /**

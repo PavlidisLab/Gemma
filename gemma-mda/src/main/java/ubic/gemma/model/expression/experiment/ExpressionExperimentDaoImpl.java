@@ -56,6 +56,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.QueryUtils;
 
 /**
  * @author pavlidis
@@ -127,7 +128,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     public Map handleGetQuantitationTypeCountById( Long Id ) {
-        HashMap<QuantitationType, Integer> qtCounts = new HashMap<QuantitationType, Integer>();
+        HashMap<QuantitationType, Long> qtCounts = new HashMap<QuantitationType, Long>();
 
         final String queryString = "select quantType,count(*) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
@@ -139,7 +140,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameter( "id", Id );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                qtCounts.put( ( QuantitationType ) list.get( 0 ), list.getInteger( 1 ) );
+                qtCounts.put( ( QuantitationType ) list.get( 0 ), list.getLong( 1 ) );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -169,13 +170,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             return handleGetQuantitationTypes( expressionExperiment );
         }
 
-        /*
-         * final String queryString = "select distinct quantType " + "from
-         * ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee " + "inner join
-         * ee.designElementDataVectors as vector " + "inner join vector.quantitationType as quantType " + "inner join
-         * vector.bioAssayDimension bad " + "inner join bad.bioAssays ba inner join ba.arrayDesignUsed ad " + "where ee =
-         * :ee and ad = :ad";
-         */
         final String queryString = "select distinct quantType "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
@@ -240,7 +234,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
              * org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
              * queryObject.setParameter( "id", Id ); queryObject.setMaxResults( 1 );
              */
-            count = ( ( BigInteger ) queryObject.uniqueResult() ).longValue();
+            count = ( Long ) queryObject.uniqueResult() ;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -254,7 +248,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
 
-            return ( Integer ) queryObject.iterate().next();
+            return ( ( Long ) queryObject.iterate().next() ).intValue();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -384,75 +378,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ( ExpressionExperiment ) this.load( expressionExperimentValueObject.getId() );
     }
 
-    @Override
-    public ExpressionExperimentValueObject toExpressionExperimentValueObject( final ExpressionExperiment entity ) {
-        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject();
-
-        vo.setId( entity.getId() );
-
-        if ( entity.getAccession() != null ) {
-            vo.setAccession( entity.getAccession().getAccession() );
-            vo.setExternalDatabase( entity.getAccession().getExternalDatabase().getName() );
-            vo.setExternalUri( entity.getAccession().getExternalDatabase().getWebUri() );
-        }
-
-        vo.setName( entity.getName() );
-
-        vo.setSource( entity.getSource() );
-
-        vo.setBioAssayCount( 0 );
-        vo.setTaxon( "test" );
-        vo.setDesignElementDataVectorCount( 0 );
-
-        // vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
-        // vo.setTaxon( getTaxon( entity ) );
-        // vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
-
-        return vo;
-    }
-
     public String getTaxon( ExpressionExperiment object ) {
 
         final String queryString = "select sample.sourceTaxon from ExpressionExperimentImpl ee "
                 + "inner join ee.bioAssays as ba inner join ba.samplesUsed as sample "
                 + "inner join sample.sourceTaxon where ee.id = :id";
 
-        Taxon taxon = ( Taxon ) queryByIdReturnObject( object.getId(), queryString );
+        Taxon taxon = ( Taxon ) QueryUtils.queryById( getSession(), object.getId(), queryString );
 
         if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
             return "Taxon unavailable";
         }
         return taxon.getCommonName();
-
-        // return ((Taxon) queryByIdReturnObject(object.getId(), queryString)).getScientificName();
-
-        /*
-         * if ( object == null ) { return "Taxon unavailable"; } Collection bioAssayCol = object.getBioAssays();
-         * BioAssay bioAssay = null; Taxon taxon = null; if ( bioAssayCol != null && bioAssayCol.size() > 0 ) { bioAssay = (
-         * BioAssay ) bioAssayCol.iterator().next(); } else { return "Taxon unavailable"; } Collection bioMaterialCol =
-         * bioAssay.getSamplesUsed(); if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) { BioMaterial
-         * bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next(); taxon = bioMaterial.getSourceTaxon(); } else {
-         * return "Taxon unavailable"; } if ( taxon != null ) return taxon.getScientificName(); return "Taxon
-         * unavailable";
-         */
-    }
-
-    private Object queryByIdReturnObject( Long id, final String queryString ) {
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setFirstResult( 1 );
-            queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
-            // collection returned
-            queryObject.setParameter( "id", id );
-            java.util.List results = queryObject.list();
-
-            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
-
-            return results.iterator().next();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
     }
 
     @Override
@@ -522,9 +459,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
                 + "inner join EE.bioAssays as BA "
-                + "inner join BA.samplesUsed as SU inner join SU.sourceTaxon where EE.id = :id";
+                + "inner join BA.samplesUsed as SU where EE.id = :id";
 
-        return ( Taxon ) queryByIdReturnObject( id, queryString );
+        return ( Taxon ) QueryUtils.queryById(getSession(), id, queryString );
 
     }
 
@@ -605,11 +542,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         Map<DesignElementDataVector, Object> dedv2genes = new HashMap<DesignElementDataVector, Object>();
 
-        // String queryString = "SELECT * FROM DESIGN_ELEMENT_DATA_VECTOR WHERE " +
-        // " DESIGN_ELEMENT_FK in (" +
-        // StringUtils.join( designElements.iterator(), "," ) + ") + AND QUANTITATION_TYPE_FK = " +
-        // quantitationType.getId();
-
         String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE "
                 + " QUANTITATION_TYPE_FK = " + qt.getId();
         Session session = getSessionFactory().openSession();
@@ -654,15 +586,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Map handleGetPerTaxonCount() throws Exception {
-        final String queryString = "select SU.sourceTaxon, count(distinct EE.id) from ExpressionExperimentImpl as EE "
+        final String queryString = "select t, count(distinct EE.id) from ExpressionExperimentImpl as EE "
                 + "inner join EE.bioAssays as BA inner join BA.samplesUsed as SU "
-                + "inner join SU.sourceTaxon group by SU.sourceTaxon.scientificName";
+                + "inner join SU.sourceTaxon t group by t.scientificName";
         Map<Taxon, Long> taxonCount = new HashMap<Taxon, Long>();
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                taxonCount.put( ( Taxon ) list.get( 0 ), new Long( list.getInteger( 1 ) ) );
+                taxonCount.put( ( Taxon ) list.get( 0 ),  list.getLong( 1 )  );
             }
             return taxonCount;
         } catch ( org.hibernate.HibernateException ex ) {
@@ -693,9 +625,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distinct SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail.events as eventCreated "
+                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
-                + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
+                + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
                 + "WHERE eventCreated.action='C'" + " group by ee order by ee.name";
 
         try {
@@ -710,8 +642,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setSource( list.getString( 4 ) );
                 v.setAccession( list.getString( 5 ) );
                 v.setTaxon( list.getString( 6 ) );
-                v.setBioAssayCount( list.getInteger( 7 ) );
-                v.setArrayDesignCount( list.getInteger( 8 ) );
+                v.setBioAssayCount( list.getLong( 7 ) );
+                v.setArrayDesignCount( list.getLong( 8 ) );
                 v.setShortName( list.getString( 9 ) );
                 v.setDateCreated( list.getDate( 10 ).toString() );
                 // removed to speed up query
@@ -748,14 +680,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
                 + "eventCreated.date as createdDate "
-                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail.events as eventCreated "
+                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
-                + "inner join SU.sourceTaxon as taxon left join ee.accession.externalDatabase as ED "
+                + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
                 + " where eventCreated.action='C' and ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
+            
             queryObject.setCacheable( true );
             List list = queryObject.list();
             for ( Object object : list ) {
@@ -769,8 +702,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setSource( ( String ) res[4] );
                 v.setAccession( ( String ) res[5] );
                 v.setTaxon( ( String ) res[6] );
-                v.setBioAssayCount( ( Integer ) res[7] );
-                v.setArrayDesignCount( ( Integer ) res[8] );
+                v.setBioAssayCount( ( Long ) res[7] );
+                v.setArrayDesignCount( ( Long ) res[8] );
                 v.setShortName( ( String ) res[9] );
                 v.setDateCreated( ( ( Date ) res[10] ).toString() );
                 vo.add( v );

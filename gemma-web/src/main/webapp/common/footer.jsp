@@ -26,7 +26,7 @@
 		</c:if> &nbsp; </span>
 </c:if>
 
-<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+<script src="<c:url value='/scripts/urchin.js' />" type="text/javascript">
 </script>
 <script type="text/javascript">
 _uacct = "UA-255601-1";

@@ -132,7 +132,7 @@ public class SecurityFormController extends BaseFormController {
 
         Object target = null;
         if ( StringUtils.equalsIgnoreCase( type, expressionExperimentType ) ) {
-            target = this.expressionExperimentService.findById( id );
+            target = this.expressionExperimentService.load( id );
         } else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
             // target = this.arrayDesignService.findArrayDesignByName( name );//TODO no findById ... maybe use name
             return processErrors( request, response, command, errors,

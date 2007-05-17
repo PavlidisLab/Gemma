@@ -83,5 +83,6 @@ read:function (o) {
 		var record = new recordType(values, id);
 		records[i] = record;
 	}
+
 	return {success:success, records:records, totalRecords:totalRecords};
 }});

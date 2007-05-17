@@ -34,9 +34,6 @@
 		<property name="compositeSequenceService">
 			<ref bean="compositeSequenceService" />
 		</property>
-		<property name="compositeSequenceGeneMapperService">
-			<ref bean="compositeSequenceGeneMapperService" />
-		</property>
 		<property name="expressionExperimentService">
 			<ref bean="expressionExperimentService" />
 		</property>

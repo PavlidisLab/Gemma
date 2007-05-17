@@ -114,19 +114,4 @@
 	</property>
 </bean>
 
-<!--  ============================================== -->
-<!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
-<bean id="conversion.service"
-	class="org.springframework.binding.convert.support.DefaultConversionService"
-	autowire="byType" />
-
-<!-- A formatter registry, a thread-safe cache for Formatters: a thread-safe, lighter weight alt. to PropertyEditors! -->
-<bean id="formatter.locator"
-	class="org.springframework.binding.format.support.ThreadLocalFormatterLocator"
-	autowire="byType" />
-
-<!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
-<bean id="thread.cleanupBroadcaster"
-	class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
-
-
+ 

@@ -1,5 +1,20 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2007 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.analysis.sequence;
 
@@ -11,6 +26,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author jsantos
+ * @version $Id$
  */
 public class CompositeSequenceMapValueObject {
     private String compositeSequenceId = null;
@@ -18,10 +34,15 @@ public class CompositeSequenceMapValueObject {
     private String bioSequenceId = null;
     private String bioSequenceName = null;
     private String bioSequenceNcbiId = null;
+    private String arrayDesignName = null;
+    private Long arrayDesignId = null;
     private Long numBlatHits = null;
 
     private Map<String, GeneProductValueObject> geneProducts = new HashMap<String, GeneProductValueObject>();;
     private Map<String, GeneValueObject> genes = new HashMap<String, GeneValueObject>();
+
+    public CompositeSequenceMapValueObject() {
+    }
 
     /**
      * @return the bioSequenceId
@@ -133,6 +154,26 @@ public class CompositeSequenceMapValueObject {
      */
     public void setGenes( Map<String, GeneValueObject> genes ) {
         this.genes = genes;
+    }
+
+    public String getArrayDesignName() {
+        return arrayDesignName;
+    }
+
+    public void setArrayDesignName( String arrayDesignName ) {
+        this.arrayDesignName = arrayDesignName;
+    }
+
+    public void setNumBlatHits( Long numBlatHits ) {
+        this.numBlatHits = numBlatHits;
+    }
+
+    public Long getArrayDesignId() {
+        return arrayDesignId;
+    }
+
+    public void setArrayDesignId( Long arrayDesignId ) {
+        this.arrayDesignId = arrayDesignId;
     }
 
 }

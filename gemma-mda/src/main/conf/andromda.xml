@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  $Id$ -->
 <andromda>
-	<!--  $Id$ -->
 	<properties>
 		<property name="modelValidation">${modelValidation}</property>
 		<property name="cartridgeFilter">${filter}</property>
@@ -16,7 +16,7 @@
 				<model>
 					<uri>jar:file:${project.basedir}/src/main/uml/gemma-om.xml.zip!/gemma-om.xml</uri>
 					<moduleSearchLocations>
-						<location patterns="**/*.xml.zip, **/*.uml2">
+						<location patterns="**/*.xml.zip, **/*.uml14">
 							${settings.localRepository}/org/andromda/profiles
 						</location>
 					</moduleSearchLocations>
@@ -37,11 +37,18 @@
 				<property name="maxSqlNameLength">60</property>
 				<property name="hibernateVersion">3</property>
 				<property name="enableTemplating">true</property>
+			</properties>
+		</namespace>
+		<namespace name="java">
+			<properties>
 				<property name="enumerations">${maven.andromda.core.generated.dir}</property>
+				<property name="exceptions">${maven.andromda.core.generated.dir}</property>
+				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
+				<property name="enableTemplating">true</property>
 			</properties>
 		</namespace>
 		<namespace name="bpm4struts">
-			<!--  Note that we are not using this now -->
+			<!--  Note that we are not using this -->
 			<properties>
 				<property name="forms">${maven.andromda.core.generated.dir}</property>
 				<property name="pages">${maven.andromda.web.generated.pages.dir}/pages</property>
@@ -87,7 +94,7 @@
 				<property name="connectionUrl">${gemma.db.url}</property>
 				<property name="serviceLocator">${maven.andromda.spring.service.locator.dir}</property>
 				<property name="applicationContext">applicationContext-hibernate.xml</property>
-				<property name="applicationContextLocalDataSource">localDataSource.xml</property>
+				<property name="applicationContextLocalDataSource">dataSource.xml</property>
 				<property name="jdbcDataSourceClass">org.apache.commons.dbcp.BasicDataSource</property>
 				<property name="jdbcDataSourceDestroyMethod">close</property>
 				<property name="localTransactionManager">
@@ -135,7 +142,6 @@
 				<property name="entities">${maven.andromda.core.generated.dir}</property>
 				<property name="entity-impls">${maven.andromda.core.manual.dir}</property>
 				<property name="entity-mappings">${maven.andromda.hibernate.configuration.dir}</property>
-				<property name="enumerations">${maven.andromda.core.generated.dir}</property>
 				<property name="user-types">${maven.andromda.core.generated.dir}</property>
 				<property name="customTypesPackage">${application.package}</property>
 				<property name="userTypesPackage">${application.package}.persistence.hibernate.usertypes</property>
@@ -158,14 +164,6 @@
 				<property name="hibernateTransactionFactoryClass">
 					org.hibernate.transaction.JTATransactionFactory
 				</property>
-			</properties>
-		</namespace>
-		<namespace name="java">
-			<properties>
-				<property name="enumerations">${maven.andromda.core.generated.dir}</property>
-				<property name="exceptions">${maven.andromda.core.generated.dir}</property>
-				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
-				<property name="enableTemplating">true</property>
 			</properties>
 		</namespace>
 	</namespaces>

@@ -19,14 +19,14 @@
 package ubic.gemma.web.remote;
 
 /**
- * TODO Document Me
+ * Bean to expose for remote access via AJAX, when all that is needed is the ID.
  * 
  * @author Paul
  * @version $Id$
  */
-public class GeneDelegator {
+public class EntityDelegator {
 
-    public GeneDelegator() {
+    public EntityDelegator() {
     }
 
     private Long id;

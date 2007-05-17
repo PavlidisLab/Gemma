@@ -65,7 +65,7 @@ public class ExperimentalFactorController extends BaseMultiActionController {
             throw new EntityNotFoundException( identifierNotFound );
         }
 
-        ExperimentalFactor experimentalFactor = experimentalFactorService.findById( id );
+        ExperimentalFactor experimentalFactor = experimentalFactorService.load( id );
         if ( experimentalFactor == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }

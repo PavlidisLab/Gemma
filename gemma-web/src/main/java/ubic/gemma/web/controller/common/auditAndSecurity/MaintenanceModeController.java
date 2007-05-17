@@ -40,14 +40,17 @@ import ubic.gemma.web.controller.BaseFormController;
  * @author pavlidis
  * @version $Id$
  */
-public class MaintenanceModeController extends BaseFormController implements ServletContextAware {
+public class MaintenanceModeController extends BaseFormController {
 
     Map<String, Object> config;
 
+    @SuppressWarnings("unchecked")
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
+        config = ( Map<String, Object> ) getServletContext().getAttribute( Constants.CONFIG );
+        
         /*
          * check that the user is admin!
          */
@@ -90,14 +93,6 @@ public class MaintenanceModeController extends BaseFormController implements Ser
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.context.ServletContextAware#setServletContext(javax.servlet.ServletContext)
-     */
-    @SuppressWarnings("unchecked")
-    public void setServletContext( ServletContext servletContext ) {
-        config = ( Map<String, Object> ) servletContext.getAttribute( Constants.CONFIG );
-    }
+    
 
 }

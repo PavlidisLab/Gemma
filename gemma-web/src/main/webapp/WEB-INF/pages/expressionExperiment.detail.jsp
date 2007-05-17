@@ -254,8 +254,7 @@ if ( expressionExperiment.getName() != null ) {
 	<%
 	if ( expressionExperiment.getSubsets().size() > 0 ) {
 	%>
-	<div
-		style="margin:0px 0px 0px 20px;><script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
+	<div style="margin:0px 0px 0px 20px;><script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 	<h3>
 		<fmt:message key="expressionExperimentSubsets.title" />&nbsp;<a class="helpLink" href="?"
 	onclick="showHelpTip(event, 'Subsets are much like experimental design factors...'); return false"><img
@@ -292,7 +291,7 @@ if ( expressionExperiment.getName() != null ) {
 		requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
 		id="dataVectorList" pagesize="30"
 		decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
-		<display:column property="data" sortable="false" title="Get data" />
+		<%-- <display:column property="data" sortable="false" title="Get data" /> --%>
 		<display:column property="qtName" sortable="true" maxWords="20"
 			titleKey="name" />
 		<display:column property="description" sortable="true" maxLength="20"

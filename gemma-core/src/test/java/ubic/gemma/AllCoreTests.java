@@ -36,7 +36,7 @@ import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
-import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.GeneOntologyServiceTest;
 import ubic.gemma.persistence.AllPersistenceTests;
 import ubic.gemma.persistence.GenomePersisterTest;
 import ubic.gemma.persistence.PersisterTest;
@@ -83,7 +83,7 @@ public class AllCoreTests {
         suite.addTestSuite( ExternalDatabaseTest.class );
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
-        suite.addTestSuite( GeneOntologyService.class );
+        suite.addTestSuite( GeneOntologyServiceTest.class );
 
         suite.addTestSuite( NCBIGene2GOAssociationParserTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );

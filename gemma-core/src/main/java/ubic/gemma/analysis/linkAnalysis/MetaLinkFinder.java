@@ -346,7 +346,7 @@ public class MetaLinkFinder {
     }
     public static ExpressionExperiment getEE(int i){
     	Object eeId = allEE.elementAt(i);
-    	ExpressionExperiment ee = eeService.findById((Long)eeId);
+    	ExpressionExperiment ee = eeService.load((Long)eeId);
     	return ee;
     }
     public static String getEEName(int i){

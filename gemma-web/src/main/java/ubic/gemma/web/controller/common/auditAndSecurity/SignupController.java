@@ -71,7 +71,7 @@ public class SignupController extends UserAuthenticatingController {
             User savedUser = this.userService.create( user.asUser() );
 
             assert savedUser != null;
-        } catch ( UserExistsException e ) {
+        } catch (  UserExistsException e ) {
             log.warn( e.getMessage() );
 
             errors.rejectValue( "userName", "errors.existing.user",

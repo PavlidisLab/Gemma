@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.util.StopWatch;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -79,29 +80,35 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
     @Override
     public void contextInitialized( ServletContextEvent event ) {
         log.info( "Initializing application context..." );
+        StopWatch sw = new StopWatch();
+        sw.start();
 
         // call Spring's context ContextLoaderListener to initialize
         // all the context files specified in web.xml
         super.contextInitialized( event );
 
-        ServletContext context = event.getServletContext();
+        ServletContext servletContext = event.getServletContext();
 
-        Map<String, Object> config = initializeConfiguration( context );
+        Map<String, Object> config = initializeConfiguration( servletContext );
 
-        loadTheme( context, config );
+        loadTheme( servletContext, config );
 
         loadVersionInformation( config );
 
-        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
+        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
 
-        /* deletes the compass lock file */
         CompassUtils.deleteCompassLocks();
 
         loadRememberMeStatus( config, ctx );
 
-        context.setAttribute( Constants.CONFIG, config );
+        servletContext.setAttribute( Constants.CONFIG, config );
 
-        populateDropDowns( context );
+        populateDropDowns( servletContext );
+
+        sw.stop();
+
+        double time = sw.getLastTaskTimeMillis() / 1000.00;
+        log.info( "Startup of Gemma took " + time + " s " );
     }
 
     /**
@@ -149,7 +156,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
      */
     private void loadTheme( ServletContext context, Map<String, Object> config ) {
         if ( context.getInitParameter( "theme" ) != null ) {
-            log.info( "Found theme " + context.getInitParameter( "theme" ) );
+            log.debug( "Found theme " + context.getInitParameter( "theme" ) );
             config.put( "theme", context.getInitParameter( "theme" ) );
         } else {
             log.warn( "No theme found, using default=" + DEFAULT_THEME );

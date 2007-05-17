@@ -42,9 +42,8 @@ import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
-import org.compass.spring.web.mvc.CompassSearchResults;
+import org.compass.core.support.search.CompassSearchResults;
 
-import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -79,7 +78,6 @@ public class SearchService {
     private CompositeSequenceService compositeSequenceService;
     private ExpressionExperimentService expressionExperimentService;
     private BioSequenceService bioSequenceService;
-    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService;
     private Compass geneBean;
     private Compass eeBean;
     private Compass arrayBean;
@@ -338,7 +336,7 @@ public class SearchService {
         ee = expressionExperimentService.findByShortName( tq );
         if ( ee != null ) results.add( ee );
         try {
-            ee = expressionExperimentService.findById( new Long( tq ) );
+            ee = expressionExperimentService.load( new Long( tq ) );
             if ( ee != null ) results.add( ee );
         } catch ( NumberFormatException e ) {
             // noop
@@ -480,7 +478,8 @@ public class SearchService {
         CompassHits hits = compassQuery.hits();
         CompassDetachedHits detachedHits = hits.detach();
         time = System.currentTimeMillis() - time;
-        CompassSearchResults searchResults = new CompassSearchResults( detachedHits.getHits(), time );
+        CompassSearchResults searchResults = new CompassSearchResults( detachedHits.getHits(), time, detachedHits
+                .getHits().length );
 
         return searchResults;
     }
@@ -546,14 +545,6 @@ public class SearchService {
      */
     public void setOntologyBean( Compass ontologyBean ) {
         this.ontologyBean = ontologyBean;
-    }
-
-    /**
-     * @param compositeSequenceGeneMapperService the compositeSequenceGeneMapperService to set
-     */
-    public void setCompositeSequenceGeneMapperService(
-            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
-        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {

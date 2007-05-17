@@ -28,9 +28,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
-import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
+import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -38,6 +37,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author daq2101
@@ -47,7 +47,6 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  * @spring.bean id="geneController"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
- * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
@@ -55,63 +54,56 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  */
 public class GeneController extends BaseMultiActionController {
     private GeneService geneService = null;
-    private BibliographicReferenceService bibliographicReferenceService = null;
     private Gene2GOAssociationService gene2GOAssociationService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private GeneOntologyService geneOntologyService;
 
     /**
-     * @return Returns the bibliographicReferenceService.
+     * Informs submit methods not to populate model with data that is going to be fetched with AJAX call. We'll
+     * configure this externally, so this is temporary.
      */
-    public BibliographicReferenceService getBibliographicReferenceService() {
-        return bibliographicReferenceService;
+    private static final boolean AJAX = true;
+
+    /**
+     * Provide the human-readable text for each GO term.
+     * 
+     * @param ontos
+     */
+    private void fillInTermNames( Collection<VocabCharacteristic> ontos ) {
+        for ( VocabCharacteristic v : ontos ) {
+            String desc = geneOntologyService.getTermName( v.getValue() );
+            v.setDescription( desc ); // we're just using this as a convenient spot.
+        }
     }
 
     /**
-     * @return Returns the geneService.
+     * For ajax
+     * 
+     * @param geneDelegator
+     * @return
+     * @spring.webremote include="true"
      */
-    public GeneService getGeneService() {
-        return geneService;
+    @SuppressWarnings("unchecked")
+    public Collection findGOTerms( EntityDelegator geneDelegator ) {
+        Gene g = Gene.Factory.newInstance();
+        g.setId( geneDelegator.getId() );
+        Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( g );
+        fillInTermNames( ontos );
+        return ontos;
     }
 
     /**
-     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     * For ajax.
+     * 
+     * @param geneDelegator
+     * @return
+     * @spring.webremote include="true"
      */
-    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
-        this.arrayDesignMapResultService = arrayDesignMapResultService;
-    }
-
-    /**
-     * @param bibliographicReferenceService The bibliographicReferenceService to set.
-     */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    public Collection getProducts( EntityDelegator geneDelegator ) {
+        Long id = geneDelegator.getId();
+        Gene gene = geneService.load( id );
+        return gene.getProducts();
     }
 
     /**
@@ -132,32 +124,19 @@ public class GeneController extends BaseMultiActionController {
         ModelAndView mav = new ModelAndView( "gene.detail" );
         mav.addObject( "gene", gene );
 
-        /*
-        Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( gene );
-        if ( ontos.size() != 0 ) {
-            fillInTermNames( ontos );
-            mav.addObject( "ontologyEntries", ontos );
+        if ( !AJAX ) {
+            Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( gene );
+            if ( ontos.size() != 0 ) {
+                fillInTermNames( ontos );
+                mav.addObject( "ontologyEntries", ontos );
+            }
+            mav.addObject( "numOntologyEntries", ontos.size() );
         }
-        
-        mav.addObject( "numOntologyEntries", ontos.size() );
-*/
-        
+
         // Get the composite sequences
         Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         return mav;
-    }
-
-    /**
-     * Provide the human-readable text for each GO term.
-     * 
-     * @param ontos
-     */
-    private void fillInTermNames( Collection<VocabCharacteristic> ontos ) {
-        for ( VocabCharacteristic v : ontos ) {
-            String desc = geneOntologyService.getTermName( v.getValue() );
-            v.setDescription( desc ); // we're just using this as a convenient spot.
-        }
     }
 
     /**
@@ -199,27 +178,74 @@ public class GeneController extends BaseMultiActionController {
      */
     @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+
+        // gene id.
         Long id = Long.parseLong( request.getParameter( "id" ) );
         Gene gene = geneService.load( id );
         if ( gene == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+            StringBuffer requestURL = request.getRequestURL();
+            log.info( requestURL );
             return new ModelAndView( "mainMenu.html" );
         }
         Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
 
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+        mav.addObject( "numCompositeSequences", compositeSequences.size() );
 
-        Collection rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
-        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        if ( !AJAX ) {
+            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+            Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
+                    .getSummaryMapValueObjects( rawSummaries );
 
-        if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
-            // / FIXME, return error or do something else intelligent.
+            if ( summaries == null || summaries.size() == 0 ) {
+                // / FIXME, return error or do something else intelligent.
+            }
+            mav.addObject( "sequenceData", summaries );
+
+        } else {
+            StringBuilder buf = new StringBuilder();
+            for ( CompositeSequence sequence : compositeSequences ) {
+                buf.append( sequence.getId() );
+                buf.append( "," );
+            }
+            mav.addObject( "compositeSequenceIdList", buf.toString().replaceAll( ",$", "" ) );
         }
         mav.addObject( "gene", gene );
-        mav.addObject( "sequenceData", compositeSequenceSummary );
-        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
 
         return mav;
+    }
+
+    /**
+     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     */
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
 }

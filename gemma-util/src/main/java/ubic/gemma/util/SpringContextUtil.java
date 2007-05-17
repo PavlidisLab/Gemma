@@ -120,7 +120,7 @@ public class SpringContextUtil {
      */
     private static String[] getStandardConfigLocations( boolean compassOn, boolean gigaspacesOn, boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
-        paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/dataSource.xml" );
 
         if ( compassOn ) {
             CompassUtils.turnOnCompass( false, paths );

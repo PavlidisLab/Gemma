@@ -32,6 +32,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -43,6 +44,7 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
+import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -58,6 +60,13 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="searchService" ref="searchService"
  */
 public class ArrayDesignController extends BackgroundProcessingMultiActionController {
+
+    /**
+     * Instead of showing all the probes for the array, we only fetch some of them.
+     */
+    private static final int NUM_PROBES_TO_SHOW = 100;
+
+    private static boolean AJAX = true;
 
     @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
@@ -84,32 +93,60 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         this.arrayDesignService = arrayDesignService;
     }
 
+    /**
+     * Show (some of) the probes from an array.
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
     public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
 
-        String idStr = request.getParameter( "id" );
+        String arrayDesignIdStr = request.getParameter( "id" );
 
-        if ( idStr == null ) {
+        if ( arrayDesignIdStr == null ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
+        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
 
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 
-        Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, 100 );
-        Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
-
-        // Collection compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( arrayDesign );
+        Collection compositeSequenceSummary = getCsSummaries( arrayDesign );
 
         if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
-            // / FIXME, return error or do something else intelligent.
+            throw new RuntimeException( "No probes found for " + arrayDesign );
         }
-
-        mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "sequenceData", compositeSequenceSummary );
         mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
+
+        mav.addObject( "arrayDesign", arrayDesign );
+
         return mav;
+    }
+
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( ArrayDesign arrayDesign ) {
+        Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
+        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
+                .getSummaryMapValueObjects( rawSummaries );
+        return summaries;
+    }
+
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param ed
+     * @return
+     */
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
+        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
+        return this.getCsSummaries( arrayDesign );
     }
 
     /**
@@ -192,6 +229,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return eeIds;
     }
 
+    /**
+     * @param arrayDesign
+     * @return
+     */
     private String formatTechnologyType( ArrayDesign arrayDesign ) {
         String techType = arrayDesign.getTechnologyType().getValue();
         String colorString = "";
@@ -208,11 +249,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
+     * Show all array designs, or according to a list of IDs passed in.
+     * 
      * @param request
      * @param response
      * @return
      */
-    // @SuppressWarnings({ "unused", "unchecked" })
     @SuppressWarnings("unchecked")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
@@ -257,38 +299,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Show statistics for all (by default) array designs.
+     * Build summary report for an array design
      * 
      * @param request
      * @param response
      * @return
      */
-
-    /*
-     * // @SuppressWarnings({ "unused", "unchecked" }) @SuppressWarnings("unchecked") public ModelAndView showAllStats(
-     * HttpServletRequest request, HttpServletResponse response ) { String sId = request.getParameter( "id" );
-     * Collection<ArrayDesignValueObject> arrayDesigns = new ArrayList<ArrayDesignValueObject>(); Collection<ArrayDesignValueObjectSummary>
-     * summaries = new ArrayList<ArrayDesignValueObjectSummary>(); // if no IDs are specified, then load all
-     * expressionExperiments and show the summary (if available) if ( sId == null ) { this.saveMessage( request,
-     * "Displaying all Arrays" ); arrayDesigns.addAll( arrayDesignService.loadAllValueObjects() ); } // if ids are
-     * specified, then display only those arrayDesigns else { Collection ids = new ArrayList<Long>(); String[] idList =
-     * StringUtils.split( sId, ',' ); for ( int i = 0; i < idList.length; i++ ) { ids.add( new Long( idList[i] ) ); }
-     * arrayDesigns.addAll( arrayDesignService.loadValueObjects( ids ) ); } for ( ArrayDesignValueObject ad :
-     * arrayDesigns ) { String summary = arrayDesignReportService.getArrayDesignReport( ad.getId() );
-     * ArrayDesignValueObjectSummary adSummary = new ArrayDesignValueObjectSummary( ad, summary );
-     * adSummary.setLastSequenceAnalysis( arrayDesignReportService.getLastSequenceAnalysisEvent( ad.getId() ) );
-     * adSummary.setLastGeneMapping( arrayDesignReportService.getLastGeneMappingEvent( ad.getId() ) );
-     * adSummary.setLastSequenceUpdate( arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) );
-     * summaries.add( adSummary ); } Long numArrayDesigns = new Long( arrayDesigns.size() ); ModelAndView mav = new
-     * ModelAndView( "arrayDesignStatistics" ); mav.addObject( "arrayDesigns", summaries ); mav.addObject(
-     * "numArrayDesigns", numArrayDesigns ); return mav; }
-     */
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    // @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
@@ -303,6 +319,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
+     * Delete an arrayDesign.
+     * 
      * @param request
      * @param response
      * @return
@@ -376,6 +394,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 + ids ) );
     }
 
+    /**
+     * Show array designs that match search criteria.
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
         String filter = request.getParameter( "filter" );
 
@@ -426,12 +451,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     /**
      * Inner class used for deleting array designs
-     * <hr>
-     * <p>
-     * Copyright (c) 2006 UBC Pavlab
-     * 
-     * @author klc
-     * @version $Id$
      */
     class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
 
@@ -463,13 +482,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Inner class used for deleting array designs
-     * <hr>
-     * <p>
-     * Copyright (c) 2006 UBC Pavlab
-     * 
-     * @author klc
-     * @version $Id$
+     * Inner class used for building array desing summary
      */
     class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
 

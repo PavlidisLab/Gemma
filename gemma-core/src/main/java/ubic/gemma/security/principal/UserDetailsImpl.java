@@ -18,10 +18,7 @@
  */
 package ubic.gemma.security.principal;
 
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.util.Collection;
 
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.userdetails.UserDetails;
@@ -36,7 +33,17 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class UserDetailsImpl extends User implements UserDetails {
+public class UserDetailsImpl implements UserDetails {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1650537135541038216L;
+    private Long id;
+    private String password;
+    private String userName;
+    private Boolean enabled;
+    private Collection<UserRole> roles;
 
     /**
      * This constructor is only to be used by the UserDetailsService.
@@ -50,10 +57,46 @@ public class UserDetailsImpl extends User implements UserDetails {
         this.setUserName( user.getUserName() );
         this.setRoles( user.getRoles() );
         this.setEnabled( user.getEnabled() );
+    }
 
-        // none of this other stuff matters...
-        this.setAffiliations( user.getAffiliations() );
-        this.setName( user.getName() );
+    /**
+     * @param roles
+     */
+    private void setRoles( Collection<UserRole> roles ) {
+        this.roles = roles;
+
+    }
+
+    /**
+     * @param enabled
+     */
+    private void setEnabled( Boolean enabled ) {
+        this.enabled = enabled;
+
+    }
+
+    /**
+     * @param userName
+     */
+    private void setUserName( String userName ) {
+        this.userName = userName;
+
+    }
+
+    /**
+     * @param password
+     */
+    private void setPassword( String password ) {
+        this.password = password;
+
+    }
+
+    /**
+     * @param id
+     */
+    private void setId( Long id ) {
+        this.id = id;
+
     }
 
     /*
@@ -61,6 +104,7 @@ public class UserDetailsImpl extends User implements UserDetails {
      * 
      * @see org.acegisecurity.userdetails.UserDetails#getAuthorities()
      */
+    @SuppressWarnings("serial")
     public GrantedAuthority[] getAuthorities() {
         GrantedAuthority[] result = new GrantedAuthority[getRoles().size()];
         int i = 0;
@@ -76,13 +120,20 @@ public class UserDetailsImpl extends User implements UserDetails {
         return result;
     }
 
+    /**
+     * @return
+     */
+    private Collection<UserRole> getRoles() {
+        return roles;
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see org.acegisecurity.userdetails.UserDetails#getUsername()
      */
     public String getUsername() {
-        return getUserName();
+        return userName;
     }
 
     /*
@@ -91,7 +142,7 @@ public class UserDetailsImpl extends User implements UserDetails {
      * @see org.acegisecurity.userdetails.UserDetails#isAccountNonExpired()
      */
     public boolean isAccountNonExpired() {
-        return getEnabled();
+        return enabled;
     }
 
     /*
@@ -100,7 +151,7 @@ public class UserDetailsImpl extends User implements UserDetails {
      * @see org.acegisecurity.userdetails.UserDetails#isAccountNonLocked()
      */
     public boolean isAccountNonLocked() {
-        return getEnabled();
+        return enabled;
     }
 
     /*
@@ -109,7 +160,7 @@ public class UserDetailsImpl extends User implements UserDetails {
      * @see org.acegisecurity.userdetails.UserDetails#isCredentialsNonExpired()
      */
     public boolean isCredentialsNonExpired() {
-        return getEnabled();
+        return enabled;
     }
 
     /*
@@ -118,7 +169,7 @@ public class UserDetailsImpl extends User implements UserDetails {
      * @see org.acegisecurity.userdetails.UserDetails#isEnabled()
      */
     public boolean isEnabled() {
-        return getEnabled();
+        return enabled;
     }
 
     public String salt() {
@@ -127,20 +178,41 @@ public class UserDetailsImpl extends User implements UserDetails {
 
     @Override
     public String toString() {
-        return this.getUserName();
+        return userName;
     }
 
     /*
-     * These two methods are implemented to keep Tomcat from trying to serialize the session.
+     * (non-Javadoc)
+     * 
+     * @see org.acegisecurity.userdetails.UserDetails#getPassword()
      */
-    @SuppressWarnings("unused")
-    private void writeObject( ObjectOutputStream out ) throws IOException {
-        throw new NotSerializableException( "Not today!" );
+    public String getPassword() {
+        return password;
     }
 
-    @SuppressWarnings("unused")
-    private void readObject( ObjectInputStream in ) throws IOException {
-        throw new NotSerializableException( "Not today!" );
+    public Boolean getEnabled() {
+        return enabled;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    // /*
+    // * These two methods are implemented to keep Tomcat from trying to serialize the session.
+    // */
+    // @SuppressWarnings("unused")
+    // private void writeObject( ObjectOutputStream out ) throws IOException {
+    // throw new NotSerializableException( "Not today!" );
+    // }
+    //
+    // @SuppressWarnings("unused")
+    // private void readObject( ObjectInputStream in ) throws IOException {
+    // throw new NotSerializableException( "Not today!" );
+    // }
 
 }

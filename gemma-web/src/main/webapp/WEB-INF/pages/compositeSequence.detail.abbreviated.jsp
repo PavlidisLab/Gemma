@@ -2,11 +2,11 @@
 <jsp:useBean id="compositeSequence" scope="request"
 	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<title><fmt:message key="compositeSequence.title" /></title>
-<script type="text/javascript"
-	src="<c:url value="/scripts/scrolltable.js"/>"></script>
-<link rel="stylesheet" type="text/css"
-	href="<c:url value='/styles/scrolltable.css'/>" />
+
+
+<title><fmt:message key="compositeSequence.title" />
+</title>
+
 
 
 
@@ -87,26 +87,25 @@
 							%>
 						</td>
 					</tr>
-				<tr>
-					<td valign="top">
-					<a class="helpLink" href="?"
-							onclick="showHelpTip(event, 'The array design this probe belongs to.'); return false"><img
-							src="/Gemma/images/help.png" /> </a>
-						<b> Array Design </b>
-					</td>
-					<td>
-						<%
-						if ( compositeSequence.getArrayDesign().getName() != null ) {
-						%>
-						${
-						compositeSequence.arrayDesign.name}
-						<%
-						                } else {
-						                out.print( "Array Design unavailable." );
-						            }
-						%>
-					</td>
-				</tr>
+					<tr>
+						<td valign="top">
+							<a class="helpLink" href="?"
+								onclick="showHelpTip(event, 'The array design this probe belongs to.'); return false"><img
+									src="/Gemma/images/help.png" /> </a>
+							<b> Array Design </b>
+						</td>
+						<td>
+							<%
+							if ( compositeSequence.getArrayDesign().getName() != null ) {
+							%>
+							${ compositeSequence.arrayDesign.name}
+							<%
+							                    } else {
+							                    out.print( "Array Design unavailable." );
+							                }
+							%>
+						</td>
+					</tr>
 					<tr>
 						<td valign="top">
 							<a class="helpLink" href="?"
@@ -270,6 +269,10 @@
 						&nbsp;
 					</div>
 					<br />
+
+
+					
+
 					<display:table name="blatResults" requestURI="" id="blatResult"
 						style="width:100%;" pagesize="2000"
 						decorator="ubic.gemma.web.taglib.displaytag.expression.designElement.CompositeSequenceWrapper"
@@ -290,7 +293,15 @@
 			</td>
 		</tr>
 	</table>
+	
+	<div id="blatres-grid" class="x-grid-mso"
+						style="border: 1px solid #c3daf9; overflow: hidden; width:430px; height:250px;"></div>
+					<input type="hidden" name="cs" id="cs"
+						value="${compositeSequence.id}" />
+	
 </aa:zone>
+
+
 
 </body>
 </html>

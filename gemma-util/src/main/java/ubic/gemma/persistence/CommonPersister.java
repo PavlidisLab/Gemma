@@ -591,7 +591,7 @@ abstract public class CommonPersister extends AbstractPersister {
             }
             try {
                 return userService.create( user );
-            } catch ( UserExistsException e ) {
+            } catch ( Exception e ) {
                 throw new RuntimeException( e );
             }
         }

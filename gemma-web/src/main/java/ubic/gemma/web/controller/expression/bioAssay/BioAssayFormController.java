@@ -85,7 +85,7 @@ public class BioAssayFormController extends BaseFormController {
         Long id = Long.parseLong( id_param );
 
         if ( !id.equals( null ) )
-            ba = bioAssayService.findById( id );
+            ba = bioAssayService.load( id );
         else
             ba = BioAssay.Factory.newInstance();
 

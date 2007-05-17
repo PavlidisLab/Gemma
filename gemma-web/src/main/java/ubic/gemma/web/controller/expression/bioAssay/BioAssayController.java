@@ -75,7 +75,7 @@ public class BioAssayController extends BaseMultiActionController {
             throw new EntityNotFoundException( identifierNotFound );
         }
 
-        BioAssay bioAssay = bioAssayService.findById( id );
+        BioAssay bioAssay = bioAssayService.load( id );
         if ( bioAssay == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
@@ -101,7 +101,7 @@ public class BioAssayController extends BaseMultiActionController {
             String[] idList = StringUtils.split( sId, ',' );
             for (int i = 0; i < idList.length; i++) {
                 Long id = Long.parseLong( idList[i] );
-                BioAssay bioAssay = bioAssayService.findById( id );
+                BioAssay bioAssay = bioAssayService.load( id );
                 if ( bioAssay == null ) {
                     throw new EntityNotFoundException( id + " not found" );
                 }
