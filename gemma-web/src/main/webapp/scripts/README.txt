@@ -1,4 +1,4 @@
-The majority of files in this directory come from Prototype
+Some files in this directory come from Prototype
 and Scriptaculous - two JavaScript libraries that make Ajax
 easier.
 
@@ -35,3 +35,8 @@ The best scriptaculous documentation is at:
 
 http://wiki.script.aculo.us/scriptaculous/show/HomePage
 
+-------------------------------------------------------
+
+Javascript source files were minified using jsmin like so:
+
+ls *.js | xargs -i echo "mv {} {}.bak; /usr/local/bin/jsmin.exe < {}.bak > {};" | bash

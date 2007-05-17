@@ -1,6 +1,6 @@
 function refreshProgress() {
 	//HttpProgressMonitor.getProgressStatus(updateProgress);
-	HttpProgressMonitor.getProgressStatus(updateProgress,DWRUtil.getValue("taskId"));
+	HttpProgressMonitor.getProgressStatus(DWRUtil.getValue("taskId"),updateProgress);
 }
 var determinate;
 
