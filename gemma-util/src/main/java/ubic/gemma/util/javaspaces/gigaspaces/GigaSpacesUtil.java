@@ -19,6 +19,7 @@
 package ubic.gemma.util.javaspaces.gigaspaces;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -296,6 +297,55 @@ public class GigaSpacesUtil implements ApplicationContextAware {
 
         return registered;
 
+    }
+
+    /**
+     * Returns the list of tasks that can currently be serviced at the space url based on the currently registered
+     * workers.
+     * 
+     * @param url
+     * @return List <String>
+     */
+    public List<String> tasksThatCanBeServiced( String url ) {
+
+        List<String> taskNames = new ArrayList<String>();
+
+        if ( !this.areWorkersRegistered( url ) ) {
+            log.error( "No workers are registered with space at " + url + ".  Currently no tasks can be serviced." );
+        }
+
+        List<GemmaSpacesGenericEntry> workerEntries = this.getRegisteredWorkers( url );
+        for ( GemmaSpacesGenericEntry entry : workerEntries ) {
+            String taskName = entry.getMessage();
+            log.debug( taskName );
+            taskNames.add( taskName );
+        }
+
+        return taskNames;
+    }
+
+    /**
+     * Returns true if the task can be serviced by the space at the given url.
+     * 
+     * @param taskName
+     * @param url The url of the space.
+     * @return boolean
+     */
+    public boolean canServiceTask( String taskName, String url ) {
+        boolean serviceable = false;
+
+        List<String> serviceableTasks = this.tasksThatCanBeServiced( url );
+
+        if ( serviceableTasks.contains( taskName ) ) {
+            serviceable = true;
+            log.info( "Can service task with name " + taskName );
+        }
+
+        else {
+            log.error( "Cannot service task with name " + taskName );
+        }
+
+        return serviceable;
     }
 
     /*
