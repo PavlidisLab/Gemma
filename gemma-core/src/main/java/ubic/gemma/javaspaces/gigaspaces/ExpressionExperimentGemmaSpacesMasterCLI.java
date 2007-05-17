@@ -54,7 +54,9 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
 
     private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesMasterCLI.class );
 
-    private GigaSpacesTemplate template;
+    private GigaSpacesUtil gigaspacesUtil = null;
+
+    private GigaSpacesTemplate template = null;
 
     private ExpressionExperimentTask proxy = null;
 
@@ -118,7 +120,7 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
      */
     protected void init() throws Exception {
 
-        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
+        gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
         ApplicationContext updatedContext = gigaspacesUtil
                 .addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
@@ -175,6 +177,10 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
                     } catch ( Exception e ) {
                         throw new RuntimeException( e );
                     }
+
+                    if ( !gigaspacesUtil.canServiceTask( ExpressionExperimentTask.class.getName(),
+                            GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) continue;
+
                     res = proxy.execute( accession, platformOnly, doMatching );
 
                     stopwatch.stop();
