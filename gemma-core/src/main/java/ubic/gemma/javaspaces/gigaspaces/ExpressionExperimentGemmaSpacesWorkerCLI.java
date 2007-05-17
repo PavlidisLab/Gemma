@@ -44,13 +44,13 @@ import com.j_spaces.core.IJSpace;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAwareCLI {
+public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwareCLI {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentGigaspacesWorkerCLI.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesWorkerCLI.class );
 
     private GigaSpacesTemplate template;
 
-    private DelegatingWorker iTestBeanWorker;
+    private DelegatingWorker worker;
 
     private Thread itbThread;
 
@@ -90,7 +90,7 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
             throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start worker." );
 
         template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
-        iTestBeanWorker = ( DelegatingWorker ) updatedContext.getBean( "testBeanWorker" );
+        worker = ( DelegatingWorker ) updatedContext.getBean( "worker" );
         space = ( IJSpace ) template.getSpace();
 
         workerRegistrationId = RandomUtils.nextLong();
@@ -111,7 +111,7 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
 
-        itbThread = new Thread( iTestBeanWorker );
+        itbThread = new Thread( worker );
         itbThread.start();
 
     }
@@ -126,7 +126,7 @@ public class ExpressionExperimentGigaspacesWorkerCLI extends AbstractSpringAware
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        ExpressionExperimentGigaspacesWorkerCLI p = new ExpressionExperimentGigaspacesWorkerCLI();
+        ExpressionExperimentGemmaSpacesWorkerCLI p = new ExpressionExperimentGemmaSpacesWorkerCLI();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {

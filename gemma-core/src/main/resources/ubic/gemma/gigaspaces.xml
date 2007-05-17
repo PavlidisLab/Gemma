@@ -33,7 +33,7 @@
 		<property name="space" ref="gigaspace" />
 	</bean>
 
-	<bean id="testBeanWorker"
+	<bean id="worker"
 		class="org.springmodules.javaspaces.DelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
@@ -93,9 +93,7 @@
 			</list>
 		</property>
 	</bean>
-	<!--
-		Simple test target
-	-->
+	
 	<bean id="taskBean"
 		class="ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTaskImpl">
 		<property name="expressionExperimentService">

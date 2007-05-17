@@ -50,9 +50,9 @@ import com.j_spaces.core.client.NotifyModifiers;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentGigaspacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
+public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentGigaspacesMasterCLI.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesMasterCLI.class );
 
     private GigaSpacesTemplate template;
 
@@ -76,7 +76,7 @@ public class ExpressionExperimentGigaspacesMasterCLI extends LoadExpressionDataC
      */
     public static void main( String[] args ) {
         log.info( "Running GigaSpaces Master ... \n" );
-        ExpressionExperimentGigaspacesMasterCLI p = new ExpressionExperimentGigaspacesMasterCLI();
+        ExpressionExperimentGemmaSpacesMasterCLI p = new ExpressionExperimentGemmaSpacesMasterCLI();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
