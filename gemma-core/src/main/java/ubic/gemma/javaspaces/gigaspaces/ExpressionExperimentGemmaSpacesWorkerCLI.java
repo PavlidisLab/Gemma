@@ -176,7 +176,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
             log.info( "Worker shut down.  Running shutdown hook ... cleaning up registered entries for this worker." );
             if ( space != null ) {
                 try {
-                    space.clear( genericEntry, null );// FIXME use take, not clear
+                    space.clear( genericEntry, null );
                 } catch ( Exception e ) {
 
                     log.error( "Error clearing the generic entry " + genericEntry + "for task " + genericEntry.message
