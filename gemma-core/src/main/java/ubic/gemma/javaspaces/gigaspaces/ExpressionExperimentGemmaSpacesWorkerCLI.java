@@ -95,7 +95,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
 
         workerRegistrationId = RandomUtils.nextLong();
         genericEntry = new GemmaSpacesGenericEntry();
-        genericEntry.message = ExpressionExperimentTaskImpl.class.getSimpleName();
+        genericEntry.message = ExpressionExperimentTask.class.getName();
         genericEntry.registrationId = workerRegistrationId;
         Lease lease = space.write( genericEntry, null, 60000000 );
         if ( lease == null ) log.error( "Null Lease returned" );
