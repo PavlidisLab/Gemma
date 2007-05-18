@@ -22,6 +22,8 @@ import java.util.concurrent.FutureTask;
 
 import javax.servlet.http.HttpServletRequest;
 
+import net.jini.space.JavaSpace;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.context.ApplicationContext;
@@ -78,14 +80,17 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         return gigaSpacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Starts the job on a compute server resource if the spaces is running and the task can be services.
      * 
-     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#startJob(java.lang.Object,
-     *      javax.servlet.http.HttpServletRequest)
+     * @param command
+     * @param request
+     * @param spaceUrl
+     * @param task
+     * @return ModelAndView
      */
-    @Override
-    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request ) {
+    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request, String spaceUrl,
+            String taskName ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -96,6 +101,18 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         updatedContext = addGigaspacesToApplicationContext();
         BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
+
+            // TODO Add check to make sure spaceUrl and taskName are given in the correct order.
+            if ( !gigaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+                // TODO Add sending of email to user.
+                // User user = SecurityUtil.getUserFromUserDetails( ( UserDetails ) SecurityContextHolder.getContext()
+                // .getAuthentication().getPrincipal() );
+                // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
+                // "http://www.bioinformatics.ubc.ca/Gemma/" );
+                this.saveMessage( request, "Cannot service task " + taskName + " on the compute server at this time." );
+                return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+            }
+
             job = getSpaceRunner( taskId, context, request, command, this.getMessageUtil() );
         } else {
             job = getRunner( taskId, context, request, command, this.getMessageUtil() );
