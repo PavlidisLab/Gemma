@@ -1,5 +1,14 @@
 Ext.tree.DwrTreeLoader = function(config){
-	Ext.tree.DwrTreeLoader.superclass.constructor.call(this);
+	//Ext.tree.DwrTreeLoader.superclass.constructor.call(this);
+    this.baseParams = {};
+    this.requestMethod = "POST";
+    Ext.apply(this, config);
+    	
+    this.addEvents({
+        "beforeload" : true,
+        "load" : true,
+        "loadexception" : true
+    });
 };
  
 
@@ -31,8 +40,9 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
     read : function( data, attr ){
     	var node = attr[0];
         this.transId = false;
-        this.processResponse(data, node, function(scope, node){ node.loadComplete(true,true,"f"); } );
+        this.processResponse(data, node, "foo" ); // no callback.
         this.fireEvent("load", this, node, data);
+        node.fireEvent("load", this, data);
        // return node; // need to complete the Reader interface but this isn't really used?
     },
     
@@ -54,7 +64,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
         
         var n = (data.leaf ?
                         new Ext.tree.TreeNode(data) : 
-                        new Ext.tree.AsyncTreeNode(data));  
+                        new Ext.tree.TreeNode(data));  
                         
         if (n.attributes.children !== undefined ) {
         	 for(var i = 0, len = n.attributes.children.length; i < len; i++){
@@ -76,7 +86,7 @@ Ext.extend(Ext.tree.DwrTreeLoader, Ext.tree.TreeLoader, {
 	            	node.appendChild( newnode );
 	        	}
 	        }
-            
+            node.loadComplete(true, true, "foo");
 	        if(typeof callback == "function"){
                 callback(this, node);
             }
