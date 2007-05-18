@@ -31,8 +31,7 @@ public class MatrixRowPairAnalysisFactory {
     }
 
     public static SpearmannMetrics spearmann( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
-        // return new SpearmannMetrics(dataMatrix, tmts);
-        return null;
+        throw new UnsupportedOperationException( "Sorry, can't do spearmann yet" );
     }
 
 }

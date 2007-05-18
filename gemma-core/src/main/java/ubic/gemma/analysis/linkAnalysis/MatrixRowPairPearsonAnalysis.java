@@ -33,6 +33,11 @@ import ubic.basecode.dataStructure.matrix.NamedMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
@@ -99,7 +104,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         if ( size > 0 ) {
             C = DoubleMatrix2DNamedFactory.compressedsparse( size, size );
         }
-        keepers = new ObjectArrayList( 50000 );
+        keepers = new ObjectArrayList();
     }
 
     /**
@@ -792,6 +797,21 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         // bin 1024 = correlation of 0.0 1024/1024 - 1 = 0
         // bin 0 = correlation of -1.0 : 0/1024 - 1 = -1
         return ( ( double ) i / HALF_BIN ) - 1.0;
+    }
+
+    public QuantitationType getMetricType() {
+        QuantitationType m = QuantitationType.Factory.newInstance();
+        m.setIsBackground( false );
+        m.setIsBackgroundSubtracted( false );
+        m.setIsNormalized( false );
+        m.setIsPreferred( false );
+        m.setIsRatio( false );
+        m.setType( StandardQuantitationType.CORRELATION );
+        m.setName( "Pearson correlation" );
+        m.setGeneralType( GeneralType.QUANTITATIVE );
+        m.setRepresentation( PrimitiveType.DOUBLE );
+        m.setScale( ScaleType.LINEAR );
+        return m;
     }
 
 }

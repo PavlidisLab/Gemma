@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
@@ -35,6 +36,8 @@ import cern.colt.list.ObjectArrayList;
 public interface MatrixRowPairAnalysis {
 
     public void calculateMetrics();
+    
+    public QuantitationType getMetricType();
 
     public void setUseAbsoluteValue( boolean k );
 

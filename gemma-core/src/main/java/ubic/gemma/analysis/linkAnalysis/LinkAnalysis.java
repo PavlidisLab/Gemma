@@ -38,6 +38,8 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -59,7 +61,7 @@ public class LinkAnalysis {
     protected static final Log log = LogFactory.getLog( LinkAnalysis.class );
     private MatrixRowPairAnalysis metricMatrix;
     private DoubleArrayList cdf;
-    private ObjectArrayList keep;
+    private ObjectArrayList keep; // links that are retained.
     private ExpressionDataDoubleMatrix dataMatrix = null;
     private Collection<DesignElementDataVector> dataVectors = null;
 
@@ -131,6 +133,7 @@ public class LinkAnalysis {
 
     /**
      * Write histogram into file.
+     * 
      * @throws IOException
      */
     public void writeDistribution() throws IOException {
@@ -178,9 +181,7 @@ public class LinkAnalysis {
             metricMatrix = MatrixRowPairAnalysisFactory
                     .pearson( this.dataMatrix, config.getCorrelationCacheThreshold() );
         } else if ( config.getMetric().equals( "spearmann" ) ) {
-            throw new UnsupportedOperationException( "Spearmann not supported" );
-            // metricMatrix = MatrixRowPairAnalysisFactory.spearman(dataMatrix,
-            // tooSmallToKeep);
+            metricMatrix = MatrixRowPairAnalysisFactory.spearmann( dataMatrix, config.getCorrelationCacheThreshold() );
         }
 
         metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
@@ -380,11 +381,15 @@ public class LinkAnalysis {
     }
 
     public ExpressionExperiment getExpressionExperiment() {
-       return this.expressionExperiment;
+        return this.expressionExperiment;
     }
 
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+
+    public QuantitationType getMetric() {
+        return this.metricMatrix.getMetricType();
     }
 
 }

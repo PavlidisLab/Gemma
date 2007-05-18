@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import cern.colt.Sorting;
+import cern.colt.list.ObjectArrayList;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
@@ -44,6 +47,7 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -64,6 +68,7 @@ import ubic.gemma.util.TaxonUtility;
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="csService" ref="compositeSequenceService"
+ * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
  * @author Paul
  * @version $Id$
  */
@@ -72,7 +77,7 @@ public class LinkAnalysisService {
     private static final int LINK_BATCH_SIZE = 1000;
 
     private static Log log = LogFactory.getLog( LinkAnalysisService.class.getName() );
-
+    QuantitationTypeService quantitationTypeService;
     ExpressionExperimentService eeService;
     CompositeSequenceService csService;
     DesignElementDataVectorService vectorService;
@@ -142,29 +147,35 @@ public class LinkAnalysisService {
     }
 
     /**
-     * Persist the links to the database.
+     * Persist the links to the database. This takes care of saving a 'flipped' version of the links.
+     * 
+     * @param p2v
+     * @param la
      */
     private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la ) {
 
-        /*
-         * Delete old links for this expressionexperiment
-         */
-
-        ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
-        log.info( "Deleting any old links for " + expressionExperiment + " ..." );
-        ppService.deleteLinks( expressionExperiment );
+        deleteOldLinks( la );
 
         log.info( "Start submitting data to database." );
         StopWatch watch = new StopWatch();
         watch.start();
-        Object[] links = la.getKeep().elements();
-        int numColumns = la.getDataMatrix().columns();
 
-        saveLinks( p2v, la, numColumns, links );
+        ObjectArrayList links = la.getKeep();
+        /*
+         * Important implementation note: Note that the links in la are stored in 'x' coordinate order. For efficiency
+         * reason, it is important that they be stored in this order in the database: so all all links with probe=x are
+         * clustered. (the actual order of x1 vs x2 doesn't matter). This makes retrievals much faster for the most
+         * common types of queries.
+         */
+        saveLinks( p2v, la, links, false );
 
-        // now create 'reversed' links, by sorting by the 'y' coordinate.
+        /*
+         * now create 'reversed' links, first by sorting by the 'y' coordinate. Again, this sort is critical to keep the
+         * links in an ordering that the RDBMS can use efficiently.
+         */
         log.info( "Sorting links to create flipped set" );
-        Sorting.quickSort( links, new Comparator() {
+        Object[] linksar = links.elements();
+        Sorting.quickSort( linksar, 0, links.size(), new Comparator() {
             public int compare( Object arg0, Object arg1 ) {
                 Link a = ( Link ) arg0;
                 Link b = ( Link ) arg1;
@@ -176,16 +187,22 @@ public class LinkAnalysisService {
                 } else {
                     return 0;
                 }
-
             }
         } );
 
         log.info( "Saving flipped links" );
-        saveLinks( p2v, la, numColumns, links );
+        saveLinks( p2v, la, links, true );
 
         watch.stop();
-        log.info( "Seconds to insert " + la.getKeep().size() + " links plus flipped versions:"
-                + ( double ) watch.getTime() / 1000.0 );
+        log.info( "Seconds to insert " + links.size() + " links plus flipped versions:" + ( double ) watch.getTime()
+                / 1000.0 );
+    }
+
+    // Delete old links for this expressionexperiment
+    private void deleteOldLinks( LinkAnalysis la ) {
+        ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
+        log.info( "Deleting any old links for " + expressionExperiment + " ..." );
+        ppService.deleteLinks( expressionExperiment );
     }
 
     /**
@@ -231,6 +248,38 @@ public class LinkAnalysisService {
         return dataVectors;
     }
 
+    // a closure would be just the thing here.
+    private class Creator {
+
+        Method m;
+        private Object[] arg;
+        private Class clazz;
+
+        Creator( Class clazz ) {
+            this.clazz = clazz;
+            this.arg = new Object[] {};
+            try {
+                m = clazz.getMethod( "newInstance", new Class[] {} );
+            } catch ( SecurityException e ) {
+                throw new RuntimeException( e );
+            } catch ( NoSuchMethodException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        public Probe2ProbeCoexpression create() {
+            try {
+                return ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
+            } catch ( IllegalArgumentException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalAccessException e ) {
+                throw new RuntimeException( e );
+            } catch ( InvocationTargetException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+    }
+
     /**
      * @param numColumns
      * @param w
@@ -238,20 +287,13 @@ public class LinkAnalysisService {
      * @param taxon
      * @return
      */
-    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, DesignElementDataVector v1, Taxon taxon ) {
-        Probe2ProbeCoexpression ppCoexpression;
-        if ( TaxonUtility.isMouse( taxon ) ) {
-            ppCoexpression = MouseProbeCoExpression.Factory.newInstance();
-        } else if ( TaxonUtility.isRat( taxon ) ) {
-            ppCoexpression = RatProbeCoExpression.Factory.newInstance();
-        } else if ( TaxonUtility.isHuman( taxon ) ) {
-            ppCoexpression = HumanProbeCoExpression.Factory.newInstance();
-        } else {
-            ppCoexpression = OtherProbeCoExpression.Factory.newInstance();
-        }
+    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric ) {
+        Probe2ProbeCoexpression ppCoexpression = c.create();
+
         ppCoexpression.setScore( w );
         ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
-        ppCoexpression.setQuantitationType( v1.getQuantitationType() );
+        ppCoexpression.setMetric( metric ); // FIXME THIS is incorrect. This should be the
+        // quantitation type for the SCORE. (e.g., pearson correlation)
         return ppCoexpression;
     }
 
@@ -262,16 +304,14 @@ public class LinkAnalysisService {
      * @param w
      * @param v1
      * @param v2
+     * @param metric type of score (pearson correlation for example)
+     * @param c class that can create instances of the correct type of probe2probecoexpression.
      * @return
      */
     private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
-            DesignElementDataVector v1, DesignElementDataVector v2, Taxon taxon ) {
+            DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric, Creator c ) {
 
-        if ( taxon == null ) {
-            throw new IllegalStateException( "Taxon cannot be null" );
-        }
-
-        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, v1, taxon );
+        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric );
 
         ppCoexpression.setFirstVector( v1 );
         ppCoexpression.setSecondVector( v2 );
@@ -288,11 +328,27 @@ public class LinkAnalysisService {
      * @param c
      * @param links
      */
-    private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la, int c, Object[] links ) {
+    private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la,
+            ObjectArrayList links, boolean flip ) {
+        int numColumns = la.getDataMatrix().columns();
+
+        QuantitationType metric = quantitationTypeService.findOrCreate( la.getMetric() );
+
+        Taxon taxon = la.getTaxon();
+        Creator c;
+        if ( TaxonUtility.isMouse( taxon ) ) {
+            c = new Creator( MouseProbeCoExpression.Factory.class );
+        } else if ( TaxonUtility.isRat( taxon ) ) {
+            c = new Creator( RatProbeCoExpression.Factory.class );
+        } else if ( TaxonUtility.isHuman( taxon ) ) {
+            c = new Creator( HumanProbeCoExpression.Factory.class );
+        } else {
+            c = new Creator( OtherProbeCoExpression.Factory.class );
+        }
+
         Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
-        for ( int i = 0, n = links.length; i < n; i++ ) {
-            Link m = ( Link ) links[i];
-            assert m != null;
+        for ( int i = 0, n = links.size(); i < n; i++ ) {
+            Link m = ( Link ) links.getQuick( i );
             Double w = m.getWeight();
 
             assert w != null;
@@ -303,7 +359,11 @@ public class LinkAnalysisService {
             DesignElementDataVector v1 = p2v.get( p1 );
             DesignElementDataVector v2 = p2v.get( p2 );
 
-            persist( c, p2plinkBatch, i, w, v1, v2, la.getTaxon() );
+            if ( flip ) {
+                persist( numColumns, p2plinkBatch, i, w, v1, v2, metric, c );
+            } else {
+                persist( numColumns, p2plinkBatch, i, w, v2, v1, metric, c );
+            }
 
             if ( i > 0 && i % 50000 == 0 ) {
                 log.info( i + " links loaded into the database" );
@@ -330,6 +390,10 @@ public class LinkAnalysisService {
 
     public void setCsService( CompositeSequenceService csService ) {
         this.csService = csService;
+    }
+
+    public void setQuantiationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
     }
 
 }

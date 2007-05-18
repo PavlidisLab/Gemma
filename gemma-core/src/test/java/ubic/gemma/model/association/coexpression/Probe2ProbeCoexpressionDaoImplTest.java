@@ -51,6 +51,7 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
         Collection<QuantitationType> qts = ees.getQuantitationTypes( ee );
 
+        // this is bogus, it should represent "pearson correlation" for example.
         QuantitationType qt = qts.iterator().next();
 
         ppcs = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
@@ -65,7 +66,7 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
             Probe2ProbeCoexpression ppc = MouseProbeCoExpression.Factory.newInstance();
             ppc.setFirstVector( dvl.get( i ) );
             ppc.setSecondVector( dvl.get( i + 1 ) );
-            ppc.setQuantitationType( qt );
+            ppc.setMetric( qt );
             ppc.setScore( 0.0 );
             ppc.setPvalue( 0.2 );
             ppcs.create( ppc );
