@@ -78,7 +78,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
         Collection<CompositeSequence> compSeq = null;
-        final String queryString = "select distinct cs from GeneImpl as gene inner joing gene.products gp,  BioSequence2GeneProductImpl"
+        final String queryString = "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
                 + " and gene = :gene and cs.arrayDesign = :arrayDesign ";

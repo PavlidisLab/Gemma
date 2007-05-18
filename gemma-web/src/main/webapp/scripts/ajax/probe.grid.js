@@ -3,11 +3,21 @@ var showprobes = function(id) {
 	// note how we pass the new array in directly, without wraping it in an object first.
 	ds.load({params:[ids]});
 };
- 
+
+var showArrayDesignProbes = function(id) {
+	ds.load({params:[{id:id}]});
+};
+
 var grid;
 var ds;
+var detailsDataSource;
 
-var init = function() {
+
+/**
+ * Initialize the main grid.
+ * @param {Object} isArrayDesign
+ */
+var init = function(isArrayDesign) {
 	
 	var convertgps = function(d) {
 		var r = "";
@@ -40,22 +50,28 @@ var init = function() {
 			{name:"geneProducts", convert : convertgps }, // map of gp ids to geneproductvalueobjects
 			{name:"genes" , convert : convertgenes}]); //  map of gene ids to geneproductvalueobjects
 
-
- 	ds = new Ext.data.Store(
-		{
-			proxy:new Ext.data.DWRProxy(CompositeSequenceController.getCsSummaries), 
-			reader:new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType), 
-			remoteSort:false,
-			sortInfo:{field:'arrayDesignName'}
-		});
+	var proxy;
+	if (isArrayDesign) {
+		proxy = new Ext.data.DWRProxy(ArrayDesignController.getCsSummaries);
+ 	} else {
+		proxy = new Ext.data.DWRProxy(CompositeSequenceController.getCsSummaries);
+	}
+	
+	ds = new Ext.data.Store(
+	{
+		proxy:proxy,
+		reader:new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType), 
+		remoteSort:false,
+		sortInfo:{field:'arrayDesignName'}
+	});
+	 
 		
 };
 
 
-var detailsDataSource;
-
-
-
+/**
+ * Separate grid for 'details' about the probe and its alignment results.
+ */
 var initDetails = function() {
 	var recordType = Ext.data.Record.create([
 		{name:"identity", type : "float" }, 
@@ -89,31 +105,55 @@ var initDetails = function() {
 	blgrid.render();
 };
  
-
+/**
+ * Event handler for clicks on probe name column in bottom grid.
+ * @param {Object} event
+ * @param {Object} id
+ */
 var showDetails = function(event, id) {
 	var record = ds.getById(id);
 	
-	var csname = record.get("compositeSequenceName");
-	var seqName = record.get("bioSequenceName");
-
-	var dh = Ext.DomHelper;
-	dh.overwrite("details-title", {tag : 'h2', html : "Details for: " + csname + " on " + record.get("arrayDesignName")});
-	dh.append("details-title", {tag : 'ul', children : [
-		{tag : 'li' , html: "Sequence: " + seqName}
-	]});
-	
 	detailsDataSource.load({params:[{id:id}]});
 	
+	if (record === undefined) {
+		return;
+	}
+		var csname = record.get("compositeSequenceName");
+		var seqName = record.get("bioSequenceName");
 	
+		var dh = Ext.DomHelper;
+		dh.overwrite("details-title", {tag : 'h2', html : "Details for: " + csname + " on " + record.get("arrayDesignName")});
+		dh.append("details-title", {tag : 'ul', children : [
+			{tag : 'li' , html: "Sequence: " + seqName}
+		]});
 };
 
 /**
- * The main grid that shows the probes.
+ * Event handler for searches. Update the lower grid.
+ * @param {Object} event
+ */
+var search = function(event) {
+	id = dwr.util.getValue("arrayDesignId");
+	query = dwr.util.getValue("searchString");
+	var oldprox = ds.proxy;
+	ds.proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
+	ds.load({params:[ query, id]});
+	ds.proxy = oldprox;
+}
+
+/**
+ * Prepare main grid that shows the probes.
  */
 Ext.onReady(function() {
-	init();
+
+	var id = dwr.util.getValue("cslist");
+	var isArrayDesign = id === "";
+	init(isArrayDesign);
+	
 	initDetails();
 	
+	if (Ext.get("probe-grid") === null ) { return; }
+	 
 	var cm = new Ext.grid.ColumnModel([
 			{header: "ArrayDesign", width: 100, dataIndex:"arrayDesignName", renderer: arraylink },
 			{header: "Probe Name",  width: 130, dataIndex:"compositeSequenceName", renderer: probelink}, 
@@ -141,9 +181,12 @@ Ext.onReady(function() {
 	
 	grid.render();
 	
-	
-	var id = dwr.util.getValue("cslist");
-	showprobes(id);
+	if (isArrayDesign) {
+		id = dwr.util.getValue("arrayDesignId");
+		showArrayDesignProbes(id);
+	} else {
+		showprobes(id);
+	}
 	
 });
 
