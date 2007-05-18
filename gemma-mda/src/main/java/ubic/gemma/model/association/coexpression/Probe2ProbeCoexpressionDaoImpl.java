@@ -22,6 +22,9 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +42,7 @@ import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.Session;
 import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -329,25 +333,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     }
      public class Link{
-		private Long id = 0L;
-		private Double score = 0.0;
-		private Double pvalue = 0.0;
-		private Long second_vector_fk = 0L;
-		private Long first_vector_fk = 0L;
-		private Long quantitation_type_fk = 0L;
-		private Long source_fk = 0L;
-		private Long souce_analysis_fk = 0L;
-		private Long human_gene_co_expression = 0L;
 		private Long first_design_element_fk = 0L;
 		private Long second_design_element_fk = 0L;
-		private Long expression_experiment_fk = 0L;
 		Link(){
-		}
-		public Long getExpression_experiment_fk() {
-			return expression_experiment_fk;
-		}
-		public void setExpression_experiment_fk(Long expression_experiment_fk) {
-			this.expression_experiment_fk = expression_experiment_fk;
 		}
 		public Long getFirst_design_element_fk() {
 			return first_design_element_fk;
@@ -355,75 +343,20 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 		public void setFirst_design_element_fk(Long first_design_element_fk) {
 			this.first_design_element_fk = first_design_element_fk;
 		}
-		public Long getFirst_vector_fk() {
-			return first_vector_fk;
-		}
-		public void setFirst_vector_fk(Long first_vector_fk) {
-			this.first_vector_fk = first_vector_fk;
-		}
-		public Long getHuman_gene_co_expression() {
-			return human_gene_co_expression;
-		}
-		public void setHuman_gene_co_expression(Long human_gene_co_expression) {
-			this.human_gene_co_expression = human_gene_co_expression;
-		}
-		public Long getId() {
-			return id;
-		}
-		public void setId(Long id) {
-			this.id = id;
-		}
-		public Double getPvalue() {
-			return pvalue;
-		}
-		public void setPvalue(Double pvalue) {
-			this.pvalue = pvalue;
-		}
-		public Long getQuantitation_type_fk() {
-			return quantitation_type_fk;
-		}
-		public void setQuantitation_type_fk(Long quantitation_type_fk) {
-			this.quantitation_type_fk = quantitation_type_fk;
-		}
-		public Double getScore() {
-			return score;
-		}
-		public void setScore(Double score) {
-			this.score = score;
-		}
 		public Long getSecond_design_element_fk() {
 			return second_design_element_fk;
 		}
 		public void setSecond_design_element_fk(Long second_design_element_fk) {
 			this.second_design_element_fk = second_design_element_fk;
 		}
-		public Long getSecond_vector_fk() {
-			return second_vector_fk;
-		}
-		public void setSecond_vector_fk(Long second_vector_fk) {
-			this.second_vector_fk = second_vector_fk;
-		}
-		public Long getSouce_analysis_fk() {
-			return souce_analysis_fk;
-		}
-		public void setSouce_analysis_fk(Long souce_analysis_fk) {
-			this.souce_analysis_fk = souce_analysis_fk;
-		}
-		public Long getSource_fk() {
-			return source_fk;
-		}
-		public void setSource_fk(Long source_fk) {
-			this.source_fk = source_fk;
-		}
 		public String toString(){
-			String res = "( " +	id + "," + score + "," + pvalue + "," + second_vector_fk + "," + first_vector_fk + "," + quantitation_type_fk
-			+ "," +	source_fk + "," + souce_analysis_fk + "," + human_gene_co_expression + "," + first_design_element_fk + "," + second_design_element_fk
-			+ "," + expression_experiment_fk + ") ";
+			String res = first_design_element_fk + "," + second_design_element_fk;
 			return res;
 		}
     }
-    private String getTableName(String taxon){
+    private String getTableName(String taxon, boolean shuffledTable){
         int tableIndex = -1;
+        String tableName = "";
         String[] tableNames = new String[] { "HUMAN_PROBE_CO_EXPRESSION", "MOUSE_PROBE_CO_EXPRESSION",
                 "RAT_PROBE_CO_EXPRESSION", "OTHER_PROBE_CO_EXPRESSION" };
         
@@ -435,14 +368,16 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         	tableIndex = 2;
         else
         	tableIndex = 3;
-        return tableNames[tableIndex];
+        if(shuffledTable) tableName = "SHUFFLED_" + tableNames[tableIndex];
+        else tableName = tableNames[tableIndex];
+        return tableName;
     }
     
     private Map<Long, Collection<Long>> getCs2GenesMap(Collection<Long> csIds){
     	Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
     	if(csIds == null || csIds.size() == 0) return cs2genes;
     	int count = 0;
-    	int CHUNK_LIMIT = 300;
+    	int CHUNK_LIMIT = 1000;
     	int total = csIds.size();
     	Collection<Long> idsInOneChunk = new HashSet<Long>();
         Session session = getSessionFactory().openSession();
@@ -480,58 +415,81 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     	return cs2genes;
     }
 
-    private Collection<Link> getLinks(ExpressionExperiment expressionExperiment, String taxon){
-        String queryString = "SELECT * FROM " + getTableName(taxon) + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId();
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        
-        queryObject.addScalar( "ID", new LongType() );
-        queryObject.addScalar( "SCORE", new DoubleType() );
-        queryObject.addScalar( "PVALUE", new DoubleType() );
-        queryObject.addScalar( "SECOND_VECTOR_FK", new LongType() );
-        queryObject.addScalar( "FIRST_VECTOR_FK", new LongType() );
-        queryObject.addScalar( "QUANTITATION_TYPE_FK", new LongType() );
-        queryObject.addScalar( "SOURCE_FK", new LongType() );
-        queryObject.addScalar( "SOURCE_ANALYSIS_FK", new LongType() );
-        queryObject.addScalar( "HUMAN_GENE_CO_EXPRESSION_FK", new LongType() );
-        queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
-        queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
-        queryObject.addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
+//    private Collection<Link> getLinks(ExpressionExperiment ee, String taxon) throws Exception{
+//        String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK FROM " + getTableName(taxon, false) + " WHERE EXPRESSION_EXPERIMENT_FK = " + ee.getId() + " limit ";
+//        int chunkSize = 1000000;
+//        Session session = getSessionFactory().openSession();
+//        Connection conn = session.connection();
+//        Statement s = conn.createStatement();
+//        
+//        long start = 0;
+//        Collection<Link> links = new ArrayList<Link>();
+//        while(true){
+//        	String queryString = baseQueryString + start + "," + chunkSize + ";";
+//        	ResultSet rs = s.executeQuery(queryString);
+//        	int count = 0;
+//        	int iterations = 0;
+//        	while ( rs.next() ) {
+//        		Long first_design_element_fk = rs.getLong("FIRST_DESIGN_ELEMENT_FK");
+//        		Long second_design_element_fk = rs.getLong("SECOND_DESIGN_ELEMENT_FK");
+//
+//        		Link oneLink = new Link();
+//        		oneLink.setFirst_design_element_fk(first_design_element_fk);
+//        		oneLink.setSecond_design_element_fk(second_design_element_fk);
+//        		links.add(oneLink);
+//        		count++;
+//        		if(count == chunkSize){
+//        			start = start + chunkSize;
+//        			System.err.print(".");
+//        			iterations++;
+//        			if(iterations%10 == 0) System.err.println();
+//        		}
+//        	}
+//        	if(count < chunkSize) break;
+//        }
+//        System.err.println("\n Load " + links.size());
+//        session.close();
+//        return links;
+//    }
+    private Collection<Link> getLinks(ExpressionExperiment ee, String taxon){
+    	String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK FROM " + getTableName(taxon, false) + " WHERE EXPRESSION_EXPERIMENT_FK = " + ee.getId() + " limit ";
+    	int chunkSize = 1000000;
+    	Session session = getSessionFactory().openSession();
+    	long start = 0;
+    	Collection<Link> links = new ArrayList<Link>();
+    	while(true){
+    		String queryString = baseQueryString + start + "," + chunkSize + ";";
 
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        Collection<Link> links = new ArrayList<Link>();
-        while ( scroll.next() ) {
-        		Long id = scroll.getLong(0);
-        		Double score = scroll.getDouble(1);
-        		Double pvalue = scroll.getDouble(2);
-        		Long second_vector_fk = scroll.getLong(3);
-        		Long first_vector_fk = scroll.getLong(4);
-        		Long quantitation_type_fk = scroll.getLong(5);
-        		Long source_fk = scroll.getLong(6);
-        		Long souce_analysis_fk = scroll.getLong(7);
-        		Long human_gene_co_expression = scroll.getLong(8);
-        		Long first_design_element_fk = scroll.getLong(9);
-        		Long second_design_element_fk = scroll.getLong(10);
-        		Long expression_experiment_fk = scroll.getLong(11);
-        		
-        		Link oneLink = new Link();
-        		oneLink.setId(id);
-        		oneLink.setScore(score);
-        		oneLink.setPvalue(pvalue);
-        		oneLink.setSecond_vector_fk(second_vector_fk);
-        		oneLink.setFirst_vector_fk(first_vector_fk);
-        		oneLink.setQuantitation_type_fk(quantitation_type_fk);
-        		oneLink.setSource_fk(source_fk);
-        		oneLink.setSouce_analysis_fk(souce_analysis_fk);
-        		oneLink.setHuman_gene_co_expression(human_gene_co_expression);
-        		oneLink.setFirst_design_element_fk(first_design_element_fk);
-        		oneLink.setSecond_design_element_fk(second_design_element_fk);
-        		oneLink.setExpression_experiment_fk(expression_experiment_fk);
-        		links.add(oneLink);
-        }
-        session.close();
-        return links;
+    		org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+    		queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+    		queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+
+    		ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+    		int count = 0;
+    		int iterations = 0;
+    		while ( scroll.next() ) {
+    			Long first_design_element_fk = scroll.getLong(0);
+    			Long second_design_element_fk = scroll.getLong(1);
+
+    			Link oneLink = new Link();
+    			oneLink.setFirst_design_element_fk(first_design_element_fk);
+    			oneLink.setSecond_design_element_fk(second_design_element_fk);
+    			links.add(oneLink);
+    			count++;
+    			if(count == chunkSize){
+    				start = start + chunkSize;
+    				System.err.print(".");
+    				iterations++;
+    				if(iterations%10 == 0) System.err.println();
+    			}
+    		}
+    		if(count < chunkSize) break;
+    	}
+    	log.info("Load " + links.size());
+    	session.close();
+    	return links;
     }
+
     private Collection<Link> shuffleLinks(Collection<Link> links,Map<Long, Collection<Long>> cs2genes){
     	Collection<Link> specificLinks = new ArrayList<Link>();
     	Collection<Link> nonRedudantLinks = new ArrayList<Link>();
@@ -541,7 +499,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		Collection<Long> firstGene = cs2genes.get(link.getFirst_design_element_fk());
     		Collection<Long> secondGene = cs2genes.get(link.getSecond_design_element_fk());
     		if(firstGene == null || secondGene == null){
-    			log.error("inconsistent links for csId " + link.getFirst_design_element_fk() + ", " + link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
+    			log.error("inconsistent links for csId (" + link.getFirst_design_element_fk() + ", " + link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
     			continue;
     		}
     		if(firstGene.size() > 1 || secondGene.size() > 1) continue; //non-specific
@@ -574,29 +532,28 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     	}
     	return nonRedudantLinks;
     }
-    private void saveLinks(Collection<Link> links, String taxon){
-        Session session = getSessionFactory().openSession();
-        String  queryString = "INSERT INTO " + getTableName(taxon) + "() " + " VALUES ";
-        for(Link link:links){
-        	queryString = queryString + link + " , ";
-        }
-        queryString = queryString + ";";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString ); // for native query.
-        queryObject.executeUpdate();
-		session.flush();
-		session.clear();
-    }
-    private void saveShuffledLinks(Collection<Link> shuffledLinks, ExpressionExperiment expressionExperiment, String taxon){
+//    private void saveLinks(Collection<Link> links, String taxon){
+//        Session session = getSessionFactory().openSession();
+//        String  queryString = "INSERT INTO " + getTableName(taxon, true) + "() " + " VALUES ";
+//        for(Link link:links){
+//        	queryString = queryString + link + " , ";
+//        }
+//        queryString = queryString + ";";
+//        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString ); // for native query.
+//        queryObject.executeUpdate();
+//		session.flush();
+//		session.clear();
+//    }
+    private void saveShuffledLinks(Collection<Link> shuffledLinks, ExpressionExperiment ee, String taxon) throws Exception{
     	if(shuffledLinks == null || shuffledLinks.size() == 0) return;
-    	//delete links first
-        String queryString = "DELETE FROM " + getTableName(taxon) + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId();
+        String queryString = "";
         Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        //queryObject.executeUpdate();
-        session.flush();
+        Connection conn = session.connection();
+        Statement s = conn.createStatement();
+
         
     	int count = 0;
-    	int CHUNK_LIMIT = 300;
+    	int CHUNK_LIMIT = 1000;
     	int total = shuffledLinks.size();
     	Collection<Link> linksInOneChunk = new ArrayList<Link>();
     	for(Link link:shuffledLinks){
@@ -605,18 +562,31 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		total--;
     		if(count == CHUNK_LIMIT || total == 0){
     			//saveLinks(linksInOneChunk,taxon);
-    			queryString = "INSERT INTO " + getTableName(taxon) + "() " + " VALUES " + StringUtils.join(linksInOneChunk.iterator(), ",")+";"; 
-    			queryObject = session.createSQLQuery( queryString ); // for native query.
-    			session.flush();
+    			String values = "";
+    			int i = 0;
+    			for(Link oneLink:linksInOneChunk){
+    				values = values + "( " + oneLink.toString() + ", " + ee.getId()+" )";
+    				i++;
+    				if(i != linksInOneChunk.size())
+    					values = values + ",";
+    			}
+    			queryString = "INSERT INTO " + getTableName(taxon,true) + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + values+";"; 
+    			s.executeUpdate(queryString);
+    	        //conn.commit(); //not needed if autocomsmit is true.
     			count = 0;
     			linksInOneChunk.clear();
     		}
     	}
+    	conn.close();
     	session.close();
     }
     @Override
     protected void handleShuffle( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
         // TODO Auto-generated method stub
+    	createShuffledTable(taxon);
+    	doShuffling(expressionExperiment, taxon);
+    }
+    protected void doShuffling( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
         Set<Long> csIds = new HashSet<Long>();
         Collection<Link> links = getLinks(expressionExperiment, taxon);
         for(Link link:links){
@@ -625,12 +595,48 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
         Map<Long, Collection<Long>> cs2genes = getCs2GenesMap(csIds);
         Collection<Link> shuffledLinks = shuffleLinks(links, cs2genes);
-        saveShuffledLinks(shuffledLinks,expressionExperiment ,taxon);
+        saveShuffledLinks(shuffledLinks,expressionExperiment,taxon);
     }
-
+    private void createShuffledTable(String taxon) throws Exception{
+    	String tableName = getTableName(taxon, true);
+        Session session = getSessionFactory().openSession();
+        Connection conn = session.connection();
+        Statement s = conn.createStatement();
+        String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
+        s.executeUpdate(queryString);
+        queryString = "CREATE TABLE " + tableName + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, " +
+        		"SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, " +
+        		"PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " +
+        		"ENGINE=MYISAM";
+        s.executeUpdate(queryString);
+        conn.close();
+        session.close();
+    }
     @Override
     protected void handleShuffle( String taxon ) throws Exception {
         // TODO Auto-generated method stub
-        // for all EE.
+    	String queryString = "SELECT DISTINCT EXPRESSION_EXPERIMENT_FK FROM " + getTableName(taxon,false);
+    	Session session = getSessionFactory().openSession();
+    	org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+    	queryObject.addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
+    	ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+    	Collection<Long> eeIds = new ArrayList<Long>();
+    	while ( scroll.next() ) {
+    		Long id = scroll.getLong(0);
+    		if(id != null)
+    			eeIds.add(id);
+    	}
+    	session.close();
+    	//Create the tempory table for saving the shuffled links
+    	createShuffledTable(taxon);
+    	
+    	int i = 1;
+    	for(Long eeId:eeIds){
+    		ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+    		log.info("Shuffling EE " + eeId + "(" + i + "/" + eeIds.size() + ")" );
+    		ee.setId(eeId);
+    		doShuffling(ee, taxon);
+    		i++;
+    	}
     }
 }
