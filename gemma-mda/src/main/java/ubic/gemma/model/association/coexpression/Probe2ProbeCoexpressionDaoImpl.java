@@ -639,4 +639,16 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		i++;
     	}
     }
+
+    @Override
+    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void handlePrepareForShuffling( String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
 }

@@ -190,4 +190,17 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         this.getProbe2ProbeCoexpressionDao().shuffle( taxon );
     }
 
+    @Override
+    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon );
+        return null;
+    }
+
+    @Override
+    protected void handlePrepareForShuffling( String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        this.getProbe2ProbeCoexpressionDao().prepareForShuffling( taxon );
+    }
+
 }
