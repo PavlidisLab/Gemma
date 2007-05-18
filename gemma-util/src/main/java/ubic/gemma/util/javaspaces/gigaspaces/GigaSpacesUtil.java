@@ -327,8 +327,8 @@ public class GigaSpacesUtil implements ApplicationContextAware {
     /**
      * Returns true if the task can be serviced by the space at the given url.
      * 
-     * @param taskName
-     * @param url The url of the space.
+     * @param taskName The name of the task to be serviced.
+     * @param url The space url.
      * @return boolean
      */
     public boolean canServiceTask( String taskName, String url ) {
