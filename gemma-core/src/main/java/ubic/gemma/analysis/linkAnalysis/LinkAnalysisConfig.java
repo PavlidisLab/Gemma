@@ -26,17 +26,17 @@ package ubic.gemma.analysis.linkAnalysis;
  */
 public class LinkAnalysisConfig {
 
-    private double upperTailCut;
-    private double lowerTailCut;
+    private double upperTailCut = 0.01;
+    private double lowerTailCut = 0.01;
 
     private String metric = "pearson";
     private boolean absoluteValue = false;
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
 
-    private boolean useDb;
+    private boolean useDb = true;
 
-    private double correlationCacheThreshold;
+    private double correlationCacheThreshold = 0.8;
 
     public double getCorrelationCacheThreshold() {
         return correlationCacheThreshold;

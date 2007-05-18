@@ -20,7 +20,9 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -39,15 +41,18 @@ import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.TaxonUtility;
 
@@ -58,6 +63,7 @@ import ubic.gemma.util.TaxonUtility;
  * @spring.property name="vectorService" ref="designElementDataVectorService"
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
+ * @spring.property name="csService" ref="compositeSequenceService"
  * @author Paul
  * @version $Id$
  */
@@ -68,6 +74,7 @@ public class LinkAnalysisService {
     private static Log log = LogFactory.getLog( LinkAnalysisService.class.getName() );
 
     ExpressionExperimentService eeService;
+    CompositeSequenceService csService;
     DesignElementDataVectorService vectorService;
     private Probe2ProbeCoexpressionService ppService = null;
 
@@ -97,6 +104,9 @@ public class LinkAnalysisService {
         la.setDataMatrix( eeDoubleMatrix );
         la.setDataVectors( dataVectors ); // shouldn't have to do this.
         la.setTaxon( eeService.getTaxon( ee.getId() ) );
+        eeService.thawLite( ee );
+        la.setExpressionExperiment( ee );
+        Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2GeneMap( la, dataVectors );
 
         /*
          * Start the analysis.
@@ -104,22 +114,43 @@ public class LinkAnalysisService {
         log.info( "Starting generating Raw Links for " + ee );
         la.analyze();
         if ( linkAnalysisConfig.isUseDb() ) {
-            saveLinks( la );
+            saveLinks( p2v, la );
         }
         log.info( "Done with processing of " + ee );
 
     }
 
     /**
+     * @param la
+     * @param dataVectors
+     * @return map of probes to vectors.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<CompositeSequence, DesignElementDataVector> getProbe2GeneMap( LinkAnalysis la,
+            Collection<DesignElementDataVector> dataVectors ) {
+        log.info( "Getting probe-to-gene map" );
+        Map<CompositeSequence, DesignElementDataVector> p2v = new HashMap<CompositeSequence, DesignElementDataVector>();
+        Collection<CompositeSequence> probesForVectors = new HashSet<CompositeSequence>();
+        for ( DesignElementDataVector v : dataVectors ) {
+            CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
+            probesForVectors.add( cs );
+            p2v.put( cs, v );
+        }
+        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = csService.getGenes( probesForVectors );
+        la.setProbeToGeneMap( probeToGeneMap );
+        return p2v;
+    }
+
+    /**
      * Persist the links to the database.
      */
-    private void saveLinks( LinkAnalysis la ) {
+    private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la ) {
 
         /*
          * Delete old links for this expressionexperiment
          */
 
-        ExpressionExperiment expressionExperiment = la.getP2v().values().iterator().next().getExpressionExperiment();
+        ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
         log.info( "Deleting any old links for " + expressionExperiment + " ..." );
         ppService.deleteLinks( expressionExperiment );
 
@@ -129,7 +160,7 @@ public class LinkAnalysisService {
         Object[] links = la.getKeep().elements();
         int numColumns = la.getDataMatrix().columns();
 
-        saveLinks( la, numColumns, links );
+        saveLinks( p2v, la, numColumns, links );
 
         // now create 'reversed' links, by sorting by the 'y' coordinate.
         log.info( "Sorting links to create flipped set" );
@@ -150,7 +181,7 @@ public class LinkAnalysisService {
         } );
 
         log.info( "Saving flipped links" );
-        saveLinks( la, numColumns, links );
+        saveLinks( p2v, la, numColumns, links );
 
         watch.stop();
         log.info( "Seconds to insert " + la.getKeep().size() + " links plus flipped versions:"
@@ -257,10 +288,11 @@ public class LinkAnalysisService {
      * @param c
      * @param links
      */
-    private void saveLinks( LinkAnalysis la, int c, Object[] links ) {
+    private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la, int c, Object[] links ) {
         Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.length; i < n; i++ ) {
             Link m = ( Link ) links[i];
+            assert m != null;
             Double w = m.getWeight();
 
             assert w != null;
@@ -268,8 +300,8 @@ public class LinkAnalysisService {
             DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
             DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
 
-            DesignElementDataVector v1 = la.getP2v().get( p1 );
-            DesignElementDataVector v2 = la.getP2v().get( p2 );
+            DesignElementDataVector v1 = p2v.get( p1 );
+            DesignElementDataVector v2 = p2v.get( p2 );
 
             persist( c, p2plinkBatch, i, w, v1, v2, la.getTaxon() );
 
@@ -294,6 +326,10 @@ public class LinkAnalysisService {
 
     public void setVectorService( DesignElementDataVectorService vectorService ) {
         this.vectorService = vectorService;
+    }
+
+    public void setCsService( CompositeSequenceService csService ) {
+        this.csService = csService;
     }
 
 }

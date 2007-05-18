@@ -40,7 +40,6 @@ import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -64,18 +63,15 @@ public class LinkAnalysis {
     private ExpressionDataDoubleMatrix dataMatrix = null;
     private Collection<DesignElementDataVector> dataVectors = null;
 
-    private CompositeSequenceService csService = null;
-
     private Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
     private Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
-    private Map<CompositeSequence, DesignElementDataVector> p2v = null;
-
     private Taxon taxon = null;
     private int uniqueGenesInDataset = 0;
 
     private NumberFormat form;
 
     private LinkAnalysisConfig config;
+    private ExpressionExperiment expressionExperiment;
 
     /**
      * @param config
@@ -93,6 +89,7 @@ public class LinkAnalysis {
         assert this.dataMatrix != null;
         assert this.dataVectors != null;
         assert this.taxon != null;
+        assert this.probeToGeneMap != null;
 
         log.debug( "Taxon: " + this.taxon.getCommonName() );
 
@@ -116,7 +113,6 @@ public class LinkAnalysis {
         this.dataVectors = null;
         this.probeToGeneMap = null;
         this.geneToProbeMap = null;
-        this.p2v = null;
         this.uniqueGenesInDataset = 0;
         this.metricMatrix = null;
     }
@@ -133,9 +129,11 @@ public class LinkAnalysis {
         this.taxon = taxon;
     }
 
+    /**
+     * Write histogram into file.
+     * @throws IOException
+     */
     public void writeDistribution() throws IOException {
-
-        ExpressionExperiment expressionExperiment = this.dataVectors.iterator().next().getExpressionExperiment();
 
         File outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
         if ( !outputDir.canWrite() ) {
@@ -286,25 +284,11 @@ public class LinkAnalysis {
     @SuppressWarnings("unchecked")
     private void init() {
         int[] stats = new int[10];
-        this.p2v = new HashMap<CompositeSequence, DesignElementDataVector>();
 
         this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
 
         StopWatch watch = new StopWatch();
         watch.start();
-
-        log.info( "Collecting probes..." );
-        Collection<CompositeSequence> probesForVectors = new HashSet<CompositeSequence>();
-        for ( DesignElementDataVector v : dataVectors ) {
-            CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
-            probesForVectors.add( cs );
-            p2v.put( cs, v );
-        }
-
-        log.info( "Mapping probes to genes..." );
-        this.probeToGeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
-
-        probeToGeneMap = csService.getGenes( probesForVectors );
 
         // populate geneToProbeMap and gather stats.
         for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
@@ -384,15 +368,23 @@ public class LinkAnalysis {
         return metricMatrix;
     }
 
-    public Map<CompositeSequence, DesignElementDataVector> getP2v() {
-        return p2v;
-    }
-
     /**
      * @return
      */
     public Taxon getTaxon() {
         return this.taxon;
+    }
+
+    public void setProbeToGeneMap( Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+        this.probeToGeneMap = probeToGeneMap;
+    }
+
+    public ExpressionExperiment getExpressionExperiment() {
+       return this.expressionExperiment;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
 }
