@@ -39,6 +39,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
@@ -67,7 +68,8 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        return startJob( command, request );
+        return startJob( command, request, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentTask.class
+                .getName() );
     }
 
     /**
