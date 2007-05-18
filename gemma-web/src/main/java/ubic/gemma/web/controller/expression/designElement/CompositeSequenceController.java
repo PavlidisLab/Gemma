@@ -36,15 +36,19 @@ import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.BlatResultGeneSummary;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -57,119 +61,19 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @spring.property name="blatResultService" ref="blatResultService"
  * @spring.property name="methodNameResolver" ref="compositeSequenceActions"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
+ * @spring.property name="geneService" ref="geneService"
+ * @spring.property name="searchService" ref="searchService"
+ * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  */
 public class CompositeSequenceController extends BaseMultiActionController {
+
     private CompositeSequenceService compositeSequenceService = null;
     private BlatResultService blatResultService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
-
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * Exposed for AJAX calls.
-     * 
-     * @param ids
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
-        Collection compositeSequences = compositeSequenceService.load( ids );
-        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
-        return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unchecked")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        CompositeSequence cs = compositeSequenceService.load( id );
-        if ( cs == null ) {
-            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
-            return new ModelAndView( "mainMenu.html" );
-        }
-
-        Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
-
-        ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
-        mav.addObject( "compositeSequence", cs );
-        mav.addObject( "blatResults", blatResults );
-        return mav;
-    }
-
-    /**
-     * The difference between this and 'show' is the view, and this method is more ajax-aware. (don't know why this is
-     * called 'abbreviated'). Probably these methods could be combined.
-     * 
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unchecked")
-    public ModelAndView showAbbreviated( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        CompositeSequence cs = compositeSequenceService.load( id );
-        if ( cs == null ) {
-            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
-            return new ModelAndView( "mainMenu.html" );
-        }
-
-        Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
-
-        if ( AAUtils.isAjaxRequest( request ) ) {
-            AAUtils.addZonesToRefresh( request, "csTable" );
-        }
-
-        ModelAndView mav = new ModelAndView( "compositeSequence.detail.abbreviated" );
-        mav.addObject( "compositeSequence", cs );
-        mav.addObject( "blatResults", blatResults );
-        return mav;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unchecked")
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-        Collection<CompositeSequence> compositeSequences = new ArrayList<CompositeSequence>();
-        // if no IDs are specified, then show an error message
-        if ( sId == null ) {
-            addMessage( request, "object.notfound", new Object[] { "All composite sequences cannot be listed. " } );
-        }
-
-        // if ids are specified, then display only those bioSequences
-        else {
-            String[] idList = StringUtils.split( sId, ',' );
-            Collection ids = new ArrayList<Long>();
-
-            for ( int i = 0; i < idList.length; i++ ) {
-                Long id = Long.parseLong( idList[i] );
-                ids.add( id );
-            }
-            compositeSequences.addAll( compositeSequenceService.load( ids ) );
-        }
-        return new ModelAndView( "compositeSequences" ).addObject( "compositeSequences", compositeSequences );
-
-    }
-
+    private GeneService geneService;
+    private SearchService searchService;
+    private ArrayDesignService arrayDesignService = null;
+ 
     /**
      * @param cs
      * @param blatResults
@@ -192,14 +96,104 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
-     * Exposed for AJAX calls.
+     * Search for probes.
      * 
-     * @param csd
+     * @param request
+     * @param response
      * @return
      */
-    public Collection<BlatResultGeneSummary> getBlatMappingSummary( EntityDelegator csd ) {
-        CompositeSequence cs = compositeSequenceService.load( csd.getId() );
-        return this.getBlatMappingSummary( cs ).values();
+    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
+        String filter = request.getParameter( "filter" );
+        String arid = request.getParameter( "arid" );
+
+        // Validate the filtering search criteria.
+        if ( StringUtils.isBlank( filter ) ) {
+            this.saveMessage( request, "No search critera provided" );
+            // return showAll( request, response );
+        }
+
+        Collection<CompositeSequence> searchResults = search( filter, arid );
+
+        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
+        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+            this.saveMessage( request, "Your search yielded no results" );
+            compositeSequenceSummary = new ArrayList<CompositeSequenceMapValueObject>();
+        } else {
+            this.saveMessage( request, searchResults.size() + " probes matched your search." );
+            compositeSequenceSummary = getSummaries( searchResults );
+        }
+
+        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+        mav.addObject( "arrayDesign", loadArrayDesign( arid ) );
+        mav.addObject( "sequenceData", compositeSequenceSummary );
+        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
+        this.saveMessage( request, "Search Criteria: " + filter );
+
+        return mav;
+    }
+
+    /**
+     * @param searchString
+     * @param arrayDesign
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequence> search( String searchString, String arrayDesignId ) {
+        /*
+         * There have to be a few ways of searching: - by ID, by bioSequence, by Gene name. An array design may or may
+         * not be given.
+         */
+        ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
+
+        Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( searchString, arrayDesign );
+        Collection<Gene> geneResults = null;
+        try {
+            geneResults = searchService.geneSearch( searchString );
+        } catch ( Exception e ) {
+            // fail quietly
+        }
+        // if there have been any genes returned, find the compositeSequences associated with the genes
+        if ( geneResults != null && geneResults.size() > 0 ) {
+            for ( Gene gene : geneResults ) {
+
+                if ( arrayDesign == null ) {
+                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequencesById( gene.getId() );
+                    searchResults.addAll( geneCs );
+                } else {
+                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequences( gene, arrayDesign );
+                    searchResults.addAll( geneCs );
+                }
+
+            }
+        }
+        return searchResults;
+    }
+
+    /**
+     * @param arrayDesignId
+     * @return
+     */
+    private ArrayDesign loadArrayDesign( String arrayDesignId ) {
+        ArrayDesign arrayDesign = null;
+        if ( arrayDesignId != null ) {
+            try {
+                arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignId ) );
+            } catch ( NumberFormatException e ) {
+                // Fail gracefully, please.
+            }
+        }
+        return arrayDesign;
+    }
+
+    /**
+     * @param compositeSequences
+     * @return
+     */
+    private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
+        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 100 );
+        compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        return compositeSequenceSummary;
     }
 
     /**
@@ -241,6 +235,30 @@ public class CompositeSequenceController extends BaseMultiActionController {
         return blatResults;
     }
 
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param csd
+     * @return
+     */
+    public Collection<BlatResultGeneSummary> getBlatMappingSummary( EntityDelegator csd ) {
+        CompositeSequence cs = compositeSequenceService.load( csd.getId() );
+        return this.getBlatMappingSummary( cs ).values();
+    }
+
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param ids
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
+        Collection compositeSequences = compositeSequenceService.load( ids );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+    }
+
     @Override
     protected void initBinder( ServletRequest request, ServletRequestDataBinder binder ) throws Exception {
         super.initBinder( request, binder );
@@ -249,6 +267,90 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
     public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
         this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unchecked")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        CompositeSequence cs = compositeSequenceService.load( id );
+        if ( cs == null ) {
+            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
+            return new ModelAndView( "mainMenu.html" );
+        }
+
+        Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
+
+        ModelAndView mav;
+        if ( AAUtils.isAjaxRequest( request ) ) {
+            AAUtils.addZonesToRefresh( request, "csTable" );
+            // really this is no longer needed.
+            mav = new ModelAndView( "compositeSequence.detail.abbreviated" );
+        } else {
+            mav = new ModelAndView( "compositeSequence.detail" );
+        }
+
+        mav.addObject( "compositeSequence", cs );
+        mav.addObject( "blatResults", blatResults );
+        return mav;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unchecked")
+    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+        Collection<CompositeSequence> compositeSequences = new ArrayList<CompositeSequence>();
+        // if no IDs are specified, then show an error message
+        if ( sId == null ) {
+            addMessage( request, "object.notfound", new Object[] { "All composite sequences cannot be listed. " } );
+        }
+
+        // if ids are specified, then display only those bioSequences
+        else {
+            String[] idList = StringUtils.split( sId, ',' );
+            Collection ids = new ArrayList<Long>();
+
+            for ( int i = 0; i < idList.length; i++ ) {
+                Long id = Long.parseLong( idList[i] );
+                ids.add( id );
+            }
+            compositeSequences.addAll( compositeSequenceService.load( ids ) );
+        }
+        return new ModelAndView( "compositeSequences" ).addObject( "compositeSequences", compositeSequences );
+
     }
 
 }

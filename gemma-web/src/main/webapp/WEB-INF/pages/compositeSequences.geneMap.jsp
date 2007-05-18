@@ -15,6 +15,9 @@
 	<script type='text/javascript'
 		src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
 
+	<script type='text/javascript'
+		src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
+
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
@@ -25,50 +28,60 @@
 
 
 <title><c:if test="${arrayDesign.id != null}">
-Probes for : ${arrayDesign.name} />
+		Probes for : ${arrayDesign.name}
 	</c:if> <c:if test="${gene != null}">
-Probes for : ${gene.officialSymbol}
-</c:if>
-</title>
+		Probes for : ${gene.officialSymbol}
+	</c:if></title>
 
 <div id="pagetitle">
-<h2>
-	<a class="helpLink" href="?"
-		onclick="showHelpTip(event, 'This page displays information on multiple probes (array design elements). Enter a gene symbol or probe identifier into the form to find matches.'); return false"><img
-			src="/Gemma/images/help.png" /> </a> Probe Viewer
-
-	<c:if test="${arrayDesign.id != null}">		
+	<h2>
+		<a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'This page displays information on multiple probes (array design elements). Enter a gene symbol or probe identifier into the form to find matches.'); return false"><img
+				src="/Gemma/images/help.png" /> </a> Probe Viewer
+		<c:if test="${arrayDesign.id != null}">		
 for <br />
-		<jsp:getProperty name="arrayDesign" property="name" />
+		${arrayDesign.name}
 (
 <a
-			href="<c:url value="/arrays/showArrayDesign.html?id=${arrayDesign.id }" />">${arrayDesign.shortName }</a>
+				href="<c:url value='/arrays/showArrayDesign.html?id=${arrayDesign.id }' />">${arrayDesign.shortName
+				}</a>
 )
 </c:if>
-	<c:if test="${gene != null}">
+
+
+		<c:if test="${gene != null}">
  for : ${gene.officialSymbol}
 </c:if>
-</h2>
+	</h2>
 
 
-<p>
-	Displaying ${numCompositeSequences} probes.
-</p>
+	<p>
+		Displaying ${numCompositeSequences} probes.
+	</p>
 
 
-<c:if test="${arrayDesign.id != null}">
-	<form name="CompositeSequenceFilter"
-		action="<c:url value="/designElement/filterCompositeSequences.html" />"
-		method="POST">
+	<c:if test="${arrayDesign.id != null}">
+		<form name="CompositeSequenceFilter"
+			action="<c:url value="/compositeSequence/filter.html" />"
+			method="POST">
+			<h4>
+				Enter search criteria for finding specific probes here
+			</h4>
+			<input type="text" name="filter" size="78" />
+			<input type="hidden" name="arid" value="${arrayDesign.id }" />
+			<input type="submit" value="Find" />
+		</form>
+	</c:if>
+
+	<c:if test="${arrayDesign.id != null}">
 		<h4>
-			Enter search criteria for finding specific probes here
+			(Ajax) Enter search criteria for finding specific probes here
 		</h4>
-		<input type="text" name="filter" size="78" />
-		<input type="hidden" name="arid"
-			value="${arrayDesign.id }" />
-		<input type="submit" value="Find" />
-	</form>
-</c:if>
+		<input type="text" id="searchString" name="filter" size="78" />
+		<input type="submit" value="Find" onClick="search(event);return;" />
+		</form>
+	</c:if>
+
 </div>
 
 <div id="details-title"
@@ -89,4 +102,7 @@ for <br />
 
 <input type="hidden" name="cslist" id="cslist"
 	value="${compositeSequenceIdList}" />
+
+<input type="hidden" name="arrayDesignId" id="arrayDesignId"
+	value="${arrayDesign.id}" />
 

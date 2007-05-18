@@ -43,7 +43,6 @@
 			<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
 			<prop key="/bioMaterial/editBioMaterial.html">bioMaterialFormController</prop>
 			<prop key="/bioMaterial/*">bioMaterialController</prop>
-			<prop key="/designElement/*">designElementController</prop>
 			<prop key="/compositeSequence/*">compositeSequenceController</prop>
 			<prop key="/experimentalDesign/*">experimentalDesignController</prop>
 			<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
@@ -77,8 +76,6 @@
 			<prop key="/blatTrack.html">blatResultTrackController</prop>
 			<prop key="/maintenanceMode.html">maintenanceModeController</prop>
 			<prop key="/ontology.html">ontologyController</prop>
-			<prop key="/bioMaterial/annotator.html">bioMaterialController</prop>
-
 		</props>
 	</property>
 </bean>
@@ -145,6 +142,7 @@
 						<list>
 							<value>getBlatMappingSummary</value>
 							<value>getCsSummaries</value>
+							<value>search</value>
 						</list>
 					</property>
 				</bean>
@@ -436,7 +434,7 @@
 			<prop key="/designElement/showAllDesignElements.html">showAll</prop>
 			<prop key="/designElement/deleteDesignElement.html">delete</prop>
 			<prop key="/designElement/showDesignElement.html">show</prop>
-			<prop key="/designElement/filterCompositeSequences.html">filter</prop>
+			
 		</props>
 	</property>
 </bean>
@@ -452,9 +450,9 @@
 	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
-			<prop key="/compositeSequence/showAllCompositeSequences.html">showAll</prop>
-			<prop key="/compositeSequence/showCompositeSequence.html">show</prop>
-			<prop key="/compositeSequence/showAjaxCompositeSequence.html">showAbbreviated</prop>
+			<prop key="/compositeSequence/showAll.html">showAll</prop>
+			<prop key="/compositeSequence/show.html">show</prop>
+			<prop key="/compositeSequence/filter.html">filter</prop>
 		</props>
 	</property>
 </bean>

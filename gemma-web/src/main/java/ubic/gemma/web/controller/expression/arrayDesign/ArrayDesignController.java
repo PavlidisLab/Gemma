@@ -110,16 +110,16 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 
-        Collection compositeSequenceSummary = getCsSummaries( arrayDesign );
-
-        if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
-            throw new RuntimeException( "No probes found for " + arrayDesign );
+        if ( !AJAX ) {
+            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getCsSummaries( arrayDesign );
+            if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
+                throw new RuntimeException( "No probes found for " + arrayDesign );
+            }
+            mav.addObject( "sequenceData", compositeSequenceSummary );
+            mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
         }
-        mav.addObject( "sequenceData", compositeSequenceSummary );
-        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
 
         mav.addObject( "arrayDesign", arrayDesign );
 
@@ -175,7 +175,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( name + " not found" );
+            throw new EntityNotFoundException( idStr + " not found" );
         }
         long id = arrayDesign.getId();
 

@@ -3,7 +3,8 @@
 	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
-	<title><fmt:message key="compositeSequence.title" /></title>
+	<title><fmt:message key="compositeSequence.title" />
+	</title>
 	<script
 		src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
 		type="text/javascript"></script>
@@ -257,29 +258,13 @@
 				</table>
 			</td>
 		</tr>
-		<tr>
-			<td>
-
-				<div id="probe-details"	style="margin:0 0 10px 0; padding: 10px; border: 1px solid #EEEEEE; overflow: hidden; width:610px; height:150px;"></div>
-
-				<input type="hidden" name="cs" id="cs"
-					value="${compositeSequence.id}" />
-
-				<display:table name="blatResults" requestURI="" id="blatResult"
-					style="width:100%;" pagesize="200"
-					decorator="ubic.gemma.web.taglib.displaytag.expression.designElement.CompositeSequenceWrapper"
-					class="scrollTable">
-					<display:column property="blatResult" sortable="true"
-						title="Alignment" />
-					<display:column property="blatScore" sortable="true" title="S"
-						defaultorder="descending" />
-					<display:column property="blatIdentity" sortable="true" title="I"
-						defaultorder="descending" />
-					<display:column property="geneProducts" title="GeneProducts" />
-					<display:column property="genes" title="Genes" />
-					<display:setProperty name="basic.empty.showtable" value="true" />
-				</display:table>
-			</td>
-		</tr>
 	</table>
+
+	<div id="probe-details"
+		style="margin:0 0 10px 0; padding: 10px; border: 1px solid #EEEEEE; overflow: hidden; width:610px; height:150px;"></div>
+
+	<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
+
+
+
 </body>
