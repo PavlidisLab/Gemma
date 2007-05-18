@@ -392,7 +392,7 @@ public class LinkAnalysisService {
         this.csService = csService;
     }
 
-    public void setQuantiationTypeService( QuantitationTypeService quantitationTypeService ) {
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
     }
 
