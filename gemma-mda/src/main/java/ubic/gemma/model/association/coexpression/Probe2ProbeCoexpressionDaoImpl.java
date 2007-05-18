@@ -321,7 +321,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
 
         }
-        return ( Integer ) result;
+        
+        /*
+         * We divide by 2 because all links are stored twice
+         */
+        return ( Integer ) result / 2 ;
 
     }
      public class Link{

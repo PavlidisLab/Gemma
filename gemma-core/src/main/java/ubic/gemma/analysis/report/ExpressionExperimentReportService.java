@@ -151,7 +151,9 @@ public class ExpressionExperimentReportService {
             eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
             eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
                     .getPreferredDesignElementDataVectorCount( tempEe ) );
+
             eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( tempEe ).longValue() );
+
             eeVo.setDateCached( timestamp );
 
             auditTrailService.thaw( tempEe.getAuditTrail() );
