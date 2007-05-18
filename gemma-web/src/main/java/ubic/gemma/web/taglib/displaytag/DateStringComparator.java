@@ -21,6 +21,8 @@ package ubic.gemma.web.taglib.displaytag;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -37,7 +39,7 @@ public class DateStringComparator implements Comparator {
     /**
      * We can add formats to this.
      */
-    private final String[] formats = new String[] { "yyyy.MMM.dd hh:mm aa" };
+    private final String[] formats = new String[] { "yyyy.MM.dd HH:mm aa", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" };
 
     private static Log log = LogFactory.getLog( DateStringComparator.class.getName() );
 
@@ -50,14 +52,32 @@ public class DateStringComparator implements Comparator {
         String d1 = ( String ) arg0;
         String d2 = ( String ) arg1;
 
+        Pattern pat = Pattern.compile( "<span\\s+title='(.+?)\\.\\d'>.+" );
+        Matcher m1 = pat.matcher( d1 );
+        Matcher m2 = pat.matcher( d2 );
+        if ( m1.matches() ) {
+            String string = m1.group( 1 );
+            if ( string != null ) {
+                d1 = string;
+            }
+        }
+
+        if ( m2.matches() ) {
+            String string2 = m2.group( 1 );
+            if ( string2 != null ) {
+                d2 = string2;
+            }
+        }
+
         Date date1;
         Date date2;
 
         try {
+            log.info( d1 + " " + d2 );
             date1 = DateUtils.parseDate( d1, formats );
             date2 = DateUtils.parseDate( d2, formats );
         } catch ( ParseException e ) {
-            log.debug( "Failed to parse dates, returning lexigraphic ordering" );
+            log.info( "Failed to parse dates, returning lexigraphic ordering" );
             return d1.compareTo( d2 );
         }
 

@@ -5,9 +5,7 @@
 
 
 <title><fmt:message key="compositeSequence.title" />
-</title>
-
-
+</title> 
 
 
 <aa:zone name="csTable">
@@ -141,16 +139,17 @@
 							<b> Sequence name </b>
 						</td>
 						<td>
-							<%
-							                        if ( compositeSequence.getBiologicalCharacteristic() != null
-							                        && compositeSequence.getBiologicalCharacteristic().getName() != null ) {
-							%>
-							${compositeSequence.biologicalCharacteristic.name }
-							<%
-							                    } else {
-							                    out.print( "No name available" );
-							                }
-							%>
+						<%
+						if ( compositeSequence.getBiologicalCharacteristic().getName() != null ) {
+						%>
+						<a title="View details in Gemma" 
+							href="<c:url value='/genome/bioSequence/showBioSequence.html?id=${compositeSequence.biologicalCharacteristic.id }'/>">${compositeSequence.biologicalCharacteristic.name
+							}</a>
+						<%
+						                } else {
+						                out.print( "No sequence name available" );
+						            }
+						%>
 						</td>
 					</tr>
 					<tr>

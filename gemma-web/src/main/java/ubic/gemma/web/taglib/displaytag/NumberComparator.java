@@ -1,15 +1,31 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2007 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
+
 package ubic.gemma.web.taglib.displaytag;
 
 import java.util.Comparator;
 
 /**
- * @author jsantos 
+ * Comparator for simple numbers in displayTag.
  * 
- * Comparator for simple numbers in displayTag. If the string is not just a number (ie the cell has a
- *         link as well), write a customized comparator.
+ * @author jsantos
+ * @version $Id$
  */
 public class NumberComparator implements Comparator {
 
@@ -27,24 +43,22 @@ public class NumberComparator implements Comparator {
         // do some reflection to determine if the numbers need to be parsed from String
         // if it is not an integer, assume it is a number of some sort. Convert to string.
         try {
-            if (arg0.getClass() == Class.forName( "java.lang.String" ) && arg1.getClass() == Class.forName( "java.lang.String" ))  {
-                s1 = (String) arg0;
-                s2 = (String) arg1;
-            }
-            else {
+            if ( arg0.getClass() == Class.forName( "java.lang.String" )
+                    && arg1.getClass() == Class.forName( "java.lang.String" ) ) {
+                s1 = ( String ) arg0;
+                s2 = ( String ) arg1;
+            } else {
                 Class c1 = arg0.getClass();
                 Class c2 = arg1.getClass();
-                
+
                 s1 = c1.cast( arg0 ).toString();
                 s2 = c2.cast( arg1 ).toString();
             }
         } catch ( ClassNotFoundException e ) {
-            // failsafe, do not sort
-            return 0;
+            // fallback on lexigraphic sort.
+            return s1.compareTo( s2 );
         }
 
-        
-        
         num1 = Double.parseDouble( ( String ) s1 );
         num2 = Double.parseDouble( ( String ) s2 );
         if ( num1 < num2 ) {
@@ -54,7 +68,6 @@ public class NumberComparator implements Comparator {
         } else {
             return 0;
         }
-
 
     }
 

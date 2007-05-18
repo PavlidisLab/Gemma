@@ -32,26 +32,34 @@
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
 	<display:column property="shortName" sortable="true"
-		titleKey="expressionExperiment.shortName" />
+		titleKey="expressionExperiment.shortName"
+		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 	<display:column property="coexpressionLinkCount" sortable="true"
 		titleKey="expressionExperiment.coexpressionLinkCount"
+		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"
 		defaultorder="descending" />
 	<display:column property="preferredDesignElementDataVectorCount"
 		sortable="true" defaultorder="descending"
+		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"
 		titleKey="expressionExperiment.preferredDesignElementDataVectorCount" />
 	<display:column property="bioMaterialCount" sortable="true"
 		defaultorder="descending"
-		titleKey="expressionExperiment.bioMaterialCount" />
+		titleKey="expressionExperiment.bioMaterialCount"
+		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	<display:column property="dateCachedNoTime" sortable="true"
 		defaultorder="descending" title="Cached" />
 	<display:column property="dateCreatedNoTime" sortable="true"
-		defaultorder="descending" title="Created" />
+		defaultorder="descending" title="Created"
+		comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 	<display:column property="dateMissingValueAnalysisNoTime"
-		sortable="true" defaultorder="descending" title="MV Analysis" />
+		sortable="true" defaultorder="descending" title="MV Analysis"
+		comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 	<display:column property="dateRankComputationNoTime" sortable="true"
-		defaultorder="descending" title="Rank Computed" />
+		defaultorder="descending" title="Rank Computed"
+		comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 	<display:column property="dateLinkAnalysisNoTime" sortable="true"
-		defaultorder="descending" title="Link Analyzed" />
+		defaultorder="descending" title="Link Analyzed"
+		comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="refreshReport" title="Refresh" />
 	</authz:authorize>

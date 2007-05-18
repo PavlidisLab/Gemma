@@ -112,21 +112,27 @@
 	requestURI="" id="arrayDesignList" pagesize="50"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 	<display:column property="name" sortable="true"
+		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 		href="showArrayDesign.html" paramId="id" paramProperty="id"
 		titleKey="arrayDesign.name" />
 	<display:column property="shortName" sortable="true"
-		titleKey="arrayDesign.shortName" />
+		titleKey="arrayDesign.shortName"
+		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 	<display:column property="taxon" sortable="true"
 		titleKey="arrayDesign.taxon" />
 	<display:column property="expressionExperimentCountLink"
-		sortable="true" title="Expts" />
+		sortable="true" title="Expts"
+		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	<display:column property="summaryTable" title="Probe Summary" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="lastSequenceUpdateDate" sortable="true"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
 			title="Seq. Update" defaultorder="descending" />
 		<display:column property="lastSequenceAnalysisDate" sortable="true"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
 			title="Seq. Analysis" defaultorder="descending" />
 		<display:column property="lastGeneMappingDate" sortable="true"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
 			title="Gene mapping" defaultorder="descending" />
 		<display:column property="color" sortable="true"
 			titleKey="arrayDesign.technologyType" />
