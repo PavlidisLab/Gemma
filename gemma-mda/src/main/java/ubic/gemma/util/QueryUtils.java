@@ -93,6 +93,22 @@ public class QueryUtils {
             throw SessionFactoryUtils.convertHibernateAccessException( ex );
         }
     }
+    
+    /**
+     * @param id with parameter "id"
+     * @param queryString
+     * @return
+     */
+    public static Collection queryByIdReturnCollection( Session session, Long id, final String queryString, int limit ) {
+        try {
+            org.hibernate.Query queryObject = session.createQuery( queryString );
+            queryObject.setParameter( "id", id );
+            queryObject.setMaxResults( limit );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw SessionFactoryUtils.convertHibernateAccessException( ex );
+        }
+    }
 
     /**
      * @param ids

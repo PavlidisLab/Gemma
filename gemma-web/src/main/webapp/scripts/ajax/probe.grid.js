@@ -1,11 +1,26 @@
 var showprobes = function(id) {
 	var ids =  id.split(",");
 	// note how we pass the new array in directly, without wraping it in an object first.
-	ds.load({params:[ids]});
+	ds.load({params:[ids], 
+	callback: function(r, options, success, scope ) {  
+		if (success) { 
+			Ext.DomHelper.overwrite("messages", this.getCount() + " shown" ); 
+		} else { 
+			Ext.DomHelper.overwrite("messages", "There was an error." );  
+		} 
+		}
+	});
 };
 
 var showArrayDesignProbes = function(id) {
-	ds.load({params:[{id:id}]});
+	ds.load({params:[{id:id}], 
+	callback: function(r, options, success, scope ) {  
+		if (success) { 
+			Ext.DomHelper.overwrite("messages", this.getCount() + " shown" ); 
+		} else { 
+			Ext.DomHelper.overwrite("messages", "There was an error." );  
+		} 
+	}});
 };
 
 var grid;
@@ -137,7 +152,13 @@ var search = function(event) {
 	query = dwr.util.getValue("searchString");
 	var oldprox = ds.proxy;
 	ds.proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
-	ds.load({params:[ query, id]});
+	ds.load({params:[ query, id], callback: function(r, options, success, scope ) {  
+		if (success) { 
+			Ext.DomHelper.overwrite("messages", this.getCount() + " found" ); 
+		} else { 
+			Ext.DomHelper.overwrite("messages", "There was an error." );  
+		} 
+	}});
 	ds.proxy = oldprox;
 }
 

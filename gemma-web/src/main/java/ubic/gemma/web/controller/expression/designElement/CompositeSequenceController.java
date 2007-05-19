@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.designElement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import javax.servlet.ServletRequest;
@@ -67,13 +68,17 @@ import ubic.gemma.web.remote.EntityDelegator;
  */
 public class CompositeSequenceController extends BaseMultiActionController {
 
+    /**
+     * 
+     */
+    private static final int MAX_PROBES_TO_RETURN = 200;
     private CompositeSequenceService compositeSequenceService = null;
     private BlatResultService blatResultService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private GeneService geneService;
     private SearchService searchService;
     private ArrayDesignService arrayDesignService = null;
- 
+
     /**
      * @param cs
      * @param blatResults
@@ -112,15 +117,13 @@ public class CompositeSequenceController extends BaseMultiActionController {
             // return showAll( request, response );
         }
 
-        Collection<CompositeSequence> searchResults = search( filter, arid );
-
-        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
-        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = search( filter, arid );
+ 
+        if ( ( compositeSequenceSummary == null ) || ( compositeSequenceSummary.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );
             compositeSequenceSummary = new ArrayList<CompositeSequenceMapValueObject>();
         } else {
-            this.saveMessage( request, searchResults.size() + " probes matched your search." );
-            compositeSequenceSummary = getSummaries( searchResults );
+            this.saveMessage( request, compositeSequenceSummary.size() + " probes matched your search." );
         }
 
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
@@ -138,7 +141,12 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<CompositeSequence> search( String searchString, String arrayDesignId ) {
+    public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) {
+        
+        if (StringUtils.isBlank( searchString )) {
+            return new HashSet<CompositeSequenceMapValueObject>();
+        }
+        
         /*
          * There have to be a few ways of searching: - by ID, by bioSequence, by Gene name. An array design may or may
          * not be given.
@@ -166,7 +174,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
             }
         }
-        return searchResults;
+        return getSummaries( searchResults );
     }
 
     /**
@@ -190,9 +198,11 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @return
      */
     private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
-        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
-        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 100 );
-        compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
+        if ( compositeSequences.size() > 0 ) {
+            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, MAX_PROBES_TO_RETURN );
+            compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        }
         return compositeSequenceSummary;
     }
 

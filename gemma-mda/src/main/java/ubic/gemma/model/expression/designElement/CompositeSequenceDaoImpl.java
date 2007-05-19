@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -178,6 +180,21 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected Collection handleGetRawSummary( Collection compositeSequences, Integer limit ) throws Exception {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
+
+        Collection compositeSequencesForQuery = new HashSet<CompositeSequence>();
+        if ( limit != null && limit != 0 ) {
+
+            int j = 0;
+            for ( Object object : compositeSequences ) {
+                if ( j > limit ) break;
+                compositeSequencesForQuery.add( object );
+                ++j;
+            }
+            // nativeQueryString = nativeQueryString + " LIMIT " + limit;
+        } else {
+            compositeSequencesForQuery = compositeSequences;
+        }
+
         StringBuilder buf = new StringBuilder();
 
         for ( Iterator<CompositeSequence> it = compositeSequences.iterator(); it.hasNext(); ) {
@@ -192,10 +209,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
 
-        if ( limit != null && limit != 0 ) {
-            nativeQueryString = nativeQueryString + " LIMIT " + limit;
-        }
-
         return QueryUtils.nativeQuery( getSession(), nativeQueryString );
     }
 
@@ -204,18 +217,17 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
-        long id = arrayDesign.getId();
+        final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
+        Collection<CompositeSequence> cs = QueryUtils.queryByIdReturnCollection( getSession(), arrayDesign.getId(),
+                queryString, numResults );
 
-        String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ARRAY_DESIGN_FK = :id ";
-        if ( numResults != null && numResults != 0 ) {
-            nativeQueryString = nativeQueryString + " LIMIT " + numResults;
-        }
-        return QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
+        return getRawSummary( cs, 0 );
 
     }
 
