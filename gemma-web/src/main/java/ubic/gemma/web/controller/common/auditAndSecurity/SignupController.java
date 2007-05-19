@@ -63,7 +63,7 @@ public class SignupController extends UserAuthenticatingController {
         String unencryptedPassword = user.getNewPassword();
         encryptPassword( user, request );
         user.setEnabled( true );
-        addUserRole( user );
+        addRole( user );
 
         try {
             log.info( "Signing up " + user + " " + user.getUserName() );
@@ -71,7 +71,7 @@ public class SignupController extends UserAuthenticatingController {
             User savedUser = this.userService.create( user.asUser() );
 
             assert savedUser != null;
-        } catch (  UserExistsException e ) {
+        } catch ( UserExistsException e ) {
             log.warn( e.getMessage() );
 
             errors.rejectValue( "userName", "errors.existing.user",
@@ -85,17 +85,30 @@ public class SignupController extends UserAuthenticatingController {
 
         sendConfirmationEmail( request, user.asUser(), locale );
 
-        saveMessage( request, "user.registered", user.getUserName(), "Registered" );
+        // TODO use this property again
+        // saveMessage(request, "user.registered", user.getUserName(), "Registered");
+        saveMessage( request, "Registered" );
         return new ModelAndView( getSuccessView() );
     }
 
     /**
+     * Adds a role to the user. If setAsAdmin is true, sets the user as an administrator.
+     * 
      * @param user
      */
-    private void addUserRole( UserUpdateCommand user ) {
+    private void addRole( UserUpdateCommand user ) {
         // Set the default user role on this new user
-        UserRole role = UserRole.Factory.newInstance( user.getUserName(), UserConstants.USER_ROLE,
-                "added by signupController" );
+        UserRole role = null;
+
+        String message = "added by " + this.getClass().getName();
+
+        boolean setAsAdmin = user.getAdminUser();
+        if ( setAsAdmin ) {
+            role = UserRole.Factory.newInstance( user.getUserName(), UserConstants.ADMIN_ROLE, message );
+        } else {
+            role = UserRole.Factory.newInstance( user.getUserName(), UserConstants.USER_ROLE, message );
+        }
+
         user.getRoles().add( role );
     }
 

@@ -149,7 +149,9 @@ public abstract class UserAuthenticatingController extends BaseFormController {
         }
 
         // Send an account information e-mail
-        mailMessage.setSubject( getText( "signup.email.subject", locale ) );
+        // TODO use this property again
+        // mailMessage.setSubject( getText( "signup.email.subject", locale ) );
+        mailMessage.setSubject( "Gemma Account Information" );
         try {
             sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
             this.saveMessage( request, "email.sent", user.getEmail(), "Confirmation email was sent to "

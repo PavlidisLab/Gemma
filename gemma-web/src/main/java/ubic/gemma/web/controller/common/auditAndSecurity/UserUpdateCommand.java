@@ -40,6 +40,7 @@ public class UserUpdateCommand {
     private String oldPassword = null;
     private String newPassword = null;
     private String confirmNewPassword = null;
+    private Boolean adminUser = false;
 
     // stored so this can be used to modify a persistent instance.
     private User user;
@@ -485,5 +486,13 @@ public class UserUpdateCommand {
     @Override
     public String toString() {
         return this.user.toString();
+    }
+
+    public Boolean getAdminUser() {
+        return adminUser;
+    }
+
+    public void setAdminUser( Boolean adminUser ) {
+        this.adminUser = adminUser;
     }
 }

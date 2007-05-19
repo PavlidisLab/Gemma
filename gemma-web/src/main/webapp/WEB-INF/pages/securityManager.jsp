@@ -73,6 +73,13 @@
         	</td>
 		</tr>
 		
+		<tr>
+			<ul class="glassList">
+				<li>
+					<a href="<c:url value="/signup.html"/>"> Add Another User </a>
+				</li>
+			</ul>
+		</tr>	
 	</table>
 
 	<table>

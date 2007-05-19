@@ -108,6 +108,19 @@
 				</td>
 			</tr>
 			<tr>
+				<th>
+					<fmt:message key="user.adminUser" />
+				</th>
+				<td>
+					<spring:bind path="user.adminUser">
+					<input type="hidden" name="_${status.expression}"/>
+						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+						<input type="checkbox" name="{status.expression}" value="true"
+							<c:if test="${status.value}">checked="checked"</c:if>/>
+					</spring:bind>
+				</td>
+			</tr>
+			<tr>
 				<td></td>
 				<td class="buttonBar bottom">
 					<input type="submit" class="button" name="save" onclick="bCancel=false"
