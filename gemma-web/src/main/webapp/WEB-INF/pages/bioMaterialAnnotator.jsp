@@ -10,11 +10,9 @@
 		<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>"
 			type="text/javascript"></script>
 
-		<script type="text/javascript"
-			src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-
-		<script type="text/javascript"
-			src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+		<script type="text/javascript"	src="<c:url value='/scripts/DwrTreeLoader.js'/>"></script>
+		<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+		<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 
 		<script type='text/javascript'
 			src='/Gemma/dwr/interface/BioMaterialController.js'></script>
@@ -23,8 +21,8 @@
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
 		<script type="text/javascript"
-			src="<c:url value='/scripts/ajax/bioMaterialAnnotator.js'/>"
-			type="text/javascript"></script>
+			src="<c:url value='/scripts/ajax/bioMaterialAnnotator.js'/>"></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>	
 	</head>
 
 	<body>

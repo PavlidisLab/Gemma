@@ -50,7 +50,6 @@ public class MgedOntologyService implements InitializingBean {
 
     // map of uris to terms
     private static Map<String, OntologyTerm> terms;
-    
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -58,8 +57,7 @@ public class MgedOntologyService implements InitializingBean {
 
     private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
     private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
-    
-    
+
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
         if ( running.get() ) {
@@ -69,50 +67,81 @@ public class MgedOntologyService implements InitializingBean {
         init();
     }
 
-    public OntologyDataList getTerm(int start, int count, String orderBy ) {
+    public OntologyDataList getTerm( int start, int count, String orderBy ) {
 
-//        if ( uri == null ) return new OntologyData();
-//
-//        OntologyTerm term = OntologyTools.getOntologyTerm( uri );
-//        if ( term == null ) return new OntologyData();
-//
-//        OntologyData od = new OntologyData( term.getUri(), term.getTerm(), term.getComment(), term.getChildren( true ) );
-//
-//        return od;
+        // if ( uri == null ) return new OntologyData();
+        //
+        // OntologyTerm term = OntologyTools.getOntologyTerm( uri );
+        // if ( term == null ) return new OntologyData();
+        //
+        // OntologyData od = new OntologyData( term.getUri(), term.getTerm(), term.getComment(), term.getChildren( true
+        // ) );
+        //
+        // return od;
+        
         OntologyDataList res = new OntologyDataList();
         Collection<OntologyData> children = new ArrayList<OntologyData>();
-        children.add(new OntologyData(99,"term99", "desc99"));
-        children.add(new OntologyData(98, "term98", "desc98"));
-        
-        Object[] ontos = { new OntologyData(1,"term1","desc1"), new OntologyData(2,"term2","desc2"),new OntologyData(3,"term3","desc3")};
+        children.add( new OntologyData( 99, "term99", "desc99" ) );
+        children.add( new OntologyData( 98, "term98", "desc98" ) );
+
+        Object[] ontos = { new OntologyData( 1, "term1", "desc1" ), new OntologyData( 2, "term2", "desc2" ),
+                new OntologyData( 3, "term3", "desc3" ) };
         res.setData( ontos );
         res.setTotalSize( 3 );
-        
+
         return res;
     }
-    
-    public Collection<OntologyTreeNode> getBioMaterialTerms(){
-        
+
+    public Collection<OntologyTreeNode> getBioMaterialTerms() {
+
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
-        
-        String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
+
+        final String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
         OntologyTerm term = terms.get( id );
-        OntologyTreeNode node = new OntologyTreeNode(term);
-        node.setAllowChildren( true );
-        
-        Collection<OntologyTerm> children =  term.getChildren( true );
-        if ((children != null) && (!children.isEmpty())){
-            for(OntologyTerm ot : children){
-                OntologyTreeNode child = new OntologyTreeNode(ot);
-                node.appendChild( child );
+
+        nodes.add( buildTreeNode( term ) );
+        return nodes;
+    }
+
+    public Collection<OntologyRestriction> getTermRestrictions( String id ) {
+
+        OntologyTerm term = terms.get( id );
+
+        return term.getRestrictions();
+
+    }
+
+    public Collection<OntologyIndividual> getTermIndividuals( String id ) {
+
+        OntologyTerm term = terms.get( id );
+
+        return term.getIndividuals( true );
+
+    }
+
+    /**
+     * @param node Recursivly builds the tree node structure that is needed by the ext tree
+     */
+    protected OntologyTreeNode buildTreeNode( OntologyTerm term ) {
+
+        OntologyTreeNode node = new OntologyTreeNode( term );
+        node.setLeaf( true );
+        Collection<OntologyTerm> children = term.getChildren( true );
+
+        if ( ( children != null ) && ( !children.isEmpty() ) ) {
+            // node has children
+            node.setAllowChildren( true );
+            node.setLeaf( false );
+
+            for ( OntologyTerm child : children ) {
+                node.appendChild( buildTreeNode( child ) );
             }
         }
 
-        
-        nodes.add(node );
-        return nodes;
+        return node;
+
     }
-    
+
     protected synchronized void init() {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
@@ -134,9 +163,8 @@ public class MgedOntologyService implements InitializingBean {
                 //
                 try {
                     loadTermsInNameSpace( MGED_URL );
-                    log.info( "Gene Ontology Molecular Function loaded, total of " + terms.size() + " items in "
+                    log.info( "MGED Ontology loaded, total of " + terms.size() + " items in "
                             + loadTime.getTime() / 1000 + "s" );
-
 
                     ready.set( true );
                     running.set( false );
@@ -183,8 +211,7 @@ public class MgedOntologyService implements InitializingBean {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
         for ( OntologyResource term : newTerms ) {
             if ( term.getUri() == null ) continue;
-            if ( term instanceof OntologyTerm ) 
-                terms.put( term.getUri(), ( OntologyTerm ) term );
+            if ( term instanceof OntologyTerm ) terms.put( term.getUri(), ( OntologyTerm ) term );
         }
     }
 
@@ -198,6 +225,5 @@ public class MgedOntologyService implements InitializingBean {
 
         return ready.get();
     }
-    
 
 }

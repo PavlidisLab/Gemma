@@ -201,6 +201,8 @@
 						<list>
 							<value>getTerm</value>
 							<value>getBioMaterialTerms</value>
+							<value>getTermIndividuals </value>
+							<value>getTermRestrictions </value>
 						</list>
 					</property>
 				</bean>

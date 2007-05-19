@@ -37,6 +37,8 @@ Simple = function() {
             mainLayout.endUpdate();
 			
 			initGrid( );
+			initTree( );
+			initDetailsGrid( );
 		}
 		
 		
@@ -69,8 +71,8 @@ var initGrid = function(div) {
 		});
 		
 	var cm = new Ext.grid.ColumnModel([
-			{header: "Name", width: 100, dataIndex:"name"},
-			{header: "Description",  width: 130, dataIndex:"description"} 
+			{header: "Name", width: 50, dataIndex:"name"},
+			{header: "Description",  width: 80, dataIndex:"description"} 
 			]);
 	cm.defaultSortable = true;
 
@@ -81,6 +83,75 @@ var initGrid = function(div) {
 	var id = dwr.util.getValue("cslist");
 	showbms(id);
 };
+
+var initTree = function(div){
+
+    var tree = new Ext.tree.TreePanel('north-div', {
+        animate:true, 
+        loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTerms})
+    });
+    
+    tree.on('click', function(node){
+			dds.load({params:[{id: node.id}]});
+           });
+    
+
+    // set the root node
+    var root = new Ext.tree.AsyncTreeNode({
+        text: 'Top of the tree',
+        draggable:false,
+        allowChildre:true,
+        id:'root'
+    });
+    tree.setRootNode(root);
+
+
+
+    // render the tree
+    tree.render();
+    root.expand();
+    
+    
+};
+
+var showDetails = function(node) {
+	dds.load({params:[{id: node}]});
+};
+
+var dds;
+
+var initDetailsGrid = function(div) {
+	var	recordDetailsType = Ext.data.Record.create([
+			{name:"id", type:"int"}, 
+			{name:"label", type:"string"},
+			{name:"localName", type:"string"},
+			{name:"uri", type:"string"}
+			
+		]);
+		
+
+
+ 	dds = new Ext.data.Store(
+		{
+			proxy:new Ext.data.DWRProxy(MgedOntologyService.getTermRestrictions), 
+			reader:new Ext.data.ListRangeReader({id:"id"}, recordDetailsType), 
+			remoteSort:false,
+			sortInfo:{field:'uri'}
+		});
+		
+	var cdm = new Ext.grid.ColumnModel([
+			{header: "Label", width: 100, dataIndex:"label"},
+			{header: "Local Name",  width: 130, dataIndex:"localName"},
+			{header: "URI",  width: 130, dataIndex:"uri"} 
+			 
+			]);
+	cdm.defaultSortable = true;
+
+	detailsGrid = new Ext.grid.Grid("east-div", {autoSizeColumns: true, ds:dds, cm:cdm, loadMask: true });
+	detailsGrid.render();
+	
+};
+
 
 
 
