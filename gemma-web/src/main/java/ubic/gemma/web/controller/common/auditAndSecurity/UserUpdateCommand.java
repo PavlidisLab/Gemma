@@ -489,7 +489,7 @@ public class UserUpdateCommand {
     }
 
     public Boolean getAdminUser() {
-        return adminUser;
+        return this.adminUser;
     }
 
     public void setAdminUser( Boolean adminUser ) {
