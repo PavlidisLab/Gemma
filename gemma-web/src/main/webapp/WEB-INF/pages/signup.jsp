@@ -113,10 +113,10 @@
 				</th>
 				<td>
 					<spring:bind path="user.adminUser">
-					<input type="hidden" name="_${status.expression}"/>
-						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="checkbox" name="{status.expression}" value="true"
-							<c:if test="${status.value}">checked="checked"</c:if>/>
+					<input type="hidden" name="_${status.expression}" />
+					<input type="checkbox" name="${status.expression}" value="true"
+						<c:if test="${status.value}">checked="checked"</c:if>/>
+					<span class="fieldError">${status.errorMessage}</span>		
 					</spring:bind>
 				</td>
 			</tr>
