@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.experiment;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -68,8 +67,12 @@ public class GeoRecordWrapper extends TableDecorator {
     public String getReleaseDateNoTime() {
         GeoRecord record = ( GeoRecord ) getCurrentRowObject();
         Date d = record.getReleaseDate();
-        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy" ); // F out.
-        return df.format( d );
+        SimpleDateFormat df = new SimpleDateFormat( "dd/MM/yy" ); // F out.
+        try {
+            return df.format( d );
+        } catch ( Exception e ) {
+            return "[date unparseable]";
+        }
     }
 
     /**

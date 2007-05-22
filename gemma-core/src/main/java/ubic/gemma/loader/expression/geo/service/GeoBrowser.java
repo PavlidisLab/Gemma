@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,6 +54,8 @@ public class GeoBrowser {
 
     private String GEO_TABLE_CELL_REGEXP = ".+?(DEEBDC|EEEEEE)\".*?>(.*?)</td>"; // allows for empty cells.
 
+    private String[] DATE_FORMATS = new String[] { "MMMM dd, yyyy" };
+
     /**
      * For an example of the HTML used, see
      * {@link http://www.ncbi.nlm.nih.gov/projects/geo/query/browse.cgi?mode=series&sorton=pub_date&sortdir=1&start=1&pgsize=10}
@@ -65,6 +68,7 @@ public class GeoBrowser {
         Pattern pat = Pattern.compile( GEO_TABLE_CELL_REGEXP );
         Pattern simpleUrlPat = Pattern.compile( "<.+?>(.+?)</.+?>" );
         URL url = null;
+
         List<GeoRecord> records = new ArrayList<GeoRecord>();
         try {
             url = new URL( GEO_BROWSE_URL + startPoint + GEO_BROWSE_SUFFIX + numberToFetch );
@@ -86,7 +90,7 @@ public class GeoBrowser {
                         case 0:
                             if ( geoRecord != null ) {
                                 records.add( geoRecord );
-                                log.info( "Record: " + geoRecord );
+                                log.debug( "Record: " + geoRecord );
                             }
                             geoRecord = new GeoRecord();
                             Pattern accath = Pattern.compile( ".+?acc=(GSE\\d+).+" );
@@ -132,13 +136,12 @@ public class GeoBrowser {
                             specCap.find();
                             break;
                         case 6:
-                            DateFormat df = DateFormat.getDateInstance();
                             try {
-                                Date d = df.parse( captured );
+                                Date d = DateUtils.parseDate( captured, DATE_FORMATS );
                                 log.debug( d );
                                 geoRecord.setReleaseDate( d );
                             } catch ( ParseException e ) {
-                                //
+                                log.warn( "Could not parse date: " + captured );
                             }
                             fieldnum = -1; // back to start.
                             break;

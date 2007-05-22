@@ -65,8 +65,11 @@ public class GeoBrowserService {
             for ( String string : organisms ) {
                 Taxon t = taxonService.findByCommonName( string );
                 if ( t == null ) {
-                    toRemove.add( record );
-                    continue rec;
+                    t = taxonService.findByScientificName( string );
+                    if ( t == null ) {
+                        toRemove.add( record );
+                        continue rec;
+                    }
                 }
                 String acc = record.getGeoAccession();
                 if ( organisms.size() > 1 ) {
