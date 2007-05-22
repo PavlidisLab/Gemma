@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
+import java.text.NumberFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -29,11 +30,19 @@ import org.apache.commons.lang.time.DateUtils;
 import ubic.gemma.analysis.report.WhatsNew;
 
 /**
+ * Tag to show 'what's new in Gemma' on home page.
+ * 
  * @jsp.tag name="whatsNew" body-content="empty"
  * @author pavlidis
+ * @author joseph
  * @version $Id$
  */
 public class WhatsNewBoxTag extends TagSupport {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4743861628500226664L;
 
     private WhatsNew whatsNew;
 
@@ -65,10 +74,11 @@ public class WhatsNewBoxTag extends TagSupport {
         } else if ( days < 8 ) {
             buf.append( " last week" );
         } else {
-            buf.append( " last " + days + " days" );
+            NumberFormat nf = NumberFormat.getIntegerInstance();
+            buf.append( " last " + nf.format( days ) + " days" );
         }
         buf.append( "</h2>" );
-        buf.append("<p>");
+        buf.append( "<p>" );
         if ( numNew > 0 ) {
             int numEEs = whatsNew.getNewExpressionExperiments().size(); // FIXME make a link to see them.
             int numADs = whatsNew.getNewArrayDesigns().size(); // FIXME make a link to see them.
@@ -86,7 +96,7 @@ public class WhatsNewBoxTag extends TagSupport {
             int numEEs = whatsNew.getUpdatedExpressionExperiments().size(); // FIXME make a link to see them.
             int numADs = whatsNew.getUpdatedArrayDesigns().size(); // FIXME make a link to see them.
             if ( numEEs > 0 ) {
-                buf.append(numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
             }
             if ( numADs > 0 ) {
                 buf.append( numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
@@ -94,8 +104,8 @@ public class WhatsNewBoxTag extends TagSupport {
         } else {
             buf.append( "[No experiments or platforms updated]<br />" );
         }
-        
-        buf.append("</p>");
+
+        buf.append( "</p>" );
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
