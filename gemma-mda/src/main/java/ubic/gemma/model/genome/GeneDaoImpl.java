@@ -1025,4 +1025,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         throw new UnsupportedOperationException( "Sorry, you shouldn't use this" );
     }
 
+    @Override
+    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

@@ -253,4 +253,10 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCompositeSequencesById( id );
     }
 
+    @Override
+    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
+        // TODO Auto-generated method stub
+        return this.getGeneDao().getCS2GeneMap( csIds );
+    }
+
 }
