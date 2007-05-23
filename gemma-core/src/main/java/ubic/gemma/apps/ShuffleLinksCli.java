@@ -153,15 +153,19 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
         int eeIndex = eeMap.get( ee.getId() );
         for(Link link:links){
-            Collection<Long> firstGeneIds =cs2genes.get( link.getFirst_design_element_fk() );
-            Collection<Long> secondGeneIds =cs2genes.get( link.getSecond_design_element_fk() );
+       		Collection<Long> firstGeneIds =cs2genes.get( link.getFirst_design_element_fk() );
+       		Collection<Long> secondGeneIds =cs2genes.get( link.getSecond_design_element_fk() );
             if(firstGeneIds == null || secondGeneIds == null) continue;
             if(firstGeneIds.size() != 1 || secondGeneIds.size() != 1) continue;
             Long firstGeneId = firstGeneIds.iterator().next();
             Long secondGeneId = secondGeneIds.iterator().next();
-            int rowIndex = linkCount.getRowIndexByName(firstGeneId);
-            int colIndex = linkCount.getColIndexByName(secondGeneId);
-            linkCount.set( rowIndex, colIndex, eeIndex );
+            try{
+            	int rowIndex = linkCount.getRowIndexByName(firstGeneId);
+            	int colIndex = linkCount.getColIndexByName(secondGeneId);
+            	linkCount.set( rowIndex, colIndex, eeIndex );
+            }catch(Exception e){
+            	continue;
+            }
         }
     }
     private int counting(CompressedNamedBitMatrix linkCount){
@@ -172,6 +176,7 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
                 int bits = linkCount.bitCount( i, j );
                 if(bits > maxBits)
                     maxBits = bits;
+                if(bits > 0) linkCount.reset(i, j);
             }
         }
         return maxBits;
@@ -180,12 +185,17 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
     private int doShuffling(Collection<ExpressionExperiment> ees, Collection<Gene> genes){
         int maxBits = 0;
         CompressedNamedBitMatrix linkCount = getMatrix(ees,genes);
+        int total = 0;
         for(ExpressionExperiment ee:ees){
+        	log.info("Shuffling " + ee.getShortName() );
             Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName );
+            if(links == null || links.size() == 0) continue;
+            total = total + links.size();
             shuffleLinks(links);
             fillingMatrix(linkCount, links,ee);
         }
         maxBits = counting(linkCount);
+        log.info(" Shuffled " + total + " links");
         return maxBits;
     }
 
@@ -208,14 +218,14 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         Collection<Gene> genes = loadGenes(taxon);
     	Collection <ExpressionExperiment> ees = eeService.findByTaxon(taxon);
         Collection <ExpressionExperiment> candidates = getCandidateEE(this.eeNameFile, ees);
-        eeMap = new HashMap();
+        eeMap = new HashMap<Long, Integer>();
         int index = 0;
         for(ExpressionExperiment eeIter:candidates){
             eeMap.put(eeIter.getId(), new Integer(index));
             index++;
         }
         int maxBits = 0;
-        for(int i = 0; i < 100; i++){
+        for(int i = 0; i < 1; i++){
             int maximalBits = doShuffling(candidates, genes);
             if( maximalBits > maxBits ) maxBits = maximalBits;
         }

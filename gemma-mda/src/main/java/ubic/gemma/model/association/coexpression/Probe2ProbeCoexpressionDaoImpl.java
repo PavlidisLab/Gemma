@@ -333,7 +333,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     }
      public class Link{
-		private Long first_design_element_fk = 0L;
+ 		private Long first_design_element_fk = 0L;
 		private Long second_design_element_fk = 0L;
 		Link(){
 		}
@@ -416,7 +416,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     	Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
     	if(csIds == null || csIds.size() == 0) return cs2genes;
     	int count = 0;
-    	int CHUNK_LIMIT = 1000;
+    	int CHUNK_LIMIT = 10000;
     	int total = csIds.size();
     	Collection<Long> idsInOneChunk = new HashSet<Long>();
         Session session = getSessionFactory().openSession();
@@ -569,9 +569,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         
     	int count = 0;
-    	int CHUNK_LIMIT = 1000;
+    	int CHUNK_LIMIT = 10000;
     	int total = links.size();
     	Collection<Link> linksInOneChunk = new ArrayList<Link>();
+    	log.info("Writing" + links.size() + " links into tables");
+    	int chunkNum = 0;
     	for(Link link:links){
     		linksInOneChunk.add(link);
     		count++;
@@ -591,8 +593,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     	        //conn.commit(); //not needed if autocomsmit is true.
     			count = 0;
     			linksInOneChunk.clear();
+    			chunkNum++;
+    			System.err.print(total+ " " );
+    			if(chunkNum % 20 == 0) System.err.println();
     		}
     	}
+    	log.info(" Finish writing ");
     	conn.close();
     	session.close();
 
@@ -640,8 +646,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @Override
     protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
         // TODO Auto-generated method stub
-    	String tableName = getTableName(taxon, false, true);
-    	return getLinks(expressionExperiment, tableName);
+    	//String tableName = getTableName(taxon, false, true);
+    	String cleanedTableName = getTableName(taxon, true, false);
+    	Collection<Link> links = getLinks(expressionExperiment, cleanedTableName); 
+    	return links;
     }
 
     private void doFiltering(ExpressionExperiment ee, String taxon) throws Exception{
@@ -665,16 +673,16 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     	String tableName = getTableName(taxon, false, false);
     	Collection<Long> eeIds = getEEIds(tableName);
     	//Create the tempory table for saving the shuffled links
-    	createCleanedTable(taxon);
+    	//createCleanedTable(taxon);
     	int i = 1;
     	for(Long eeId:eeIds){
-    		ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-    		log.info("Filtering EE " + eeId + "(" + i + "/" + eeIds.size() + ")" );
-    		ee.setId(eeId);
-    		doFiltering(ee, taxon);
+    		if(eeId ==  378){
+    			ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+    			log.info("Filtering EE " + eeId + "(" + i + "/" + eeIds.size() + ")" );
+    			ee.setId(eeId);
+    			doFiltering(ee, taxon);
+    		}
     		i++;
     	}
-
-        
     }
 }

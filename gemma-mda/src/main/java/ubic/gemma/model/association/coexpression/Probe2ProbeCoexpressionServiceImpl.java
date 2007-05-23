@@ -193,8 +193,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     @Override
     protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
         // TODO Auto-generated method stub
-        this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon );
-        return null;
+        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon );
     }
 
     @Override
