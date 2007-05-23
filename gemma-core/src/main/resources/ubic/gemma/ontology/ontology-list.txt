@@ -9,4 +9,4 @@ http://www.berkeleybop.org/ontologies/obo-all/disease_ontology/disease_ontology.
 http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl
 http://www.berkeleybop.org/ontologies/obo-all/quality/quality.owl
 http://www.berkeleybop.org/ontologies/obo-all/ncithesaurus/ncithesaurus.owl
- 
+http://www.berkeleybop.org/ontologies/obo-all/fma_lite/fma_lite.owl
