@@ -67,29 +67,11 @@ public class MgedOntologyService implements InitializingBean {
         init();
     }
 
-    public OntologyDataList getTerm( int start, int count, String orderBy ) {
+    public OntologyTerm getTerm( String id ) {
 
-        // if ( uri == null ) return new OntologyData();
-        //
-        // OntologyTerm term = OntologyTools.getOntologyTerm( uri );
-        // if ( term == null ) return new OntologyData();
-        //
-        // OntologyData od = new OntologyData( term.getUri(), term.getTerm(), term.getComment(), term.getChildren( true
-        // ) );
-        //
-        // return od;
-        
-        OntologyDataList res = new OntologyDataList();
-        Collection<OntologyData> children = new ArrayList<OntologyData>();
-        children.add( new OntologyData( 99, "term99", "desc99" ) );
-        children.add( new OntologyData( 98, "term98", "desc98" ) );
+        OntologyTerm term = terms.get( id );
 
-        Object[] ontos = { new OntologyData( 1, "term1", "desc1" ), new OntologyData( 2, "term2", "desc2" ),
-                new OntologyData( 3, "term3", "desc3" ) };
-        res.setData( ontos );
-        res.setTotalSize( 3 );
-
-        return res;
+        return term;
     }
 
     public Collection<OntologyTreeNode> getBioMaterialTerms() {
@@ -163,8 +145,8 @@ public class MgedOntologyService implements InitializingBean {
                 //
                 try {
                     loadTermsInNameSpace( MGED_URL );
-                    log.info( "MGED Ontology loaded, total of " + terms.size() + " items in "
-                            + loadTime.getTime() / 1000 + "s" );
+                    log.info( "MGED Ontology loaded, total of " + terms.size() + " items in " + loadTime.getTime()
+                            / 1000 + "s" );
 
                     ready.set( true );
                     running.set( false );
