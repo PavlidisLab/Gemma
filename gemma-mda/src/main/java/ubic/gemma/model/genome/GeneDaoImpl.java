@@ -1028,7 +1028,46 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
         // TODO Auto-generated method stub
-        return null;
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+        if(csIds == null || csIds.size() == 0) return cs2genes;
+        int count = 0;
+        int CHUNK_LIMIT = 100000;
+        int total = csIds.size();
+        Collection<Long> idsInOneChunk = new HashSet<Long>();
+        Session session = getSessionFactory().openSession();
+        
+        for(Object csId:csIds){
+            Long tmpId = (Long)csId;
+            idsInOneChunk.add(tmpId);
+            count++;
+            total--;
+            if(count == CHUNK_LIMIT || total == 0){
+                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE " + 
+                " CS in (" +
+                StringUtils.join( idsInOneChunk.iterator(), "," ) + 
+                ")";
+                
+                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                queryObject.addScalar( "id", new LongType() );
+                queryObject.addScalar( "geneId", new LongType() );
+
+                ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                while ( scroll.next() ) {
+                    Long id = scroll.getLong( 0 );
+                    Long geneId = scroll.getLong( 1 );
+                    Collection<Long> geneIds = cs2genes.get(id);
+                    if(geneIds == null){
+                        geneIds = new HashSet<Long>();
+                        cs2genes.put( id, geneIds );
+                    }
+                    geneIds.add(geneId);
+                }
+                count = 0;
+                idsInOneChunk.clear();
+            }
+        }
+        session.close();
+        return cs2genes;
     }
 
 }
