@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Vector;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -18,11 +17,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -45,6 +41,10 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
 	private GeneService geneService = null;
 	private ExpressionExperimentService eeService = null;
     private HashMap<Long, Integer> eeMap = null;
+    private final static int ITERATION_NUM = 100;
+    private CompressedNamedBitMatrix linkCount = null;
+    private int[][] stats = new int[ITERATION_NUM+1][ITERATION_NUM];
+    private int currentIteration = 0;
 	@Override
 	protected void buildOptions() {
 //		 TODO Auto-generated method stub
@@ -168,35 +168,31 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
             }
         }
     }
-    private int counting(CompressedNamedBitMatrix linkCount){
+    private void counting(){
         int rows = linkCount.rows();
-        int maxBits = 0;
         for(int i = 0; i < rows; i++){
             for(int j = i + 1; j < rows; j++){
                 int bits = linkCount.bitCount( i, j );
-                if(bits > maxBits)
-                    maxBits = bits;
-                if(bits > 0) linkCount.reset(i, j);
+                if(bits > 0){
+                    stats[currentIteration][bits]++;
+                    linkCount.reset(i, j);
+                }
             }
         }
-        return maxBits;
     }
 
-    private int doShuffling(Collection<ExpressionExperiment> ees, Collection<Gene> genes){
-        int maxBits = 0;
-        CompressedNamedBitMatrix linkCount = getMatrix(ees,genes);
+    private void doShuffling(Collection<ExpressionExperiment> ees){
         int total = 0;
         for(ExpressionExperiment ee:ees){
         	log.info("Shuffling " + ee.getShortName() );
-            Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName );
+            Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
             if(links == null || links.size() == 0) continue;
             total = total + links.size();
             shuffleLinks(links);
             fillingMatrix(linkCount, links,ee);
         }
-        maxBits = counting(linkCount);
+        counting();
         log.info(" Shuffled " + total + " links");
-        return maxBits;
     }
 
 	@Override
@@ -206,31 +202,30 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
+        Taxon taxon = getTaxon( taxonName );
+        Collection <ExpressionExperiment> ees = eeService.findByTaxon(taxon);
+        Collection <ExpressionExperiment> candidates = getCandidateEE(this.eeNameFile, ees);
         if(!prepared){
         	log.info(" Create intermediate tables for shuffling ");
             StopWatch watch = new StopWatch();
             watch.start();
-        	p2pService.prepareForShuffling(taxonName);
+        	p2pService.prepareForShuffling(candidates, taxonName);
         	watch.stop();
         	log.info(" Spent " + watch.getTime()/1000 + " to finish the preparation ");
         }
-        Taxon taxon = getTaxon( taxonName );
         Collection<Gene> genes = loadGenes(taxon);
-    	Collection <ExpressionExperiment> ees = eeService.findByTaxon(taxon);
-        Collection <ExpressionExperiment> candidates = getCandidateEE(this.eeNameFile, ees);
         eeMap = new HashMap<Long, Integer>();
         int index = 0;
         for(ExpressionExperiment eeIter:candidates){
             eeMap.put(eeIter.getId(), new Integer(index));
             index++;
         }
-        int maxBits = 0;
-        for(int i = 0; i < 1; i++){
-            int maximalBits = doShuffling(candidates, genes);
-            if( maximalBits > maxBits ) maxBits = maximalBits;
+        linkCount = getMatrix(ees,genes);
+        //The first iteration doesn't do the shuffling and only read the real data and do the counting
+        for(currentIteration = 0; currentIteration < 101; currentIteration++){
+            doShuffling(candidates);
         }
-        log.info( "Finish the simulation! Get the significant threshold " + maxBits);
-        
+        log.info( "Finish the simulation! Get the significant threshold ");
 //        if(this.eeId > 0){
 //        	ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
 //        	ee.setId(this.eeId);

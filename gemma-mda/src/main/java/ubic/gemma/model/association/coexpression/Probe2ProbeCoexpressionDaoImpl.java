@@ -59,6 +59,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase {
 
     private static final int LINK_DELETE_BATCH_SIZE = 100000;
+    private long eeId = 0L;
 
     @Override
     protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees )
@@ -350,7 +351,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 			this.second_design_element_fk = second_design_element_fk;
 		}
 		public String toString(){
-			String res = first_design_element_fk + "," + second_design_element_fk;
+            String res = "(" + first_design_element_fk + "," + second_design_element_fk + ", " + eeId + ")";
 			return res;
 		}
     }
@@ -556,16 +557,17 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		total--;
     		if(count == CHUNK_LIMIT || total == 0){
     			//saveLinks(linksInOneChunk,taxon);
-    			String values = "";
-    			int i = 0;
-    			for(Link oneLink:linksInOneChunk){
-    				values = values + "( " + oneLink.toString() + ", " + ee.getId()+" )";
-    				i++;
-    				if(i != linksInOneChunk.size())
-    					values = values + ",";
-    			}
-    			queryString = "INSERT INTO " + tableName + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + values+";"; 
-    			s.executeUpdate(queryString);
+//    			String values = "";
+//    			int i = 0;
+//    			for(Link oneLink:linksInOneChunk){
+//    				values = values + "( " + oneLink.toString() + ", " + ee.getId()+" )";
+//    				i++;
+//    				if(i != linksInOneChunk.size())
+//    					values = values + ",";
+//    			}
+//    			queryString = "INSERT INTO " + tableName + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + values+";"; 
+                queryString = "INSERT INTO " + tableName + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + StringUtils.join(linksInOneChunk, ",")+";";
+                s.executeUpdate(queryString);
     	        //conn.commit(); //not needed if autocomsmit is true.
     			count = 0;
     			linksInOneChunk.clear();
