@@ -210,7 +210,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
 
                 String accesionNum = expressionExperimentLoadCommand.getAccession();
 
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
+                ProgressJob job = ProgressManager.createGigaspacesProgressJob( this.getTaskId(), securityContext
                         .getAuthentication().getName(), "Loading " + expressionExperimentLoadCommand.getAccession() );
 
                 // put the accession number in a safer form
