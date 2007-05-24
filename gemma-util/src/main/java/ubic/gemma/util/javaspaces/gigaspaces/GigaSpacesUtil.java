@@ -314,11 +314,13 @@ public class GigaSpacesUtil implements ApplicationContextAware {
             log.error( "No workers are registered with space at " + url + ".  Currently no tasks can be serviced." );
         }
 
-        List<GemmaSpacesGenericEntry> workerEntries = this.getRegisteredWorkers( url );
-        for ( GemmaSpacesGenericEntry entry : workerEntries ) {
-            String taskName = entry.getMessage();
-            log.debug( taskName );
-            taskNames.add( taskName );
+        else {
+            List<GemmaSpacesGenericEntry> workerEntries = this.getRegisteredWorkers( url );
+            for ( GemmaSpacesGenericEntry entry : workerEntries ) {
+                String taskName = entry.getMessage();
+                log.debug( taskName );
+                taskNames.add( taskName );
+            }
         }
 
         return taskNames;
