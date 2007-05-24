@@ -336,6 +336,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      public class Link{
  		private Long first_design_element_fk = 0L;
 		private Long second_design_element_fk = 0L;
+		private Double score = 0.0;
 		Link(){
 		}
 		public Long getFirst_design_element_fk() {
@@ -350,8 +351,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 		public void setSecond_design_element_fk(Long second_design_element_fk) {
 			this.second_design_element_fk = second_design_element_fk;
 		}
+		public Double getScore(){
+			return score;
+		}
+		public void setScore(Double score){
+			this.score = score;
+		}
 		public String toString(){
-            String res = "(" + first_design_element_fk + "," + second_design_element_fk + ", " + eeId + ")";
+            String res = "(" + first_design_element_fk + "," + second_design_element_fk + ", " + score + ", "+ eeId + ")";
 			return res;
 		}
     }
@@ -374,14 +381,13 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         return tableName;
     }
     private void createTable(String tableName) throws Exception{
-
         Session session = getSessionFactory().openSession();
         Connection conn = session.connection();
         Statement s = conn.createStatement();
         String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
         s.executeUpdate(queryString);
         queryString = "CREATE TABLE " + tableName + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, " +
-        		"SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, " +
+        		"SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, " +
         		"PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " +
         		"ENGINE=MYISAM";
         s.executeUpdate(queryString);
@@ -403,7 +409,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		count++;
     		total--;
     		if(count == CHUNK_LIMIT || total == 0){
-    			String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE " + 
+    			String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and " + 
     			" CS in (" +
     			StringUtils.join( idsInOneChunk.iterator(), "," ) + 
     			")";
@@ -439,7 +445,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		Collection<Long> firstGene = cs2genes.get(link.getFirst_design_element_fk());
     		Collection<Long> secondGene = cs2genes.get(link.getSecond_design_element_fk());
     		if(firstGene == null || secondGene == null){
-    			log.error("inconsistent links for csId (" + link.getFirst_design_element_fk() + ", " + link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
+    			//log.error("inconsistent links for csId (" + link.getFirst_design_element_fk() + ", " + link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
     			continue;
     		}
     		if(firstGene.size() > 1 || secondGene.size() > 1) continue; //non-specific
@@ -500,7 +506,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 //  return links;
 //}
     private Collection getLinks(ExpressionExperiment expressionExperiment, String tableName) throws Exception{
-    	String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK FROM " + tableName + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
+    	String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM " + tableName + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
     	int chunkSize = 1000000;
     	Session session = getSessionFactory().openSession();
     	long start = 0;
@@ -511,6 +517,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
     		queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
     		queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+    		queryObject.addScalar( "SCORE", new DoubleType() );
 
     		ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
     		int count = 0;
@@ -518,10 +525,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		while ( scroll.next() ) {
     			Long first_design_element_fk = scroll.getLong(0);
     			Long second_design_element_fk = scroll.getLong(1);
+    			Double score = scroll.getDouble(2);
 
     			Link oneLink = new Link();
     			oneLink.setFirst_design_element_fk(first_design_element_fk);
     			oneLink.setSecond_design_element_fk(second_design_element_fk);
+    			oneLink.setScore(score);
     			links.add(oneLink);
     			count++;
     			if(count == chunkSize){
@@ -544,7 +553,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Connection conn = session.connection();
         Statement s = conn.createStatement();
 
-        
+        this.eeId = ee.getId();
     	int count = 0;
     	int CHUNK_LIMIT = 10000;
     	int total = links.size();
@@ -566,7 +575,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 //    					values = values + ",";
 //    			}
 //    			queryString = "INSERT INTO " + tableName + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + values+";"; 
-                queryString = "INSERT INTO " + tableName + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + StringUtils.join(linksInOneChunk, ",")+";";
+                queryString = "INSERT INTO " + tableName + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_EXPERIMENT_FK) " + " VALUES " + StringUtils.join(linksInOneChunk, ",")+";";
                 s.executeUpdate(queryString);
     	        //conn.commit(); //not needed if autocomsmit is true.
     			count = 0;
