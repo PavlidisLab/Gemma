@@ -177,29 +177,16 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
     }
-
     @Override
-    protected void handleShuffle( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
+    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon, boolean cleaned ) throws Exception {
         // TODO Auto-generated method stub
-        this.getProbe2ProbeCoexpressionDao().shuffle( expressionExperiment, taxon );
+        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, cleaned );
     }
 
     @Override
-    protected void handleShuffle( String taxon ) throws Exception {
+    protected void handlePrepareForShuffling( Collection ees, String taxon ) throws Exception {
         // TODO Auto-generated method stub
-        this.getProbe2ProbeCoexpressionDao().shuffle( taxon );
-    }
-
-    @Override
-    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
-        // TODO Auto-generated method stub
-        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon );
-    }
-
-    @Override
-    protected void handlePrepareForShuffling( String taxon ) throws Exception {
-        // TODO Auto-generated method stub
-        this.getProbe2ProbeCoexpressionDao().prepareForShuffling( taxon );
+        this.getProbe2ProbeCoexpressionDao().prepareForShuffling( ees, taxon );
     }
 
 }

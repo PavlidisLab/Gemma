@@ -354,7 +354,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 			return res;
 		}
     }
-    private String getTableName(String taxon, boolean cleanedTable, boolean shuffledTable){
+    private String getTableName(String taxon, boolean cleanedTable){
         int tableIndex = -1;
         String tableName = "";
         String[] tableNames = new String[] { "HUMAN_PROBE_CO_EXPRESSION", "MOUSE_PROBE_CO_EXPRESSION",
@@ -368,8 +368,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         	tableIndex = 2;
         else
         	tableIndex = 3;
-        if(shuffledTable) tableName = "SHUFFLED_" + tableNames[tableIndex];
-        else if(cleanedTable) tableName = "CLEANED_" + tableNames[tableIndex];
+        if(cleanedTable) tableName = "CLEANED_" + tableNames[tableIndex];
         else tableName = tableNames[tableIndex];
         return tableName;
     }
@@ -388,29 +387,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         conn.close();
         session.close();
     	
-    }
-    private void createShuffledTable(String taxon) throws Exception{
-    	String tableName = getTableName(taxon, false, true);
-    	createTable(tableName);
-    }
-    private void createCleanedTable(String taxon) throws Exception{
-    	String tableName = getTableName(taxon, true, false);
-    	createTable(tableName);
-    }
-    private Collection getEEIds(String tableName) throws Exception{
-    	String queryString = "SELECT DISTINCT EXPRESSION_EXPERIMENT_FK FROM " + tableName;
-    	Session session = getSessionFactory().openSession();
-    	org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-    	queryObject.addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
-    	ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-    	Collection<Long> eeIds = new ArrayList<Long>();
-    	while ( scroll.next() ) {
-    		Long id = scroll.getLong(0);
-    		if(id != null)
-    			eeIds.add(id);
-    	}
-    	session.close();
-    	return eeIds;
     }
     private Map<Long, Collection<Long>> getCs2GenesMap(Collection<Long> csIds){
     	Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
@@ -614,46 +590,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     		((Link)linksInArray[i]).setSecond_design_element_fk(tmpId);
     	}
     }
-    private void doShuffling( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
-    	String tableName = getTableName(taxon, true, false);
-        Collection<Link> links = getLinks(expressionExperiment, tableName);
-        shuffleLinks(links);
-        String shuffledTableName = getTableName(taxon, false, true);
-        saveLinks(links, expressionExperiment, tableName);
-    }
-    @Override
-    protected void handleShuffle( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
-        // TODO Auto-generated method stub
-    	createShuffledTable(taxon);
-    	doShuffling(expressionExperiment, taxon);
-    }
-    @Override
-    protected void handleShuffle( String taxon ) throws Exception {
-        // TODO Auto-generated method stub
-    	String tableName = getTableName(taxon, true, false);
-    	Collection<Long> eeIds = getEEIds(tableName);
-    	//Create the tempory table for saving the shuffled links
-    	createShuffledTable(taxon);
-    	int i = 1;
-    	for(Long eeId:eeIds){
-    		ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-    		log.info("Shuffling EE " + eeId + "(" + i + "/" + eeIds.size() + ")" );
-    		ee.setId(eeId);
-    		doShuffling(ee, taxon);
-    		i++;
-    	}
-    }
-    @Override
-    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon ) throws Exception {
-        // TODO Auto-generated method stub
-    	//String tableName = getTableName(taxon, false, true);
-    	String cleanedTableName = getTableName(taxon, true, false);
-    	Collection<Link> links = getLinks(expressionExperiment, cleanedTableName); 
-    	return links;
-    }
-
     private void doFiltering(ExpressionExperiment ee, String taxon) throws Exception{
-    	String tableName = getTableName(taxon, false, false);
+    	String tableName = getTableName(taxon, false);
     	Collection<Link> links = getLinks(ee, tableName);
     	Set<Long> csIds = new HashSet<Long>();
         for(Link link:links){
@@ -662,27 +600,31 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
         Map<Long, Collection<Long>> cs2genes = getCs2GenesMap(csIds);
     	links = filtering(links, cs2genes);
-        String cleanedTableName = getTableName(taxon, true, false);
+        String cleanedTableName = getTableName(taxon, true);
         saveLinks(links, ee, cleanedTableName);
 
     	
     }
     @Override
-    protected void handlePrepareForShuffling( String taxon ) throws Exception {
+    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon, boolean cleaned ) throws Exception {
         // TODO Auto-generated method stub
-    	String tableName = getTableName(taxon, false, false);
-    	Collection<Long> eeIds = getEEIds(tableName);
-    	//Create the tempory table for saving the shuffled links
-    	//createCleanedTable(taxon);
-    	int i = 1;
-    	for(Long eeId:eeIds){
-    		if(eeId ==  378){
-    			ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-    			log.info("Filtering EE " + eeId + "(" + i + "/" + eeIds.size() + ")" );
-    			ee.setId(eeId);
-    			doFiltering(ee, taxon);
-    		}
-    		i++;
-    	}
+        String tableName = getTableName(taxon, cleaned);
+        Collection<Link> links = getLinks(expressionExperiment, tableName); 
+        return links;
+    }
+
+    @Override
+    protected void handlePrepareForShuffling( Collection ees, String taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        if(ees.size() > 70){
+            String tableName = getTableName(taxon, true);
+            createTable( tableName );
+        }
+        int i = 1;
+        for(Object ee:ees){
+            log.info("Filtering EE " + ((ExpressionExperiment)ee).getShortName() + "(" + i + "/" + ees.size() + ")" );
+            doFiltering((ExpressionExperiment)ee, taxon);
+            i++;
+        }
     }
 }
