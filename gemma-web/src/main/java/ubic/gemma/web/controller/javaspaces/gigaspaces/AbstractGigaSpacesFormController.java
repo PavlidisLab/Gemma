@@ -123,7 +123,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
         ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        mnv.addObject( "taskId", taskId );
+        mnv.addObject( JOB_ATTRIBUTE, taskId );
         return mnv;
     }
 
