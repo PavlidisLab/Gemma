@@ -1,7 +1,9 @@
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
@@ -17,6 +19,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
+import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
+import ubic.gemma.analysis.linkAnalysis.TreeNode;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,9 +45,10 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
 	private GeneService geneService = null;
 	private ExpressionExperimentService eeService = null;
     private HashMap<Long, Integer> eeMap = null;
-    private final static int ITERATION_NUM = 100;
+    private final static int ITERATION_NUM = 3;
+    private final static int LINK_MAXIMUM_COUNT = 100;
     private CompressedNamedBitMatrix linkCount = null;
-    private int[][] stats = new int[ITERATION_NUM+1][ITERATION_NUM];
+    private int[][] stats = new int[ITERATION_NUM+1][LINK_MAXIMUM_COUNT];
     private int currentIteration = 0;
 	@Override
 	protected void buildOptions() {
@@ -155,8 +160,14 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         for(Link link:links){
        		Collection<Long> firstGeneIds =cs2genes.get( link.getFirst_design_element_fk() );
        		Collection<Long> secondGeneIds =cs2genes.get( link.getSecond_design_element_fk() );
-            if(firstGeneIds == null || secondGeneIds == null) continue;
-            if(firstGeneIds.size() != 1 || secondGeneIds.size() != 1) continue;
+            if(firstGeneIds == null || secondGeneIds == null){
+            	log.info(" Preparation is not correct " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
+            	continue;
+            }
+            if(firstGeneIds.size() != 1 || secondGeneIds.size() != 1){
+            	log.info(" Preparation is not correct " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
+            	continue;
+            }
             Long firstGeneId = firstGeneIds.iterator().next();
             Long secondGeneId = secondGeneIds.iterator().next();
             try{
@@ -164,6 +175,8 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
             	int colIndex = linkCount.getColIndexByName(secondGeneId);
             	linkCount.set( rowIndex, colIndex, eeIndex );
             }catch(Exception e){
+            	log.info(" No Gene Definition " + firstGeneId + "," + secondGeneId);
+            	//Aligned Region and Predicted Gene
             	continue;
             }
         }
@@ -175,7 +188,6 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
                 int bits = linkCount.bitCount( i, j );
                 if(bits > 0){
                     stats[currentIteration][bits]++;
-                    linkCount.reset(i, j);
                 }
             }
         }
@@ -187,14 +199,38 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         	log.info("Shuffling " + ee.getShortName() );
             Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
             if(links == null || links.size() == 0) continue;
-            total = total + links.size();
-            shuffleLinks(links);
+            if(currentIteration != 0){
+            	total = total + links.size();
+            	shuffleLinks(links);
+            }
             fillingMatrix(linkCount, links,ee);
         }
         counting();
         log.info(" Shuffled " + total + " links");
     }
 
+    private void saveStats(String outFile){
+    	try{
+    		FileWriter out = new FileWriter(new File(outFile));
+    		for(int i = 0; i < ITERATION_NUM + 1; i++){
+    			for(int j = LINK_MAXIMUM_COUNT - 2; j >= 0; j--){
+    				stats[i][j] = stats[i][j] + stats[i][j+1];
+    			}
+    		}
+    		for(int i = 1; i < ITERATION_NUM + 1; i++){
+    			for(int j = 1; j < LINK_MAXIMUM_COUNT; j++){
+    				if(stats[0][j] == 0) out.write("\t");
+    				else out.write((double)stats[i][j]/(double)stats[0][j] + "\t");
+    			}
+    			out.write("\n");
+    		}
+    		out.close();
+    	}
+        catch(Exception e){
+        	e.printStackTrace();
+        	return;
+        }
+    }
 	@Override
 	protected Exception doWork(String[] args) {
 		// TODO Auto-generated method stub
@@ -220,12 +256,13 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
             eeMap.put(eeIter.getId(), new Integer(index));
             index++;
         }
-        linkCount = getMatrix(ees,genes);
         //The first iteration doesn't do the shuffling and only read the real data and do the counting
-        for(currentIteration = 0; currentIteration < 101; currentIteration++){
+        for(currentIteration = 0; currentIteration < ITERATION_NUM + 1; currentIteration++){
+            linkCount = getMatrix(ees,genes);
+            System.gc();
             doShuffling(candidates);
         }
-        log.info( "Finish the simulation! Get the significant threshold ");
+        saveStats("stats.txt");
 //        if(this.eeId > 0){
 //        	ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
 //        	ee.setId(this.eeId);
