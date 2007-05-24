@@ -102,7 +102,6 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
 
-            // TODO Add check to make sure spaceUrl and taskName are given in the correct order.
             if ( !gigaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
                 // TODO Add sending of email to user.
                 // User user = SecurityUtil.getUserFromUserDetails( ( UserDetails ) SecurityContextHolder.getContext()
