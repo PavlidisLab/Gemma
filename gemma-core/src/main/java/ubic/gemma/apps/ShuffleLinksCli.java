@@ -248,6 +248,7 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         	p2pService.prepareForShuffling(candidates, taxonName);
         	watch.stop();
         	log.info(" Spent " + watch.getTime()/1000 + " to finish the preparation ");
+        	System.exit(0);
         }
         Collection<Gene> genes = loadGenes(taxon);
         eeMap = new HashMap<Long, Integer>();
