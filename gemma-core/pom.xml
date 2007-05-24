@@ -31,6 +31,12 @@
 			<type>jar</type>
 			<!--	<scope>test</scope> -->
 		</dependency>
+		<dependency><!-- needed for jena, needs to be early in build order -->
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>3.4</version>
+			<type>jar</type>
+		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate</artifactId>
@@ -205,12 +211,6 @@
 			<groupId>jena</groupId>
 			<artifactId>arq-extra</artifactId>
 			<version>2.5.2</version>
-			<type>jar</type>
-		</dependency>
-		<dependency><!-- needed for jena -->
-			<groupId>com.ibm.icu</groupId>
-			<artifactId>icu4j</artifactId>
-			<version>3.4.4</version>
 			<type>jar</type>
 		</dependency>
 		<dependency><!--  needed for jena -->
