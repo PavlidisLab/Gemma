@@ -44,6 +44,7 @@ var showArrayDesignProbes = function(id) {
  */
 var init = function(isArrayDesign, id) {
 	
+	
 	var convertgps = function(d) {
 		var r = "";
 		for(var gp in d) {
@@ -71,6 +72,7 @@ var init = function(isArrayDesign, id) {
 	var	recordType = Ext.data.Record.create([
 			{name:"compositeSequenceId", type:"int"}, 
 			{name:"compositeSequenceName", type:"string"},
+			{name:"compositeSequenceDescription", type:"string"},
 			{name:"arrayDesignName", type:"string"},
 			{name:"arrayDesignId", type:"int"},
 			{name:"bioSequenceId", type:"int" },
@@ -121,6 +123,9 @@ var initDetails = function() {
 		remoteSort:false,
 		sortInfo:{field:"score", direction:"DESC"}
 		}); 
+		
+	// add a listener.
+	detailsDataSource.on("load", updateSequenceInfo);
 	
 	var cm = new Ext.grid.ColumnModel([
 		{header: "Alignment",  width: 210, dataIndex:"blatResult", renderer:blatResRender}, 
@@ -144,6 +149,8 @@ var initDetails = function() {
     });
     rz.on('resize', blgrid.autoSize, blgrid);
 	
+	
+	
 	blgrid.render();
 };
  
@@ -153,6 +160,7 @@ var initDetails = function() {
  * @param {Object} id
  */
 var showDetails = function(event, id) {
+ 	Ext.QuickTips.init();
 	var record = ds.getById(id);
 	
 	detailsDataSource.load({params:[{id:id}]});
@@ -160,15 +168,39 @@ var showDetails = function(event, id) {
 	if (record === undefined) {
 		return;
 	}
-		var csname = record.get("compositeSequenceName");
-		var seqName = record.get("bioSequenceName");
-	
-		var dh = Ext.DomHelper;
-		dh.overwrite("details-title", {tag : 'h2', html : "Details for: " + csname + " on " + record.get("arrayDesignName")});
-		dh.append("details-title", {tag : 'ul', children : [
-			{tag : 'li' , html: "Sequence name: " + seqName}
-		]});
+	var csname = record.get("compositeSequenceName");
+	var seqName = record.get("bioSequenceName");
+	var csDesc = record.get("compositeSequenceDescription");
+
+	var dh = Ext.DomHelper;
+	dh.overwrite("details-title", {tag : 'h2', html : "Details for probe: " + csname + " on " + record.get("arrayDesignName")});
+	dh.append("details-title", {tag : 'ul', id : 'sequence-info', children : [
+		{tag : 'li' , id : "probe-description", html: "Probe description: " + csDesc, "ext:qtip": "Provider's description, may not be accurate"},
+		{tag : 'li' , html: "Sequence name: " + seqName + "&nbsp;", id: "probe-sequence-name"}
+	]});
+	 
 };
+
+
+/**
+ * Event handler for loading of sequence information in details grid.
+ * @param {Object} event
+ */
+var updateSequenceInfo = function(event) {
+	
+	if (detailsDataSource.getCount() === 0) { return; }
+	var record = detailsDataSource.getAt(0);
+	var dh = Ext.DomHelper;
+	var seq = record.get("blatResult").querySequence;
+	dh.append("sequence-info", { tag : 'li' , html: "Length: " + seq.length });
+	dh.append("sequence-info", { tag : 'li' , html: "Type: " + seq.type.value });
+	
+	if (seq.sequenceDatabaseEntry) {
+		dh.append("probe-sequence-name", {tag: 'a', id : "ncbiLink", target:"_blank", title: "view at NCBI", href: "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=" + seq.sequenceDatabaseEntry.accession, html: "<img src ='" + NCBI_ICON + "'/>"});
+	}
+	// dh.append("sequence-info", { tag : 'li' , html: "Sequence: " + seq.sequence });
+};
+
 
 /**
  * Event handler for searches. Update the lower grid.
@@ -236,7 +268,7 @@ Ext.onReady(function() {
 	var cm = new Ext.grid.ColumnModel([
 			{header: "ArrayDesign", width: 100, dataIndex:"arrayDesignName", renderer: arraylink },
 			{header: "Probe Name",  width: 130, dataIndex:"compositeSequenceName", renderer: probelink}, 
-			{header: "Sequence", width: 130, dataIndex:"bioSequenceName" },
+			{header: "Sequence", width: 130, dataIndex:"bioSequenceName", renderer: sequencelink },
 			{header: "#Hits", width: 50, dataIndex: "numBlatHits"},  
 			{header: "Genes", width: 200, dataIndex:"genes" }
 			]);
@@ -279,6 +311,15 @@ Ext.onReady(function() {
 var GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
 var UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
 var NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
+
+var sequencelink = function( data, metadata, record, row, column, store  ) {
+	if (data === "null") {
+		return "<a title='[unavailable]'>-</a>";
+	}
+	return data;
+	//return "<a onclick=\"showDetails(event, " + record.get("compositeSequenceId") + ");\">" + data + "</a>";
+};
+
 
 var probelink = function( data, metadata, record, row, column, store  ) {
 	return "<a onclick=\"showDetails(event, " + record.get("compositeSequenceId") + ");\">" + data + "</a>";

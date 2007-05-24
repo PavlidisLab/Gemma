@@ -103,12 +103,14 @@ public class ArrayDesignMapResultService {
      * @return
      */
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection<Object[]> sequenceData ) {
-        HashMap<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
-        HashMap<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
+        Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
+        Map<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
+
         for ( Object o : sequenceData ) {
             Object[] row = ( Object[] ) o;
 
             Long csId = ( ( BigInteger ) row[0] ).longValue();
+
             String csName = ( String ) row[1];
             String bioSequenceName = ( String ) row[2];
             String bioSequenceNcbiId = ( String ) row[3];
@@ -137,10 +139,15 @@ public class ArrayDesignMapResultService {
                 vo = new CompositeSequenceMapValueObject();
                 summary.put( csId, vo );
             }
+
+            String csDesc = ( String ) row[15];
+            vo.setCompositeSequenceDescription( csDesc );
+
             vo.setArrayDesignId( arrayDesignId.longValue() );
 
             vo.setCompositeSequenceId( csId.toString() );
             vo.setCompositeSequenceName( csName );
+
             vo.setArrayDesignName( arrayDesignShortName );
 
             // fill in value object

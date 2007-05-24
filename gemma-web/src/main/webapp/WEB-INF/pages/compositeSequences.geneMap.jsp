@@ -38,7 +38,7 @@
 	</div>
 
 	<c:if test="${arrayDesign.id != null}">
-		<div id="search" style="border-width:thin; border-style:dotted; background-color:#EEEEEE;padding:5px;position:absolute; left: 50%;top:0%;">
+		<div id="search" style="border-width:thin; border-style:dotted; background-color:#EEEEEE;padding:5px;position:absolute; left: 50%;top:0%;width:165px;">
 
 			<span style="text-align:left"> Search for probes on this platform. </span>
 			<input type="text" id="searchString" name="filter" onkeyup="if (event.keyCode == 13) search(event) ;return;" />
@@ -52,7 +52,7 @@
 <div style="height:10px;padding:5px;" id="messages"></div>
 <div id="padding" style="padding:15px; width:610px;"></div>
 <div style="background-color:#EEEEEE; margin:0 0 10px 0; padding: 5px; width:620px;">
-	<div id="details-title" style="background-color:#EEEEEE; margin:0 0 10px 0; padding: 5px; width:600px;height:60px;">
+	<div id="details-title" style="background-color:#EEEEEE; margin:0 0 10px 0; padding: 5px; width:600px;">
 		<em>Details about individual probes can be shown here.</em>
 	</div>
 	<div id="probe-details"

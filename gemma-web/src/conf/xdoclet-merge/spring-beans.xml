@@ -356,11 +356,19 @@
 					<property name="includes">
 						<list>
 							<value>name</value>
+							<value>description</value>
 							<value>id</value>
 							<value>sequence</value> <!--  this is questionable, as it can be big. -->
 							<value>sequenceDatabaseEntry</value>
+							<value>length</value>
+							<value>type</value>
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.biosequence.SequenceType">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.model.common.description.DatabaseEntry">

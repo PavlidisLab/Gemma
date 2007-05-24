@@ -34,6 +34,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate3.SessionFactoryUtils;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -163,8 +164,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             nativeQueryString = nativeQueryString + " LIMIT " + numResults;
         }
 
-        Collection retVal = QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
-        return retVal;
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
+        queryObject.setParameter( "id", id );
+        queryObject.addScalar( "deDesc", Hibernate.CLOB ); // must do this or Hibernate is unhappy.
+        return queryObject.list();
     }
 
     /*
@@ -205,8 +208,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
-
-        return QueryUtils.nativeQuery( getSession(), nativeQueryString );
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
+        queryObject.addScalar( "deDesc", Hibernate.CLOB ); // must do this or Hibernate is unhappy.
+        return queryObject.list();
     }
 
     /*
@@ -224,7 +228,19 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         if ( numResults <= 0 ) {
             // get all probes
             final String queryString = nativeBaseSummaryQueryString + " where ad.id = " + arrayDesign.getId();
-            return QueryUtils.nativeQuery( getSession(), queryString );
+            try {
+                org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+                queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
+                        .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
+                        .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" ).addScalar(
+                                "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
+                queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this or Hibernate is unhappy.
+                return queryObject.list();
+            } catch ( org.hibernate.HibernateException ex ) {
+                throw SessionFactoryUtils.convertHibernateAccessException( ex );
+            }
+
+            // return QueryUtils.nativeQuery( getSession(), queryString );
         } else {
             // just a chunk.
             final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
@@ -238,9 +254,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     /*
      * Add your 'where' clause to this.
      */
-    private static final String nativeBaseSummaryQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION, ssr.ID,"
-            + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK, "
-            + "geneProductRNA.TYPE, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId "
+    private static final String nativeBaseSummaryQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
+            + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK as geneid, "
+            + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, de.DESCRIPTION as deDesc "
             + " from "
             + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
             + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "

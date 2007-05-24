@@ -188,8 +188,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, -1 );
             Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
                     .getSummaryMapValueObjects( rawSummaries );
-
-            // sort
             res = new ArrayList();
             res.addAll( summaries );
 
@@ -217,18 +215,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                     if ( property instanceof Comparable ) {
                         return desc * ( ( Comparable ) property ).compareTo( ( ( Comparable ) property2 ) );
                     } else if ( property instanceof Collection ) {
-                        // Iterator it = ( ( Collection ) property ).iterator();
-                        // Iterator it2 = ( ( Collection ) property2 ).iterator();
-                        // return desc * compareCollections( it, it2 );
-
+                        // This is lame - sort by size. Should sort by members themselves.
                         return desc * ( ( ( Collection ) property ).size() - ( ( Collection ) property2 ).size() );
 
                     } else if ( property instanceof Map ) {
                         return desc * ( ( ( Map ) property ).values().size() - ( ( Map ) property2 ).values().size() );
-
-                        // Iterator it = ( ( Map ) property ).values().iterator();
-                        // Iterator it2 = ( ( Map ) property2 ).values().iterator();
-                        // return desc * compareCollections( it, it2 );
                     }
                 } catch ( Exception e ) {
                     return 0;
