@@ -25,9 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -223,11 +220,18 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
-        final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
-        Collection<CompositeSequence> cs = QueryUtils.queryByIdReturnCollection( getSession(), arrayDesign.getId(),
-                queryString, numResults );
 
-        return getRawSummary( cs, 0 );
+        if ( numResults <= 0 ) {
+            // get all probes
+            final String queryString = nativeBaseSummaryQueryString + " where ad.id = " + arrayDesign.getId();
+            return QueryUtils.nativeQuery( getSession(), queryString );
+        } else {
+            // just a chunk.
+            final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
+            Collection<CompositeSequence> cs = QueryUtils.queryByIdReturnCollection( getSession(), arrayDesign.getId(),
+                    queryString, numResults );
+            return getRawSummary( cs, 0 );
+        }
 
     }
 
@@ -275,7 +279,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";
         try {
-            log.info( "Query Name: " + name );
+            log.debug( "Query Name: " + name );
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "id", name );
             compositeSequences = queryObject.list();

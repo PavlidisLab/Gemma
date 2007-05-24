@@ -154,26 +154,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
         Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( searchString, arrayDesign );
-        Collection<Gene> geneResults = null;
-        try {
-            geneResults = searchService.geneSearch( searchString );
-        } catch ( Exception e ) {
-            // fail quietly
-        }
-        // if there have been any genes returned, find the compositeSequences associated with the genes
-        if ( geneResults != null && geneResults.size() > 0 ) {
-            for ( Gene gene : geneResults ) {
-
-                if ( arrayDesign == null ) {
-                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequencesById( gene.getId() );
-                    searchResults.addAll( geneCs );
-                } else {
-                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequences( gene, arrayDesign );
-                    searchResults.addAll( geneCs );
-                }
-
-            }
-        }
+       
         return getSummaries( searchResults );
     }
 

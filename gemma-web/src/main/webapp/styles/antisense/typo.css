@@ -39,12 +39,12 @@
         }
 
         a:visited {
-            color: #1465B7;
+           color: #1465B7;
             background-color: transparent;
         }
 
         a:hover {
-            color: #CC6633;
+            color: #CC6633; 
             text-decoration: none;
         }
     /* END LINKS */
@@ -190,9 +190,9 @@
             padding: 0;
         }
 
-    /* END LISTS */
+    	/* END LISTS */
 
-    /* TABLE */
+    	/* TABLE */
         table caption {
             font-weight: bold;
             margin: 0 0 0 0;
@@ -208,7 +208,6 @@
 		th {
 			font-weight: bold;
 		}
-
 
     hr {
         display: none;

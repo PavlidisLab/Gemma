@@ -234,7 +234,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
              * org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
              * queryObject.setParameter( "id", Id ); queryObject.setMaxResults( 1 );
              */
-            count = ( Long ) queryObject.uniqueResult() ;
+            count = ( Long ) queryObject.uniqueResult();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -262,6 +262,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     public void remove( ExpressionExperiment expressionExperiment ) {
         final ExpressionExperiment toDelete = expressionExperiment;
+
+        this.thawBioAssays( expressionExperiment );
+
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
 
@@ -279,13 +282,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.delete( dv );
                     if ( ++count % 20000 == 0 ) {
                         log.info( count + " design Element data vectors deleted" );
-                        // session.flush();
                     }
 
                 }
                 toDelete.getDesignElementDataVectors().clear();
-                // session.flush();
-                // session.clear();
 
                 log.info( "Removing BioAssay Dimensions." );
                 for ( BioAssayDimension dim : dims ) {
@@ -294,8 +294,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
                 for ( BioAssay ba : toDelete.getBioAssays() ) {
-                    ba.getArrayDesignUsed().getCompositeSequences().size();
-
                     // delete references to files on disk
                     for ( LocalFile lf : ba.getDerivedDataFiles() ) {
                         for ( LocalFile sf : lf.getSourceFiles() ) {
@@ -307,22 +305,17 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     // Delete raw data files
                     if ( ba.getRawDataFile() != null ) session.delete( ba.getRawDataFile() );
 
-                    // remove the bioassay audit trail
-                    // AuditTrail at = ba.getAuditTrail();
-                    // ba.setAuditTrail( null );
-                    // if ( at != null ) {
-                    // for ( AuditEvent event : at.getEvents() ) {
-                    // session.delete( event );
-                    // }
-                    // at.getEvents().clear();
-                    // session.delete( at );
-                    // }
-
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
                     bioMaterialsToDelete.addAll( biomaterials );
                     for ( BioMaterial bm : biomaterials ) {
+                        
+                        // fix for bug 855 - make sure this collection is initialized.
+                        bm = ( BioMaterial ) session.merge( bm );
+                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                      
                         bm.getBioAssaysUsedIn().clear();
                         session.saveOrUpdate( bm );
+                        session.evict( bm );
                     }
                     biomaterials.clear();
                     session.update( ba );
@@ -339,38 +332,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.delete( bm );
                 }
 
-                // session.flush();
-
-                // Delete investigators
-                // for ( Contact ct : toDelete.getInvestigators() ) {
-                // session.delete( ct );
-                // }
-
-                // Remove audit information for ee from the db. We might want to keep this but......
-                // AuditTrail at = toDelete.getAuditTrail();
-                // if ( at != null ) {
-                // for ( AuditEvent event : at.getEvents() ) {
-                // session.delete( event );
-                // }
-                // at.getEvents().clear();
-
-                // session.delete( at );
-                // }
-
-                // session.clear();
                 session.delete( toDelete );
                 session.flush();
                 session.clear();
 
-                // for ( BioMaterial bm : bioMaterialsToDelete ) {
-                // session.delete( bm );
-                // }
-                // session.flush();
-
+                log.info( "Deleted " + toDelete );
                 return null;
             }
         }, true );
-
     }
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
@@ -458,10 +427,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
         final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
-                + "inner join EE.bioAssays as BA "
-                + "inner join BA.samplesUsed as SU where EE.id = :id";
+                + "inner join EE.bioAssays as BA " + "inner join BA.samplesUsed as SU where EE.id = :id";
 
-        return ( Taxon ) QueryUtils.queryById(getSession(), id, queryString );
+        return ( Taxon ) QueryUtils.queryById( getSession(), id, queryString );
 
     }
 
@@ -594,7 +562,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
-                taxonCount.put( ( Taxon ) list.get( 0 ),  list.getLong( 1 )  );
+                taxonCount.put( ( Taxon ) list.get( 0 ), list.getLong( 1 ) );
             }
             return taxonCount;
         } catch ( org.hibernate.HibernateException ex ) {
@@ -688,7 +656,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            
+
             queryObject.setCacheable( true );
             List list = queryObject.list();
             for ( Object object : list ) {

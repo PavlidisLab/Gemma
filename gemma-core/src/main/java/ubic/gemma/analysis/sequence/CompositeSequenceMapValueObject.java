@@ -28,7 +28,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @author jsantos
  * @version $Id$
  */
-public class CompositeSequenceMapValueObject {
+public class CompositeSequenceMapValueObject implements Comparable {
     private String compositeSequenceId = null;
     private String compositeSequenceName = null;
     private String bioSequenceId = null;
@@ -174,6 +174,13 @@ public class CompositeSequenceMapValueObject {
 
     public void setArrayDesignId( Long arrayDesignId ) {
         this.arrayDesignId = arrayDesignId;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo( Object o ) {
+       return this.compositeSequenceName.compareTo(((CompositeSequenceMapValueObject)o).getCompositeSequenceName());
     }
 
 }

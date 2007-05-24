@@ -157,6 +157,7 @@
 					<property name="includes">
 						<list>
 							<value>getCsSummaries</value>
+							<value>getCsSummaryRange</value>
 						</list>
 					</property>
 				</bean>
@@ -221,6 +222,11 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.web.remote.ListRange">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
 			<entry key="ubic.gemma.model.common.description.VocabCharacteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -249,14 +255,6 @@
 			<entry key="ubic.gemma.model.genome.Taxon">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="hibernate3" />
-					<property name="includes">
-						<list>
-							<value>id</value>
-							<value>commonName</value>
-							<value>scientificName</value>
-							<value>ncbiId</value>
-						</list>
-					</property>
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.model.genome.gene.GeneProductValueObject">
@@ -345,10 +343,43 @@
 					<property name="type" value="hibernate3" />
 					<property name="excludes">
 						<list>
-							<value>querySequence</value>
 							<value>targetAlignedRegions</value>
 							<value>queryAlignedRegions</value>
 							<value>searchedDatabase</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.genome.biosequence.BioSequence">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>name</value>
+							<value>id</value>
+							<value>sequence</value> <!--  this is questionable, as it can be big. -->
+							<value>sequenceDatabaseEntry</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.description.DatabaseEntry">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>accession</value>
+							<value>externalDatabase</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.description.ExternalDatabase">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>name</value>
 						</list>
 					</property>
 				</bean>
@@ -436,7 +467,7 @@
 			<prop key="/designElement/showAllDesignElements.html">showAll</prop>
 			<prop key="/designElement/deleteDesignElement.html">delete</prop>
 			<prop key="/designElement/showDesignElement.html">show</prop>
-			
+
 		</props>
 	</property>
 </bean>

@@ -1,11 +1,17 @@
 
+/**
+ * 
+ * @param {Object} dwrCall The method that will be called
+ * @param {Object} config consisting of:
+ * - {boolean} pagingAndSort
+ * - {Array} baseParams, which are sent in dwr method calls as the first parameters. 
+ */
 Ext.data.DWRProxy = function (dwrCall, config) {
 	Ext.data.DWRProxy.superclass.constructor.call(this);
 	this.dwrCall = dwrCall;
 	if (config !== undefined) {
 		this.pagingAndSort = (config.pagingAndSort !== undefined ? config.pagingAndSort : false);
-		this.success = config.success;
-		this.failure = config.failure;
+		this.baseParams = config.baseParams;
 	}
 };
 
@@ -22,22 +28,32 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
 	load:function (params, reader, callback, scope, arg) {
 		if (this.fireEvent("beforeload", this, params) !== false) {
 			var delegate = this.loadResponse.createDelegate(this, [reader, callback, scope, arg], true);
-			if (params === undefined || params === null) {
-				params = [];
-			}
-			params.push({callback : delegate, errorHandler : this.handleFailure });
+			var callParams = [];
 
-			return this.dwrCall.apply(this, params);
+   		 	if ( params instanceof Array) {
+				callParams = params;
+			} else if ( params.push === undefined && this.pagingAndSort ) {
+				callParams.push(params.start);
+				callParams.push(params.limit);
+				callParams.push(params.sort);
+				callParams.push(params.dir);
+			}
+			
+			// add baseparams to start of array
+			if (this.baseParams !== undefined ) {
+				for(var k = this.baseParams.length - 1; k >= 0; k--) {
+					callParams.unshift(this.baseParams[k]);
+				}
+			}
+			callParams.push({callback : delegate, errorHandler : this.handleFailure });
+			return this.dwrCall.apply(this, callParams);
 		} else {
 			callback.call(scope || this, null, arg, false);
 		}
 	}, 
 	
 	handleFailure: function(data, e) {
-    	if (typeof this.failure == "function" ) {
-    		failure();
-    	}
-		this.fireEvent("loadexception", this, null, data, e);
+		fireEvent("loadexception", this, null, data, e);
 		if (typeof callback == "function") {
 			callback.call(scope, null, arg, false);
 		}
@@ -47,7 +63,7 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
 	loadResponse:function (data, reader, callback, scope, arg) {
 		var result;
 		try {
-			console.log(dwr.util.toDescriptiveString(data, 5));
+			 console.log(dwr.util.toDescriptiveString(data, 5));
 			result = reader.read(data, arg);
 		}
 		catch (e) {

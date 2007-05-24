@@ -1,10 +1,26 @@
+/*
+ * The 'probe viewer' application. 
+ * 
+ * This handles situations where we're viewing probes from an array design, or those for a specific gene. For array designs it allows searches.
+ * 
+ * @author Paul
+ * @version $Id$ 
+ */
+
+var start = 0; 
+var size = 50; // page size
+var grid;
+var ds;
+var detailsDataSource;
+
+
 var showprobes = function(id) {
 	var ids =  id.split(",");
 	// note how we pass the new array in directly, without wraping it in an object first.
 	ds.load({params:[ids], 
 	callback: function(r, options, success, scope ) {  
 		if (success) { 
-			Ext.DomHelper.overwrite("messages", this.getCount() + " shown" ); 
+			Ext.DomHelper.overwrite("messages", this.getCount() + " probes shown" ); 
 		} else { 
 			Ext.DomHelper.overwrite("messages", "There was an error." );  
 		} 
@@ -12,43 +28,42 @@ var showprobes = function(id) {
 	});
 };
 
+
 var showArrayDesignProbes = function(id) {
-	ds.load({params:[{id:id}], 
+	ds.load({params:{start:start, limit:size, sort:"arrayDesignName", dir:"ASC"},
 	callback: function(r, options, success, scope ) {  
-		if (success) { 
-			Ext.DomHelper.overwrite("messages", this.getCount() + " shown" ); 
-		} else { 
+		if (!success) { 
 			Ext.DomHelper.overwrite("messages", "There was an error." );  
 		} 
 	}});
 };
 
-var grid;
-var ds;
-var detailsDataSource;
-
-
 /**
  * Initialize the main grid.
- * @param {Object} isArrayDesign
+ * @param {boolean} isArrayDesign	
  */
-var init = function(isArrayDesign) {
+var init = function(isArrayDesign, id) {
 	
 	var convertgps = function(d) {
 		var r = "";
 		for(var gp in d) {
 			r = r + d[gp].name + ",";
 		}
-		r = r.substr(0, r.length - 2);
+		r = r.substr(0, r.length - 1);
 		return r;
 	};
 		
 	var convertgenes = function(d) {
 		var r = "";
+		var count = 0;
 		for(var g in d) {
-			r = r + d[g].officialSymbol + ",";
+			r = r + "&nbsp;<a href='/Gemma/gene/showGene?id=" + d[g].id + "'>" + d[g].officialSymbol + "</a>,";
+			++count;
 		}
-		r = r.substr(0, r.length - 2);// trim tailing comma.
+		if (count > 3) {
+			r =  "(" +count + ")" + r;
+		}
+		r = r.substr(0, r.length - 1);// trim tailing comma.
 		return r;
 	};
 		
@@ -66,18 +81,21 @@ var init = function(isArrayDesign) {
 			{name:"genes" , convert : convertgenes}]); //  map of gene ids to geneproductvalueobjects
 
 	var proxy;
+	var reader;
 	if (isArrayDesign) {
-		proxy = new Ext.data.DWRProxy(ArrayDesignController.getCsSummaries);
+		proxy = new Ext.data.DWRProxy(ArrayDesignController.getCsSummaryRange, {pagingAndSort: true, baseParams:[{id:id}] });
+		reader = new Ext.data.ListRangeReader({id:"compositeSequenceId", totalProperty:"totalSize", root:"data"}, recordType);
  	} else {
 		proxy = new Ext.data.DWRProxy(CompositeSequenceController.getCsSummaries);
+		reader = new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType);
 	}
-	
+	 
 	ds = new Ext.data.Store(
 	{
 		proxy:proxy,
-		reader:new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType), 
-		remoteSort:false,
-		sortInfo:{field:'arrayDesignName'}
+		reader:reader,
+		remoteSort:isArrayDesign,
+		sortInfo:{field:'arrayDesignName'}	
 	});
 	 
 		
@@ -105,17 +123,26 @@ var initDetails = function() {
 		}); 
 	
 	var cm = new Ext.grid.ColumnModel([
-		{header: "Alignment",  width: 160, dataIndex:"blatResult", renderer:blatResRender}, 
+		{header: "Alignment",  width: 210, dataIndex:"blatResult", renderer:blatResRender}, 
 		{header: "Score", width: 60, dataIndex:"score", renderer:numberformat },
 		{header: "Identity", width: 60, dataIndex:"identity", renderer:numberformat },  
-		{header: "Genes", width: 120, dataIndex:"geneProductIdGeneMap", renderer:geneMapRender  },
-		{header: "Products", width: 120, dataIndex:"geneProductIdMap", renderer:gpMapRender  }
+		{header: "Genes", width: 150, dataIndex:"geneProductIdGeneMap", renderer:geneMapRender  },
+		{header: "Products", width: 150, dataIndex:"geneProductIdMap", renderer:gpMapRender  }
 		]);
+		
 	cm.defaultSortable = true;
 	cm.setColumnTooltip(0, "Alignment genomic location");
 	cm.setColumnTooltip(1, "BLAT score");
 	cm.setColumnTooltip(2, "Sequence alignment identity");
 	var blgrid = new Ext.grid.Grid("probe-details", {ds:detailsDataSource, cm:cm, loadMask: true });
+	
+    var rz = new Ext.Resizable("probe-details", {
+	    wrap:true,
+	    minHeight:100,
+	    pinned:true,
+	    handles: 's'
+    });
+    rz.on('resize', blgrid.autoSize, blgrid);
 	
 	blgrid.render();
 };
@@ -139,7 +166,7 @@ var showDetails = function(event, id) {
 		var dh = Ext.DomHelper;
 		dh.overwrite("details-title", {tag : 'h2', html : "Details for: " + csname + " on " + record.get("arrayDesignName")});
 		dh.append("details-title", {tag : 'ul', children : [
-			{tag : 'li' , html: "Sequence: " + seqName}
+			{tag : 'li' , html: "Sequence name: " + seqName}
 		]});
 };
 
@@ -152,7 +179,7 @@ var search = function(event) {
 	query = dwr.util.getValue("searchString");
 	var oldprox = ds.proxy;
 	ds.proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
-	ds.load({params:[ query, id], callback: function(r, options, success, scope ) {  
+	ds.load({params:[query, id], callback: function(r, options, success, scope ) {  
 		if (success) { 
 			Ext.DomHelper.overwrite("messages", this.getCount() + " found" ); 
 		} else { 
@@ -160,7 +187,35 @@ var search = function(event) {
 		} 
 	}});
 	ds.proxy = oldprox;
-}
+	
+	// greyout and disable the paging toolbar.
+    paging.getEl().mask();
+    paging.getEl().select("input,a,button").each(function(e){e.dom.disabled=true;});
+};
+
+/**
+ * Show first batch of data.
+ * @param {Object} isArrayDesign
+ * @param {Object} id
+ */
+var reset = function( ) {
+	var id = dwr.util.getValue("cslist");
+	var isArrayDesign = id === "";
+	if (isArrayDesign) {
+		id = dwr.util.getValue("arrayDesignId");
+	}
+	if (isArrayDesign) {
+		showArrayDesignProbes(id);
+	} else {
+		showprobes(id);
+	}
+	
+	// reset the toolbar.
+    paging.getEl().unmask();
+    paging.getEl().select("input,a,button").each(function(e){e.dom.disabled=false;});
+};
+
+var paging;
 
 /**
  * Prepare main grid that shows the probes.
@@ -169,7 +224,10 @@ Ext.onReady(function() {
 
 	var id = dwr.util.getValue("cslist");
 	var isArrayDesign = id === "";
-	init(isArrayDesign);
+	if (isArrayDesign) {
+		id = dwr.util.getValue("arrayDesignId");
+	}
+	init(isArrayDesign, id);
 	
 	initDetails();
 	
@@ -180,9 +238,9 @@ Ext.onReady(function() {
 			{header: "Probe Name",  width: 130, dataIndex:"compositeSequenceName", renderer: probelink}, 
 			{header: "Sequence", width: 130, dataIndex:"bioSequenceName" },
 			{header: "#Hits", width: 50, dataIndex: "numBlatHits"},  
-			{header: "Genes", width: 130, dataIndex:"genes" }
-			//{header: "Products", width: 140, dataIndex:"geneProducts"  }
+			{header: "Genes", width: 200, dataIndex:"genes" }
 			]);
+
 	cm.defaultSortable = true;
 	cm.setColumnTooltip(0, "Name of array design (click for details - leaves this page)");
 	cm.setColumnTooltip(1, "Name of probe (click for details)");
@@ -202,18 +260,26 @@ Ext.onReady(function() {
 	
 	grid.render();
 	
+	// add a paging toolbar to the grid's footer
 	if (isArrayDesign) {
-		id = dwr.util.getValue("arrayDesignId");
-		showArrayDesignProbes(id);
-	} else {
-		showprobes(id);
+		var gridFoot = grid.getView().getFooterPanel(true);
+	     paging  = new Ext.PagingToolbar(gridFoot, ds, {
+	        pageSize: size
+	    });
 	}
 	
+	reset();
+
 });
 
 /*
  * Renderers
  */
+
+var GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
+var UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
+var NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
+
 var probelink = function( data, metadata, record, row, column, store  ) {
 	return "<a onclick=\"showDetails(event, " + record.get("compositeSequenceId") + ");\">" + data + "</a>";
 };
@@ -236,15 +302,27 @@ var gpMapRender = function(data) {
 
 var geneMapRender = function(data) {
 	var res = "";
+	
 	for(var id in data) {
-		res = res + data[id].officialSymbol + "<br />";
+		res = res + "<a href='/Gemma/gene/showGene?id=" + data[id].id + "'>" + data[id].officialSymbol + "</a><br />";
 	}
 	return res;
 };
 
-
+var getDb = function(taxon) {
+	if (taxon.externalDatabase) {
+		return taxon.externalDatabase.name;
+	}
+};
 
 var blatResRender = function(d, metadata, record, row, column, store  ) {
-	var res = "chr" + d.targetChromosome.name + " " + d.targetStart + "-" + d.targetEnd;
+	var res = "chr" + d.targetChromosome.name + " (" + d.strand + ") " + d.targetStart + "-" + d.targetEnd;
+	
+	var organism = d.targetChromosome.taxon;
+	var database = getDb(organism);
+	if (database) {
+		var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850&db=" + database + "&hgt.customText=" + GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
+		res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link + "'><img src='" + UCSC_ICON + "'  /></a>";
+	}
 	return res;
 };

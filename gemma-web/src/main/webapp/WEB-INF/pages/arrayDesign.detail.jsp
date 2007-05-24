@@ -281,7 +281,7 @@
 				<div align="left">
 					<input type="button"
 						onclick="location.href='showAllArrayDesigns.html'"
-						value="Back to all designs">
+						value="Show all array designs">
 				</div>
 			</td>
 			<authz:authorize ifAnyGranted="admin">

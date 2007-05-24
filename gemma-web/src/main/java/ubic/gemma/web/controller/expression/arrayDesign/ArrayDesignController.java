@@ -20,13 +20,26 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -45,6 +58,7 @@ import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.remote.ListRange;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -59,10 +73,25 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  * @spring.property name="searchService" ref="searchService"
  */
-public class ArrayDesignController extends BackgroundProcessingMultiActionController {
+public class ArrayDesignController extends BackgroundProcessingMultiActionController implements InitializingBean {
 
     /**
-     * Instead of showing all the probes for the array, we only fetch some of them.
+     * How long an item in the cache lasts when it is not accessed.
+     */
+    private static final int ARRAY_INFO_CACHE_TIME_TO_IDLE = 60;
+
+    /**
+     * How long after creation before an object is evicted.
+     */
+    private static final int ARRAY_INFO_CACHE_TIME_TO_DIE = 2000;
+
+    /**
+     * How many array designs can stay in memory
+     */
+    private static final int ARRAY_INFO_CACHE_SIZE = 5;
+
+    /**
+     * Instead of showing all the probes for the array, we might only fetch some of them.
      */
     private static final int NUM_PROBES_TO_SHOW = 100;
 
@@ -78,6 +107,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private CompositeSequenceService compositeSequenceService = null;
     private final String messageName = "Array design with name";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
+
+    private Cache cache;
 
     /**
      * @param arrayDesignReportService the arrayDesignReportService to set
@@ -136,6 +167,100 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
                 .getSummaryMapValueObjects( rawSummaries );
         return summaries;
+    }
+
+    /**
+     * @param arrayDesign
+     * @param offset how many from start
+     * @param how many to return
+     * @param sortBy name of field to sort by.
+     * @param uid Unique identifier for this query (to use for caching results)
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public ListRange getCsSummaryRange( EntityDelegator ed, int offset, int size, final String sortBy,
+            final String sortDirection ) {
+        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
+        Element element = cache.get( arrayDesign );
+        List res;
+        if ( element == null ) {
+
+            Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, -1 );
+            Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
+                    .getSummaryMapValueObjects( rawSummaries );
+
+            // sort
+            res = new ArrayList();
+            res.addAll( summaries );
+
+            cache.put( new Element( arrayDesign, res ) );
+        } else {
+            res = ( List ) element.getValue();
+        }
+
+        int dir = 1;
+        if ( sortDirection != null && sortDirection.equalsIgnoreCase( "DESC" ) ) {
+            dir = -1;
+        }
+
+        final int desc = dir;
+
+        Collections.sort( res, new Comparator<CompositeSequenceMapValueObject>() {
+            public int compare( CompositeSequenceMapValueObject o1, CompositeSequenceMapValueObject o2 ) {
+                try {
+
+                    Object property = PropertyUtils.getProperty( o1, sortBy );
+                    Object property2 = PropertyUtils.getProperty( o2, sortBy );
+
+                    if ( property == null || property2 == null ) return 0;
+
+                    if ( property instanceof Comparable ) {
+                        return desc * ( ( Comparable ) property ).compareTo( ( ( Comparable ) property2 ) );
+                    } else if ( property instanceof Collection ) {
+                        // Iterator it = ( ( Collection ) property ).iterator();
+                        // Iterator it2 = ( ( Collection ) property2 ).iterator();
+                        // return desc * compareCollections( it, it2 );
+
+                        return desc * ( ( ( Collection ) property ).size() - ( ( Collection ) property2 ).size() );
+
+                    } else if ( property instanceof Map ) {
+                        return desc * ( ( ( Map ) property ).values().size() - ( ( Map ) property2 ).values().size() );
+
+                        // Iterator it = ( ( Map ) property ).values().iterator();
+                        // Iterator it2 = ( ( Map ) property2 ).values().iterator();
+                        // return desc * compareCollections( it, it2 );
+                    }
+                } catch ( Exception e ) {
+                    return 0;
+                }
+                return 0;
+            }
+
+            /**
+             * @param it
+             * @param it2
+             * @return
+             */
+            private int compareCollections( Iterator it, Iterator it2 ) {
+                while ( it.hasNext() ) {
+                    if ( it2.hasNext() ) {
+                        return ( ( Comparable ) it.next() ).compareTo( ( Comparable ) it2.next() );
+                    } else {
+                        return 1;
+                    }
+                }
+                return 0;
+            }
+        } );
+
+        // return just the values.
+        offset = Math.max( 0, offset );
+        offset = Math.min( res.size() - 1, offset );
+        int endpoint = Math.min( res.size() - 1, offset + size );
+        ListRange result = new ListRange();
+        result.setData( res.subList( offset, endpoint ).toArray() );
+        result.setTotalSize( res.size() );
+        return result;
     }
 
     /**
@@ -536,5 +661,27 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
+        try {
+            CacheManager manager = CacheManager.create();
+
+            cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
+                    MemoryStoreEvictionPolicy.LFU, false, null, false, ARRAY_INFO_CACHE_TIME_TO_DIE,
+                    ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
+
+            manager.addCache( cache );
+            cache = manager.getCache( "ArrayDesignCompositeSequenceCache" );
+
+        } catch ( CacheException e ) {
+            throw new RuntimeException();
+        }
+
     }
 }
