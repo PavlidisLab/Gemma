@@ -120,17 +120,50 @@ var initTree = function(div){
 };
 
 
-var displayRestrictionsPanel = function(node) {
+var displayRestrictionsPanel = function(node, indent) {
 
 		var dh = Ext.DomHelper;
-		dh.overwrite("east-div", {tag : 'h2', html : "Details for: " + node.uri });
-		//dh.append("east-div", {tag : 'ul', children : [
-		//	{tag : 'li' , html: "Sequence: " + seqName}
-		//]});
+		if (indent === undefined){
+			dh.overwrite("east-div", {html : "next"});
+			indent = "";
+		}
+		console.log(dwr.util.toDescriptiveString(node, 7));
+		
+
+		dh.append("east-div", {tag : 'h3', html : indent + "========== Details for: " + node.uri + "=======" });
 
 
+        /*
+         * Either fill in an individual here, OR fill in the slots.
+         */
 
-};
+        var res = node.restrictions;
+        if ( res.size() > 0 ) {
+            dh.append("east-div", {html : indent + "Please fill in the following slots " });
+            for ( var id in res ) {
+            	var restrictedOn = res[id].restrictionOn;
+            	              
+                if ( (res[id].restrictedTo !== undefined) && (res[id].restrictedTo !== null)) {	//is it a class restriction?
+                    var restrictedTo = res[id].restrictedTo;
+                    dh.append( "east-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn + " with a " + restrictedTo });
+                    displayRestrictionsPanel( restrictedTo, "====" + indent );
+                    
+                } else if ( res[id].type !== undefined ) {
+                    var restrictedTo = res[id].type
+                    dh.append("east-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn + " with a " + restrictedTo });
+                    
+                } else if ( res[id].cardinality !== undefined  ) {
+                    // this will be rare.                  
+                    var cardinality = res[id].cardinality;
+                    var cardinalityType = res[id].cardinalityType;
+                    dh.append("east-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn + " with " + cardinalityType + " "
+                            + cardinality + " things" });
+                    // todo check range of the property (what 'things' should be) if specified.
+                }
+            }
+        }
+	    dh.append("east-div", {html : indent + "====== End of details for " + node.uri + " =======" });
+    };
 
 
 Ext.EventManager.onDocumentReady(Simple.init, Simple, true);
