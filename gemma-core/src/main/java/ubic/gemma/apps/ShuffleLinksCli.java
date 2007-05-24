@@ -48,6 +48,7 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
     private final static int ITERATION_NUM = 3;
     private final static int LINK_MAXIMUM_COUNT = 100;
     private CompressedNamedBitMatrix linkCount = null;
+    private CompressedNamedBitMatrix negativeLinkCount = null;
     private int[][] stats = new int[ITERATION_NUM+1][LINK_MAXIMUM_COUNT];
     private int currentIteration = 0;
 	@Override
@@ -173,7 +174,10 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
             try{
             	int rowIndex = linkCount.getRowIndexByName(firstGeneId);
             	int colIndex = linkCount.getColIndexByName(secondGeneId);
-            	linkCount.set( rowIndex, colIndex, eeIndex );
+                if(link.getScore() > 0)
+                    linkCount.set( rowIndex, colIndex, eeIndex );
+                else
+                    negativeLinkCount.set( rowIndex, colIndex, eeIndex );
             }catch(Exception e){
             	log.info(" No Gene Definition " + firstGeneId + "," + secondGeneId);
             	//Aligned Region and Predicted Gene
@@ -183,8 +187,9 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
     }
     private void counting(){
         int rows = linkCount.rows();
+        //The filling process only filled one item. So the matrix is not symetric
         for(int i = 0; i < rows; i++){
-            for(int j = i + 1; j < rows; j++){
+            for(int j = 0; j < rows; j++){
                 int bits = linkCount.bitCount( i, j );
                 if(bits > 0){
                     stats[currentIteration][bits]++;
@@ -208,7 +213,22 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         counting();
         log.info(" Shuffled " + total + " links");
     }
-
+    private void saveMatrix(String outFile){
+        try {
+            FileWriter out = new FileWriter( new File( outFile ) );
+            for ( int i = 0; i < linkCount.rows(); i++ )
+                for ( int j = 0; j < linkCount.columns(); j++ ) {
+                    int bits = linkCount.bitCount( i, j ); 
+                    int negativeBits = negativeLinkCount.bitCount(i,j);
+                    if (  bits != 0  || negativeBits != 0) {
+                        out.write( linkCount.getRowName( i ) + "\t" + linkCount.getColName( i ) + "\t"+ bits + "\t" + negativeBits + "\n"); 
+                    }
+                }
+            out.close();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+    }
     private void saveStats(String outFile){
     	try{
     		FileWriter out = new FileWriter(new File(outFile));
@@ -260,8 +280,10 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         //The first iteration doesn't do the shuffling and only read the real data and do the counting
         for(currentIteration = 0; currentIteration < ITERATION_NUM + 1; currentIteration++){
             linkCount = getMatrix(ees,genes);
+            negativeLinkCount = getMatrix(ees,genes);
             System.gc();
             doShuffling(candidates);
+            saveMatrix( "matrix"+currentIteration+".txt" );
         }
         saveStats("stats.txt");
 //        if(this.eeId > 0){
