@@ -119,24 +119,28 @@ var initTree = function(div){
 
 };
 
+//The call back method for the dwr call
+var displayRestrictionsPanel = function(node){
+	console.log(dwr.util.toDescriptiveString(node, 7));
+	createRestrictionGui(node);
+};
 
-var displayRestrictionsPanel = function(node, indent) {
+//Recursive function that walks the node given to it and creates a coresponding form to fill in
+var createRestrictionGui = function(node, indent) {
 
-		var dh = Ext.DomHelper;
+		var dh = Ext.DomHelper;  //allows html output
+
 		if (indent === undefined){
-			dh.overwrite("east-div", {html : "next"});
+			dh.overwrite("east-div", {html : "<\br>"});
 			indent = "";
 		}
-		console.log(dwr.util.toDescriptiveString(node, 7));
+	
 		
 
-		dh.append("east-div", {tag : 'h3', html : indent + "========== Details for: " + node.uri + "=======" });
+		dh.append("east-div", {html : indent + "Details for: " + node.uri + "=======" });
 
 
-        /*
-         * Either fill in an individual here, OR fill in the slots.
-         */
-
+      
         var res = node.restrictions;
         if ( res.size() > 0 ) {
             dh.append("east-div", {html : indent + "Please fill in the following slots " });
@@ -145,24 +149,24 @@ var displayRestrictionsPanel = function(node, indent) {
             	              
                 if ( (res[id].restrictedTo !== undefined) && (res[id].restrictedTo !== null)) {	//is it a class restriction?
                     var restrictedTo = res[id].restrictedTo;
-                    dh.append( "east-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn + " with a " + restrictedTo });
-                    displayRestrictionsPanel( restrictedTo, "====" + indent );
+                    dh.append( "east-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
+                    createRestrictionGui( restrictedTo, "===>" + indent );
                     
                 } else if ( res[id].type !== undefined ) {
                     var restrictedTo = res[id].type
-                    dh.append("east-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn + " with a " + restrictedTo });
+                    dh.append("east-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
                     
                 } else if ( res[id].cardinality !== undefined  ) {
                     // this will be rare.                  
                     var cardinality = res[id].cardinality;
                     var cardinalityType = res[id].cardinalityType;
-                    dh.append("east-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn + " with " + cardinalityType + " "
+                    dh.append("east-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
                             + cardinality + " things" });
                     // todo check range of the property (what 'things' should be) if specified.
                 }
             }
         }
-	    dh.append("east-div", {html : indent + "====== End of details for " + node.uri + " =======" });
+	    dh.append("east-div", {html : indent + "End of details for " + node.uri}) ;
     };
 
 
