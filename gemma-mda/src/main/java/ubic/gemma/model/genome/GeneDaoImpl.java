@@ -1042,7 +1042,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             count++;
             total--;
             if(count == CHUNK_LIMIT || total == 0){
-                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE " + 
+                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and" + 
                 " CS in (" +
                 StringUtils.join( idsInOneChunk.iterator(), "," ) + 
                 ")";
