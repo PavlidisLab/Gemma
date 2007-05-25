@@ -97,7 +97,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
         genericEntry = new GemmaSpacesGenericEntry();
         genericEntry.message = ExpressionExperimentTask.class.getName();
         genericEntry.registrationId = workerRegistrationId;
-        Lease lease = space.write( genericEntry, null, 60000000 );
+        Lease lease = space.write( genericEntry, null, 600000000 );
         if ( lease == null ) log.error( "Null Lease returned" );
         // TODO set lease time to large number so it never expires (or only when the
         // worker shuts down. That is, do some "worker cleanup" when it shuts down.
