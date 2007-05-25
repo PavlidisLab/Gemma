@@ -345,7 +345,7 @@ var geneMapRender = function(data) {
 	var res = "";
 	
 	for(var id in data) {
-		res = res + "<a href='/Gemma/gene/showGene?id=" + data[id].id + "'>" + data[id].officialSymbol + "</a><br />";
+		res = res + "<a href='/Gemma/gene/showGene.html?id=" + data[id].id + "'>" + data[id].officialSymbol + "</a><br />";
 	}
 	return res;
 };
