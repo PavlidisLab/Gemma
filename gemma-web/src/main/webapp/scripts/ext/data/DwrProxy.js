@@ -32,7 +32,7 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
 
    		 	if ( params instanceof Array) {
 				callParams = params;
-			} else if ( params.push === undefined && this.pagingAndSort ) {
+			} else if ( params && params.push === undefined && this.pagingAndSort ) {
 				callParams.push(params.start);
 				callParams.push(params.limit);
 				callParams.push(params.sort);
