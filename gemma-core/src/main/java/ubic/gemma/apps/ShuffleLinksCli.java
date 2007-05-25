@@ -45,11 +45,11 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
 	private GeneService geneService = null;
 	private ExpressionExperimentService eeService = null;
     private HashMap<Long, Integer> eeMap = null;
-    private final static int ITERATION_NUM = 3;
+    private int iteration_num = 100;
     private final static int LINK_MAXIMUM_COUNT = 100;
     private CompressedNamedBitMatrix linkCount = null;
     private CompressedNamedBitMatrix negativeLinkCount = null;
-    private int[][] stats = new int[ITERATION_NUM+1][LINK_MAXIMUM_COUNT];
+    private int[][] stats = null;
     private int currentIteration = 0;
 	@Override
 	protected void buildOptions() {
@@ -57,15 +57,18 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription(
         "the taxon name" ).withLongOpt( "Taxon" ).create( 't' );
         addOption( taxonOption );
-        Option eeId = OptionBuilder.hasArg().withArgName( "Expression Experiment Id" ).withDescription(
-        "Expression Experiment Id" ).withLongOpt( "eeId" ).create( 'e' );
-        addOption( eeId );
+//        Option eeId = OptionBuilder.hasArg().withArgName( "Expression Experiment Id" ).withDescription(
+//        "Expression Experiment Id" ).withLongOpt( "eeId" ).create( 'e' );
+//        addOption( eeId );
         Option eeNameFile = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" ).withDescription(
         "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
         addOption( eeNameFile );
         Option startPreparing = OptionBuilder.withArgName( " Starting preparing " ).withDescription(
         " Starting preparing the temppory tables " ).withLongOpt( "startPreparing" ).create( 's' );
         addOption( startPreparing );
+        Option iterationNum = OptionBuilder.withArgName( " The number of iteration for shuffling " ).withDescription(
+        " The number of iteration for shuffling " ).withLongOpt( "iterationNum" ).create( 'i' );
+        addOption( iterationNum );
 	}
     protected void processOptions() {
         super.processOptions();
@@ -75,16 +78,19 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'f' ) ) {
             this.eeNameFile = getOptionValue( 'f' );
         }
-        if ( hasOption( 'e' ) ) {
-            this.eeId = Long.valueOf(getOptionValue( 'e' ));
-        }
+//        if ( hasOption( 'e' ) ) {
+//            this.eeId = Long.valueOf(getOptionValue( 'e' ));
+//        }
         if ( hasOption( 's' ) ) {
             this.prepared = false;
         }
-
+        if ( hasOption( 'i' ) ) {
+            this.iteration_num = Integer.valueOf(getOptionValue( 'i' ));
+        }
         p2pService = (Probe2ProbeCoexpressionService) this.getBean ( "probe2ProbeCoexpressionService" );
         geneService = (GeneService) this.getBean( "geneService" );
         eeService = (ExpressionExperimentService) this.getBean( "expressionExperimentService" );
+        stats= new int[iteration_num+1][LINK_MAXIMUM_COUNT];
     }
     private Taxon getTaxon( String name ) {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -162,12 +168,12 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
        		Collection<Long> firstGeneIds =cs2genes.get( link.getFirst_design_element_fk() );
        		Collection<Long> secondGeneIds =cs2genes.get( link.getSecond_design_element_fk() );
             if(firstGeneIds == null || secondGeneIds == null){
-            	log.info(" Preparation is not correct " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
+            	log.info(" Preparation is not correct (get null genes) " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
             	continue;
             }
             if(firstGeneIds.size() != 1 || secondGeneIds.size() != 1){
-            	log.info(" Preparation is not correct " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
-            	continue;
+            	log.info(" Preparation is not correct (get non-specific genes)" + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
+            	System.exit(0);
             }
             Long firstGeneId = firstGeneIds.iterator().next();
             Long secondGeneId = secondGeneIds.iterator().next();
@@ -191,8 +197,12 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < rows; j++){
                 int bits = linkCount.bitCount( i, j );
+                int negativeBits = negativeLinkCount.bitCount(i, j);
                 if(bits > 0){
                     stats[currentIteration][bits]++;
+                }
+                if(negativeBits > 0){
+                    stats[currentIteration][negativeBits]++;
                 }
             }
         }
@@ -232,13 +242,20 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
     private void saveStats(String outFile){
     	try{
     		FileWriter out = new FileWriter(new File(outFile));
-    		for(int i = 0; i < ITERATION_NUM + 1; i++){
+    		for(int i = 0; i < iteration_num + 1; i++){
     			for(int j = LINK_MAXIMUM_COUNT - 2; j >= 0; j--){
     				stats[i][j] = stats[i][j] + stats[i][j+1];
     			}
     		}
-    		for(int i = 1; i < ITERATION_NUM + 1; i++){
-    			for(int j = 1; j < LINK_MAXIMUM_COUNT; j++){
+    		int maxBits = 0;
+    		for(int j = LINK_MAXIMUM_COUNT - 1; j >= 0; j--){
+    			if(stats[0][j] != 0){
+    				maxBits = j;
+    				break;
+    			}
+    		}
+    		for(int i = 1; i < iteration_num + 1; i++){
+    			for(int j = 1; j <= maxBits; j++){
     				if(stats[0][j] == 0) out.write("\t");
     				else out.write((double)stats[i][j]/(double)stats[0][j] + "\t");
     			}
@@ -278,7 +295,7 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
             index++;
         }
         //The first iteration doesn't do the shuffling and only read the real data and do the counting
-        for(currentIteration = 0; currentIteration < ITERATION_NUM + 1; currentIteration++){
+        for(currentIteration = 0; currentIteration < iteration_num + 1; currentIteration++){
             linkCount = getMatrix(ees,genes);
             negativeLinkCount = getMatrix(ees,genes);
             System.gc();
