@@ -60,13 +60,13 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
 //        Option eeId = OptionBuilder.hasArg().withArgName( "Expression Experiment Id" ).withDescription(
 //        "Expression Experiment Id" ).withLongOpt( "eeId" ).create( 'e' );
 //        addOption( eeId );
-        Option eeNameFile = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" ).withDescription(
+        Option eeNameFile = OptionBuilder.hasArg().isRequired().withArgName( "File having Expression Experiment Names" ).withDescription(
         "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
         addOption( eeNameFile );
         Option startPreparing = OptionBuilder.withArgName( " Starting preparing " ).withDescription(
         " Starting preparing the temppory tables " ).withLongOpt( "startPreparing" ).create( 's' );
         addOption( startPreparing );
-        Option iterationNum = OptionBuilder.withArgName( " The number of iteration for shuffling " ).withDescription(
+        Option iterationNum = OptionBuilder.hasArg().withArgName( " The number of iteration for shuffling " ).withDescription(
         " The number of iteration for shuffling " ).withLongOpt( "iterationNum" ).create( 'i' );
         addOption( iterationNum );
 	}
