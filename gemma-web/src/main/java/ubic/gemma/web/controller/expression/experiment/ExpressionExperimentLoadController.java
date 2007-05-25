@@ -210,7 +210,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
 
                 String accesionNum = expressionExperimentLoadCommand.getAccession();
 
-                ProgressJob job = ProgressManager.createGigaspacesProgressJob( this.getTaskId(), securityContext
+                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
                         .getAuthentication().getName(), "Loading " + expressionExperimentLoadCommand.getAccession() );
 
                 // put the accession number in a safer form
@@ -244,9 +244,6 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                     }
 
                 } else {
-                    // Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
-                    // doSampleMatching );
-
                     GigaSpacesResult res = eeTaskProxy.execute( accesionNum, false, doSampleMatching );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
                     log.info( "result " + result );
