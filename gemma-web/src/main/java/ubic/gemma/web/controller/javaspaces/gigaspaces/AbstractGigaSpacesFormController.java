@@ -36,6 +36,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.basecode.thread.ThreadUtil;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
@@ -172,6 +173,8 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
             log.debug( "id: " + arrivedRemoteEvent.getID() );
             log.debug( "sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
             log.debug( "notify type: " + arrivedRemoteEvent.getNotifyType() );
+
+            // ThreadUtil.visitAllRunningThreads();
 
             /*
              * Since the logging level is INFO, this logging event should be subscribed by the ProgressAppender and the
