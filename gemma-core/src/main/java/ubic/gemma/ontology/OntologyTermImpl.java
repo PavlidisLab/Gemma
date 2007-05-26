@@ -121,6 +121,13 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
         return inds;
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.ontology.OntologyTerm#getIndividuals()
+     */
+    public Collection<OntologyIndividual> getIndividuals() {       
+        return getIndividuals( true );
+    }
+    
     public Collection<OntologyRestriction> getRestrictions() {
         Collection<OntologyRestriction> result = new HashSet<OntologyRestriction>();
         ExtendedIterator iterator = ontResource.listSuperClasses( true );

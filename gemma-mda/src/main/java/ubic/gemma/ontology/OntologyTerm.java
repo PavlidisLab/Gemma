@@ -52,6 +52,8 @@ public interface OntologyTerm extends OntologyResource {
 
     public Collection<AnnotationProperty> getAnnotations();
 
+    public Collection<OntologyIndividual> getIndividuals();
+    
     public String getComment();
 
     public boolean isRoot();
