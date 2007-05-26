@@ -131,19 +131,19 @@ var createRestrictionGui = function(node, indent) {
 		var dh = Ext.DomHelper;  //allows html output
 
 		if (indent === undefined){
-			dh.overwrite("east-div", {html : "<\br>"});
+			dh.overwrite("east-div", {html : ""});
 			indent = "";
 		}
 	
 		
 
-		dh.append("east-div", {html : indent + "Details for: " + node.uri + "=======" });
+		dh.append("east-div", {html : indent + "Details for: " + node.uri });
 
 
       
         var res = node.restrictions;
-        if ( res.size() > 0 ) {
-            dh.append("east-div", {html : indent + "Please fill in the following slots " });
+        if ( (res !== undefined) && (res !== null) && (res.size() > 0) ) {
+        	
             for ( var id in res ) {
             	var restrictedOn = res[id].restrictionOn;
             	              
