@@ -58,7 +58,7 @@ var init = function(isArrayDesign, id) {
 		var r = "";
 		var count = 0;
 		for(var g in d) {
-			r = r + "&nbsp;<a href='/Gemma/gene/showGene?id=" + d[g].id + "'>" + d[g].officialSymbol + "</a>,";
+			r = r + "&nbsp;<a href='/Gemma/gene/showGene.html?id=" + d[g].id + "'>" + d[g].officialSymbol + "</a>,";
 			++count;
 		}
 		if (count > 3) {
@@ -72,14 +72,12 @@ var init = function(isArrayDesign, id) {
 	var	recordType = Ext.data.Record.create([
 			{name:"compositeSequenceId", type:"int"}, 
 			{name:"compositeSequenceName", type:"string"},
-			{name:"compositeSequenceDescription", type:"string"},
 			{name:"arrayDesignName", type:"string"},
 			{name:"arrayDesignId", type:"int"},
 			{name:"bioSequenceId", type:"int" },
 			{name:"bioSequenceName", type:"string" },
 			{name:"numBlatHits",type:"int" }, 
-			{name:"bioSequenceNcbiId", type:"string" }, 
-			{name:"geneProducts", convert : convertgps }, // map of gp ids to geneproductvalueobjects
+			{name:"bioSequenceNcbiId", type:"string" },
 			{name:"genes" , convert : convertgenes}]); //  map of gene ids to geneproductvalueobjects
 
 	var proxy;
@@ -91,6 +89,8 @@ var init = function(isArrayDesign, id) {
 		proxy = new Ext.data.DWRProxy(CompositeSequenceController.getCsSummaries);
 		reader = new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType);
 	}
+	
+	proxy.on("loadexception", handleLoadError);
 	 
 	ds = new Ext.data.Store(
 	{
@@ -99,9 +99,11 @@ var init = function(isArrayDesign, id) {
 		remoteSort:isArrayDesign,
 		sortInfo:{field:'arrayDesignName'}	
 	});
-	 
+	
+	ds.on("load", loadHandler); 
 		
 };
+
 
 
 /**
@@ -112,6 +114,7 @@ var initDetails = function() {
 		{name:"identity", type : "float" }, 
 		{name:"score", type: "float" },
 		{name:"blatResult"},
+		{name:"compositeSequence"},
 		{name:"geneProductIdMap"},
 		{name:"geneProductIdGeneMap"}
 		]); 
@@ -139,6 +142,7 @@ var initDetails = function() {
 	cm.setColumnTooltip(0, "Alignment genomic location");
 	cm.setColumnTooltip(1, "BLAT score");
 	cm.setColumnTooltip(2, "Sequence alignment identity");
+
 	var blgrid = new Ext.grid.Grid("probe-details", {ds:detailsDataSource, cm:cm, loadMask: true });
 	
     var rz = new Ext.Resizable("probe-details", {
@@ -148,9 +152,6 @@ var initDetails = function() {
 	    handles: 's'
     });
     rz.on('resize', blgrid.autoSize, blgrid);
-	
-	
-	
 	blgrid.render();
 };
  
@@ -170,17 +171,35 @@ var showDetails = function(event, id) {
 	}
 	var csname = record.get("compositeSequenceName");
 	var seqName = record.get("bioSequenceName");
-	var csDesc = record.get("compositeSequenceDescription");
+	if (!seqName) {
+		seqName = "[Unavailable]";
+	}
+	var arName = record.get("arrayName") ?  " on " + record.get("arrayDesignName") : "";
 
 	var dh = Ext.DomHelper;
-	dh.overwrite("details-title", {tag : 'h2', html : "Details for probe: " + csname + " on " + record.get("arrayDesignName")});
+	dh.overwrite("details-title", {tag : 'h2', html : "Details for probe: " + csname + arName});
 	dh.append("details-title", {tag : 'ul', id : 'sequence-info', children : [
-		{tag : 'li' , id : "probe-description", html: "Probe description: " + csDesc, "ext:qtip": "Provider's description, may not be accurate"},
-		{tag : 'li' , html: "Sequence name: " + seqName + "&nbsp;", id: "probe-sequence-name"}
+		{tag : 'li' , id : "probe-description", html: "Probe description: " + "[pending]"},
+		{tag : 'li', id: "probe-sequence-name" , html: "Sequence name: " + seqName + "&nbsp;"}
 	]});
 	 
 };
 
+/**
+ * Event handler for when the main grid loads: show the first sequence.
+ */
+var loadHandler = function() {
+	if (ds.getCount() > 0) {
+		var v = ds.getAt(0);
+		var c = v.get("compositeSequenceId");
+		showDetails(null, c);
+	}
+};
+
+var handleLoadError = function(scope,b,message,exception) {
+	 Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/iconWarning.gif' });  
+	 Ext.DomHelper.append("messages", {tag : 'span', html : "There was an error while loading data. Try again or contact the webmaster." });  
+};
 
 /**
  * Event handler for loading of sequence information in details grid.
@@ -188,10 +207,21 @@ var showDetails = function(event, id) {
  */
 var updateSequenceInfo = function(event) {
 	
-	if (detailsDataSource.getCount() === 0) { return; }
-	var record = detailsDataSource.getAt(0);
 	var dh = Ext.DomHelper;
+	
+	if (detailsDataSource.getCount() === 0) {
+		// This is really a bug. Just because we don't have alignment information, we shouldn't be missing the 
+		//description. It's just that we send this with the blat data, and if there is no blat data, there is no probe description.
+		dh.overwrite("probe-description", {tag : 'li' , id : "probe-description", html: "Probe description: " + "[unavailable]"});
+		return; 
+	}
+	var record = detailsDataSource.getAt(0);
 	var seq = record.get("blatResult").querySequence;
+	var cs = record.get("compositeSequence");
+	
+	var csDesc = cs.description !== null ?  cs.description : "[None provided]" ;
+	
+	dh.overwrite("probe-description", {tag : 'li' , id : "probe-description", html: "Probe description: " + csDesc , "ext:qtip": "Provider's description, may not be accurate"});
 	dh.append("sequence-info", { tag : 'li' , html: "Length: " + seq.length });
 	dh.append("sequence-info", { tag : 'li' , html: "Type: " + seq.type.value });
 	
@@ -221,8 +251,13 @@ var search = function(event) {
 	ds.proxy = oldprox;
 	
 	// greyout and disable the paging toolbar.
-    paging.getEl().mask();
-    paging.getEl().select("input,a,button").each(function(e){e.dom.disabled=true;});
+	if (paging) {
+    	paging.getEl().mask();
+    	paging.getEl().select("input,a,button").each(function(e){e.dom.disabled=true;});
+	}
+	
+	
+
 };
 
 /**
@@ -243,8 +278,10 @@ var reset = function( ) {
 	}
 	
 	// reset the toolbar.
-    paging.getEl().unmask();
-    paging.getEl().select("input,a,button").each(function(e){e.dom.disabled=false;});
+	if (paging) {
+    	paging.getEl().unmask();
+    	paging.getEl().select("input,a,button").each(function(e){e.dom.disabled=false;});
+	}
 };
 
 var paging;
@@ -265,19 +302,37 @@ Ext.onReady(function() {
 	
 	if (Ext.get("probe-grid") === null ) { return; }
 	 
-	var cm = new Ext.grid.ColumnModel([
-			{header: "ArrayDesign", width: 100, dataIndex:"arrayDesignName", renderer: arraylink },
-			{header: "Probe Name",  width: 130, dataIndex:"compositeSequenceName", renderer: probelink}, 
-			{header: "Sequence", width: 130, dataIndex:"bioSequenceName", renderer: sequencelink },
-			{header: "#Hits", width: 50, dataIndex: "numBlatHits"},  
-			{header: "Genes", width: 200, dataIndex:"genes" }
-			]);
+	var cm;
+	
+	if (isArrayDesign) {
+		// omit array design column
+		cm = new Ext.grid.ColumnModel([
+				{header: "Probe Name",  width: 130, dataIndex:"compositeSequenceName", renderer: probelink}, 
+				{header: "Sequence", width: 130, dataIndex:"bioSequenceName", renderer: sequencelink },
+				{header: "#Hits", width: 50, dataIndex: "numBlatHits"},  
+				{header: "Genes", width: 200, dataIndex:"genes" }
+		]);
 
-	cm.defaultSortable = true;
-	cm.setColumnTooltip(0, "Name of array design (click for details - leaves this page)");
-	cm.setColumnTooltip(1, "Name of probe (click for details)");
-	cm.setColumnTooltip(2, "Name of sequence");
-	cm.setColumnTooltip(3, "Number of high-quality BLAT alignments");
+		cm.defaultSortable = true;
+		cm.setColumnTooltip(0, "Name of probe (click for details)");
+		cm.setColumnTooltip(1, "Name of sequence");
+		cm.setColumnTooltip(2, "Number of high-quality BLAT alignments");
+	} else {
+		cm = new Ext.grid.ColumnModel([
+				{header: "ArrayDesign", width: 100, dataIndex:"arrayDesignName", renderer: arraylink },
+				{header: "Probe Name",  width: 130, dataIndex:"compositeSequenceName", renderer: probelink}, 
+				{header: "Sequence", width: 130, dataIndex:"bioSequenceName", renderer: sequencelink },
+				{header: "#Hits", width: 50, dataIndex: "numBlatHits"},  
+				{header: "Genes", width: 200, dataIndex:"genes" }
+				]);
+	
+		cm.defaultSortable = true;
+		cm.setColumnTooltip(0, "Name of array design (click for details - leaves this page)");
+		cm.setColumnTooltip(1, "Name of probe (click for details)");
+		cm.setColumnTooltip(2, "Name of sequence");
+		cm.setColumnTooltip(3, "Number of high-quality BLAT alignments");
+		cm.setColumnTooltip(4, "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses");
+	}
 
 	grid = new Ext.grid.Grid("probe-grid", {ds:ds, cm:cm, loadMask: true });
 	
@@ -304,9 +359,9 @@ Ext.onReady(function() {
 
 });
 
-/*
+/**************************************************
  * Renderers
- */
+ **************************************************/
 
 var GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
 var UCSC_ICON = "/Gemma/images/logo/ucsc.gif";

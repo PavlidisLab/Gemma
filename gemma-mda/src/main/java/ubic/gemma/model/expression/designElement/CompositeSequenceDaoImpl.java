@@ -49,6 +49,12 @@ import ubic.gemma.util.QueryUtils;
  */
 public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase {
 
+    /*
+     * Absolute maximum number of records to return when fetching raw summaries. This is necessary to avoid retrieving
+     * millions of records (some sequences are repeats and can have >200,000 records.
+     */
+    private static final int MAX_CS_RECORDS = 10000;
+
     private static Log log = LogFactory.getLog( CompositeSequenceDaoImpl.class.getName() );
 
     /*
@@ -160,13 +166,19 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
 
+        int limit = MAX_CS_RECORDS;
         if ( numResults != null && numResults != 0 ) {
-            nativeQueryString = nativeQueryString + " LIMIT " + numResults;
+            limit = Math.min( numResults, MAX_CS_RECORDS );
         }
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
         queryObject.setParameter( "id", id );
-        queryObject.addScalar( "deDesc", Hibernate.CLOB ); // must do this or Hibernate is unhappy.
+        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" ).addScalar(
+                "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" ).addScalar( "geneid" )
+                .addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" ).addScalar( "gNcbi" ).addScalar(
+                        "adShortName" ).addScalar( "adId" );
+        queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this for CLOB or Hibernate is unhappy
+        queryObject.setMaxResults( limit );
         return queryObject.list();
     }
 
@@ -182,8 +194,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
 
         Collection compositeSequencesForQuery = new HashSet<CompositeSequence>();
-        if ( limit != null && limit != 0 ) {
 
+        /*
+         * Note that running this without a limit is dangerous. If the sequence is an unmasked repeat, then we can get
+         * upwards of a million records back.
+         */
+        if ( limit != null && limit != 0 ) {
             int j = 0;
             for ( Object object : compositeSequences ) {
                 if ( j > limit ) break;
@@ -207,9 +223,15 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             if ( it.hasNext() ) buf.append( "," );
         }
 
+        // This uses the 'full' query, assuming that this list isn't too big.
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
-        queryObject.addScalar( "deDesc", Hibernate.CLOB ); // must do this or Hibernate is unhappy.
+        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" ).addScalar(
+                "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" ).addScalar( "geneid" )
+                .addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" ).addScalar( "gNcbi" ).addScalar(
+                        "adShortName" ).addScalar( "adId" );
+        queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this for CLOB or Hibernate is unhappy
+        queryObject.setMaxResults( MAX_CS_RECORDS );
         return queryObject.list();
     }
 
@@ -226,21 +248,18 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         if ( numResults <= 0 ) {
-            // get all probes
-            final String queryString = nativeBaseSummaryQueryString + " where ad.id = " + arrayDesign.getId();
+            // get all probes. Uses a light-weight version of this query that omits as much as possible.
+            final String queryString = nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign.getId();
             try {
                 org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
                 queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
-                        .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
-                        .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" ).addScalar(
-                                "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
-                queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this or Hibernate is unhappy.
+                        .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
+                queryObject.setMaxResults( MAX_CS_RECORDS );
                 return queryObject.list();
             } catch ( org.hibernate.HibernateException ex ) {
                 throw SessionFactoryUtils.convertHibernateAccessException( ex );
             }
 
-            // return QueryUtils.nativeQuery( getSession(), queryString );
         } else {
             // just a chunk.
             final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
@@ -257,6 +276,21 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     private static final String nativeBaseSummaryQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
             + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK as geneid, "
             + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, de.DESCRIPTION as deDesc "
+            + " from "
+            + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
+            + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+            + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+            + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
+            + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+            + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+            + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
+            + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
+
+    /*
+     * Add your 'where' clause to this. returns much less stuff.
+     */
+    private static final String nativeBaseSummaryShorterQueryString = "SELECT de.ID as deID, de.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
+            + " gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol "
             + " from "
             + "COMPOSITE_SEQUENCE cs join DESIGN_ELEMENT de on cs.ID=de.ID "
             + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "

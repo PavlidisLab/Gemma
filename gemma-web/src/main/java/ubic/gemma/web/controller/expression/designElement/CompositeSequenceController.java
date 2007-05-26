@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -45,7 +44,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
@@ -56,6 +54,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author joseph
+ * @author paul
  * @version $Id$
  * @spring.bean id="compositeSequenceController"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
@@ -67,10 +66,6 @@ import ubic.gemma.web.remote.EntityDelegator;
  */
 public class CompositeSequenceController extends BaseMultiActionController {
 
-    /**
-     * 
-     */
-    private static final int MAX_PROBES_TO_RETURN = 200;
     private CompositeSequenceService compositeSequenceService = null;
     private BlatResultService blatResultService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
@@ -176,11 +171,12 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param compositeSequences
      * @return
      */
+    @SuppressWarnings("unchecked")
     private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
         if ( compositeSequences.size() > 0 ) {
-            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences,
-                    MAX_PROBES_TO_RETURN );
+            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+
             compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
         }
         return compositeSequenceSummary;
@@ -216,6 +212,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
                     BlatResultGeneSummary summary = new BlatResultGeneSummary();
                     summary.addGene( geneProduct, gene );
                     summary.setBlatResult( blatResult );
+                    summary.setCompositeSequence( cs );
                     blatResults.put( blatResult, summary );
                 }
             }
@@ -250,7 +247,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     @Override
-    protected void initBinder( ServletRequest request, ServletRequestDataBinder binder ) throws Exception {
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) throws Exception {
         super.initBinder( request, binder );
         binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }

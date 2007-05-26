@@ -144,7 +144,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 
         if ( !AJAX ) {
-            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getCsSummaries( arrayDesign );
+            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getDesignSummaries( arrayDesign );
             if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
                 throw new RuntimeException( "No probes found for " + arrayDesign );
             }
@@ -162,7 +162,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<CompositeSequenceMapValueObject> getCsSummaries( ArrayDesign arrayDesign ) {
+    public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
         Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
         Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
                 .getSummaryMapValueObjects( rawSummaries );
@@ -174,7 +174,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param offset how many from start
      * @param how many to return
      * @param sortBy name of field to sort by.
-     * @param uid Unique identifier for this query (to use for caching results)
+     * @param sortDirection DESC or ASC
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -184,13 +184,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Element element = cache.get( arrayDesign );
         List res;
         if ( element == null ) {
-
+            // Experimental; this returns the entire array design info, which is then cached. This is pretty memory
+            // intensive.
             Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, -1 );
             Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-                    .getSummaryMapValueObjects( rawSummaries );
+                    .getSmallerSummaryMapValueObjects( rawSummaries );
             res = new ArrayList();
             res.addAll( summaries );
-
             cache.put( new Element( arrayDesign, res ) );
         } else {
             res = ( List ) element.getValue();
@@ -228,6 +228,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             }
 
             /**
+             * FIXME this isn't used.
+             * 
              * @param it
              * @param it2
              * @return
@@ -262,7 +264,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
-        return this.getCsSummaries( arrayDesign );
+        return this.getDesignSummaries( arrayDesign );
     }
 
     /**

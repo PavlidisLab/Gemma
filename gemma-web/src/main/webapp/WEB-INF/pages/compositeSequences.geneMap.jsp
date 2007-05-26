@@ -18,8 +18,7 @@
 		Probes for : ${arrayDesign.name} 
 	</c:if> <c:if test="${gene != null}">
 		Probes for : ${gene.officialSymbol}
-	</c:if>
-</title>
+	</c:if></title>
 
 
 <div id="toparea" style="height:60px">
@@ -38,7 +37,8 @@
 	</div>
 
 	<c:if test="${arrayDesign.id != null}">
-		<div id="search" style="border-width:thin; border-style:dotted; background-color:#EEEEEE;padding:5px;position:absolute; left: 50%;top:0%;width:165px;">
+		<div id="search"
+			style="border-width:thin; border-style:dotted; background-color:#EEEEEE;padding:5px;position:absolute; left: 40%;top:0%;width:265px;">
 
 			<span style="text-align:left"> Search for probes on this platform. </span>
 			<input type="text" id="searchString" name="filter" onkeyup="if (event.keyCode == 13) search(event) ;return;" />
@@ -49,7 +49,8 @@
 	</c:if>
 </div>
 
-<div style="height:10px;padding:5px;" id="messages"></div>
+<div style="height:10px;padding:5px;" id="messages">
+</div>
 <div id="padding" style="padding:15px; width:610px;"></div>
 <div style="background-color:#EEEEEE; margin:0 0 10px 0; padding: 5px; width:620px;">
 	<div id="details-title" style="background-color:#EEEEEE; margin:0 0 10px 0; padding: 5px; width:600px;">
@@ -61,6 +62,16 @@
 </div>
 
 <div id="probe-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:350px;"></div>
+<c:if test="${arrayDesign.id != null}">
+	<div style="font-size:smaller;border-width:thin; border-style:dotted; border-color:#CCCCCC;padding:3px;margin-top:13px;width:40%">
+		Note that for many array designs, not all probes will be available above. Use the search function to find specific probes
+	</div>
+</c:if>
+<c:if test="${gene != null}">
+		<div style="font-size:smaller;border-width:thin; border-style:dotted; border-color:#CCCCCC;padding:3px;margin-top:13px;width:40%">
+		Note that in a few cases, to avoid accessing huge amounts of data, not all probes will be shown for a gene.
+	</div>
+	</c:if>
 
 <input type="hidden" name="cslist" id="cslist" value="${compositeSequenceIdList}" />
 

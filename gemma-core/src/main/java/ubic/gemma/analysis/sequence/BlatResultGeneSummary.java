@@ -23,12 +23,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
- * This is a convenience object to hold a BlatResult and its associated gene products and genes.
+ * This is a convenience value object to hold a BlatResult and its associated gene products and genes.
  * 
  * @author jsantos
  * @author paul
@@ -37,10 +38,14 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 public class BlatResultGeneSummary implements Serializable {
 
     private static final long serialVersionUID = 8899320580201273360L;
-    
+
     private BlatResult blatResult;
 
     private Map<GeneProduct, Gene> geneProductMap;
+
+    // this is a bit of a hack - we need this information when displaying the blat results for a probe. Might need name
+    // etc. too.
+    private CompositeSequence compositeSequence;
 
     /*
      * These maps are maintained for javascript clients, which cannot marshal maps unless the keys are strings.
@@ -127,5 +132,13 @@ public class BlatResultGeneSummary implements Serializable {
 
     public String getBlatResultId() {
         return blatResultId;
+    }
+
+    public CompositeSequence getCompositeSequence() {
+        return compositeSequence ;
+    }
+
+    public void setCompositeSequence( CompositeSequence compositeSequence ) {
+        this.compositeSequence = compositeSequence;
     }
 }

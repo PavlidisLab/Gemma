@@ -13,10 +13,16 @@ Ext.data.DWRProxy = function (dwrCall, config) {
 		this.pagingAndSort = (config.pagingAndSort !== undefined ? config.pagingAndSort : false);
 		this.baseParams = config.baseParams;
 	}
+	
+	
 };
 
 
+
 Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
+
+		
+	
 	
    /**
  	* @param params Array of parameters
@@ -26,8 +32,11 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
  	* @param arg array of arguments that will be passed to read method of the Reader.
  	*/
 	load:function (params, reader, callback, scope, arg) {
+
+	
 		if (this.fireEvent("beforeload", this, params) !== false) {
 			var delegate = this.loadResponse.createDelegate(this, [reader, callback, scope, arg], true);
+			var errorHandler = this.handleFailure.createDelegate(this, [], true);
 			var callParams = [];
 
    		 	if ( params instanceof Array) {
@@ -39,35 +48,37 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
 				callParams.push(params.dir);
 			}
 			
-			// add baseparams to start of array
+		 	// add baseparams to start of array
 			if (this.baseParams !== undefined ) {
 				for(var k = this.baseParams.length - 1; k >= 0; k--) {
 					callParams.unshift(this.baseParams[k]);
 				}
 			}
-			callParams.push({callback : delegate, errorHandler : this.handleFailure });
+			
+			callParams.push({callback : delegate, errorHandler : errorHandler  });
 			return this.dwrCall.apply(this, callParams);
 		} else {
 			callback.call(scope || this, null, arg, false);
 		}
 	}, 
 	
-	handleFailure: function(data, e) {
-		fireEvent("loadexception", this, null, data, e);
+
+
+	handleFailure : function(data, e) {
+		this.fireEvent("loadexception", this, null, data, e);
 		if (typeof callback == "function") {
 			callback.call(scope, null, arg, false);
 		}
 	},
 
-
 	loadResponse:function (data, reader, callback, scope, arg) {
 		var result;
 		try {
-			 console.log(dwr.util.toDescriptiveString(data, 5));
+			console.log(dwr.util.toDescriptiveString(data, 5));
 			result = reader.read(data, arg);
 		}
 		catch (e) {
-			handleFailure(data);
+			handleFailure(data, e);
 			return;
 		}
 		if (typeof callback == "function") {
