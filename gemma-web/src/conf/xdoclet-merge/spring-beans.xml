@@ -358,7 +358,7 @@
 							<value>name</value>
 							<value>description</value>
 							<value>id</value>
-							<value>sequence</value> <!--  this is questionable, as it can be big. -->
+							<value>sequence</value><!--  this is questionable, as it can be big. -->
 							<value>sequenceDatabaseEntry</value>
 							<value>length</value>
 							<value>type</value>
@@ -378,6 +378,28 @@
 						<list>
 							<value>accession</value>
 							<value>externalDatabase</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesign">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="excludes">
+						<list>
+							<value>compositeSequences</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.expression.designElement.CompositeSequence">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>name</value>
+							<value>description</value>
 						</list>
 					</property>
 				</bean>
@@ -402,6 +424,16 @@
 							<value>taxon</value>
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry key="java.lang.Exception">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="exception" />
+				</bean>
+			</entry>
+			<entry key="java.lang.StackTraceElement">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
 				</bean>
 			</entry>
 		</map>

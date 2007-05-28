@@ -73,27 +73,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
     private ArrayDesignService arrayDesignService = null;
 
     /**
-     * @param cs
-     * @param blatResults
-     */
-    @SuppressWarnings("unchecked")
-    private void addBlatResultsLackingGenes( CompositeSequence cs, Map<BlatResult, BlatResultGeneSummary> blatResults ) {
-        /*
-         * Pick up blat results that didn't map to genes.
-         */
-        Collection<BlatResult> allBlatResultsForCs = blatResultService.findByBioSequence( cs
-                .getBiologicalCharacteristic() );
-        for ( BlatResult blatResult : allBlatResultsForCs ) {
-            if ( !blatResults.containsKey( blatResult ) ) {
-                BlatResultGeneSummary summary = new BlatResultGeneSummary();
-                summary.setBlatResult( blatResult );
-                // no gene...
-                blatResults.put( blatResult, summary );
-            }
-        }
-    }
-
-    /**
      * Search for probes.
      * 
      * @param request
@@ -129,100 +108,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
-     * @param searchString
-     * @param arrayDesign
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) {
-
-        if ( StringUtils.isBlank( searchString ) ) {
-            return new HashSet<CompositeSequenceMapValueObject>();
-        }
-
-        /*
-         * There have to be a few ways of searching: - by ID, by bioSequence, by Gene name. An array design may or may
-         * not be given.
-         */
-        ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
-
-        Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( searchString, arrayDesign );
-
-        return getSummaries( searchResults );
-    }
-
-    /**
-     * @param arrayDesignId
-     * @return
-     */
-    private ArrayDesign loadArrayDesign( String arrayDesignId ) {
-        ArrayDesign arrayDesign = null;
-        if ( arrayDesignId != null ) {
-            try {
-                arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignId ) );
-            } catch ( NumberFormatException e ) {
-                // Fail gracefully, please.
-            }
-        }
-        return arrayDesign;
-    }
-
-    /**
-     * @param compositeSequences
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
-        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
-        if ( compositeSequences.size() > 0 ) {
-            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
-
-            compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
-        }
-        return compositeSequenceSummary;
-    }
-
-    /**
-     * @param cs
-     * @return
-     */
-    private Map<BlatResult, BlatResultGeneSummary> getBlatMappingSummary( CompositeSequence cs ) {
-        BioSequence bs = cs.getBiologicalCharacteristic();
-        Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult, BlatResultGeneSummary>();
-        // if the biosequence does not exist, then return null
-        if ( bs == null ) {
-            return blatResults;
-        }
-        // if there is no bs2gp entry, then return null
-        if ( bs.getBioSequence2GeneProduct() == null ) {
-            return blatResults;
-        }
-        Collection bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
-
-        for ( Object object : bs2gps ) {
-            BioSequence2GeneProduct bs2gp = ( BioSequence2GeneProduct ) object;
-            if ( bs2gp instanceof BlatAssociation ) {
-                BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
-                GeneProduct geneProduct = blatAssociation.getGeneProduct();
-                Gene gene = geneProduct.getGene();
-                BlatResult blatResult = blatAssociation.getBlatResult();
-                if ( blatResults.containsKey( blatResult ) ) {
-                    blatResults.get( blatResult ).addGene( geneProduct, gene );
-                } else {
-                    BlatResultGeneSummary summary = new BlatResultGeneSummary();
-                    summary.addGene( geneProduct, gene );
-                    summary.setBlatResult( blatResult );
-                    summary.setCompositeSequence( cs );
-                    blatResults.put( blatResult, summary );
-                }
-            }
-        }
-
-        addBlatResultsLackingGenes( cs, blatResults );
-        return blatResults;
-    }
-
-    /**
      * Exposed for AJAX calls.
      * 
      * @param csd
@@ -246,14 +131,35 @@ public class CompositeSequenceController extends BaseMultiActionController {
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) throws Exception {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
+    /**
+     * @param searchString
+     * @param arrayDesign
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) {
+
+        if ( StringUtils.isBlank( searchString ) ) {
+            return new HashSet<CompositeSequenceMapValueObject>();
+        }
+
+        /*
+         * There have to be a few ways of searching: - by ID, by bioSequence, by Gene name. An array design may or may
+         * not be given.
+         */
+        ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
+
+        Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( searchString, arrayDesign );
+
+        return getSummaries( searchResults );
     }
 
     public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
         this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     public void setBlatResultService( BlatResultService blatResultService ) {
@@ -269,10 +175,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**
@@ -334,6 +236,102 @@ public class CompositeSequenceController extends BaseMultiActionController {
         }
         return new ModelAndView( "compositeSequences" ).addObject( "compositeSequences", compositeSequences );
 
+    }
+
+    /**
+     * @param cs
+     * @param blatResults
+     */
+    @SuppressWarnings("unchecked")
+    private void addBlatResultsLackingGenes( CompositeSequence cs, Map<BlatResult, BlatResultGeneSummary> blatResults ) {
+        /*
+         * Pick up blat results that didn't map to genes.
+         */
+        Collection<BlatResult> allBlatResultsForCs = blatResultService.findByBioSequence( cs
+                .getBiologicalCharacteristic() );
+        for ( BlatResult blatResult : allBlatResultsForCs ) {
+            if ( !blatResults.containsKey( blatResult ) ) {
+                BlatResultGeneSummary summary = new BlatResultGeneSummary();
+                summary.setBlatResult( blatResult );
+                // no gene...
+                blatResults.put( blatResult, summary );
+            }
+        }
+    }
+
+    /**
+     * @param cs
+     * @return
+     */
+    private Map<BlatResult, BlatResultGeneSummary> getBlatMappingSummary( CompositeSequence cs ) {
+        BioSequence bs = cs.getBiologicalCharacteristic();
+
+        Map<BlatResult, BlatResultGeneSummary> blatResults = new HashMap<BlatResult, BlatResultGeneSummary>();
+        if ( bs == null || bs.getBioSequence2GeneProduct() == null ) {
+            return blatResults;
+        }
+
+        Collection<BioSequence2GeneProduct> bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+
+        for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
+            if ( !( bs2gp instanceof BlatAssociation ) ) {
+                continue;
+            }
+            BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
+            GeneProduct geneProduct = blatAssociation.getGeneProduct();
+            Gene gene = geneProduct.getGene();
+            BlatResult blatResult = blatAssociation.getBlatResult();
+            
+            if ( blatResults.containsKey( blatResult ) ) {
+                blatResults.get( blatResult ).addGene( geneProduct, gene );
+            } else {
+                BlatResultGeneSummary summary = new BlatResultGeneSummary();
+                summary.addGene( geneProduct, gene );
+                summary.setBlatResult( blatResult );
+                summary.setCompositeSequence( cs );
+                blatResults.put( blatResult, summary );
+            }
+        }
+
+        addBlatResultsLackingGenes( cs, blatResults );
+        return blatResults;
+    }
+
+    /**
+     * @param compositeSequences
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
+        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
+        if ( compositeSequences.size() > 0 ) {
+            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+
+            compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        }
+        return compositeSequenceSummary;
+    }
+
+    /**
+     * @param arrayDesignId
+     * @return
+     */
+    private ArrayDesign loadArrayDesign( String arrayDesignId ) {
+        ArrayDesign arrayDesign = null;
+        if ( arrayDesignId != null ) {
+            try {
+                arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignId ) );
+            } catch ( NumberFormatException e ) {
+                // Fail gracefully, please.
+            }
+        }
+        return arrayDesign;
+    }
+
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) throws Exception {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
 }

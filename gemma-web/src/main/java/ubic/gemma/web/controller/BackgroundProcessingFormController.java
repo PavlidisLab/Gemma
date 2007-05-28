@@ -40,10 +40,6 @@ import ubic.gemma.web.util.MessageUtil;
 public abstract class BackgroundProcessingFormController extends BaseFormController {
 
     /**
-     * 
-     */
-
-    /**
      * Use this to access the task id in the request.
      */
     public final static String JOB_ATTRIBUTE = "taskId";
@@ -60,8 +56,8 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
     /**
      * @param command
      * @param request
-     * @returns a model and view 
-     *      */
+     * @returns a model and view
+     */
     protected synchronized ModelAndView startJob( Object command, HttpServletRequest request ) {
         /*
          * all new threads need this to acccess protected resources (like services)

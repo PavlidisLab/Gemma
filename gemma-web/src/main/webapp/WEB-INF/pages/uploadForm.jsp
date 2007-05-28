@@ -76,7 +76,7 @@
         <br />
 
  <script type="text/javascript">
-	crateDeterminateProgressBar();
+	createDeterminateProgressBar();
 </script>
 
         <script type="text/javascript">

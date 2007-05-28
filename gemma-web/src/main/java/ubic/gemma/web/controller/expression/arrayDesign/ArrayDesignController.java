@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -203,57 +202,61 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         final int desc = dir;
 
-        Collections.sort( res, new Comparator<CompositeSequenceMapValueObject>() {
-            public int compare( CompositeSequenceMapValueObject o1, CompositeSequenceMapValueObject o2 ) {
-                try {
+        // we need to lock res as it is potentially sorted in different directions by different users.
+        synchronized ( res ) {
+            Collections.sort( res, new Comparator<CompositeSequenceMapValueObject>() {
+                public int compare( CompositeSequenceMapValueObject o1, CompositeSequenceMapValueObject o2 ) {
+                    try {
 
-                    Object property = PropertyUtils.getProperty( o1, sortBy );
-                    Object property2 = PropertyUtils.getProperty( o2, sortBy );
+                        Object property = PropertyUtils.getProperty( o1, sortBy );
+                        Object property2 = PropertyUtils.getProperty( o2, sortBy );
 
-                    if ( property == null || property2 == null ) return 0;
+                        if ( property == null || property2 == null ) return 0;
 
-                    if ( property instanceof Comparable ) {
-                        return desc * ( ( Comparable ) property ).compareTo( ( ( Comparable ) property2 ) );
-                    } else if ( property instanceof Collection ) {
-                        // This is lame - sort by size. Should sort by members themselves.
-                        return desc * ( ( ( Collection ) property ).size() - ( ( Collection ) property2 ).size() );
+                        if ( property instanceof Comparable ) {
+                            return desc * ( ( Comparable ) property ).compareTo( ( ( Comparable ) property2 ) );
+                        } else if ( property instanceof Collection ) {
+                            // This is lame - sort by size. Should sort by members themselves.
+                            return desc * ( ( ( Collection ) property ).size() - ( ( Collection ) property2 ).size() );
 
-                    } else if ( property instanceof Map ) {
-                        return desc * ( ( ( Map ) property ).values().size() - ( ( Map ) property2 ).values().size() );
+                        } else if ( property instanceof Map ) {
+                            return desc
+                                    * ( ( ( Map ) property ).values().size() - ( ( Map ) property2 ).values().size() );
+                        }
+                    } catch ( Exception e ) {
+                        return 0;
                     }
-                } catch ( Exception e ) {
                     return 0;
                 }
-                return 0;
-            }
 
-            /**
-             * FIXME this isn't used.
-             * 
-             * @param it
-             * @param it2
-             * @return
-             */
-            private int compareCollections( Iterator it, Iterator it2 ) {
-                while ( it.hasNext() ) {
-                    if ( it2.hasNext() ) {
-                        return ( ( Comparable ) it.next() ).compareTo( ( Comparable ) it2.next() );
-                    } else {
-                        return 1;
-                    }
-                }
-                return 0;
-            }
-        } );
+                // /**
+                // * FIXME this isn't used.
+                // *
+                // * @param it
+                // * @param it2
+                // * @return
+                // */
+                // private int compareCollections( Iterator it, Iterator it2 ) {
+                // while ( it.hasNext() ) {
+                // if ( it2.hasNext() ) {
+                // return ( ( Comparable ) it.next() ).compareTo( ( Comparable ) it2.next() );
+                //                        } else {
+                //                            return 1;
+                //                        }
+                //                    }
+                //                    return 0;
+                //                }
+            } );
 
-        // return just the values.
-        offset = Math.max( 0, offset );
-        offset = Math.min( res.size() - 1, offset );
-        int endpoint = Math.min( res.size() - 1, offset + size );
-        ListRange result = new ListRange();
-        result.setData( res.subList( offset, endpoint ).toArray() );
-        result.setTotalSize( res.size() );
-        return result;
+            // return just the values.
+            offset = Math.max( 0, offset );
+            offset = Math.min( res.size() - 1, offset );
+            int endpoint = Math.min( res.size() - 1, offset + size );
+            ListRange result = new ListRange();
+            result.setData( res.subList( offset, endpoint ).toArray() );
+            result.setTotalSize( res.size() );
+            return result;
+        }
     }
 
     /**
