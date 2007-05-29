@@ -435,14 +435,14 @@ public class ProgressManager {
     }
 
     /**
-     * Updated a job with the given taskId with the message.
+     * Updates a job with the given taskId with the message.
      * 
      * @param taskId Task Id of the job.
      * @param message The message to update with.
      */
     public static void sendMessageToTask( Object taskId, String message ) {
         ProgressJob job = progressJobsByTaskId.get( taskId );
-        job.getProgressData().setDescription( message );
+        job.updateProgress( message );
     }
 
 }
