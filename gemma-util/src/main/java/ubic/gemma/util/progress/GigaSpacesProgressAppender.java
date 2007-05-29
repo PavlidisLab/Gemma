@@ -27,6 +27,10 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
 
 /**
+ * This appender is used to send progress notifications to the space. The information for these notifications is
+ * retrieved from the {@link LoggingEvent}. This information comes from the logging statement inlined in the source
+ * code (ie. log.info("the text")).
+ * 
  * @author keshav
  * @version $Id$
  */

@@ -26,6 +26,7 @@ import net.jini.core.event.UnknownEventException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.progress.ProgressManager;
 
@@ -33,6 +34,12 @@ import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;
 
 /**
+ * This observer receives notifications from a java space. Most likely, these notification entires were written to the
+ * space by a worker.
+ * <p>
+ * A client instantiating this class would then pass it to the {@link GigaSpacesTemplate} with a call to
+ * addNotifyDelegatorListener.
+ * 
  * @author keshav
  * @version $Id$
  */
