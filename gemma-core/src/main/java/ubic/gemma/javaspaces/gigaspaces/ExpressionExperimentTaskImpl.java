@@ -20,18 +20,19 @@ package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
 
-import net.jini.core.lease.Lease;
-
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
+import ubic.gemma.util.progress.GigaSpacesProgressAppender;
 
 /**
  * @author keshav
@@ -76,31 +77,16 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
 
-        // TODO - this is a test - will move into fetchAndLoad or into interceptor
-        // when finished.
-        Lease[] lease = new Lease[10];
-        // LoggingEntry entry = null;
-        GemmaSpacesProgressEntry entry = null;
-        for ( int i = 0; i < 5; i++ ) {
-
-            if ( entry == null ) {
-                log.info( "Could not find entry.  Writing a new entry." );
-                entry = new GemmaSpacesProgressEntry();
-                entry.message = "Logging Server Task";
-
-                lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
-            } else {
-                try {
-                    entry = ( GemmaSpacesProgressEntry ) gigaSpacesTemplate.read( entry, 1000 );
-                    entry.setMessage( String.valueOf( i ) + "% complete" );
-                    log.info( "Updating entry: " + entry.getMessage() );
-                    gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
-                } catch ( Exception e ) {
-                    e.printStackTrace();
-                }
-            }
+        // AppenderAttachable appenderAttachable = new AppenderAttachableImpl();
+        Logger logger = LogManager.getLogger( "ubic.gemma" );
+        logger.setLevel( Level.INFO );
+        GigaSpacesProgressAppender javaSpacesAppender = new GigaSpacesProgressAppender( gigaSpacesTemplate );
+        if ( !logger.isAttached( javaSpacesAppender ) ) {
+            // appenderAttachable.addAppender( javaSpacesAppender );
+            logger.addAppender( javaSpacesAppender );
         }
-        // end test
+
+        log.info( "This is a test of the javaspaces appender" );
 
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
                 doSampleMatching );
