@@ -89,7 +89,10 @@ public class CrudUtils implements InitializingBean {
      * @return
      */
     public EntityPersister getEntityPersister( Object object ) {
-        return ( ( EntityPersister ) metaData.get( object.getClass().getName() ) );
+        String className = object.getClass().getName();
+        // hack to remove "$$EnhancerByCGLib...".
+        className = className.replaceAll( "\\$\\$.+$", "" );
+        return ( ( EntityPersister ) metaData.get( className ) );
     }
 
     /**
