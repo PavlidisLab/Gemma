@@ -18,15 +18,12 @@
  */
 package ubic.gemma.apps;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.ontology.AnnotationProperty;
 import ubic.gemma.ontology.OntologyLoader;
-import ubic.gemma.ontology.OntologyResource;
-import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.AbstractCLI;
 
 /**
@@ -44,6 +41,7 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     }
 
     private String url;
+    private File file;
     private boolean force;
 
     /*
@@ -54,11 +52,13 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        addOption( OptionBuilder.isRequired().hasArg().withArgName( "url" ).withDescription( "URL for the OWL file" )
+        addOption( OptionBuilder.isRequired().hasArg().withArgName( "url" ).withDescription( "Base URL for the OWL file" )
                 .withLongOpt( "url" ).create( "o" ) );
 
         addOption( OptionBuilder.withDescription( "Force reloading of Ontology in Database" ).withLongOpt( "force" )
                 .create( "f" ) );
+
+        addOption( OptionBuilder.withDescription( "Load from file" ).withLongOpt( "file" ).create( "l" ) );
 
     }
 
@@ -74,9 +74,13 @@ public class OwlOntologyLoadCli extends AbstractCLI {
         if ( exception != null ) return exception;
 
         try {
+            if ( file != null ) {
+                OntologyLoader.loadFromFile( file, url );
+            } else {
+                OntologyLoader.loadPersistentModel( url, force );
+            }
 
-            OntologyLoader.loadPersistentModel( url, force );
-           // log.info( "Loaded " + values.size() + " terms" );
+            // log.info( "Loaded " + values.size() + " terms" );
 
             // if ( log.isDebugEnabled() ) {
             // for ( OntologyResource term : values ) {
@@ -92,11 +96,11 @@ public class OwlOntologyLoadCli extends AbstractCLI {
             // Collection<AnnotationProperty> annotations = ( ( OntologyTerm ) term ).getAnnotations();
             //
             // for ( AnnotationProperty o : annotations ) {
-            //                        log.debug( "  Annot: " + o );
-            //                    }
+            // log.debug( " Annot: " + o );
+            // }
             //
-            //                }
-            //            }
+            // }
+            // }
         } catch ( IOException e ) {
             return e;
         }
@@ -113,6 +117,7 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     protected void processOptions() {
         this.url = this.getOptionValue( 'o' );
         this.force = this.hasOption( 'f' );
+        this.file = new File( this.getOptionValue( 'l' ) );
     }
 
 }
