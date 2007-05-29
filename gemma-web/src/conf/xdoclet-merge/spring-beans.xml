@@ -312,16 +312,156 @@
 					</property>
 				</bean>
 			</entry>
+
+			<entry key="ubic.gemma.ontology.AnnotationPropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+
 			<entry key="ubic.gemma.util.progress.ProgressData">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.ontology.*">
+			<entry key="ubic.gemma.ontology.OntologyTermImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>
+							<value>ontResource</value>						
+						</list>
+					</property>										
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.ontology.OntologyRestrictionImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>
+							<value>ontResource</value>						
+						</list>
+					</property>										
+				</bean>
+			</entry>
+			
+			<entry key="ubic.gemma.ontology.OntologyCardinalityRestrictionImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>
+							<value>ontResource</value>						
+						</list>
+					</property>										
+				</bean>
+			</entry>
+			
+			<entry key="ubic.gemma.ontology.OntologyClassRestrictionImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>
+							<value>ontResource</value>						
+						</list>
+					</property>										
+				</bean>
+			</entry>
+
+			<entry key="ubic.gemma.ontology.OntologyDatatypeRestrictionImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>
+							<value>ontResource</value>						
+						</list>
+					</property>										
+				</bean>
+			</entry>	
+			
+				
+			
+			<entry key="ubic.gemma.ontology.OntologyPropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>				
+						</list>
+					</property>										
+				</bean>
+			</entry>	
+			
+			<entry key="ubic.gemma.ontology.OntologyIndividualImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>ind</value>
+							<value>sourceOntology</value>				
+						</list>
+					</property>										
+				</bean>
+			</entry>	
+			
+			<entry key="ubic.gemma.ontology.AnnotationPropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>property</value>
+							<value>sourceOntology</value>				
+						</list>
+					</property>										
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.ontology.DatatypePropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>				
+						</list>
+					</property>										
+				</bean>
+			</entry>
+			
+			<entry key="ubic.gemma.ontology.ObjectPropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="excludes">
+						<list>
+							<value>resource</value>
+							<value>sourceOntology</value>				
+						</list>
+					</property>										
+				</bean>
+			</entry>	
+			
+			<entry key="ubic.gemma.ontology.OntologyData">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
-			</entry>
+			</entry>	
+	
+				<entry key="ubic.gemma.ontology.OntologyDataList">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>			
+				
+			
 			<entry key="ubic.gemma.analysis.sequence.BlatResultGeneSummary">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -427,6 +567,13 @@
 					</property>
 				</bean>
 			</entry>
+			
+			<entry key="ubic.gemma.model.common.quantitationtype.PrimitiveType">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			
 			<entry key="java.lang.Exception">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="exception" />
@@ -437,6 +584,13 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
+			
+			<entry key="ubic.gemma.ontology.OntologyTreeNode">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+	
 		</map>
 	</property>
 </bean>
@@ -713,4 +867,3 @@
 		<value>expressionExperiment</value>
 	</property>
 </bean>
-
