@@ -69,7 +69,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         return startJob( command, request, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentTask.class
-                .getName() );
+                .getName(), true );
     }
 
     /**

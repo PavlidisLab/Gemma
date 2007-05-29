@@ -87,18 +87,19 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
     }
 
     /**
-     * Starts the job on a compute server resource if the spaces is running and the task can be services. If the
-     * taskName is null and the gigaspaces beans have not been loaded, the job WILL be run in the webapp (as opposed to
-     * on the compute server).
+     * Starts the job on a compute server resource if the spaces is running and the task can be services. If runInWebapp
+     * is true, the task will be run in the webapp virtual machine. If false the task will only be run if the space is
+     * started and workers that can service the task exist.
      * 
      * @param command
      * @param request
      * @param spaceUrl
      * @param taskName
+     * @param runInWebapp
      * @return {@link ModelAndView}
      */
     protected synchronized ModelAndView startJob( Object command, HttpServletRequest request, String spaceUrl,
-            String taskName ) {
+            String taskName, boolean runInWebapp ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -129,7 +130,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
                     Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
             job = getSpaceRunner( taskId, context, request, command, this.getMessageUtil() );
-        } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && taskName != null ) {
+        } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInWebapp ) {
             this
                     .saveMessage( request,
                             "This task must be run on the compute server, but the space is not running.  Please try again later." );
