@@ -1113,6 +1113,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 arrayDesign.getExternalReferences().size();
                 arrayDesign.getAuditTrail().getEvents().size();
 
+                if (arrayDesign.getDesignProvider() != null)
+                    arrayDesign.getDesignProvider().getAuditTrail().getEvents().size();
+                
+                if (arrayDesign.getMergees() != null)
+                    arrayDesign.getMergees().size();
+                               
                 session.clear();
 
                 return null;
