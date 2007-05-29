@@ -135,6 +135,12 @@
 			<version>0.8</version>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+			<groupId>spring</groupId>
+			<artifactId>spring-modules-javaspaces</artifactId>
+			<version>0.8</version>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 	<build>
 		<directory>target</directory>
