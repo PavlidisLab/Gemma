@@ -31,6 +31,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.javaspaces.GemmaSpacesLoggingEntry;
 import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
 import ubic.gemma.util.progress.ProgressManager;
 
@@ -81,22 +82,20 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         // when finished.
         Lease[] lease = new Lease[10];
         // LoggingEntry entry = null;
-        GigaspacesProgressJobImpl entry = null;
+        GemmaSpacesLoggingEntry entry = null;
         for ( int i = 0; i < 5; i++ ) {
 
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
-                entry = ( GigaspacesProgressJobImpl ) ProgressManager.createGigaspacesProgressJob( null,
-                        SecurityContextHolder.getContext().getAuthentication().getName(), "Logging Server Task" );
+                entry = new GemmaSpacesLoggingEntry();
+                entry.message = "Logging Server Task";
 
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
-                log.info( "Updating entry: " + entry );
                 try {
-                    entry = ( GigaspacesProgressJobImpl ) gigaSpacesTemplate.read( entry, 1000 );
-                    ProgressManager.updateCurrentThreadsProgressJob( entry.getProgressData() );
-                    // entry.setMessage( String.valueOf( i ) + "% complete" );
-                    log.info( String.valueOf( i ) + "% complete" );
+                    entry = ( GemmaSpacesLoggingEntry ) gigaSpacesTemplate.read( entry, 1000 );
+                    entry.setMessage( String.valueOf( i ) + "% complete" );
+                    log.info( "Updating entry: " + entry.getMessage() );
                     gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
                 } catch ( Exception e ) {
                     e.printStackTrace();
@@ -105,7 +104,7 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         }
         // end test
 
-         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
+        Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
                 doSampleMatching );
 
         counter++;
