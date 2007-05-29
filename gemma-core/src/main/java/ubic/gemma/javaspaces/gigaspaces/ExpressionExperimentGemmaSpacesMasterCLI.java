@@ -24,6 +24,7 @@ import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
+import net.jini.space.JavaSpace;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -33,10 +34,9 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
+import ubic.gemma.util.javaspaces.GemmaSpacesLoggingEntry;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
-import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
-import ubic.gemma.util.progress.ProgressData;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;
@@ -171,7 +171,7 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
                     /* configure this client to be receive notifications */
                     try {
 
-                        template.addNotifyDelegatorListener( this, new GigaspacesProgressJobImpl(), null, true,
+                        template.addNotifyDelegatorListener( this, new GemmaSpacesLoggingEntry(), null, true,
                                 Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
                     } catch ( Exception e ) {
@@ -214,19 +214,21 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
-
-        log.info( "notified ..." );
+        log.debug( "notified ..." );
 
         try {
             EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
 
-            log.info( "event: " + arrivedRemoteEvent );
+            log.debug( "event: " + arrivedRemoteEvent );
             ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
-            log.info( "entry: " + entry );
-            log.info( "id: " + arrivedRemoteEvent.getID() );
-            log.info( "sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
-            log.info( "notify type: " + arrivedRemoteEvent.getNotifyType() );
-            log.info( "message: " + ( ( ProgressData ) entry.getFieldValue( "pData" ) ).getDescription() );
+            log.debug( "entry: " + entry );
+            log.debug( "id: " + arrivedRemoteEvent.getID() );
+            log.debug( "sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
+            log.debug( "notify type: " + arrivedRemoteEvent.getNotifyType() );
+
+            String message = ( String ) entry.getFieldValue( "message" );
+            log.info( "message: " + message );
+
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
