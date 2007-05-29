@@ -90,7 +90,9 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
         super();
         this.securityContext = SecurityContextHolder.getContext();
         WebContext ctx = WebContextFactory.get();
-        this.session = ctx.getSession( false );
+        if ( ctx != null ) {
+            this.session = ctx.getSession( false );
+        }
         this.messageUtil = msgUtil;
     }
 
@@ -120,7 +122,9 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      */
     public void saveMessage( String msg ) {
         log.info( msg );
-        this.messageUtil.saveMessage( session, msg );
+        if ( session != null ) {
+            this.messageUtil.saveMessage( session, msg );
+        }
     }
 
     /**

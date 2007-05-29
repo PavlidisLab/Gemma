@@ -25,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.web.util.MessageUtil;
-
 /**
  * Extends this when the controller needs to run a long task (show a progress bar). To use it, implement getRunner and
  * call startJob in your onSubmit method.
@@ -38,16 +36,13 @@ import ubic.gemma.web.util.MessageUtil;
 public abstract class BackgroundProcessingMultiActionController extends BaseMultiActionController {
 
     /**
-     * 
-     */
-
-    /**
      * Use this to access the task id in the request.
      */
     public final static String JOB_ATTRIBUTE = "taskId";
 
     TaskRunningService taskRunningService;
-    private MessageUtil messageUtil;
+
+    // private MessageUtil messageUtil;
 
     /**
      * @param taskRunningService the taskRunningService to set
@@ -63,6 +58,21 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      *         allowing one controller to create more than 1 job
      */
     protected synchronized ModelAndView startJob( HttpServletRequest request, BackgroundControllerJob<ModelAndView> job ) {
+        String taskId = run( job );
+
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( "taskId", taskId );
+        return mnv;
+    }
+
+    /**
+     * For AJAX use. In your subclass, call this method with your job, which has to be created in a AJAX-accessible
+     * method.
+     * 
+     * @param job
+     * @return
+     */
+    protected String run( BackgroundControllerJob<ModelAndView> job ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -70,14 +80,11 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
         String taskId = TaskRunningService.generateTaskId();
 
         assert taskId != null;
-        request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
+        // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
         job.setTaskId( taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
-
-        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        mnv.addObject( "taskId", taskId );
-        return mnv;
+        return taskId;
     }
 
 }
