@@ -87,13 +87,15 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
     }
 
     /**
-     * Starts the job on a compute server resource if the spaces is running and the task can be services.
+     * Starts the job on a compute server resource if the spaces is running and the task can be services. If the
+     * taskName is null and the gigaspaces beans have not been loaded, the job WILL be run in the webapp (as opposed to
+     * on the compute server).
      * 
      * @param command
      * @param request
      * @param spaceUrl
-     * @param task
-     * @return ModelAndView
+     * @param taskName
+     * @return {@link ModelAndView}
      */
     protected synchronized ModelAndView startJob( Object command, HttpServletRequest request, String spaceUrl,
             String taskName ) {
@@ -114,8 +116,8 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
                 // .getAuthentication().getPrincipal() );
                 // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
                 // "http://www.bioinformatics.ubc.ca/Gemma/" );
-                this.saveMessage( request, "Cannot service task " + taskName.getClass().getSimpleName()
-                        + " on the compute server at this time." );
+                this.saveMessage( request, "No workers are registered to service task "
+                        + taskName.getClass().getSimpleName() + " on the compute server at this time." );
                 return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
             }
             /* register this "spaces client" to receive notifications */
