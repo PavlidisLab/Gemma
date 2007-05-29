@@ -161,6 +161,7 @@ public class ExpressionExperimentReportService {
                 eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
             }
             eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
+            log.info( "Generated report for " + eeVo.getShortName() );
 
         }
     }

@@ -308,11 +308,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
                     bioMaterialsToDelete.addAll( biomaterials );
                     for ( BioMaterial bm : biomaterials ) {
-                        
+
                         // fix for bug 855 - make sure this collection is initialized.
                         bm = ( BioMaterial ) session.merge( bm );
                         Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                      
+
                         bm.getBioAssaysUsedIn().clear();
                         session.saveOrUpdate( bm );
                         session.evict( bm );
@@ -715,8 +715,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
-
-        long count = 0;
         final String queryString = "select count(distinct sample) from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample where ee.id = :eeId ";
 
@@ -726,12 +724,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             queryObject.setMaxResults( 1 );
 
-            count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
+            return ( Long ) queryObject.uniqueResult();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return count;
     }
 
     /*
@@ -742,7 +739,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
-        long count = 0;
         final String queryString = "select count(distinct dedv) from ExpressionExperimentImpl as ee "
                 + "inner join ee.designElementDataVectors as dedv "
                 + "inner join dedv.quantitationType as qType where qType.isPreferred = true and ee.id = :eeId ";
@@ -753,14 +749,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             queryObject.setMaxResults( 1 );
 
-            count = ( ( Integer ) queryObject.uniqueResult() ).longValue();
+             return ( Long ) queryObject.uniqueResult();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return count;
     }
-
+    
     /*
      * (non-Javadoc)
      * 

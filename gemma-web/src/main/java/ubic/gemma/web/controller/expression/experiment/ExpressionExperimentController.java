@@ -63,28 +63,45 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
+    private static final Boolean AJAX = true;
+
     private ExpressionExperimentService expressionExperimentService = null;
+
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
     private ExpressionExperimentReportService expressionExperimentReportService = null;
-    private SearchService searchService;
 
-    private static final Boolean AJAX = true;
+    private SearchService searchService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
     /**
-     * @param expressionExperimentService
+     * @param request
+     * @param response
+     * @return ModelAndView
      */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+    @SuppressWarnings("unused")
+    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
 
-    /**
-     * @param expressionExperimentSubSetService
-     */
-    public void setExpressionExperimentSubSetService(
-            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
-        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new EntityNotFoundException( "There was no valid identifier." );
+        }
+
+        if ( id == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( identifierNotFound );
+        }
+
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( expressionExperiment + " not found" );
+        }
+
+        return startJob( request, new RemoveExpressionExperimentJob( request, expressionExperiment,
+                expressionExperimentService ) );
+
     }
 
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
@@ -118,6 +135,73 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 + " Datasets matched." );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
                 + list ) );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        if ( sId == null ) {
+            return startJob( request, new GenerateSummary( request, expressionExperimentReportService ) );
+        } else {
+            Collection ids = new ArrayList<Long>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                if ( StringUtils.isNotBlank( idList[i] ) ) {
+                    ids.add( new Long( idList[i] ) );
+                }
+            }
+            expressionExperimentReportService.generateSummaryObjects( ids );
+            String idStr = StringUtils.join( ids.toArray(), "," );
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
+        }
+
+    }
+
+    /**
+     * @return the searchService
+     */
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
+    /**
+     * @param expressionExperimentReportService the expressionExperimentReportService to set
+     */
+    public void setExpressionExperimentReportService(
+            ExpressionExperimentReportService expressionExperimentReportService ) {
+        this.expressionExperimentReportService = expressionExperimentReportService;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param expressionExperimentSubSetService
+     */
+    public void setExpressionExperimentSubSetService(
+            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
+        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     /**
@@ -184,9 +268,126 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return mav;
     }
 
-    private ModelAndView redirectToList( HttpServletRequest request ) {
-        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+    /**
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+        String taxonId = request.getParameter( "taxonId" );
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+
+        // if a taxon ID is specified, load all expression experiments for this taxon
+        if ( taxonId != null ) {
+            Taxon taxon = Taxon.Factory.newInstance();
+            Long tId = Long.parseLong( taxonId );
+            taxon.setId( tId );
+            // taxon = taxonService.find( taxon );
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getExpressionExperimentValueObjects( expressionExperimentService.findByTaxon( taxon ) );
+
+            expressionExperiments.addAll( eeValObjectCol );
+        }
+        // if no IDs are specified, then load all expressionExperiments
+        else if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Datasets" );
+            // TODO refactor this and make more generic (that is, turning securable objects into value objects).
+            // I did this because I need to go through security.
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getFilteredExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+        }
+        // if ids are specified, then display only those expressionExperiments
+        else {
+            Collection eeList = new ArrayList<ExpressionExperiment>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                if ( StringUtils.isNotBlank( idList[i] ) ) {
+                    // ids.add( new Long( idList[i] ) );
+                    ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+                    ee.setId( new Long( idList[i] ) );
+                    eeList.add( ee );
+                }
+            }
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getFilteredExpressionExperimentValueObjects( eeList );
+            expressionExperiments.addAll( eeValObjectCol );
+        }
+        // sort expression experiments by name first
+        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
+            public int compare( Object o1, Object o2 ) {
+                String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
+                String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
+                int comparison = s1.compareToIgnoreCase( s2 );
+                return comparison;
+            }
+        } );
+        Long numExpressionExperiments = new Long( expressionExperiments.size() );
+        ModelAndView mav = new ModelAndView( "expressionExperiments" );
+        mav.addObject( "expressionExperiments", expressionExperiments );
+        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        return mav;
+
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+
+        // if no IDs are specified, then load all expressionExperiments
+        if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Datasets" );
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getFilteredExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+            // expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
+        }
+
+        // if ids are specified, then display only those expressionExperiments
+        else {
+            Collection ids = new ArrayList<Long>();
+
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                if ( StringUtils.isNotBlank( idList[i] ) ) {
+                    ids.add( new Long( idList[i] ) );
+                }
+            }
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getFilteredExpressionExperimentValueObjects( null );
+            expressionExperiments.addAll( eeValObjectCol );
+            // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
+        }
+
+        // load cached data
+        expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
+        expressionExperimentReportService.fillEventInformation( expressionExperiments );
+        // sort expression experiments by name first
+        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
+            public int compare( Object o1, Object o2 ) {
+                String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
+                String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
+                int comparison = s1.compareToIgnoreCase( s2 );
+                return comparison;
+            }
+        } );
+        Long numExpressionExperiments = new Long( expressionExperiments.size() );
+        ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
+        mav.addObject( "expressionExperiments", expressionExperiments );
+        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        return mav;
+
     }
 
     /**
@@ -263,31 +464,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * shows a list of BioAssays for an expression experiment subset
-     * 
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
-
-        ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
-        if ( subset == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
-
-        // request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
-    }
-
-    /**
      * Shows a bioassay view of a single expression experiment subset.
      * 
      * @param request
@@ -314,69 +490,43 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * shows a list of BioAssays for an expression experiment subset
+     * 
      * @param request
      * @param response
+     * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-        String taxonId = request.getParameter( "taxonId" );
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-
-        // if a taxon ID is specified, load all expression experiments for this taxon
-        if ( taxonId != null ) {
-            Taxon taxon = Taxon.Factory.newInstance();
-            Long tId = Long.parseLong( taxonId );
-            taxon.setId( tId );
-            // taxon = taxonService.find( taxon );
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getExpressionExperimentValueObjects( expressionExperimentService.findByTaxon( taxon ) );
-
-            expressionExperiments.addAll( eeValObjectCol );
+    @SuppressWarnings("unused")
+    public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        if ( id == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( identifierNotFound );
         }
-        // if no IDs are specified, then load all expressionExperiments
-        else if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Datasets" );
-            // TODO refactor this and make more generic (that is, turning securable objects into value objects).
-            // I did this because I need to go through security.
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null );
-            expressionExperiments.addAll( eeValObjectCol );
-        }
-        // if ids are specified, then display only those expressionExperiments
-        else {
-            Collection eeList = new ArrayList<ExpressionExperiment>();
 
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    // ids.add( new Long( idList[i] ) );
-                    ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                    ee.setId( new Long( idList[i] ) );
-                    eeList.add( ee );
-                }
-            }
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( eeList );
-            expressionExperiments.addAll( eeValObjectCol );
+        ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
+        if ( subset == null ) {
+            throw new EntityNotFoundException( id + " not found" );
         }
-        // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
-            public int compare( Object o1, Object o2 ) {
-                String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
-                String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
-                int comparison = s1.compareToIgnoreCase( s2 );
-                return comparison;
-            }
-        } );
-        Long numExpressionExperiments = new Long( expressionExperiments.size() );
-        ModelAndView mav = new ModelAndView( "expressionExperiments" );
-        mav.addObject( "expressionExperiments", expressionExperiments );
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-        return mav;
 
+        // request.setAttribute( "id", id );
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
+    }
+
+    /**
+     * @param securedEEs
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
+            Collection<ExpressionExperiment> securedEEs ) {
+        // FIXME use the ee, not the id
+        Collection ids = new LinkedHashSet();
+        for ( ExpressionExperiment ee : securedEEs ) {
+            ids.add( ee.getId() );
+        }
+        return expressionExperimentService.loadValueObjects( ids );
     }
 
     /**
@@ -407,152 +557,73 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return getExpressionExperimentValueObjects( securedEEs );
     }
 
-    /**
-     * @param securedEEs
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
-            Collection<ExpressionExperiment> securedEEs ) {
-        // FIXME use the ee, not the id
-        Collection ids = new LinkedHashSet();
-        for ( ExpressionExperiment ee : securedEEs ) {
-            ids.add( ee.getId() );
-        }
-        return expressionExperimentService.loadValueObjects( ids );
+    private ModelAndView redirectToList( HttpServletRequest request ) {
+        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
 
     /**
-     * @param request
-     * @param response
-     * @return ModelAndView
+     * Generates summary reports of expression experiments
+     * 
+     * @author pavlidis
+     * @version $Id$
      */
-    @SuppressWarnings( { "unused", "unchecked" })
-    public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
+    private class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
 
-        String sId = request.getParameter( "id" );
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+        private ExpressionExperimentReportService expressionExperimentReportService;
+        private Collection ids;
 
-        // if no IDs are specified, then load all expressionExperiments
-        if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Datasets" );
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null );
-            expressionExperiments.addAll( eeValObjectCol );
-            // expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
+        public GenerateSummary( HttpServletRequest request,
+                ExpressionExperimentReportService expressionExperimentReportService ) {
+            super( request, getMessageUtil() );
+            this.expressionExperimentReportService = expressionExperimentReportService;
+            ids = null;
         }
 
-        // if ids are specified, then display only those expressionExperiments
-        else {
-            Collection ids = new ArrayList<Long>();
+        public GenerateSummary( HttpServletRequest request,
+                ExpressionExperimentReportService expressionExperimentReportService, Collection id ) {
+            super( request, getMessageUtil() );
+            this.expressionExperimentReportService = expressionExperimentReportService;
+            this.ids = id;
+        }
 
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    ids.add( new Long( idList[i] ) );
-                }
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Expression experiment report  generating" );
+
+            if ( ids == null ) {
+                saveMessage( "Generating report for all experiments" );
+                job.updateProgress( "Generating report for all experiments" );
+                expressionExperimentReportService.generateSummaryObjects();
+            } else {
+                saveMessage( "Generating report for experiment" );
+                job.updateProgress( "Generating report for specified experiment" );
+                expressionExperimentReportService.generateSummaryObjects( ids );
             }
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null );
-            expressionExperiments.addAll( eeValObjectCol );
-            // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
-        }
-
-        // load cached data
-        expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-        expressionExperimentReportService.fillEventInformation( expressionExperiments );
-        // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
-            public int compare( Object o1, Object o2 ) {
-                String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
-                String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
-                int comparison = s1.compareToIgnoreCase( s2 );
-                return comparison;
+            ProgressManager.destroyProgressJob( job );
+            if ( ids != null ) {
+                String idStr = StringUtils.join( ids.toArray(), "," );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
+            } else {
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
             }
-        } );
-        Long numExpressionExperiments = new Long( expressionExperiments.size() );
-        ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
-        mav.addObject( "expressionExperiments", expressionExperiments );
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-        return mav;
 
+        }
     }
 
     /**
-     * @param request
-     * @param response
-     * @return ModelAndView
+     * Delete expression experiments.
+     * 
+     * @author pavlidis
+     * @version $Id$
      */
-    @SuppressWarnings("unused")
-    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-
-        Long id = null;
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            throw new EntityNotFoundException( "There was no valid identifier." );
-        }
-
-        if ( id == null ) {
-            // should be a validation error.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
-
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( expressionExperiment + " not found" );
-        }
-
-        return startJob( request, new RemoveExpressionExperimentJob( request, expressionExperiment,
-                expressionExperimentService ) );
-
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    @SuppressWarnings( { "unused", "unchecked" })
-    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-
-        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        if ( sId == null ) {
-            return startJob( request, new GenerateSummary( request, expressionExperimentReportService ) );
-        } else {
-            Collection ids = new ArrayList<Long>();
-
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    ids.add( new Long( idList[i] ) );
-                }
-            }
-            expressionExperimentReportService.generateSummaryObjects( ids );
-            String idStr = StringUtils.join( ids.toArray(), "," );
-            return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
-        }
-
-    }
-
-    /**
-     * @return the searchService
-     */
-    public SearchService getSearchService() {
-        return searchService;
-    }
-
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    class RemoveExpressionExperimentJob extends BackgroundControllerJob<ModelAndView> {
+    private class RemoveExpressionExperimentJob extends BackgroundControllerJob<ModelAndView> {
 
         ExpressionExperimentService expressionExperimentService;
         ExpressionExperiment ee;
@@ -581,63 +652,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
 
         }
-    }
-
-    class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
-
-        private ExpressionExperimentReportService expressionExperimentReportService;
-        private Collection ids;
-
-        public GenerateSummary( HttpServletRequest request,
-                ExpressionExperimentReportService expressionExperimentReportService ) {
-            super( request, getMessageUtil() );
-            this.expressionExperimentReportService = expressionExperimentReportService;
-            ids = null;
-        }
-
-        public GenerateSummary( HttpServletRequest request,
-                ExpressionExperimentReportService expressionExperimentReportService, Collection id ) {
-            super( request, getMessageUtil() );
-            this.expressionExperimentReportService = expressionExperimentReportService;
-            this.ids = id;
-        }
-
-        @SuppressWarnings("unchecked")
-        public ModelAndView call() throws Exception {
-
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Generating ArrayDesign Report summary" );
-
-            if ( ids == null ) {
-                saveMessage( "Generated summary for all experiments" );
-                job.updateProgress( "Generated summary for all experiments" );
-                expressionExperimentReportService.generateSummaryObjects();
-            } else {
-                saveMessage( "Generating summary for experiment" );
-                job.updateProgress( "Generating summary for specified experiment" );
-                expressionExperimentReportService.generateSummaryObjects( ids );
-            }
-            ProgressManager.destroyProgressJob( job );
-            if ( ids != null ) {
-                String idStr = StringUtils.join( ids.toArray(), "," );
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
-            } else {
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
-            }
-
-        }
-    }
-
-    /**
-     * @param expressionExperimentReportService the expressionExperimentReportService to set
-     */
-    public void setExpressionExperimentReportService(
-            ExpressionExperimentReportService expressionExperimentReportService ) {
-        this.expressionExperimentReportService = expressionExperimentReportService;
     }
 
 }

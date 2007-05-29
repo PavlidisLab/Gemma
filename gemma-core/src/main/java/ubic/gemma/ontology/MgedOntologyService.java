@@ -151,7 +151,7 @@ public class MgedOntologyService implements InitializingBean {
                     ready.set( true );
                     running.set( false );
 
-                    log.info( "Done loading GO" );
+                    log.info( "Done loading MGED Ontology" );
                     loadTime.stop();
                 } catch ( Exception e ) {
                     log.error( e, e );
