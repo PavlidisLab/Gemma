@@ -58,7 +58,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * @param request
      * @returns a model and view
      */
-    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request ) {
+    protected synchronized ModelAndView startJob( Object command ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -69,7 +69,9 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
         BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, command, this.getMessageUtil() );
 
         assert taskId != null;
-        request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
+
+        // NOno, we can't do this.
+        // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 

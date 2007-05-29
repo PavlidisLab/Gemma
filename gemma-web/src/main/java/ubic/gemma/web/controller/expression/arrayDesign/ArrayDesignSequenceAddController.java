@@ -129,7 +129,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
         ProgressManager.destroyProgressJob( job );
 
-        return startJob( commandObject, request );
+        return startJob( commandObject );
 
     }
 

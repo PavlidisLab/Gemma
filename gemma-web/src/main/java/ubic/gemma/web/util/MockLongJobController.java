@@ -61,7 +61,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
-        return startJob( null, request );
+        return startJob( null );
 
     }
 
@@ -74,8 +74,8 @@ public class MockLongJobController extends BackgroundProcessingFormController {
      */
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-             Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( jobId, securityContext,  command, messenger ) {
+            Object command, MessageUtil messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( jobId, securityContext, command, messenger ) {
 
             public ModelAndView call() throws Exception {
 
@@ -85,7 +85,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
                 // if ( this.getRequest().getAttribute( "throw" ) != null ) {
                 // log.info( "I'm throwing an exception" );
                 // throw new IllegalArgumentException( "I'm not happy." );
-                //                }
+                // }
 
                 long millis = System.currentTimeMillis();
                 while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {

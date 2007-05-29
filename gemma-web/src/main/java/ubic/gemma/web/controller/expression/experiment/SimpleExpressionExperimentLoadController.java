@@ -283,7 +283,7 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
             return showForm( request, response, errors );
         }
 
-        return startJob( commandObject, request );
+        return startJob( commandObject );
 
     }
 
