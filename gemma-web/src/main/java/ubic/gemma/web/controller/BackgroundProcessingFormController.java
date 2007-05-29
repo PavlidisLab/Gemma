@@ -20,8 +20,6 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.FutureTask;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
@@ -59,6 +57,20 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * @returns a model and view
      */
     protected synchronized ModelAndView startJob( Object command ) {
+        String taskId = run( command );
+
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( "taskId", taskId );
+        return mnv;
+    }
+
+    /**
+     * This method can be exposed via AJAX to allow asynchronous calls
+     * 
+     * @param command The command object containing parameters.
+     * @return
+     */
+    public String run( Object command ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -74,15 +86,13 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
         // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
-
-        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        mnv.addObject( "taskId", taskId );
-        return mnv;
+        return taskId;
     }
 
     /**
      * You have to implement this in your subclass.
      * 
+     * @param jobId a unique job identifier that is used to retrieve results and status information about the job.
      * @param securityContext
      * @param command from form
      * @return
