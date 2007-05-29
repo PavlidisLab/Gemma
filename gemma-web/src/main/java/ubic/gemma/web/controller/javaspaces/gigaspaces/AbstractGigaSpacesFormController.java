@@ -20,8 +20,6 @@ package ubic.gemma.web.controller.javaspaces.gigaspaces;
 
 import java.util.concurrent.FutureTask;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
@@ -66,7 +64,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
      * @return BackgroundControllerJob<ModelAndView>
      */
     abstract protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId,
-            SecurityContext securityContext, HttpServletRequest request, Object command, MessageUtil messenger );
+            SecurityContext securityContex, Object command, MessageUtil messenger );
 
     /**
      * Controllers extending this class must implement this method. The implementation should call
@@ -92,14 +90,12 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
      * started and workers that can service the task exist.
      * 
      * @param command
-     * @param request
      * @param spaceUrl
      * @param taskName
      * @param runInWebapp
      * @return {@link ModelAndView}
      */
-    protected synchronized ModelAndView startJob( Object command, HttpServletRequest request, String spaceUrl,
-            String taskName, boolean runInWebapp ) {
+    protected synchronized ModelAndView startJob( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -117,8 +113,9 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
                 // .getAuthentication().getPrincipal() );
                 // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
                 // "http://www.bioinformatics.ubc.ca/Gemma/" );
-                this.saveMessage( request, "No workers are registered to service task "
-                        + taskName.getClass().getSimpleName() + " on the compute server at this time." );
+                // TODO commented out while we try to ajaxify this.
+                // this.saveMessage( request, "No workers are registered to service task "
+                // + taskName.getClass().getSimpleName() + " on the compute server at this time." );
                 return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
             }
             /* register this "spaces client" to receive notifications */
@@ -129,21 +126,22 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
             template.addNotifyDelegatorListener( javaSpacesJobObserver, new GemmaSpacesProgressEntry(), null, true,
                     Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
-            job = getSpaceRunner( taskId, context, request, command, this.getMessageUtil() );
+            job = getSpaceRunner( taskId, context, command, this.getMessageUtil() );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInWebapp ) {
-            this
-                    .saveMessage( request,
-                            "This task must be run on the compute server, but the space is not running.  Please try again later." );
+            // TODO commented out while we try to ajaxify this.
+            // this
+            // .saveMessage( request,
+            // "This task must be run on the compute server, but the space is not running. Please try again later." );
 
             return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
         }
 
         else {
-            job = getRunner( taskId, context, request, command, this.getMessageUtil() );
+            job = getRunner( taskId, context, command, this.getMessageUtil() );
         }
 
         assert taskId != null;
-        request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
+        // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
