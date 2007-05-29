@@ -34,7 +34,7 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
-import ubic.gemma.util.javaspaces.GemmaSpacesLoggingEntry;
+import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 
@@ -171,7 +171,7 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
                     /* configure this client to be receive notifications */
                     try {
 
-                        template.addNotifyDelegatorListener( this, new GemmaSpacesLoggingEntry(), null, true,
+                        template.addNotifyDelegatorListener( this, new GemmaSpacesProgressEntry(), null, true,
                                 Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
                     } catch ( Exception e ) {

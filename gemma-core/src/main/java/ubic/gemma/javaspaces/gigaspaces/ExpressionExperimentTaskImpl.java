@@ -31,7 +31,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.javaspaces.GemmaSpacesLoggingEntry;
+import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
 import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
 import ubic.gemma.util.progress.ProgressManager;
 
@@ -82,18 +82,18 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
         // when finished.
         Lease[] lease = new Lease[10];
         // LoggingEntry entry = null;
-        GemmaSpacesLoggingEntry entry = null;
+        GemmaSpacesProgressEntry entry = null;
         for ( int i = 0; i < 5; i++ ) {
 
             if ( entry == null ) {
                 log.info( "Could not find entry.  Writing a new entry." );
-                entry = new GemmaSpacesLoggingEntry();
+                entry = new GemmaSpacesProgressEntry();
                 entry.message = "Logging Server Task";
 
                 lease[i] = gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
                 try {
-                    entry = ( GemmaSpacesLoggingEntry ) gigaSpacesTemplate.read( entry, 1000 );
+                    entry = ( GemmaSpacesProgressEntry ) gigaSpacesTemplate.read( entry, 1000 );
                     entry.setMessage( String.valueOf( i ) + "% complete" );
                     log.info( "Updating entry: " + entry.getMessage() );
                     gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );

@@ -32,7 +32,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.util.javaspaces.GemmaSpacesLoggingEntry;
+import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
 import ubic.gemma.util.javaspaces.JavaSpacesJobObserver;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
@@ -123,7 +123,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
 
             GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
 
-            template.addNotifyDelegatorListener( javaSpacesJobObserver, new GemmaSpacesLoggingEntry(), null, true,
+            template.addNotifyDelegatorListener( javaSpacesJobObserver, new GemmaSpacesProgressEntry(), null, true,
                     Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
             job = getSpaceRunner( taskId, context, request, command, this.getMessageUtil() );

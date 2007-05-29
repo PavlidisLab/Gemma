@@ -25,7 +25,7 @@ package ubic.gemma.util.javaspaces;
  * @author keshav
  * @version $Id$
  */
-public class GemmaSpacesLoggingEntry extends GemmaSpacesGenericEntry {
+public class GemmaSpacesProgressEntry extends GemmaSpacesGenericEntry {
 
     /**
      * 
