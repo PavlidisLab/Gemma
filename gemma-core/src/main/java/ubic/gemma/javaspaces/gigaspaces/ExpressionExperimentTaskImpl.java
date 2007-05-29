@@ -86,8 +86,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
             logger.addAppender( javaSpacesAppender );
         }
 
-        log.info( "This is a test of the javaspaces appender" );
-
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
                 doSampleMatching );
 
