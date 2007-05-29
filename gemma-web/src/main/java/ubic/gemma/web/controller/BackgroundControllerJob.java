@@ -20,27 +20,19 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.Callable;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.directwebremoting.WebContext;
+import org.directwebremoting.WebContextFactory;
 import org.springframework.validation.BindException;
 
 import ubic.gemma.web.util.MessageUtil;
 
 /**
- * @author pavlidis
- * @version $Id$
- */
-/**
- * <hr>
- * <p>
- * Copyright (c) 2006 UBC Pavlab
- * 
  * @author klc
  * @version $Id$
  */
@@ -55,17 +47,7 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
 
     private MessageUtil messageUtil;
 
-    private HttpServletRequest request;
     private BindException errors;
-    private HttpServletResponse response;
-
-    public HttpServletResponse getResponse() {
-        return response;
-    }
-
-    public void setResponse( HttpServletResponse response ) {
-        this.response = response;
-    }
 
     public BindException getErrors() {
         return errors;
@@ -73,13 +55,6 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
 
     public void setErrors( BindException errors ) {
         this.errors = errors;
-    }
-
-    /**
-     * @return the request
-     */
-    public HttpServletRequest getRequest() {
-        return this.request;
     }
 
     /**
@@ -98,26 +73,43 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      * @param command
      * @param jobDescription
      */
-    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
-            Object commandObj, MessageUtil messenger ) {
-        this( request, messenger );
+    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
+            MessageUtil messenger ) {
+        this( messenger );
         this.taskId = taskId;
         this.command = commandObj;
 
     }
 
-    public BackgroundControllerJob( HttpServletRequest request, MessageUtil msgUtil ) {
+    /**
+     * Use this for AJAX calls where the session will be obtained from the AJAX framework.
+     * 
+     * @param msgUtil
+     */
+    public BackgroundControllerJob( MessageUtil msgUtil ) {
         super();
         this.securityContext = SecurityContextHolder.getContext();
-        this.request = request;
-        this.session = request.getSession();
+        WebContext ctx = WebContextFactory.get();
+        this.session = ctx.getSession( false );
         this.messageUtil = msgUtil;
     }
 
-    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, HttpServletRequest request,
-            HttpServletResponse response, Object commandObj, MessageUtil messenger, BindException errors ) {
-        this( taskId, parentSecurityContext, request, commandObj, messenger );
+    /**
+     * Use this where the session is available from a regular HttpRequest object.
+     * 
+     * @param msgUtil
+     * @param session
+     */
+    public BackgroundControllerJob( MessageUtil msgUtil, HttpSession session ) {
+        super();
+        this.securityContext = SecurityContextHolder.getContext();
+        this.session = session;
+        this.messageUtil = msgUtil;
+    }
 
+    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
+            MessageUtil messenger, BindException errors ) {
+        this( taskId, parentSecurityContext, commandObj, messenger );
         this.errors = errors;
     }
 

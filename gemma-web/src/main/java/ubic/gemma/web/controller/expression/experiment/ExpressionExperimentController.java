@@ -99,8 +99,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }
 
-        return startJob( request, new RemoveExpressionExperimentJob( request, expressionExperiment,
-                expressionExperimentService ) );
+        return startJob( request, new RemoveExpressionExperimentJob( expressionExperiment, expressionExperimentService ) );
 
     }
 
@@ -149,7 +148,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            return startJob( request, new GenerateSummary( request, expressionExperimentReportService ) );
+            return startJob( request, new GenerateSummary( expressionExperimentReportService ) );
         } else {
             Collection ids = new ArrayList<Long>();
 
@@ -573,16 +572,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         private ExpressionExperimentReportService expressionExperimentReportService;
         private Collection ids;
 
-        public GenerateSummary( HttpServletRequest request,
-                ExpressionExperimentReportService expressionExperimentReportService ) {
-            super( request, getMessageUtil() );
+        public GenerateSummary( ExpressionExperimentReportService expressionExperimentReportService ) {
+            super( getMessageUtil() );
             this.expressionExperimentReportService = expressionExperimentReportService;
             ids = null;
         }
 
-        public GenerateSummary( HttpServletRequest request,
-                ExpressionExperimentReportService expressionExperimentReportService, Collection id ) {
-            super( request, getMessageUtil() );
+        public GenerateSummary( ExpressionExperimentReportService expressionExperimentReportService, Collection id ) {
+            super( getMessageUtil() );
             this.expressionExperimentReportService = expressionExperimentReportService;
             this.ids = id;
         }
@@ -628,9 +625,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ExpressionExperimentService expressionExperimentService;
         ExpressionExperiment ee;
 
-        public RemoveExpressionExperimentJob( HttpServletRequest request, ExpressionExperiment ee,
+        public RemoveExpressionExperimentJob( ExpressionExperiment ee,
                 ExpressionExperimentService expressionExperimentService ) {
-            super( request, getMessageUtil() );
+            super( getMessageUtil() );
             this.expressionExperimentService = expressionExperimentService;
             this.ee = ee;
         }

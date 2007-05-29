@@ -74,8 +74,8 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        return startJob( command, request, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentTask.class
-                .getName(), true );
+        return startJob( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(),
+                ExpressionExperimentTask.class.getName(), true );
     }
 
     /*
@@ -122,9 +122,9 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
      */
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
+            Object command, MessageUtil messenger ) {
 
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
 
             @SuppressWarnings("unchecked")
             public ModelAndView call() throws Exception {
@@ -204,11 +204,11 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
      */
     @Override
     protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
+            Object command, MessageUtil messenger ) {
 
         final ExpressionExperimentTask eeTaskProxy = ( ExpressionExperimentTask ) updatedContext.getBean( "proxy" );
 
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
 
             @SuppressWarnings("unchecked")
             public ModelAndView call() throws Exception {

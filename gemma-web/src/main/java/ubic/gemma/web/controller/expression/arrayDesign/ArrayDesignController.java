@@ -240,12 +240,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 // while ( it.hasNext() ) {
                 // if ( it2.hasNext() ) {
                 // return ( ( Comparable ) it.next() ).compareTo( ( Comparable ) it2.next() );
-                //                        } else {
-                //                            return 1;
-                //                        }
-                //                    }
-                //                    return 0;
-                //                }
+                // } else {
+                // return 1;
+                // }
+                // }
+                // return 0;
+                // }
             } );
 
             // return just the values.
@@ -579,7 +579,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         private ArrayDesign ad;
 
         public RemoveArrayJob( HttpServletRequest request, ArrayDesign ad, ArrayDesignService arrayDesignService ) {
-            super( request, getMessageUtil() );
+            super( getMessageUtil() );
             this.arrayDesignService = arrayDesignService;
             this.ad = ad;
         }
@@ -611,13 +611,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         private Long id;
 
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
-            super( request, getMessageUtil() );
+            super( getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
             id = null;
         }
 
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService, Long id ) {
-            super( request, getMessageUtil() );
+            super( getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
             this.id = id;
         }

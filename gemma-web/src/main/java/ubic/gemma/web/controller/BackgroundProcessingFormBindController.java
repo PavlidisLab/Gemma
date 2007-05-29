@@ -71,8 +71,7 @@ public abstract class BackgroundProcessingFormBindController extends BaseFormCon
 
         String taskId = TaskRunningService.generateTaskId();
 
-        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, request, response, command, this
-                .getMessageUtil(), errors );
+        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, command, this.getMessageUtil(), errors );
 
         assert taskId != null;
         request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
@@ -92,7 +91,6 @@ public abstract class BackgroundProcessingFormBindController extends BaseFormCon
      * @return
      */
     protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            HttpServletRequest request, HttpServletResponse response, Object command, MessageUtil messenger,
-            BindException errors );
+            Object command, MessageUtil messenger, BindException errors );
 
 }

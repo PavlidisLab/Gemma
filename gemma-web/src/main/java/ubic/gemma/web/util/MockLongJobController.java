@@ -74,18 +74,18 @@ public class MockLongJobController extends BackgroundProcessingFormController {
      */
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            final HttpServletRequest request, Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( jobId, securityContext, request, command, messenger ) {
+             Object command, MessageUtil messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( jobId, securityContext,  command, messenger ) {
 
             public ModelAndView call() throws Exception {
 
                 SecurityContextHolder.setContext( securityContext );
                 ProgressManager.createProgressJob( this.getTaskId(), "SomeUser", "Doin' sumpin'" );
-
-                if ( this.getRequest().getAttribute( "throw" ) != null ) {
-                    log.info( "I'm throwing an exception" );
-                    throw new IllegalArgumentException( "I'm not happy." );
-                }
+                //
+                // if ( this.getRequest().getAttribute( "throw" ) != null ) {
+                // log.info( "I'm throwing an exception" );
+                // throw new IllegalArgumentException( "I'm not happy." );
+                //                }
 
                 long millis = System.currentTimeMillis();
                 while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {

@@ -149,10 +149,6 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     }
 
     /**
-     * <hr>
-     * <p>
-     * Copyright (c) 2006 UBC Pavlab
-     * 
      * @author klc
      * @version $Id$ This inner class is used
      *          for creating a seperate thread that will delete the compass ee index
@@ -163,7 +159,7 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         private String description;
 
         public IndexJob( HttpServletRequest request, CompassGpsInterfaceDevice gpsDevice, String description ) {
-            super( request, getMessageUtil() );
+            super( getMessageUtil() );
             this.gpsDevice = gpsDevice;
             this.description = description;
         }

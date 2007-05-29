@@ -628,11 +628,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            final HttpServletRequest request, final HttpServletResponse response, final Object command,
-            final MessageUtil messenger, final BindException errors ) {
+            final Object command, final MessageUtil messenger, final BindException errors ) {
 
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, response, command,
-                messenger, errors ) {
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger, errors ) {
 
             @SuppressWarnings("unchecked")
             public ModelAndView call() throws Exception {

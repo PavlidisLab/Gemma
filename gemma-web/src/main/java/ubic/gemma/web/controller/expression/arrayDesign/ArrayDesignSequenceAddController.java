@@ -195,9 +195,9 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
      */
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            HttpServletRequest request, Object command, MessageUtil messenger ) {
+            Object command, MessageUtil messenger ) {
 
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, request, command, messenger ) {
+        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
             public ModelAndView call() throws Exception {
                 SecurityContextHolder.setContext( securityContext );
 
