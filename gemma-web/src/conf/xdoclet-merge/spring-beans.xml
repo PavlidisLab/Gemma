@@ -254,7 +254,7 @@
 			</entry>
 			<entry key="ubic.gemma.model.genome.Taxon">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="hibernate3" />
+					<property name="type" value="bean" />
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.model.genome.gene.GeneProductValueObject">
@@ -340,7 +340,7 @@
 			</entry>
 			<entry key="ubic.gemma.model.genome.sequenceAnalysis.BlatResult">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="hibernate3" />
+					<property name="type" value="bean" />
 					<property name="excludes">
 						<list>
 							<value>targetAlignedRegions</value>
@@ -352,7 +352,7 @@
 			</entry>
 			<entry key="ubic.gemma.model.genome.biosequence.BioSequence">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="hibernate3" />
+					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
 							<value>name</value>
@@ -362,6 +362,7 @@
 							<value>sequenceDatabaseEntry</value>
 							<value>length</value>
 							<value>type</value>
+							<value>taxon</value>
 						</list>
 					</property>
 				</bean>

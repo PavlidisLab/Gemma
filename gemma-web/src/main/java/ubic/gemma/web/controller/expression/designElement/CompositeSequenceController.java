@@ -281,6 +281,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
             GeneProduct geneProduct = blatAssociation.getGeneProduct();
             Gene gene = geneProduct.getGene();
             BlatResult blatResult = blatAssociation.getBlatResult();
+            blatResult.getQuerySequence().getTaxon();
             
             if ( blatResults.containsKey( blatResult ) ) {
                 blatResults.get( blatResult ).addGene( geneProduct, gene );
