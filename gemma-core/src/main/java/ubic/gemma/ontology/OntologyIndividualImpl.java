@@ -33,6 +33,8 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  */
 public class OntologyIndividualImpl extends AbstractOntologyResource implements OntologyIndividual {
 
+        private static final long serialVersionUID = -6164561945940667693L;
+    
     private Individual ind;
     private ExternalDatabase sourceOntology;
     private String uri;
