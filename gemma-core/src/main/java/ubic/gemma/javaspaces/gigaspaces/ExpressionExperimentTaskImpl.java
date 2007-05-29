@@ -32,8 +32,6 @@ import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
-import ubic.gemma.util.progress.GigaspacesProgressJobImpl;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * @author keshav
