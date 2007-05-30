@@ -18,6 +18,8 @@
  */
 package ubic.gemma.ontology;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -377,6 +379,15 @@ public class OntologyLoader {
 
         return ModelFactory.createOntologyModel( spec, base );
 
+    }
+
+    /**
+     * Added to allow loading of files
+     */
+    public static OntModel loadFromFile( File file, String base ) throws IOException {
+        OntModel model = getRDBModel( base );
+        model.read( new FileInputStream( file ), base );
+        return model;
     }
 
 }
