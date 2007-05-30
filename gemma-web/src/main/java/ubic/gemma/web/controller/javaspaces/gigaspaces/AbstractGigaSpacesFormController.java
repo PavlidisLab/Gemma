@@ -96,6 +96,23 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
      * @return {@link ModelAndView}
      */
     protected synchronized ModelAndView startJob( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
+        String taskId = run( command, spaceUrl, taskName, runInWebapp );
+
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( JOB_ATTRIBUTE, taskId );
+        return mnv;
+    }
+
+    /**
+     * For use in AJAX-driven runs.
+     * 
+     * @param command
+     * @param spaceUrl
+     * @param taskName
+     * @param runInWebapp
+     * @return
+     */
+    protected String run( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */
@@ -116,7 +133,9 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
                 // TODO commented out while we try to ajaxify this.
                 // this.saveMessage( request, "No workers are registered to service task "
                 // + taskName.getClass().getSimpleName() + " on the compute server at this time." );
-                return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+                // return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+                throw new RuntimeException( "No workers are registered to service task "
+                        + taskName.getClass().getSimpleName() + " on the compute server at this time." );
             }
             /* register this "spaces client" to receive notifications */
             JavaSpacesJobObserver javaSpacesJobObserver = new JavaSpacesJobObserver( taskId );
@@ -133,7 +152,9 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
             // .saveMessage( request,
             // "This task must be run on the compute server, but the space is not running. Please try again later." );
 
-            return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+            // return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+            throw new RuntimeException(
+                    "This task must be run on the compute server, but the space is not running. Please try again later" );
         }
 
         else {
@@ -144,10 +165,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
-
-        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        mnv.addObject( JOB_ATTRIBUTE, taskId );
-        return mnv;
+        return taskId;
     }
 
     /**

@@ -78,6 +78,11 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                 ExpressionExperimentTask.class.getName(), true );
     }
 
+    public String run( ExpressionExperimentLoadCommand command ) {
+        return run( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentTask.class.getName(),
+                true );
+    }
+
     /*
      * (non-Javadoc)
      * 

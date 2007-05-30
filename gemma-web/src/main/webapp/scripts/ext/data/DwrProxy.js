@@ -21,9 +21,6 @@ Ext.data.DWRProxy = function (dwrCall, config) {
 
 Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
 
-		
-	
-	
    /**
  	* @param params Array of parameters
  	* @param reader Reader implmentation that will be used to create the callback for DWR

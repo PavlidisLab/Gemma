@@ -1,7 +1,20 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="command" scope="request"
 	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
+<head>
+		<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
 
+	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script> 
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script> 
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentFormController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/loadExpressionExperiment.js'/>" type="text/javascript"></script>
+	
+	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+</head>
 
 <title><fmt:message key="expressionExperiment.load.title" /></title>
 <content tag="heading">
@@ -24,10 +37,9 @@
 
 <fmt:message key="expressionExperiment.load.message" />
 
-<form method="post" id="loadExpressionExperimentForm"
-	action="<c:url value="/loadExpressionExperiment.html"/>">
-
-
+<div id="messages"></div>
+<div id="taskId"></div>
+ 
 	<table class="detail">
 		<tr>
 			<th>
@@ -50,7 +62,7 @@
 				<spring:bind path="command.loadPlatformOnly">
 					<input type="hidden" name="_<c:out value="${status.expression}"/>">
 					<input align="left" type="checkbox"
-						name="<c:out value="${status.expression}"/>" value="true"
+						name="<c:out value="${status.expression}"/>" value="true" id="loadPlatformOnly"
 						<c:if test="${status.value}">checked</c:if> />
 					<span class="fieldError"> <c:out
 							value="${status.errorMessage}" /> </span>
@@ -67,7 +79,7 @@
 			<td align="left">
 				<spring:bind path="command.suppressMatching">
 					<input type="hidden" name="_<c:out value="${status.expression}"/>">
-					<input align="left" type="checkbox"
+					<input id="suppressMatching" align="left" type="checkbox"
 						name="<c:out value="${status.expression}"/>" value="true"
 						<c:if test="${status.value}">checked</c:if> />
 					<span class="fieldError"> <c:out
@@ -78,17 +90,17 @@
 		<tr>
 			<td />
 			<td align="center" class="buttonBar">
-				<input type="submit" name="upload" class="button"
-					onclick="bCancel=false;this.form._eventId.value='submit'"
+				<input type="button" name="upload" class="button"
+					onclick="bCancel=false;submitForm();"
 					value="<fmt:message key="button.upload"/>" />
-				<input type="submit" name="cancel" class="button"
+				<%--<input type="submit" name="cancel" class="button"
 					onclick="bCancel=true;this.form._eventId.value='cancel'"
-					value="<fmt:message key="button.cancel"/>" />
+					value="<fmt:message key="button.cancel"/>" />--%>
 			</td>
 
 		</tr>
 	</table>
-</form>
+ 
 
 
 <validate:javascript formName="expressionExperimentLoadCommand"
