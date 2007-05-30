@@ -26,6 +26,7 @@ package ubic.gemma.util.javaspaces.gigaspaces;
  */
 public enum GemmaSpacesEnum {
 
+    // TODO this also needs to be pulled from build.properties (gemma.spaces.url.0)
     DEFAULT_SPACE("rmi://localhost:10098/./remotingSpace");
 
     private String spaceUrl = null;
