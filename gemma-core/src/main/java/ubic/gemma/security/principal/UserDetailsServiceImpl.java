@@ -27,6 +27,7 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.userdetails.UserDetails;
 import org.acegisecurity.userdetails.UserDetailsService;
 import org.acegisecurity.userdetails.UsernameNotFoundException;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -77,8 +78,11 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
             AuthenticationUtils.anonymousAuthenticate( username, providerManager );
         }
 
-        // JdbcTemplate template = new JdbcTemplate( ( DataSource ) applicationContext.getBean("dataSource");
-        // template.
+        // FIXME One of the interceptors is prepending the username with UserImpl USERNAME= to give a username of
+        // UserImpl USERNAME=administrator. This is why we have this String split.
+        String[] strings = StringUtils.split( username, "=" );
+        if ( strings.length > 1 ) username = strings[1];
+
         User u = userService.findByUserName( username );
 
         if ( u == null ) {
