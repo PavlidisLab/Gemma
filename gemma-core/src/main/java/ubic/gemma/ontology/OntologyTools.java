@@ -26,6 +26,9 @@ import java.util.HashSet;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 import net.sf.ehcache.CacheException;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -37,6 +40,7 @@ import ubic.gemma.ontology.cache.OntologyCache;
  */
 public class OntologyTools {
 
+    
     private static OntologyCache cache;
 
     static {
@@ -151,5 +155,25 @@ public class OntologyTools {
         }
         return result;
     }
+    
+    
+    /**
+     * Given a variable for a sparql query and a solution/result set it will give you a string to represent it. 
+     * 
+     * @param var
+     * @param soln
+     * @return String to represent the var
+     */
+    
+    public static String varToString( String var, QuerySolution soln ) {
+        try {
+            Resource r = soln.getResource( var );
+            return r.toString();
+        } catch ( ClassCastException c ) {
+            Literal l = soln.getLiteral( var );
+            return l.getString();
+        }
+    }
+
 
 }
