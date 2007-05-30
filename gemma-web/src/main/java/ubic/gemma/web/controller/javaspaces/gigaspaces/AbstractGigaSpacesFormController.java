@@ -85,7 +85,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
     }
 
     /**
-     * Starts the job on a compute server resource if the spaces is running and the task can be services. If runInWebapp
+     * Starts the job on a compute server resource if the space is running and the task can be serviced. If runInWebapp
      * is true, the task will be run in the webapp virtual machine. If false the task will only be run if the space is
      * started and workers that can service the task exist.
      * 
