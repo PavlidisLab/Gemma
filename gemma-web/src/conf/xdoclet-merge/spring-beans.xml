@@ -331,7 +331,8 @@
 						<list>
 							<value>resource</value>
 							<value>sourceOntology</value>
-							<value>ontResource</value>						
+							<value>ontResource</value>		
+							<value>model</value>				
 						</list>
 					</property>										
 				</bean>
@@ -408,7 +409,8 @@
 					<property name="excludes">
 						<list>
 							<value>ind</value>
-							<value>sourceOntology</value>				
+							<value>sourceOntology</value>	
+							<value>instanceOf</value>			
 						</list>
 					</property>										
 				</bean>
