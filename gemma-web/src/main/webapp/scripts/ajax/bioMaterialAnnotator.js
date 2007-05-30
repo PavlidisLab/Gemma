@@ -17,10 +17,10 @@ Simple = function() {
                    split: false, initialSize: 400
                },
                east: {
-                   split: true, initialSize: 300
+                   split: true, initialSize: 0
                },
                west: {
-                   split: false, initialSize: 0
+                   split: true, initialSize: 300
                },
                center: { split: true, initialSize: 80
                }
@@ -36,13 +36,13 @@ Simple = function() {
                fitToFrame: true, closable: false, autoScroll: true
            }));
            mainLayout.add('west', westPanel = new Ext.ContentPanel('west-div', {
-               fitToFrame: true, closable: false
+               fitToFrame: true, closable: false, autoScroll: true
            }));
            mainLayout.add('center', centerPanel = new Ext.ContentPanel('center-div', {
                fitToFrame: true , autoScroll: true
            }));
            mainLayout.endUpdate();
-                       mainLayout.getRegion('west').hide();
+                       mainLayout.getRegion('east').hide();
                        mainLayout.getRegion('north').hide();
                        initBioMaterialGrid( );
                        initTree( );                     
@@ -90,7 +90,7 @@ var initBioMaterialGrid = function(div) {
 
 var initTree = function(div){
 
-   var tree = new Ext.tree.TreePanel("center-div", {
+   var tree = new Ext.tree.TreePanel("west-div", {
        animate:true,
        loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTerms})
    });
@@ -131,13 +131,13 @@ var createRestrictionGui = function(node, indent) {
 		var dh = Ext.DomHelper;  //allows html output
 
 		if (indent === undefined){
-			dh.overwrite("east-div", {html : ""});
+			dh.overwrite("center-div", {html : ""});
 			indent = "";
 		}
 	
 		
 
-		dh.append("east-div", {html : indent + "Details for: " + node.uri });
+		dh.append("center-div", {html : indent + "Details for: " + node.uri });
 
 
       
@@ -149,24 +149,47 @@ var createRestrictionGui = function(node, indent) {
             	              
                 if ( (res[id].restrictedTo !== undefined) && (res[id].restrictedTo !== null)) {	//is it a class restriction?
                     var restrictedTo = res[id].restrictedTo;
-                    dh.append( "east-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
-                    createRestrictionGui( restrictedTo, "===>" + indent );
+                    dh.append( "center-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
                     
+                    if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){
+                    	
+	                    var store = new Ext.data.SimpleStore({
+	        				fields: ['label','uri'],
+	        				data : [restrictedTo.individuals.slice(0)]	//make a copy of the array
+	    				});
+	
+					    var combo = new Ext.form.ComboBox({
+					        store: store,
+					        displayField:'label',
+					        typeAhead: true,
+					        mode: 'local',
+					        triggerAction: 'all',
+					        emptyText:'Select an individual',
+					        selectOnFocus:true
+					    });
+					    
+					    //Need to make a div to apply the combo box to. 
+					 	dh.append("center-div", {tag: 'div', tag: 'input', type: 'text', id: 'individual', size:'20'});  
+					    combo.applyTo('individual');
+	                    
+	                    createRestrictionGui( restrictedTo, "===>" + indent );
+                    }
+                                        
                 } else if ( res[id].type !== undefined ) {
                     var restrictedTo = res[id].type
-                    dh.append("east-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
+                    dh.append("center-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
                     
                 } else if ( res[id].cardinality !== undefined  ) {
                     // this will be rare.                  
                     var cardinality = res[id].cardinality;
                     var cardinalityType = res[id].cardinalityType;
-                    dh.append("east-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
+                    dh.append("center-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
                             + cardinality + " things" });
                     // todo check range of the property (what 'things' should be) if specified.
                 }
             }
         }
-	    dh.append("east-div", {html : indent + "End of details for " + node.uri}) ;
+	    dh.append("center-div", {html : indent + "End of details for " + node.uri}) ;
     };
 
 
