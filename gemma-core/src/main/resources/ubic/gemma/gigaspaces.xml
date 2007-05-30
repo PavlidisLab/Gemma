@@ -16,7 +16,7 @@
 		<property name="urls">
 			<list>
 				<!--  <value>jini://*/*/remotingSpace</value> -->
-				<value>${gemma.space.url}</value>
+				<value>${gemma.spaces.url.0}</value>
 			</list>
 		</property>
 	</bean>
