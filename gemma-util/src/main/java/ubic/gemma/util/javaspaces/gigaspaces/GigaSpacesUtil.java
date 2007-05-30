@@ -29,12 +29,11 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.context.support.GenericWebApplicationContext;
 
+import ubic.gemma.util.SpringContextUtil;
 import ubic.gemma.util.javaspaces.GemmaSpacesGenericEntry;
 
 import com.j_spaces.core.IJSpace;
@@ -117,18 +116,8 @@ public class GigaSpacesUtil implements ApplicationContextAware {
 
         if ( !contextContainsGigaspaces() ) {
 
-            GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
-            XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
-            xmlReader.loadBeanDefinitions( new ClassPathResource( GIGASPACES_SPRING_CONTEXT ) );
-            // PropertiesBeanDefinitionReader propReader = new PropertiesBeanDefinitionReader( genericCtx );
-            // propReader.loadBeanDefinitions(new ClassPathResource("otherBeans.properties"));
-
-            genericCtx.setParent( applicationContext );
-
-            genericCtx.refresh();
-
-            return genericCtx;
-
+            return SpringContextUtil.addResourceToContext( applicationContext, new ClassPathResource(
+                    GIGASPACES_SPRING_CONTEXT ) );
         }
 
         else {

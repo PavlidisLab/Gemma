@@ -26,7 +26,11 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 
@@ -148,5 +152,29 @@ public class SpringContextUtil {
         }
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
+    }
+
+    /**
+     * Adds the resource to the application context and sets the parentContext as the parent of the resource
+     * 
+     * @param parentContext
+     * @param resource
+     * @return {@link ApplicationContext}
+     */
+    public static ApplicationContext addResourceToContext( ApplicationContext parentContext, ClassPathResource resource ) {
+        GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
+        XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
+        xmlReader.loadBeanDefinitions( resource );
+
+        genericCtx.setParent( parentContext );
+
+        CommonsConfigurationPropertyPlaceholderConfigurer configurationPropertyConfigurer = ( CommonsConfigurationPropertyPlaceholderConfigurer ) genericCtx
+                .getBean( "configurationPropertyConfigurer" );
+        if ( configurationPropertyConfigurer != null )
+            configurationPropertyConfigurer.postProcessBeanFactory( genericCtx.getBeanFactory() );
+
+        genericCtx.refresh();
+
+        return genericCtx;
     }
 }
