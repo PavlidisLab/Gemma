@@ -39,7 +39,7 @@
 <fmt:message key="expressionExperiment.load.message" />
 
 <div id="messages"></div>
-<div id="taskId"></div>
+<div id="taskId" style="display: none;"></div>
 
 <table class="detail">
 	<tr>

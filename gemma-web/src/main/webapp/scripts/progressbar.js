@@ -1,5 +1,6 @@
 /**
- * Progressbar.js 
+ * Progressbar.js. To use this, create a div with id "progress-area" on your page, and a task id in a div with id "taskId". 
+ * Arrange for createIndeterminateProgressBar or createDeterminateProgressBar to be called, followed by startProgress(). 
  * @author Kelsey
  * @author Paul
  * @version $Id$
@@ -37,11 +38,14 @@ function updateDeterminateProgress(data){
 }
 
 var previousMessage = "";
+
+// time in ms between updates
+var BAR_UPDATE_INTERVAL = 400;
+		
 function updateIndeterminateProgress(data){
  		
    if (previousMessage != data.description) {
 		previousMessage = data.description
-		
 		document.getElementById("progressTextArea").innerHTML +=  "<br />" + data.description;	
    		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 	} else{
@@ -62,7 +66,7 @@ function startProgress() {
 		document.getElementById("progressBarText").value = "Monitoring Progress...";
 	}
 	
-	window.setTimeout("refreshProgress()", 400);
+	window.setTimeout("refreshProgress()", BAR_UPDATE_INTERVAL);
 	return true;
 }
 function createIndeterminateProgressBar() {
@@ -74,18 +78,13 @@ function createIndeterminateProgressBar() {
 function createDeterminateProgressBar(){
 	determinate = 1;
 	var barHtml = '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>';
- 	document.write(barHtml);
-	
-//	Ext.DomHelper.overwrite("progress", "");
+ 	Ext.DomHelper.overwrite("progress-area", barHtml);
 }
 
 
-// xp_progressbar
+// based on xp_progressbar
 // Copyright 2004 Brian Gosselin of ScriptAsylum.com
 //
-
-
-
 function createIndeterminateBarDetails(w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
 	var w3c=(document.getElementById)?true:false;
 	var ie=(document.all)?true:false;
@@ -102,7 +101,6 @@ function createIndeterminateBarDetails(w,h,bgc,brdW,brdC,blkC,speed,blocks,count
 		var ipbHeader = '<div id="progressBar"> <div id="theMeter">	<div id="progressBarText"> <div class="clob" id="progressTextArea"> </div>	</div>';
 		var ipbFooter = '</div>	</div>	<form> <input type="hidden" name="taskId\" />		</form> ';
 		Ext.DomHelper.overwrite("progress-area", ipbHeader + t + ipbFooter);
-		//document.write(ipbHeader + t + ipbFooter);
 		var bA=(ie)?document.all['blocks'+N]:document.getElementById('blocks'+N);
 		bA.bar=(ie)?document.all['_xpbar'+N]:document.getElementById('_xpbar'+N);
 		bA.blocks=blocks;
