@@ -73,11 +73,11 @@ public class DateStringComparator implements Comparator {
         Date date2;
 
         try {
-            log.info( d1 + " " + d2 );
+            log.debug( d1 + " " + d2 );
             date1 = DateUtils.parseDate( d1, formats );
             date2 = DateUtils.parseDate( d2, formats );
         } catch ( ParseException e ) {
-            log.info( "Failed to parse dates, returning lexigraphic ordering" );
+            log.debug( "Failed to parse dates, returning lexigraphic ordering" );
             return d1.compareTo( d2 );
         }
 
