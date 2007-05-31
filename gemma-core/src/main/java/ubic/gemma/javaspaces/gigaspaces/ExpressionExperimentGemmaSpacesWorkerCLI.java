@@ -98,21 +98,20 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
         genericEntry.message = ExpressionExperimentTask.class.getName();
         genericEntry.registrationId = workerRegistrationId;
         Lease lease = space.write( genericEntry, null, 600000000 );
+        log.info( this.getClass().getSimpleName() + " registered with space " + template.getUrl() );
         if ( lease == null ) log.error( "Null Lease returned" );
-        // TODO set lease time to large number so it never expires (or only when the
-        // worker shuts down. That is, do some "worker cleanup" when it shuts down.
-        // This includes removing entries it has written to the space, etc.)?
     }
 
     /**
      * Starts the thread for this worker.
      */
     protected void start() {
-        log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
-                + SecurityContextHolder.getContext().getAuthentication() );
+        log.debug( "Authentication: " + SecurityContextHolder.getContext().getAuthentication() );
 
         itbThread = new Thread( worker );
         itbThread.start();
+
+        log.info( this.getClass().getSimpleName() + " started successfully." );
 
     }
 
@@ -122,7 +121,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Running GigaSpaces Worker To Handle Expression Experiments ... \n" );
+        log.info( "Running GigaSpaces worker to load expression experiments ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 
