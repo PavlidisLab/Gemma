@@ -34,19 +34,14 @@
 
 		<div id="layout" style="height:1000px;">
 			<div id="north-div">
-				annotation interface goes here
 			</div>
 			<div id="south-div">
-				maybe show status here
 			</div>
-			<div id="east-div">
-				?
+			<div id="east-div">				
 			</div>
-			<div id="west-div">
-				?
+			<div id="west-div">				
 			</div>
 			<div id="center-div">
-				list of biomaterials goes here
 			</div>
 		</div>
 
