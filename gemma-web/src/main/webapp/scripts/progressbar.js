@@ -23,7 +23,7 @@ function updateProgress(data) {
 //I should implement a setting to turn forwarding on and off in the datapack, or in the progressjob checking for a size == 1 is just bad.
  		
  	if (data.done && data.forwardingURL != null && data.forwardingURL.size != 1) {
-			redirect( data.forwardingURL );
+			redirect( data.forwardingURL + "?taskId=" + dwr.util.getValue("taskId")  );
 	} else {
 		window.setTimeout("refreshProgress()", 800);
 	}

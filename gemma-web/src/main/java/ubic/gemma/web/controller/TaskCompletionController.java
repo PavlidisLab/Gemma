@@ -65,14 +65,15 @@ public class TaskCompletionController extends BaseFormController {
     @SuppressWarnings("unused")
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
-        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
-
+        //String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId =  request.getParameter( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         if ( taskId == null ) {
             
             this.saveMessage( request, "Can not monitor a task with a null task Id" );
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
 
+        //todo: is this redundant code?  see ProcessDeleteController. remove? 
         if ( request.getAttribute( CANCEL_ATTRIBUTE ) != null ) {
             log.info( "Cancelling " + taskId );
             taskRunningService.cancelTask( taskId );

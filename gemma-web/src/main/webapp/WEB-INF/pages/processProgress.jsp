@@ -20,7 +20,7 @@
 		
 
 		<input type = "hidden" name="taskId" id="taskId" value= "${taskId}"/> 
-		<form method="post" action="<c:url value='/processDelete.html'/>">			
+		<form method="post" action="<c:url value='/processDelete.html?taskId=' + ${taskId} />">			
 			<input type="submit" value="cancel" />
 		</form>
 
