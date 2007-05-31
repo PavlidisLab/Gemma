@@ -121,7 +121,7 @@ var initTree = function(div){
 
 //The call back method for the dwr call
 var displayRestrictionsPanel = function(node){
-	console.log(dwr.util.toDescriptiveString(node, 7));
+	console.log(dwr.util.toDescriptiveString(node, 10));
 	createRestrictionGui(node);
 };
 
@@ -144,20 +144,31 @@ var createRestrictionGui = function(node, indent) {
         var res = node.restrictions;
         if ( (res !== undefined) && (res !== null) && (res.size() > 0) ) {
         	
-            for ( var id in res ) {
-            	var restrictedOn = res[id].restrictionOn;
-            	              
-                if ( (res[id].restrictedTo !== undefined) && (res[id].restrictedTo !== null)) {	//is it a class restriction?
-                    var restrictedTo = res[id].restrictedTo;
+            for ( var i = 0, len = res.length; i < len; i++ ) {
+            	var restrictedOn = res[i].restrictionOn;
+            	var restrictedTo = res[i].restrictedTo;
+            	var divId = (Math.random() * 100000).toFixed();   
+            	dh.append("center-div", {tag: 'div', id: divId});
+            	
+                if ( (res[i].restrictedTo !== undefined) && (res[i].restrictedTo !== null)) {	//is it a class restriction?
+                    
                     dh.append( "center-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
                     
                     if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){
                     	
-	                    var store = new Ext.data.SimpleStore({
-	        				fields: ['label','uri'],
-	        				data : [restrictedTo.individuals.slice(0)]	//make a copy of the array
-	    				});
-	
+                    	var recordType = Ext.data.Record.create([
+							{name:"label", type : "string" }, 
+							{name:"uri", type: "string" } 
+						]);
+						
+						var records = [];
+						for(var i = 0, len = restrictedTo.individuals.length; i < len; i++) {
+							records.push(new recordType(restrictedTo.individuals[i]));
+						}
+                    	
+	                    var store = new Ext.data.Store({recordType : recordType} );
+						store.add(records);
+						
 					    var combo = new Ext.form.ComboBox({
 					        store: store,
 					        displayField:'label',
@@ -168,24 +179,35 @@ var createRestrictionGui = function(node, indent) {
 					        selectOnFocus:true
 					    });
 					    
-					    //Need to make a div to apply the combo box to. 
-					 	dh.append("center-div", {tag: 'div', tag: 'input', type: 'text', id: 'individual', size:'20'});  
-					    combo.applyTo('individual');
-	                    
-	                    createRestrictionGui( restrictedTo, "===>" + indent );
+					    //Need to make a div to apply the combo box to. 					    
+					 	dh.append(divId, {tag: 'input', type: 'text', id: "input" + divId , size:'20'});  
+					    combo.applyTo("input" + divId);	                    	                    
                     }
-                                        
-                } else if ( res[id].type !== undefined ) {
-                    var restrictedTo = res[id].type
-                    dh.append("center-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
                     
-                } else if ( res[id].cardinality !== undefined  ) {
+                    dh.append(divId, "This will be a free-text field");
+                    dh.append(divId, "This will be a search field");
+                    
+                    createRestrictionGui( restrictedTo, "&nbsp;&nbsp;&nbsp;&nbsp;" + indent );
+                                        
+                } else if ( res[i].type !== undefined ) {	//Primitive Type
+                    var primitiveRestrictedTo = res[i].type
+                    dh.append("center-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + primitiveRestrictedTo.term });
+                    
+                } else if ( res[i].cardinality !== undefined  ) { //Cardinality Type
                     // this will be rare.                  
-                    var cardinality = res[id].cardinality;
-                    var cardinalityType = res[id].cardinalityType;
+                    var cardinality = res[i].cardinality;
+                    var cardinalityType = res[i].cardinalityType;
                     dh.append("center-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
                             + cardinality + " things" });
                     // todo check range of the property (what 'things' should be) if specified.
+                }
+                else if ((res[id].restrictions !== undefined) &&  (res[id].restrictions !== null)) {
+                	  dh.append("center-div",{ html: indent + " Restrictions  slot: " + res[id].restrictions });                	
+                	  createRestrictionGui(res[id].restrictions, "===>" + indent);     
+                }
+                else{
+                	  dh.append("center-div",{ html: indent + " Catch all slot: " });                	
+ 
                 }
             }
         }
