@@ -636,16 +636,25 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected ArrayDesign handleLoadFully( Long id ) throws Exception {
-
+        StopWatch timer = new StopWatch();
+        timer.start();
+        log.info( "Thawing array design ..." );
         String queryString = "select ad from ArrayDesignImpl ad inner join "
                 + " fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs "
-                + " inner join fetch bs.taxon " + " inner join fetch ad.auditTrail auditTrail "
-                + " left join fetch auditTrail.events events " + " left join fetch ad.localFiles "
-                + " left join fetch ad.externalReferences " + " left join fetch ad.subsumedArrayDesigns "
-                + " left join fetch bs.bioSequence2GeneProduct bs2gp " + " left join fetch bs2gp.geneProduct gp "
+                + " inner join fetch bs.taxon "
+                + " inner join fetch ad.auditTrail auditTrail "
+                + " left join fetch auditTrail.events "
+                + " left join fetch ad.localFiles "
+                + " left join fetch ad.externalReferences "
+                + " left join fetch ad.subsumedArrayDesigns left join fetch ad.mergees "
+                + " left join fetch bs.bioSequence2GeneProduct bs2gp "
+                + " left join fetch bs2gp.geneProduct gp "
+                + " left join fetch ad.designProvider dp inner join fetch dp.auditTrail dpat inner join fetch dpat.events "
                 + " left join fetch gp.gene gene " + " left join fetch gene.aliases " + " where  " + " ad.id = :id";
 
-        return ( ArrayDesign ) QueryUtils.queryById( getSession(), id, queryString );
+        ArrayDesign arrayDesign = ( ArrayDesign ) QueryUtils.queryById( getSession(), id, queryString );
+        log.info( "Thaw done (" + timer.getTime() / 1000 + " s elapsed)" );
+        return arrayDesign;
     }
 
     @Override
@@ -1113,12 +1122,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 arrayDesign.getExternalReferences().size();
                 arrayDesign.getAuditTrail().getEvents().size();
 
-                if (arrayDesign.getDesignProvider() != null)
+                if ( arrayDesign.getDesignProvider() != null )
                     arrayDesign.getDesignProvider().getAuditTrail().getEvents().size();
-                
-                if (arrayDesign.getMergees() != null)
-                    arrayDesign.getMergees().size();
-                               
+
+                if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
+
                 session.clear();
 
                 return null;

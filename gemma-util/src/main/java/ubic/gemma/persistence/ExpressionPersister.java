@@ -25,11 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.orm.hibernate3.HibernateTemplate;
+
 import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.LocalFile; 
+import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -193,7 +195,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         Characteristic category = experimentalFactor.getCategory();
         if ( category != null ) {
-            experimentalFactor.setCategory( persistCharacteristicAssociations(  category ) );
+            experimentalFactor.setCategory( persistCharacteristicAssociations( category ) );
         }
         return experimentalFactor;
     }
@@ -343,7 +345,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         }
 
-      //  fillInOntologyEntries( entity.getCharacteristics() ); // characteristics themselves should cascade
+        // fillInOntologyEntries( entity.getCharacteristics() ); // characteristics themselves should cascade
 
         return bioMaterialService.findOrCreate( entity );
     }
@@ -494,6 +496,23 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             for ( BioAssay bA : subset.getBioAssays() ) {
                 bA.setId( persistBioAssay( bA ).getId() );
                 assert bA.getArrayDesignUsed().getId() != null;
+
+                final BioAssay baF = bA;
+
+                // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
+                HibernateTemplate templ = this.getHibernateTemplate();
+                templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        ArrayDesign arrayDesignUsed = baF.getArrayDesignUsed();
+                        session.update( arrayDesignUsed );
+                        session.update( arrayDesignUsed.getDesignProvider().getAuditTrail() );
+                        arrayDesignUsed.getDesignProvider().getAuditTrail().getEvents().size();
+                        arrayDesignUsed.getMergees().size();
+                        return null;
+                    }
+                } );
+
                 if ( !alreadyFilled.contains( bA ) ) {
                     /*
                      * This is an exceptional circumstance that might indicate problems with the source.

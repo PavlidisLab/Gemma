@@ -330,6 +330,16 @@ public class GeoFamilyParser implements Parser {
      */
     private void addTo( Object target, String property, Object value ) {
         try {
+            if ( value == null ) {
+                log.warn( "Value is null for target=" + target + "property=" + property );
+                return;
+            }
+            if ( target == null ) {
+                log.warn( "Target is null for value=" + value + "property=" + property );
+            }
+            if ( property == null ) {
+                log.warn( "Property is null for value=" + value + "target=" + target );
+            }
             Method adder = target.getClass().getMethod( "addTo" + WordUtils.capitalize( property ),
                     new Class[] { value.getClass() } );
             adder.invoke( target, new Object[] { value } );

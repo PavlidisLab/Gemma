@@ -171,14 +171,14 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			document.getElementById("progressBarText").value = "Cancelling...";
 		}
 		var f =  this.cancelCallback.createDelegate(this, [], true);
-		HttpProgressMonitor.cancelJob(taskId, f);
+		ProgressStatusService.cancelJob(taskId, f);
 	},
 	
 	/* Private
 	 * Check for status from server.
 	 */
 	refreshProgress : function (taskId, callback, errorHandler) {
-		HttpProgressMonitor.getProgressStatus(taskId, {callback:callback, errorHandler:errorHandler});
+		ProgressStatusService.getProgressStatus(taskId, {callback:callback, errorHandler:errorHandler});
 	},
 	
 	/* Private
@@ -218,56 +218,14 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 	Ext.DomHelper.overwrite("progress-area", barHtml);
 	},
 	
-	
-	// based on xp_progressbar
-	// Copyright 2004 Brian Gosselin of ScriptAsylum.com
-	//
+	 
 	createIndeterminateBarDetails : function (w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
-		var w3c=(document.getElementById)?true:false;
-		var ie=(document.all)?true:false;
-		var N=-1;
-		if(ie||w3c){
-			var t='<div id="_xpbar'+(++N)+'" style="visibility:visible; position:relative; overflow:hidden; width:'+w+'px; height:'+h+'px; background-color:'+bgc+'; border-color:'+brdC+'; border-width:'+brdW+'px; border-style:solid; font-size:1px;">';
-			t+='<span id="blocks'+N+'" style="left:-'+(h*2+1)+'px; position:absolute; font-size:1px">';
-			for(i=0;i<blocks;i++){
-				t+='<span style="background-color:'+blkC+'; left:-'+((h*i)+i)+'px; font-size:1px; position:absolute; width:'+h+'px; height:'+h+'px; '
-				t+=(ie)?'filter:alpha(opacity='+(100-i*(100/blocks))+')':'-Moz-opacity:'+((100-i*(100/blocks))/100);
-				t+='"></span>';
-			}
-			t+='</span></div>';
-			
-			t = '<div ><form style="float:left" ><input type="button" id="cancel-button" name="Cancel" value="cancel" /></form> ';
-			t += '<img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
-			
-			var ipbHeader = '<div id="progressBar"><div id="progressBarText"> <div class="clob" style="margin:10px;padding:4px;" id="progressTextArea"> </div>	</div> <div id="theMeter">	';
-			var ipbFooter = '</div>	</div>	 ';
-			Ext.DomHelper.overwrite("progress-area", ipbHeader + t + ipbFooter);
-		/*	var bA=(ie)?document.all['blocks'+N]:document.getElementById('blocks'+N);
-			bA.bar=(ie)?document.all['_xpbar'+N]:document.getElementById('_xpbar'+N);
-			bA.blocks=blocks;
-			bA.N=N;
-			bA.w=w;
-			bA.h=h;
-			bA.speed=speed;   
-			bA.ctr=0;
-			bA.count=count;
-			bA.action=action;
-				
-			bA.showBar=function(){
-				this.bar.style.visibility="visible";
-			}
-			bA.hideBar=function(){
-				this.bar.style.visibility="hidden";
-			}
-			var tid = setInterval('startBar('+N+')',speed);
-			bA.tid = tid;
-			bA.stop = function() {
-				if (this.tid != 0)
-					clearInterval(this.tid);
-			}
-			return bA;*/
-		}
-	},
+		var t = '<div ><form style="float:left" ><input type="button" id="cancel-button" name="Cancel" value="cancel" /></form> ';
+		t += '<img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
+		var ipbHeader = '<div id="progressBar"><div id="progressBarText"> <div class="clob" style="width:350px;margin:10px;padding:4px;" id="progressTextArea"> </div>	</div> <div id="theMeter">	';
+		var ipbFooter = '</div>	</div>	 ';
+		Ext.DomHelper.overwrite("progress-area", ipbHeader + t + ipbFooter);
+	} 
 	
  
 });

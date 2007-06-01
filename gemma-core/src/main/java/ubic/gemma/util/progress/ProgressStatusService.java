@@ -26,19 +26,19 @@ import org.apache.commons.logging.LogFactory;
 /**
  * This class exposes methods for AJAX calls.
  * 
- * @spring.bean id="httpProgressMonitor"
+ * @spring.bean id="progressStatusService"
  * @spring.property name="taskRunningService" ref="taskRunningService"
  * @spring.property name="progressManager" ref="progressManager"
  * @author klc
  * @version $Id$
  */
-public class HttpProgressMonitor {
+public class ProgressStatusService {
 
-    private HttpProgressMonitor() {
+    private ProgressStatusService() {
     }
 
-    private static Log log = LogFactory.getLog( HttpProgressMonitor.class.getName() );
-    protected static final Log logger = LogFactory.getLog( HttpProgressMonitor.class );
+    private static Log log = LogFactory.getLog( ProgressStatusService.class.getName() );
+    protected static final Log logger = LogFactory.getLog( ProgressStatusService.class );
 
     private TaskRunningService taskRunningService;
     private ProgressManager progressManager;

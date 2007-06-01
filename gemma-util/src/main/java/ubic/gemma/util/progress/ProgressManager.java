@@ -1,4 +1,4 @@
-/* Copyright (c) 2006 University of British Columbia
+/* Copyright (c) 2006-2007University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -269,10 +269,20 @@ public class ProgressManager {
         return true;
     }
 
+    /**
+     * @param progressJob
+     * @return
+     */
     public static synchronized boolean destroyProgressJob( ProgressJob progressJob ) {
         return destroyProgressJob( progressJob, false );
     }
 
+    /**
+     * @param progressJob
+     * @param doForward
+     * @param cause
+     * @return
+     */
     public static synchronized boolean destroyFailedProgressJob( ProgressJob progressJob, boolean doForward,
             Throwable cause ) {
         if ( progressJob == null ) {
@@ -280,14 +290,14 @@ public class ProgressManager {
                     .debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
             return false;
         }
-        log.debug( "Destroying " + progressJob );
+        log.debug( "Finishing up" + progressJob );
 
         String toForwardTo = FORWARD_DEFAULT;
 
         if ( doForward && ( progressJob.getForwardingURL() != null ) && ( progressJob.getForwardingURL().length() != 0 ) ) {
             toForwardTo = progressJob.getForwardingURL();
             progressJob.updateProgress( new ProgressData( 100, "Job failed.", true, toForwardTo ) );
-            log.info( "Forwarding url is  " + toForwardTo );
+            log.debug( "Forwarding url is  " + toForwardTo );
         }
 
         progressJob.failed( cause );
@@ -345,8 +355,9 @@ public class ProgressManager {
         String toForwardTo = FORWARD_DEFAULT;
 
         // not sure if this forwarding scheme is correct. Could it be the case we wan't to forward to someplace else?
-        if ( ( progressJob.getForwardingURL() != null ) && ( progressJob.getForwardingURL().length() != 0 ) )
+        if ( doForward && ( progressJob.getForwardingURL() != null ) && ( progressJob.getForwardingURL().length() != 0 ) ) {
             toForwardTo = progressJob.getForwardingURL();
+        }
 
         // if ( doForward ) {
         progressJob.updateProgress( new ProgressData( 100, "Job completed.", true, toForwardTo ) );
@@ -354,7 +365,7 @@ public class ProgressManager {
         progressJob.done();
 
         cleanupJob( progressJob );
-        log.info( "cleanup done" );
+        log.debug( "cleanup done" );
         return true;
     }
 
@@ -406,7 +417,7 @@ public class ProgressManager {
      * @param taskId Task Id of the job.
      * @param message The message to update with.
      */
-    public static void sendMessageToTask( Object taskId, String message ) {
+    public static void updateJob( Object taskId, String message ) {
         ProgressJob job = progressJobsByTaskId.get( taskId );
         job.updateProgress( message );
     }

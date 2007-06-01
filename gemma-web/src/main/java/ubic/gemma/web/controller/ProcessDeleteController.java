@@ -35,7 +35,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.property name="formView" value="mainMenu"
  * @spring.property name="successView" value="mainMenu"
  * @spring.property name="taskRunningService" ref="taskRunningService"
- * @deprecated Please use ajax calls to cancel jobs via the HttpProgressMonitor.
+ * @deprecated Please use ajax calls to cancel jobs via the ProgressStatusService.
  */
 public class ProcessDeleteController extends BaseFormController {
 

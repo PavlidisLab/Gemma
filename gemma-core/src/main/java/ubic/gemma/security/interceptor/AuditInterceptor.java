@@ -366,7 +366,7 @@ public class AuditInterceptor implements MethodInterceptor {
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
-            throw new IllegalArgumentException( "Not persister for " + object.getClass().getName() );
+            throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );
         }
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
