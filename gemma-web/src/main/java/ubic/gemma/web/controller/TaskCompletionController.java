@@ -26,8 +26,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.AbstractController;
 import org.springframework.web.servlet.view.RedirectView;
+
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * Generic controller that looks for a finished job.
@@ -56,53 +57,53 @@ public class TaskCompletionController extends BaseFormController {
     }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     * The normal way this is reached is via a call with the task id. Usually this should be called only when the job is
+     * done and the results are needed.
      */
     @Override
     @SuppressWarnings("unused")
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
-        //String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
-        String taskId =  request.getParameter( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = request.getParameter( BackgroundProcessingFormController.JOB_ATTRIBUTE );
         if ( taskId == null ) {
-            
             this.saveMessage( request, "Can not monitor a task with a null task Id" );
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
 
-        //todo: is this redundant code?  see ProcessDeleteController. remove? 
+        // todo: is this redundant code? see ProcessDeleteController. remove?
         if ( request.getAttribute( CANCEL_ATTRIBUTE ) != null ) {
-            log.info( "Cancelling " + taskId );
-            taskRunningService.cancelTask( taskId );
+            log.debug( "Cancelling " + taskId );
+            taskRunningService.cancelTask( taskId, true );
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
 
         log.debug( "Checking for job " + taskId );
 
-        ModelAndView returnedView;
+        ModelAndView returnedView = null;
         try {
-            returnedView =  (ModelAndView) taskRunningService.checkResult( taskId );
-            if (returnedView == null){
-                this.saveMessage( request, "No task found with id: " + taskId );
-                return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
+            int tries = 0;
+            while ( tries < 3 ) {
+                returnedView = ( ModelAndView ) taskRunningService.checkResult( taskId );
+                if ( returnedView != null ) {
+                    log.debug( "Got result for " + taskId + ":" + returnedView );
+                    return returnedView;
+                }
+                tries++;
+                Thread.sleep( 100 );
             }
-              
-            //returnedView.setView( new RedirectView(returnedView.getViewName()) );
-              return returnedView;
-            
+
+            this.saveMessage( request, "No task found with id, or still running: " + taskId );
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
+
         } catch ( CancellationException e ) {
             log.debug( "Job was cancelled" );
-            
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         } catch ( Throwable e ) {
             log.debug( "Got an exception: " + e );
             if ( e instanceof Exception ) throw ( Exception ) e;
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
-        
+
     }
-        
+
 }

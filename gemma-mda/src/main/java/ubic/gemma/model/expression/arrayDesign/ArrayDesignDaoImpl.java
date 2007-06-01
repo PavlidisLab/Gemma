@@ -1044,7 +1044,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         HibernateTemplate templ = this.getHibernateTemplate();
 
         templ.setFetchSize( 500 );
-        log.info( "Fetch size for thaw is " + templ.getFetchSize() );
+        log.debug( "Fetch size for thaw is " + templ.getFetchSize() );
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -1055,9 +1055,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
 
                 timer.start();
-                log.info( "... thaw composite sequences ..." );
+                log.debug( "... thaw composite sequences ..." );
                 int numToDo = arrayDesign.getCompositeSequences().size();
-                log.info( "Done in " + timer.getTime() + " ms; now thaw " + numToDo
+                log.debug( "Done in " + timer.getTime() + " ms; now thaw " + numToDo
                         + " composite sequence associations ..." );
 
                 timer.reset();

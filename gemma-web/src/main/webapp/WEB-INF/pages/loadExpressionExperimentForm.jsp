@@ -38,7 +38,7 @@
 
 <fmt:message key="expressionExperiment.load.message" />
 
-<div id="messages"></div>
+<div id="messages" style="margin:10px;width:400px"></div>
 <div id="taskId" style="display: none;"></div>
 
 <table class="detail">
@@ -83,19 +83,13 @@
 		</td>
 	</tr>
 	<tr>
-		<td />
-		<td align="center" class="buttonBar">
-			<input type="button" name="upload" class="button" onclick="bCancel=false;submitForm();"
-				value="<fmt:message key="button.upload"/>" />
-			<%--<input type="submit" name="cancel" class="button"
-					onclick="bCancel=true;this.form._eventId.value='cancel'"
-					value="<fmt:message key="button.cancel"/>" />--%>
-		</td>
-
+		<td colspan="2" style="padding:10px" align="center" class="buttonBar"  >
+			<div id="upload-button"></div>
+		 </td>
 	</tr>
 </table>
 
-<div id="progress-area"></div>
+<div id="progress-area" style="padding:5px;"></div>
 
 <validate:javascript formName="expressionExperimentLoadCommand" staticJavascript="false" />
 <script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>

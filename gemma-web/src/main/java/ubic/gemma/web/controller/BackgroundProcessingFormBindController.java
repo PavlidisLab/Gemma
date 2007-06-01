@@ -30,6 +30,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.util.MessageUtil;
 
 /**

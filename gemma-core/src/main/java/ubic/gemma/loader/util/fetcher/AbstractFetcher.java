@@ -74,19 +74,23 @@ public abstract class AbstractFetcher implements Fetcher {
      * @param future
      * @param expectedSize
      * @param outputFileName
+     * @return true if it finished normally, false if it was cancelled.
      */
-    protected void waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
-        while ( !future.isDone() ) {
+    protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
+        while ( !future.isDone() && !future.isCancelled() ) {
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
-                throw new RuntimeException( ie );
+                log.info( "Looks like we should stop" );
+                future.cancel( true );
+                return false;
             }
 
             if ( log.isInfoEnabled() ) {
                 log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
             }
         }
+        return true;
     }
 
     /**
@@ -191,7 +195,8 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * Wrap the existing file in the required Collection&lt;LocalFile&gt; 
+     * Wrap the existing file in the required Collection&lt;LocalFile&gt;
+     * 
      * @param existingFile
      * @param seekFile
      * @return

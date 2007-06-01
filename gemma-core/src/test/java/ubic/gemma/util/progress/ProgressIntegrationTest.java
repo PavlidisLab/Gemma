@@ -69,7 +69,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         assertEquals( pJob.getUser(), ConfigUtils.getString( "gemma.admin.user" ) );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager" );
 
-        ProgressManager.destroyProgressJob( pJob ); // clean up so this test won't affect next tests
+        ProgressManager.destroyProgressJob( pJob, true ); // clean up so this test won't affect next tests
         pJob = null;
 
     }
@@ -104,7 +104,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
         pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
 
-        ProgressManager.destroyProgressJob( pJob );
+        ProgressManager.destroyProgressJob( pJob, true );
         assertEquals( ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), pObserver ),
                 false );
 
@@ -126,10 +126,10 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         ProgressManager.addToNotification( taskID, pObserver );
         pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
 
-        assertEquals( pObserver.getProgressData().getPercent(), 88 );
-        assertEquals( pObserver.getProgressData().getDescription(), "Another test" );
-        assert ( pObserver.getProgressData().isDone() );
-        ProgressManager.destroyProgressJob( pJob );
+        assertEquals( pObserver.getProgressData().iterator().next().getPercent(), 88 );
+        assertEquals( pObserver.getProgressData().iterator().next().getDescription(), "Another test" );
+        assert ( pObserver.getProgressData().iterator().next().isDone() );
+        ProgressManager.destroyProgressJob( pJob, true );
         pJob = null;
 
         // multiple case
@@ -146,8 +146,8 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         assertEquals( mClient.upDateTimes(), 2 );
         assertEquals( mClient.getProgressData().size(), 1 );
 
-        ProgressManager.destroyProgressJob( pJob1 );
-        ProgressManager.destroyProgressJob( pJob2 );
+        ProgressManager.destroyProgressJob( pJob1, true );
+        ProgressManager.destroyProgressJob( pJob2, true );
 
     }
 
@@ -213,51 +213,51 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     /*
      * Test adding to notify list when list contains 1 job Test adding to notify list when list contains multiple jobs
      */
-    public void testAddToRecentNotificationStringObserver() {
-
-        pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.admin.user" ) );
-        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
-                "Testing the Progress Manager" );
-
-        // single case
-        ProgressManager.addToNotification( pJob.getUser(), pObserver );
-        pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
-
-        assertEquals( pObserver.getProgressData().getPercent(), 88 );
-        assertEquals( pObserver.getProgressData().getDescription(), "Another test" );
-        assert ( pObserver.getProgressData().isDone() );
-        ProgressManager.destroyProgressJob( pJob );
-        pJob = null;
-
-        // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
-                "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
-                "Test2 of Notify" );
-        ProgressJob pJob3 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
-                "Test3 of Notify" );
-        ProgressJob pJob4 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
-                "Test4 of Notify" );
-
-        MockClient mClient = new MockClient();
-        ProgressManager.addToRecentNotification( ConfigUtils.getString( "gemma.admin.user" ), mClient );
-        pJob1.nudgeProgress();
-        assertEquals( mClient.upDateTimes(), 1 );
-        pJob2.nudgeProgress();
-        assertEquals( mClient.upDateTimes(), 2 );
-        pJob3.nudgeProgress();
-        assertEquals( mClient.upDateTimes(), 3 );
-        pJob4.nudgeProgress();
-        assertEquals( mClient.upDateTimes(), 4 );
-
-        assertEquals( mClient.getProgressData().size(), 1 );
-
-        ProgressManager.destroyProgressJob( pJob1 );
-        ProgressManager.destroyProgressJob( pJob2 );
-        ProgressManager.destroyProgressJob( pJob3 );
-        ProgressManager.destroyProgressJob( pJob4 );
-
-    }
+//    public void testAddToRecentNotificationStringObserver() {
+//
+//        pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.admin.user" ) );
+//        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+//                "Testing the Progress Manager" );
+//
+//        // single case
+//        ProgressManager.addToNotification( pJob.getUser(), pObserver );
+//        pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
+//
+//        assertEquals( pObserver.getProgressData().iterator().next().getPercent(), 88 );
+//        assertEquals( pObserver.getProgressData().iterator().next().getDescription(), "Another test" );
+//        assert ( pObserver.getProgressData().iterator().next().isDone() );
+//        ProgressManager.destroyProgressJob( pJob, true );
+//        pJob = null;
+//
+//        // multiple case
+//        ProgressJob pJob1 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+//                "Test1 of Notify" );
+//        ProgressJob pJob2 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+//                "Test2 of Notify" );
+//        ProgressJob pJob3 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+//                "Test3 of Notify" );
+//        ProgressJob pJob4 = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+//                "Test4 of Notify" );
+//
+//        MockClient mClient = new MockClient();
+//        ProgressManager.addToRecentNotification( ConfigUtils.getString( "gemma.admin.user" ), mClient );
+//        pJob1.nudgeProgress();
+//        assertEquals( mClient.upDateTimes(), 1 );
+//        pJob2.nudgeProgress();
+//        assertEquals( mClient.upDateTimes(), 2 );
+//        pJob3.nudgeProgress();
+//        assertEquals( mClient.upDateTimes(), 3 );
+//        pJob4.nudgeProgress();
+//        assertEquals( mClient.upDateTimes(), 4 );
+//
+//        assertEquals( mClient.getProgressData().size(), 1 );
+//
+//        ProgressManager.destroyProgressJob( pJob1, true );
+//        ProgressManager.destroyProgressJob( pJob2, true );
+//        ProgressManager.destroyProgressJob( pJob3, true );
+//        ProgressManager.destroyProgressJob( pJob4, true );
+//
+//    }
 
     /*
      * Test adding to notify list when list contains 1 job of correct type todo: Test adding to notify list when list
@@ -325,7 +325,6 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
     // ProgressManager.destroyProgressJob( pJob4 );
     //
     // }
-
     /*
      * Tests if the thread local variable gets inherited to new threads
      */
@@ -350,7 +349,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
         ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mc );
         fProgres.start();
 
-        ProgressManager.destroyProgressJob( pj );
+        ProgressManager.destroyProgressJob( pj, true );
 
         assertEquals( mc.upDateTimes(), 100 );
 
@@ -414,7 +413,7 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
 
             }
 
-            ProgressManager.destroyProgressJob( simpleJob );
+            ProgressManager.destroyProgressJob( simpleJob, true );
 
         }
 

@@ -39,9 +39,8 @@ public class OntologyCache {
         try {
 
             // fixme: get this from the spring context?
-            CacheManager manager = CacheManager.create();
-
-            // fixme in ehacache 1.2 this changes
+            CacheManager manager = CacheManager.getInstance();
+ 
             cache = new Cache( "ontologyCache", MAX_ELEMENTS, false, true, TIME_TO_LIVE, 30, false, 0 );
 
             manager.addCache( cache );

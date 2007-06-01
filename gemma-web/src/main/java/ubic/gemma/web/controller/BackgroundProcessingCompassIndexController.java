@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.compass.spring.web.mvc.AbstractCompassGpsCommandController;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -63,7 +64,7 @@ public abstract class BackgroundProcessingCompassIndexController extends Abstrac
      * 
      * This allows the background controller job to be created outside and passed in effectively allowing one controller to create more than 1 job
      */
-    protected synchronized String startJob( HttpServletRequest request,  BackgroundControllerJob<ModelAndView> job ) {
+    protected synchronized String startJob( HttpServletRequest request,  BackgroundControllerJob<ModelAndView> job  ) {
         /*
          * all new threads need this to acccess protected resources (like services)
          */

@@ -25,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.util.progress.TaskRunningService;
+
 /**
  * Extends this when the controller needs to run a long task (show a progress bar). To use it, implement getRunner and
  * call startJob in your onSubmit method.

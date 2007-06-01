@@ -62,6 +62,8 @@ import ubic.gemma.web.util.MessageUtil;
  */
 public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormController {
 
+    private static final boolean AJAX = true;
+
     GeoDatasetService geoDatasetService;
 
     /*
@@ -93,13 +95,20 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
-            Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
-            job.cancel( true );
+            cancel( request );
             this.saveMessage( request, "Cancelled processing" );
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );
         }
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * @param request
+     */
+    private void cancel( HttpServletRequest request ) {
+        Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
+        job.cancel( true );
     }
 
     /*
@@ -161,7 +170,6 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                             doSampleMatching );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     model.put( "arrayDesigns", arrayDesigns );
-                    ProgressManager.destroyProgressJob( job );
 
                     if ( arrayDesigns.size() == 1 ) {
                         return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
@@ -180,14 +188,12 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
                         model.put( "expressionExperiment", loaded );
-                        ProgressManager.destroyProgressJob( job );
                         return new ModelAndView( new RedirectView(
                                 "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                                         + result.iterator().next().getId() ) );
                     } else {
                         // model.put( "expressionExeriments", result );
                         this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-                        ProgressManager.destroyProgressJob( job );
                         for ( ExpressionExperiment ee : result )
                             list += ee.getId() + ",";
                         return new ModelAndView( new RedirectView(
@@ -245,7 +251,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                             doSampleMatching );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     model.put( "arrayDesigns", arrayDesigns );
-                    ProgressManager.destroyProgressJob( job );
+                    ProgressManager.destroyProgressJob( job, !AJAX );
 
                     if ( arrayDesigns.size() == 1 ) {
                         return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
@@ -266,14 +272,14 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
                         model.put( "expressionExperiment", loaded );
-                        ProgressManager.destroyProgressJob( job );
+                        ProgressManager.destroyProgressJob( job, !AJAX );
                         return new ModelAndView( new RedirectView(
                                 "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                                         + result.iterator().next().getId() ) );
                     } else {
                         // model.put( "expressionExeriments", result );
                         this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-                        ProgressManager.destroyProgressJob( job );
+                        ProgressManager.destroyProgressJob( job, !AJAX );
                         for ( ExpressionExperiment ee : result )
                             list += ee.getId() + ",";
                         return new ModelAndView( new RedirectView(

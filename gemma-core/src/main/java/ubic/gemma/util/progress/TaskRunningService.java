@@ -1,4 +1,4 @@
-package ubic.gemma.web.controller;
+package ubic.gemma.util.progress;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -14,8 +14,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.progress.ProgressManager;
-
 /**
  * Handles the execution of tasks in threads that can be check by clients later.
  * 
@@ -27,7 +25,7 @@ public class TaskRunningService {
 
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
 
-    private static final int KEY_LENGTH = 16;
+    private static final int KEY_LENGTH = 32;
 
     final Map<Object, Future> submittedTasks = new ConcurrentHashMap<Object, Future>();
 
@@ -42,7 +40,7 @@ public class TaskRunningService {
      * 
      * @param taskId
      */
-    public synchronized void cancelTask( Object taskId ) {
+    public synchronized void cancelTask( Object taskId, boolean doForward ) {
         log.debug( "Cancelling " + taskId );
         if ( submittedTasks.containsKey( taskId ) ) {
             Future toCancel = submittedTasks.get( taskId );
@@ -52,12 +50,12 @@ public class TaskRunningService {
                  * Note that we do this notification stuff here, not in the callable that is watching it. Don't do it
                  * twice.
                  */
-                handleCancel( taskId, toCancel );
+                handleCancel( taskId, toCancel, doForward );
             } else {
                 throw new RuntimeException( "Couldn't cancel " + taskId );
             }
         } else {
-            log.warn( "Attempt to cancel a task that has not been submitted" );
+            log.warn( "Attempt to cancel a task (" + taskId + ") that has not been submitted or is already gone." );
             return;
         }
     }
@@ -70,13 +68,13 @@ public class TaskRunningService {
      * @return
      */
     public synchronized Object checkResult( Object taskId ) throws Throwable {
-        log.debug( "entering" );        
+        log.debug( "entering" );
         if ( this.finishedTasks.containsKey( taskId ) ) {
             log.debug( "Job is finished" );
             return clearFinished( taskId );
         } else if ( this.cancelledTasks.containsKey( taskId ) ) {
             log.debug( "Job was cancelled" );
-            return clearCancelled( taskId );
+            return clearCancelled( taskId, true );
         } else if ( this.failedTasks.containsKey( taskId ) ) {
             clearFailed( taskId );
             return null;
@@ -84,7 +82,8 @@ public class TaskRunningService {
             log.debug( "Job is apparently still running?" );
             return null;
         } else {
-            //throw new IllegalStateException( "Job isn't running for " + taskId + " , we don't know what happened to it." );
+            // throw new IllegalStateException( "Job isn't running for " + taskId + " , we don't know what happened to
+            // it." );
             log.debug( "Job isn't running for " + taskId + " , we don't know what happened to it." );
             return null;
         }
@@ -105,7 +104,7 @@ public class TaskRunningService {
      * @param taskId
      * @return
      */
-    private Object clearCancelled( Object taskId ) throws Throwable {
+    private Object clearCancelled( Object taskId, boolean doForward ) throws Throwable {
         Future cancelled = cancelledTasks.get( taskId );
         cancelledTasks.remove( taskId );
         try {
@@ -132,13 +131,12 @@ public class TaskRunningService {
         return finished;
     }
 
-
     /**
      * @param taskId
      * @param task
      */
     public synchronized void submitTask( final Object taskId, final FutureTask task ) {
-        log.info( "Submitting " + taskId );
+        log.debug( "Submitting " + taskId );
 
         // Run the task in its own thread.
         ExecutorService service = Executors.newSingleThreadExecutor();
@@ -157,8 +155,8 @@ public class TaskRunningService {
                     return result;
                 } catch ( CancellationException e ) {
                     // I think this will never happen.
-                    log.info( "Cancellation received for " + taskId );
-                    handleCancel( taskId, task );
+                    log.debug( "Cancellation received for " + taskId );
+                    handleCancel( taskId, task, false );
                 } catch ( ExecutionException e ) {
                     if ( e.getCause() instanceof InterruptedException ) {
                         if ( cancelledTasks.containsKey( taskId ) ) {
@@ -191,7 +189,7 @@ public class TaskRunningService {
      * @param taskId
      * @param toCancel
      */
-    void handleCancel( Object taskId, Future toCancel ) {
+    void handleCancel( Object taskId, Future toCancel, boolean doForward ) {
         cancelledTasks.put( taskId, toCancel );
         submittedTasks.remove( taskId );
         ProgressManager.signalCancelled( taskId );
@@ -221,7 +219,7 @@ public class TaskRunningService {
      * @return
      */
     public static String generateTaskId() {
-        return RandomStringUtils.randomAlphanumeric( KEY_LENGTH );
+        return RandomStringUtils.randomAlphanumeric( KEY_LENGTH ).toUpperCase();
     }
 
 }

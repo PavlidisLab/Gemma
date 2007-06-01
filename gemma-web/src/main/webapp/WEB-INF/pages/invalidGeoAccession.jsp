@@ -2,6 +2,8 @@
 <%@ page language="java" isErrorPage="true"%>
 <%-- $Id$ --%>
 
+<%-- This is not being used. --%>
+
 		<title>Invalid GEO accession</title>
 
 	<body>

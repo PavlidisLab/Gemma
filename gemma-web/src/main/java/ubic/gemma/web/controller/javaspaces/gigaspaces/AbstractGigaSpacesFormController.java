@@ -34,9 +34,9 @@ import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
 import ubic.gemma.util.javaspaces.JavaSpacesJobObserver;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
-import ubic.gemma.web.controller.TaskRunningService;
 import ubic.gemma.web.util.MessageUtil;
 
 import com.j_spaces.core.client.NotifyModifiers;

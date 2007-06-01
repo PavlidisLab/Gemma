@@ -137,6 +137,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             log.info( geoAccession + " corresponds to " + seriesAccessions );
             for ( String seriesAccession : seriesAccessions ) {
                 GeoSeries series = processSeries( seriesAccession, this.doSampleMatching );
+                if ( series == null ) continue;
                 result.add( series );
             }
         } else if ( geoAccession.startsWith( "GSE" ) ) {
@@ -144,6 +145,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                 return processSeriesPlatforms( geoAccession ); // FIXME, this is ugly.
             }
             GeoSeries series = processSeries( geoAccession, this.doSampleMatching );
+            if ( series == null ) return result;
             result.add( series );
             return result;
         } else {
@@ -209,7 +211,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
-            throw new RuntimeException( "No series file found for " + seriesAccession );
+            log.warn( "No series file found for " + seriesAccession );
+            return null;
         }
         LocalFile seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath = seriesFile.getLocalURL().getPath();
@@ -403,8 +406,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             }
             seriesAccession = StringUtils.removeEnd( seriesAccession, "," );
         } else {
-            throw new InvalidAccessionException( geoAccession
-                    + " is not understood by Gemma; must be a GSE, GDS or GPL" );
+            if ( geoAccession == null || geoAccession.length() == 0 ) {
+                throw new InvalidAccessionException( "GEO accession must not be blank. Enter a  GSE, GDS or GPL" );
+            }
+            throw new InvalidAccessionException( "'" + geoAccession
+                    + "' is not understood by Gemma; must be a GSE, GDS or GPL" );
         }
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance( ed );

@@ -141,8 +141,12 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         Executors.newSingleThreadExecutor().execute( future );
         try {
             File outputFile = new File( outputFileName );
-            waitForDownload( future, expectedSize, outputFile );
-            if ( future.get().booleanValue() ) {
+            boolean ok = waitForDownload( future, expectedSize, outputFile );
+
+            if ( !ok ) {
+                // probably cancelled.
+                return null;
+            } else if ( future.get().booleanValue() ) {
                 if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFile );
                 unPack( outputFile );
                 cleanUp( outputFile );
@@ -194,11 +198,11 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
         StopWatch s = new StopWatch();
         s.start();
-        while ( !future.isDone() ) {
+        while ( !future.isDone() && !future.isCancelled() ) {
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
-                ;
+                return;
             }
             // log.info( FileTools.listDirectoryFiles( newDir ).size() - 1 + " files unpacked " );
             log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );

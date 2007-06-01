@@ -25,6 +25,7 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -81,9 +82,6 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
         BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, command, this.getMessageUtil() );
 
         assert taskId != null;
-
-        // NOno, we can't do this.
-        // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
         return taskId;

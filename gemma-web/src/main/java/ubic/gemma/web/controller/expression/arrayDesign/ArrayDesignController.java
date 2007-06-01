@@ -596,7 +596,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             saveMessage( "Array " + ad.getShortName() + " removed from Database." );
             ad = null;
 
-            ProgressManager.destroyProgressJob( job );
+            ProgressManager.destroyProgressJob( job, true );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
 
         }
@@ -639,7 +639,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 job.updateProgress( "Generating summary for specified platform" );
                 arrayDesignReportService.generateArrayDesignReport( id );
             }
-            ProgressManager.destroyProgressJob( job );
+            ProgressManager.destroyProgressJob( job, true );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) );
 
         }
@@ -666,7 +666,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     public void afterPropertiesSet() throws Exception {
         try {
-            CacheManager manager = CacheManager.create();
+            CacheManager manager = CacheManager.getInstance();
 
             cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
                     MemoryStoreEvictionPolicy.LFU, false, null, false, ARRAY_INFO_CACHE_TIME_TO_DIE,

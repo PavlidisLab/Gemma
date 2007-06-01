@@ -79,12 +79,20 @@ public class GeoDatasetService extends AbstractGeoService {
 
         if ( loadPlatformOnly ) {
             Collection<?> platforms = geoDomainObjectGenerator.generate( geoAccession );
+            if ( platforms.size() == 0 ) {
+                log.warn( "Got no results" );
+                return null;
+            }
             Collection<Object> arrayDesigns = geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
 
         Collection<?> parseResult = geoDomainObjectGenerator.generate( geoAccession );
-        log.info( "Generated GEO domain objects for " + geoAccession );
+        if ( parseResult.size() == 0 ) {
+            log.warn( "Got no results" );
+            return null;
+        }
+        log.debug( "Generated GEO domain objects for " + geoAccession );
 
         if ( parseResult == null || parseResult.size() == 0 ) {
             throw new RuntimeException( "Could not get domain objects for " + geoAccession );
@@ -110,10 +118,10 @@ public class GeoDatasetService extends AbstractGeoService {
 
         getPubMedInfo( result );
 
-        log.info( "Converted " + seriesAccession );
+        log.debug( "Converted " + seriesAccession );
         assert persisterHelper != null;
         Collection persistedResult = persisterHelper.persist( result );
-        log.info( "Persisted " + seriesAccession );
+        log.debug( "Persisted " + seriesAccession );
         this.geoConverter.clear();
         return persistedResult;
     }

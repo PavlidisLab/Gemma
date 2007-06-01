@@ -19,6 +19,8 @@ package ubic.gemma.util.progress;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Observable;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
@@ -31,10 +33,10 @@ import ubic.gemma.model.common.auditAndSecurity.JobInfo;
  */
 public class ProgressJobImpl extends Observable implements ProgressJob {
 
-    protected ProgressData pData;
-    protected JobInfo jInfo;        //this obj is persisted to DB
+    protected Queue<ProgressData> pData;
+    protected JobInfo jInfo; // this obj is persisted to DB
     protected int currentPhase;
-    protected String trackingId;    //session id
+    protected String trackingId; // session id
     protected String forwardingURL;
 
     /*
@@ -43,7 +45,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString(){ 
+    public String toString() {
         return "TrackingId: " + trackingId + "  JobID: " + jInfo.getId() + "  TaskID: " + jInfo.getTaskId();
     }
 
@@ -54,38 +56,17 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @param description
      */
     ProgressJobImpl( JobInfo info, String description ) {
-        this.pData = new ProgressData( 0, description, false );
+        this.pData = new ConcurrentLinkedQueue<ProgressData>();
+        this.pData.add( new ProgressData( 0, description, false ) );
         this.jInfo = info;
         currentPhase = 0;
     }
 
     /**
-     * @return Returns the pData.
+     * @return Returns the pData, which can be cleaned out. (this isn't ideal..)
      */
-    public ProgressData getProgressData() {
+    public Queue<ProgressData> getProgressData() {
         return pData;
-    }
-
-    /**
-     * @param data The pData to set.
-     */
-    public void setProgressData( ProgressData data ) {
-        pData = data;
-    }
-
-    /**
-     * @return Returns the runningStatus.
-     */
-    public boolean isRunningStatus() {
-        return jInfo.getRunningStatus();
-    }
-
-    /**
-     * @param runningStatus The runningStatus to set.
-     */
-    public void setRunningStatus( boolean runningStatus ) {
-        jInfo.setRunningStatus( runningStatus );
-        if ( !jInfo.getRunningStatus() ) this.pData.setDone( false );
     }
 
     public String getUser() {
@@ -98,7 +79,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * Updates the percent completion of the job by 1 percent
      */
     public void nudgeProgress() {
-        pData.setPercent( pData.getPercent() + 1 );
+        ProgressData d = new ProgressData( pData.peek().getPercent() + 1, "" );
+        pData.add( d );
         setChanged();
         notifyObservers( pData );
     }
@@ -110,8 +92,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @param pd
      */
     public void updateProgress( ProgressData pd ) {
-        setProgressData( pd );
-        setDescription( pd.getDescription() );
+        this.pData.add( pd );
         updateDescriptionHistory( pd.getDescription() );
         setChanged();
         notifyObservers( pData );
@@ -123,7 +104,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @param newPercent
      */
     public void updateProgress( int newPercent ) {
-        pData.setPercent( newPercent );
+        ProgressData d = new ProgressData( newPercent, "" );
+        pData.add( d );
         setChanged();
         notifyObservers( pData );
     }
@@ -134,30 +116,34 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @see ubic.gemma.util.progress.ProgressJob#updateProgress(java.lang.String)
      */
     public void updateProgress( String newDescription ) {
-        pData.setDescription( newDescription );
-        setDescription( newDescription );
+        ProgressData d = new ProgressData( 0, newDescription, false );
+        pData.add( d );
         updateDescriptionHistory( newDescription );
         setChanged();
         notifyObservers( pData );
     }
 
-    /**
-     * returns the id of the current job
-     */
-    public Long getId() {
-        return jInfo.getId();
-    }
-
     public void done() {
-
         Calendar cal = new GregorianCalendar();
         jInfo.setEndTime( cal.getTime() );
+        ProgressData d = new ProgressData( 100, "Finished", true );
+        pData.add( d );
+        notifyObservers( pData );
+    }
 
+    public void failed( Throwable cause ) {
+        Calendar cal = new GregorianCalendar();
+        jInfo.setEndTime( cal.getTime() );
+        ProgressData d = new ProgressData( 0, cause.getMessage(), true );
+        d.setFailed( true );
+        d.setDescription( cause.getMessage() );
+        this.pData.add( d );
+        setChanged();
+        notifyObservers( pData );
     }
 
     public int getPhase() {
         return currentPhase;
-
     }
 
     public void setPhase( int phase ) {
@@ -166,15 +152,6 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         if ( phase > jInfo.getPhases() ) jInfo.setPhases( phase );
 
         currentPhase = phase;
-    }
-
-    public void setDescription( String description ) {
-        this.pData.setDescription( description );
-        this.jInfo.setDescription( description );
-    }
-
-    public String getDescription() {
-        return this.pData.getDescription();
     }
 
     public JobInfo getJobInfo() {
@@ -210,7 +187,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     }
 
     private void updateDescriptionHistory( String message ) {
-        if (this.jInfo.getMessages() == null)
+        if ( this.jInfo.getMessages() == null )
             this.jInfo.setMessages( message );
         else
             this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );

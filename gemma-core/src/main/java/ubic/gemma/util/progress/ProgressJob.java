@@ -17,15 +17,13 @@
 package ubic.gemma.util.progress;
 
 import java.util.Observer;
+import java.util.Queue;
 
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
 /**
- * <hr>
  * All progressJobs must implement the following functionality. ProgressJobs are used by the client to provide hooks for
  * providing feedback to a user for long running processes
- * <p>
- * Copyright (c) 2006 UBC Pavlab
  * 
  * @author klc
  * @version $Id$
@@ -35,22 +33,7 @@ public interface ProgressJob {
     /**
      * @return Returns the pData.
      */
-    public abstract ProgressData getProgressData();
-
-    /**
-     * @param data The pData to set.
-     */
-    public abstract void setProgressData( ProgressData data );
-
-    /**
-     * @return Returns the runningStatus.
-     */
-    public abstract boolean isRunningStatus();
-
-    /**
-     * @param runningStatus The runningStatus to set.
-     */
-    public abstract void setRunningStatus( boolean runningStatus );
+    public abstract Queue<ProgressData> getProgressData();
 
     public abstract String getUser();
 
@@ -82,17 +65,13 @@ public interface ProgressJob {
 
     public abstract void addObserver( Observer O );
 
-    public abstract Long getId();
-
     public abstract void done();
+
+    public abstract void failed( Throwable cause );
 
     public abstract int getPhase();
 
     public abstract void setPhase( int phase );
-
-    public abstract void setDescription( String description );
-
-    public abstract String getDescription();
 
     public abstract JobInfo getJobInfo();
 

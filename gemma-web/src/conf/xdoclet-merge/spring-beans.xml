@@ -180,13 +180,14 @@
 			<entry key="HttpProgressMonitor">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
-						<bean class="org.directwebremoting.create.NewCreator">
-							<property name="className" value="ubic.gemma.util.progress.HttpProgressMonitor" />
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="httpProgressMonitor" />
 						</bean>
 					</property>
 					<property name="includes">
 						<list>
 							<value>getProgressStatus</value>
+							<value>cancelJob</value>
 						</list>
 					</property>
 				</bean>
@@ -624,8 +625,8 @@
 	<property name="exceptionMappings">
 		<props>
 			<prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
-			<prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop>
-			<prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop>
+		<!-- <prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop> -->
+		<!-- <prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop> -->
 			<prop key="java.lang.Exception">error</prop>
 		</props>
 	</property>

@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -127,9 +128,12 @@ public abstract class FtpFetcher extends AbstractFetcher {
         try {
 
             File outputFile = new File( outputFileName );
-            waitForDownload( future, expectedSize, outputFile );
+            boolean ok = waitForDownload( future, expectedSize, outputFile );
 
-            if ( future.get().booleanValue() ) {
+            if (!ok) {
+                // cancelled, probably.
+                return null;
+            } else if ( future.get().booleanValue() ) {
                 if ( log.isInfoEnabled() ) log.info( "Done: local file is " + outputFile );
                 LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
                 Collection<LocalFile> result = new HashSet<LocalFile>();
@@ -139,7 +143,11 @@ public abstract class FtpFetcher extends AbstractFetcher {
         } catch ( ExecutionException e ) {
             throw new RuntimeException( "Couldn't fetch " + seekFileName, e );
         } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName, e );
+            log.warn( "Interrupted: Couldn't fetch " + seekFileName, e );
+            return null;
+        } catch (CancellationException e ) {
+            log.info("Cancelled");
+            return null;
         }
         throw new RuntimeException( "Couldn't fetch file for " + seekFileName );
     }

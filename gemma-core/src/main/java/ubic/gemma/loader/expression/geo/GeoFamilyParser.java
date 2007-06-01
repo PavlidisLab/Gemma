@@ -180,11 +180,12 @@ public class GeoFamilyParser implements Parser {
         executor.execute( future );
         executor.shutdown();
 
-        while ( !future.isDone() ) {
+        while ( !future.isDone() && !future.isCancelled() ) {
             try {
                 TimeUnit.SECONDS.sleep( 2L );
             } catch ( InterruptedException e ) {
-                throw new RuntimeException( e );
+                // probably cancelled.
+                return;
             }
             log.info( parsedLines + " lines parsed." );
         }
