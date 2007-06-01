@@ -1,133 +1,282 @@
 /**
  * Progressbar.js. To use this, create a div with id "progress-area" on your page, and a task id in a div with id "taskId". 
+ * An optional update area "messages" may be used.
  * Arrange for createIndeterminateProgressBar or createDeterminateProgressBar to be called, followed by startProgress(). 
  * @author Kelsey
  * @author Paul
  * @version $Id$
  */
 
-function refreshProgress() {
-	HttpProgressMonitor.getProgressStatus(dwr.util.getValue("taskId"),updateProgress);
-}
-var determinate;
-
-function updateProgress(data) {
- 
- 	if (determinate == 1) {
- 		updateDeterminateProgress(data);
- 	} else { 
- 		updateIndeterminateProgress(data);
-	}
-
-//As it turns out the forwardingURL will never be null as its always set by default by the progressManager.
-//Still good to check though, if the size of the forwardingURL is 1 charcter then i know its just a blank character
-//I should implement a setting to turn forwarding on and off in the datapack, or in the progressjob checking for a size == 1 is just bad.
- 		
- 	if (data.done && data.forwardingURL != null && data.forwardingURL.size != 1) {
-			redirect( data.forwardingURL + "?taskId=" + dwr.util.getValue("taskId")  );
-	} else {
-		window.setTimeout("refreshProgress()", 800);
-	}
+progressbar = function(){
+    this.addEvents({
+        finish : true,
+        fail : true,
+        cancel : true
+    });
+    progressbar.superclass.constructor.call(this);
 	
-	return true;
-}
-
-function updateDeterminateProgress(data){
-	document.getElementById("progressBarText").innerHTML = data.description + " " + data.percent + "%";
-	document.getElementById("progressBarBoxContent").style.width = parseInt(data.percent * 3.5) + "px";
-}
-
-var previousMessage = "";
-
-// time in ms between updates
-var BAR_UPDATE_INTERVAL = 400;
-		
-function updateIndeterminateProgress(data){
- 		
-   if (previousMessage != data.description) {
-		previousMessage = data.description
-		document.getElementById("progressTextArea").innerHTML +=  "<br />" + data.description;	
-   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
-	} else{
-		document.getElementById("progressTextArea").innerHTML += ".";	
-   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;	
-	}
-}
-
-function redirect(url) {
-   window.location = url;
-}
-
-function startProgress() {
-	//Ext.get("progressBar").style.display = "block";
-   if (determinate == 0){
-		document.getElementById("progressTextArea").innerHTML = "Monitoring Progress...";
-	} else {
-		document.getElementById("progressBarText").value = "Monitoring Progress...";
-	}
 	
-	window.setTimeout("refreshProgress()", BAR_UPDATE_INTERVAL);
-	return true;
-}
-function createIndeterminateProgressBar() {
-	determinate = 0;
-	var barId = createIndeterminateBarDetails(500,20,'white',1,'black','#FF9933',85,7,3,"");
-	
-}
-
-function createDeterminateProgressBar(){
-	determinate = 1;
-	var barHtml = '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>';
- 	Ext.DomHelper.overwrite("progress-area", barHtml);
-}
-
-
-// based on xp_progressbar
-// Copyright 2004 Brian Gosselin of ScriptAsylum.com
-//
-function createIndeterminateBarDetails(w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
-	var w3c=(document.getElementById)?true:false;
-	var ie=(document.all)?true:false;
-	var N=-1;
-	if(ie||w3c){
-		var t='<div id="_xpbar'+(++N)+'" style="visibility:visible; position:relative; overflow:hidden; width:'+w+'px; height:'+h+'px; background-color:'+bgc+'; border-color:'+brdC+'; border-width:'+brdW+'px; border-style:solid; font-size:1px;">';
-		t+='<span id="blocks'+N+'" style="left:-'+(h*2+1)+'px; position:absolute; font-size:1px">';
-		for(i=0;i<blocks;i++){
-			t+='<span style="background-color:'+blkC+'; left:-'+((h*i)+i)+'px; font-size:1px; position:absolute; width:'+h+'px; height:'+h+'px; '
-			t+=(ie)?'filter:alpha(opacity='+(100-i*(100/blocks))+')':'-Moz-opacity:'+((100-i*(100/blocks))/100);
-			t+='"></span>';
-		}
-		t+='</span></div>';
-		var ipbHeader = '<div id="progressBar"> <div id="theMeter">	<div id="progressBarText"> <div class="clob" id="progressTextArea"> </div>	</div>';
-		var ipbFooter = '</div>	</div>	<form> <input type="hidden" name="taskId\" />		</form> ';
-		Ext.DomHelper.overwrite("progress-area", ipbHeader + t + ipbFooter);
-		var bA=(ie)?document.all['blocks'+N]:document.getElementById('blocks'+N);
-		bA.bar=(ie)?document.all['_xpbar'+N]:document.getElementById('_xpbar'+N);
-		bA.blocks=blocks;
-		bA.N=N;
-		bA.w=w;
-		bA.h=h;
-		bA.speed=speed;   
-		bA.ctr=0;
-		bA.count=count;
-		bA.action=action;
-		bA.togglePause=togglePause;
-			
-		bA.showBar=function(){
-			this.bar.style.visibility="visible";
-		}
-		bA.hideBar=function(){
-			this.bar.style.visibility="hidden";
-		}
-		bA.tid=setInterval('startBar('+N+')',speed);
-		return bA;
-	}
 };
+
+Ext.extend(progressbar, Ext.util.Observable, {
+
+	bar : null,
+	determinate : false,
+	previousMessage :  "",
+	timeoutid : null,
+	
+		// time in ms between updates
+	BAR_UPDATE_INTERVAL : 1000,
+	
+	handleFailure : function (data, e) {
+		this.stopProgress();
+		var messageArea = Ext.get("messages");
+		if (messageArea) {
+			var messageText;
+			if (data.description) {
+				messageText = data.description;
+			} else if (!e) {
+				messageText = data;
+			}
+	       this.fireEvent("fail", messageText);
+		} else {
+			this.fireEvent('fail');
+		}
+	},
+	
+
+	/**
+	 * Start the progressbar in motion.
+	 */
+	startProgress : function () {
+	   if (this.determinate == 0){
+			document.getElementById("progressTextArea").innerHTML = "Starting job...";
+		} else {
+			document.getElementById("progressBarText").value = "Please wait...";
+		}
+		
+		var callParams = [dwr.util.getValue("taskId")];
+		var callback = this.updateProgress.createDelegate(this, [], true) ;
+		var errorHandler = this.handleFailure.createDelegate(this, [], true) ;
+		//callParams.push({callback : callback, errorHandler : errorHandler  });
+		callParams.push(callback);
+		callParams.push(errorHandler);
+		var f = this.refreshProgress.createDelegate(this, callParams, false);
+		
+		this.timeoutid = setInterval(f, this.BAR_UPDATE_INTERVAL);
+	},
+	
+	
+	stopProgress : function () {
+		window.clearTimeout(this.timeoutid);
+		Ext.DomHelper.overwrite("progress-area", "");
+	//	this.bar.stop();
+		this.previousMessage = null;
+	},
+	
+	
+	/* Private
+	 * Callback for DWR
+	 * @param {Object} data
+	 */
+	updateProgress : function (data) {	 
+	 	if (this.determinate == 1) {
+	 		this.updateDeterminateProgress(data);
+	 	} else { 
+	 		this.updateIndeterminateProgress(data);
+		}
+	},
+	
+	updateDeterminateProgress : function (data){
+		var messages = "";
+		var percent = 0;
+		if (data.push) {
+			for(var i = 0, len = data.length; i < len; i++) {
+				var d = data[i];
+				messages = messages + "<br/>" + d.description;
+				percent = d.percent; // use last value.
+				if (d.failed) {
+					return  this.handleFailure(d);
+				} else if (d.done) {
+					this.fireEvent('done');
+					if (d.forwardingURL) {
+					  	window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
+					  	return;
+					}
+				}
+			}	
+		} else {
+			if (data.done) {
+				return this.handleFailure(data);
+			} else if (d.done) {
+				this.fireEvent('done');
+			}
+			percent = data.percent;
+		}
+	
+		document.getElementById("progressBarText").innerHTML = messages + " " + percent + "%";
+		document.getElementById("progressBarBoxContent").style.width = parseInt(percent * 3.5) + "px";
+	},
+
+			
+	updateIndeterminateProgress : function (data){
+
+		var messages = "";
+		var percent = 0;
+		if (data.push) {
+			for(var i = 0, len = data.length; i < len; i++) {
+				var d = data[i];
+				messages = messages + "<br/>" + d.description;
+				percent = d.percent; // use last value.
+				if (d.failed) {
+					return this.handleFailure(d);
+				} else if (d.done) {
+					this.fireEvent('done');
+					if (d.forwardingURL) {
+				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
+						return;
+					}
+				}
+			}	
+		} else {
+			if (data.done) {
+				return this.handleFailure(data);
+			} else if (d.done) {
+				this.fireEvent('done');
+			}
+			percent = data.percent;
+		}
+		
+		if (!document.getElementById("progressTextArea")) return;
+	
+	   if (this.previousMessage != messages) {
+			this.previousMessage = messages;
+			document.getElementById("progressTextArea").innerHTML +=   messages;	
+	   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
+		} else{
+			document.getElementById("progressTextArea").innerHTML += ".";	
+	   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;	
+		}
+	},
+
+	
+	/* Private
+	 * Send a cancel notification to the server.
+	 */
+	cancelJob : function () {
+		var taskId = dwr.util.getValue("taskId");
+		if (this.determinate == 0){
+			document.getElementById("progressTextArea").innerHTML = "Cancelling...";
+		} else {
+			document.getElementById("progressBarText").value = "Cancelling...";
+		}
+		var f =  this.cancelCallback.createDelegate(this, [], true);
+		HttpProgressMonitor.cancelJob(taskId, f);
+	},
+	
+	/* Private
+	 * Check for status from server.
+	 */
+	refreshProgress : function (taskId, callback, errorHandler) {
+		HttpProgressMonitor.getProgressStatus(taskId, {callback:callback, errorHandler:errorHandler});
+	},
+	
+	/* Private
+	 * Callback to handle cancellation
+	 * @param {Object} data
+	 */
+	cancelCallback : function (data)  {
+		this.stopProgress();
+		var messageArea = Ext.get("messages");
+		if (messageArea) {
+			Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/ok.png' });  
+			Ext.DomHelper.append("messages", "&nbsp;Job was cancelled.");
+		}
+		this.fireEvent('cancel');	
+		
+	},
+			
+			
+	/**
+	 * Create a progress bar that has no fixed endpoint
+	 */
+	createIndeterminateProgressBar : function () {
+		this.determinate = 0;
+		this.bar= this.createIndeterminateBarDetails(300,15,'white',1,'black','#FF9933',85,4,3,"");
+		f = this.cancelJob.createDelegate(this, [], true);
+		Ext.get("cancel-button").on('click', f);
+	},
+	
+
+
+	/**
+	 * Create a progress bar that has a known endpoint
+	 */
+	createDeterminateProgressBar : function (){
+		this.determinate = 1;
+		var barHtml = '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>';
+	 	Ext.DomHelper.overwrite("progress-area", barHtml);
+	},
+	
+	
+	// based on xp_progressbar
+	// Copyright 2004 Brian Gosselin of ScriptAsylum.com
+	//
+	createIndeterminateBarDetails : function (w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
+		var w3c=(document.getElementById)?true:false;
+		var ie=(document.all)?true:false;
+		var N=-1;
+		if(ie||w3c){
+			var t='<div id="_xpbar'+(++N)+'" style="visibility:visible; position:relative; overflow:hidden; width:'+w+'px; height:'+h+'px; background-color:'+bgc+'; border-color:'+brdC+'; border-width:'+brdW+'px; border-style:solid; font-size:1px;">';
+			t+='<span id="blocks'+N+'" style="left:-'+(h*2+1)+'px; position:absolute; font-size:1px">';
+			for(i=0;i<blocks;i++){
+				t+='<span style="background-color:'+blkC+'; left:-'+((h*i)+i)+'px; font-size:1px; position:absolute; width:'+h+'px; height:'+h+'px; '
+				t+=(ie)?'filter:alpha(opacity='+(100-i*(100/blocks))+')':'-Moz-opacity:'+((100-i*(100/blocks))/100);
+				t+='"></span>';
+			}
+			t+='</span></div>';
+			
+			t = '<div ><form style="float:left" ><input type="button" id="cancel-button" name="Cancel" value="cancel" /></form> ';
+			t += '<img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
+			
+			var ipbHeader = '<div id="progressBar"><div id="progressBarText"> <div class="clob" style="margin:10px;padding:4px;" id="progressTextArea"> </div>	</div> <div id="theMeter">	';
+			var ipbFooter = '</div>	</div>	 ';
+			Ext.DomHelper.overwrite("progress-area", ipbHeader + t + ipbFooter);
+		/*	var bA=(ie)?document.all['blocks'+N]:document.getElementById('blocks'+N);
+			bA.bar=(ie)?document.all['_xpbar'+N]:document.getElementById('_xpbar'+N);
+			bA.blocks=blocks;
+			bA.N=N;
+			bA.w=w;
+			bA.h=h;
+			bA.speed=speed;   
+			bA.ctr=0;
+			bA.count=count;
+			bA.action=action;
+				
+			bA.showBar=function(){
+				this.bar.style.visibility="visible";
+			}
+			bA.hideBar=function(){
+				this.bar.style.visibility="hidden";
+			}
+			var tid = setInterval('startBar('+N+')',speed);
+			bA.tid = tid;
+			bA.stop = function() {
+				if (this.tid != 0)
+					clearInterval(this.tid);
+			}
+			return bA;*/
+		}
+	},
+	
+ 
+});
+
+ 
 
 function startBar(bn){
 	var ie=(document.all)?true:false;
-	var t=(ie)?document.all[
-	'blocks'+bn]:document.getElementById('blocks'+bn);
+	var t=(ie)?document.all['blocks'+bn]:document.getElementById('blocks'+bn);
 	if(parseInt(t.style.left)+t.h+1-(t.blocks*t.h+t.blocks)>t.w){
 		t.style.left=-(t.h*2+1)+'px';
 		t.ctr++;
@@ -137,23 +286,5 @@ function startBar(bn){
 		}
 	} else 
 		t.style.left=(parseInt(t.style.left)+t.h+1)+'px';
-};
-
-function togglePause(){	
-	if(this.tid==0){
-		this.tid=setInterval('startBar('+this.N+')',this.speed);
-	}else{
-		clearInterval(this.tid);
-	this.tid=0;
-	}
-};
-
-function togglePause(){
-	if(this.tid==0){
-		this.tid=setInterval('startBar('+this.N+')',this.speed);
-	}else{
-		clearInterval(this.tid);
-		this.tid=0;
-	}
-};
-
+} 
+	
