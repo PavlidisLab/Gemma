@@ -126,7 +126,7 @@ var displayRestrictionsPanel = function(node){
 };
 
 //Recursive function that walks the node given to it and creates a coresponding form to fill in
-var createRestrictionGui = function(node, indent) {
+var createRestrictionGui = function(node, indent, parentDivId) {
 
 		var dh = Ext.DomHelper;  //allows html output
 
@@ -134,10 +134,13 @@ var createRestrictionGui = function(node, indent) {
 			dh.overwrite("center-div", {html : ""});
 			indent = "";
 		}
+		if (parentDivId === undefined) {
+			parentDivId = "center-div";
+		}
 	
 		
 
-		dh.append("center-div", {html : indent + "Details for: " + node.uri });
+		//dh.append(parentDivId, {html : indent + "Details for: " + node.uri });
 
 
       
@@ -147,29 +150,62 @@ var createRestrictionGui = function(node, indent) {
             for ( var i = 0, len = res.length; i < len; i++ ) {
             	var restrictedOn = res[i].restrictionOn;
             	var restrictedTo = res[i].restrictedTo;
+            	//make a nested div for adding to.
             	var divId = (Math.random() * 100000).toFixed();   
-            	dh.append("center-div", {tag: 'div', id: divId});
+            	dh.append(parentDivId, {tag: 'div', id: divId});
             	
-                if ( (res[i].restrictedTo !== undefined) && (res[i].restrictedTo !== null)) {	//is it a class restriction?
+            	if (restrictedOn.type !== undefined ) {	//Primitive Type
+                    var primitiveRestrictedTo = restrictedOn.type
+                    dh.append(parentDivId, {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + primitiveRestrictedTo.value });
+            	} else if ( (restrictedTo !== undefined) && (restrictedTo !== null)) {	//is it a class restriction?
+                                       
+                    if (restrictedTo.restrictions === undefined || restrictedTo.restrictions === null || restrictedTo.restrictions.size() === 0){	// ie) we are at a leaf node so display gui
+                        dh.append(divId, {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
+ 
+	                    var simple = createForm();	
+					                       
+    	                if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){  //are there examples?
+        		            	simple.add(createComboBox(restrictedTo.individuals));                                 	                    
+                	    }
                     
-                    dh.append( "center-div", {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
+	                    simple.render(divId);
+                    } else{        //Not a leaf node. recurse down another level
+                        dh.append(divId, {html : indent + " The " + restrictedOn.label + " restriction has " + restrictedTo.restrictions.size()+ " slots to fill in"});
+    	            	createRestrictionGui( restrictedTo, "&nbsp;&nbsp;&nbsp;&nbsp;" + indent, divId );
+                   }                
                     
-                    if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){
-                    	
-                    	var recordType = Ext.data.Record.create([
+                } else if ( res[i].cardinality !== undefined  ) { //Cardinality Type
+                    // this will be rare.                  
+                    var cardinality = res[i].cardinality;
+                    var cardinalityType = res[i].cardinalityType;
+                    dh.append(parentDivId,{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
+                            + cardinality + " things" });
+                    // todo check range of the property (what 'things' should be) if specified.
+                } else{
+                	  dh.append(parentDivId,{ html: indent + " Error: This should not happen" });                	
+                }
+            }
+        }
+	    //dh.append(parentDivId, {html : indent + "End of details for " + node.uri}) ;
+    };
+
+var createComboBox = function(individuals){
+	     	var recordType = Ext.data.Record.create([
 							{name:"label", type : "string" }, 
 							{name:"uri", type: "string" } 
 						]);
 						
+						//convert the arry of objects into an array of records
 						var records = [];
-						for(var i = 0, len = restrictedTo.individuals.length; i < len; i++) {
-							records.push(new recordType(restrictedTo.individuals[i]));
+						for(var i = 0, len = individuals.length; i < len; i++) {
+							records.push(new recordType(individuals[i]));
 						}
                     	
 	                    var store = new Ext.data.Store({recordType : recordType} );
 						store.add(records);
 						
 					    var combo = new Ext.form.ComboBox({
+					    	fieldLabel: 'pick one',
 					        store: store,
 					        displayField:'label',
 					        typeAhead: true,
@@ -179,41 +215,36 @@ var createRestrictionGui = function(node, indent) {
 					        selectOnFocus:true
 					    });
 					    
-					    //Need to make a div to apply the combo box to. 					    
-					 	dh.append(divId, {tag: 'input', type: 'text', id: "input" + divId , size:'20'});  
-					    combo.applyTo("input" + divId);	                    	                    
-                    }
-                    
-                    dh.append(divId, "This will be a free-text field");
-                    dh.append(divId, "This will be a search field");
-                    
-                    createRestrictionGui( restrictedTo, "&nbsp;&nbsp;&nbsp;&nbsp;" + indent );
-                                        
-                } else if ( res[i].type !== undefined ) {	//Primitive Type
-                    var primitiveRestrictedTo = res[i].type
-                    dh.append("center-div", {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + primitiveRestrictedTo.term });
-                    
-                } else if ( res[i].cardinality !== undefined  ) { //Cardinality Type
-                    // this will be rare.                  
-                    var cardinality = res[i].cardinality;
-                    var cardinalityType = res[i].cardinalityType;
-                    dh.append("center-div",{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
-                            + cardinality + " things" });
-                    // todo check range of the property (what 'things' should be) if specified.
-                }
-                else if ((res[id].restrictions !== undefined) &&  (res[id].restrictions !== null)) {
-                	  dh.append("center-div",{ html: indent + " Restrictions  slot: " + res[id].restrictions });                	
-                	  createRestrictionGui(res[id].restrictions, "===>" + indent);     
-                }
-                else{
-                	  dh.append("center-div",{ html: indent + " Catch all slot: " });                	
- 
-                }
-            }
-        }
-	    dh.append("center-div", {html : indent + "End of details for " + node.uri}) ;
-    };
+					    return combo;				
+					    
+	
+};
 
+var createForm = function(){
+	var simple = new Ext.form.Form({
+					        labelWidth: 75, // label settings here cascade unless overridden
+					        url:'save-form.php'
+					    });
+					    simple.add(
+					        new Ext.form.TextField({
+					            fieldLabel: 'Lookup',
+					            name: 'lookup',
+					            width:175,
+					            allowBlank:true
+					        }),
+					
+					        new Ext.form.TextField({
+					            fieldLabel: 'custom',
+					            name: 'custom',
+					            width:175
+					        })										
+					    );
+
+					    //simple.addButton('Save');
+					    //simple.addButton('Cancel');		
+					   
+					   return simple;		
+}
 
 Ext.EventManager.onDocumentReady(Simple.init, Simple, true);
 
