@@ -154,13 +154,29 @@ var createRestrictionGui = function(node, indent, parentDivId) {
             	var divId = (Math.random() * 100000).toFixed();   
             	dh.append(parentDivId, {tag: 'div', id: divId});
             	
-            	if (restrictedOn.type !== undefined ) {	//Primitive Type
+            	if (restrictedOn.type !== undefined ) {	//Primitive Type... just fill in the value
                     var primitiveRestrictedTo = restrictedOn.type
-                    dh.append(parentDivId, {html : indent + " Primitive Type Slot to fill in: " + restrictedOn.label + " with a " + primitiveRestrictedTo.value });
+                    
+                    	var simple = new Ext.form.Form({
+					        labelWidth: 75, // label settings here cascade unless overridden
+					        url:'save-form.php'
+					    });
+					    simple.add(
+					        new Ext.form.TextField({
+					            fieldLabel: restrictedOn.label ,
+					            name: 'hasValue',
+					            width:175,
+					            allowBlank:false
+					        })					
+					    );
+                       dh.append(divId, {tag: 'h3', html : indent + 'Value:' });
+ 
+					   simple.render(divId);
+					   
             	} else if ( (restrictedTo !== undefined) && (restrictedTo !== null)) {	//is it a class restriction?
                                        
                     if (restrictedTo.restrictions === undefined || restrictedTo.restrictions === null || restrictedTo.restrictions.size() === 0){	// ie) we are at a leaf node so display gui
-                        dh.append(divId, {html : indent + " Restricted To Slot to fill in: " + restrictedOn.label + " with a " + restrictedTo.term });
+                        dh.append(divId, {tag: 'h3', html : indent + restrictedTo.term });
  
 	                    var simple = createForm();	
 					                       
@@ -186,7 +202,16 @@ var createRestrictionGui = function(node, indent, parentDivId) {
                 }
             }
         }
-	    //dh.append(parentDivId, {html : indent + "End of details for " + node.uri}) ;
+        else if ((node.individuals !== undefined) && (node.individuals !== null) && (node.individuals.size() > 0)){
+        	var simple = createForm();	
+   	    	simple.add(createComboBox(node.individuals));
+           	var divId = (Math.random() * 100000).toFixed();   
+           	dh.append(parentDivId, {tag: 'div', id: divId});  
+        	simple.render(divId);
+        }
+        else{
+	    	dh.append(parentDivId, {html : indent + "error: is this a nothing node? uri:" + node.uri}) ;
+        }
     };
 
 var createComboBox = function(individuals){
