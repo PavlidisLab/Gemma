@@ -327,11 +327,6 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.ontology.AnnotationPropertyImpl">
-				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
-				</bean>
-			</entry>
 			<entry key="ubic.gemma.util.progress.ProgressData">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -381,7 +376,7 @@
 						<list>
 							<value>resource</value>
 							<value>sourceOntology</value>
-							<value>ontResource</value>
+							<value>model</value>
 						</list>
 					</property>
 				</bean>
@@ -413,8 +408,7 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="excludes">
-						<list>
-							<value>ind</value>
+						<list>						
 							<value>sourceOntology</value>
 							<value>instanceOf</value>
 						</list>
@@ -425,8 +419,7 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="excludes">
-						<list>
-							<value>property</value>
+						<list>						
 							<value>sourceOntology</value>
 						</list>
 					</property>
@@ -437,7 +430,6 @@
 					<property name="type" value="bean" />
 					<property name="excludes">
 						<list>
-							<value>resource</value>
 							<value>sourceOntology</value>
 						</list>
 					</property>
@@ -448,7 +440,6 @@
 					<property name="type" value="bean" />
 					<property name="excludes">
 						<list>
-							<value>resource</value>
 							<value>sourceOntology</value>
 						</list>
 					</property>
