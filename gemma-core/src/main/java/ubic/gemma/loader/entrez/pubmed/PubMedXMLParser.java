@@ -31,6 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Attr;
@@ -499,16 +500,6 @@ public class PubMedXMLParser {
             }
         }
 
-        //        
-        // Node dn = ( Node ) dayExpression.evaluate( dateNode, XPathConstants.NODE );
-        // Node y = ( Node ) yearExpression.evaluate( dateNode, XPathConstants.NODE );
-        // Node m = ( Node ) monthExpression.evaluate( dateNode, XPathConstants.NODE );
-        // Node medLineDate = ( Node ) medlineDateExpression.evaluate( dateNode, XPathConstants.NODE );
-        // String yearText = XMLUtils.getTextValue( ( Element ) y );
-        // String medLineText = XMLUtils.getTextValue( ( Element ) medLineDate );
-        // String monthText = XMLUtils.getTextValue( ( Element ) m );
-        // String dayText = XMLUtils.getTextValue( ( Element ) dn );
-
         df.setLenient( true );
 
         if ( yearText == null && medLineText != null ) {
@@ -544,12 +535,14 @@ public class PubMedXMLParser {
         String dateString = monthText + " " + ( dayText == null ? "1" : dayText ) + ", " + yearText;
 
         try {
-            return df.parse( dateString );
+            return DateUtils.parseDate( dateString, formats );
         } catch ( ParseException e ) {
             log.warn( "Could not parse date " + dateString + " from medlinetext=" + medLineText );
             return null;
         }
     }
+
+    private final String[] formats = new String[] { "MMM dd, yyyy" };
 
     // /**
     // * This is a fallback that should not get used.
