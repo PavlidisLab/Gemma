@@ -82,7 +82,7 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
-        int oldPercent = pJob.getProgressData().getPercent();
+        int oldPercent = pJob.getProgressData().iterator().next().getPercent();
 
         totalBytesRead = totalBytesRead + bytesRead;
         Double newPercent = ( totalBytesRead / totalToRead ) * 100;

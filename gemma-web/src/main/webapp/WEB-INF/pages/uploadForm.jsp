@@ -7,7 +7,7 @@
         <fmt:message key="upload.heading" />
         </content>
         
-        <script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
+        <script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
         <script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
         <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
         <script type='text/javascript' src="<c:url value="scripts/progressbar.js"/>"></script>

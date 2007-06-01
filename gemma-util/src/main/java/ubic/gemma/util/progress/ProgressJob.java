@@ -75,9 +75,7 @@ public interface ProgressJob {
 
     public abstract JobInfo getJobInfo();
 
-    public abstract String getTrackingId();
-
-    public abstract void setTrackingId( String trackingId );
+    public abstract Object getTaskId();
 
     public abstract String getForwardingURL();
 

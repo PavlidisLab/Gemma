@@ -36,8 +36,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     protected Queue<ProgressData> pData;
     protected JobInfo jInfo; // this obj is persisted to DB
     protected int currentPhase;
-    protected String trackingId; // session id
     protected String forwardingURL;
+    protected Object taskId;
 
     /*
      * (non-Javadoc)
@@ -46,7 +46,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      */
     @Override
     public String toString() {
-        return "TrackingId: " + trackingId + "  JobID: " + jInfo.getId() + "  TaskID: " + jInfo.getTaskId();
+        return "TaskID: " + jInfo.getTaskId();
     }
 
     /**
@@ -59,6 +59,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         this.pData = new ConcurrentLinkedQueue<ProgressData>();
         this.pData.add( new ProgressData( 0, description, false ) );
         this.jInfo = info;
+        this.taskId = info.getTaskId();
         currentPhase = 0;
     }
 
@@ -159,20 +160,6 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     }
 
     /**
-     * @return the anonymousId
-     */
-    public String getTrackingId() {
-        return trackingId;
-    }
-
-    /**
-     * @param anonymousId the anonymousId to set
-     */
-    public void setTrackingId( String trackingId ) {
-        this.trackingId = trackingId;
-    }
-
-    /**
      * @return the forwardingURL
      */
     public String getForwardingURL() {
@@ -191,6 +178,10 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
             this.jInfo.setMessages( message );
         else
             this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
+    }
+
+    public Object getTaskId() {
+        return this.taskId;
     }
 
 }

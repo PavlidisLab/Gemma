@@ -107,10 +107,6 @@ public class ProgressManager {
 
             newJob = new ProgressJobImpl( createdJobI, description );
 
-            // if no user is set then the userName should be a sessionId
-
-            if ( createdJobI.getUser() == null ) newJob.setTrackingId( userId );
-
             currentJob.set( taskId );
 
             newJob.setPhase( 0 );
@@ -179,7 +175,7 @@ public class ProgressManager {
 
             for ( Iterator values = progressJobs.get( name ).iterator(); values.hasNext(); ) {
                 ProgressJob job = ( ProgressJob ) values.next();
-                log.debug( "====> progressJob: " + job.getTrackingId() );
+                log.debug( "====> progressJob: " + job.getTaskId() );
             }
         }
 
@@ -302,15 +298,23 @@ public class ProgressManager {
 
         progressJob.failed( cause );
 
-        cleanupJob( progressJob );
+        currentJob.set( null );
+        jobInfoDao.update( progressJob.getJobInfo() );
 
         return true;
     }
 
     /**
+     * To be called ONLY if the task is completely done with and no clients care any more. This is a hack! But if we
+     * don't do this, we will leak memory.
+     * 
      * @param progressJob
      */
-    private static void cleanupJob( ProgressJob progressJob ) {
+    public void cleanupJob( Object taskId ) {
+
+        ProgressJob progressJob = progressJobsByTaskId.get( taskId );
+
+        if ( progressJob == null ) return;
 
         // stored by user?
         if ( ( progressJob.getUser() != null ) && ( progressJobs.containsKey( progressJob.getUser() ) ) ) {
@@ -319,21 +323,8 @@ public class ProgressManager {
             if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getUser() );
         }
 
-        // stored by sessionID?
-        if ( ( progressJob.getTrackingId() != null ) && ( progressJobs.containsKey( progressJob.getTrackingId() ) ) ) {
-            Collection jobs = progressJobs.get( progressJob.getTrackingId() );
-            jobs.remove( progressJob );
-            if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getTrackingId() );
-        }
+        progressJobsByTaskId.remove( taskId );
 
-        // if ( progressJobsById.containsKey( progressJob.getId() ) ) progressJobsById.remove( progressJob.getId() );
-
-        if ( ( progressJob.getJobInfo().getTaskId() != null )
-                && ( progressJobsByTaskId.containsKey( progressJob.getJobInfo().getTaskId() ) ) )
-            progressJobsByTaskId.remove( progressJob.getJobInfo().getTaskId() );
-
-        currentJob.set( null );
-        jobInfoDao.update( progressJob.getJobInfo() );
     }
 
     /**
@@ -364,8 +355,8 @@ public class ProgressManager {
         // }
         progressJob.done();
 
-        cleanupJob( progressJob );
-        log.debug( "cleanup done" );
+        currentJob.set( null );
+        jobInfoDao.update( progressJob.getJobInfo() );
         return true;
     }
 

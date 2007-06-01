@@ -4,7 +4,7 @@
 
 
 <script type='text/javascript'
-	src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
+	src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 <script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/progressbar.js'></script>

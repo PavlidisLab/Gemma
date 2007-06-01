@@ -76,6 +76,7 @@ public class ProgressStatusService {
             result.add( data );
             if ( data.isDone() ) {
                 log.debug( "Job is done! forward to " + data.getForwardingURL() );
+                progressManager.cleanupJob(taskId);
             }
         }
 
@@ -92,6 +93,7 @@ public class ProgressStatusService {
         try {
             log.debug( "Got cancellation for " + taskId );
             taskRunningService.cancelTask( taskId, false );
+            progressManager.cleanupJob(taskId);
         } catch ( Exception e ) {
             return false;
         }
