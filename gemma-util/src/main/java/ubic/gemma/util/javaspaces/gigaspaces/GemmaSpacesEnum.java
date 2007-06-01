@@ -18,6 +18,10 @@
  */
 package ubic.gemma.util.javaspaces.gigaspaces;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 /**
  * An enumeration of java spaces used by Gemma.
  * 
@@ -26,20 +30,25 @@ package ubic.gemma.util.javaspaces.gigaspaces;
  */
 public enum GemmaSpacesEnum {
 
-    // TODO this also needs to be pulled from build.properties (gemma.spaces.url.0)
-    DEFAULT_SPACE("rmi://localhost:10098/./remotingSpace");
+    DEFAULT_SPACE(System.getProperty( "user.home" ) + System.getProperty( "file.separator" ) + "build.properties");
 
     private String spaceUrl = null;
 
     /**
      * @param url
      */
-    private GemmaSpacesEnum( String url ) {
-        this.spaceUrl = url;
+    private GemmaSpacesEnum( String gemmaProperties ) {
+        Properties properties = new Properties();
+        try {
+            properties.load( new FileInputStream( gemmaProperties ) );
+            this.spaceUrl = properties.getProperty( "gemma.spaces.url.0" );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Cannot load properties file.  Error is: " + e );
+        }
     }
 
     /**
-     * @return
+     * @return String
      */
     public String getSpaceUrl() {
         return this.spaceUrl;
