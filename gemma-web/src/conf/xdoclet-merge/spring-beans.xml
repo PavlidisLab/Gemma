@@ -388,7 +388,7 @@
 						<list>
 							<value>resource</value>
 							<value>sourceOntology</value>
-							<value>ontResource</value>
+							<value>model</value>
 						</list>
 					</property>
 				</bean>
