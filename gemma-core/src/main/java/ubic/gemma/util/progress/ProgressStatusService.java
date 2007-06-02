@@ -59,11 +59,7 @@ public class ProgressStatusService {
         ProgressJob job = progressManager.getJob( taskId );
 
         if ( job == null ) {
-            log.debug( "No job with id " + taskId + " is live." );
-            ProgressData progressData = new ProgressData( 100, "No Live Job Found", true,
-                    ProgressManager.FORWARD_DEFAULT );
-            progressData.setDone( true ); // might have died before first check.
-            result.add( progressData );
+            // we might just need to wait a little while for the job to register.
             return result;
         }
 

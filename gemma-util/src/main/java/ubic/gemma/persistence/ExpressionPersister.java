@@ -506,8 +506,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                             throws org.hibernate.HibernateException {
                         ArrayDesign arrayDesignUsed = baF.getArrayDesignUsed();
                         session.update( arrayDesignUsed );
-                        session.update( arrayDesignUsed.getDesignProvider().getAuditTrail() );
-                        arrayDesignUsed.getDesignProvider().getAuditTrail().getEvents().size();
+                        if ( arrayDesignUsed.getDesignProvider() != null ) {
+                            session.update( arrayDesignUsed.getDesignProvider().getAuditTrail() );
+                            arrayDesignUsed.getDesignProvider().getAuditTrail().getEvents().size();
+                        }
                         arrayDesignUsed.getMergees().size();
                         return null;
                     }

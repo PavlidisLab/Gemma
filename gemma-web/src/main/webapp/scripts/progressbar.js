@@ -220,11 +220,18 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	
 	 
 	createIndeterminateBarDetails : function (w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
-		var t = '<div ><form style="float:left" ><input type="button" id="cancel-button" name="Cancel" value="cancel" /></form> ';
-		t += '<img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
-		var ipbHeader = '<div id="progressBar"><div id="progressBarText"> <div class="clob" style="width:550px;margin:10px;padding:4px;" id="progressTextArea"> </div>	</div> <div id="theMeter">	';
-		var ipbFooter = '</div>	</div>	 ';
-		Ext.DomHelper.overwrite("progress-area", ipbHeader + t + ipbFooter);
+		var div = '<div id="progressTextArea" class="clob" style="font-size:smaller;width:650px;margin:10px;padding:4px;" ><input type="textarea" /></div><div style="width:650px;"><input style="float:left" type="button" id="cancel-button" name="Cancel" value="Cancel job" /><img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
+		Ext.DomHelper.overwrite("progress-area", div);
+//	 	var textArea = new Ext.form.TextArea({grow: false, });
+//	 	textArea.disable();
+//	 	Ext.DomHelper.overwrite("progressTextArea", textArea);
+//	 	
+//		var rz = new Ext.Resizable("progressTextArea", {
+//        	wrap:true,
+//        	minHeight:100,
+//        	pinned:true 
+//    	});
+//    	//rz.on('resize', grid.autoSize, grid);
 	} 
 	
  

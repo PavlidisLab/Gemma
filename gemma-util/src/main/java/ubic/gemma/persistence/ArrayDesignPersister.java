@@ -145,7 +145,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( !arrayDesignCache.containsKey( ad.getName() )
                 && !( ad.getShortName() != null && arrayDesignCache.containsKey( ad.getShortName() ) ) ) {
             ad = persistArrayDesign( ad );
-            ad = arrayDesignService.loadFully( ad.getId() );
+            arrayDesignService.thaw( ad );
             assert !isTransient( ad );
             addToDesignElementCache( ad );
             arrayDesignCache.put( ad.getName(), ad );

@@ -69,10 +69,9 @@ public class QueryUtils {
             queryObject.setMaxResults( 1 );
             java.util.List results = queryObject.list();
             Object result = null;
-            if ( results != null ) {
-                result = results.iterator().next();
+            if ( results != null && results.size() > 0 ) {
+                return results.iterator().next();
             }
-
             return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw SessionFactoryUtils.convertHibernateAccessException( ex );
