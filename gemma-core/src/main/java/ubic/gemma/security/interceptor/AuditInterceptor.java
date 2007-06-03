@@ -163,19 +163,28 @@ public class AuditInterceptor implements MethodInterceptor {
     private void addCreateAuditEvent( Auditable d ) {
         assert d != null;
         log.debug( "Create audit event for: " + d.getClass() );
- 
+
         AuditTrail at = d.getAuditTrail();
 
-        if ( at != null && at.getEvents() !=null && at.getEvents().size() == 1){
-            if (at.getEvents().iterator().next().getAction() == AuditAction.CREATE ) {
+        try {
+            if ( at != null && at.getEvents() != null && at.getEvents().size() == 1 ) {
+                if ( at.getEvents().iterator().next().getAction() == AuditAction.CREATE ) {
 
-            // This can happen when we persist objects and then let this interceptor look at them again while persisting
-            // parent objects. Harmless.
+                    // This can happen when we persist objects and then let this interceptor look at them again while
+                    // persisting
+                    // parent objects. Harmless.
 
-            // log.warn( "Expected empty or null audit trail for creating object, but got " + at.getEvents().size()
-            // + " events for " + d + ", first one was " + at.getEvents().iterator().next().getAction() );
-                return;
+                    // log.warn( "Expected empty or null audit trail for creating object, but got " +
+                    // at.getEvents().size()
+                    // + " events for " + d + ", first one was " + at.getEvents().iterator().next().getAction() );
+                    return;
+                }
             }
+        } catch ( org.hibernate.LazyInitializationException e ) {
+            log
+                    .warn( "Could not check audit trail for "
+                            + d
+                            + ", events were not thawed; probably okay because this only happens when the object already exists in the system." );
         }
 
         // initialize the audit trail, if necessary.

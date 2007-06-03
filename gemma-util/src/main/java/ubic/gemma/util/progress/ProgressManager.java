@@ -324,8 +324,8 @@ public class ProgressManager {
         }
 
         progressJobsByTaskId.remove( taskId );
-
-    }
+        log.debug("Completed cleanup of job: " + taskId);
+    } 
 
     /**
      * Removes ProgressJob from notification lists and provides general clean up. Also causes job to be persisted to db.

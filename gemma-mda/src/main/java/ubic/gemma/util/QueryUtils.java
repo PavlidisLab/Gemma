@@ -20,6 +20,8 @@ package ubic.gemma.util;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Session;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 
@@ -31,6 +33,8 @@ import org.springframework.orm.hibernate3.SessionFactoryUtils;
  */
 public class QueryUtils {
 
+    private static Log log = LogFactory.getLog( QueryUtils.class.getName() );
+    
     /**
      * @param queryString with no parameters
      * @return a single object
@@ -72,6 +76,7 @@ public class QueryUtils {
             if ( results != null && results.size() > 0 ) {
                 return results.iterator().next();
             }
+            log.warn( "Nothing found for id=" + id );
             return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw SessionFactoryUtils.convertHibernateAccessException( ex );

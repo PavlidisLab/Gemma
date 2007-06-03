@@ -54,7 +54,7 @@ public class SpringContextUtil {
             String[] paths = getConfigLocations( testing, compassOn, gigaspacesOn, isWebApp );
             ctx = new ClassPathXmlApplicationContext( paths );
             if ( ctx != null ) {
-                log.info( "Got context" );
+                log.debug( "Got context" );
             } else {
                 log.error( "Failed to load context" );
             }

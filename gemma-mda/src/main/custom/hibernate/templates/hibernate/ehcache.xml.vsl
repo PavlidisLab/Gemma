@@ -1,3 +1,5 @@
+<!-- NOTE this is a custom template for Gemma ! -->
+<!-- $Id$ -->
 <ehcache>
 
     <!-- Sets the path to the directory where cache .data files are created.
@@ -35,7 +37,7 @@
         eternal="false"
         timeToIdleSeconds="120"
         timeToLiveSeconds="120"
-        overflowToDisk="true" />
+        overflowToDisk="false" />
         
 <!-- customization -->        
 <cache
@@ -43,13 +45,13 @@
     maxElementsInMemory="500"
     eternal="false"
     timeToLiveSeconds="6000"
-    overflowToDisk="true"/>
+    overflowToDisk="false"/>
  
 <cache
     name="org.hibernate.cache.UpdateTimestampsCache"
     maxElementsInMemory="5000"
     eternal="true"
-    overflowToDisk="true"/>
+    overflowToDisk="false"/>
 <!-- end customization -->
 
 #if($hibernateEnableCache == "true")

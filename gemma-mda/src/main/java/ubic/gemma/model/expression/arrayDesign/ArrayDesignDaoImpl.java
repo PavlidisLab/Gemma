@@ -640,7 +640,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         timer.start();
         log.info( "Thawing array design ..." );
         String queryString = "select ad from ArrayDesignImpl ad inner join "
-                + " fetch ad.compositeSequences cs inner join fetch cs.biologicalCharacteristic bs "
+                + " fetch ad.compositeSequences cs left join fetch cs.biologicalCharacteristic bs "
                 + " inner join fetch bs.taxon "
                 + " inner join fetch ad.auditTrail auditTrail "
                 + " left join fetch auditTrail.events "
@@ -1072,6 +1072,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 timer.reset();
                 timer.start();
 
+                String deepQuery = "select bs from BioSequenceImpl bs left outer join fetch bs.bioSequence2GeneProduct bs2gp "
+                        + "left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where bs = :bs";
+                org.hibernate.Query queryObject = session.createQuery( deepQuery );
+
                 int i = 0;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                     BioSequence bs = cs.getBiologicalCharacteristic();
@@ -1088,6 +1092,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                             continue;
                         }
 
+//                        queryObject.setParameter( "bs", bs );
+//                        bs = ( BioSequence ) queryObject.list().iterator().next();
+                         
                         for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
                             if ( bs2gp == null ) {
                                 continue;
@@ -1095,9 +1102,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                             GeneProduct geneProduct = bs2gp.getGeneProduct();
                             if ( geneProduct != null && geneProduct.getGene() != null ) {
                                 Gene g = geneProduct.getGene();
-                                g.getAliases().size();
-                                session.evict( g );
-                                session.evict( geneProduct );
+                                g.getAliases().size(); // slow
+                                // session.evict( g );
+                                // session.evict( geneProduct );
                             }
 
                         }
@@ -1113,8 +1120,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
-                    if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
-                    session.evict( bs );
+                    // if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
+                    // session.evict( bs );
                 }
                 log.info( "CS assoc thaw done (" + timer.getTime() + " ms elapsed)" );
                 arrayDesign.getSubsumedArrayDesigns().size();
