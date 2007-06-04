@@ -18,7 +18,9 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import net.jini.space.JavaSpace;
+import ubic.gemma.javaspaces.JavaSpacesTask;
+import ubic.gemma.loader.expression.geo.model.GeoDataset;
 
 /**
  * A task interface to wrap {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} type jobs. Tasks of this
@@ -28,16 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public interface ExpressionExperimentTask {
-
-    /**
-     * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
-     * This method performs some action on the given {@link ExpressionExperiment}.
-     * 
-     * @param expressionExperiment
-     * @return Result
-     */
-    public GigaSpacesResult execute( ExpressionExperiment expressionExperiment );
+public interface ExpressionExperimentTask extends JavaSpacesTask {
 
     /**
      * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
@@ -49,5 +42,6 @@ public interface ExpressionExperimentTask {
      * @return Result
      */
     public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+    // FIXME Just take in the command object ExpressionExperimentLoadCommand ... seems more robust
 
 }

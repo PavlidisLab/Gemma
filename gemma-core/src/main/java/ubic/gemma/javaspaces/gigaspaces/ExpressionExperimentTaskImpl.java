@@ -20,39 +20,39 @@ package ubic.gemma.javaspaces.gigaspaces;
 
 import java.util.Collection;
 
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.progress.GigaSpacesProgressAppender;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
+public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements ExpressionExperimentTask {
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
-    private GigaSpacesTemplate gigaSpacesTemplate = null;
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see ubic.gemma.javaspaces.JavaSpacesTask#execute(java.lang.Object)
      */
-    public GigaSpacesResult execute( ExpressionExperiment expressionExperiment ) {
+    public GigaSpacesResult execute( Object obj ) {
+        // TODO Unsed, but will need to load expression experiments directly (as opposed to using fetchAndLoad).
+        if ( !( obj instanceof ExpressionExperiment ) ) {
+            throw new RuntimeException( "Task of type " + this.getClass().getSimpleName()
+                    + " cannot execute on objects of type " + obj.getClass().getSimpleName() );
+        }
 
+        ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) obj;
         ExpressionExperiment persistedExpressionExperiment = expressionExperimentService.create( expressionExperiment );
         Long id = persistedExpressionExperiment.getId();
         counter++;
@@ -72,26 +72,13 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
     @SuppressWarnings("unchecked")
     public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
 
-        log.info( "executing task " + this.getClass().getName() );
-
-        log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
-                + SecurityContextHolder.getContext().getAuthentication() );
-
-        // AppenderAttachable appenderAttachable = new AppenderAttachableImpl();
-        Logger logger = LogManager.getLogger( "ubic.gemma" );
-        logger.setLevel( Level.INFO );
-        GigaSpacesProgressAppender javaSpacesAppender = new GigaSpacesProgressAppender( gigaSpacesTemplate );
-        if ( !logger.isAttached( javaSpacesAppender ) ) {
-            // appenderAttachable.addAppender( javaSpacesAppender );
-            logger.addAppender( javaSpacesAppender );
-        }
+        super.initProgressAppender( this.getClass() );
 
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
                 doSampleMatching );
 
         counter++;
         GigaSpacesResult result = new GigaSpacesResult();
-        // result.setAnswer( datasets.size() );
         result.setAnswer( datasets );
         result.setTaskID( counter );
 
@@ -119,6 +106,6 @@ public class ExpressionExperimentTaskImpl implements ExpressionExperimentTask {
      * @param gigaSpacesTemplate
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
-        this.gigaSpacesTemplate = gigaSpacesTemplate;
+        super.setGigaSpacesTemplate( gigaSpacesTemplate );
     }
 }
