@@ -104,7 +104,10 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     }
 
     /**
+     * This method has been deprecated in favor of an ajax call.
+     * 
      * @param request
+     * @deprecated
      */
     private void cancel( HttpServletRequest request ) {
         Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
@@ -251,7 +254,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                             doSampleMatching );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     model.put( "arrayDesigns", arrayDesigns );
-                    ProgressManager.destroyProgressJob( job, !AJAX );
+                    // ProgressManager.destroyProgressJob( job, !AJAX );
 
                     if ( arrayDesigns.size() == 1 ) {
                         return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
@@ -272,14 +275,14 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
                         model.put( "expressionExperiment", loaded );
-                        ProgressManager.destroyProgressJob( job, !AJAX );
+                        // ProgressManager.destroyProgressJob( job, !AJAX );
                         return new ModelAndView( new RedirectView(
                                 "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                                         + result.iterator().next().getId() ) );
                     } else {
                         // model.put( "expressionExeriments", result );
                         this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-                        ProgressManager.destroyProgressJob( job, !AJAX );
+                        // ProgressManager.destroyProgressJob( job, !AJAX );
                         for ( ExpressionExperiment ee : result )
                             list += ee.getId() + ",";
                         return new ModelAndView( new RedirectView(
