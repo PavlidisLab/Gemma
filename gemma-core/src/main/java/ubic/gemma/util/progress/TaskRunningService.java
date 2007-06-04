@@ -193,6 +193,7 @@ public class TaskRunningService {
         cancelledTasks.put( taskId, toCancel );
         submittedTasks.remove( taskId );
         ProgressManager.signalCancelled( taskId );
+        //GigaSpacesUtil.cancel(taskId);
     }
 
     /**
