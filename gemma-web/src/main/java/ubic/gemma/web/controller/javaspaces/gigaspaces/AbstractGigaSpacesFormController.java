@@ -130,10 +130,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
                 // .getAuthentication().getPrincipal() );
                 // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
                 // "http://www.bioinformatics.ubc.ca/Gemma/" );
-                // TODO commented out while we try to ajaxify this.
-                // this.saveMessage( request, "No workers are registered to service task "
-                // + taskName.getClass().getSimpleName() + " on the compute server at this time." );
-                // return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+
                 throw new RuntimeException( "No workers are registered to service task "
                         + taskName.getClass().getSimpleName() + " on the compute server at this time." );
             }
@@ -147,12 +144,6 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
 
             job = getSpaceRunner( taskId, context, command, this.getMessageUtil() );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInWebapp ) {
-            // TODO commented out while we try to ajaxify this.
-            // this
-            // .saveMessage( request,
-            // "This task must be run on the compute server, but the space is not running. Please try again later." );
-
-            // return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
             throw new RuntimeException(
                     "This task must be run on the compute server, but the space is not running. Please try again later" );
         }
@@ -162,7 +153,6 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         }
 
         assert taskId != null;
-        // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
         return taskId;
