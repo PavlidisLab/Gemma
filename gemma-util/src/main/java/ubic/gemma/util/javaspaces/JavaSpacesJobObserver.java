@@ -76,7 +76,8 @@ public class JavaSpacesJobObserver implements RemoteEventListener {
 
             /* updated the progress with message from notification */
             String message = ( String ) entry.getFieldValue( "message" );
-            log.info( message );
+
+            log.debug( message );
             ProgressManager.updateJob( this.taskId, message );
 
         } catch ( Exception e ) {
