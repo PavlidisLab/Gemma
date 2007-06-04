@@ -339,6 +339,15 @@ public class GigaSpacesUtil implements ApplicationContextAware {
         return serviceable;
     }
 
+    /**
+     * Cancels the task running with the taskId.
+     * 
+     * @param taskId
+     */
+    public static void cancel( String taskId ) {
+        throw new UnsupportedOperationException( "Method not yet implemented." );
+    }
+
     /*
      * (non-Javadoc)
      * 
