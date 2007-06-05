@@ -165,14 +165,15 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
             log.debug( "event: " + arrivedRemoteEvent );
             ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
             Object taskId = ( Object ) entry.getFieldValue( "taskId" );
-            log.info( " Stopping execution of task: " + taskId );
 
-            itbThread.stop();
+            if ( taskId.equals( worker.getTaskId() ) ) {
+                log.info( "Stopping execution of task: " + taskId );
+                itbThread.stop();
+            }
 
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
 
     }
-
 }
