@@ -3,7 +3,14 @@
 
 //expose the main layout panels for use later. 
  var northPanel, southPanel, eastPanel, westPanel, centerPanel;
- 
+
+
+onSubmit = function() {
+	
+}
+
+
+
 //The simple function will be called when the document is finished loading.  See event at bottem of file 
 Simple = function() {
 
@@ -122,17 +129,20 @@ var initTree = function(div){
 //The call back method for the dwr call
 var displayRestrictionsPanel = function(node){
 	console.log(dwr.util.toDescriptiveString(node, 10));
-	createRestrictionGui(node);
+	
+	var vc = { termUri : node.uri, properties : [] };
+	
+	createRestrictionGui(node, vc);
 };
 
 //Recursive function that walks the node given to it and creates a coresponding form to fill in
-var createRestrictionGui = function(node, indent, parentDivId) {
+var createRestrictionGui = function(node, vc, indent, parentDivId) {
 
 		var dh = Ext.DomHelper;  //allows html output
 
 		if (indent === undefined){
 			dh.overwrite("center-div", {html : ""});
-			indent = "";
+			indent = 0;
 		}
 		if (parentDivId === undefined) {
 			parentDivId = "center-div";
@@ -140,7 +150,7 @@ var createRestrictionGui = function(node, indent, parentDivId) {
 	
 		
 
-		//dh.append(parentDivId, {html : indent + "Details for: " + node.uri });
+		dh.append(parentDivId, {html : node.term+ ": " + node.comment});
 
 
       
@@ -152,67 +162,83 @@ var createRestrictionGui = function(node, indent, parentDivId) {
             	var restrictedTo = res[i].restrictedTo;
             	//make a nested div for adding to.
             	var divId = (Math.random() * 100000).toFixed();   
-            	dh.append(parentDivId, {tag: 'div', id: divId});
+            	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});
+                dh.append(divId, {html : restrictedOn.label});
+ 
             	
-            	if (restrictedOn.type !== undefined ) {	//Primitive Type... just fill in the value
+            	if (restrictedOn.type !== undefined ) {	//Primitive Type
                     var primitiveRestrictedTo = restrictedOn.type
-                    
+ 
                     	var simple = new Ext.form.Form({
 					        labelWidth: 75, // label settings here cascade unless overridden
 					        url:'save-form.php'
 					    });
-					    simple.add(
-					        new Ext.form.TextField({
+					    
+					     var handler = function(field) {
+					   		vc.object.value = field.getValue();
+					   };
+					    var valueField = new Ext.form.TextField({
 					            fieldLabel: restrictedOn.label ,
 					            name: 'hasValue',
 					            width:175,
-					            allowBlank:false
-					        })					
-					    );
-                       dh.append(divId, {tag: 'h3', html : indent + 'Value:' });
+					            allowBlank:false,					           
+					        });
+					     
+					  //valueField.on.createDelegate(this,['valid', handler],true);					       
+					   valueField.on('valid', handler);
+					        
+					   simple.add(valueField);
+                       dh.append(divId, {tag: 'h3', html : 'Value:' });
  
 					   simple.render(divId);
 					   
-            	} else if ( (restrictedTo !== undefined) && (restrictedTo !== null)) {	//is it a class restriction?
+					   
+					   
+            	} else if ( (restrictedTo !== undefined) && (restrictedTo !== null)) {	//Class restriction
                                        
                     if (restrictedTo.restrictions === undefined || restrictedTo.restrictions === null || restrictedTo.restrictions.size() === 0){	// ie) we are at a leaf node so display gui
-                        dh.append(divId, {tag: 'h3', html : indent + restrictedTo.term });
- 
+                        dh.append(divId, {tag: 'h3', html : "Create an instance of: " +restrictedTo.term });
+ 					 
 	                    var simple = createForm();	
 					                       
     	                if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){  //are there examples?
-        		            	simple.add(createComboBox(restrictedTo.individuals));                                 	                    
+        		            	simple.column({width:285},createComboBox(restrictedTo.individuals));                                 	                    
                 	    }
                     
 	                    simple.render(divId);
                     } else{        //Not a leaf node. recurse down another level
-                        dh.append(divId, {html : indent + " The " + restrictedOn.label + " restriction has " + restrictedTo.restrictions.size()+ " slots to fill in"});
-    	            	createRestrictionGui( restrictedTo, "&nbsp;&nbsp;&nbsp;&nbsp;" + indent, divId );
+                        var vcChild = { termUri : restrictedOn.uri, object : { termUri : restrictedTo.uri }, properties : []};
+                        vc.properties.push(vcChild);
+    	            	createRestrictionGui( restrictedTo, vcChild, indent + 3, divId );
                    }                
                     
                 } else if ( res[i].cardinality !== undefined  ) { //Cardinality Type
                     // this will be rare.                  
                     var cardinality = res[i].cardinality;
                     var cardinalityType = res[i].cardinalityType;
-                    dh.append(parentDivId,{ html: indent + " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
+                    dh.append(parentDivId,{ html: " Cardinality Slot to fill in: " + restrictedOn.label + " with " + cardinalityType.term + " "
                             + cardinality + " things" });
                     // todo check range of the property (what 'things' should be) if specified.
                 } else{
-                	  dh.append(parentDivId,{ html: indent + " Error: This should not happen" });                	
+                	  dh.append(parentDivId,{ html: " Error: Not a typical type.  " + restrictedOn.label});                	
                 }
             }
         }
-        else if ((node.individuals !== undefined) && (node.individuals !== null) && (node.individuals.size() > 0)){
-        	var simple = createForm();	
-   	    	simple.add(createComboBox(node.individuals));
-           	var divId = (Math.random() * 100000).toFixed();   
-           	dh.append(parentDivId, {tag: 'div', id: divId});  
+        else{//No restrictions must be a leaf node. 
+			
+			//Create new div
+        	var divId = (Math.random() * 100000).toFixed();   
+           	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});
+           	dh.append(divId, {tag: 'h3', html :  "Create an instance of: " + node.term });      
+           	var simple = createForm();	
+           	
+           	//If there already exisit individuals display them in a drop down box so the user can select one.
+            if ((node.individuals !== undefined) && (node.individuals !== null) && (node.individuals.size() > 0))
+            	simple.column({width:285},createComboBox(node.individuals)); 	   	    
+    		
         	simple.render(divId);
         }
-        else{
-	    	dh.append(parentDivId, {html : indent + "error: is this a nothing node? uri:" + node.uri}) ;
-        }
-    };
+	};
 
 var createComboBox = function(individuals){
 	     	var recordType = Ext.data.Record.create([
@@ -247,28 +273,32 @@ var createComboBox = function(individuals){
 
 var createForm = function(){
 	var simple = new Ext.form.Form({
-					        labelWidth: 75, // label settings here cascade unless overridden
+					        labelWidth: 50, // label settings here cascade unless overridden
 					        url:'save-form.php'
 					    });
-					    simple.add(
-					        new Ext.form.TextField({
-					            fieldLabel: 'Lookup',
-					            name: 'lookup',
-					            width:175,
-					            allowBlank:true
-					        }),
-					
-					        new Ext.form.TextField({
-					            fieldLabel: 'custom',
-					            name: 'custom',
-					            width:175
-					        })										
-					    );
+					    
+    simple.column(
+    	{width:250},
+        new Ext.form.TextField({
+            fieldLabel: 'Lookup',
+            name: 'lookup',
+            width:150,
+            allowBlank:true
+        }));
 
-					    //simple.addButton('Save');
-					    //simple.addButton('Cancel');		
-					   
-					   return simple;		
+	simple.column(
+		{width:250},
+        new Ext.form.TextField({
+            fieldLabel: 'custom',
+            name: 'custom',
+            width:150
+        })										
+    );
+
+    //simple.addButton('Save');
+    //simple.addButton('Cancel');		
+   
+   return simple;		
 }
 
 Ext.EventManager.onDocumentReady(Simple.init, Simple, true);
