@@ -31,9 +31,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 
@@ -56,7 +59,7 @@ import ubic.gemma.util.QueryUtils;
  */
 public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
 
-    private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
+    private static final int LOGGING_UPDATE_EVENT_COUNT = 2000;
     static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
@@ -652,7 +655,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + " left join fetch ad.designProvider dp inner join fetch dp.auditTrail dpat inner join fetch dpat.events "
                 + " left join fetch gp.gene gene " + " left join fetch gene.aliases " + " where  " + " ad.id = :id";
 
-        ArrayDesign arrayDesign = ( ArrayDesign ) QueryUtils.queryById( getSession(), id, queryString );
+        Session session = getSession();
+        session.setCacheMode( CacheMode.IGNORE );
+        ArrayDesign arrayDesign = ( ArrayDesign ) QueryUtils.queryById( session, id, queryString );
         log.info( "Thaw done (" + timer.getTime() / 1000 + " s elapsed)" );
         return arrayDesign;
     }
@@ -1052,67 +1057,42 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
 
-        templ.setFetchSize( 500 );
+        templ.setFetchSize( 400 );
         log.debug( "Fetch size for thaw is " + templ.getFetchSize() );
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.setCacheMode( CacheMode.IGNORE );
-                session.update( arrayDesign );
-                StopWatch timer = new StopWatch();
+
+                // The following are VERY important for performance.
+                FlushMode oldFlushMode = session.getFlushMode();
+                CacheMode oldCacheMode = session.getCacheMode();
+                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
+                session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
+
+                session.lock( arrayDesign, LockMode.NONE );
+
                 log.info( "Thawing " + arrayDesign + " ..." );
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
 
-                timer.start();
-                log.debug( "... thaw composite sequences ..." );
-                int numToDo = arrayDesign.getCompositeSequences().size();
-                log.debug( "Done in " + timer.getTime() + " ms; now thaw " + numToDo
-                        + " composite sequence associations ..." );
+                int numToDo = arrayDesign.getCompositeSequences().size(); // this takes a little while.
+                log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
 
-                timer.reset();
-                timer.start();
-
-                String deepQuery = "select bs from BioSequenceImpl bs left outer join fetch bs.bioSequence2GeneProduct bs2gp "
-                        + "left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where bs = :bs";
+                String deepQuery = "select cs from CompositeSequenceImpl cs left outer join fetch cs.biologicalCharacteristic bs "
+                        + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
+                        + " left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where cs = :cs";
                 org.hibernate.Query queryObject = session.createQuery( deepQuery );
+                queryObject.setReadOnly( true );
 
+                StopWatch timer = new StopWatch();
+                timer.start();
                 int i = 0;
+
+                Collection<BioSequence> seen = new HashSet<BioSequence>();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    BioSequence bs = cs.getBiologicalCharacteristic();
-                    if ( bs == null ) {
-                        continue;
-                    }
-
-                    session.update( bs );
-
-                    bs.getTaxon();
-
-                    if ( deep ) {
-                        if ( bs.getBioSequence2GeneProduct() == null ) {
-                            continue;
-                        }
-
-//                        queryObject.setParameter( "bs", bs );
-//                        bs = ( BioSequence ) queryObject.list().iterator().next();
-                         
-                        for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                            if ( bs2gp == null ) {
-                                continue;
-                            }
-                            GeneProduct geneProduct = bs2gp.getGeneProduct();
-                            if ( geneProduct != null && geneProduct.getGene() != null ) {
-                                Gene g = geneProduct.getGene();
-                                g.getAliases().size(); // slow
-                                // session.evict( g );
-                                // session.evict( geneProduct );
-                            }
-
-                        }
-                    }
 
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                        log.info( "CS assoc thaw progress: " + i + "/" + numToDo + " ... (" + timer.getTime()
-                                + " ms elapsed)" );
+                        log.info( "CS assoc thaw progress: " + i + "/" + numToDo + " ... (" + timer.getTime() / 1000
+                                + "s elapsed)" );
                         try {
                             Thread.sleep( 10 );
                         } catch ( InterruptedException e ) {
@@ -1120,22 +1100,59 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
-                    // if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
-                    // session.evict( bs );
+                    BioSequence bs = cs.getBiologicalCharacteristic();
+                    if ( bs == null ) {
+                        continue;
+                    }
+
+                    // Sequences can show up more than once per arraydesign. Skipping this check will result in a
+                    // hibernate exception.
+                    if ( !seen.contains( bs ) ) {
+                        try { // just in case...
+                            session.lock( bs, LockMode.NONE );
+                            seen.add( bs );
+                        } catch ( org.hibernate.NonUniqueObjectException e ) {
+                            continue; // no need to process it then
+                        }
+                    }
+
+                    bs.getTaxon();
+
+                    if ( !deep || bs.getBioSequence2GeneProduct() == null ) {
+                        continue;
+                    }
+                    for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                        if ( bs2gp == null ) {
+                            continue;
+                        }
+                        GeneProduct geneProduct = bs2gp.getGeneProduct();
+                        Gene g = geneProduct.getGene();
+                        if ( g != null ) {
+                            g.getAliases().size();
+                        }
+                    }
                 }
-                log.info( "CS assoc thaw done (" + timer.getTime() + " ms elapsed)" );
-                arrayDesign.getSubsumedArrayDesigns().size();
+
+                log.info( "CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
+
+                session.update( arrayDesign );
                 arrayDesign.getLocalFiles().size();
                 arrayDesign.getExternalReferences().size();
                 arrayDesign.getAuditTrail().getEvents().size();
 
-                if ( arrayDesign.getDesignProvider() != null )
+                if ( arrayDesign.getDesignProvider() != null ) {
+                    session.update( arrayDesign.getDesignProvider() );
+                    session.update( arrayDesign.getDesignProvider().getAuditTrail() );
                     arrayDesign.getDesignProvider().getAuditTrail().getEvents().size();
+                }
 
                 if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
 
-                session.clear();
+                if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
 
+                session.clear();
+                session.setFlushMode( oldFlushMode );
+                session.setCacheMode( oldCacheMode );
                 return null;
             }
         }, true );
