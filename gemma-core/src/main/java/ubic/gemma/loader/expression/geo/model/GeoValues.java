@@ -71,7 +71,7 @@ public class GeoValues {
 
     static {
 
-        // These are from GenePix files. In Stanford files they are named differently than described here:
+        // Most of these are from GenePix files. In Stanford files they are named differently than described here:
         // http://www.moleculardevices.com/pages/software/gn_genepix_file_formats.html
 
         // these are location and spot size information.
@@ -112,7 +112,13 @@ public class GeoValues {
         skippableQuantitationTypes.add( "UNF_VALUE" ); // this is the same as 'value' but with the flagged points still
         // in.
 
-        // Remove these if we see them.
+        // these occur in some agilent files
+        skippableQuantitationTypes.add( "PositionX" );
+        skippableQuantitationTypes.add( "PositionY" );
+        skippableQuantitationTypes.add( "rNumPix" );
+        skippableQuantitationTypes.add( "gNumPix" );
+
+        // Remove these if we see them and we're being aggressive
         aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEAN" );
         aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEDIAN" );
         aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEAN" );
