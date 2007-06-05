@@ -29,9 +29,8 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.SecurityUtil;
-import ubic.gemma.util.javaspaces.GemmaSpacesGenericEntry;
+import ubic.gemma.util.javaspaces.GemmaSpacesRegistrationEntry;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 
@@ -44,21 +43,9 @@ import com.j_spaces.core.IJSpace;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwareCLI {
+public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpacesWorkerCLI {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesWorkerCLI.class );
-
-    private GigaSpacesTemplate template;
-
-    private DelegatingWorker worker;
-
-    private Thread itbThread;
-
-    private IJSpace space = null;
-
-    private GemmaSpacesGenericEntry genericEntry = null;
-
-    private Long workerRegistrationId = null;
 
     /*
      * (non-Javadoc)
@@ -68,13 +55,12 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
     @Override
     protected void buildOptions() {
         // TODO Auto-generated method stub
-
     }
 
-    /**
-     * Initializes the spring beans.
+    /*
+     * (non-Javadoc)
      * 
-     * @throws Exception
+     * @see ubic.gemma.javaspaces.gigaspaces.AbstractBaseGemmaSpacesWorkerCLI#init()
      */
     protected void init() throws Exception {
 
@@ -94,7 +80,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
         space = ( IJSpace ) template.getSpace();
 
         workerRegistrationId = RandomUtils.nextLong();
-        genericEntry = new GemmaSpacesGenericEntry();
+        genericEntry = new GemmaSpacesRegistrationEntry();
         genericEntry.message = ExpressionExperimentTask.class.getName();
         genericEntry.registrationId = workerRegistrationId;
         Lease lease = space.write( genericEntry, null, 600000000 );
@@ -102,8 +88,10 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
         if ( lease == null ) log.error( "Null Lease returned" );
     }
 
-    /**
-     * Starts the thread for this worker.
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.javaspaces.gigaspaces.AbstractBaseGemmaSpacesWorkerCLI#start()
      */
     protected void start() {
         log.debug( "Authentication: " + SecurityContextHolder.getContext().getAuthentication() );
@@ -139,51 +127,10 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractSpringAwar
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( this.getClass().getName(), args );
-        try {
-            init();
-            start();
-        } catch ( Exception e ) {
-            log.error( "transError problem..." + e.getMessage() );
-            e.printStackTrace();
-        }
-        return err;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
      */
     @Override
     protected void processOptions() {
         super.processOptions();
     }
-
-    /**
-     * A worker shutdown hook.
-     * 
-     * @author keshav
-     */
-    public class ShutdownHook extends Thread {
-        // TODO move me to a base task.
-        public void run() {
-            log.info( "Worker shut down.  Running shutdown hook ... cleaning up registered entries for this worker." );
-            if ( space != null ) {
-                try {
-                    space.clear( genericEntry, null );
-                } catch ( Exception e ) {
-
-                    log.error( "Error clearing the generic entry " + genericEntry + "for task " + genericEntry.message
-                            + "from space." );
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
 }
