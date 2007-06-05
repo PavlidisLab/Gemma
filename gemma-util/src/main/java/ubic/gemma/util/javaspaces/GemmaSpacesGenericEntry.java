@@ -24,9 +24,10 @@ import com.j_spaces.core.client.MetaDataEntry;
  * This class is handy for testing the javaspaces notifications mechanism. It wraps messages on the server side and
  * sends them back to the client.
  * <p>
- * This class can also be used by workers (in a master-worker pattern) to "register" themselves with a space. Workers
- * are actually automatically registered with a space when the worker is started, but this class serves the purpose of
- * allowing clients to detect both which workers and how many are registered with a given space.
+ * This class can be extended and used by workers (in a master-worker pattern) to "register" themselves with a space.
+ * Workers are actually automatically registered with a space when the worker is started, but extending this class for
+ * registraton purposes allows clients to detect both which workers and how many are registered with a given space. See
+ * {@link GemmaSpacesRegistrationEntry}.
  * 
  * @author keshav
  * @version $Id$
