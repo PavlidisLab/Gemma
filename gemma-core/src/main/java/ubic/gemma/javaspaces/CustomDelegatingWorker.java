@@ -130,14 +130,14 @@ public class CustomDelegatingWorker implements Runnable {
                     }
 
                     // custom
-                    // TODO Get the taskId and set it so the worker holding this CustomDelegatingWorker
-                    // can use it to see if a job should be cancelled.
-                    // try {
-                    // Field field = businessInterface.getField( "taskId" );
-                    // log.info( " ************ " + field );
-                    // } catch ( Exception e ) {
-                    // throw new RuntimeException( "Cannot get field taskId. Exception is " + e );
-                    // }
+                    // FIXME Should get the taskId from the ExpressionExperimentTaskImpl. It is in there,
+                    // just cannot get at it.
+                    try {
+                        Object[] args = call.getArguments();
+                        taskId = args[0];
+                    } catch ( Exception e ) {
+                        throw new RuntimeException( "Cannot get field taskId. Exception is " + e );
+                    }
                     // end custom
 
                     try {
