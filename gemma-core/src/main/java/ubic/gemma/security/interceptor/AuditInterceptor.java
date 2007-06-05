@@ -22,6 +22,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -292,13 +293,13 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
             for ( Object object2 : ( Collection<?> ) returnValue ) {
-                if ( object2 instanceof Auditable ) processAfter( m, ( Auditable ) object2, null );
+                if ( object2 instanceof Auditable ) processAfter( m, ( Auditable ) object2, new HashSet<Object>() );
             }
         } else if ( !Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
             return; // no need to look at it!
         } else {
             Auditable d = ( Auditable ) returnValue;
-            processAfter( m, d, null );
+            processAfter( m, d, new HashSet<Object>() );
         }
 
     }
@@ -330,7 +331,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param m
      * @param d
      */
-    private void processAfter( Method m, Auditable returnValue, Object owner ) {
+    private void processAfter( Method m, Auditable returnValue, Collection<Object> visited ) {
 
         if ( returnValue == null ) return;
 
@@ -354,7 +355,8 @@ public class AuditInterceptor implements MethodInterceptor {
 
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
-            processAssociations( m, returnValue, owner );
+            visited.add( returnValue );
+            processAssociations( m, returnValue, visited );
         }
 
     }
@@ -366,7 +368,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param m
      * @param object
      */
-    private void processAssociations( Method m, Object object, Object owner ) {
+    private void processAssociations( Method m, Object object, Collection<Object> visited ) {
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
@@ -400,25 +402,25 @@ public class AuditInterceptor implements MethodInterceptor {
                 if ( Auditable.class.isAssignableFrom( propertyType ) ) {
 
                     // break vicious cycle in bidirectional relation
-                    if ( owner != null && owner == associatedObject ) continue;
+                    if ( visited.contains( associatedObject ) ) continue;
 
                     if ( log.isTraceEnabled() )
                         log.trace( "Processing audit for property " + propertyNames[j] + ", Cascade=" + cs );
-                    processAfter( m, ( Auditable ) associatedObject, object );
+                    processAfter( m, ( Auditable ) associatedObject, visited );
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                     Collection associatedObjects = ( Collection ) associatedObject;
 
                     for ( Object object2 : associatedObjects ) {
 
                         // break vicious cycle in bidirectional relation
-                        if ( owner != null && owner == object2 ) continue;
+                        if ( visited.contains( object2 ) ) continue;
 
                         if ( Auditable.class.isAssignableFrom( object2.getClass() ) ) {
                             if ( log.isTraceEnabled() ) {
                                 log.trace( "Processing audit for member " + object2 + " of collection "
                                         + propertyNames[j] + ", Cascade=" + cs );
                             }
-                            processAfter( m, ( Auditable ) object2, object );
+                            processAfter( m, ( Auditable ) object2, visited );
                         }
                     }
                 }

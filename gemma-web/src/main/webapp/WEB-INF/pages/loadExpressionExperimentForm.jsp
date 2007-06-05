@@ -44,7 +44,7 @@
 <table class="detail">
 	<tr>
 		<th>
-			<Gemma:label key="databaseEntry.accession.title" />
+			<fmt:message key="databaseEntry.accession.title" />
 		</th>
 		<td>
 			<spring:bind path="command.accession">
@@ -55,7 +55,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperiment.load.platformOnly" />
+			<fmt:message key="expressionExperiment.load.platformOnly" />
 		</th>
 		<td align="left">
 			<spring:bind path="command.loadPlatformOnly">
@@ -68,7 +68,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperiment.load.suppressMatching" />
+			<fmt:message key="expressionExperiment.load.suppressMatching" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Check this box if you know that samples were run on only one platform each. Otherwise an attempt will be made to identify biological replicates on different platforms.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -91,6 +91,6 @@
 
 <div id="progress-area" style="padding:5px;"></div>
 
-<validate:javascript formName="expressionExperimentLoadCommand" staticJavascript="false" />
-<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
+<%--<validate:javascript formName="expressionExperimentLoadCommand" staticJavascript="false" />
+<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script> --%>
 

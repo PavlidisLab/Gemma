@@ -1109,10 +1109,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     // hibernate exception.
                     if ( !seen.contains( bs ) ) {
                         try { // just in case...
-                            session.lock( bs, LockMode.NONE );
+                            // note: LockMode.NONE results in lazy errors in TESTS but not actual runs.
+                            session.lock( bs, LockMode.READ );
                             seen.add( bs );
                         } catch ( org.hibernate.NonUniqueObjectException e ) {
-                            continue; // no need to process it then
+                            continue; // no need to process it then, we've already thawed it.
                         }
                     }
 
