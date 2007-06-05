@@ -54,6 +54,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected boolean doMatching = true;
     protected boolean force = false;
     protected ExpressionExperimentService eeService;
+    private boolean aggressive;
 
     /*
      * (non-Javadoc)
@@ -83,8 +84,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
                 .withLongOpt( "force" ).create( "force" );
-
         addOption( forceOption );
+        Option aggressiveQtRemoval = OptionBuilder.withDescription(
+                "Aggressively remove all unneeded quantitation types" ).withLongOpt( "aggressive" ).create(
+                "aggressive" );
+
+        addOption( aggressiveQtRemoval );
     }
 
     /**
@@ -141,7 +146,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                     }
 
                     if ( platformOnly ) {
-                        Collection designs = geoService.fetchAndLoad( accession, true, true );
+                        Collection designs = geoService.fetchAndLoad( accession, true, true, false );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             successObjects.add( ( ( Describable ) object ).getName()
@@ -190,7 +195,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 removeIfExists( accession );
             }
 
-            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching );
+            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
+                    this.aggressive );
 
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
@@ -244,6 +250,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         if ( hasOption( "force" ) ) {
             force = true;
+        }
+
+        if ( hasOption( "aggressive" ) ) {
+            this.aggressive = true;
         }
 
         this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );

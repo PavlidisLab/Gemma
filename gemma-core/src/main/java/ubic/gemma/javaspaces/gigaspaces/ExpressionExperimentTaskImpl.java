@@ -75,8 +75,9 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
 
         super.initProgressAppender( this.getClass() );
 
+        // FIXME add setting for aggressiveQuantitationType removal.
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
-                doSampleMatching );
+                doSampleMatching, false );
 
         counter++;
         GigaSpacesResult result = new GigaSpacesResult();

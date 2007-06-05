@@ -60,6 +60,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     private boolean doSampleMatching = true;
 
+    private boolean aggressiveQuantitationTypeRemoval;
+
     public void setDoSampleMatching( boolean doSampleMatching ) {
         this.doSampleMatching = doSampleMatching;
     }
@@ -136,7 +138,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             }
             log.info( geoAccession + " corresponds to " + seriesAccessions );
             for ( String seriesAccession : seriesAccessions ) {
-                GeoSeries series = processSeries( seriesAccession, this.doSampleMatching );
+                GeoSeries series = processSeries( seriesAccession );
                 if ( series == null ) continue;
                 result.add( series );
             }
@@ -144,7 +146,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             if ( processPlatformsOnly ) {
                 return processSeriesPlatforms( geoAccession ); // FIXME, this is ugly.
             }
-            GeoSeries series = processSeries( geoAccession, this.doSampleMatching );
+            GeoSeries series = processSeries( geoAccession );
             if ( series == null ) return result;
             result.add( series );
             return result;
@@ -201,7 +203,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @param doSampleMatching Whether we should attempt to match the samples. In some cases we might know that this is
      *        not a good idea.
      */
-    private GeoSeries processSeries( String seriesAccession, boolean doSampleMatching ) {
+    private GeoSeries processSeries( String seriesAccession ) {
 
         Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
 
@@ -218,6 +220,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         String seriesPath = seriesFile.getLocalURL().getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
+        parser.setAgressiveQtRemoval( this.aggressiveQuantitationTypeRemoval );
+
         try {
             parser.parse( seriesPath );
         } catch ( IOException e1 ) {
@@ -419,5 +423,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         accessions.add( de );
 
         return accessions;
+    }
+
+    public void setAggressiveQtRemoval( boolean aggressiveQuantitationTypeRemoval ) {
+        this.aggressiveQuantitationTypeRemoval = aggressiveQuantitationTypeRemoval;
+
     }
 }

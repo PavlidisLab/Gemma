@@ -26,13 +26,13 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector; 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -54,12 +54,11 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @spring.bean id="expressionExperimentPlatformSwitchService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
- * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentPlatformSwitchService {
+public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
 
     /**
      * Used to identify design elements that have no sequence associated with them.
@@ -75,8 +74,6 @@ public class ExpressionExperimentPlatformSwitchService {
     private static Log log = LogFactory.getLog( ExpressionExperimentPlatformSwitchService.class.getName() );
 
     ExpressionExperimentService expressionExperimentService;
-
-    DesignElementDataVectorService designElementDataVectorService;
 
     ArrayDesignService arrayDesignService;
 
@@ -223,29 +220,12 @@ public class ExpressionExperimentPlatformSwitchService {
         return true;
     }
 
-    /**
-     * @param arrayDesign
-     * @param type
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
-            QuantitationType type ) {
-        Collection<DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign, type );
-        designElementDataVectorService.thaw( vectorsForQt );
-        return vectorsForQt;
-    }
-
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
     public void setBioAssayService( BioAssayService bioAssayService ) {
         this.bioAssayService = bioAssayService;
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
     }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {

@@ -43,7 +43,7 @@ import ubic.gemma.model.common.description.LocalFile;
  * @author pavlidis
  * @version $Id$
  */
-public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerator {
+public class NcbiGeneDomainObjectGenerator {
 
     static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );

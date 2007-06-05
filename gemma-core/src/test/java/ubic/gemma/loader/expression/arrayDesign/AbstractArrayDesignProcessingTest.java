@@ -65,7 +65,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
-                    true );
+                    true, false );
             ad = ads.iterator().next();
 
         }

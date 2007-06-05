@@ -24,7 +24,7 @@ import java.util.Collection;
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService
- */ 
+ */
 public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase {
 
     /**
@@ -56,7 +56,12 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
 
     @Override
     protected BioAssayDimension handleLoad( Long id ) throws Exception {
-       return ( BioAssayDimension ) this.getBioAssayDimensionDao().load( id );
+        return ( BioAssayDimension ) this.getBioAssayDimensionDao().load( id );
+    }
+
+    @Override
+    protected void handleUpdate( BioAssayDimension bioAssayDimension ) throws Exception {
+        this.getBioAssayDimensionDao().update( bioAssayDimension );
     }
 
 }

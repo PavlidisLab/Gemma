@@ -68,11 +68,13 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
+    public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval ) {
         this.geoConverter.clear();
         geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching );
+        geoDomainObjectGenerator.setAggressiveQtRemoval( aggressiveQuantitationTypeRemoval );
 
         Collection<DatabaseEntry> projectedAccessions = geoDomainObjectGenerator.getProjectedAccessions( geoAccession );
         checkForExisting( projectedAccessions );

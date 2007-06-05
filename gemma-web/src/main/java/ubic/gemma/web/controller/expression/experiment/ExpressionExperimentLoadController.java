@@ -166,11 +166,12 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                 }
 
                 boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+                boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
                 String list = "";
                 if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
                     job.updateProgress( "Loading platforms only." );
                     Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true,
-                            doSampleMatching );
+                            doSampleMatching, aggressiveQtRemoval );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     model.put( "arrayDesigns", arrayDesigns );
 
@@ -186,7 +187,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
 
                 } else {
                     Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
-                            doSampleMatching );
+                            doSampleMatching, aggressiveQtRemoval );
                     if ( result.size() == 1 ) {
                         ExpressionExperiment loaded = result.iterator().next();
                         this.saveMessage( "Successfully loaded " + loaded );
@@ -247,11 +248,12 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                 }
 
                 boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+                boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
                 String list = "";
                 if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
                     job.updateProgress( "Loading platforms only." );
                     Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true,
-                            doSampleMatching );
+                            doSampleMatching, aggressiveQtRemoval );
                     this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
                     model.put( "arrayDesigns", arrayDesigns );
                     // ProgressManager.destroyProgressJob( job, !AJAX );

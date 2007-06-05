@@ -209,7 +209,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE1133", false, true );
+                "GSE1133", false, true, false );
         ee = results.iterator().next(); // fixme, need to delete both.
         eeService.thawLite( ee );
         assertNotNull( ee.getPrimaryPublication() );
@@ -235,7 +235,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE3434", false, true );
+                    "GSE3434", false, true, false );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) e.getData();
@@ -263,7 +263,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds775short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS775", false, true );
+                "GDS775", false, true, false );
 
         ee = results.iterator().next();
         assertEquals( 4, ee.getBioAssays().size() );
@@ -284,7 +284,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "gds999short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GDS999", false, true );
+                    "GDS999", false, true, false );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) e.getData();
@@ -309,7 +309,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gds22Short" ) );
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS22", false, true );
+                "GDS22", false, true, false );
 
         ee = results.iterator().next();
         eeService.thawLite( ee );
@@ -331,7 +331,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gse60Short" ) );
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE60", false, true );
+                "GSE60", false, true, false );
         ee = results.iterator().next();
     }
 
@@ -360,7 +360,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gse464Short" ) );
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE464", false, true );
+                "GSE464", false, true, false );
         ee = results.iterator().next();
     }
 
@@ -375,7 +375,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gds994Short" ) );
         try {
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GDS994", false, true );
+                    "GDS994", false, true, false );
             ee = results.iterator().next();
             assertEquals( 12, ee.getBioAssays().size() );
             assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
@@ -422,7 +422,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment newee;
         try {
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GDS472", false, true );
+                    "GDS472", false, true, false );
             newee = results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -518,7 +518,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "complexShortTest" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS825", false, true );
+                "GDS825", false, true, false );
 
         ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
                 .getBean( "expressionExperimentService" );
@@ -596,13 +596,13 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE3434" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE3434", false, true );
+                "GSE3434", false, true, false );
         ee = results.iterator().next();
         assertNotNull( ee );
         eeService.delete( ee );
         ee = null;
 
-        results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE3434", false, true );
+        results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE3434", false, true , false );
         ee = results.iterator().next();
 
         // this has no fail condition, just check that we can delete...
@@ -653,7 +653,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE61Short" ) );
-            geoService.fetchAndLoad( "GSE61", false, true );
+            geoService.fetchAndLoad( "GSE61", false, true, false );
         } catch ( AlreadyExistsInSystemException e ) {
             // ok
         }
@@ -667,7 +667,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE3193", false, true );
+                "GSE3193", false, true, false );
         ee = results.iterator().next();
 
         assertNotNull( ee );

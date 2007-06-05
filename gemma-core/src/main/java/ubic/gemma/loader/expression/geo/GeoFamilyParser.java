@@ -1109,6 +1109,7 @@ public class GeoFamilyParser implements Parser {
     private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
     Map<String, Integer> quantitationTypeKey = new HashMap<String, Integer>();
     Map<Integer, Integer> quantitationTypeTargetColumn = new HashMap<Integer, Integer>();
+    private boolean aggressiveQuantitationTypeRemoval;
 
     /**
      * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0. This
@@ -1120,7 +1121,7 @@ public class GeoFamilyParser implements Parser {
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
         int i = 0;
         for ( String columnName : currentSample().getColumnNames() ) {
-            boolean isWanted = values.isWantedQuantitationType( columnName );
+            boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
 
             int quantitationTypeIndex = i - 1;
             if ( !isWanted ) {
@@ -1718,6 +1719,11 @@ public class GeoFamilyParser implements Parser {
             ( ( GeoPlatform ) object ).setSupplementaryFile( value );
 
         else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setSupplementaryFile( value );
+
+    }
+
+    public void setAgressiveQtRemoval( boolean aggressiveQuantitationTypeRemoval ) {
+        this.aggressiveQuantitationTypeRemoval = aggressiveQuantitationTypeRemoval;
 
     }
 

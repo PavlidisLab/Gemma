@@ -68,7 +68,7 @@ public class ExpressionDataMatrixVectorMergingTest extends BaseSpringContextTest
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE3193Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE3193trick", false, false ); // don't do sample matching!!
+                    "GSE3193trick", false, false, false ); // don't do sample matching!!
             newee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();

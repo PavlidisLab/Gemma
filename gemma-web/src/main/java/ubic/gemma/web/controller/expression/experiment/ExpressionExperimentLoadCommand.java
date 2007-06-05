@@ -45,6 +45,11 @@ public class ExpressionExperimentLoadCommand implements Serializable {
     private String accession;
 
     /**
+     * Set to true to attempt to remove all unneeded quantitation types during parsing.
+     */
+    private boolean aggressiveQtRemoval;
+
+    /**
      * @return Returns the accession.
      */
     public String getAccession() {
@@ -94,6 +99,14 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     public void setSuppressMatching( boolean suppressMatching ) {
         this.suppressMatching = suppressMatching;
+    }
+
+    public boolean isAggressiveQtRemoval() {
+        return aggressiveQtRemoval;
+    }
+
+    public void setAggressiveQtRemoval( boolean aggressiveQtRemoval ) {
+        this.aggressiveQtRemoval = aggressiveQtRemoval;
     }
 
 }

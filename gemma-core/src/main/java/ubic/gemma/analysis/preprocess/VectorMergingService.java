@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,7 +42,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -63,20 +63,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * 
  * @spring.bean id="vectorMergingService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @author pavlidis
  * @version $Id$
  * @see ExpressionDataMatrixBuilder
  */
-public class VectorMergingService {
+public class VectorMergingService extends ExpressionExperimentVectorManipulatingService {
 
     private static Log log = LogFactory.getLog( VectorMergingService.class.getName() );
 
     private ExpressionExperimentService expressionExperimentService;
-
-    private DesignElementDataVectorService designElementDataVectorService;
 
     private ArrayDesignService arrayDesignService;
 
@@ -85,9 +82,6 @@ public class VectorMergingService {
     public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
         this.bioAssayDimensionService = bioAssayDimensionService;
     }
-
-    // ByteArrayConverter is stateless.
-    ByteArrayConverter converter = new ByteArrayConverter();
 
     /**
      * @param expExp
@@ -113,7 +107,7 @@ public class VectorMergingService {
 
             log.info( "Processing " + type );
 
-            Collection<DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( expExp, type );
+            Collection<DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( type );
 
             LinkedHashSet<BioAssayDimension> oldBioAssayDims = new LinkedHashSet<BioAssayDimension>();
 
@@ -170,41 +164,7 @@ public class VectorMergingService {
                     for ( DesignElementDataVector oldV : dedvs ) {
                         if ( oldV.getBioAssayDimension().equals( oldDim ) ) {
                             found = true;
-                            byte[] rawDat = oldV.getData();
-
-                            if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-                                boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
-                                for ( boolean b : convertedDat ) {
-                                    data.add( new Boolean( b ) );
-                                }
-                            } else if ( representation.equals( PrimitiveType.CHAR ) ) {
-                                char[] convertedDat = converter.byteArrayToChars( rawDat );
-                                for ( char b : convertedDat ) {
-                                    data.add( new Character( b ) );
-                                }
-                            } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-                                double[] convertedDat = converter.byteArrayToDoubles( rawDat );
-                                for ( double b : convertedDat ) {
-                                    data.add( new Double( b ) );
-                                }
-                            } else if ( representation.equals( PrimitiveType.INT ) ) {
-                                int[] convertedDat = converter.byteArrayToInts( rawDat );
-                                for ( int b : convertedDat ) {
-                                    data.add( new Integer( b ) );
-                                }
-                            } else if ( representation.equals( PrimitiveType.LONG ) ) {
-                                long[] convertedDat = converter.byteArrayToLongs( rawDat );
-                                for ( long b : convertedDat ) {
-                                    data.add( new Long( b ) );
-                                }
-                            } else if ( representation.equals( PrimitiveType.STRING ) ) {
-                                String[] convertedDat = converter.byteArrayToStrings( rawDat );
-                                for ( String b : convertedDat ) {
-                                    data.add( b );
-                                }
-                            } else {
-                                throw new UnsupportedOperationException( "Don't know how to handle " + representation );
-                            }
+                            convertFromBytes( data, representation, oldV );
 
                             break;
                         }
@@ -374,30 +334,8 @@ public class VectorMergingService {
         this.arrayDesignService = arrayDesignService;
     }
 
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * FIXME Code copied from ExpressionExperimentPlatformSwitchService
-     * 
-     * @param expExp
-     * @param type
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<DesignElementDataVector> getVectorsForOneQuantitationType( ExpressionExperiment expExp,
-            QuantitationType type ) {
-        Collection<QuantitationType> oneType = new HashSet<QuantitationType>();
-        oneType.add( type );
-        Collection<DesignElementDataVector> vectorsForQt = expressionExperimentService.getDesignElementDataVectors(
-                expExp, oneType );
-        designElementDataVectorService.thaw( vectorsForQt );
-        return vectorsForQt;
     }
 
     public void mergeVectors( ExpressionExperiment expressionExperiment ) {

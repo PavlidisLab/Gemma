@@ -47,7 +47,8 @@ public abstract class AbstractGeoService {
      * @param geoAccession
      * @return
      */
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
+            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval );
 
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.

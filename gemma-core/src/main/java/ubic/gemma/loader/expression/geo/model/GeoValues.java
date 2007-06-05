@@ -67,6 +67,8 @@ public class GeoValues {
 
     private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
 
+    private static Collection<String> aggressivelyRemovedQuantitationTypes = new HashSet<String>();
+
     static {
 
         // These are from GenePix files. In Stanford files they are named differently than described here:
@@ -83,7 +85,7 @@ public class GeoValues {
         skippableQuantitationTypes.add( "TOT_SPIX" );
         skippableQuantitationTypes.add( "TOT_BPIX" );
 
-        // the following are background-subtracted values that can be easily computed from the raw values
+        //  
         // unfortunately the non-background-subtracted values aren't always available.
         // skippableQuantitationTypes.add( "CH1D_MEAN" );
         // skippableQuantitationTypes.add( "CH2D_MEAN" );
@@ -104,12 +106,36 @@ public class GeoValues {
         skippableQuantitationTypes.add( "PERGTBCH2I_2SD" );
 
         // these removed just in the interest of saving memory!
-        skippableQuantitationTypes.add( "SUM_MEAN" );
         skippableQuantitationTypes.add( "SUM_MEDIAN" );
         skippableQuantitationTypes.add( "REGR" );
         skippableQuantitationTypes.add( "CORR" );
         skippableQuantitationTypes.add( "UNF_VALUE" ); // this is the same as 'value' but with the flagged points still
         // in.
+
+        // Remove these if we see them.
+        aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEAN" );
+        aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2IN_MEAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2BN_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2IN_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "RAT1N_MEAN" );
+        aggressivelyRemovedQuantitationTypes.add( "RAT1N_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1DN_MEAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1IN_MEAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1BN_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1IN_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1DN_MEDIAN" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2I_SD" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1B_SD" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2B_SD" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2I_SD" );
+        aggressivelyRemovedQuantitationTypes.add( "CH1_PER_SAT" );
+        aggressivelyRemovedQuantitationTypes.add( "CH2_PER_SAT" );
+        aggressivelyRemovedQuantitationTypes.add( "RAT2_SD" );
+        aggressivelyRemovedQuantitationTypes.add( "RAT1_SD" );
+        aggressivelyRemovedQuantitationTypes.add( "LOG_RAT2N_MEDIAN" );
 
     }
 
@@ -118,12 +144,14 @@ public class GeoValues {
      * the system. Skipping these makes loading the data more manageable for some data sets that are very large.
      * 
      * @param quantitationTypeName
+     * @param aggressive To be more aggressive in remove unwanted quantitation types.
      * @return true if the name is NOT on the 'skippable' list.
      */
-    public boolean isWantedQuantitationType( String quantitationTypeName ) {
+    public boolean isWantedQuantitationType( String quantitationTypeName, boolean aggressive ) {
         if ( quantitationTypeName == null )
             throw new IllegalArgumentException( "Quantitation type name cannot be null" );
-        return !skippableQuantitationTypes.contains( quantitationTypeName );
+        return !skippableQuantitationTypes.contains( quantitationTypeName )
+                && !aggressivelyRemovedQuantitationTypes.contains( quantitationTypeName );
     }
 
     /**
@@ -149,16 +177,16 @@ public class GeoValues {
      *        the order isn't the same for two samples.
      * @param quantitationTypeIndex Identifies the quantitation type.
      * @param designElement
-     * @param value The data point to be stored.  
+     * @param value The data point to be stored.
      */
     public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
 
         // we really don't allow null values at this stage.
-        if (value == null) {
+        if ( value == null ) {
             throw new IllegalArgumentException();
         }
-        assert value != null : "Attempted to add null for sample=" + sample + " qtype=" + quantitationTypeIndex + " de="
-                + designElement;
+        assert value != null : "Attempted to add null for sample=" + sample + " qtype=" + quantitationTypeIndex
+                + " de=" + designElement;
 
         if ( sample.getPlatforms().size() > 1 ) {
             throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
