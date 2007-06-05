@@ -32,8 +32,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
+import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.SpringContextUtil;
+import ubic.gemma.util.javaspaces.GemmaSpacesCancellationEntry;
 import ubic.gemma.util.javaspaces.GemmaSpacesGenericEntry;
 import ubic.gemma.util.javaspaces.GemmaSpacesRegistrationEntry;
 
@@ -341,12 +343,31 @@ public class GigaSpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Cancels the task running with the taskId.
+     * Cancels the task.
      * 
      * @param taskId
      */
-    public static void cancel( String taskId ) {
-        throw new UnsupportedOperationException( "Method not yet implemented." );
+    public void cancel( Object taskId ) {
+
+        ApplicationContext updatedContext = addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
+
+        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) ) {
+            log.error( "Cannot cancel space task because the space is not running" );
+            return;
+        }
+
+        GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
+
+        IJSpace space = ( IJSpace ) template.getSpace();
+
+        GemmaSpacesCancellationEntry cancellationEntry = new GemmaSpacesCancellationEntry();
+        cancellationEntry.taskId = taskId;
+        try {
+            space.write( cancellationEntry, null, 600000000 );
+        } catch ( Exception e ) {
+            throw new RuntimeException( "Cannot cancel task " + taskId + ".  Exception is: " + e );
+        }
     }
 
     /*
