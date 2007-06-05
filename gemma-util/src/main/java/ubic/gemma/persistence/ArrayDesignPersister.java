@@ -146,6 +146,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 && !( ad.getShortName() != null && arrayDesignCache.containsKey( ad.getShortName() ) ) ) {
             ad = persistArrayDesign( ad );
 
+            // Two methods for thawing. Either one should work, question is speed.
             arrayDesignService.thaw( ad );
             // ad = arrayDesignService.loadFully( ad.getId() );
 

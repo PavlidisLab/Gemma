@@ -389,60 +389,58 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param entity
+     * @param expExp
      * @return
      */
-    private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
+    private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment expExp ) {
 
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
+        if ( expExp == null ) return null;
+        if ( !isTransient( expExp ) ) return expExp;
 
-        log.info( "Persisting " + entity );
+        log.info( "Persisting " + expExp );
 
-        ExpressionExperiment existing = expressionExperimentService.findByName( entity.getName() );
+        ExpressionExperiment existing = expressionExperimentService.findByName( expExp.getName() );
         if ( existing != null ) {
             log.warn( "Expression experiment with same name exists (" + existing
                     + "), returning it (this method does not handle updates)" );
             return existing;
         }
 
-        entity.setPrimaryPublication( ( BibliographicReference ) persist( entity.getPrimaryPublication() ) );
+        expExp.setPrimaryPublication( ( BibliographicReference ) persist( expExp.getPrimaryPublication() ) );
 
-        if ( entity.getOwner() == null ) {
-            entity.setOwner( defaultOwner );
+        if ( expExp.getOwner() == null ) {
+            expExp.setOwner( defaultOwner );
         }
-        entity.setOwner( ( Contact ) persist( entity.getOwner() ) );
+        expExp.setOwner( ( Contact ) persist( expExp.getOwner() ) );
 
-        persistCollectionElements( entity.getQuantitationTypes() );
-        persistCollectionElements( entity.getOtherRelevantPublications() );
-        persistCollectionElements( entity.getInvestigators() );
+        persistCollectionElements( expExp.getQuantitationTypes() );
+        persistCollectionElements( expExp.getOtherRelevantPublications() );
+        persistCollectionElements( expExp.getInvestigators() );
 
-        if ( entity.getAccession() != null ) {
-            entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
+        if ( expExp.getAccession() != null ) {
+            expExp.setAccession( persistDatabaseEntry( expExp.getAccession() ) );
         }
 
         // this has to come first and be persisted, so our factorvalues get persisted before we process the bioassays.
-        if ( entity.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
+        if ( expExp.getExperimentalDesign() != null ) {
+            ExperimentalDesign experimentalDesign = expExp.getExperimentalDesign();
             processExperimentalDesign( experimentalDesign );
             assert experimentalDesign.getId() != null;
-            entity.setExperimentalDesign( experimentalDesign );
+            expExp.setExperimentalDesign( experimentalDesign );
         }
 
         // this does most of the preparatory work.
-        processBioAssays( entity );
-
-        log.info( "Persisting " + entity );
-        entity = expressionExperimentService.create( entity );
+        processBioAssays( expExp );
+        expExp = expressionExperimentService.create( expExp );
         this.getSession().flush(); // Yes, this is important.
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
-            expressionExperimentService.delete( entity );
+            expressionExperimentService.delete( expExp );
             throw new CancellationException( "Thread canceled during EE persisting. " + this.getClass() );
         }
 
-        return entity;
+        return expExp;
     }
 
     /**

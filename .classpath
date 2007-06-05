@@ -47,7 +47,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar" sourcepath="/JAR_SOURCE/commons-collections-3.1/src/java"/>
 	<classpathentry kind="var" path="M2_REPO/commons-validator/commons-validator/1.3.0/commons-validator-1.3.0.jar" sourcepath="/JAR_SOURCE/commons-validator-1.3.0-src/src/share"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.5/spring-2.0.5.jar" sourcepath="/JAR_SOURCE/spring-framework-2.0.5/src"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.5/spring-2.0.5.jar" sourcepath="/JAR_SOURCE/spring-framework-2.0.5/dist/spring-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/velocity/velocity/1.4/velocity-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.3/commons-lang-2.3.jar" sourcepath="/JAR_SOURCE/commons-lang-2.1/src/java">
 		<attributes>
