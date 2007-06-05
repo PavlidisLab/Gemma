@@ -162,21 +162,15 @@ public class AuditInterceptor implements MethodInterceptor {
      */
     private void addCreateAuditEvent( Auditable d ) {
         assert d != null;
-        log.debug( "Create audit event for: " + d.getClass() );
-
-        AuditTrail at = d.getAuditTrail();
-
+        if ( log.isDebugEnabled() ) log.debug( "Create audit event for: " + d.getClass() );
+        AuditTrail at = null;
         try {
-            if ( at != null && at.getEvents() != null && at.getEvents().size() == 1 ) {
+            at = d.getAuditTrail();
+            if ( at != null && at.getEvents() != null && at.getEvents().size() > 0 ) {
+                // don't add event if it already has one.
                 if ( at.getEvents().iterator().next().getAction() == AuditAction.CREATE ) {
-
                     // This can happen when we persist objects and then let this interceptor look at them again while
-                    // persisting
-                    // parent objects. Harmless.
-
-                    // log.warn( "Expected empty or null audit trail for creating object, but got " +
-                    // at.getEvents().size()
-                    // + " events for " + d + ", first one was " + at.getEvents().iterator().next().getAction() );
+                    // persisting parent objects. Harmless.
                     return;
                 }
             }
@@ -185,6 +179,7 @@ public class AuditInterceptor implements MethodInterceptor {
                     .warn( "Could not check audit trail for "
                             + d
                             + ", events were not thawed; probably okay because this only happens when the object already exists in the system." );
+            return;
         }
 
         // initialize the audit trail, if necessary.
@@ -403,8 +398,10 @@ public class AuditInterceptor implements MethodInterceptor {
                 Class<?> propertyType = descriptor.getPropertyType();
 
                 if ( Auditable.class.isAssignableFrom( propertyType ) ) {
-                    if ( owner != null && owner == associatedObject ) continue; // break vicious cycle in bidirectional
-                    // relation
+
+                    // break vicious cycle in bidirectional relation
+                    if ( owner != null && owner == associatedObject ) continue;
+
                     if ( log.isTraceEnabled() )
                         log.trace( "Processing audit for property " + propertyNames[j] + ", Cascade=" + cs );
                     processAfter( m, ( Auditable ) associatedObject, object );
@@ -413,8 +410,8 @@ public class AuditInterceptor implements MethodInterceptor {
 
                     for ( Object object2 : associatedObjects ) {
 
-                        if ( owner != null && owner == object2 ) continue; // break vicious cycle in bidirectional
-                        // relation
+                        // break vicious cycle in bidirectional relation
+                        if ( owner != null && owner == object2 ) continue;
 
                         if ( Auditable.class.isAssignableFrom( object2.getClass() ) ) {
                             if ( log.isTraceEnabled() ) {
