@@ -35,6 +35,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import ubic.gemma.util.SpringContextUtil;
 import ubic.gemma.util.javaspaces.GemmaSpacesGenericEntry;
+import ubic.gemma.util.javaspaces.GemmaSpacesRegistrationEntry;
 
 import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.admin.IJSpaceContainerAdmin;
@@ -230,7 +231,7 @@ public class GigaSpacesUtil implements ApplicationContextAware {
         try {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
 
-            count = space.count( new GemmaSpacesGenericEntry(), null );
+            count = space.count( new GemmaSpacesRegistrationEntry(), null );
             log.info( "count: " + count );
         } catch ( Exception e ) {
             log.error( "Could not check for workers registered.  Assuming 0 workers are registered." );
@@ -247,9 +248,9 @@ public class GigaSpacesUtil implements ApplicationContextAware {
      * @param url
      * @return List<GemmaSpacesGenericEntry>
      */
-    public List<GemmaSpacesGenericEntry> getRegisteredWorkers( String url ) {
+    public List<GemmaSpacesRegistrationEntry> getRegisteredWorkers( String url ) {
 
-        GemmaSpacesGenericEntry[] workerEntries = null;
+        GemmaSpacesRegistrationEntry[] workerEntries = null;
         if ( !isSpaceRunning( url ) ) {
             log.error( "Space not started at " + url + ". Returning a count of 0 (workers registered)." );
             return null;
@@ -258,11 +259,11 @@ public class GigaSpacesUtil implements ApplicationContextAware {
         try {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
 
-            Object[] commandObjects = space.readMultiple( new GemmaSpacesGenericEntry(), null, 120000 );
-            workerEntries = new GemmaSpacesGenericEntry[commandObjects.length];
+            Object[] commandObjects = space.readMultiple( new GemmaSpacesRegistrationEntry(), null, 120000 );
+            workerEntries = new GemmaSpacesRegistrationEntry[commandObjects.length];
 
             for ( int i = 0; i < commandObjects.length; i++ ) {
-                GemmaSpacesGenericEntry entry = ( GemmaSpacesGenericEntry ) commandObjects[i];
+                GemmaSpacesRegistrationEntry entry = ( GemmaSpacesRegistrationEntry ) commandObjects[i];
                 workerEntries[i] = entry;
                 log.debug( "entry: " + entry );
             }
@@ -304,7 +305,7 @@ public class GigaSpacesUtil implements ApplicationContextAware {
         }
 
         else {
-            List<GemmaSpacesGenericEntry> workerEntries = this.getRegisteredWorkers( url );
+            List<GemmaSpacesRegistrationEntry> workerEntries = this.getRegisteredWorkers( url );
             for ( GemmaSpacesGenericEntry entry : workerEntries ) {
                 String taskName = entry.getMessage();
                 log.debug( taskName );
