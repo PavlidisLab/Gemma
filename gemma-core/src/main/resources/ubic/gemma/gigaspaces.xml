@@ -34,7 +34,7 @@
 	</bean>
 
 	<bean id="worker"
-		class="org.springmodules.javaspaces.DelegatingWorker"
+		class="ubic.gemma.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
