@@ -34,8 +34,10 @@ import org.springframework.orm.hibernate3.SessionFactoryUtils;
 public class QueryUtils {
 
     private static Log log = LogFactory.getLog( QueryUtils.class.getName() );
-    
+
     /**
+     * Run a read-only query
+     * 
      * @param queryString with no parameters
      * @return a single object
      * @throws InvalidDataAccessResourceUsageException if more than one object is returned
@@ -43,7 +45,7 @@ public class QueryUtils {
      */
     public static Object query( Session session, final String queryString ) {
         try {
-            org.hibernate.Query queryObject = session.createQuery( queryString );
+            org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -62,15 +64,17 @@ public class QueryUtils {
     }
 
     /**
+     * Run a read-only query
+     * 
      * @param id
      * @param queryString with parameter "id"
      * @return a single Object, even if the query actually returns more.
      */
     public static Object queryById( Session session, Long id, final String queryString ) {
         try {
-            org.hibernate.Query queryObject = session.createQuery( queryString );
+            org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
             queryObject.setParameter( "id", id );
-            queryObject.setMaxResults( 1 );
+            // queryObject.setMaxResults( 1 );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null && results.size() > 0 ) {
@@ -84,13 +88,15 @@ public class QueryUtils {
     }
 
     /**
+     * Run a read-only query
+     * 
      * @param id with parameter "id"
      * @param queryString
      * @return
      */
     public static Collection queryByIdReturnCollection( Session session, Long id, final String queryString ) {
         try {
-            org.hibernate.Query queryObject = session.createQuery( queryString );
+            org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
             queryObject.setParameter( "id", id );
             return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -99,6 +105,8 @@ public class QueryUtils {
     }
 
     /**
+     * Run a read-only query
+     * 
      * @param id with parameter "id"
      * @param queryString
      * @param limit how many records to return; set to 0 or a negative to not use a limit.
@@ -106,7 +114,7 @@ public class QueryUtils {
      */
     public static Collection queryByIdReturnCollection( Session session, Long id, final String queryString, int limit ) {
         try {
-            org.hibernate.Query queryObject = session.createQuery( queryString );
+            org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
             queryObject.setParameter( "id", id );
             if ( limit >= 0 ) {
                 queryObject.setMaxResults( limit );
@@ -118,13 +126,15 @@ public class QueryUtils {
     }
 
     /**
+     * Run a read-only query
+     * 
      * @param ids
      * @param queryString with parameter "ids"
      * @return a single Object
      */
     public static Object queryByIds( Session session, Collection<Long> ids, final String queryString ) {
         try {
-            org.hibernate.Query queryObject = session.createQuery( queryString );
+            org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
             queryObject.setParameterList( "ids", ids );
             java.util.List results = queryObject.list();
             Object result = null;
@@ -144,7 +154,7 @@ public class QueryUtils {
     }
 
     /**
-     * Run a native SQL query with no parameters.
+     * Run a native read-only SQL query with no parameters.
      * 
      * @param queryString
      * @return Collection of records (Object[])
@@ -152,7 +162,7 @@ public class QueryUtils {
     @SuppressWarnings("unchecked")
     public static Collection<Object[]> nativeQuery( Session session, final String queryString ) {
         try {
-            org.hibernate.Query queryObject = session.createSQLQuery( queryString );
+            org.hibernate.Query queryObject = session.createSQLQuery( queryString ).setReadOnly( true );
             return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
             throw SessionFactoryUtils.convertHibernateAccessException( ex );
@@ -161,7 +171,7 @@ public class QueryUtils {
     }
 
     /**
-     * Run a native SQL query with a single 'id' parameter
+     * Run a native read-only SQL query with a single 'id' parameter
      * 
      * @param id
      * @param queryString
@@ -170,7 +180,7 @@ public class QueryUtils {
     @SuppressWarnings("unchecked")
     public static Collection<Object[]> nativeQueryById( Session session, Long id, final String queryString ) {
         try {
-            org.hibernate.Query queryObject = session.createSQLQuery( queryString );
+            org.hibernate.Query queryObject = session.createSQLQuery( queryString ).setReadOnly( true );
             queryObject.setLong( "id", id );
             return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
