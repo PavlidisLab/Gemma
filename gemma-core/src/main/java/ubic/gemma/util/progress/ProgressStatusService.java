@@ -23,12 +23,15 @@ import java.util.Vector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
+
 /**
  * This class exposes methods for AJAX calls.
  * 
  * @spring.bean id="progressStatusService"
  * @spring.property name="taskRunningService" ref="taskRunningService"
  * @spring.property name="progressManager" ref="progressManager"
+ * @spring.property name="gigaSpacesUtil" ref="gigaSpacesUtil"
  * @author klc
  * @version $Id$
  */
@@ -42,6 +45,7 @@ public class ProgressStatusService {
 
     private TaskRunningService taskRunningService;
     private ProgressManager progressManager;
+    private GigaSpacesUtil gigaSpacesUtil;
 
     public void setProgressManager( ProgressManager progressManager ) {
         this.progressManager = progressManager;
@@ -72,7 +76,7 @@ public class ProgressStatusService {
             result.add( data );
             if ( data.isDone() ) {
                 log.debug( "Job is done! forward to " + data.getForwardingURL() );
-                progressManager.cleanupJob(taskId);
+                progressManager.cleanupJob( taskId );
             }
         }
 
@@ -88,8 +92,9 @@ public class ProgressStatusService {
     public boolean cancelJob( String taskId ) {
         try {
             log.debug( "Got cancellation for " + taskId );
+            gigaSpacesUtil.cancel( taskId );
             taskRunningService.cancelTask( taskId, false );
-            progressManager.cleanupJob(taskId);
+            progressManager.cleanupJob( taskId );
         } catch ( Exception e ) {
             return false;
         }
@@ -98,6 +103,10 @@ public class ProgressStatusService {
 
     public void setTaskRunningService( TaskRunningService taskRunningService ) {
         this.taskRunningService = taskRunningService;
+    }
+
+    public void setGigaSpacesUtil( GigaSpacesUtil gigaSpacesUtil ) {
+        this.gigaSpacesUtil = gigaSpacesUtil;
     }
 
 }
