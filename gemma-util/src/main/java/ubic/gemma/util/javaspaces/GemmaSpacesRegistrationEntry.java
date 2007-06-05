@@ -32,7 +32,4 @@ public class GemmaSpacesRegistrationEntry extends GemmaSpacesGenericEntry {
     private static final long serialVersionUID = 1L;
 
     public Boolean busy = false;
-
-    public Boolean cancel = false;
-
 }
