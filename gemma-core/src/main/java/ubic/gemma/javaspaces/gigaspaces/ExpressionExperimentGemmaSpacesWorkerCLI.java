@@ -18,6 +18,11 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
+import java.rmi.RemoteException;
+
+import net.jini.core.event.RemoteEvent;
+import net.jini.core.event.RemoteEventListener;
+import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
@@ -26,15 +31,19 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
-import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.javaspaces.CustomDelegatingWorker;
 import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.util.javaspaces.GemmaSpacesCancellationEntry;
 import ubic.gemma.util.javaspaces.GemmaSpacesRegistrationEntry;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
 
 import com.j_spaces.core.IJSpace;
+import com.j_spaces.core.client.EntryArrivedRemoteEvent;
+import com.j_spaces.core.client.ExternalEntry;
+import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * This command line interface is used to take {@link ExpressionExperimentTask} tasks from the {@link JavaSpace} and
@@ -43,7 +52,8 @@ import com.j_spaces.core.IJSpace;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpacesWorkerCLI {
+public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpacesWorkerCLI implements
+        RemoteEventListener {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesWorkerCLI.class );
 
@@ -62,6 +72,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
      * 
      * @see ubic.gemma.javaspaces.gigaspaces.AbstractBaseGemmaSpacesWorkerCLI#init()
      */
+    @Override
     protected void init() throws Exception {
 
         /* register the shutdown hook so cleanup occurs even if VM is incorrectly terminated */
@@ -76,14 +87,19 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
             throw new RuntimeException( "Gigaspaces beans could not be loaded. Cannot start worker." );
 
         template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
-        worker = ( DelegatingWorker ) updatedContext.getBean( "worker" );
+
+        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "worker" );
+
+        template.addNotifyDelegatorListener( this, new GemmaSpacesCancellationEntry(), null, true, Lease.FOREVER,
+                NotifyModifiers.NOTIFY_ALL );
+
         space = ( IJSpace ) template.getSpace();
 
         workerRegistrationId = RandomUtils.nextLong();
-        genericEntry = new GemmaSpacesRegistrationEntry();
-        genericEntry.message = ExpressionExperimentTask.class.getName();
-        genericEntry.registrationId = workerRegistrationId;
-        Lease lease = space.write( genericEntry, null, 600000000 );
+        registrationEntry = new GemmaSpacesRegistrationEntry();
+        registrationEntry.message = ExpressionExperimentTask.class.getName();
+        registrationEntry.registrationId = workerRegistrationId;
+        Lease lease = space.write( registrationEntry, null, 600000000 );
         log.info( this.getClass().getSimpleName() + " registered with space " + template.getUrl() );
         if ( lease == null ) log.error( "Null Lease returned" );
     }
@@ -93,6 +109,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
      * 
      * @see ubic.gemma.javaspaces.gigaspaces.AbstractBaseGemmaSpacesWorkerCLI#start()
      */
+    @Override
     protected void start() {
         log.debug( "Authentication: " + SecurityContextHolder.getContext().getAuthentication() );
 
@@ -133,4 +150,29 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
     protected void processOptions() {
         super.processOptions();
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
+     */
+    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
+        log.info( "notified ..." );
+
+        try {
+            EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
+
+            log.debug( "event: " + arrivedRemoteEvent );
+            ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
+            Object taskId = ( Object ) entry.getFieldValue( "taskId" );
+            log.info( " Stopping execution of task: " + taskId );
+
+            itbThread.stop();
+
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
 }

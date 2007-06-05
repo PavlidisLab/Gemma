@@ -18,15 +18,9 @@
  */
 package ubic.gemma.javaspaces.gigaspaces;
 
-import java.rmi.RemoteException;
-
-import net.jini.core.event.RemoteEvent;
-import net.jini.core.event.RemoteEventListener;
-import net.jini.core.event.UnknownEventException;
-
-import org.springmodules.javaspaces.DelegatingWorker;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.javaspaces.CustomDelegatingWorker;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.javaspaces.GemmaSpacesRegistrationEntry;
 
@@ -36,17 +30,17 @@ import com.j_spaces.core.IJSpace;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCLI implements RemoteEventListener {
+public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCLI {
 
     protected GigaSpacesTemplate template;
 
-    protected DelegatingWorker worker;
+    protected CustomDelegatingWorker worker;
 
     protected Thread itbThread;
 
     protected IJSpace space = null;
 
-    protected GemmaSpacesRegistrationEntry genericEntry = null;
+    protected GemmaSpacesRegistrationEntry registrationEntry = null;
 
     protected Long workerRegistrationId = null;
 
@@ -80,16 +74,6 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
         return err;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
-     */
-    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
-        // TODO Auto-generated method stub
-
-    }
-
     /**
      * A worker shutdown hook.
      * 
@@ -101,11 +85,11 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
             log.info( "Worker shut down.  Running shutdown hook ... cleaning up registered entries for this worker." );
             if ( space != null ) {
                 try {
-                    space.clear( genericEntry, null );
+                    space.clear( registrationEntry, null );
                 } catch ( Exception e ) {
 
-                    log.error( "Error clearing the generic entry " + genericEntry + "for task " + genericEntry.message
-                            + "from space." );
+                    log.error( "Error clearing the generic entry " + registrationEntry + "for task "
+                            + registrationEntry.message + "from space." );
                     e.printStackTrace();
                 }
             }
