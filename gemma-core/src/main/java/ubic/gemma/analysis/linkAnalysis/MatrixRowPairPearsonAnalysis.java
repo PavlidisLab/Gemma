@@ -278,57 +278,11 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     }
 
     /**
-     * Check if probeA and probeB are mapped to the same gene. This is used to avoid comparing a gene to itself.
-     * 
-     * @param rowElA
-     * @param rowElB
-     * @return
-     */
-    private boolean referToTheSameGene( ExpressionDataMatrixRowElement rowElA, ExpressionDataMatrixRowElement rowElB ) {
-        Collection<Gene> geneIdSet = getGenesForRow( rowElA );
-        if ( geneIdSet == null ) return false;
-        for ( Gene gene : geneIdSet ) {
-            if ( geneToProbeMap.get( gene ).contains( getProbeForRow( rowElB ) ) ) {
-                if ( log.isDebugEnabled() ) log.debug( rowElA + " and " + rowElB + " both point to the same gene" );
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param rowElA
-     * @return
-     */
-    private Collection<Gene> getGenesForRow( ExpressionDataMatrixRowElement rowElA ) {
-        return this.probeToGeneMap.get( getProbeForRow( rowElA ) );
-    }
-
-    /**
      * @param rowEl
      * @return
      */
     public DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl ) {
         return this.rowMapCache.get( rowEl );
-    }
-
-    /**
-     * This is used to determine if we need to watch out for comparing a gene to itself (via a different probe).
-     * 
-     * @param ExpressionDataMatrixRowElement rowEl
-     * @return true if ANY of the genes this row element refers to have OTHER probes that refer to them.
-     */
-    private boolean hasAnotherProbeForSameGene( ExpressionDataMatrixRowElement rowEl ) {
-        Collection<Gene> geneIdSet = getGenesForRow( rowEl );
-        if ( geneIdSet == null ) return false;
-
-        for ( Gene geneId : geneIdSet ) {
-            if ( geneToProbeMap.get( geneId ).size() > 1 ) {
-                if ( log.isTraceEnabled() ) log.trace( rowEl + " maps to genes which map to more than one probe. " );
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -363,15 +317,12 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         ExpressionDataMatrixRowElement itemA = null;
         ExpressionDataMatrixRowElement itemB = null;
         double[] vectorA = null;
-        boolean itemAHasDuplicates = false;
-        int duplicateSkip = 0;
         int count = 0;
         int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) {
             itemA = this.dataMatrix.getRowElement( i );
             if ( !this.hasGene( itemA ) ) continue;
             if ( docalcs ) {
-                itemAHasDuplicates = hasAnotherProbeForSameGene( itemA );
                 vectorA = data[i];
             }
 
@@ -383,21 +334,17 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     keepCorrel( i, j, C.getQuick( i, j ), numcols );
                     continue;
                 }
-                if ( itemAHasDuplicates && this.referToTheSameGene( itemA, itemB ) ) {
-                    duplicateSkip++;
-                    continue;
-                }
+
                 setCorrel( i, j, correlFast( vectorA, data[j], i, j ), numcols );
                 ++numComputed;
             }
             if ( ++count % 2000 == 0 ) {
-                log.info( count + " rows done, " + numComputed + " correlations computed, " + duplicateSkip
-                        + " self-hits skipped, last row was " + itemA + " "
+                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
                         + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
 
-        finishMetrics( duplicateSkip );
+        finishMetrics();
 
     }
 
@@ -434,8 +381,6 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
 
         /* for each vector, compare it to all other vectors */
         ExpressionDataMatrixRowElement itemA = null;
-        boolean moreThanOneProbePerGeneInItemA = false;
-        int duplicateSkip = 0;
         double[] vectorA = null;
         double syy, sxy, sxx, sx, sy, xj, yj;
         int count = 0;
@@ -445,7 +390,6 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
             if ( !this.hasGene( itemA ) ) continue;
             if ( docalcs ) {
                 rowStatistics();
-                moreThanOneProbePerGeneInItemA = this.hasAnotherProbeForSameGene( itemA );
                 vectorA = data[i];
             }
 
@@ -458,12 +402,6 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !docalcs || C.getQuick( i, j ) != 0.0 ) {
                     keepCorrel( i, j, C.getQuick( i, j ), numcols );
-                    continue;
-                }
-
-                /* avoid comparing a gene to itself (via distinct probes) */
-                if ( moreThanOneProbePerGeneInItemA && this.referToTheSameGene( itemA, itemB ) ) {
-                    duplicateSkip++;
                     continue;
                 }
 
@@ -506,12 +444,11 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
 
             }
             if ( ++count % 2000 == 0 ) {
-                log.info( count + " rows done, " + numComputed + " correlations computed, " + duplicateSkip
-                        + " self-hits skipped, last row was " + itemA + " "
+                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
                         + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        finishMetrics( duplicateSkip );
+        finishMetrics();
     }
 
     /**
@@ -753,12 +690,11 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     }
 
     /**
-     * @param duplicateSkip int
      * @param duplicates Map
      */
-    private void finishMetrics( int duplicateSkip ) {
+    private void finishMetrics() {
         if ( !this.histogramIsFilled && this.probeToGeneMap != null && this.geneToProbeMap != null ) {
-            log.info( "Skipped " + duplicateSkip + " pairs of duplicates" );
+            // log.info( "Skipped " + duplicateSkip + " pairs of duplicates" );
         }
         this.histogramIsFilled = true;
         globalMean = globalTotal / numVals;
