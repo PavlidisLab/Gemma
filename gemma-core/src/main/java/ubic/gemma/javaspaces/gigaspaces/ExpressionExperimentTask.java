@@ -42,6 +42,21 @@ public interface ExpressionExperimentTask extends JavaSpacesTask {
      * @return Result
      */
     public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+
     // FIXME Just take in the command object ExpressionExperimentLoadCommand ... seems more robust
+
+    /**
+     * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
+     * This method is useful for invoking methods from {@link GeoDataset}.
+     * 
+     * @param taskId
+     * @param geoAccession
+     * @param loadPlatformOnly
+     * @param doSampleMatching
+     * @return Result
+     */
+    public GigaSpacesResult execute( String taskId, String geoAccession, boolean loadPlatformOnly,
+            boolean doSampleMatching );
+    // TODO remove this - shouldn't be passing in the taskId
 
 }
