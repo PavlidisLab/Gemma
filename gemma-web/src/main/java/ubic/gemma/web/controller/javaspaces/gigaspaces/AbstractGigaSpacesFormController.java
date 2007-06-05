@@ -30,6 +30,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTaskImpl;
 import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
 import ubic.gemma.util.javaspaces.JavaSpacesJobObserver;
 import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
@@ -118,11 +119,13 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
          */
         SecurityContext context = SecurityContextHolder.getContext();
 
-        String taskId = TaskRunningService.generateTaskId();
+        String taskId = null;
 
         updatedContext = addGigaspacesToApplicationContext();
         BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
+
+            taskId = ( String ) ( ( ExpressionExperimentTaskImpl ) updatedContext.getBean( "taskBean" ) ).getTaskId();
 
             if ( !gigaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
                 // TODO Add sending of email to user.
@@ -149,6 +152,7 @@ public abstract class AbstractGigaSpacesFormController extends BackgroundProcess
         }
 
         else {
+            taskId = TaskRunningService.generateTaskId();
             job = getRunner( taskId, context, command, this.getMessageUtil() );
         }
 
