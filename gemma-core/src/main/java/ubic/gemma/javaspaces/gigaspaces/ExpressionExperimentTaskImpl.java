@@ -39,6 +39,7 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
     private long counter = 0;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
+    private String taskId = null;
 
     /*
      * (non-Javadoc)
@@ -107,5 +108,12 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         super.setGigaSpacesTemplate( gigaSpacesTemplate );
+    }
+
+    /**
+     * @param taskId
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
     }
 }
