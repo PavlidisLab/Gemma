@@ -22,18 +22,21 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements ExpressionExperimentTask {
+public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements ExpressionExperimentTask,
+        InitializingBean {
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
     private long counter = 0;
@@ -75,9 +78,8 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
 
         super.initProgressAppender( this.getClass() );
 
-        // FIXME add setting for aggressiveQuantitationType removal.
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
-                doSampleMatching, false );
+                doSampleMatching );
 
         counter++;
         GigaSpacesResult result = new GigaSpacesResult();
@@ -87,6 +89,19 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, java.lang.String,
+     *      boolean, boolean)
+     */
+    public GigaSpacesResult execute( String taskId, String geoAccession, boolean loadPlatformOnly,
+            boolean doSampleMatching ) {
+        // TODO - remove this method when you figure out how to get the taskId from the ExpressionExperimentImpl in the
+        // CustomDelegatorWorker
+        return execute( geoAccession, loadPlatformOnly, doSampleMatching );
     }
 
     /**
@@ -111,10 +126,21 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
         super.setGigaSpacesTemplate( gigaSpacesTemplate );
     }
 
-    /**
-     * @param taskId
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
+    public void afterPropertiesSet() throws Exception {
+        this.taskId = TaskRunningService.generateTaskId();
+    }
+
+    /**
+     * Returns the taskId for this task.
+     * 
+     * @return
+     */
+    public String getTaskId() {
+        return taskId;
     }
 }
