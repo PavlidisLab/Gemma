@@ -99,10 +99,31 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }
 
-        return startJob( request, new RemoveExpressionExperimentJob( expressionExperiment, expressionExperimentService ) );
+        RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
+                expressionExperiment, expressionExperimentService );
+
+        return startJob( request, removeExpressionExperimentJob );
 
     }
 
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param id
+     * @return taskId
+     */
+    public String deleteById( Long id ) {
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
+                expressionExperiment, expressionExperimentService );
+        return run( removeExpressionExperimentJob );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
         String searchString = request.getParameter( "filter" );
 
