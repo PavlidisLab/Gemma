@@ -62,11 +62,13 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option writeLinkMatrix = OptionBuilder.withDescription( "Giving this option will generate the new link matrix, Otherwise reading the link matrix from file" ).withLongOpt( "linkMatrix" ).create(
-                'l' );
+        Option writeLinkMatrix = OptionBuilder.withDescription(
+                "Giving this option will generate the new link matrix, Otherwise reading the link matrix from file" )
+                .withLongOpt( "linkMatrix" ).create( 'l' );
         addOption( writeLinkMatrix );
-        Option writeTree = OptionBuilder.withDescription( "Giving this option will generate the new clustering tree, Otherwise reading the tree from file" ).withLongOpt( "clusteringTree" )
-                .create( 'c' );
+        Option writeTree = OptionBuilder.withDescription(
+                "Giving this option will generate the new clustering tree, Otherwise reading the tree from file" )
+                .withLongOpt( "clusteringTree" ).create( 'c' );
         addOption( writeTree );
         Option matrixFile = OptionBuilder.hasArg().withArgName( "Bit Matrixfile" ).isRequired().withDescription(
                 "The file for saving bit matrix" ).withLongOpt( "matrixfile" ).create( 'm' );
@@ -76,14 +78,14 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 .withDescription( "The File for Saving the Expression Experiment Mapping" ).withLongOpt( "mapfile" )
                 .create( 'e' );
         addOption( mapFile );
-        
+
         Option treeFile = OptionBuilder.hasArg().withArgName( "Clustering Tree File" ).isRequired().withDescription(
-        "The file for saving clustering tree" ).withLongOpt( "treefile" ).create( 't' );
+                "The file for saving clustering tree" ).withLongOpt( "treefile" ).create( 't' );
         addOption( treeFile );
 
-        Option specie = OptionBuilder.hasArg().withArgName( "The name of specie" ).isRequired().withDescription(
-        "The name of specie" ).withLongOpt( "specie" ).create( 's' );
-        addOption( specie );
+        Option species = OptionBuilder.hasArg().withArgName( "The name of the species" ).isRequired().withDescription(
+                "The name of the species" ).withLongOpt( "species" ).create( 's' );
+        addOption( species );
 
     }
 
@@ -104,17 +106,15 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'e' ) ) {
             this.eeMapFile = getOptionValue( 'e' );
         }
-        
+
         if ( hasOption( 't' ) ) {
             this.treeFile = getOptionValue( 't' );
         }
         if ( hasOption( 's' ) ) {
-            String specieName = getOptionValue( 's' );
-            taxon = this.getTaxon( specieName );
+            String speciesName = getOptionValue( 's' );
+            taxon = this.getTaxon( speciesName );
         }
     }
-
-
 
     private Taxon getTaxon( String name ) {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -122,7 +122,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
         taxon = taxonService.find( taxon );
         if ( taxon == null ) {
-            log.info( "NO Taxon found!" );
+            log.info( "No Taxon found!" );
         }
         return taxon;
     }
@@ -145,9 +145,14 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         matrix.set( 20, 10, 0 );
         matrix.set( 20, 10, 12 );
         matrix.set( 20, 10, 24 );
-        matrix.toFile( "test.File" );
+        try {
+            matrix.toFile( "test.File" );
+        } catch ( IOException e ) {
+            System.out.println( e.getMessage() );
+        }
     }
-    void interactiveQuery(){
+
+    void interactiveQuery() {
         BufferedReader bfr = new BufferedReader( new InputStreamReader( System.in ) );
         String geneName;
         int count = 0;
@@ -175,6 +180,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             System.out.println( "IO error:" + ioe );
         }
     }
+
     /*
      * (non-Javadoc)
      * 
@@ -182,94 +188,96 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-//        GraphVisualization graphVisualization1 = new GraphVisualization(new Object[0]);
-//        graphVisualization1.run();
-//        if(1== 1) return null;
+        // GraphVisualization graphVisualization1 = new GraphVisualization(new Object[0]);
+        // graphVisualization1.run();
+        // if(1== 1) return null;
         Exception err = processCommandLine( "Link Analysis Data Loader", args );
         if ( err != null ) {
             return err;
         }
         try {
-        	ExpressionExperimentService eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                    .getBean( "expressionExperimentService" );
             GeneService geneService = ( GeneService ) this.getBean( "geneService" );
             GeneOntologyService geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
-            Gene2GOAssociationService gene2GoAssociationService = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
+            Gene2GOAssociationService gene2GoAssociationService = ( Gene2GOAssociationService ) this
+                    .getBean( "gene2GOAssociationService" );
 
-            
             MetaLinkFinder linkFinder = new MetaLinkFinder();
-            linkFinder.setEeService(eeService);
-            linkFinder.setGeneService(geneService);
-            linkFinder.setGeneOntologyService(geneOntologyService);
-            linkFinder.setGene2GoAssociationService(gene2GoAssociationService);
-            if(taxon == null){
-            	return new Exception("The input specie couldn't be found");
+            linkFinder.setEeService( eeService );
+            linkFinder.setGeneService( geneService );
+            linkFinder.setGeneOntologyService( geneOntologyService );
+            linkFinder.setGene2GoAssociationService( gene2GoAssociationService );
+            if ( taxon == null ) {
+                return new Exception( "The input species couldn't be found" );
             }
             StopWatch watch = new StopWatch();
 
             // load the link matrix
             if ( this.writeLinkMatrix ) {
-            	watch.start();
+                watch.start();
                 linkFinder.find( taxon );
-                if ( !linkFinder.toFile( this.matrixFile, this.eeMapFile ) ) {
+                try {
+                    linkFinder.toFile( this.matrixFile, this.eeMapFile );
+                } catch ( IOException e ) {
                     log.info( "Couldn't save the results into the files " );
-                    return null;
+                    return e;
                 }
-                log.info( "Spend " + watch.getTime()/1000 + " to generate link matrix" );
+                log.info( "Spend " + watch.getTime() / 1000 + " to generate link matrix" );
             } else {
-            	watch.start();
-                if ( !linkFinder.fromFile( this.matrixFile, this.eeMapFile ) ) {
+                watch.start();
+                try {
+                    linkFinder.fromFile( this.matrixFile, this.eeMapFile );
+                } catch ( IOException e ) {
                     log.info( "Couldn't load the data from the files " );
-                    return null;
+                    return e;
                 }
                 watch.stop();
-                log.info( "Spend " + watch.getTime()/1000 + " to load the data matrix" );
+                log.info( "Spend " + watch.getTime() / 1000 + " to load the data matrix" );
             }
             System.err.println( "Finish Loading!" );
             watch.reset();
             watch.start();
 
-            LinkGraphClustering clustering = new LinkGraphClustering(6);
-        	//clustering.testSerilizable();
-            if(this.writeClusteringTree){
-            	clustering.run();
-            	clustering.saveToFile( this.treeFile );
-            }else{
-            	clustering.readTreeFromFile( this.treeFile );
+            LinkGraphClustering clustering = new LinkGraphClustering( 6 );
+            // clustering.testSerilizable();
+            if ( this.writeClusteringTree ) {
+                clustering.run();
+                clustering.saveToFile( this.treeFile );
+            } else {
+                clustering.readTreeFromFile( this.treeFile );
             }
-            ObjectArrayList savedClusters = clustering.selectClustersToSave(20);
-            GraphViewer gviewer = new GraphViewer(savedClusters, true);
+            ObjectArrayList savedClusters = clustering.selectClustersToSave( 20 );
+            GraphViewer gviewer = new GraphViewer( savedClusters, true );
             gviewer.run();
-            
+
             ObjectArrayList leafNodes = new ObjectArrayList();
-//            for(int i = 0; i < savedClusters.size(); i++){
-//            	//if(i < 3) continue;
-//            	TreeNode clusterRoot = (TreeNode) savedClusters.getQuick(i);
-//            	leafNodes.clear();
-//            	LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), clusterRoot);
-//            	System.err.println("Cluster"+(i+1)+"_" + leafNodes.size() +" :");
-//            	GraphVisualization graphVisualization = new GraphVisualization(leafNodes.toList().toArray());
-//            	if(i == 6 || i == 7)
-//            		graphVisualization.run();
-//            }
+            // for(int i = 0; i < savedClusters.size(); i++){
+            // //if(i < 3) continue;
+            // TreeNode clusterRoot = (TreeNode) savedClusters.getQuick(i);
+            // leafNodes.clear();
+            // LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), clusterRoot);
+            // System.err.println("Cluster"+(i+1)+"_" + leafNodes.size() +" :");
+            // GraphVisualization graphVisualization = new GraphVisualization(leafNodes.toList().toArray());
+            // if(i == 6 || i == 7)
+            // graphVisualization.run();
+            // }
 
-
-            //Select clusters for frequent linkset finder
-            TreeNode testNode = clustering.selectClusterWithMaximalBits(6);
+            // Select clusters for frequent linkset finder
+            TreeNode testNode = clustering.selectClusterWithMaximalBits( 6 );
             leafNodes.clear();
-            //testNode = clustering.selectMaximalCluster();
-            LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), testNode);
-            GraphViewer gviewer1 = new GraphViewer(leafNodes, false);
+            // testNode = clustering.selectMaximalCluster();
+            LinkGraphClustering.collectTreeNodes( leafNodes, new ObjectArrayList(), testNode );
+            GraphViewer gviewer1 = new GraphViewer( leafNodes, false );
             gviewer1.run();
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6);
-            freFinder.find(leafNodes);
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6 );
+            freFinder.find( leafNodes );
             watch.stop();
-            log.info( "Spend " + watch.getTime()/1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
+            log.info( "Spend " + watch.getTime() / 1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
             /*
-            MetaLinkFinder.saveLinkMatrix("linkMatrix.txt", 6);
-            System.err.println( "Output some stats" );
-            MetaLinkFinder.outputStat();
-            interactiveQuery();
-            */
+             * MetaLinkFinder.saveLinkMatrix("linkMatrix.txt", 6); System.err.println( "Output some stats" );
+             * MetaLinkFinder.outputStat(); interactiveQuery();
+             */
         } catch ( Exception e ) {
             log.error( e );
             return e;
