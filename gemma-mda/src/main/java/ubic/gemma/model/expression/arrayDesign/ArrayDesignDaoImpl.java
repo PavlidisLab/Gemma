@@ -42,6 +42,7 @@ import org.springframework.orm.hibernate3.SessionFactoryUtils;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -59,7 +60,7 @@ import ubic.gemma.util.QueryUtils;
  */
 public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
 
-    private static final int LOGGING_UPDATE_EVENT_COUNT = 2000;
+    private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
     static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
@@ -1062,6 +1063,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                log.info( "Thawing " + arrayDesign + " ..." );
 
                 // The following are VERY important for performance.
                 FlushMode oldFlushMode = session.getFlushMode();
@@ -1070,12 +1072,27 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
 
                 session.lock( arrayDesign, LockMode.NONE );
+                arrayDesign.getLocalFiles().size();
+                for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
+                    session.update( d );
+                }
 
-                log.info( "Thawing " + arrayDesign + " ..." );
+                arrayDesign.getAuditTrail().getEvents().size();
+
+                if ( arrayDesign.getDesignProvider() != null ) {
+                    session.update( arrayDesign.getDesignProvider() );
+                    session.update( arrayDesign.getDesignProvider().getAuditTrail() );
+                    arrayDesign.getDesignProvider().getAuditTrail().getEvents().size();
+                }
+
+                if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
+
+                if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
+
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
 
                 int numToDo = arrayDesign.getCompositeSequences().size(); // this takes a little while.
-                log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
+                // log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
 
                 String deepQuery = "select cs from CompositeSequenceImpl cs left outer join fetch cs.biologicalCharacteristic bs "
                         + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
@@ -1119,13 +1136,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     bs.getTaxon();
 
-                    if ( !deep || bs.getBioSequence2GeneProduct() == null ) {
+                    if ( !deep ) {
                         continue;
                     }
                     for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                        if ( bs2gp == null ) {
-                            continue;
-                        }
                         GeneProduct geneProduct = bs2gp.getGeneProduct();
                         Gene g = geneProduct.getGene();
                         if ( g != null ) {
@@ -1136,20 +1150,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                 log.info( "CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
 
-                session.update( arrayDesign );
-                arrayDesign.getLocalFiles().size();
-                arrayDesign.getExternalReferences().size();
-                arrayDesign.getAuditTrail().getEvents().size();
-
-                if ( arrayDesign.getDesignProvider() != null ) {
-                    session.update( arrayDesign.getDesignProvider() );
-                    session.update( arrayDesign.getDesignProvider().getAuditTrail() );
-                    arrayDesign.getDesignProvider().getAuditTrail().getEvents().size();
-                }
-
-                if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
-
-                if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
+                // session.update( arrayDesign );
 
                 session.clear();
                 session.setFlushMode( oldFlushMode );

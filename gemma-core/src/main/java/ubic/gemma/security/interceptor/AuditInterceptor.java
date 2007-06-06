@@ -370,6 +370,7 @@ public class AuditInterceptor implements MethodInterceptor {
      */
     private void processAssociations( Method m, Object object, Collection<Object> visited ) {
 
+        if (object instanceof AuditTrail) return;
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
             throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );

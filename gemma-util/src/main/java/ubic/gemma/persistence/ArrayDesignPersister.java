@@ -145,11 +145,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( !arrayDesignCache.containsKey( ad.getName() )
                 && !( ad.getShortName() != null && arrayDesignCache.containsKey( ad.getShortName() ) ) ) {
             ad = persistArrayDesign( ad );
-
-            // Two methods for thawing. Either one should work, question is speed.
-            arrayDesignService.thaw( ad );
-            // ad = arrayDesignService.loadFully( ad.getId() );
-
             assert !isTransient( ad );
             addToDesignElementCache( ad );
             arrayDesignCache.put( ad.getName(), ad );
@@ -210,7 +205,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         log.info( "Array Design " + arrayDesign + " already exists, returning..." );
-
+        arrayDesignService.thawLite( existing );
         return existing;
 
     }
@@ -353,6 +348,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );
         }
 
+        arrayDesignService.thawLite( arrayDesign );
         return arrayDesign;
     }
 

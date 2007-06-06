@@ -23,6 +23,7 @@ import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -218,6 +219,22 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
+    // /**
+    // * Causes a stack overflow in audit trail. - not reproduced in this small data set.
+    // * @throws Exception
+    // */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE3497() throws Exception {
+        endTransaction();
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GSE3497", false, true, true );
+        ee = results.iterator().next();
+        eeService.thawLite( ee );
+
+    }
+
     // Please leave this here, we use it to load data sets for chopping.
     // @SuppressWarnings("unchecked")
     // public void testFetchASeries() throws Exception {
@@ -240,6 +257,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) e.getData();
         }
+        eeService.thawLite( ee );
         assertNotNull( ee );
         assertNotNull( ee.getBioAssays() );
         assertEquals( 4, ee.getBioAssays().size() );
@@ -266,6 +284,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 "GDS775", false, true, false );
 
         ee = results.iterator().next();
+        eeService.thawLite( ee );
         assertEquals( 4, ee.getBioAssays().size() );
         assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
         //
@@ -314,7 +333,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ee = results.iterator().next();
         eeService.thawLite( ee );
         assertEquals( 80, ee.getBioAssays().size() );
-        assertEquals( 410, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
+        assertEquals( 400, ee.getDesignElementDataVectors().size() );
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         ads.add( ad );
         int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
@@ -350,20 +369,19 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // .fetchAndLoad( "GSE1074" );
     // ee = results.iterator().next();
     // }
-    /**
-     * Suffers from two data sets with the same platform
-     */
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoadGSE464() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse464Short" ) );
-
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE464", false, true, false );
-        ee = results.iterator().next();
-    }
-
+    // /**
+    // * Suffers from two data sets with the same platform
+    // */
+    // @SuppressWarnings("unchecked")
+    // public void testFetchAndLoadGSE464() throws Exception {
+    // String path = getTestFileBasePath();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+    // + "gse464Short" ) );
+    //
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+    // "GSE464", false, true, false );
+    // ee = results.iterator().next();
+    // }
     /**
      * @throws Exception
      */
@@ -570,21 +588,20 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( ee != null );
         assertTrue( newee.equals( ee ) );
 
-        // FIXME temporarily disable until matrix situation is fixed.
         // matrix = new ExpressionDataDoubleMatrix( newee, qt );
         // assertTrue( matrix != null );
         // if ( log.isDebugEnabled() ) {
         // log.debug( matrix );
         // }
-        //
+        //        
         // assertTrue( matrix != null );
-        //
+        //        
         // assertEquals( 17, matrix.rows() );
-        //
+        //        
         // assertEquals( 4, matrix.columns() );
-        //
+        //        
         // testMatrixValue( newee, matrix, "885", "GSM21256", -0.1202943 );
-        //
+        //        
         // testMatrixValue( newee, matrix, "878", "GSM21254", 0.6135323 );
 
     }
@@ -595,14 +612,20 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE3434" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE3434", false, true, false );
-        ee = results.iterator().next();
+        try {
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE3434", false, true, false );
+            ee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ExpressionExperiment ) e.getData();
+        }
+
         assertNotNull( ee );
         eeService.delete( ee );
         ee = null;
 
-        results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE3434", false, true , false );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GSE3434", false, true, false );
         ee = results.iterator().next();
 
         // this has no fail condition, just check that we can delete...
