@@ -370,7 +370,7 @@ public class AuditInterceptor implements MethodInterceptor {
      */
     private void processAssociations( Method m, Object object, Collection<Object> visited ) {
 
-        if (object instanceof AuditTrail) return;
+        if ( object instanceof AuditTrail ) return;
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
             throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );
@@ -381,8 +381,10 @@ public class AuditInterceptor implements MethodInterceptor {
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
 
+                String propertyName = propertyNames[j];
+
                 if ( log.isTraceEnabled() )
-                    log.trace( "Checking property " + propertyNames[j] + " of " + object + " for cascade audit" );
+                    log.trace( "Checking property " + propertyName + " of " + object + " for cascade audit" );
 
                 /*
                  * If the action being taken will result in a hibernate cascade, we need to update the audit information
@@ -390,10 +392,10 @@ public class AuditInterceptor implements MethodInterceptor {
                  * Otherwise, low-level hibernate activities (like cascading updates) are not seen.
                  */
                 if ( !crudUtils.needCascade( m, cs ) ) {
-                    if ( log.isTraceEnabled() ) continue;
+                    continue;
                 }
 
-                PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );
+                PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyName );
                 Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
 
                 if ( associatedObject == null ) continue;
@@ -406,23 +408,30 @@ public class AuditInterceptor implements MethodInterceptor {
                     if ( visited.contains( associatedObject ) ) continue;
 
                     if ( log.isTraceEnabled() )
-                        log.trace( "Processing audit for property " + propertyNames[j] + ", Cascade=" + cs );
+                        log.trace( "Processing audit for property " + propertyName + ", Cascade=" + cs );
                     processAfter( m, ( Auditable ) associatedObject, visited );
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                     Collection associatedObjects = ( Collection ) associatedObject;
 
-                    for ( Object object2 : associatedObjects ) {
+                    try {
+                        for ( Object collectionMember : associatedObjects ) {
 
-                        // break vicious cycle in bidirectional relation
-                        if ( visited.contains( object2 ) ) continue;
+                            // break vicious cycle in bidirectional relation
+                            if ( visited.contains( collectionMember ) ) continue;
 
-                        if ( Auditable.class.isAssignableFrom( object2.getClass() ) ) {
-                            if ( log.isTraceEnabled() ) {
-                                log.trace( "Processing audit for member " + object2 + " of collection "
-                                        + propertyNames[j] + ", Cascade=" + cs );
+                            if ( Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
+                                if ( log.isTraceEnabled() ) {
+                                    log.trace( "Processing audit for member " + collectionMember + " of collection "
+                                            + propertyName + ", Cascade=" + cs );
+                                }
+                                processAfter( m, ( Auditable ) collectionMember, visited );
                             }
-                            processAfter( m, ( Auditable ) object2, visited );
                         }
+                    } catch ( org.hibernate.LazyInitializationException e ) {
+                        // This is almost always not a problem, as it means the collection is already in the system. But
+                        // it can indicate a problem in the thaw state of the audited object.
+                        log.warn( "Collection " + propertyName + " on " + object
+                                + " could not be initialized, it will not be audited" );
                     }
                 }
             }
