@@ -54,7 +54,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected boolean doMatching = true;
     protected boolean force = false;
     protected ExpressionExperimentService eeService;
-    private boolean aggressive;
+    protected boolean aggressive;
 
     /*
      * (non-Javadoc)
