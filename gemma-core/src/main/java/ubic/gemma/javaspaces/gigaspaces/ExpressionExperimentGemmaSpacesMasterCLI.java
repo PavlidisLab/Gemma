@@ -181,7 +181,7 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
                     if ( !gigaspacesUtil.canServiceTask( ExpressionExperimentTask.class.getName(),
                             GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) continue;
 
-                    res = proxy.execute( accession, platformOnly, doMatching );
+                    res = proxy.execute( accession, platformOnly, doMatching, aggressive );
 
                     stopwatch.stop();
                     long wt = stopwatch.getTime();
