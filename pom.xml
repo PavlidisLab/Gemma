@@ -21,11 +21,11 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:continuum@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma</connection>
+		<connection>scm:cvs:ext:continuum@broca.ubic.ca:/cvs:Gemma</connection>
 		<developerConnection>
-			scm:cvs:ext:continuum@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
+			scm:cvs:ext:continuum@broca.ubic.ca:/cvs:Gemma
 		</developerConnection>
-		<url>http://luria.cmmt.ubc.ca:8080/viewrep/Pavlidis/Gemma</url>
+		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
