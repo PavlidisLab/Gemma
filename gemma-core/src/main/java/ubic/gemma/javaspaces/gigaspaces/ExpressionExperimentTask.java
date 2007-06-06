@@ -39,9 +39,11 @@ public interface ExpressionExperimentTask extends JavaSpacesTask {
      * @param geoAccession
      * @param loadPlatformOnly
      * @param doSampleMatching
-     * @return Result
+     * @param aggressiveQtRemoval
+     * @return
      */
-    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching );
+    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQtRemoval );
 
     // FIXME Just take in the command object ExpressionExperimentLoadCommand ... seems more robust
 
@@ -53,10 +55,11 @@ public interface ExpressionExperimentTask extends JavaSpacesTask {
      * @param geoAccession
      * @param loadPlatformOnly
      * @param doSampleMatching
+     * @param aggressiveQtRemoval
      * @return Result
      */
     public GigaSpacesResult execute( String taskId, String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching );
+            boolean doSampleMatching, boolean aggressiveQtRemoval );
     // TODO remove this - shouldn't be passing in the taskId
 
 }

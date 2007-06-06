@@ -74,12 +74,13 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
     @SuppressWarnings("unchecked")
-    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching ) {
+    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQtRemoval ) {
 
         super.initProgressAppender( this.getClass() );
 
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
-                doSampleMatching );
+                doSampleMatching, aggressiveQtRemoval );
 
         counter++;
         GigaSpacesResult result = new GigaSpacesResult();
@@ -88,7 +89,7 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
 
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
-        return result;
+        return result;  
     }
 
     /*
@@ -98,10 +99,10 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
      *      boolean, boolean)
      */
     public GigaSpacesResult execute( String taskId, String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching ) {
+            boolean doSampleMatching, boolean aggressiveQtRemoval ) {
         // TODO - remove this method when you figure out how to get the taskId from the ExpressionExperimentImpl in the
         // CustomDelegatorWorker
-        return execute( geoAccession, loadPlatformOnly, doSampleMatching );
+        return execute( geoAccession, loadPlatformOnly, doSampleMatching, aggressiveQtRemoval );
     }
 
     /**
