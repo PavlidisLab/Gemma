@@ -55,7 +55,7 @@ import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * This a service class used for preforming searches. there are generally two kinds of searches available, percise db
+ * This a service class used for performing searches. there are generally two kinds of searches available, percise db
  * searches looking for specific exact matches in the db and the compass/lucene style searches
  * <p>
  * Note: The corresponding Spring configuration is in applicationContext-compass.xml
