@@ -106,16 +106,6 @@ public class BibliographicReferenceServiceImpl extends
         getBibliographicReferenceDao().update( BibliographicReference );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetAllBibliographicReferences()
-     */
-    @Override
-    protected Collection handleGetAll() throws Exception {
-        return this.getBibliographicReferenceDao().loadAll();
-    }
-
     @Override
     protected void handleRemove( BibliographicReference bibliographicReference ) throws Exception {
         this.getBibliographicReferenceDao().remove( bibliographicReference );
@@ -143,6 +133,16 @@ public class BibliographicReferenceServiceImpl extends
     @Override
     protected BibliographicReference handleLoad( Long id ) throws Exception {
         return ( BibliographicReference ) this.getBibliographicReferenceDao().load( id );
+    }
+
+    @Override
+    protected Collection handleGetAllExperimentLinkedReferences() throws Exception {
+        return this.getBibliographicReferenceDao().getAllExperimentLinkedReferences();
+    }
+
+    @Override
+    protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
+        return this.getBibliographicReferenceDao().getRelatedExperiments( bibliographicReference );
     }
 
 }

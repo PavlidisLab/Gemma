@@ -19,6 +19,8 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +35,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceImpl;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -89,6 +92,27 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     }
 
     /**
+     * For AJAX calls.
+     * 
+     * @param id
+     */
+    public void update( Long id ) {
+        BibliographicReference bibRef = bibliographicReferenceService.load( id );
+        if ( id == null ) {
+            throw new EntityNotFoundException( "Could not locate reference with that id" );
+        }
+
+        String pubMedId = bibRef.getPubAccession().getAccession();
+        BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+
+        bibRef.setMeshTerms( fresh.getMeshTerms() );
+        bibRef.setChemicals( fresh.getChemicals() );
+        bibRef.setKeywords( fresh.getKeywords() );
+
+        bibliographicReferenceService.update( bibRef );
+    }
+
+    /**
      * @param request
      * @param response
      * @return
@@ -119,10 +143,21 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "bibRefList" ).addObject( "bibliographicReferences", bibliographicReferenceService
-                .getAll() );
+    @SuppressWarnings( { "unused", "unchecked" })
+    public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
+        Collection<BibliographicReference> allExperimentLinkedReferences = bibliographicReferenceService
+                .getAllExperimentLinkedReferences();
+
+        // FIXME this loop is slow; instead just put a link to the service method to get the experiments.
+        Collection<BibliographicReferenceValueObject> vos = new HashSet<BibliographicReferenceValueObject>();
+        for ( BibliographicReference b : allExperimentLinkedReferences ) {
+            Collection<ExpressionExperiment> ees = bibliographicReferenceService.getRelatedExperiments( b );
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( b );
+            vo.setExperiments( ees );
+            vos.add( vo );
+        }
+
+        return new ModelAndView( "bibRefList" ).addObject( "bibliographicReferences", vos );
     }
 
     /**

@@ -19,10 +19,12 @@
 package ubic.gemma.web.taglib.displaytag.common.description;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject;
 
 /**
  * Decorator for displaying bibligraphic refereneces in a list view.
@@ -45,20 +47,55 @@ public class BibliographicReferenceWrapper extends TableDecorator {
     public String getCitation() {
         // basically copied from the BibliographicReferenceTag.
         StringBuilder buf = new StringBuilder();
-        BibliographicReference bibliographicReference = ( BibliographicReference ) this.getCurrentRowObject();
+        Object obj = this.getCurrentRowObject();
+
+        BibliographicReferenceValueObject bibliographicReference = ( BibliographicReferenceValueObject ) obj;
         buf.append( bibliographicReference.getPublication() + " " );
 
         if ( bibliographicReference.getVolume() != null ) {
             buf.append( "<em>" + bibliographicReference.getVolume() + "</em>: " );
         }
         buf.append( bibliographicReference.getPages() );
+
         return buf.toString();
     }
 
     public String getYear() {
-        BibliographicReference bibliographicReference = ( BibliographicReference ) this.getCurrentRowObject();
+        Object obj = this.getCurrentRowObject();
+
+        BibliographicReferenceValueObject bibliographicReference = ( BibliographicReferenceValueObject ) obj;
         SimpleDateFormat form = new SimpleDateFormat( "yyyy" );
-        return form.format( bibliographicReference.getPublicationDate() );
+        Date publicationDate = bibliographicReference.getPublicationDate();
+        if ( publicationDate != null ) {
+            return form.format( publicationDate );
+        } else {
+            return "?";
+        }
+
+    }
+
+    public String getExperiments() {
+        BibliographicReferenceValueObject br = ( BibliographicReferenceValueObject ) this.getCurrentRowObject();
+        if ( br.getExperiments().size() == 0 ) return "";
+        StringBuilder buf = new StringBuilder();
+        if ( br.getExperiments().size() == 1 ) {
+            buf.append( "<a href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" );
+            buf.append( br.getExperiments().iterator().next().getId() );
+            buf.append( "'>" + br.getExperiments().iterator().next().getShortName() + "</a>" );
+        } else {
+            buf.append( "<a href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+            for ( ExpressionExperiment ee : br.getExperiments() ) {
+                buf.append( ee.getId() + "," );
+            }
+            buf.append( "'>[" + br.getExperiments().size() + " datasets]</a>" );
+        }
+        return buf.toString();
+    }
+
+    public String getUpdate() {
+        BibliographicReferenceValueObject br = ( BibliographicReferenceValueObject ) this.getCurrentRowObject();
+        return "<input id='" + br.getId() + "' type=\"button\"  value=\"Update\" onClick='doUpdate(" + br.getId()
+                + ");' />";
     }
 
 }

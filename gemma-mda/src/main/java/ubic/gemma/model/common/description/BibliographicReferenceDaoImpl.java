@@ -20,12 +20,15 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.QueryUtils;
 
 /**
  * @author pavlidis
@@ -93,4 +96,28 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         if ( log.isDebugEnabled() ) log.debug( "Creating new bibliographicReference: " + bibliographicReference );
         return ( BibliographicReference ) create( bibliographicReference );
     }
+
+    @SuppressWarnings("unchecked")
+    public Collection<BibliographicReference> handleGetAllExperimentLinkedReferences() {
+        final String query = "select distinct e.primaryPublication from ExpressionExperimentImpl e ";
+        return QueryUtils.queryForCollection( this.getSession( true ), query );
+    }
+
+    // FIXME Note that almost the same method is also available from the EEservice
+    @Override
+    protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
+        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
+                + " WHERE ee.primaryPublication = :bib OR (eeO = :bib) ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "bib", bibliographicReference );
+
+            Collection results = queryObject.list();
+            return results;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
 }

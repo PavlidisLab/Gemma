@@ -63,6 +63,15 @@ public class QueryUtils {
         }
     }
 
+    public static Collection queryForCollection( Session session, final String queryString ) {
+        try {
+            org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw SessionFactoryUtils.convertHibernateAccessException( ex );
+        }
+    }
+
     /**
      * Run a read-only query
      * 

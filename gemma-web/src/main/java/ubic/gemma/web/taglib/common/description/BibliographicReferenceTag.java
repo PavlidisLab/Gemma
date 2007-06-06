@@ -26,6 +26,9 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Keyword;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
+import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -109,6 +112,27 @@ public class BibliographicReferenceTag extends TagSupport {
                 buf.append( "</td></tr><tr><td valign=\"top\"><b>PDF</B></td><td>&nbsp;</td><td valign=\"top\">" );
                 buf.append( "<a href=\"" + absoluteUrl + "\">" + absoluteUrl + "</a>" );
                 buf.append( "&nbsp;(" + bibliographicReference.getFullTextPDF().getSize() + " bytes)" );
+            }
+
+            if ( bibliographicReference.getKeywords().size() > 0 ) {
+                buf.append( "</td></tr><tr><td valign=\"top\"><b>Keywords</B></td><td>&nbsp;</td><td valign=\"top\">" );
+                for ( Keyword o : bibliographicReference.getKeywords() ) {
+                    buf.append( o.getTerm() + "<br />" );
+                }
+            }
+
+            if ( bibliographicReference.getMeshTerms().size() > 0 ) {
+                buf.append( "</td></tr><tr><td valign=\"top\"><b>MESH</B></td><td>&nbsp;</td><td valign=\"top\">" );
+                for ( MedicalSubjectHeading o : bibliographicReference.getMeshTerms() ) {
+                    buf.append( o.getTerm() + "<br />" );
+                }
+            }
+
+            if ( bibliographicReference.getChemicals().size() > 0 ) {
+                buf.append( "</td></tr><tr><td valign=\"top\"><b>Chemicals</B></td><td>&nbsp;</td><td valign=\"top\">" );
+                for ( Compound o : bibliographicReference.getChemicals() ) {
+                    buf.append( o.getName() + "<br />" );
+                }
             }
 
             buf.append( "</td></tr></table>" );

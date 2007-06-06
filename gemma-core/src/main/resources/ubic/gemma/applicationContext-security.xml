@@ -324,13 +324,14 @@
                 ubic.gemma.model.expression.biomaterial.CompoundService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.biomaterial.CompoundService.update=user,admin
                 ubic.gemma.model.expression.biomaterial.CompoundService.remove=user,admin 
-                ubic.gemma.model.common.description.BibliographicReferenceService.getAll=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.description.BibliographicReferenceService.getAllExperimentLinkedReferences=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.description.BibliographicReferenceService.getRelatedExperiments=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
                 ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.findByTitle=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.create=ACL_SECURABLE_EDIT,user,admin
-                ubic.gemma.model.common.description.BibliographicReferenceService.update=ACL_SECURABLE_EDIT
+                ubic.gemma.model.common.description.BibliographicReferenceService.update=ACL_SECURABLE_EDIT,admin
                 ubic.gemma.model.common.description.BibliographicReferenceService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.common.description.BibliographicReferenceService.addPDF=user,admin 
                 ubic.gemma.model.common.description.ExternalDatabaseService.find=user,admin,ROLE_ANONYMOUS

@@ -24,6 +24,8 @@ import java.lang.reflect.Method;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
+import ubic.gemma.model.common.Auditable;
+
 /**
  * Class to help complete beans based on other beans
  * 
@@ -52,6 +54,8 @@ public class BeanPropertyCompleter {
      * Associated objects which are in collections or maps are not updated individually. All associations are either
      * assigned to or left alone. Thus collections will be replaced if "update" is selected, but if not, the collection
      * will not be changed, even if the sourceObject contains new members in the collection.
+     * <p>
+     * Note that Id, and AuditTrails on Auditables are NEVER clobbered by this method.
      * 
      * @param targetObject
      * @param sourceObject
@@ -60,12 +64,21 @@ public class BeanPropertyCompleter {
     public static void complete( Object targetObject, Object sourceObject, boolean update ) {
 
         if ( targetObject == null || sourceObject == null )
-            throw new IllegalArgumentException( "Args must benon-null" );
+            throw new IllegalArgumentException( "Args must be non-null" );
         if ( targetObject.getClass() != sourceObject.getClass() )
             throw new IllegalArgumentException( "Args must be of the same type" );
         PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors( targetObject );
         for ( int i = 0; i < props.length; i++ ) {
             PropertyDescriptor descriptor = props[i];
+
+            if ( targetObject instanceof Auditable && descriptor.getName().equals( "auditTrail" ) ) {
+                continue;
+            }
+
+            if ( descriptor.getName().equals( "id" ) ) {
+                continue;
+            }
+
             Method setter = descriptor.getWriteMethod();
             if ( setter == null ) continue;
             Method getter = descriptor.getReadMethod();

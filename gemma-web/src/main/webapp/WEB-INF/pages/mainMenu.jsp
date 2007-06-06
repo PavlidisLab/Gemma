@@ -17,8 +17,9 @@
 </spring:bind>
 
 
-<title><fmt:message key="mainMenu.title" /></title>
-<table class="datasummary" >
+<title><fmt:message key="mainMenu.title" />
+</title>
+<table class="datasummary">
 	<tr>
 		<td colspan="2">
 			<b>Data Summary</b>
@@ -167,8 +168,8 @@
 					key="menu.compassIndexer" /> </a>
 		</li>
 		<li>
-			<a href="<c:url value="/bibRef/showAllBibRef.html"/>">Articles
-				referenced in Gemma</a>
+			<a href="<c:url value="/bibRef/showAllEeBibRefs.html"/>">Articles
+				referenced by Experiments in Gemma</a>
 		</li>
 		<li>
 			<a
