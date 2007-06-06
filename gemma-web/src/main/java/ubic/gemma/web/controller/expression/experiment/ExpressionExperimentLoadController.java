@@ -269,7 +269,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                     }
 
                 } else {
-                    GigaSpacesResult res = eeTaskProxy.execute( accesionNum, false, doSampleMatching );
+                    GigaSpacesResult res = eeTaskProxy.execute( taskId, accesionNum, false, doSampleMatching );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
                     log.info( "result " + result );
 
