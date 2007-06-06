@@ -219,21 +219,21 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
-    // /**
-    // * Causes a stack overflow in audit trail. - not reproduced in this small data set.
-    // * @throws Exception
-    // */
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoadGSE3497() throws Exception {
-        endTransaction();
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE3497", false, true, true );
-        ee = results.iterator().next();
-        eeService.thawLite( ee );
-
-    }
+    // // /**
+    // // * Causes a stack overflow in audit trail. - not reproduced in this small data set.
+    // // * @throws Exception
+    // // */
+    // @SuppressWarnings("unchecked")
+    // public void testFetchAndLoadGSE3497() throws Exception {
+    // endTransaction();
+    // String path = getTestFileBasePath();
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+    // "GSE3497", false, true, true );
+    // ee = results.iterator().next();
+    //        eeService.thawLite( ee );
+    //
+    //    }
 
     // Please leave this here, we use it to load data sets for chopping.
     // @SuppressWarnings("unchecked")
