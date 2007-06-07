@@ -376,7 +376,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // if ids are specified, then display only those expressionExperiments
         else {
-            Collection ids = new ArrayList<Long>();
+            Collection<Long> ids = new ArrayList<Long>();
 
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
@@ -385,7 +385,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 }
             }
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null );
+                    .getFilteredExpressionExperimentValueObjects( ids );
             expressionExperiments.addAll( eeValObjectCol );
             // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
@@ -557,22 +557,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects(
-            Collection<ExpressionExperiment> eeCol ) {
+            Collection<Long> eeIds ) {
 
         log.debug( SecurityService.getPrincipal() );
 
-        /* Filtering happens here. */
-        Collection<ExpressionExperiment> allEEs = expressionExperimentService.loadAll();
+        /* Filtering happens here. */        
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
-        if ( eeCol == null ) {
-            securedEEs = allEEs;
-        } else {
-            Collection ids = new LinkedHashSet();
-            for ( ExpressionExperiment ee : eeCol ) {
-                ids.add( ee.getId() );
-            }
-            securedEEs = expressionExperimentService.load( ids );
+        if ( eeIds == null ) {
+            securedEEs = expressionExperimentService.loadAll();
+        } else {          
+            securedEEs = expressionExperimentService.load( eeIds );
         }
         return getExpressionExperimentValueObjects( securedEEs );
     }
