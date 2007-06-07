@@ -219,11 +219,14 @@ var updateSequenceInfo = function(event) {
 	var seq = record.get("blatResult").querySequence;
 	var cs = record.get("compositeSequence");
 	
-	var csDesc = cs.description !== null ?  cs.description : "[None provided]" ;
+	if (cs !== null) {
+		var csDesc = cs.description !== null ?  cs.description : "[None provided]" ;
+		dh.overwrite("probe-description", {tag : 'li' , id : "probe-description", html: "Probe description: " + csDesc , "ext:qtip": "Provider's description, may not be accurate"});
+	}
 	
-	dh.overwrite("probe-description", {tag : 'li' , id : "probe-description", html: "Probe description: " + csDesc , "ext:qtip": "Provider's description, may not be accurate"});
 	dh.append("sequence-info", { tag : 'li' , html: "Length: " + seq.length });
 	dh.append("sequence-info", { tag : 'li' , html: "Type: " + seq.type.value });
+	dh.append("sequence-info", { tag : 'li' , html: "Sequence: <div class='clob' style='height:30px;font-size:smaller;font-style:courier'>" + seq.sequence + "</div>"});
 	
 	if (seq.sequenceDatabaseEntry) {
 		dh.append("probe-sequence-name", {tag: 'a', id : "ncbiLink", target:"_blank", title: "view at NCBI", href: "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=" + seq.sequenceDatabaseEntry.accession, html: "<img src ='" + NCBI_ICON + "'/>"});
