@@ -125,12 +125,8 @@ public class FastaParser extends RecordParser {
             } else if ( rheader.matches( NIA_HEADER_REGEX ) ) {
                 keep = parseNIA( bioSequence, rheader );
             } else {
-                /*
-                 * This can happen if the input stream contains no FASTA records (which should be a survivable error)
-                 */
-                if ( log.isDebugEnabled() ) log.debug( "FASTA header missing or in unrecognized format: " + rheader );
-                keep = false;
-
+                // just treat the whole header as the sequence name.
+                keep = parseDeflineHeader( bioSequence, rheader );
             }
 
             if ( keep ) bioSequences.add( bioSequence );
@@ -212,7 +208,7 @@ public class FastaParser extends RecordParser {
      * <li>NCBI Reference Sequence : ref|accession|locus
      * <li>Local Sequence identifier : lcl|identifier
      * <li>NIA 15k and 7k sets : H[0-9A-Z]{1-9}-\d | alternate (example: &gt;H4002F12-5 )
-     * <li>Generic : probeid
+     * <li>Generic: probeid
      * </ul>
      * 
      * @param bioSequence

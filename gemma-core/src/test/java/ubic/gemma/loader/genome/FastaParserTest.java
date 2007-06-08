@@ -115,5 +115,18 @@ public class FastaParserTest extends TestCase {
 
         }
     }
+    
+    public void testParseMasked() throws Exception {
+        InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/maskedSeq.fa" );
+        FastaParser p = new FastaParser();
+        p.parse( n );
+        Collection<BioSequence> actualResult = p.getResults();
+        assertTrue( actualResult != null );
+        assertEquals( 7, actualResult.size() );
+        for ( Object object : actualResult ) {
+            BioSequence b = ( BioSequence ) object;
+            log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
+        }
+    }
 
 }

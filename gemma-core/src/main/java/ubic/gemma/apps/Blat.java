@@ -275,16 +275,15 @@ public class Blat {
     }
 
     /**
+     * Write a collection of sequences in FASTA format. TODO: move this somewhere more generally accessible.
+     * 
      * @param sequences
-     * @param taxon The taxon whose database will be searched.
-     * @return map of the input sequences to a corresponding collection of blat result(s)
+     * @param querySequenceFile
+     * @return
      * @throws IOException
      */
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
+    public static int writeSequencesToFile( Collection<BioSequence> sequences, File querySequenceFile )
             throws IOException {
-        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
-
-        File querySequenceFile = File.createTempFile( "pattern", ".fa" );
         BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
 
         /*
@@ -299,13 +298,14 @@ public class Blat {
         int repeats = 0;
         for ( BioSequence b : sequences ) {
             if ( StringUtils.isNotBlank( b.getSequence() ) ) {
-                String identifier = b.getName();
-                identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
+                String identifier = getIdentifier( b );
                 if ( identifiers.contains( identifier ) ) {
                     repeats++;
                     continue; // don't repeat sequences.
                 }
-                out.write( ">" + identifier + "\n" + b.getSequence() + "\n" );
+
+                // use toUpper to ensure that sequence does not start out 'masked'.
+                out.write( ">" + identifier + "\n" + b.getSequence().toUpperCase() + "\n" );
                 identifiers.add( identifier );
             } else {
                 log.warn( "Blank sequence for " + b );
@@ -315,13 +315,32 @@ public class Blat {
             }
         }
         out.close();
+        log.info( "Wrote " + count + " sequences( " + repeats + " repeated items were skipped)." );
+        return count;
+    }
 
+    public static String getIdentifier( BioSequence b ) {
+        String identifier = b.getName();
+        identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
+        return identifier;
+    }
+
+    /**
+     * @param sequences
+     * @param taxon The taxon whose database will be searched.
+     * @return map of the input sequences to a corresponding collection of blat result(s)
+     * @throws IOException
+     */
+    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
+            throws IOException {
+        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
+
+        File querySequenceFile = File.createTempFile( "pattern", ".fa" );
+        int count = writeSequencesToFile( sequences, querySequenceFile );
         if ( count == 0 ) {
             querySequenceFile.delete();
             throw new IllegalArgumentException( "No sequences!" );
         }
-
-        log.info( "Wrote " + count + " sequences( " + repeats + " repeated items were skipped)." );
 
         String outputPath = getTmpPslFilePath( "process" );
 
@@ -638,7 +657,7 @@ public class Blat {
         return this.processPsl( outputPath, null );
     }
 
-    private String getMinutesElapsed( StopWatch overallWatch ) {
+    public static String getMinutesElapsed( StopWatch overallWatch ) {
         Long overallElapsed = overallWatch.getTime();
         NumberFormat nf = new DecimalFormat();
         nf.setMaximumFractionDigits( 2 );

@@ -1,0 +1,179 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.analysis.sequence;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.apps.Blat;
+import ubic.gemma.loader.genome.FastaParser;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.concurrent.GenericStreamConsumer;
+
+/**
+ * Scan sequences for repeats
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class RepeatScan {
+
+    private static Log log = LogFactory.getLog( RepeatScan.class.getName() );
+
+    private static String REPEAT_MASKER = ConfigUtils.getString( "repeatMasker.exe" );
+
+    private static final int UPDATE_INTERVAL_MS = 1000 * 30;
+
+    /**
+     * Run repeatmasker on the sequences. The sequence will be updated with the masked (lower-case) sequences and the
+     * fraction of masked bases will be filled in.
+     * 
+     * @param sequences
+     */
+    public void repeatScan( Collection<BioSequence> sequences ) {
+        try {
+            File querySequenceFile = File.createTempFile( "repmask", ".fa" );
+            Blat.writeSequencesToFile( sequences, querySequenceFile );
+
+            Taxon taxon = sequences.iterator().next().getTaxon();
+
+            execRepeatMasker( querySequenceFile, taxon );
+
+            final String outputSequencePath = querySequenceFile.getParent() + File.separatorChar
+                    + querySequenceFile.getName() + ".masked";
+            // final String outputScorePath = querySequenceFile.getParent() + File.separatorChar
+            // + querySequenceFile.getName() + ".masked";
+            processRepeatMaskerOutput( sequences, outputSequencePath );
+
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Run a gfClient query, using a call to exec().
+     * 
+     * @param querySequenceFile
+     * @param outputPath
+     * @return
+     */
+    private void execRepeatMasker( File querySequenceFile, Taxon taxon ) throws IOException {
+        final String cmd = REPEAT_MASKER + " -xsmall -species " + taxon.getCommonName() + " "
+                + querySequenceFile.getAbsolutePath();
+        log.info( cmd );
+
+        final Process run = Runtime.getRuntime().exec( cmd );
+
+        // to ensure that we aren't left waiting for these streams
+        GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
+        GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
+        gscErr.start();
+        gscIn.start();
+
+        try {
+
+            int exitVal = Integer.MIN_VALUE;
+
+            // wait...
+            StopWatch overallWatch = new StopWatch();
+            overallWatch.start();
+
+            while ( exitVal == Integer.MIN_VALUE ) {
+                try {
+                    exitVal = run.exitValue();
+                } catch ( IllegalThreadStateException e ) {
+                    // okay, still waiting.
+                }
+                Thread.sleep( UPDATE_INTERVAL_MS );
+                String minutes = Blat.getMinutesElapsed( overallWatch );
+                log.info( "Repeatmasker: " + minutes + " minutes elapsed)" );
+            }
+
+            overallWatch.stop();
+            String minutes = Blat.getMinutesElapsed( overallWatch );
+            log.info( "Repeatmasker took a total of " + minutes + " minutes" );
+
+            // int exitVal = run.waitFor();
+
+            log.debug( "Repeatmasker exit value=" + exitVal );
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
+        }
+        log.debug( "Repeatmasker Success" );
+
+    }
+
+    /**
+     * @param sequences
+     * @param outputSequencePath
+     */
+    private void processRepeatMaskerOutput( Collection<BioSequence> sequences, String outputSequencePath )
+            throws IOException {
+        FastaParser parser = new FastaParser();
+        parser.parse( outputSequencePath );
+
+        // build map of identifiers to sequences.
+        Collection<BioSequence> results = parser.getResults();
+
+        Map<String, BioSequence> map = new HashMap<String, BioSequence>();
+        for ( BioSequence maskedSeq : results ) {
+            String identifier = maskedSeq.getName();
+            if ( log.isDebugEnabled() ) log.debug( "Masked: " + identifier );
+            map.put( identifier, maskedSeq );
+        }
+
+        // fill in old sequences with new information
+        for ( BioSequence origSeq : sequences ) {
+            String identifier = Blat.getIdentifier( origSeq );
+            BioSequence maskedSeq = map.get( identifier );
+
+            if ( log.isDebugEnabled() ) log.debug( "Orig: " + identifier );
+
+            if ( maskedSeq == null ) {
+                log.warn( "No masked sequence for " + identifier );
+                continue;
+            }
+
+            origSeq.setSequence( maskedSeq.getSequence() );
+
+            double fraction = computeFractionMasked( maskedSeq );
+            origSeq.setFractionRepeats( fraction );
+        }
+
+    }
+
+    double computeFractionMasked( BioSequence maskedSeq ) {
+        // count fraction of masked bases.
+        int origLength = maskedSeq.getSequence().length();
+        int unmaskedBases = maskedSeq.getSequence().replaceAll( "[a-z]", "" ).length();
+
+        double fraction = ( origLength - unmaskedBases ) / ( double ) origLength;
+        return fraction;
+    }
+
+}

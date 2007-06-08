@@ -59,6 +59,12 @@ import ubic.gemma.util.SequenceBinUtils;
 public class ProbeMapper {
 
     /**
+     * Sequences which have more than this fraction accounted for by repeats (via repeatmasker) will not be examined if
+     * they produce multiple alignments to the genome, regardless of the alignment quality.
+     */
+    public static final double REPEAT_FRACTION_MAXIMUM = 0.3;
+
+    /**
      * Sequence identity below which we throw hits away.
      */
     public static final double DEFAULT_IDENTITY_THRESHOLD = 0.80;
@@ -112,6 +118,7 @@ public class ProbeMapper {
         Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
         int count = 0;
         int skipped = 0;
+        int skippedDueToRepeat = 0;
 
         // group results together by BioSequence
         Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
@@ -128,6 +135,14 @@ public class ProbeMapper {
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
             if ( log.isDebugEnabled() ) {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
+            }
+
+            Double fractionRepeats = sequence.getFractionRepeats();
+            if ( fractionRepeats != null && fractionRepeats > REPEAT_FRACTION_MAXIMUM
+                    && blatResultsForSequence.size() > 1 ) {
+                skippedDueToRepeat++;
+                skipped++;
+                continue;
             }
 
             Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
@@ -187,9 +202,11 @@ public class ProbeMapper {
 
         } // end of iteration over sequence
 
-        // if ( log.isInfoEnabled() && skipped > 0 )
-        // log.info( "Skipped " + skipped + "/" + blatResults.size()
-        // + " individual blat results that didn't meet criteria" );
+        if ( log.isInfoEnabled() && skipped > 0 ) {
+            log.info( "Skipped " + skipped + "/" + blatResults.size()
+                    + " individual blat results that didn't meet criteria; " + skippedDueToRepeat
+                    + " were skipped due to repeat or low complexity content." );
+        }
 
         return allRes;
     }

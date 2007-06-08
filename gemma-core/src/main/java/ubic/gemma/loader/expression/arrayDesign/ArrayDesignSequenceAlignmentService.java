@@ -75,7 +75,7 @@ public class ArrayDesignSequenceAlignmentService {
         arrayDesignService.deleteAlignmentData( ad );
 
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
+        Collection<BioSequence> sequencesToBlat = getSequences( ad );
 
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
@@ -133,7 +133,7 @@ public class ArrayDesignSequenceAlignmentService {
         log.info( "Looking for old results to remove..." );
         arrayDesignService.deleteAlignmentData( ad );
 
-        Collection<BioSequence> sequencesToBlat = getSequenceMap( ad );
+        Collection<BioSequence> sequencesToBlat = getSequences( ad );
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
 
         ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
@@ -276,7 +276,7 @@ public class ArrayDesignSequenceAlignmentService {
      * @param ad
      * @return
      */
-    private Collection<BioSequence> getSequenceMap( ArrayDesign ad ) {
+    public static Collection<BioSequence> getSequences( ArrayDesign ad ) {
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
         int numWithNoBioSequence = 0;
