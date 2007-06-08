@@ -19,8 +19,6 @@
 package ubic.gemma.javaspaces.gigaspaces;
 
 import net.jini.space.JavaSpace;
-import ubic.gemma.javaspaces.JavaSpacesTask;
-import ubic.gemma.loader.expression.geo.model.GeoDataset;
 
 /**
  * A task interface to wrap {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} type jobs. Tasks of this
@@ -30,36 +28,7 @@ import ubic.gemma.loader.expression.geo.model.GeoDataset;
  * @author keshav
  * @version $Id$
  */
-public interface ExpressionExperimentTask extends JavaSpacesTask {
-
-    /**
-     * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
-     * This method is useful for invoking methods from {@link GeoDataset}.
-     * 
-     * @param geoAccession
-     * @param loadPlatformOnly
-     * @param doSampleMatching
-     * @param aggressiveQtRemoval
-     * @return
-     */
-    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQtRemoval );
-
-    // FIXME Just take in the command object ExpressionExperimentLoadCommand ... seems more robust
-
-    /**
-     * Methods with the name "execute" are proxied by the client (master) and run by the worker (on the compute server).
-     * This method is useful for invoking methods from {@link GeoDataset}.
-     * 
-     * @param taskId
-     * @param geoAccession
-     * @param loadPlatformOnly
-     * @param doSampleMatching
-     * @param aggressiveQtRemoval
-     * @return Result
-     */
-    public GigaSpacesResult execute( String taskId, String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQtRemoval );
-    // TODO remove this - shouldn't be passing in the taskId
+public interface ExpressionExperimentTask {
+    public GigaSpacesResult execute( JavaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand );
 
 }
