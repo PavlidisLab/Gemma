@@ -282,7 +282,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
             Gene gene = geneProduct.getGene();
             BlatResult blatResult = blatAssociation.getBlatResult();
             blatResult.getQuerySequence().getTaxon();
-            
+
             if ( blatResults.containsKey( blatResult ) ) {
                 blatResults.get( blatResult ).addGene( geneProduct, gene );
             } else {
@@ -295,6 +295,18 @@ public class CompositeSequenceController extends BaseMultiActionController {
         }
 
         addBlatResultsLackingGenes( cs, blatResults );
+
+        if ( blatResults.size() == 0 ) {
+            // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
+            BlatResultGeneSummary summary = new BlatResultGeneSummary();
+            summary.setCompositeSequence( cs );
+            BlatResult newInstance = BlatResult.Factory.newInstance();
+            newInstance.setQuerySequence( cs.getBiologicalCharacteristic() );
+            newInstance.setId( -1L );
+            summary.setBlatResult( newInstance );
+            blatResults.put( newInstance, summary );
+        }
+
         return blatResults;
     }
 

@@ -189,14 +189,21 @@
             margin: 0 0 0 30px;
             padding: 0;
         }
-
-    	/* END LISTS */
+		/* END LISTS */
+		
+    	
 
     	/* TABLE */
-        table caption {
-            font-weight: bold;
+		td {
+			font:normal 11px arial, tahoma, helvetica, sans-serif;
+		}
+
+        table {
+        	border-style:solid;
+			border-width:1px;
+			border-color:#BBBBBB;
             margin: 0 0 0 0;
-            padding: 0 0 1.5em 0;
+            padding: 6px;
         }
 
 	     td.label {
@@ -206,7 +213,9 @@
         } 
 		
 		th {
-			font-weight: bold;
+			border-bottom:solid #555555 1px;
+			font:bold 11px arial, tahoma, helvetica, sans-serif;
+			padding: 4px;
 		}
 
     hr {

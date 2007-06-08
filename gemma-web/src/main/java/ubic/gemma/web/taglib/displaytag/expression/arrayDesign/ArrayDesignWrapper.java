@@ -55,6 +55,21 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
     }
 
+    public String getLastRepeatMaskDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        Date dateObject = object.getLastRepeatMask();
+
+        if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+
     public String getShortName() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         String result = object.getShortName();
@@ -268,10 +283,12 @@ public class ArrayDesignWrapper extends TableDecorator {
         Date seqDate = object.getLastSequenceUpdate();
         Date analDate = object.getLastSequenceAnalysis();
         Date mapDate = object.getLastGeneMapping();
+        Date repDate = object.getLastRepeatMask();
 
         if ( seqDate != null && dateObject.before( seqDate ) ) return false;
         if ( analDate != null && dateObject.before( analDate ) ) return false;
         if ( mapDate != null && dateObject.before( mapDate ) ) return false;
+        if ( repDate != null && dateObject.before( repDate ) ) return false;
 
         return true;
     }

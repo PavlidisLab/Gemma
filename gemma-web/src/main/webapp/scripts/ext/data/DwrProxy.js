@@ -71,7 +71,7 @@ Ext.extend(Ext.data.DWRProxy, Ext.data.DataProxy, {
 	loadResponse:function (data, reader, callback, scope, arg) {
 		var result;
 		try {
-			// console.log(dwr.util.toDescriptiveString(data, 5));
+			console.log(dwr.util.toDescriptiveString(data, 5));
 			result = reader.read(data, arg);
 		}
 		catch (e) {

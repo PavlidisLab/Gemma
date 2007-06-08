@@ -29,6 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.genome.Taxon;
@@ -270,6 +271,21 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
         Class eventclass = ArrayDesignSequenceAnalysisEvent.class;
+        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastRepeatAnalysis( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not SequenceAnalysis events
+        Set<Long> aaIds = eventMap.keySet();
+        Class eventclass = ArrayDesignRepeatAnalysisEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }

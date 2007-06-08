@@ -48,7 +48,7 @@ public class RepeatScan {
 
     private static String REPEAT_MASKER = ConfigUtils.getString( "repeatMasker.exe" );
 
-    private static final int UPDATE_INTERVAL_MS = 1000 * 30;
+    private static final int UPDATE_INTERVAL_MS = 5000 * 30;
 
     /**
      * Run repeatmasker on the sequences. The sequence will be updated with the masked (lower-case) sequences and the
@@ -85,7 +85,7 @@ public class RepeatScan {
      * @return
      */
     private void execRepeatMasker( File querySequenceFile, Taxon taxon ) throws IOException {
-        final String cmd = REPEAT_MASKER + " -xsmall -species " + taxon.getCommonName() + " "
+        final String cmd = REPEAT_MASKER + " -parallel 8 -xsmall -species " + taxon.getCommonName() + " "
                 + querySequenceFile.getAbsolutePath();
         log.info( cmd );
 

@@ -210,14 +210,16 @@ var updateSequenceInfo = function(event) {
 	var dh = Ext.DomHelper;
 	
 	if (detailsDataSource.getCount() === 0) {
-		// This is really a bug. Just because we don't have alignment information, we shouldn't be missing the 
-		//description. It's just that we send this with the blat data, and if there is no blat data, there is no probe description.
+		// This shouldn't happen any mor ebecause we always return at least a dummy record holding the sequence
 		dh.overwrite("probe-description", {tag : 'li' , id : "probe-description", html: "Probe description: " + "[unavailable]"});
 		return; 
 	}
 	var record = detailsDataSource.getAt(0);
-	var seq = record.get("blatResult").querySequence;
+	
+	// Note this can be a dummy with  no real blat result.
+	var	seq = record.get("blatResult").querySequence;
 	var cs = record.get("compositeSequence");
+	
 	
 	if (cs !== null) {
 		var csDesc = cs.description !== null ?  cs.description : "[None provided]" ;
@@ -227,14 +229,13 @@ var updateSequenceInfo = function(event) {
 	dh.append("sequence-info", { tag : 'li' , html: "Length: " + seq.length });
 	dh.append("sequence-info", { tag : 'li' , html: "Type: " + seq.type.value });
 	if ( seq.fractionRepeats ) {
-		dh.append("sequence-info",  { tag : 'li' , html: "Repeatmasked bases: " + seq.fractionRepeats });
+		dh.append("sequence-info",  { tag : 'li' , html: "Repeat-masked bases: " + Math.round(seq.fractionRepeats * 1000)/10 + "%" });
 	}
-	dh.append("sequence-info", { tag : 'li' , html: "Sequence: <div class='clob' style='height:30px;font-size:smaller;font-style:courier'>" + seq.sequence + "</div>"});
+	dh.append("sequence-info", { tag : 'li' , html: "Sequence: <div class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>" + seq.sequence + "</div>"});
 	
 	if (seq.sequenceDatabaseEntry) {
 		dh.append("probe-sequence-name", {tag: 'a', id : "ncbiLink", target:"_blank", title: "view at NCBI", href: "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=" + seq.sequenceDatabaseEntry.accession, html: "<img src ='" + NCBI_ICON + "'/>"});
 	}
-	// dh.append("sequence-info", { tag : 'li' , html: "Sequence: " + seq.sequence });
 };
 
 
@@ -418,6 +419,11 @@ var getDb = function(taxon) {
 };
 
 var blatResRender = function(d, metadata, record, row, column, store  ) {
+	
+	if (!d.targetChromosome) {
+		return "";
+	}
+	
 	var res = "chr" + d.targetChromosome.name + " (" + d.strand + ") " + d.targetStart + "-" + d.targetEnd;
 	
 	var organism = d.targetChromosome.taxon;

@@ -140,6 +140,7 @@ public class FastaParser extends RecordParser {
      *        Affymetrix &quot;style&quot; file                      target:probename
      *        Affymetrix probe                             probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
      *        Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     *        Affymetrix-like format                       array:probe or other string containing ':'.
      * </pre>
      * 
      * @param bioSequence
@@ -167,8 +168,9 @@ public class FastaParser extends RecordParser {
             bioSequence.setName( split[1] + ":" + split[2] );
             bioSequence.setDescription( split[3] );
         } else {
-            log.warn( "Affymetrix-style FASTA header in unrecognized format, started with " + firstTag );
-            return false;
+            // This is the case if the xxxx:xxxx format is used on non-affy
+            bioSequence.setName( StringUtils.removeStart( header, ">" ) );
+            return true;
         }
 
         for ( String string : split ) {

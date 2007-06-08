@@ -77,9 +77,12 @@ public class BlatResultGeneSummary implements Serializable {
      */
     public void setBlatResult( BlatResult blatResult ) {
         this.blatResult = blatResult;
-        this.identity = blatResult.identity();
-        this.score = blatResult.score();
-        this.blatResultId = blatResult.getId().toString();
+        if ( blatResult.getMatches() != null ) {
+            this.identity = blatResult.identity();
+            this.score = blatResult.score();
+        }
+
+        if ( blatResult.getId() != null ) this.blatResultId = blatResult.getId().toString();
     }
 
     /**
@@ -135,7 +138,7 @@ public class BlatResultGeneSummary implements Serializable {
     }
 
     public CompositeSequence getCompositeSequence() {
-        return compositeSequence ;
+        return compositeSequence;
     }
 
     public void setCompositeSequence( CompositeSequence compositeSequence ) {

@@ -108,8 +108,7 @@
 <script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
-<display:table name="arrayDesigns" sort="list" class="list"
-	requestURI="" id="arrayDesignList" pagesize="50"
+<display:table name="arrayDesigns" sort="list" requestURI="" id="arrayDesignList" pagesize="50"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 	<display:column property="name" sortable="true"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
@@ -128,6 +127,9 @@
 		<display:column property="lastSequenceUpdateDate" sortable="true"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
 			title="Seq. Update" defaultorder="descending" />
+		<display:column property="lastRepeatMaskDate" sortable="true"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
+			title="Rep. mask" defaultorder="descending" />
 		<display:column property="lastSequenceAnalysisDate" sortable="true"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
 			title="Seq. Analysis" defaultorder="descending" />
