@@ -35,6 +35,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask;
 import ubic.gemma.javaspaces.gigaspaces.GigaSpacesResult;
+import ubic.gemma.javaspaces.gigaspaces.JavaSpacesExpressionExperimentLoadCommand;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -269,8 +270,15 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
                     }
 
                 } else {
-                    GigaSpacesResult res = eeTaskProxy.execute( taskId, accesionNum, false, doSampleMatching,
-                            aggressiveQtRemoval );
+                    ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
+                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand();
+                    jsCommand.setTaskId( taskId );
+                    jsCommand.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
+                    jsCommand.setSuppressMatching( eeLoadCommand.isSuppressMatching() );
+                    jsCommand.setAccession( eeLoadCommand.getAccession() );
+                    jsCommand.setAggressiveQtRemoval( eeLoadCommand.isAggressiveQtRemoval() );
+
+                    GigaSpacesResult res = eeTaskProxy.execute( jsCommand );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
                     log.info( "result " + result );
 
