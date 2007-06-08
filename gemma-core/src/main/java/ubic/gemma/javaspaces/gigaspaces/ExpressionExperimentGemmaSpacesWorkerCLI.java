@@ -169,6 +169,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
             if ( taskId.equals( worker.getTaskId() ) ) {
                 log.info( "Stopping execution of task: " + taskId );
                 itbThread.stop();
+                // itbThread.destroy();
             }
 
         } catch ( Exception e ) {
