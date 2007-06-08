@@ -648,9 +648,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
                 + "eventCreated.date as createdDate "
-                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
+                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
-                + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
+                + "inner join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " where eventCreated.action='C' and ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {

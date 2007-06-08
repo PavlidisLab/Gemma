@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -129,6 +130,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         assertNotNull( expressionExperiment );
     }
 
+   
     @SuppressWarnings("unchecked")
     public final void testGetDesignElementDataVectors() throws Exception {
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
@@ -192,6 +194,36 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     public final void testLoadAllValueObjects() throws Exception {
         Collection list = expressionExperimentDao.loadAllValueObjects();
         assertNotNull( list );
+    }
+    
+    //Test needs to be run against the production db. Comment out the onsetup and on tear down before running on production. 
+    //The test db is just to trivial a db for this test to ever fail. 
+    //there were issues with loadValueObjects not returning all the specified value objects
+    //because of join issues (difference between left join and inner join).  Made this test to quickly test if it was working or not. 
+    public final void testVerifyLoadValueObjects() throws Exception {
+               
+        Collection<ExpressionExperiment> eeAll = expressionExperimentDao.loadAll();
+        
+        Collection<Long> ids = new LinkedHashSet<Long>();
+        for ( ExpressionExperiment ee : eeAll ) {
+            ids.add( ee.getId() );
+        }
+        log.debug( "loadAll: " + ids.toString() );
+
+        Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentDao.loadValueObjects( ids );
+        
+        Collection<Long> idsAfter = new LinkedHashSet<Long>();
+        for (ExpressionExperimentValueObject ee : valueObjs){
+            idsAfter.add( ee.getId());
+        }
+        
+        log.debug( "loadValueObjects: " + idsAfter.toString() );
+        
+        Collection<Long> removedIds = new LinkedHashSet<Long>(ids);
+        removedIds.removeAll( idsAfter );
+        
+        log.debug( "Intersection of EEs: " + removedIds.toString() );
+        assertEquals(idsAfter.size(), ids.size());
     }
 
     /**
