@@ -47,37 +47,23 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.javaspaces.JavaSpacesTask#execute(java.lang.Object)
-     */
-    public GigaSpacesResult execute( Object obj ) {
-        // TODO Unsed, but will need to load expression experiments directly (as opposed to using fetchAndLoad).
-        if ( !( obj instanceof ExpressionExperiment ) ) {
-            throw new RuntimeException( "Task of type " + this.getClass().getSimpleName()
-                    + " cannot execute on objects of type " + obj.getClass().getSimpleName() );
-        }
-
-        ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) obj;
-        ExpressionExperiment persistedExpressionExperiment = expressionExperimentService.create( expressionExperiment );
-        Long id = persistedExpressionExperiment.getId();
-        counter++;
-        GigaSpacesResult result = new GigaSpacesResult();
-        result.setTaskID( counter );
-        result.setAnswer( id );
-
-        return result;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
     @SuppressWarnings("unchecked")
-    public GigaSpacesResult execute( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQtRemoval ) {
+    public GigaSpacesResult execute( JavaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand ) {
+
+        if ( !( javaSpacesExpressionExperimentLoadCommand instanceof JavaSpacesExpressionExperimentLoadCommand ) ) {
+            throw new RuntimeException( "Cannot handle objects of type "
+                    + javaSpacesExpressionExperimentLoadCommand.getClass() );
+        }
 
         super.initProgressAppender( this.getClass() );
+
+        JavaSpacesExpressionExperimentLoadCommand jsEeLoadCommand = ( JavaSpacesExpressionExperimentLoadCommand ) javaSpacesExpressionExperimentLoadCommand;
+        String geoAccession = jsEeLoadCommand.getAccession();
+        boolean loadPlatformOnly = jsEeLoadCommand.isLoadPlatformOnly();
+        boolean doSampleMatching = jsEeLoadCommand.isSuppressMatching();
+        boolean aggressiveQtRemoval = jsEeLoadCommand.isAggressiveQtRemoval();
 
         Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
                 doSampleMatching, aggressiveQtRemoval );
@@ -89,20 +75,7 @@ public class ExpressionExperimentTaskImpl extends BaseJavaSpacesTask implements 
 
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
-        return result;  
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, java.lang.String,
-     *      boolean, boolean)
-     */
-    public GigaSpacesResult execute( String taskId, String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQtRemoval ) {
-        // TODO - remove this method when you figure out how to get the taskId from the ExpressionExperimentImpl in the
-        // CustomDelegatorWorker
-        return execute( geoAccession, loadPlatformOnly, doSampleMatching, aggressiveQtRemoval );
+        return result;
     }
 
     /**
