@@ -18,11 +18,16 @@
  */
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -48,9 +53,13 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option justTestingOption = OptionBuilder.withArgName( "tryout mode" ).withDescription(
+        Option justTestingOption = OptionBuilder.withLongOpt( "tryout" ).withDescription(
                 "Set to run without any database modifications" ).create( 'f' );
         addOption( justTestingOption );
+
+        Option sequenceNameList = OptionBuilder.hasArg().withArgName( "file" ).withDescription(
+                "File with list of biosequence names to check." ).create( 'b' );
+        addOption( sequenceNameList );
     }
 
     public static void main( String[] args ) {
@@ -69,6 +78,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     CompositeSequenceService css;
     BlatResultService blatResultService;
     BlatAssociationService blatAssociationService;
+    private String file = null;
 
     @Override
     protected void processOptions() {
@@ -77,6 +87,11 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
             this.justTesting = true;
             log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
         }
+
+        if ( this.hasOption( 'b' ) ) {
+            this.file = ( String ) getOptionValue( 'b' );
+        }
+
         bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
         css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         blatResultService = ( BlatResultService ) this.getBean( "blatResultService" );
@@ -93,9 +108,32 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         if ( this.arrayDesignName != null ) {
             ads.add( locateArrayDesign( this.arrayDesignName ) );
+        } else if ( file != null ) {
+            try {
+                InputStream is = new FileInputStream( file );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+                String id = null;
+                Collection<Long> ids = new HashSet<Long>();
+                while ( ( id = br.readLine() ) != null ) {
+
+                    if ( StringUtils.isBlank( id ) ) {
+                        continue;
+                    }
+                    ids.add( Long.parseLong( id ) );
+                }
+
+                Collection bioSequences = bss.load( ids );
+                bss.thaw( bioSequences );
+                processSequences( bioSequences );
+                return null;
+            } catch ( Exception e ) {
+                return e;
+            }
         } else {
             ads = this.arrayDesignService.loadAll();
         }
+
         int i = 0;
         for ( ArrayDesign design : ads ) {
             log.info( design );
@@ -109,60 +147,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 bioSequences.add( cs.getBiologicalCharacteristic() );
             }
 
-            // ///////////////////////////////
-            // First stage: fix biosequences that lack database entries, when there is one for another essentially
-            // identical sequence (and the name is the same as the accession)
-            for ( BioSequence sequence : bioSequences ) {
-
-                Collection<BioSequence> reps = bss.findByName( sequence.getName() );
-
-                if ( reps.size() == 1 ) continue;
-
-                // pass 1: find an anchor.
-                BioSequence anchor = null;
-                for ( BioSequence possibleAnchor : reps ) {
-                    if ( possibleAnchor.getSequenceDatabaseEntry() != null
-                            && possibleAnchor.getSequenceDatabaseEntry().getAccession().equals(
-                                    possibleAnchor.getName() ) ) {
-                        anchor = possibleAnchor;
-                    }
-
-                }
-
-                if ( anchor == null ) continue;
-                reps.remove( anchor );
-
-                log.info( "Examining duplicates of " + anchor );
-
-                for ( BioSequence rep : reps ) {
-                    if ( rep.getSequenceDatabaseEntry() != null ) {
-
-                        if ( rep.getSequenceDatabaseEntry().getAccession().equals(
-                                anchor.getSequenceDatabaseEntry().getAccession() ) ) {
-                            log.warn( anchor + " and " + rep + " have equivalent database entries for accession" );
-
-                            // they might have different names, but we don't care. One of them has to go.
-
-                        } else {
-                            log.warn( anchor + " and " + rep
-                                    + " have distinct database entries for accession: skipping" );
-                            continue;
-                        }
-
-                    }
-
-                    log.info( sequence + " has a potential replica: " + rep );
-
-                    // only do this if they have the same name
-                    // if ( !rep.getName().equals( anchor.getName() ) ) {
-                    // log.warn( rep + " and " + anchor + " have different names, skipping" );
-                    // continue;
-                    // }
-
-                    switchAndDeleteExtra( anchor, rep );
-
-                }
-            }
+            processSequences( bioSequences );
 
             // ///////////////////////////////
             // Second phase: make sure composite sequences don't refer to sequences that have duplicates based on name,
@@ -216,6 +201,63 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         return null;
 
+    }
+
+    private void processSequences( Collection<BioSequence> bioSequences ) {
+        // ///////////////////////////////
+        // First stage: fix biosequences that lack database entries, when there is one for another essentially
+        // identical sequence (and the name is the same as the accession)
+        for ( BioSequence sequence : bioSequences ) {
+
+            Collection<BioSequence> reps = bss.findByName( sequence.getName() );
+
+            if ( reps.size() == 1 ) continue;
+
+            bss.thaw( reps );
+
+            // pass 1: find an anchor.
+            BioSequence anchor = null;
+            for ( BioSequence possibleAnchor : reps ) {
+                if ( possibleAnchor.getSequenceDatabaseEntry() != null
+                        && possibleAnchor.getSequenceDatabaseEntry().getAccession().equals( possibleAnchor.getName() ) ) {
+                    anchor = possibleAnchor;
+                }
+
+            }
+
+            if ( anchor == null ) continue;
+            reps.remove( anchor );
+
+            log.info( "Examining duplicates of " + anchor );
+
+            for ( BioSequence rep : reps ) {
+                if ( rep.getSequenceDatabaseEntry() != null ) {
+
+                    if ( rep.getSequenceDatabaseEntry().getAccession().equals(
+                            anchor.getSequenceDatabaseEntry().getAccession() ) ) {
+                        log.warn( anchor + " and " + rep + " have equivalent database entries for accession" );
+
+                        // they might have different names, but we don't care. One of them has to go.
+
+                    } else {
+                        log.warn( anchor + " and " + rep + " have distinct database entries for accession: skipping" );
+                        continue;
+                    }
+
+                }
+
+                log.info( sequence + " has a potential replica: " + rep );
+
+                // only do this if they have the same name
+                // if ( !rep.getName().equals( anchor.getName() ) ) {
+                // log.warn( rep + " and " + anchor + " have different names, skipping" );
+                // continue;
+                // }
+
+                switchAndDeleteExtra( anchor, rep );
+
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")

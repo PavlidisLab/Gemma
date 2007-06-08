@@ -19,18 +19,26 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
+import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.sequence.RepeatScan;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 
 /**
+ * Runs repeatmasker on array designs.
+ * 
  * @author pavlidis
  * @version $Id$
  */
 public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli {
+    BioSequenceService bsService;
 
     /**
      * @param args
@@ -48,29 +56,85 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     }
 
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignRepeatAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception exception = processCommandLine( "repeatScan", args );
         if ( exception != null ) return exception;
 
-        BioSequenceService bsService = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+        bsService = ( BioSequenceService ) this.getBean( "bioSequenceService" );
 
-        ArrayDesign design = this.locateArrayDesign( arrayDesignName );
+        Date skipIfLastRunLaterThan = getLimitingDate();
+
+        if ( StringUtils.isNotBlank( this.arrayDesignName ) ) {
+
+            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+
+            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
+                log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                return null;
+            }
+
+            unlazifyArrayDesign( arrayDesign );
+
+            processArrayDesign( arrayDesign );
+            audit( arrayDesign, "" );
+
+        } else if ( skipIfLastRunLaterThan != null ) {
+            log.warn( "*** Running Repeatmasker for all Array designs *** " );
+
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+            for ( ArrayDesign design : allArrayDesigns ) {
+
+                if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
+                    log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                    // not really an error, but nice to get notification.
+                    errorObjects
+                            .add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                    continue;
+                }
+
+                log.info( "============== Start processing: " + design + " ==================" );
+                try {
+                    arrayDesignService.thaw( design );
+                    processArrayDesign( design );
+                    successObjects.add( design.getName() );
+                    audit( design, "" );
+                } catch ( Exception e ) {
+                    errorObjects.add( design + ": " + e.getMessage() );
+                    log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+                    log.error( e, e );
+                }
+
+            }
+            summarizeProcessing();
+        } else {
+            bail( ErrorCode.MISSING_ARGUMENT );
+        }
+
+        return null;
+    }
+
+    private void processArrayDesign( ArrayDesign design ) {
         unlazifyArrayDesign( design );
 
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( design );
 
         RepeatScan scanner = new RepeatScan();
 
-        scanner.repeatScan( sequences );
+        Collection<BioSequence> altered = scanner.repeatScan( sequences );
 
-        for ( BioSequence sequence : sequences ) {
-            log.info( sequence.getFractionRepeats() + " " + sequence.getSequence() );
-        }
-
-        // bsService.update( sequences );
-
-        return null;
+        log.info( "Saving..." );
+        bsService.update( altered );
+        log.info( "Done with " + design );
     }
 
 }

@@ -543,6 +543,7 @@
 							<value>sequenceDatabaseEntry</value>
 							<value>length</value>
 							<value>type</value>
+							<value>fractionRepeats</value>
 							<value>taxon</value>
 						</list>
 					</property>

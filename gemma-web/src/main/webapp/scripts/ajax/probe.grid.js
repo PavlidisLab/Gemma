@@ -226,6 +226,9 @@ var updateSequenceInfo = function(event) {
 	
 	dh.append("sequence-info", { tag : 'li' , html: "Length: " + seq.length });
 	dh.append("sequence-info", { tag : 'li' , html: "Type: " + seq.type.value });
+	if ( seq.fractionRepeats ) {
+		dh.append("sequence-info",  { tag : 'li' , html: "Repeatmasked bases: " + seq.fractionRepeats });
+	}
 	dh.append("sequence-info", { tag : 'li' , html: "Sequence: <div class='clob' style='height:30px;font-size:smaller;font-style:courier'>" + seq.sequence + "</div>"});
 	
 	if (seq.sequenceDatabaseEntry) {

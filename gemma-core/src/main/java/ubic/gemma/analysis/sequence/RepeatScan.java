@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -54,8 +55,9 @@ public class RepeatScan {
      * fraction of masked bases will be filled in.
      * 
      * @param sequences
+     * @return sequences that had repeats.
      */
-    public void repeatScan( Collection<BioSequence> sequences ) {
+    public Collection<BioSequence> repeatScan( Collection<BioSequence> sequences ) {
         try {
             File querySequenceFile = File.createTempFile( "repmask", ".fa" );
             Blat.writeSequencesToFile( sequences, querySequenceFile );
@@ -68,7 +70,7 @@ public class RepeatScan {
                     + querySequenceFile.getName() + ".masked";
             // final String outputScorePath = querySequenceFile.getParent() + File.separatorChar
             // + querySequenceFile.getName() + ".masked";
-            processRepeatMaskerOutput( sequences, outputSequencePath );
+            return processRepeatMaskerOutput( sequences, outputSequencePath );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -131,12 +133,13 @@ public class RepeatScan {
     /**
      * @param sequences
      * @param outputSequencePath
+     * @return Sequences which were updated.
      */
-    private void processRepeatMaskerOutput( Collection<BioSequence> sequences, String outputSequencePath )
-            throws IOException {
+    private Collection<BioSequence> processRepeatMaskerOutput( Collection<BioSequence> sequences,
+            String outputSequencePath ) throws IOException {
         FastaParser parser = new FastaParser();
         parser.parse( outputSequencePath );
-
+        Collection<BioSequence> finalRes = new HashSet<BioSequence>();
         // build map of identifiers to sequences.
         Collection<BioSequence> results = parser.getResults();
 
@@ -148,6 +151,7 @@ public class RepeatScan {
         }
 
         // fill in old sequences with new information
+
         for ( BioSequence origSeq : sequences ) {
             String identifier = Blat.getIdentifier( origSeq );
             BioSequence maskedSeq = map.get( identifier );
@@ -160,10 +164,17 @@ public class RepeatScan {
             }
 
             origSeq.setSequence( maskedSeq.getSequence() );
-
             double fraction = computeFractionMasked( maskedSeq );
             origSeq.setFractionRepeats( fraction );
+
+            if ( fraction > 0 ) {
+
+                finalRes.add( origSeq );
+            }
         }
+
+        log.info( finalRes.size() + " sequences had non-zero repeat fractions." );
+        return finalRes;
 
     }
 

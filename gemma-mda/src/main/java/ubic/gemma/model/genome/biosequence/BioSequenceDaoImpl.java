@@ -25,6 +25,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -61,7 +63,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     debug( results );
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '" + BioSequence.class.getName()
-                                    + "' was found when executing query" );
+                                    + "' was found when executing query for " + bioSequence );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -254,7 +256,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 session.update( bioSequence.getTaxon() );
 
                 DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-                if ( dbEntry != null ) session.update( dbEntry.getExternalDatabase() );
+
+                if ( dbEntry != null ) {
+                    session.update( dbEntry );
+                    session.update( dbEntry.getExternalDatabase() );
+                }
                 session.evict( bioSequence );
                 return null;
             }
@@ -282,11 +288,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                     DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
                     if ( dbEntry != null ) {
-                        dbEntry.getExternalDatabase();
+                        session.update( dbEntry );
+                        Hibernate.initialize( dbEntry.getExternalDatabase() );
                     }
 
                 }
-                session.clear();
                 return null;
             }
         }, true );
