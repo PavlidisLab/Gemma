@@ -24,7 +24,7 @@ import java.io.Serializable;
  * @author keshav
  * @version $Id$
  */
-public class JavaSpacesExpressionExperimentLoadCommand extends JavaSpacesCommand implements Serializable{
+public class JavaSpacesExpressionExperimentLoadCommand extends JavaSpacesCommand implements Serializable {
 
     /**
      * 
@@ -77,8 +77,28 @@ public class JavaSpacesExpressionExperimentLoadCommand extends JavaSpacesCommand
         this.suppressMatching = suppressMatching;
     }
 
+    /**
+     * 
+     *
+     */
     public JavaSpacesExpressionExperimentLoadCommand() {
         super();
+    }
+
+    /**
+     * @param taskId
+     * @param loadPlatformOnly
+     * @param suppressMatching
+     * @param accession
+     * @param aggressiveQtRemoval
+     */
+    public JavaSpacesExpressionExperimentLoadCommand( String taskId, boolean loadPlatformOnly,
+            boolean suppressMatching, String accession, boolean aggressiveQtRemoval ) {
+        super( taskId );
+        this.loadPlatformOnly = loadPlatformOnly;
+        this.suppressMatching = suppressMatching;
+        this.accession = accession;
+        this.aggressiveQtRemoval = aggressiveQtRemoval;
     }
 
 }

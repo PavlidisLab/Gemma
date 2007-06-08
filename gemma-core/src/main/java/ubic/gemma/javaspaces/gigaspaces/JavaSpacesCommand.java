@@ -43,6 +43,15 @@ public class JavaSpacesCommand implements Serializable {
     /**
      * @param taskId
      */
+    public JavaSpacesCommand( String taskId ) {
+        super();
+        this.taskId = taskId;
+    }
+
+    /**
+     * 
+     *
+     */
     public JavaSpacesCommand() {
         super();
     }
