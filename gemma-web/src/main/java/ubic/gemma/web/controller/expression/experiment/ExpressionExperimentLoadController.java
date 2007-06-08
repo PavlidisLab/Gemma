@@ -271,12 +271,9 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
 
                 } else {
                     ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
-                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand();
-                    jsCommand.setTaskId( taskId );
-                    jsCommand.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
-                    jsCommand.setSuppressMatching( eeLoadCommand.isSuppressMatching() );
-                    jsCommand.setAccession( eeLoadCommand.getAccession() );
-                    jsCommand.setAggressiveQtRemoval( eeLoadCommand.isAggressiveQtRemoval() );
+                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand(
+                            taskId, eeLoadCommand.isLoadPlatformOnly(), eeLoadCommand.isSuppressMatching(),
+                            eeLoadCommand.getAccession(), eeLoadCommand.isAggressiveQtRemoval() );
 
                     GigaSpacesResult res = eeTaskProxy.execute( jsCommand );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();

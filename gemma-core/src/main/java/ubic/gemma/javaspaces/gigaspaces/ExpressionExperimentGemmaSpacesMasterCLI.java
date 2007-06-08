@@ -184,13 +184,8 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
                     ExpressionExperimentTaskImpl eeTaskImpl = ( ExpressionExperimentTaskImpl ) this
                             .getBean( "taskBean" );
 
-                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand();
-
-                    jsCommand.setTaskId( eeTaskImpl.getTaskId() );
-                    jsCommand.setLoadPlatformOnly( platformOnly );
-                    jsCommand.setSuppressMatching( doMatching );
-                    jsCommand.setAccession( accession );
-                    jsCommand.setAggressiveQtRemoval( aggressive );
+                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand(
+                            eeTaskImpl.getTaskId(), platformOnly, doMatching, accession, aggressive );
 
                     res = proxy.execute( jsCommand );
 
