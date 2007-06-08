@@ -35,6 +35,8 @@ import org.springmodules.javaspaces.JavaSpaceTemplate;
 import org.springmodules.javaspaces.entry.AbstractMethodCallEntry;
 import org.springmodules.javaspaces.entry.MethodResultEntry;
 
+import ubic.gemma.javaspaces.gigaspaces.JavaSpacesCommand;
+
 /**
  * The {@link DelegatingWorker} was customized to allow interrogation of the task for the taskId.
  * <p>
@@ -130,11 +132,14 @@ public class CustomDelegatingWorker implements Runnable {
                     }
 
                     // custom
-                    // FIXME Should get the taskId from the ExpressionExperimentTaskImpl. It is in there,
-                    // just cannot get at it.
                     try {
                         Object[] args = call.getArguments();
-                        taskId = args[0];
+
+                        if ( args[0] instanceof JavaSpacesCommand ) {
+                            JavaSpacesCommand javaSpacesCommand = ( JavaSpacesCommand ) args[0];
+                            taskId = javaSpacesCommand.getTaskId();
+                        }
+
                     } catch ( Exception e ) {
                         throw new RuntimeException( "Cannot get field taskId. Exception is " + e );
                     }
