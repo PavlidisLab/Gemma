@@ -181,7 +181,18 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
                     if ( !gigaspacesUtil.canServiceTask( ExpressionExperimentTask.class.getName(),
                             GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) continue;
 
-                    res = proxy.execute( accession, platformOnly, doMatching, aggressive );
+                    ExpressionExperimentTaskImpl eeTaskImpl = ( ExpressionExperimentTaskImpl ) this
+                            .getBean( "taskBean" );
+
+                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand();
+
+                    jsCommand.setTaskId( eeTaskImpl.getTaskId() );
+                    jsCommand.setLoadPlatformOnly( platformOnly );
+                    jsCommand.setSuppressMatching( doMatching );
+                    jsCommand.setAccession( accession );
+                    jsCommand.setAggressiveQtRemoval( aggressive );
+
+                    res = proxy.execute( jsCommand );
 
                     stopwatch.stop();
                     long wt = stopwatch.getTime();
