@@ -38,6 +38,7 @@ public class JavaSpacesCommand implements Serializable {
      * 
      */
     private static final long serialVersionUID = 1L;
+
     private String taskId = null;
 
     /**
@@ -46,14 +47,6 @@ public class JavaSpacesCommand implements Serializable {
     public JavaSpacesCommand( String taskId ) {
         super();
         this.taskId = taskId;
-    }
-
-    /**
-     * 
-     *
-     */
-    public JavaSpacesCommand() {
-        super();
     }
 
     /**

@@ -78,14 +78,6 @@ public class JavaSpacesExpressionExperimentLoadCommand extends JavaSpacesCommand
     }
 
     /**
-     * 
-     *
-     */
-    public JavaSpacesExpressionExperimentLoadCommand() {
-        super();
-    }
-
-    /**
      * @param taskId
      * @param loadPlatformOnly
      * @param suppressMatching
