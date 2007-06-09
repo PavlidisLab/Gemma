@@ -324,8 +324,8 @@ public class ProgressManager {
         }
 
         progressJobsByTaskId.remove( taskId );
-        log.debug("Completed cleanup of job: " + taskId);
-    } 
+        log.debug( "Completed cleanup of job: " + taskId );
+    }
 
     /**
      * Removes ProgressJob from notification lists and provides general clean up. Also causes job to be persisted to db.
@@ -410,7 +410,7 @@ public class ProgressManager {
      */
     public static void updateJob( Object taskId, String message ) {
         ProgressJob job = progressJobsByTaskId.get( taskId );
-        job.updateProgress( message );
+        if ( job != null ) job.updateProgress( message );
     }
 
 }
