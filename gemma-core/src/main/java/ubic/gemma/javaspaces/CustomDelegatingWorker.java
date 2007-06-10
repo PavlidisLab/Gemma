@@ -36,6 +36,7 @@ import org.springmodules.javaspaces.entry.AbstractMethodCallEntry;
 import org.springmodules.javaspaces.entry.MethodResultEntry;
 
 import ubic.gemma.javaspaces.gigaspaces.JavaSpacesCommand;
+import ubic.gemma.util.javaspaces.GemmaSpacesRegistrationEntry;
 
 /**
  * The {@link DelegatingWorker} was customized to allow interrogation of the task for the taskId.
@@ -64,6 +65,8 @@ public class CustomDelegatingWorker implements Runnable {
     private boolean running = true;
 
     private Object taskId = null;
+
+    private GemmaSpacesRegistrationEntry gemmaSpacesRegistrationEntry = null;
 
     /**
      * Candidate that will match only this interface
@@ -132,6 +135,7 @@ public class CustomDelegatingWorker implements Runnable {
                     }
 
                     // custom
+                    js.take( gemmaSpacesRegistrationEntry, null, 600000000 );
                     try {
                         Object[] args = call.getArguments();
 
@@ -149,6 +153,7 @@ public class CustomDelegatingWorker implements Runnable {
                         MethodResultEntry result = invokeMethod( call, delegate );
                         // push the result back to the JavaSpace
                         js.write( result, transaction, Lease.FOREVER );
+                        js.write( gemmaSpacesRegistrationEntry, null, 600000000 );
                     } catch ( Exception ex ) {
                         // TODO fix me, should translate to JavaSpaceException
                         // hierarchy
@@ -178,7 +183,17 @@ public class CustomDelegatingWorker implements Runnable {
         return result;
     }
 
+    /**
+     * @return
+     */
     public Object getTaskId() {
         return taskId;
+    }
+
+    /**
+     * @param gemmaSpacesRegistrationEntry
+     */
+    public void setGemmaSpacesRegistrationEntry( GemmaSpacesRegistrationEntry gemmaSpacesRegistrationEntry ) {
+        this.gemmaSpacesRegistrationEntry = gemmaSpacesRegistrationEntry;
     }
 }
