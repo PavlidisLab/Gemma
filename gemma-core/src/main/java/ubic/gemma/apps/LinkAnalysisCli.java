@@ -147,7 +147,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
-
+                    eeService.thawLite( ee );
                     if ( !needToRun( ee, LinkAnalysisEvent.class ) ) {
                         continue;
                     }
@@ -175,6 +175,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
                             errorObjects.add( shortName + " is not found in the database! " );
                             continue;
                         }
+
+                        eeService.thawLite( expressionExperiment );
 
                         if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                             continue;
@@ -210,7 +212,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
                 if ( expressionExperiment == null ) {
                     continue;
                 }
-
+                eeService.thawLite(expressionExperiment);
                 if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                     return null;
                 }
