@@ -198,12 +198,13 @@
 			font:normal 11px arial, tahoma, helvetica, sans-serif;
 		}
 
+	/* this can interfere with EXT.js tables. */
         table {
-        	border-style:solid;
+        	/*border-style:solid;
 			border-width:1px;
-			border-color:#BBBBBB;
+			border-color:#BBBBBB; 
             margin: 0 0 0 0;
-            padding: 6px;
+            padding: 6px;*/
         }
 
 	     td.label {
@@ -215,7 +216,6 @@
 		th {
 			border-bottom:solid #555555 1px;
 			font:bold 11px arial, tahoma, helvetica, sans-serif;
-			padding: 4px;
 		}
 
     hr {
