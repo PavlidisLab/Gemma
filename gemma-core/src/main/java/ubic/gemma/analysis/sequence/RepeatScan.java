@@ -48,7 +48,7 @@ public class RepeatScan {
 
     private static String REPEAT_MASKER = ConfigUtils.getString( "repeatMasker.exe" );
 
-    private static final int UPDATE_INTERVAL_MS = 5000 * 30;
+    private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;
 
     /**
      * Run repeatmasker on the sequences. The sequence will be updated with the masked (lower-case) sequences and the

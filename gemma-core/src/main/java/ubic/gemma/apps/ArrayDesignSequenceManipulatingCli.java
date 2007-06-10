@@ -140,6 +140,25 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     /**
      * @param arrayDesign
+     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
+     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
+     *         subsuming status. (the analysis is not done as part of this call).
+     */
+    protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
+        if ( arrayDesign.getSubsumingArrayDesign() != null ) {
+            log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign() );
+            return true;
+        }
+
+        if ( arrayDesign.getMergedInto() != null ) {
+            log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto() );
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param arrayDesign
      * @param eventClass
      * @return
      */

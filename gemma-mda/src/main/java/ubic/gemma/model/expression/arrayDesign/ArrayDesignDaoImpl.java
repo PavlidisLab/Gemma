@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
@@ -1145,6 +1146,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         if ( g != null ) {
                             g.getAliases().size();
                         }
+                    }
+
+                    if ( bs.getSequenceDatabaseEntry() != null ) {
+                        Hibernate.initialize( bs.getSequenceDatabaseEntry() );
                     }
                 }
 

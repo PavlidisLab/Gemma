@@ -571,7 +571,8 @@ public class ArrayDesignSequenceProcessingService {
 
     /**
      * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on
-     * the array.
+     * the array. If probe does not have a match to a sequence in the input file, the sequence for that probe will be
+     * nulled.
      * <p>
      * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
      * format. Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element;
@@ -582,7 +583,11 @@ public class ArrayDesignSequenceProcessingService {
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
      * <ol>
-     * <li>The format line contains an explicit reference to the name of the CompositeSequence (probe id).</li>
+     * <li>The format line contains an explicit reference to the name of the CompositeSequence (probe id)</li>
+     * <li>The format line sequence name matches the CompositeSequence name with a suffix added to disambiguate
+     * duplicates. That is, sometimes the same sequence appears on the array more than once, and this is the identifier
+     * used for the probe; we add something like "___[string]" to the end of probe name in this case. For example, a
+     * sequence with name M100000439 will match probes named M100000439 as well as M100000439___Dup1.
      * <li>The BioSequence for the CompositeSequences are already filled in, and there is a matching external database
      * identifier (e.g., Genbank accession). This will only work if Genbank accessions do not re-occur in the FASTA
      * file.</li>
@@ -594,6 +599,8 @@ public class ArrayDesignSequenceProcessingService {
      * @param taxon - if null, attempt to determine it from the array design.
      * @throws IOException
      * @see ubic.gemma.loader.genome.FastaParser
+     * @see ArrayDesignProbeRenamingService.DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR for the specification of how duplicate
+     *      probes are munged.
      */
     @SuppressWarnings("unchecked")
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
@@ -642,6 +649,8 @@ public class ArrayDesignSequenceProcessingService {
         int numWithNoSequence = 0;
         int numMatchedByAccession = 0;
         int numMatchedByProbeName = 0;
+        String mungeRegex = ArrayDesignProbeRenamingService.DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR + ".+$";
+
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
             if ( log.isTraceEnabled() ) log.trace( "Looking for sequence for: " + compositeSequence.getName() );
@@ -650,13 +659,26 @@ public class ArrayDesignSequenceProcessingService {
             if ( nameMap.containsKey( compositeSequence.getName() ) ) {
                 match = nameMap.get( compositeSequence.getName() );
                 numMatchedByProbeName++;
-            } else if ( compositeSequence.getBiologicalCharacteristic() != null
-                    && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null
-                    && gbIdMap.containsKey( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
-                            .getAccession() ) ) {
-                match = gbIdMap.get( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
-                        .getAccession() );
-                numMatchedByAccession++;
+            } else if ( compositeSequence.getName().matches( mungeRegex ) ) {
+                String unMungedName = compositeSequence.getName().replaceFirst( mungeRegex, "" );
+                if ( nameMap.containsKey( unMungedName ) ) {
+                    match = nameMap.get( unMungedName );
+                    numMatchedByProbeName++;
+                    continue;
+                }
+            } else if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+                bioSequenceService.thaw( compositeSequence.getBiologicalCharacteristic() );
+                if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null
+                        && gbIdMap.containsKey( compositeSequence.getBiologicalCharacteristic()
+                                .getSequenceDatabaseEntry().getAccession() ) ) {
+                    match = gbIdMap.get( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
+                            .getAccession() );
+                    numMatchedByAccession++;
+                } else {
+                    compositeSequence.setBiologicalCharacteristic( null );
+                    numWithNoSequence++;
+                    notifyAboutMissingSequences( numWithNoSequence, compositeSequence );
+                }
             } else {
                 numWithNoSequence++;
                 notifyAboutMissingSequences( numWithNoSequence, compositeSequence );

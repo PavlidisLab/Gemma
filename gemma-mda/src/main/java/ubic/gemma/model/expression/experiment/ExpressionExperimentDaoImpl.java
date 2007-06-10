@@ -749,13 +749,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             queryObject.setMaxResults( 1 );
 
-             return ( Long ) queryObject.uniqueResult();
+            return ( Long ) queryObject.uniqueResult();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -763,7 +763,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
         Collection<ExpressionExperiment> ee = null;
         final String queryString = "select ee from ExpressionExperimentImpl as ee " + " where ee.id in (:ids) ";
 

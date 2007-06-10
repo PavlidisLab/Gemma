@@ -321,19 +321,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
         // if ids are specified, then display only those expressionExperiments
         else {
-            Collection eeList = new ArrayList<ExpressionExperiment>();
-
+            Collection<Long> eeIdList = new ArrayList<Long>();
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
                 if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    // ids.add( new Long( idList[i] ) );
-                    ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                    ee.setId( new Long( idList[i] ) );
-                    eeList.add( ee );
+                    eeIdList.add( new Long( idList[i] ) );
                 }
             }
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( eeList );
+                    .getFilteredExpressionExperimentValueObjects( eeIdList );
             expressionExperiments.addAll( eeValObjectCol );
         }
         // sort expression experiments by name first
@@ -564,12 +560,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         log.debug( SecurityService.getPrincipal() );
 
-        /* Filtering happens here. */        
+        /* Filtering happens here. */
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
         if ( eeIds == null ) {
             securedEEs = expressionExperimentService.loadAll();
-        } else {          
+        } else {
             securedEEs = expressionExperimentService.load( eeIds );
         }
         return getExpressionExperimentValueObjects( securedEEs );

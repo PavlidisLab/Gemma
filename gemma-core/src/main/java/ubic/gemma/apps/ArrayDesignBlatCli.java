@@ -167,6 +167,14 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                         continue;
                     }
 
+                    if ( isSubsumedOrMerged( design ) ) {
+                        log.warn( design + " is subsumed or merged into another design, it will not be run." );
+                        // not really an error, but nice to get notification.
+                        errorObjects.add( design + ": "
+                                + "Skipped because it is subsumed by or merged into another design." );
+                        continue;
+                    }
+
                     log.info( "============== Start processing: " + design + " ==================" );
                     try {
                         arrayDesignService.thaw( design );

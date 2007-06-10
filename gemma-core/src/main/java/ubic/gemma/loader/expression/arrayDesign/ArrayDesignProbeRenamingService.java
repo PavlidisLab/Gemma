@@ -43,6 +43,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  */
 public class ArrayDesignProbeRenamingService {
 
+    /**
+     * When we encounter two probes with the same name, we add this string along with a unique identifier to the end of
+     * the name. This comes into play when the probe name is the sequence name, and the same sequence is used multiple
+     * times on the array design.
+     */
+    public static final String DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR = "___";
+
     private static Log log = LogFactory.getLog( ArrayDesignProbeRenamingService.class.getName() );
     ArrayDesignService arrayDesignService;
 
@@ -99,10 +106,25 @@ public class ArrayDesignProbeRenamingService {
         while ( ( line = br.readLine() ) != null ) {
             String[] fields = line.split( "\t" );
             if ( fields.length < 2 ) continue;
-            String probeName = fields[0];
-            String seqAcc = fields[1];
+            String originalProbeName = fields[0];
+            String newProbeName = fields[1];
 
-            old2new.put( probeName, seqAcc );
+            if ( old2new.containsKey( newProbeName ) ) {
+                log.warn( newProbeName + " is a duplicate, will mangle to make unique" );
+                String candidateNewProbeName = newProbeName;
+                int i = 1;
+                while ( old2new.containsKey( newProbeName ) ) {
+                    newProbeName = candidateNewProbeName + DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR + "Dup" + i;
+                    i++;
+                    // just in case...
+                    if ( i > 100 ) {
+                        log.warn( "Was unable to create unique probe name for " + originalProbeName );
+                        continue;
+                    }
+                }
+            }
+
+            old2new.put( originalProbeName, newProbeName );
         }
         br.close();
 
