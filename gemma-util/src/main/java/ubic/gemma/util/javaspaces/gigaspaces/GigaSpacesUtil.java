@@ -20,7 +20,6 @@ package ubic.gemma.util.javaspaces.gigaspaces;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -252,7 +251,7 @@ public class GigaSpacesUtil implements ApplicationContextAware {
      */
     public List<GemmaSpacesRegistrationEntry> getRegisteredWorkers( String url ) {
 
-        GemmaSpacesRegistrationEntry[] workerEntries = null;
+        List<GemmaSpacesRegistrationEntry> workerEntries = null;
         if ( !isSpaceRunning( url ) ) {
             log.error( "Space not started at " + url + ". Returning a count of 0 (workers registered)." );
             return null;
@@ -262,18 +261,17 @@ public class GigaSpacesUtil implements ApplicationContextAware {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
 
             Object[] commandObjects = space.readMultiple( new GemmaSpacesRegistrationEntry(), null, 120000 );
-            workerEntries = new GemmaSpacesRegistrationEntry[commandObjects.length];
 
+            workerEntries = new ArrayList<GemmaSpacesRegistrationEntry>();
             for ( int i = 0; i < commandObjects.length; i++ ) {
                 GemmaSpacesRegistrationEntry entry = ( GemmaSpacesRegistrationEntry ) commandObjects[i];
-                workerEntries[i] = entry;
-                log.debug( "entry: " + entry );
+                workerEntries.add( entry );
             }
         } catch ( Exception e ) {
             e.printStackTrace();
             return null;
         }
-        return Arrays.asList( workerEntries );
+        return workerEntries;
     }
 
     /**
