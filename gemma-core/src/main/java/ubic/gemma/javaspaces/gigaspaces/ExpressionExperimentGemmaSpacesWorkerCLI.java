@@ -99,6 +99,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
         registrationEntry = new GemmaSpacesRegistrationEntry();
         registrationEntry.message = ExpressionExperimentTask.class.getName();
         registrationEntry.registrationId = workerRegistrationId;
+        worker.setGemmaSpacesRegistrationEntry( registrationEntry );
         Lease lease = space.write( registrationEntry, null, 600000000 );
         log.info( this.getClass().getSimpleName() + " registered with space " + template.getUrl() );
         if ( lease == null ) log.error( "Null Lease returned" );
