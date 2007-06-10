@@ -320,7 +320,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                             "More than one instance of 'Integer" + "' was found when executing query --> '"
                                     + queryString + "'" );
                 } else if ( results.size() == 1 ) {
-                    result += ( Integer ) results.iterator().next();
+                    result += ( Long ) results.iterator().next();
                 }
 
             }
