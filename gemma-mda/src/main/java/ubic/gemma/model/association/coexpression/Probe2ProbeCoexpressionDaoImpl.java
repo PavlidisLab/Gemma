@@ -28,14 +28,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
-import org.hibernate.Session;
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -350,7 +350,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
                 "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
 
-        Integer result = 0;
+        Long result = 0l;
         for ( String p2pClassName : p2pClassNames ) {
 
             /*
@@ -380,7 +380,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         /*
          * We divide by 2 because all links are stored twice
          */
-        return ( Integer ) result / 2;
+
+        Integer resultAsInt = result.intValue();
+        return resultAsInt / 2;
 
     }
 
