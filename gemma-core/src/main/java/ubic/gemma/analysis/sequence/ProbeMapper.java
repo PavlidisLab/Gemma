@@ -59,6 +59,13 @@ import ubic.gemma.util.SequenceBinUtils;
 public class ProbeMapper {
 
     /**
+     * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
+     * This is used in combination with the REPEAT_FRACTION_MAXIMUM. Note that many sequences which contain repeats
+     * nonetheless only align to very few sites in the genome.
+     */
+    private static final int NON_SPECIFIC_SITE_THRESHOLD = 3;
+
+    /**
      * Sequences which have more than this fraction accounted for by repeats (via repeatmasker) will not be examined if
      * they produce multiple alignments to the genome, regardless of the alignment quality.
      */
@@ -139,7 +146,7 @@ public class ProbeMapper {
 
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > REPEAT_FRACTION_MAXIMUM
-                    && blatResultsForSequence.size() > 1 ) {
+                    && blatResultsForSequence.size() >= NON_SPECIFIC_SITE_THRESHOLD ) {
                 skippedDueToRepeat++;
                 skipped++;
                 continue;
