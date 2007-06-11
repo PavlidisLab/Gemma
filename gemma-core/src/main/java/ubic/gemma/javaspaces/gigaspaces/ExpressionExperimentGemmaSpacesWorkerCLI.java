@@ -169,8 +169,15 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
 
             if ( taskId.equals( worker.getTaskId() ) ) {
                 log.info( "Stopping execution of task: " + taskId );
+
+                log.debug( itbThread.getState() );
                 itbThread.stop();
-                // itbThread.destroy();
+
+                // GemmaSpacesRegistrationEntry alreadyRegisteredEntry = ( GemmaSpacesRegistrationEntry ) space.read(
+                // registrationEntry, null, 600000000 );
+                // if ( alreadyRegisteredEntry == null ) {
+                // space.write( registrationEntry, null, 600000000 );
+                // }
             }
 
         } catch ( Exception e ) {
