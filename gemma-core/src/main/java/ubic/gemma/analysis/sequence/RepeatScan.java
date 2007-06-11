@@ -18,8 +18,13 @@
  */
 package ubic.gemma.analysis.sequence;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,6 +75,13 @@ public class RepeatScan {
                     + querySequenceFile.getName() + ".masked";
             // final String outputScorePath = querySequenceFile.getParent() + File.separatorChar
             // + querySequenceFile.getName() + ".masked";
+
+            File output = new File( outputSequencePath );
+            if ( !output.exists() ) {
+                handleNoOutputCondition( querySequenceFile, outputSequencePath );
+                return new HashSet<BioSequence>();
+            }
+
             return processRepeatMaskerOutput( sequences, outputSequencePath );
 
         } catch ( IOException e ) {
@@ -128,6 +140,28 @@ public class RepeatScan {
         }
         log.debug( "Repeatmasker Success" );
 
+    }
+
+    private void handleNoOutputCondition( File querySequenceFile, final String outputSequencePath )
+            throws FileNotFoundException, IOException {
+        // this happens if there were no repeats to mask. Check to make sure.
+        final String outputSummary = querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName()
+                + ".out";
+        if ( !( new File( outputSummary ) ).exists() ) {
+            // okay, something is wrong for sure.
+            throw new RuntimeException( "Repeatmasker seems to have failed, it left no useful output (looking for "
+                    + outputSequencePath + " or " + outputSummary );
+        } else {
+            InputStream is = new FileInputStream( outputSummary );
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            String nothingFound = "There were no repetitive sequences detected";
+            String line = br.readLine();
+            if ( line.startsWith( nothingFound ) ) {
+                log.info( "There were no repeats found" );
+            } else {
+                log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
+            }
+        }
     }
 
     /**
