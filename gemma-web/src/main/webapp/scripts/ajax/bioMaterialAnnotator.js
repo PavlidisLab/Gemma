@@ -126,14 +126,25 @@ var initTree = function(div){
 
 };
 
+var vocabC; 
+
 //The call back method for the dwr call
 var displayRestrictionsPanel = function(node){
 	console.log(dwr.util.toDescriptiveString(node, 10));
+
+	vocabC = { termUri : node.uri, properties : [] };		
+	createRestrictionGui(node, vocabC);
 	
-	var vc = { termUri : node.uri, properties : [] };
-	
-	createRestrictionGui(node, vc);
+	var saveButton = new Ext.Button("center-div", {text : 'save'});
+	saveButton.on("click", saveHandler);
+
 };
+
+var saveHandler = function(event){
+	console.log(dwr.util.toDescriptiveString(vocabC,10))
+	//MgedOntologyService.saveTerm(vocabC);
+		
+}
 
 //Recursive function that walks the node given to it and creates a coresponding form to fill in
 var createRestrictionGui = function(node, vc, indent, parentDivId) {
@@ -142,10 +153,11 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 
 		if (indent === undefined){
 			dh.overwrite("center-div", {html : ""});
-			indent = 0;
+			indent = 0;			
 		}
 		if (parentDivId === undefined) {
 			parentDivId = "center-div";
+			
 		}
 	
 		
@@ -202,7 +214,14 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 	                    var simple = createForm();	
 					                       
     	                if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){  //are there examples?
-        		            	simple.column({width:285},createComboBox(restrictedTo.individuals));                                 	                    
+    	                		var combo = createComboBox(restrictedTo.individuals);
+
+    	                		var comboHandler = function(field,record,index){
+    	                			vc.object.value = record;
+    	                		};
+    	                		
+    	                		combo.on('select', comboHandler);
+        		            	simple.column({width:285},combo);                                 	                    
                 	    }
                     
 	                    simple.render(divId);
