@@ -362,12 +362,10 @@
 					<property name="includes">
 						<list>
 							<value>id</value>
-							<value>name</value>
-							<value>characteristics</value>
+							<value>name</value>							
 							<value>description</value>
-							<value>bioAssaysUsedIn</value>
-						</list>
-					</property>
+						</list>						
+					</property>									
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.util.progress.ProgressData">
