@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -41,6 +42,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.LongArrayList;
 import cern.colt.list.ObjectArrayList;
+import cern.colt.map.AbstractLongObjectMap;
+import cern.colt.map.OpenLongObjectHashMap;
 
 /**
  * Calculate the effect size
@@ -48,66 +51,262 @@ import cern.colt.list.ObjectArrayList;
  * @author xwan
  */
 public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
-    private static final int MINIMUN_SAMPLE_SIZE = 3;
-    private DesignElementDataVectorService dedvService;
+    private static final int MINIMUM_SAMPLE_SIZE = 3;
+//    private DesignElementDataVectorService dedvService;
     private ExpressionExperimentService eeService;
-    private CompositeSequenceService csService;
+//    private CompositeSequenceService csService;
     private GeneService geneService;
     private String geneList = null;
     private String taxonName = null;
     private String outputFile = null;
     private String matrixFile = null;
     private int stringency = 3;
-    private ObjectArrayList genePairs = new ObjectArrayList();
-    private Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
-    private Collection<ExpressionExperiment> allEEs = null;
+    /**
+     * Stores candidate gene pairs (to evaluate effect size)
+     */
+    /**
+     * Maps gene IDs to genes
+     */
+    // private Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
+    // private Collection<ExpressionExperiment> allEEs = null;
     private CorrelationEffectMetaAnalysis metaAnalysis = new CorrelationEffectMetaAnalysis( true, false );
     private ByteArrayConverter bac = new ByteArrayConverter();
-    private LongArrayList eeIndex = new LongArrayList();
-    private Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
-    private Map<Long, Integer> eeSampleSizes = new HashMap<Long, Integer>();
+
+    // private LongArrayList eeIndex = new LongArrayList();
+    // private Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
+    // private Map<Long, Integer> eeSampleSizes = new HashMap<Long, Integer>();
+
+    /**
+     * Stores a list of gene pairs using <code>ObjectArrayList</code> as a delegate
+     * 
+     * @author Raymond
+     */
+    protected class GenePairList {
+        private ObjectArrayList genePairs;
+        private Set<Long> geneIDList;
+
+        /**
+         * Constructs a new gene pair list
+         */
+        public GenePairList() {
+            genePairs = new ObjectArrayList();
+            geneIDList = new HashSet<Long>();
+        }
+
+        /**
+         * Add a gene pair
+         * @param id1
+         * @param id2
+         * @param count
+         */
+        public void add( long id1, long id2, int count ) {
+            GenePair genePair = new GenePair( id1, id2, count );
+            genePairs.add( genePair );
+            geneIDList.add( id1 );
+            geneIDList.add( id2 );
+        }
+
+        /**
+         * Add a gene pair
+         * @param genePair
+         */
+        public void add( GenePair genePair ) {
+            genePairs.add( genePair );
+            geneIDList.add( genePair.firstId );
+            geneIDList.add( genePair.secondId );
+        }
+
+        /**
+         * Add all of the specified gene pairs
+         * @param collection
+         */
+        public void addAllOf( Collection<GenePair> collection ) {
+            genePairs.addAllOf( collection );
+        }
+
+        /**
+         * Returns true if the receiver contains the specified element. Tests for equality or identity as specified by testForEquality. 
+         * @param elem - element to search for
+         * @param testForEquality - if true, test for equality, otherwise identity
+         * @return true if receiver contains specified element
+         */
+        public boolean contains( GenePair elem, boolean testForEquality ) {
+            return genePairs.contains( elem, testForEquality );
+        }
+
+        /**
+         * Get the gene pair at the specified index
+         * @param index
+         * @return gene pair
+         */
+        public GenePair get( int index ) {
+            return ( GenePair ) genePairs.get( index );
+        }
+
+        /**
+         * Checks if the gene pair list is empty
+         * @return true if list is empty
+         */
+        public boolean isEmpty() {
+            return genePairs.isEmpty();
+        }
+
+        /**
+         * Remove the gene pair at the specified index
+         * @param index
+         */
+        public void remove( int index ) {
+            genePairs.remove( index );
+        }
+
+        /**
+         * Size of the gene pair list
+         * @return size
+         */
+        public int size() {
+            return genePairs.size();
+        }
+
+        /**
+         * Get the list of gene IDs
+         * @return set of gene IDs
+         */
+        public Collection<Long> getGeneIDs() {
+            return geneIDList;
+        }
+
+        /**
+         * Sort the gene pairs
+         */
+        public void sort() {
+            genePairs.sort();
+        }
+    }
 
     /**
      * Stores a pair of gene IDs and related info. Sort them by effect size in descending order.
      * 
      * @author xwan
      */
-    protected class GenePair implements Comparable<GenePair> {
-        long firstId = 0;
-        long secondId = 0;
-        Integer count = 0;
-        Double effectSize = 0.0;
-        DoubleArrayList correlations = new DoubleArrayList();
-        LongArrayList eeIds = new LongArrayList();
+    public class GenePair implements Comparable<GenePair> {
+        private long firstId = 0;
+        private long secondId = 0;
+        private Integer count = 0;
+        private Double effectSize = 0.0;
+        private AbstractLongObjectMap eeCorrelationMap;
 
-        public GenePair( long firstId, long secondId, int count ) {
-            this.firstId = firstId;
-            this.secondId = secondId;
+        /**
+         * Construct a gene pair with the specified pair of IDs and count
+         * 
+         * @param id1 - ID of first gene
+         * @param id2 - ID of second gene
+         * @param count - number of expression experiments gene pair is observed in
+         */
+        public GenePair( long id1, long id2, int count ) {
+            this.firstId = id1;
+            this.secondId = id2;
             this.count = count;
+            eeCorrelationMap = new OpenLongObjectHashMap();
+        }
+
+        /**
+         * Add a correlation
+         * @param eeID - expression experiment ID
+         * @param correlation
+         */
+        public void addCorrelation( long eeID, double correlation ) {
+            eeCorrelationMap.put( eeID, new Double( correlation ) );
+        }
+
+        /**
+         * Get a correlation for a specified expression experiment
+         * @param eeID - expression experiment ID
+         * @return correlation of the expression experiment
+         */
+        public Double getCorrelation( long eeID ) {
+            return ( Double ) eeCorrelationMap.get( eeID );
+        }
+
+        /**
+         * Get the of correlations
+         * @return list of correlations (Double)
+         */
+        public ObjectArrayList getCorrelations() {
+            return eeCorrelationMap.values();
+        }
+
+        /**
+         * Get the list of expression experiment IDs
+         * @return list of expression experiment IDs
+         */
+        public LongArrayList getEEIDs() {
+            return eeCorrelationMap.keys();
         }
 
         public int compareTo( GenePair o ) {
-            return effectSize.compareTo( o.effectSize ) * ( -1 );
+            return -effectSize.compareTo( o.effectSize );
+        }
+
+        public Integer getCount() {
+            return count;
+        }
+
+        public void setCount( Integer count ) {
+            this.count = count;
+        }
+
+        public Double getEffectSize() {
+            return effectSize;
+        }
+
+        public void setEffectSize( Double effectSize ) {
+            this.effectSize = effectSize;
+        }
+
+        public long getFirstId() {
+            return firstId;
+        }
+
+        public void setFirstId( long firstId ) {
+            this.firstId = firstId;
+        }
+
+        public long getSecondId() {
+            return secondId;
+        }
+
+        public void setSecondId( long secondId ) {
+            this.secondId = secondId;
         }
     }
 
     /**
-     * A data vector based on a DesignElementDataVector. Byte array stored as data.
+     * Stores the expression profile data.
      * 
      * @author xwan
      */
-    protected class DataVector {
+    protected class ExpressionProfile {
         DesignElementDataVector dedv = null;
         double[] val = null;
         long id;
 
-        public DataVector( DesignElementDataVector dedv ) {
+        /**
+         * Construct an ExpressionProfile from the specified DesignElementDataVector
+         * 
+         * @param dedv - vector to convert
+         */
+        public ExpressionProfile( DesignElementDataVector dedv ) {
             this.dedv = dedv;
             this.id = dedv.getId();
             byte[] bytes = dedv.getData();
             val = bac.byteArrayToDoubles( bytes );
         }
 
+        /**
+         * Get the ID of the vector
+         * 
+         * @return the vector ID
+         */
         public long getId() {
             return this.id;
         }
@@ -126,7 +325,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
                 "The file for saving bit matrix" ).withLongOpt( "matrixfile" ).create( 'm' );
         addOption( matrixFile );
         Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
-                "File for saving the corelation data" ).withLongOpt( "outFile" ).create( 'o' );
+                "File for saving the correlation data" ).withLongOpt( "outFile" ).create( 'o' );
         addOption( outputFileOption );
         Option stringencyFileOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
                 "The stringency for the number of co-expression link(Default 3)" ).withLongOpt( "stringency" ).create(
@@ -134,6 +333,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         addOption( stringencyFileOption );
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
         if ( hasOption( 'g' ) ) {
@@ -151,10 +351,10 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         if ( hasOption( 'm' ) ) {
             this.matrixFile = getOptionValue( 'm' );
         }
-        dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
+//        dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
-        csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+//        csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
     }
 
     private Taxon getTaxon( String name ) {
@@ -163,7 +363,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
         taxon = taxonService.find( taxon );
         if ( taxon == null ) {
-            log.info( "NO Taxon found!" );
+            log.info( "No Taxon found!" );
         }
         return taxon;
     }
@@ -189,19 +389,21 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
                 }
             out.close();
         } catch ( IOException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         System.err.println( "Total Links " + count );
     }
 
     /**
-     * Read in gene pair IDs from the geneList (CLI specified file) into geneMap
+     * Read in gene pair IDs from the geneList (CLI specified file) into genePairs if they meet the stringency
+     * requirements, i.e. if the pairing is seen in enough other datasets.
+     * 
+     * @return list of gene pairs
      */
-    private void readGenesPairs() {
-        Collection<Long> geneIds = new HashSet<Long>();
+    private GenePairList readGenePairs( String geneListFile ) {
+        GenePairList genePairs = new GenePairList();
         try {
-            BufferedReader in = new BufferedReader( new FileReader( new File( this.geneList ) ) );
+            BufferedReader in = new BufferedReader( new FileReader( new File( geneListFile ) ) );
             String row = null;
             while ( ( row = in.readLine() ) != null ) {
                 row = row.trim();
@@ -212,26 +414,33 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
                 int count = Integer.valueOf( subItems[2] );
                 if ( count >= this.stringency ) {
                     genePairs.add( new GenePair( firstId, secondId, count ) );
-                    if ( !geneIds.contains( firstId ) ) geneIds.add( firstId );
-                    if ( !geneIds.contains( secondId ) ) geneIds.add( secondId );
                 }
             }
             in.close();
         } catch ( Exception e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         // load data in chunks
+        return genePairs;
+    }
+
+    /**
+     * Create and return a gene ID to gene map
+     * @param ids - gene IDs
+     * @return gene ID to gene map
+     */
+    private Map<Long, Gene> getGeneMap( Collection<Long> ids ) {
+        Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
         int count = 0;
-        int total = geneIds.size();
-        int CHUNK_LIMIT = 100;
+        int total = ids.size();
+        final int CHUNK_LIMIT = 100;
         Collection<Long> idsInOneChunk = new HashSet<Long>();
         Collection<Gene> allGenes = new HashSet<Gene>();
         log.info( "Start loading genes" );
         StopWatch qWatch = new StopWatch();
         qWatch.start();
-        for ( Long geneId : geneIds ) {
-            idsInOneChunk.add( geneId );
+        for ( Long geneID : ids ) {
+            idsInOneChunk.add( geneID );
             count++;
             total--;
             if ( count == CHUNK_LIMIT || total == 0 ) {
@@ -243,28 +452,29 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         }
         System.err.println();
         qWatch.stop();
-        log.info( "Query takes " + qWatch.getTime() + " to load " + geneIds.size() + " genes" );
+        log.info( "Query takes " + qWatch.getTime() + " to load " + ids.size() + " genes" );
 
         for ( Gene gene : allGenes ) {
-            if ( geneIds.contains( gene.getId() ) ) {
+            if ( ids.contains( gene.getId() ) ) {
                 geneMap.put( gene.getId(), gene );
             }
         }
+        return geneMap;
     }
 
     /**
      * Build and return the gene to probe (composite sequences) map
      * 
+     * @param genes
      * @return gene to probe map
      */
-    private Map<Long, Collection<Long>> getGene2CSMap() {
-        // Get cs2Gene Map
+    private Map<Long, Collection<Long>> getGene2CSMap( Collection<Gene> genes ) {
         Map<Long, Collection<Long>> gene2cs = new HashMap<Long, Collection<Long>>();
         int count = 0;
-        int total = geneMap.keySet().size();
-        int CHUNK_LIMIT = 500;
+        int total = genes.size();
+        final int CHUNK_LIMIT = 500;
         Collection<Gene> genesInOneChunk = new HashSet<Gene>();
-        for ( Gene gene : geneMap.values() ) {
+        for ( Gene gene : genes ) {
             genesInOneChunk.add( gene );
             count++;
             total--;
@@ -279,28 +489,31 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * Build and return the probe (cs) to gene map
+     * Inverts the specified gene to probe (cs) map for the specified gene to produce a probe to gene(s) map
      * 
-     * @param geneId
-     * @param gene2cs
-     * @return
+     * @param geneId - ID of gene that probes map to
+     * @param gene2cs - gene to probe map
+     * @return probe to gene map
      */
-    private Map<Long, Collection<Gene>> getCs2GeneMap( Long geneId, Map<Long, Collection<Long>> gene2cs ) {
+    private Map<Long, Collection<Gene>> getCS2GeneMap( Map<Long, Collection<Long>> gene2cs, Map<Long, Gene> geneMap ) {
         Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-        Collection<Long> csIds = gene2cs.get( geneId );
-        for ( Long csId : csIds ) {
-            Collection<Gene> genes = cs2gene.get( csId );
-            if ( genes == null ) {
-                genes = new HashSet<Gene>();
-                cs2gene.put( csId, genes );
+        for ( Long geneId : gene2cs.keySet() ) {
+            Collection<Long> csIds = gene2cs.get( geneId );
+            for ( Long csId : csIds ) {
+                Collection<Gene> genes = cs2gene.get( csId );
+                if ( genes == null ) {
+                    genes = new HashSet<Gene>();
+                    cs2gene.put( csId, genes );
+                }
+                genes.add( geneMap.get( geneId ) );
             }
-            genes.add( geneMap.get( geneId ) );
         }
         return cs2gene;
     }
 
     /**
      * Get the preferred quantitation type for the expression experiment
+     * 
      * @param ee expression experiment
      * @return preferred quantitation type
      */
@@ -313,11 +526,13 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
     }
 
     /**
+     * Retrieve an expression profile for a set of genes, i.e. a map of design element data vectors to the set of genes
+     * that it represents.
      * 
-     * @param cs2gene
-     * @param qt
-     * @param ee
-     * @return
+     * @param cs2gene - a probe to gene map
+     * @param qt - the quantitation type of the expression profile desired
+     * @param ee - the expression experiment
+     * @return map of design element data vectors to its set of genes
      */
     Map<DesignElementDataVector, Collection<Gene>> getDesignElementDataVectors( Map<Long, Collection<Gene>> cs2gene,
             QuantitationType qt, ExpressionExperiment ee ) {
@@ -329,14 +544,14 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param devI
-     * @param devJ
-     * @return
+     * Calculate the correlation between the two specified expression profiles
+     * 
+     * @param ep1 - expression profile
+     * @param ep2 - expression profile
+     * @return the correlation coefficient
      */
-    private double coRelation( DataVector dedvI, DataVector dedvJ ) throws Exception {
-        double corr = 0;
-
-        double[] ival = dedvI.val, jval = dedvJ.val;
+    private double correlation( ExpressionProfile ep1, ExpressionProfile ep2 ) {
+        double[] ival = ep1.val, jval = ep2.val;
 
         if ( ival.length != jval.length ) {
             // System.err.print("Error in Dimension " + devI.getId()+ " " + ival.length + " (" +
@@ -346,296 +561,324 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
             return Double.NaN;
         }
         if ( ival.length < GeneCoExpressionAnalysis.MINIMUM_SAMPLE ) return Double.NaN;
-        if ( dedvI.getId() == dedvJ.getId() ) {
+        if ( ep1.getId() == ep2.getId() ) {
             // System.err.println("Error in " + devI.getExpressionExperiment().getId());
             return Double.NaN;
         }
         return CorrelationStats.correl( ival, jval );
     }
 
-    private double correlation( Collection<DataVector> source, Collection<DataVector> target ) throws Exception {
-        Object[] dedvI = source.toArray();
-        Object[] dedvJ = source.toArray();
+    /**
+     * Calculate the median correlation between the source and the target genes
+     * 
+     * @param source - a collection of data vectors
+     * @param target - a collection of data vectors
+     * @return the median correlation between the source and the target
+     */
+    private double medianCorrelation( Collection<ExpressionProfile> source, Collection<ExpressionProfile> target ) {
         DoubleArrayList sortedData = new DoubleArrayList();
-        ;
-        for ( int ii = 0; ii < dedvI.length; ii++ )
-            for ( int jj = 0; jj < dedvJ.length; jj++ ) {
-                double corr = coRelation( ( DataVector ) dedvI[ii], ( DataVector ) dedvJ[jj] );
-                if ( !Double.isNaN( corr ) ) sortedData.add( corr );
+        for ( ExpressionProfile ep1 : source ) {
+            for ( ExpressionProfile ep2 : target ) {
+                double corr = correlation( ep1, ep2 );
+                if ( !Double.isNaN( corr ) ) {
+                    sortedData.add( corr );
+                }
             }
-        if ( sortedData.size() > 0 ) {
-            Double medianCorr = sortedData.get( sortedData.size() / 2 );
-            return medianCorr;
         }
-        return 0.0;
+        Double medianCorr = sortedData.get( sortedData.size() / 2 );
+        return ( sortedData.size() > 0 ) ? medianCorr : 0.0;
     }
 
-    // For slow version
-    private double effectSize( Collection<DataVector> source, Collection<DataVector> target ) {
-        if ( source == null || target == null ) return 0.0;
-        Map<Long, Collection<DataVector>> sourceMap = new HashMap<Long, Collection<DataVector>>();
-        Map<Long, Collection<DataVector>> targetMap = new HashMap<Long, Collection<DataVector>>();
-        DoubleArrayList correlations = new DoubleArrayList();
-        DoubleArrayList sampleSizes = new DoubleArrayList();
-
-        for ( DataVector dv : source ) {
-            Long key = dv.dedv.getExpressionExperiment().getId();
-            Collection<DataVector> dvs = sourceMap.get( key );
-            if ( dvs == null ) {
-                dvs = new HashSet<DataVector>();
-                sourceMap.put( key, dvs );
-            }
-            dvs.add( dv );
-        }
-
-        for ( DataVector dv : target ) {
-            Long key = dv.dedv.getExpressionExperiment().getId();
-            Collection<DataVector> dvs = targetMap.get( key );
-            if ( dvs == null ) {
-                dvs = new HashSet<DataVector>();
-                targetMap.put( key, dvs );
-            }
-            dvs.add( dv );
-        }
-        for ( Long eeId : sourceMap.keySet() ) {
-            Collection<DataVector> dedvsI = sourceMap.get( eeId );
-            Collection<DataVector> dedvsJ = targetMap.get( eeId );
-            double corr = 0.0;
-            try {
-                corr = correlation( dedvsI, dedvsJ );
-            } catch ( Exception e ) {
-                continue;
-            }
-            if ( corr == 0.0 ) continue;
-            Integer eeSampleSize = eeSampleSizes.get( eeId );
-            if ( eeSampleSize == null ) {
-                eeSampleSize = dedvsI.iterator().next().val.length;
-                eeSampleSizes.put( eeId, eeSampleSize );
-            }
-            if ( eeSampleSize > MINIMUN_SAMPLE_SIZE ) {
-                correlations.add( corr );
-                sampleSizes.add( eeSampleSize );
-            }
-        }
-        metaAnalysis.run( correlations, sampleSizes );
-        double effectSize = Math.abs( metaAnalysis.getE() );
-        return effectSize;
-    }
+//    /**
+//     * Calculate the effect size for the specified data vectors or expression profiles
+//     */
+//    private double effectSize( Collection<ExpressionProfile> source, Collection<ExpressionProfile> target ) {
+//        if ( source == null || target == null ) return 0.0;
+//        Map<Long, Collection<ExpressionProfile>> sourceMap = new HashMap<Long, Collection<ExpressionProfile>>();
+//        Map<Long, Collection<ExpressionProfile>> targetMap = new HashMap<Long, Collection<ExpressionProfile>>();
+//        DoubleArrayList correlations = new DoubleArrayList();
+//        DoubleArrayList sampleSizes = new DoubleArrayList();
+//
+//        // map EE IDs to their set of data vectors for source
+//        for ( ExpressionProfile ep : source ) {
+//            Long key = ep.dedv.getExpressionExperiment().getId();
+//            Collection<ExpressionProfile> eps = sourceMap.get( key );
+//            if ( eps == null ) {
+//                eps = new HashSet<ExpressionProfile>();
+//                sourceMap.put( key, eps );
+//            }
+//            eps.add( ep );
+//        }
+//
+//        // map EE IDs to their set of data vectors for target
+//        for ( ExpressionProfile ep : target ) {
+//            Long key = ep.dedv.getExpressionExperiment().getId();
+//            Collection<ExpressionProfile> eps = targetMap.get( key );
+//            if ( eps == null ) {
+//                eps = new HashSet<ExpressionProfile>();
+//                targetMap.put( key, eps );
+//            }
+//            eps.add( ep );
+//        }
+//
+//        // determine median correlations for expression experiments that meet the minimum sample size
+//        for ( Long eeId : sourceMap.keySet() ) {
+//            Collection<ExpressionProfile> eps1 = sourceMap.get( eeId );
+//            Collection<ExpressionProfile> eps2 = targetMap.get( eeId );
+//            double corr = 0.0;
+//            corr = medianCorrelation( eps1, eps2 );
+//            if ( corr == 0.0 ) continue;
+//            // store the sample sizes
+//            Integer eeSampleSize = eeSampleSizes.get( eeId );
+//            if ( eeSampleSize > MINIMUM_SAMPLE_SIZE ) {
+//                correlations.add( corr );
+//                sampleSizes.add( eeSampleSize );
+//            }
+//        }
+//        // determine effect size using meta analysis
+//        metaAnalysis.run( correlations, sampleSizes );
+//        double effectSize = Math.abs( metaAnalysis.getE() );
+//        return effectSize;
+//    }
 
     /**
-     * Calculate the effect size for one chunk of the data
+     * Calculate the effect size
+     * 
      * @param start
      * @param end
      * @param cs2gene
      */
-    private void calculateEffectSizeForOneChunk( int start, int end, Map<Long, Collection<Gene>> cs2gene ) {
-        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        for ( ExpressionExperiment ee : allEEs ) {
-            QuantitationType qt = getPreferredQT( ee );
-            if ( qt == null ) continue;
-            Map<DesignElementDataVector, Collection<Gene>> dedvs = getDesignElementDataVectors( cs2gene, qt, ee );
-            dedv2genes.putAll( dedvs );
-        }
-        watch.stop();
-        System.err.println( "Took " + watch.getTime() / 1000 + " to retrieve data" );
-        watch.reset();
-        watch.start();
-        Map<Long, Collection<DataVector>> geneId2dvs = new HashMap<Long, Collection<DataVector>>();
-        for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
-            Collection<Gene> genes = dedv2genes.get( dedv );
-            for ( Gene gene : genes ) {
-                Long id = gene.getId();
-                Collection<DataVector> dvs = geneId2dvs.get( id );
-                if ( dvs == null ) {
-                    dvs = new HashSet<DataVector>();
-                    geneId2dvs.put( id, dvs );
-                }
-                dvs.add( new DataVector( dedv ) );
-            }
-        }
-        for ( int i = start; i < end; i++ ) {
-            GenePair genePair = ( GenePair ) genePairs.get( i );
-            genePair.effectSize = effectSize( geneId2dvs.get( genePair.firstId ), geneId2dvs.get( genePair.secondId ) );
-        }
-        watch.stop();
-        System.err.println( "Took " + watch.getTime() / 1000 + " to calculation correlations" );
-    }
-
-    /**
-     * 
-     *
-     */
-    private void calculateEffectSizeForHughData() {
-        Map<Long, Collection<Long>> gene2cs = getGene2CSMap();
-        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-        Collection<Long> geneIds = new HashSet<Long>();
-
-        int CHUNK_LIMIT = 3000;
-        int count = 0;
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.err.println( "Start Computing Effect Size for " + genePairs.size() + " gene pairs" );
-        genePairs.sort();
-        for ( int i = 0; i < genePairs.size(); i++ ) {
-            GenePair onePair = ( GenePair ) genePairs.get( i );
-            if ( !geneIds.contains( onePair.firstId ) ) {
-                cs2gene.putAll( getCs2GeneMap( onePair.firstId, gene2cs ) );
-                geneIds.add( onePair.firstId );
-            }
-            if ( !geneIds.contains( onePair.secondId ) ) {
-                cs2gene.putAll( getCs2GeneMap( onePair.secondId, gene2cs ) );
-                geneIds.add( onePair.secondId );
-            }
-            count++;
-            if ( geneIds.size() == CHUNK_LIMIT || ( i + 1 ) == genePairs.size() ) {
-                calculateEffectSizeForOneChunk( ( i + 1 ) - count, i + 1, cs2gene );
-                count = 0;
-                geneIds.clear();
-                cs2gene.clear();
-                System.err.print( i + "( " + watch.getTime() / 1000 + " ) " );
-            }
-        }
-        watch.stop();
-        System.err.println( "Finished in " + watch.getTime() / 1000 + " seconds" );
-    }
-
+    // private void calculateEffectSize( Map<Long, Collection<Gene>> cs2gene, ObjectArrayList genePairs) {
+    // Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector,
+    // Collection<Gene>>();
+    // StopWatch watch = new StopWatch();
+    // watch.start();
+    // for ( ExpressionExperiment ee : allEEs ) {
+    // QuantitationType qt = getPreferredQT( ee );
+    // if ( qt == null ) continue;
+    // Map<DesignElementDataVector, Collection<Gene>> dedvs = getDesignElementDataVectors( cs2gene, qt, ee );
+    // dedv2genes.putAll( dedvs );
+    // }
+    // watch.stop();
+    // System.err.println( "Took " + watch.getTime() / 1000 + " to retrieve data" );
+    // watch.reset();
+    // watch.start();
+    // Map<Long, Collection<ExpressionProfile>> geneId2Eps = new HashMap<Long, Collection<ExpressionProfile>>();
+    // for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
+    // Collection<Gene> genes = dedv2genes.get( dedv );
+    // for ( Gene gene : genes ) {
+    // Long id = gene.getId();
+    // Collection<ExpressionProfile> eps = geneId2Eps.get( id );
+    // if ( eps == null ) {
+    // eps = new HashSet<ExpressionProfile>();
+    // geneId2Eps.put( id, eps );
+    // }
+    // eps.add( new ExpressionProfile( dedv ) );
+    // }
+    // }
+    // for ( int i = 0; i < genePairs.size(); i++ ) {
+    // GenePair genePair = ( GenePair ) genePairs.get( i );
+    // genePair.effectSize = effectSize( geneId2Eps.get( genePair.firstId ), geneId2Eps.get( genePair.secondId ) );
+    // }
+    // watch.stop();
+    // System.err.println( "Took " + watch.getTime() / 1000 + " to calculation correlations" );
+    // }
+    // private void calculateEffectSizeForHughData() {
+    // Map<Long, Collection<Long>> gene2cs = getGene2CSMap();
+    // Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
+    // Collection<Long> geneIds = new HashSet<Long>();
+    //
+    // int CHUNK_LIMIT = 3000;
+    // int count = 0;
+    // StopWatch watch = new StopWatch();
+    // watch.start();
+    // System.err.println( "Start Computing Effect Size for " + genePairs.size() + " gene pairs" );
+    // genePairs.sort();
+    // for ( int i = 0; i < genePairs.size(); i++ ) {
+    // GenePair onePair = ( GenePair ) genePairs.get( i );
+    // if ( !geneIds.contains( onePair.firstId ) ) {
+    // cs2gene.putAll( getCs2GeneMap( onePair.firstId, gene2cs ) );
+    // geneIds.add( onePair.firstId );
+    // }
+    // if ( !geneIds.contains( onePair.secondId ) ) {
+    // cs2gene.putAll( getCs2GeneMap( onePair.secondId, gene2cs ) );
+    // geneIds.add( onePair.secondId );
+    // }
+    // count++;
+    // if ( geneIds.size() == CHUNK_LIMIT || ( i + 1 ) == genePairs.size() ) {
+    // calculateEffectSize( ( i + 1 ) - count, i + 1, cs2gene );
+    // count = 0;
+    // geneIds.clear();
+    // cs2gene.clear();
+    // System.err.print( i + "( " + watch.getTime() / 1000 + " ) " );
+    // }
+    // }
+    // watch.stop();
+    // System.err.println( "Finished in " + watch.getTime() / 1000 + " seconds" );
+    // }
     // For fast version
-    private double effectSize( DoubleArrayList correlations, LongArrayList eeIds ) {
-        DoubleArrayList sampleSizes = new DoubleArrayList();
-        for ( int i = 0; i < eeIds.size(); i++ ) {
-            sampleSizes.add( eeSampleSizes.get( eeIds.get( i ) ) );
-        }
-        metaAnalysis.run( correlations, sampleSizes );
-        double effectSize = metaAnalysis.getE();
-        return effectSize;
-    }
+//    private double effectSize( DoubleArrayList correlations, LongArrayList eeIds ) {
+//        DoubleArrayList sampleSizes = new DoubleArrayList();
+//        for ( int i = 0; i < eeIds.size(); i++ ) {
+//            sampleSizes.add( eeSampleSizes.get( eeIds.get( i ) ) );
+//        }
+//        metaAnalysis.run( correlations, sampleSizes );
+//        double effectSize = metaAnalysis.getE();
+//        return effectSize;
+//    }
 
-    private void calculateCorrelations( Map<DesignElementDataVector, Collection<Gene>> dedv2genes,
-            Map<Long, Collection<Gene>> cs2gene, long eeId ) {
-        Map<Long, Collection<DataVector>> geneId2dvs = new HashMap<Long, Collection<DataVector>>();
+    /**
+     * Get a gene ID to expression profiles map for an expression experiment (specified by the quantitation type)
+     * 
+     * @param geneMap - gene ID to gene map
+     * @param qt - quantitation type of the expression experiment
+     * @return gene ID to expression profile map
+     */
+    private Map<Long, Collection<ExpressionProfile>> getGeneID2EPsMap( Map<Long, Gene> geneMap, QuantitationType qt ) {
+        Map<Long, Collection<Long>> gene2cs = getGene2CSMap( geneMap.values() );
+        Map<Long, Collection<Gene>> cs2gene = getCS2GeneMap( gene2cs, geneMap );
+        System.err.println( "Loaded " + gene2cs.keySet().size() + " genes and " + cs2gene.keySet().size() + " CSs" );
+
+        Map<Long, Collection<ExpressionProfile>> geneID2EPs = new HashMap<Long, Collection<ExpressionProfile>>();
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = eeService.getDesignElementDataVectors( cs2gene, qt );
         for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
             Collection<Gene> genes = dedv2genes.get( dedv );
             for ( Gene gene : genes ) {
                 Long id = gene.getId();
-                Collection<DataVector> dvs = geneId2dvs.get( id );
-                if ( dvs == null ) {
-                    dvs = new HashSet<DataVector>();
-                    geneId2dvs.put( id, dvs );
+                Collection<ExpressionProfile> eps = geneID2EPs.get( id );
+                if ( eps == null ) {
+                    eps = new HashSet<ExpressionProfile>();
+                    geneID2EPs.put( id, eps );
                 }
-                dvs.add( new DataVector( dedv ) );
+                eps.add( new ExpressionProfile( dedv ) );
             }
         }
-        for ( int i = 0; i < genePairs.size(); i++ ) {
-            GenePair genePair = ( GenePair ) genePairs.get( i );
-            Collection<DataVector> source = geneId2dvs.get( genePair.firstId );
-            Collection<DataVector> target = geneId2dvs.get( genePair.secondId );
-            if ( source != null && target != null ) {
-                double corr = 0.0;
-                try {
-                    corr = correlation( source, target );
-                } catch ( Exception e ) {
-                }
-                if ( corr != 0.0 ) {
-                    int eeSampleSize = source.iterator().next().val.length;
-                    if ( !eeSampleSizes.containsKey( eeId ) ) {
-                        eeSampleSizes.put( eeId, eeSampleSize );
-                    }
-                    if ( eeSampleSize > MINIMUN_SAMPLE_SIZE ) {
-                        genePair.correlations.add( corr );
-                        genePair.eeIds.add( eeId );
-                    }
-                }
-            }
-
-        }
+        return geneID2EPs;
     }
 
     /**
-     * Calculate the effect size for each gene pair
-     *
+     * Calculate correlations for the specified gene pairs in the specified EEs.
+     * 
+     * @param EEs - expression experiments
+     * @param genePairs - gene pair list
+     * @param geneMap - gene ID to gene map
+     * @return expression experiment ID to sample size map
      */
-    private void calculateEffectSize() {
-        Map<Long, Collection<Long>> gene2cs = getGene2CSMap();
-        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-
-        for ( Long geneId : gene2cs.keySet() ) {
-            Collection<Long> csIds = gene2cs.get( geneId );
-            for ( Long csId : csIds ) {
-                Collection<Gene> genes = cs2gene.get( csId );
-                if ( genes == null ) {
-                    genes = new HashSet<Gene>();
-                    cs2gene.put( csId, genes );
-                }
-                genes.add( geneMap.get( geneId ) );
-            }
-        }
-        System.err.println( " Got " + gene2cs.keySet().size() + " genes and " + cs2gene.keySet().size() + " CSs" );
-        StopWatch watch = new StopWatch();
-        watch.start();
-        System.err.println( "Start Computing Effect Size for " + genePairs.size() + " gene pairs" );
+    private Map<Long, Integer> calculateCorrelations( Collection<ExpressionExperiment> EEs, GenePairList genePairs,
+            Map<Long, Gene> geneMap ) {
+        Map<Long, Integer> eeSampleSizeMap = new HashMap<Long, Integer>();
         int total = 0;
-        for ( ExpressionExperiment ee : allEEs ) {
+        for ( ExpressionExperiment ee : EEs ) {
+            StopWatch watch = new StopWatch();
+            watch.start();
+            // quantitation type is tied to its EE
             QuantitationType qt = getPreferredQT( ee );
-            if ( qt == null ) continue;
-            Map<DesignElementDataVector, Collection<Gene>> dedv2genes = eeService.getDesignElementDataVectors( cs2gene,
-                    qt );
-            calculateCorrelations( dedv2genes, cs2gene, ee.getId() );
-            eeIndex.add( ee.getId() );
-            eeMap.put( ee.getId(), ee );
-            total = total + dedv2genes.keySet().size();
-            System.err.println( ee.getId() + "----->" + dedv2genes.keySet().size() + " DEDVs" + " in "
+            if ( qt == null ) {
+                continue;
+            }
+            Map<Long, Collection<ExpressionProfile>> geneID2EPs = getGeneID2EPsMap( geneMap, qt );
+
+            for ( int i = 0; i < genePairs.size(); i++ ) {
+                GenePair genePair = genePairs.get( i );
+                Collection<ExpressionProfile> source = geneID2EPs.get( genePair.firstId );
+                Collection<ExpressionProfile> target = geneID2EPs.get( genePair.secondId );
+                if ( source != null && target != null ) {
+                    double corr = 0.0;
+                    corr = medianCorrelation( source, target );
+                    if ( corr != 0.0 ) {
+                        int eeSampleSize = source.iterator().next().val.length;
+                        if ( eeSampleSize > MINIMUM_SAMPLE_SIZE ) {
+                            genePair.addCorrelation( ee.getId(), corr );
+                            eeSampleSizeMap.put( ee.getId(), eeSampleSize );
+                        }
+                    }
+                }
+            }
+            // eeIndex.add( ee.getId() );
+            // eeMap.put( ee.getId(), ee );
+            total += geneID2EPs.values().size();
+            System.err.println( ee.getId() + "----->" + geneID2EPs.values().size() + " expression profiles" + " in "
                     + watch.getTime() / 1000 + " seconds" );
         }
+        return eeSampleSizeMap;
+    }
+
+    /**
+     * Calculate the effect size for each gene pair from the specified expression experiments
+     */
+    private void calculateEffectSize( Collection<ExpressionExperiment> EEs, GenePairList genePairs,
+            Map<Long, Gene> geneMap, Map<Long, Integer> eeSampleSizeMap ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        System.err.println( "Start Computing Effect Size for " + genePairs.size() + " gene pairs" );
         for ( int i = 0; i < genePairs.size(); i++ ) {
-            GenePair onePair = ( GenePair ) genePairs.get( i );
-            onePair.effectSize = effectSize( onePair.correlations, onePair.eeIds );
+            GenePair pair = genePairs.get( i );
+            DoubleArrayList correlations = new DoubleArrayList();
+            DoubleArrayList sampleSizes = new DoubleArrayList();
+            for ( ExpressionExperiment ee : EEs ) {
+                Integer sampleSize = eeSampleSizeMap.get( ee.getId() );
+                Double corr = pair.getCorrelation( ee.getId() );
+                if ( sampleSize != null && corr != null ) {
+                    sampleSizes.add( sampleSize );
+                    correlations.add( corr );
+                }
+            }
+            metaAnalysis.run( correlations, sampleSizes );
+            double effectSize = metaAnalysis.getE();
+            pair.setEffectSize( effectSize );
         }
         watch.stop();
         System.err.println( "Finished in " + watch.getTime() / 1000 + " seconds" );
 
     }
 
-    private void saveToFigures( String figureFileName, int numOfGenePairs ) throws IOException {
-        double[][] data = new double[numOfGenePairs][eeMap.keySet().size()];
+    /**
+     * Save the gene pairs to the specified file name
+     * @param figureFileName - file name
+     * @param numGenePairsToSave - number of gene pairs to save
+     * @param genePairs - gene pair list
+     * @param EEs - expression experiment list
+     * @param geneMap - gene ID to gene map
+     * @throws IOException
+     */
+    private void saveToFigures( String figureFileName, int numGenePairsToSave, GenePairList genePairs, Collection<ExpressionExperiment> EEs,
+            Map<Long, Gene> geneMap ) throws IOException {
+        double[][] data = new double[numGenePairsToSave][EEs.size()];
         List<String> rowLabels = new ArrayList<String>();
         List<String> colLabels = new ArrayList<String>();
-        ObjectArrayList outputGenePairs = new ObjectArrayList();
+        GenePairList outputGenePairs = new GenePairList();
         for ( int i = 0; i < genePairs.size(); i++ ) {
-            GenePair genePair = ( GenePair ) genePairs.get( i );
-            if ( genePair.correlations.size() > 100 ) outputGenePairs.add( genePair );
+            GenePair genePair = genePairs.get( i );
+            if ( genePair.getCorrelations().size() > 100 ) outputGenePairs.add( genePair );
         }
         genePairs = outputGenePairs;
         genePairs.sort();
-        for ( int i = 0; i < eeIndex.size(); i++ ) {
-            long eeId = eeIndex.get( i );
-            colLabels.add( eeMap.get( eeId ).getShortName() );
+        for ( ExpressionExperiment ee : EEs ) {
+            colLabels.add( ee.getShortName() );
         }
         for ( int i = 0; i < genePairs.size(); i++ ) {
-            GenePair genePair = ( GenePair ) genePairs.get( i );
+            GenePair genePair = genePairs.get( i );
             rowLabels
                     .add( geneMap.get( genePair.firstId ).getName() + "_" + geneMap.get( genePair.secondId ).getName() );
 
-            if ( i == numOfGenePairs / 2 - 1 ) i = genePairs.size() - numOfGenePairs / 2 - 1;
+            if ( i == numGenePairsToSave / 2 - 1 ) i = genePairs.size() - numGenePairsToSave / 2 - 1;
         }
         DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
         dataMatrix.setRowNames( rowLabels );
         dataMatrix.setColumnNames( colLabels );
 
         for ( int i = 0; i < genePairs.size(); i++ ) {
-            GenePair genePair = ( GenePair ) genePairs.get( i );
+            GenePair genePair = genePairs.get( i );
             String rowName = geneMap.get( genePair.firstId ).getName() + "_"
                     + geneMap.get( genePair.secondId ).getName();
             int rowIndex = dataMatrix.getRowIndexByName( rowName );
-            for ( int j = 0; j < genePair.eeIds.size(); j++ ) {
-                long eeId = eeIndex.get( j );
-                String colName = eeMap.get( eeId ).getShortName();
+            for ( ExpressionExperiment ee : EEs ) {
+                String colName = ee.getShortName();
                 int colIndex = dataMatrix.getColIndexByName( colName );
-                dataMatrix.setQuick( rowIndex, colIndex, genePair.correlations.get( j ) );
+                dataMatrix.setQuick( rowIndex, colIndex, genePair.getCorrelation( ee.getId() ) );
             }
 
-            if ( i == numOfGenePairs / 2 - 1 ) i = genePairs.size() - numOfGenePairs / 2 - 1;
+            if ( i == numGenePairsToSave / 2 - 1 ) i = genePairs.size() - numGenePairsToSave / 2 - 1;
         }
         ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
         dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
@@ -645,10 +888,9 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        // TODO Auto-generated method stub
-        Exception err = processCommandLine( "EffectSizeCalculation ", args );
-        if ( err != null ) {
-            return err;
+        Exception exc = processCommandLine( "EffectSizeCalculation ", args );
+        if ( exc != null ) {
+            return exc;
         }
         MetaLinkFinder linkFinder = new MetaLinkFinder();
         linkFinder.setGeneService( geneService );
@@ -656,7 +898,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         watch.start();
         try {
             linkFinder.fromFile( this.matrixFile, null );
-        } catch (IOException e) {
+        } catch ( IOException e ) {
             log.info( "Couldn't load the data from the files " );
             return e;
         }
@@ -664,21 +906,25 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         log.info( "Spend " + watch.getTime() / 1000 + " to load the data matrix" );
 
         Taxon taxon = getTaxon( this.taxonName );
-        allEEs = eeService.findByTaxon( taxon );
 
         // First time using the following function to save candidate gene pair into a file
         // saveGenePairs("genepairs.txt");
-        readGenesPairs();
-        calculateEffectSize();
+        GenePairList genePairs = readGenePairs( geneList );
+        Map<Long, Gene> geneMap = getGeneMap( genePairs.getGeneIDs() );
+        Collection<ExpressionExperiment> EEs = eeService.findByTaxon(taxon);
+        Map<Long, Integer> eeSampleSizeMap = calculateCorrelations( EEs, genePairs, geneMap );
+        calculateEffectSize( EEs, genePairs, geneMap, eeSampleSizeMap );
+
         try {
-            saveToFigures( "correlationData.png", 2700 );
-        } catch ( Exception e ) {
+            saveToFigures( "correlationData.png", 2700, genePairs, EEs, geneMap );
+        } catch ( IOException e ) {
             return e;
         }
         return null;
     }
 
     /**
+     * Calculate effect size
      * @param args
      */
     public static void main( String[] args ) {
