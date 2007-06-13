@@ -37,6 +37,11 @@ import org.apache.commons.logging.LogFactory;
 public class DateStringComparator implements Comparator {
 
     /**
+     * This is what the decorators will send for sorting.
+     */
+    private static final String DATE_HTML_PATTERN = "<span\\s+(style.+?){0,1}\\s+title='(.+?)\\.\\d'>.+";
+
+    /**
      * We can add formats to this.
      */
     private final String[] formats = new String[] { "yyyy.MM.dd HH:mm aa", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" };
@@ -52,18 +57,18 @@ public class DateStringComparator implements Comparator {
         String d1 = ( String ) arg0;
         String d2 = ( String ) arg1;
 
-        Pattern pat = Pattern.compile( "<span\\s+title='(.+?)\\.\\d'>.+" );
+        Pattern pat = Pattern.compile( DATE_HTML_PATTERN );
         Matcher m1 = pat.matcher( d1 );
         Matcher m2 = pat.matcher( d2 );
         if ( m1.matches() ) {
-            String string = m1.group( 1 );
+            String string = m1.group( 2 );
             if ( string != null ) {
                 d1 = string;
             }
         }
 
         if ( m2.matches() ) {
-            String string2 = m2.group( 1 );
+            String string2 = m2.group( 2 );
             if ( string2 != null ) {
                 d2 = string2;
             }
