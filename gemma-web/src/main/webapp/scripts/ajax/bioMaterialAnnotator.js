@@ -132,7 +132,7 @@ var vocabC;
 var displayRestrictionsPanel = function(node){
 	console.log(dwr.util.toDescriptiveString(node, 10));
 
-	vocabC = { termUri : node.uri, properties : [] };		
+	vocabC = { termUri : node.uri,properties : [] };		
 	createRestrictionGui(node, vocabC);
 	
 	var saveButton = new Ext.Button("center-div", {text : 'save'});
@@ -179,16 +179,23 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
  
             	
             	if (restrictedOn.type !== undefined ) {	//Primitive Type
-                    var primitiveRestrictedTo = restrictedOn.type
- 
+ 					
                     	var simple = new Ext.form.Form({
 					        labelWidth: 75, // label settings here cascade unless overridden
 					        url:'save-form.php'
 					    });
 					    
-					     var handler = function(field) {
-					   		vc.object.value = field.getValue();
-					   };
+					    var handler = createPrimitiveTypeHandler(restrictedOn, vc);
+//					     var handler = function(field) {
+//					     	console.log(dwr.util.toDescriptiveString(vc,10));
+//					     	var newVc = {termUri : primitiveRestrictedOn.uri, data : field.getValue(), type : primitiveRestrictedTo};
+//					     	
+//					     	if (vc.properties === undefined){
+//    	                	 	vc.properties = [];    	                	 	
+//    	                	}
+//					     	
+//					   		vc.properties.push(newVc); 
+//					   };
 					    var valueField = new Ext.form.TextField({
 					            fieldLabel: restrictedOn.label ,
 					            name: 'hasValue',
@@ -197,7 +204,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 					        });
 					     
 					  //valueField.on.createDelegate(this,['valid', handler],true);					       
-					   valueField.on('valid', handler);
+					  valueField.on('valid', handler);
 					        
 					   simple.add(valueField);
                        dh.append(divId, {tag: 'h3', html : 'Value:' });
@@ -211,16 +218,10 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
                     if (restrictedTo.restrictions === undefined || restrictedTo.restrictions === null || restrictedTo.restrictions.size() === 0){	// ie) we are at a leaf node so display gui
                         dh.append(divId, {tag: 'h3', html : "Create an instance of: " +restrictedTo.term });
  					 
-	                    var simple = createForm();	
+	                    var simple = createForm(restrictedOn,vc);	
 					                       
     	                if (restrictedTo.individuals !== undefined && restrictedTo.individuals !== null && restrictedTo.individuals.size() > 0){  //are there examples?
-    	                		var combo = createComboBox(restrictedTo.individuals);
-
-    	                		var comboHandler = function(field,record,index){
-    	                			vc.object.value = record;
-    	                		};
-    	                		
-    	                		combo.on('select', comboHandler);
+    	                		var combo = createComboBox(restrictedOn, restrictedTo.individuals, vc);    	                
         		            	simple.column({width:285},combo);                                 	                    
                 	    }
                     
@@ -228,7 +229,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
                     } else{        //Not a leaf node. recurse down another level
                         var vcChild = { termUri : restrictedOn.uri, object : { termUri : restrictedTo.uri }, properties : []};
                         vc.properties.push(vcChild);
-    	            	createRestrictionGui( restrictedTo, vcChild, indent + 3, divId );
+    	            	createRestrictionGui( restrictedTo, vcChild.object, indent + 3, divId );
                    }                
                     
                 } else if ( res[i].cardinality !== undefined  ) { //Cardinality Type
@@ -249,17 +250,17 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
         	var divId = (Math.random() * 100000).toFixed();   
            	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});
            	dh.append(divId, {tag: 'h3', html :  "Create an instance of: " + node.term });      
-           	var simple = createForm();	
+           	var simple = createForm(restrictedOn,vc);	
            	
            	//If there already exisit individuals display them in a drop down box so the user can select one.
             if ((node.individuals !== undefined) && (node.individuals !== null) && (node.individuals.size() > 0))
-            	simple.column({width:285},createComboBox(node.individuals)); 	   	    
+            	simple.column({width:285},createComboBox(restrictedOn, node.individuals)); 	   	    
     		
         	simple.render(divId);
         }
 	};
 
-var createComboBox = function(individuals){
+var createComboBox = function(subject, individuals, vc){
 	     	var recordType = Ext.data.Record.create([
 							{name:"label", type : "string" }, 
 							{name:"uri", type: "string" } 
@@ -285,40 +286,88 @@ var createComboBox = function(individuals){
 					        selectOnFocus:true
 					    });
 					    
+					    var comboHandler = function(field,record,index){
+					    	console.log(dwr.util.toDescriptiveString(vc,10));
+					    	var vcChild = { termUri : subject.uri, object : record.data};
+					    	
+					    	if (vc.properties === undefined){
+    	                	 	vc.properties = [];    	                	 	
+    	                	}
+    	                	vc.properties.push(vcChild); 
+                        
+    	                };
+    	                		
+    	                combo.on('select', comboHandler);
+					    
 					    return combo;				
 					    
 	
 };
 
-var createForm = function(){
-	var simple = new Ext.form.Form({
-					        labelWidth: 50, // label settings here cascade unless overridden
-					        url:'save-form.php'
-					    });
-					    
-    simple.column(
-    	{width:250},
-        new Ext.form.TextField({
+var createForm = function(subject, vc){
+
+	var lookUp = 	new Ext.form.TextField({
             fieldLabel: 'Lookup',
             name: 'lookup',
             width:150,
-            allowBlank:true
-        }));
+            allowBlank:true	});
+	
+	var custom =   new Ext.form.TextField({
+            fieldLabel: 'custom',
+            name: 'custom',
+            width:150 });
+
+	var customHandler = function(field){
+							console.log(dwr.util.toDescriptiveString(vc,10));
+							var newVC = {termUri : subject, object : {value: field.getValue()}};
+    	                	if (vc.properties === undefined){
+    	                	 	vc.properties = [];    	                	 	
+    	                	}
+    	                	//todo:  need to do something about clicking back and forth and creating more objects than necessary
+    	                	vc.properties.push(newVC); 
+    	                };
+    	                		
+    	       custom.on('valid', customHandler);
+
+	var simple = new Ext.form.Form({
+		        labelWidth: 50, // label settings here cascade unless overridden
+    });
+					    
+    simple.column(
+    	{width:250},
+        lookUp
+        );
 
 	simple.column(
 		{width:250},
-        new Ext.form.TextField({
-            fieldLabel: 'custom',
-            name: 'custom',
-            width:150
-        })										
+		custom								
     );
+    
+    
 
     //simple.addButton('Save');
     //simple.addButton('Cancel');		
    
    return simple;		
 }
+
+//Do this for scope reasons. 
+//By creating a function on the fly the scope of the restrictions will be fixed for the handler.
+var createPrimitiveTypeHandler = function(restrictedOn, vc){
+
+	return 	function(field) {
+					     	
+					     	var newVc = {termUri : restrictedOn.uri, data : field.getValue(), type : restrictedOn.type};
+					     	
+					     	if (vc.properties === undefined){
+    	                	 	vc.properties = [];    	                	 	
+    	                	}
+					     	
+					   		vc.properties.push(newVc); 
+					   		console.log(dwr.util.toDescriptiveString(vc,10));
+			}
+};
+
 
 Ext.EventManager.onDocumentReady(Simple.init, Simple, true);
 
