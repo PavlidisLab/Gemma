@@ -45,7 +45,7 @@ import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.gemmaspaces.AbstractGigaSpacesFormController;
+import ubic.gemma.web.controller.gemmaspaces.AbstractGemmaSpacesFormController;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -61,7 +61,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
  * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
  */
-public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormController {
+public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormController {
 
     private static final boolean AJAX = true;
 
