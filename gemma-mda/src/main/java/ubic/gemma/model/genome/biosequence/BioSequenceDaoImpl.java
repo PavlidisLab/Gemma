@@ -29,8 +29,11 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -261,6 +264,15 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     session.update( dbEntry );
                     session.update( dbEntry.getExternalDatabase() );
                 }
+
+                for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
+                    GeneProduct geneProduct = bs2gp.getGeneProduct();
+                    Gene g = geneProduct.getGene();
+                    if ( g != null ) {
+                        g.getAliases().size();
+                    }
+                }
+
                 session.evict( bioSequence );
                 return null;
             }

@@ -351,7 +351,6 @@ public class ProbeMapper {
     /**
      * Given a collection of sequences, blat them against the selected genome.
      * 
-     * @param output
      * @param goldenpath for the genome to be used.
      * @param sequences
      * @return

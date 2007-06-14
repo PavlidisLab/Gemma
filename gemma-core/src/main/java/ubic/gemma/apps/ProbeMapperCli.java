@@ -21,6 +21,7 @@ package ubic.gemma.apps;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,20 +36,25 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.BlatAssociationScorer;
-import ubic.gemma.analysis.sequence.ProbeMapper; 
+import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
+ * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. This
+ * CLI was written to take a file as input, and write results to a file or standard out, but has been modified to
+ * process sequence ids from a file and load the results into the db.
  * <p>
  * 
  * @author pavlidis
@@ -85,9 +91,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         Exception e = p.doWork( args );
         if ( e != null ) {
             System.err.println( e.getLocalizedMessage() );
-            if ( log.isDebugEnabled() ) {
-                log.debug( e, e );
-            }
+            log.error( e, e );
         }
     }
 
@@ -100,6 +104,8 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
     private String ncbiIdentifierFileName = null;
 
     private String fastaFileName = null;
+
+    private String sequenceIdentifierFileName = null;
 
     public ProbeMapperCli() {
         super();
@@ -130,8 +136,11 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
                 "File containing sequences in FASTA format" ).withLongOpt( "fastaFile" ).create( 'f' ) );
 
+        addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
+                "File containing BioSequence primary keys (results are saved to database)" ).create( "seqIds" ) );
+
         addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription( "Output file basename" )
-                .isRequired().withLongOpt( "outputFile" ).create( 'o' ) );
+                .withLongOpt( "outputFile" ).create( 'o' ) );
 
         addOption( databaseNameOption );
 
@@ -143,11 +152,16 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         try {
             Exception err = processCommandLine( "probeMapper", args );
             if ( err != null ) return err;
-            String bestOutputFileName = outputFileName + ".best";
-            log.info( "Saving best to " + bestOutputFileName );
 
-            Writer resultsOut = getWriterForBestResults( outputFileName );
-            Writer bestResultsOut = getWriterForBestResults( bestOutputFileName );
+            Writer resultsOut = null;
+            Writer bestResultsOut = null;
+            if ( outputFileName != null ) {
+                String bestOutputFileName = outputFileName + ".best";
+                log.info( "Saving best to " + bestOutputFileName );
+
+                resultsOut = getWriterForBestResults( outputFileName );
+                bestResultsOut = getWriterForBestResults( bestOutputFileName );
+            }
 
             log.info( "DatabaseHost = " + this.host + " User=" + this.username );
 
@@ -173,6 +187,10 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
                 Map<String, Collection<BlatAssociation>> results = runOnSequences( new FileInputStream( f ), resultsOut );
 
                 printBestResults( results, bestResultsOut );
+            } else if ( this.sequenceIdentifierFileName != null ) {
+
+                runOnBioSequences();
+
             } else {
                 String[] moreArgs = getArgs();
                 if ( moreArgs.length == 0 ) {
@@ -197,13 +215,74 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
                 }
             }
 
-            resultsOut.close();
-            bestResultsOut.close();
+            if ( resultsOut != null ) resultsOut.close();
+            if ( bestResultsOut != null ) bestResultsOut.close();
 
         } catch ( Exception e ) {
             return new RuntimeException( e );
         }
         return null;
+    }
+
+    /**
+     * @throws SQLException
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    private void runOnBioSequences() throws SQLException, FileNotFoundException, IOException {
+        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( this.databaseName );
+
+        InputStream stream = new FileInputStream( new File( this.sequenceIdentifierFileName ) );
+        TabDelimParser parser = new TabDelimParser();
+        parser.parse( stream );
+
+        Collection<String[]> seqIds = parser.getResults();
+
+        log.info( seqIds.size() + " ids found in file" );
+
+        BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+        PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+        BlatResultService blatResultService = ( BlatResultService ) this.getBean( "blatResultService" );
+
+        int count = 0;
+        int hits = 0;
+        for ( String[] strings : seqIds ) {
+            try {
+                if ( strings.length == 0 ) continue;
+                String idString = strings[0];
+                Long id = Long.parseLong( idString );
+                BioSequence bs = bss.load( id );
+                bss.thaw( bs );
+
+                if ( bs == null ) continue;
+
+                final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+
+                if ( blatResults == null || blatResults.isEmpty() ) continue;
+
+                Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
+                        blatResults );
+
+                for ( Collection<BlatAssociation> col : results.values() ) {
+                    for ( BlatAssociation association : col ) {
+                        if ( log.isDebugEnabled() ) log.debug( association );
+                    }
+
+                    persisterHelper.persist( col );
+                    ++hits;
+                }
+
+                if ( ++count % 100 == 0 ) {
+                    log
+                            .info( "Processed " + count + "  sequences" + " with blat results; " + hits
+                                    + " mappings found." );
+                }
+
+            } catch ( NumberFormatException e ) {
+                log.warn( strings[0] + " was not a number" );
+            }
+        }
     }
 
     /**
@@ -290,6 +369,10 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
         if ( hasOption( 'g' ) ) {
             this.ncbiIdentifierFileName = getFileNameOptionValue( 'g' );
+        }
+
+        if ( hasOption( "seqIds" ) ) {
+            this.sequenceIdentifierFileName = getFileNameOptionValue( "seqIds" );
         }
 
         this.outputFileName = getOptionValue( 'o' );
