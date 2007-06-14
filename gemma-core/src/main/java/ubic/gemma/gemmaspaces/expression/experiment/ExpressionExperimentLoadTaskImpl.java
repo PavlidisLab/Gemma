@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.gemmaspaces.BaseJavaSpacesTask;
+import ubic.gemma.gemmaspaces.BaseGemmaSpacesTask;
 import ubic.gemma.gemmaspaces.GemmaSpacesResult;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -37,7 +37,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentLoadTaskImpl extends BaseJavaSpacesTask implements ExpressionExperimentLoadTask,
+public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implements ExpressionExperimentLoadTask,
         InitializingBean {
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
