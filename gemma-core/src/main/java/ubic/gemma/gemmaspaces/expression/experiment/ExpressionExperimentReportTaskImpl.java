@@ -25,12 +25,11 @@ import ubic.gemma.gemmaspaces.GemmaSpacesResult;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentLoadTask {
+public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentReportTask {
 
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
-    public GemmaSpacesResult execute(
-            GemmaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand ) {
+    public GemmaSpacesResult execute() {
 
         expressionExperimentReportService.generateSummaryObjects();
 
