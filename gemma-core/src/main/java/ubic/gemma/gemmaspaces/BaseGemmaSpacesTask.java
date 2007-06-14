@@ -26,7 +26,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.util.progress.GigaSpacesProgressAppender;
+import ubic.gemma.util.progress.GemmaSpacesProgressAppender;
 
 /**
  * Tasks extending this are to be executed in a JavaSpaces environment. This base class serves as starting point for all
@@ -35,7 +35,7 @@ import ubic.gemma.util.progress.GigaSpacesProgressAppender;
  * @author keshav
  * @version $Id$
  */
-public class BaseJavaSpacesTask {
+public class BaseGemmaSpacesTask {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -59,7 +59,7 @@ public class BaseJavaSpacesTask {
         if ( gigaSpacesTemplate == null )
             throw new RuntimeException( "Will not be able to log information for the task " + clazz.getSimpleName() );
 
-        GigaSpacesProgressAppender javaSpacesAppender = new GigaSpacesProgressAppender( gigaSpacesTemplate );
+        GemmaSpacesProgressAppender javaSpacesAppender = new GemmaSpacesProgressAppender( gigaSpacesTemplate );
         if ( !logger.isAttached( javaSpacesAppender ) ) {
             logger.addAppender( javaSpacesAppender );
         }
