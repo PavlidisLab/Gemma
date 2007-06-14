@@ -23,9 +23,11 @@ import org.springframework.context.ApplicationContext;
 
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 
 /**
- * A test class for {@link GigaSpacesUtil}.
+ * A test class for {@link GemmaSpacesUtil}.
  * 
  * @author keshav
  * @version $Id$
@@ -37,7 +39,7 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
      */
     public void testIsSpaceRunning() {
 
-        boolean isRunning = GigaSpacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        boolean isRunning = GemmaSpacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( isRunning )
             assertTrue( isRunning );
@@ -58,13 +60,13 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
-        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
+        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
 
-        BeanFactory updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+        BeanFactory updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
 
         /* verify that we have the new gigaspaces beans */
-        if ( !GigaSpacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) )
+        if ( !GemmaSpacesUtil.isSpaceRunning( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) )
             assertFalse( updatedCtx.containsBean( gigaspacesTemplate ) );
         else {
             assertTrue( updatedCtx.containsBean( gigaspacesTemplate ) );
@@ -77,14 +79,14 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
      * Test logging space statistics.
      */
     public void testLogSpaceStatistics() {
-        GigaSpacesUtil.logSpaceStatistics( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        GemmaSpacesUtil.logSpaceStatistics( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     /**
      * Tests logging the configuration report.
      */
     public void testGetSpaceContainerAdmin() {
-        GigaSpacesUtil.logRuntimeConfigurationReport();
+        GemmaSpacesUtil.logRuntimeConfigurationReport();
     }
 
     /**
@@ -92,8 +94,8 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
      */
     public void testAreWorkersRegistered() {
 
-        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
+        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
 
         /*
@@ -114,8 +116,8 @@ public class GigaSpacesUtilTest extends BaseSpringContextTest {
      * Tests the number of workers registered.
      */
     public void testNumWorkersRegistered() {
-        GigaSpacesUtil gigaspacesUtil = ( GigaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil.addGigaspacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
+        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
 
         int count = gigaspacesUtil.numWorkersRegistered( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );

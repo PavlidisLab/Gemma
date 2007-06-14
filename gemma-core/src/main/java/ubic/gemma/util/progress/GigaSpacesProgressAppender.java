@@ -24,7 +24,7 @@ import org.apache.log4j.Priority;
 import org.apache.log4j.spi.LoggingEvent;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.util.javaspaces.GemmaSpacesProgressEntry;
+import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesProgressEntry;
 
 /**
  * This appender is used to send progress notifications to the space. The information for these notifications is
