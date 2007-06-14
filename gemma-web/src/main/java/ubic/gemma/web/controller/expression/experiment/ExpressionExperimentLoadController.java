@@ -33,19 +33,19 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask;
-import ubic.gemma.javaspaces.gigaspaces.GigaSpacesResult;
-import ubic.gemma.javaspaces.gigaspaces.JavaSpacesExpressionExperimentLoadCommand;
+import ubic.gemma.gemmaspaces.GemmaSpacesResult;
+import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTask;
+import ubic.gemma.gemmaspaces.expression.experiment.GemmaSpacesExpressionExperimentLoadCommand;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.javaspaces.gigaspaces.GemmaSpacesEnum;
-import ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController;
+import ubic.gemma.web.controller.gemmaspaces.AbstractGigaSpacesFormController;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -59,7 +59,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
- * @spring.property name="gigaSpacesUtil" ref="gigaSpacesUtil"
+ * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
  */
 public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormController {
 
@@ -78,11 +78,11 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         return startJob( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(),
-                ExpressionExperimentTask.class.getName(), true );
+                ExpressionExperimentLoadTask.class.getName(), true );
     }
 
     public String run( ExpressionExperimentLoadCommand command ) {
-        return run( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentTask.class.getName(),
+        return run( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
                 true );
     }
 
@@ -121,8 +121,8 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
      * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
      */
     @Override
-    public void setGigaSpacesUtil( GigaSpacesUtil gigaSpacesUtil ) {
-        this.injectGigaspacesUtil( gigaSpacesUtil );
+    public void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+        this.injectGemmaSpacesUtil( gemmaSpacesUtil );
     }
 
     /**
@@ -222,7 +222,7 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
     protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
 
-        final ExpressionExperimentTask eeTaskProxy = ( ExpressionExperimentTask ) updatedContext.getBean( "proxy" );
+        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext.getBean( "proxy" );
 
         return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
 
@@ -271,11 +271,11 @@ public class ExpressionExperimentLoadController extends AbstractGigaSpacesFormCo
 
                 } else {
                     ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
-                    JavaSpacesExpressionExperimentLoadCommand jsCommand = new JavaSpacesExpressionExperimentLoadCommand(
+                    GemmaSpacesExpressionExperimentLoadCommand jsCommand = new GemmaSpacesExpressionExperimentLoadCommand(
                             taskId, eeLoadCommand.isLoadPlatformOnly(), eeLoadCommand.isSuppressMatching(),
                             eeLoadCommand.getAccession(), eeLoadCommand.isAggressiveQtRemoval() );
 
-                    GigaSpacesResult res = eeTaskProxy.execute( jsCommand );
+                    GemmaSpacesResult res = eeTaskProxy.execute( jsCommand );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
                     log.info( "result " + result );
 
