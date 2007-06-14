@@ -34,13 +34,13 @@ import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesProgressEntry;
  * @author keshav
  * @version $Id$
  */
-public class GigaSpacesProgressAppender extends ProgressAppender {
+public class GemmaSpacesProgressAppender extends ProgressAppender {
 
     private GemmaSpacesProgressEntry entry = null;
 
     private GigaSpacesTemplate gigaSpacesTemplate = null;
 
-    public GigaSpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate ) {
+    public GemmaSpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
     }
 

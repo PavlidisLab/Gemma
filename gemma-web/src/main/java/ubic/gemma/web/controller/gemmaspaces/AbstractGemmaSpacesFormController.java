@@ -48,7 +48,7 @@ import com.j_spaces.core.client.NotifyModifiers;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractGigaSpacesFormController extends BackgroundProcessingFormController {
+public abstract class AbstractGemmaSpacesFormController extends BackgroundProcessingFormController {
 
     private GemmaSpacesUtil gemmaSpacesUtil = null;
 
