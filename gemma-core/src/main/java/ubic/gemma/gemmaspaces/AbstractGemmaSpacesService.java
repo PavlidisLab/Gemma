@@ -29,7 +29,7 @@ import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
  */
 public abstract class AbstractGemmaSpacesService {
 
-    protected GemmaSpacesUtil gigaSpacesUtil = null;
+    protected GemmaSpacesUtil gemmaSpacesUtil = null;
 
     protected ApplicationContext updatedContext = null;
 
@@ -37,9 +37,9 @@ public abstract class AbstractGemmaSpacesService {
      * @return ApplicationContext
      */
     public ApplicationContext addGigaspacesToApplicationContext() {
-        if ( gigaSpacesUtil == null ) gigaSpacesUtil = new GemmaSpacesUtil();
+        if ( gemmaSpacesUtil == null ) gemmaSpacesUtil = new GemmaSpacesUtil();
 
-        return gigaSpacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        return gemmaSpacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     /**
@@ -47,15 +47,15 @@ public abstract class AbstractGemmaSpacesService {
      * injectGigaspacesUtil(GigaSpacesUtil gigaSpacesUtil) to "inject" a spring loaded GigaSpacesUtil into this abstract
      * class.
      * 
-     * @param gigaSpacesUtil
+     * @param gemmaSpacesUtil
      */
-    abstract protected void setGigaSpacesUtil( GemmaSpacesUtil gigaSpacesUtil );
+    abstract protected void setGemmaSpacesUtil( GemmaSpacesUtil gigaSpacesUtil );
 
     /**
-     * @param gigaSpacesUtil
+     * @param gemmaSpacesUtil
      */
-    protected void injectGigaspacesUtil( GemmaSpacesUtil gigaspacesUtil ) {
-        this.gigaSpacesUtil = gigaspacesUtil;
+    protected void injectGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+        this.gemmaSpacesUtil = gemmaSpacesUtil;
     }
 
 }

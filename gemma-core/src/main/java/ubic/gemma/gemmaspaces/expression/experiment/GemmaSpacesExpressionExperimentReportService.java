@@ -41,8 +41,8 @@ public class GemmaSpacesExpressionExperimentReportService extends AbstractGemmaS
     }
 
     @Override
-    protected void setGigaSpacesUtil( GemmaSpacesUtil gigaSpacesUtil ) {
-        this.injectGigaspacesUtil( gigaSpacesUtil );
+    protected void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+        this.injectGemmaSpacesUtil( gemmaSpacesUtil );
 
     }
 
