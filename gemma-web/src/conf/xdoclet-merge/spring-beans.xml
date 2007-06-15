@@ -234,6 +234,7 @@
 							<value>getBioMaterialTerms</value>
 							<value>getTermIndividuals</value>
 							<value>getTermRestrictions</value>
+							<value>saveStatement</value>							
 						</list>
 					</property>
 				</bean>
@@ -285,31 +286,73 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.common.description.VocabCharacteristic">
+			<entry key="ubic.gemma.model.common.description.VocabCharacteristicImpl">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
-							<value>id</value>
-							<value>value</value>
-							<value>description</value>
 							<value>termUri</value>
+							<value>properties</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.common.description.Characteristic">
+			<entry key="ubic.gemma.model.common.description.CharacteristicImpl">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
-						<list>
-							<value>id</value>
-							<value>value</value>
-							<value>description</value>
+						<list>							
 						</list>
 					</property>
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.model.common.description.CharacteristicProperty">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>	
+							<value>termUri</value>						
+						</list>
+					</property>
+				</bean>
+			</entry>
+			
+			<entry key="ubic.gemma.model.common.description.CharacteristicPropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>						
+							<value>termUri</value>												
+						</list>
+					</property>
+				</bean>
+			</entry>
+		
+			
+			<entry key="ubic.gemma.model.common.description.PropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>						
+							<value>termUri</value>
+							<value>object</value>							
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.description.DataPropertyImpl">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>							
+							<value>termUri</value>
+							<value>data</value>
+							<value>type</value>							
+						</list>
+					</property>
+				</bean>
+			</entry>
+			
 			<entry key="ubic.gemma.model.genome.Taxon">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
