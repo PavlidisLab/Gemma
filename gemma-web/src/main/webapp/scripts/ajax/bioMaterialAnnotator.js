@@ -64,6 +64,7 @@ var showbms = function( id ) {
 };
 
 var ds;
+var bioMaterialList;
 
 var initBioMaterialGrid = function(div) {
        var     recordType = Ext.data.Record.create([
@@ -88,9 +89,23 @@ var initBioMaterialGrid = function(div) {
        cm.defaultSortable = true;
 
        grid = new Ext.grid.Grid("south-div", {autoSizeColumns: true, ds:ds,cm:cm, loadMask: true });
+       
+       var gridClickHandler = function(grid, rowIndex, event){
+       		//Get the ids of the selected biomaterials and put them in BiomatierialList
+	       	var selected = grid.getSelectionModel().getSelections();	
+	   
+	    	bioMaterialList = [];
+	    	for(var index=0; index<selected.length; index++) {	    		
+	    		bioMaterialList.push(selected[index].id);
+	    	}  	
+       	
+       }
+       
+       grid.on("rowclick", gridClickHandler);
+       
        grid.render();
 
-
+	
        var id = dwr.util.getValue("cslist");
        showbms(id);
 };
@@ -142,7 +157,7 @@ var displayRestrictionsPanel = function(node){
 
 var saveHandler = function(event){
 	console.log(dwr.util.toDescriptiveString(vocabC,10))
-	//MgedOntologyService.saveTerm(vocabC);
+	MgedOntologyService.saveStatement(vocabC, bioMaterialList);
 		
 }
 
@@ -244,11 +259,11 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
         	var divId = (Math.random() * 100000).toFixed();   
            	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});
            	dh.append(divId, {tag: 'h3', html :  "Create an instance of: " + node.term });      
-           	var simple = createForm(restrictedOn,vc, divId);	
+           	var simple = createForm(node,vc, divId);	
            	
            	//If there already exisit individuals display them in a drop down box so the user can select one.
             if ((node.individuals !== undefined) && (node.individuals !== null) && (node.individuals.size() > 0))
-            	simple.column({width:285},createComboBox(restrictedOn, node.individuals, divId)); 	   	    
+            	simple.column({width:285},createComboBox(node, node.individuals, vc, divId)); 	   	    
     		
         	simple.render(divId);
         }
