@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
+import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -55,7 +56,7 @@ public class MgedOntologyService implements InitializingBean {
 
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
-    private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
+    //private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
     private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
 
     public void afterPropertiesSet() throws Exception {
@@ -67,18 +68,25 @@ public class MgedOntologyService implements InitializingBean {
         init();
     }
 
-    public OntologyTerm getTerm( String id ) {
+    public OntologyTerm getTerm( String id ){
 
         OntologyTerm term = terms.get( id );
-
+     
         return term;
     }
+    
+    public void saveStatement(VocabCharacteristicImpl vc, Collection<Long> bioMaterialIdList){
+        
 
+        log.info( "Vocab Characteristic: " + vc );
+        log.info( "Biomaterial ID List: " + bioMaterialIdList );
+    }
+    
     public Collection<OntologyTreeNode> getBioMaterialTerms() {
 
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
 
-        final String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
+        final String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#MGEDOntology";
         OntologyTerm term = terms.get( id );
 
         nodes.add( buildTreeNode( term ) );
