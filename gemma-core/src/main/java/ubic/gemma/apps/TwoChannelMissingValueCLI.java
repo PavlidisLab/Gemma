@@ -140,10 +140,14 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         return null;
     }
 
+    /**
+     * @param ee
+     */
     @SuppressWarnings("unchecked")
     private void processExperiment( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService().getArrayDesignsUsed( ee );
 
+        boolean wasProcessed = false;
         for ( ArrayDesign design : arrayDesignsUsed ) {
             TechnologyType tt = design.getTechnologyType();
             if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
@@ -153,16 +157,25 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 } else {
                     processExperiment( ee, design );
                 }
-                successObjects.add( ee.toString() );
+                wasProcessed = true;
             }
         }
 
-        AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
-        auditTrailService
-                .addUpdateEvent( ee, type, "Computed missing value data on array designs: " + arrayDesignsUsed );
+        if ( !wasProcessed ) {
+            errorObjects.add( ee.getShortName() + " does not use a two-color array design." );
+        } else {
+            AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
+            auditTrailService.addUpdateEvent( ee, type, "Computed missing value data on array designs: "
+                    + arrayDesignsUsed );
+            successObjects.add( ee.toString() );
+        }
 
     }
 
+    /**
+     * @param ee
+     * @param ad
+     */
     @SuppressWarnings("unchecked")
     private void processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
@@ -205,7 +218,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 ex.printStackTrace();
             }
         } catch ( Exception e ) {
-            throw new RuntimeException( e );
+            log.error( e, e );
         }
     }
 
