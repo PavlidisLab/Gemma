@@ -24,15 +24,15 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 
@@ -286,11 +286,33 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     @Override
     protected void handleThaw( final Collection bioSequences ) throws Exception {
+        doThaw( bioSequences, true );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
+     */
+    @Override
+    protected void handleThawLite( final Collection bioSequences ) throws Exception {
+        doThaw( bioSequences, false );
+    }
+
+    /**
+     * @param bioSequences
+     * @param deep
+     */
+    private void doThaw( final Collection bioSequences, final boolean deep ) {
         if ( bioSequences == null ) return;
         if ( bioSequences.size() == 0 ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
+        templ.setFetchSize( 300 );
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
+                session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
+                int count = 0;
                 for ( Object object : bioSequences ) {
                     BioSequence bioSequence = ( BioSequence ) object;
                     session.update( bioSequence );
@@ -298,10 +320,15 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                     bioSequence.getTaxon();
 
-                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-                    if ( dbEntry != null ) {
-                        session.update( dbEntry );
-                        Hibernate.initialize( dbEntry.getExternalDatabase() );
+                    if ( deep ) {
+                        DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+                        if ( dbEntry != null ) {
+                            session.update( dbEntry );
+                            session.update( dbEntry.getExternalDatabase() );
+                        }
+                    }
+                    if ( ++count % 1000 == 0 ) {
+                        log.info( "Thawed " + count + " sequences ..." );
                     }
 
                 }

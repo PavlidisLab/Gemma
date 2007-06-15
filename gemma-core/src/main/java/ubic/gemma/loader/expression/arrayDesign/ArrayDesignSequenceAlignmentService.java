@@ -134,7 +134,7 @@ public class ArrayDesignSequenceAlignmentService {
         arrayDesignService.deleteAlignmentData( ad );
 
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
-        bioSequenceService.thaw( sequencesToBlat );
+        bioSequenceService.thawLite( sequencesToBlat );
 
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
 
@@ -204,7 +204,7 @@ public class ArrayDesignSequenceAlignmentService {
     private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
         Blat blat = new Blat();
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
-        bioSequenceService.thaw( sequencesToBlat );
+        bioSequenceService.thawLite( sequencesToBlat );
         try {
 
             Collection<BioSequence> needBlat = getGoldenPathAlignments( sequencesToBlat, taxon, results );
