@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -316,18 +315,19 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 for ( Object object : bioSequences ) {
                     BioSequence bioSequence = ( BioSequence ) object;
                     session.update( bioSequence );
-                    bioSequence.getBioSequence2GeneProduct().size();
-
-                    bioSequence.getTaxon();
 
                     if ( deep ) {
-                        DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-                        if ( dbEntry != null ) {
-                            session.update( dbEntry );
-                            session.update( dbEntry.getExternalDatabase() );
-                        }
+                        bioSequence.getTaxon();
+                        bioSequence.getBioSequence2GeneProduct().size();
                     }
-                    if ( ++count % 1000 == 0 ) {
+
+                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+                    if ( dbEntry != null ) {
+                        session.update( dbEntry );
+                        session.update( dbEntry.getExternalDatabase() );
+                    }
+
+                    if ( ++count % 2000 == 0 ) {
                         log.info( "Thawed " + count + " sequences ..." );
                     }
 
