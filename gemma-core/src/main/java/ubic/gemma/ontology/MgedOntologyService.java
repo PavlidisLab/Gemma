@@ -20,7 +20,6 @@
 package ubic.gemma.ontology;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,7 +34,9 @@ import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 import ubic.gemma.util.ConfigUtils;
 
+import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.larq.IndexLARQ;
 
 /**
  * Holds a complete copy of the GeneOntology. This gets loaded on startup.
@@ -58,6 +59,8 @@ public class MgedOntologyService implements InitializingBean {
 
     //private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
     private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    
+    private OntModel model;
 
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
@@ -108,6 +111,18 @@ public class MgedOntologyService implements InitializingBean {
         return term.getIndividuals( true );
 
     }
+    
+    public Collection<OntologyTerm> findTerm(String search){
+        
+        if (!this.ready.get())
+            return null;
+        
+        String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
+        IndexLARQ index = OntologyIndexer.indexOntology( url, "mged", model );
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
+        
+        return name;
+    }
 
     /**
      * @param node Recursivly builds the tree node structure that is needed by the ext tree
@@ -141,6 +156,8 @@ public class MgedOntologyService implements InitializingBean {
             log.info( "Loading Mged is disabled" );
             return;
         }
+        
+        //Load the mged model for searching
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
@@ -152,6 +169,7 @@ public class MgedOntologyService implements InitializingBean {
                 loadTime.start();
                 //
                 try {
+                    model = OntologyLoader.loadMemoryModel( MGED_URL, OntModelSpec.OWL_MEM );
                     loadTermsInNameSpace( MGED_URL );
                     log.info( "MGED Ontology loaded, total of " + terms.size() + " items in " + loadTime.getTime()
                             / 1000 + "s" );
@@ -181,8 +199,8 @@ public class MgedOntologyService implements InitializingBean {
      * @param url
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( String url ) throws IOException {
-        Collection<OntologyResource> terms = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM );
+    protected void loadTermsInNameSpace( String url ) throws IOException {       
+        Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
         addTerms( terms );
     }
 
@@ -192,10 +210,10 @@ public class MgedOntologyService implements InitializingBean {
      * @param is
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( InputStream is ) throws IOException {
-        Collection<OntologyResource> terms = OntologyLoader.loadMemoryModel( is, null, OntModelSpec.OWL_MEM );
-        addTerms( terms );
-    }
+//    protected void loadTermsInNameSpace( InputStream is ) throws IOException {
+//        Collection<OntologyResource> terms = OntologyLoader.ini
+//        addTerms( terms );
+//    }
 
     private void addTerms( Collection<OntologyResource> newTerms ) {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();

@@ -50,7 +50,7 @@ public class OntologyTools {
     public static void initOntology( InputStream is, String name, OntModelSpec spec ) {
         Collection<OntologyResource> terms;
         try {
-            terms = OntologyLoader.loadMemoryModel( is, name, spec );
+            terms = OntologyLoader.initialize( name,OntologyLoader.loadMemoryModel( is, name, spec ));
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -63,7 +63,7 @@ public class OntologyTools {
     public static void initOntology( String url, OntModelSpec spec ) {
         Collection<OntologyResource> terms;
         try {
-            terms = OntologyLoader.loadMemoryModel( url, spec );
+            terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, spec ));
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

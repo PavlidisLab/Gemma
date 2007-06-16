@@ -204,10 +204,10 @@ public class OntologyLoader {
      * @return
      * @throws IOException
      */
-    public static Collection<OntologyResource> loadMemoryModel( String url, OntModelSpec spec ) throws IOException {
+    public static OntModel loadMemoryModel( String url, OntModelSpec spec ) throws IOException {
         OntModel model = getMemoryModel( url, spec );
         model.read( url );
-        return initialize( url, model );
+        return model;
     }
 
     /**
@@ -218,11 +218,11 @@ public class OntologyLoader {
      * @return
      * @throws IOException
      */
-    public static Collection<OntologyResource> loadMemoryModel( InputStream is, String name, OntModelSpec spec )
+    public static OntModel loadMemoryModel( InputStream is, String name, OntModelSpec spec )
             throws IOException {
         OntModel model = getMemoryModel( name, spec );
         model.read( is, null );
-        return initialize( name, model );
+        return model;
     }
 
     /**
@@ -243,7 +243,7 @@ public class OntologyLoader {
      * @param model
      * @return
      */
-    private static Collection<OntologyResource> initialize( String url, OntModel model ) {
+    public static Collection<OntologyResource> initialize( String url, OntModel model ) {
         ExternalDatabase database = ontologyAsExternalDatabase( url );
         Collection<OntologyResource> result = new HashSet<OntologyResource>();
 
