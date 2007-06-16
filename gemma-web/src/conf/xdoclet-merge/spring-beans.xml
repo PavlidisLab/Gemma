@@ -99,6 +99,11 @@
 <!--  ============================================ -->
 <!--             DWR CONFIGURATION                 -->
 <!--  ============================================ -->
+
+<bean id="characteristicPropertyConverter" class="ubic.gemma.model.common.description.CharacteristicPropertyConverter">
+</bean>
+
+
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
 	<property name="creators">
 		<map>
@@ -234,7 +239,8 @@
 							<value>getBioMaterialTerms</value>
 							<value>getTermIndividuals</value>
 							<value>getTermRestrictions</value>
-							<value>saveStatement</value>							
+							<value>saveStatement</value>		
+							<value>findTerm</value>					
 						</list>
 					</property>
 				</bean>
@@ -308,7 +314,7 @@
 			</entry>
 			<entry key="ubic.gemma.model.common.description.CharacteristicProperty">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
+					<property name="type" value="characteristicPropertyConverter" />
 					<property name="includes">
 						<list>	
 							<value>termUri</value>						

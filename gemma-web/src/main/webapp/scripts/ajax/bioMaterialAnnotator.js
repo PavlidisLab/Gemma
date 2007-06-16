@@ -358,12 +358,59 @@ var propertiesPush = function(vc, fieldId, toAdd){
 //the vc = the vocabulary charactersit we are trying to create. 
 var createForm = function(subject, vc, divId){
 
-	var lookUp = 	new Ext.form.TextField({
-            fieldLabel: 'Lookup',
-            name: 'lookup',
-            width:150,
-            allowBlank:true	});
-    lookUp.vocabId = divId;
+//	var lookUp = 	new Ext.form.TextField({
+//            fieldLabel: 'Lookup',
+//            name: 'lookup',
+//            width:150,
+//            allowBlank:true	});
+//    lookUp.vocabId = divId;
+	
+ var     recordType = Ext.data.Record.create([
+                       {name:"id", type:"string"},
+                       {name:"text", type:"string"},
+               ]);
+
+
+       ds = new Ext.data.Store(
+               {
+                       proxy:new Ext.data.DWRProxy(MgedOntologyService.findTerm),
+                       reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
+                       remoteSort:false,
+                       sortInfo:{field:'id'}
+               });
+
+       var cm = new Ext.grid.ColumnModel([
+                       {header: "Label", width: 50, dataIndex:"text"},
+                       {header: "Uri",  width: 80, dataIndex:"id"}
+                       ]);
+       cm.defaultSortable = true;	
+	
+//================================
+    
+    
+     // Custom rendering Template
+    var resultTpl = new Ext.Template(
+        '<div class="search-item">',
+            '<h3><span>{id}</span>{text}</h3>',
+            '{excerpt}',
+        '</div>'
+    );
+    
+    var search = new Ext.form.ComboBox({
+        store: ds,
+        displayField:'title',
+        fieldLabel: 'Lookup',
+        typeAhead: false,
+        loadingText: 'Searching...',
+        width: 570,
+        pageSize:10,
+        tpl: resultTpl,
+        hideTrigger:true,      
+        onSelect: function(record){ // override default onSelect to do redirect
+          
+        }
+    });
+    search.vocabId = divId;
 	
 	var custom =   new Ext.form.TextField({
             fieldLabel: 'custom',
@@ -387,8 +434,8 @@ var createForm = function(subject, vc, divId){
     });
 					    
     simple.column(
-    	{width:250},
-        lookUp
+    	{width:300},
+        search
         );
 
 	simple.column(
