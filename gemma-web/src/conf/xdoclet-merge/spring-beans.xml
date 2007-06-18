@@ -100,7 +100,7 @@
 <!--             DWR CONFIGURATION                 -->
 <!--  ============================================ -->
 
-<bean id="characteristicPropertyConverter" class="ubic.gemma.model.common.description.CharacteristicPropertyConverter">
+<bean id="characteristicPropertyConverter" class="ubic.gemma.web.dwr.CharacteristicPropertyConverter">
 </bean>
 
 
