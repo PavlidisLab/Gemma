@@ -587,10 +587,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon ) throws Exception {
-        if ( ees.size() > 70 ) { // what is the magic number 70?
-            String tableName = getTableName( taxon, true );
-            createTable( tableName );
-        }
+    	String tableName = getTableName( taxon, true );
+    	createTable( tableName );
         int i = 1;
         for ( Object ee : ees ) {
             log.info( "Filtering EE " + ( ( ExpressionExperiment ) ee ).getShortName() + "(" + i + "/" + ees.size()
