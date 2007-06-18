@@ -136,12 +136,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 // link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
                 continue;
             }
-            boolean filtered = false;
-            for ( Long firstGene : firstGenes ) {
-                if ( secondGenes.contains( firstGene ) ) // probe1 is hybridized with probe2
-                    filtered = true;
-            }
-            if ( filtered ) continue;
+//            boolean filtered = false;
+//            for ( Long firstGene : firstGenes ) {
+//                if ( secondGenes.contains( firstGene ) ) // probe1 is hybridized with probe2
+//                    filtered = true;
+//            }
+//            if ( filtered ) continue;
             if ( link.getFirst_design_element_fk() > maximumId ) maximumId = link.getFirst_design_element_fk();
             if ( link.getSecond_design_element_fk() > maximumId ) maximumId = link.getSecond_design_element_fk();
             specificLinks.add( link );
