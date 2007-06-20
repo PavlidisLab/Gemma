@@ -356,6 +356,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         simpleAclEntry.setMask( getAuthority() );
 
         String recipient = UserDetailsServiceImpl.getCurrentUsername();
+        /* if user logged in is user=administrator, all anonymous to see it */
         if ( StringUtils.equalsIgnoreCase( recipient, ADMINISTRATOR ) ) {
             recipient = ANONYMOUS;
         }
