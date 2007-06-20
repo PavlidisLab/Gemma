@@ -23,6 +23,8 @@
 	action="<c:url value="/securityManager.html"/>">
 
 	<table>
+	
+		<tr><b> Make Data Public/Private <br/><br/> </b></tr>
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="security.securableType" /> </b>
@@ -72,14 +74,6 @@
             	</spring:bind>
         	</td>
 		</tr>
-		
-		<tr>
-			<ul class="glassList">
-				<li>
-					<a href="<c:url value="/signup.html"/>"> Add Another User </a>
-				</li>
-			</ul>
-		</tr>	
 	</table>
 
 	<table>
@@ -91,6 +85,21 @@
 					value="<fmt:message key="button.cancel"/>" />
 			</td>
 		</tr>
+	</table>
+	
+	<table>
+		<tr>
+			<br/><br/>
+			<b> Other Security Related Operations <br/><br/> </b>
+		</tr>
+			
+		<tr>
+			<ul class="glassList">
+				<li>
+					<a href="<c:url value="/signup.html"/>"> Add Another User </a>
+				</li>
+			</ul>
+		</tr>	
 	</table>
 	
 </form>
