@@ -6,6 +6,7 @@ import java.util.Date;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -36,6 +37,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;
+    private ArrayDesignReportService arrayDesignReportService;
 
     /*
      * (non-Javadoc)
@@ -141,7 +143,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         super.processOptions();
         arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
-
+        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         if ( this.hasOption( 't' ) ) {
@@ -162,6 +164,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignGeneMappingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

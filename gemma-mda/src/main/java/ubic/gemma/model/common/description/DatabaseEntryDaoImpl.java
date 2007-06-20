@@ -97,8 +97,12 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
             log.warn( "No composite sequences are associated with " + databaseEntry );
             return null;
         } else if ( compositeSequences.size() > 1 ) {
+            for ( Object object : compositeSequences ) {
+                log.info( object );
+            }
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException( compositeSequences.size()
-                    + " composite sequences associated with multiple database entries for the same accession " );
+                    + " composite sequences associated with multiple database entries for the same accession: "
+                    + databaseEntry );
         } else {
             Object o = compositeSequences.iterator().next();
             assert o instanceof CompositeSequence : "Expected CompositeSequence, got a " + o.getClass().getName();

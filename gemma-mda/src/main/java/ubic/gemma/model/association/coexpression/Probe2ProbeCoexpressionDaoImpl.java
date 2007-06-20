@@ -36,6 +36,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -408,25 +409,31 @@ public class Probe2ProbeCoexpressionDaoImpl extends
              * datavectors for this ee.
              */
             final String queryString = "select pp from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee=:ee";
+                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee= :ee ";
 
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setMaxResults( LINK_DELETE_BATCH_SIZE );
             queryObject.setParameter( "ee", ee );
 
             // we query iteratively until there are no more links to get. This takes much less memory than doing it all
-            // at once.
+            // at once. However, it is very easy for this loop to leak memory like crazy.
             while ( true ) {
                 final Collection results = queryObject.list();
 
                 if ( results.size() == 0 ) break;
 
-                remove( results );
+                HibernateTemplate templ = this.getHibernateTemplate();
+                templ.setFetchSize( 10000 ); // does this do anything? probably not.
+                templ.deleteAll( results );
+                templ.flush();
+                templ.clear();
 
                 Integer numDone = results.size();
 
                 totalDone += numDone;
 
+                results.clear(); // probably pointless.
+                
                 log.info( "Delete link progress: " + totalDone + " ..." );
             }
 

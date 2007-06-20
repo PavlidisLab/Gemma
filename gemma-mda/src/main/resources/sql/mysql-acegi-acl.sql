@@ -28,6 +28,8 @@ INSERT INTO acl_object_identity VALUES (1, 'globalDummyParent:1', null, 'org.ace
 --- (id, acl object identity, recepient (principal username), mask)
 INSERT INTO acl_permission VALUES (null, 1, 'administrator', 1);
 
+alter table acl_permission add index acl_object_identity_key (acl_object_identity);
+
 
 --- Mask integer 0  = no permissions
 --- Mask integer 1  = administrator

@@ -34,6 +34,7 @@ import ubic.gemma.analysis.linkAnalysis.LinkAnalysisConfig;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
@@ -72,6 +73,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
 
     private ExpressionExperimentService eeService = null;
 
+    private ExpressionExperimentReportService expressionExperimentReportService;
+
     private LinkAnalysisService linkAnalysisService;
 
     private FilterConfig filterConfig = new FilterConfig();
@@ -84,6 +87,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
      * @param arrayDesign
      */
     private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
+        expressionExperimentReportService.generateSummaryObject( ee.getId() );
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
@@ -212,7 +216,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
                 if ( expressionExperiment == null ) {
                     continue;
                 }
-                eeService.thawLite(expressionExperiment);
+                eeService.thawLite( expressionExperiment );
                 if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                     return null;
                 }
@@ -273,7 +277,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
         if ( hasOption( 'd' ) ) {
             this.linkAnalysisConfig.setUseDb( false );
         }
-
+        this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
+                .getBean( "expressionExperimentReportService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 }

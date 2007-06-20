@@ -149,9 +149,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
             String style = "";
             if ( type instanceof FailedLinkAnalysisEvent ) {
-                style = "style=\"color:#F33;\"";
+                // FIXME get access to the error message; you need to have the AuditTrail in the object.
+                style = "style=\"color:#F33;\" title='There was an error during analysis'";
             } else if ( type instanceof TooSmallDatasetLinkAnalysisEvent ) {
-                style = "style=\"font-style:italic;\"";
+                style = "style=\"font-style:italic;\" title='This dataset was too small to analyze'";
             }
 
             String fullDate = dateObject.toString();

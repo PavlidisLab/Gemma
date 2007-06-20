@@ -28,6 +28,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
@@ -56,6 +57,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private String taxonName;
 
     private Taxon taxon;
+
+    private ArrayDesignReportService arrayDesignReportService;
 
     /*
      * (non-Javadoc)
@@ -221,6 +224,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
@@ -249,7 +253,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         arrayDesignSequenceAlignmentService = ( ArrayDesignSequenceAlignmentService ) this
                 .getBean( "arrayDesignSequenceAlignmentService" );
-
+        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
     }
 
 }
