@@ -34,4 +34,23 @@ public class UserConstants {
      */
     public static final String USER_ROLE = "user";
 
+    /**
+     * Name of the user when no actual authenticated user is needed.
+     */
+    public static final String ANONYMOUS_USERNAME = "anonymous";
+
+    /**
+     * Objects are grouped in a hierarchy. A default 'parent' is defined in the database. This must match an entry in
+     * the ACL_OBJECT_IDENTITY table. In Gemma this is added as part of database initialization (see mysql-acegy-acl.sql
+     * for MySQL version)
+     */
+    public static final String DEFAULT_PARENT = "globalDummyParent";
+
+    /**
+     * The primary key to use for the DEFAULT_PARENT
+     * 
+     * @see DEFAULT_PARENT
+     */
+    public static final String DEFAULT_PARENT_ID = "1";
+
 }

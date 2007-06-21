@@ -61,6 +61,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.ReflectionUtil;
+import ubic.gemma.util.UserConstants;
 
 /**
  * Adds security controls to newly created objects, and removes them for objects that are deleted. Methods in this
@@ -80,27 +81,11 @@ import ubic.gemma.util.ReflectionUtil;
  */
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
-    private static final int ADMIN_OBJECT_IDENTITY = 1;
-
-    private static final String ANONYMOUS = "anonymous";
-
     CrudUtils crudUtils;
 
     public AddOrRemoveFromACLInterceptor() {
         this.crudUtils = new CrudUtils();
     }
-
-    /**
-     * Objects are grouped in a hierarchy. A default 'parent' is defined in the database. This must match an entry in
-     * the ACL_OBJECT_IDENTITY table. In Gemma this is added as part of database initialization (see mysql-acegy-acl.sql
-     * for MySQL version)
-     */
-    private static final String DEFAULT_PARENT = "globalDummyParent";
-
-    /**
-     * @see DEFAULT_PARENT
-     */
-    private static final String DEFAULT_PARENT_ID = "1";
 
     private static Log log = LogFactory.getLog( AddOrRemoveFromACLInterceptor.class.getName() );
 
@@ -140,7 +125,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         AbstractBasicAclEntry simpleAclEntry = getAclEntry( object );
 
         /* By default we assign the object to have the default global parent. */
-        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( DEFAULT_PARENT, DEFAULT_PARENT_ID ) );
+        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( UserConstants.DEFAULT_PARENT,
+                UserConstants.DEFAULT_PARENT_ID ) );
 
         try {
             basicAclExtendedDao.create( simpleAclEntry );
@@ -376,8 +362,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         /* If you are an admin (any admin) and are loading data, set recipient = ANONYMOUS on the data */
         else {
             for ( UserRole role : roles ) {
-                if ( StringUtils.equals( role.getName(), "admin" ) ) {
-                    recipient = ANONYMOUS;
+                if ( StringUtils.equals( role.getName(), UserConstants.ADMIN_ROLE ) ) {
+                    recipient = UserConstants.ANONYMOUS_USERNAME;
                     break;
                 }
             }
@@ -440,7 +426,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
         GrantedAuthority[] ga = auth.getAuthorities();
         for ( int i = 0; i < ga.length; i++ ) {
-            if ( ga[i].equals( "admin" ) ) {
+            if ( ga[i].equals( UserConstants.ADMIN_ROLE ) ) {
                 // if ( log.isDebugEnabled() ) log.debug( "Granting ADMINISTRATION privileges" );
                 return SimpleAclEntry.ADMINISTRATION;
             }
