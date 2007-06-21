@@ -47,8 +47,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import ubic.gemma.model.association.Relationship;
 import ubic.gemma.model.common.Securable;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -79,8 +81,11 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="crudUtils" ref="crudUtils"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="customAclDao" ref="customAclDao"
+ * @spring.property name="userService" ref="userService"
  */
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
+
+    private static final String ROLE_ADMIN = "admin";
 
     private static final String ANONYMOUS = "anonymous";
 
@@ -134,6 +139,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     private CustomAclDao customAclDao;
 
+    private UserService userService;
+
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
@@ -172,9 +179,20 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             // }
         }
 
-        /* if not anonymous, then we are adding an admin FIXME get user from db so you can get role */
-        if ( !StringUtils.equals( simpleAclEntry.getRecipient().toString(), ANONYMOUS ) ) {
-            customAclDao.updateAclObjectIdentityInAclPermission( simpleAclEntry.getRecipient().toString() );
+        /*
+         * If not anonymous, then we are adding an admin. If userJustAdded is null, then we are not adding a new user to
+         * the system, we are adding other data so skip this.
+         */
+        // FIXME this will be a problem if recipient is not anonymous. Currently, we don't do that but beware.
+        User userJustAdded = userService.findByUserName( simpleAclEntry.getRecipient().toString() );
+        if ( userJustAdded != null ) {
+            Collection<UserRole> roles = userJustAdded.getRoles();
+            for ( UserRole r : roles ) {
+                if ( StringUtils.equals( r.getName(), ROLE_ADMIN ) ) {
+                    customAclDao.updateAclObjectIdentityInAclPermission( simpleAclEntry.getRecipient().toString() );
+                    break;
+                }
+            }
         }
     }
 
@@ -384,7 +402,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         /* If you are an admin (any admin) and are loading data, set recipient = ANONYMOUS on the data */
         else {
             for ( UserRole role : roles ) {
-                if ( StringUtils.equals( role.getName(), "admin" ) ) {
+                if ( StringUtils.equals( role.getName(), ROLE_ADMIN ) ) {
                     recipient = ANONYMOUS;
                     break;
                 }
@@ -448,7 +466,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
         GrantedAuthority[] ga = auth.getAuthorities();
         for ( int i = 0; i < ga.length; i++ ) {
-            if ( ga[i].equals( "admin" ) ) {
+            if ( ga[i].equals( ROLE_ADMIN ) ) {
                 // if ( log.isDebugEnabled() ) log.debug( "Granting ADMINISTRATION privileges" );
                 return SimpleAclEntry.ADMINISTRATION;
             }
@@ -464,8 +482,18 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         this.crudUtils = crudUtils;
     }
 
+    /**
+     * @param customAclDao
+     */
     public void setCustomAclDao( CustomAclDao customAclDao ) {
         this.customAclDao = customAclDao;
+    }
+
+    /**
+     * @param userService
+     */
+    public void setUserService( UserService userService ) {
+        this.userService = userService;
     }
 
 }

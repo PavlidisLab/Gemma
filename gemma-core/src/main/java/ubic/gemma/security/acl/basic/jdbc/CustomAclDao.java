@@ -41,8 +41,6 @@ public class CustomAclDao {
      * @param recipient
      */
     public void updateAclObjectIdentityInAclPermission( String recipient ) {
-        // TODO use the id instead of the recipient
-
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.execute( "update acl_permission set acl_object_identity=1 where recipient=" + "\'" + recipient
                 + "\'" );
