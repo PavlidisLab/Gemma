@@ -586,7 +586,13 @@
             <ref bean="dataSource"/>
         </property>
     </bean>
-    
+   
+    <bean id="customAclDao" class="ubic.gemma.security.acl.basic.jdbc.CustomAclDao">
+        <property name="dataSource">
+            <ref bean="dataSource"/>
+        </property>
+    </bean>
+     
     <!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~~~~ -->
     
     <!-- ACL permission masks -->
