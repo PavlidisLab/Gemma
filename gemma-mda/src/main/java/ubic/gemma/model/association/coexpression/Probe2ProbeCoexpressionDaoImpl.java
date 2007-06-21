@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -137,12 +138,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 // link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
                 continue;
             }
-//            boolean filtered = false;
-//            for ( Long firstGene : firstGenes ) {
-//                if ( secondGenes.contains( firstGene ) ) // probe1 is hybridized with probe2
-//                    filtered = true;
-//            }
-//            if ( filtered ) continue;
+            // boolean filtered = false;
+            // for ( Long firstGene : firstGenes ) {
+            // if ( secondGenes.contains( firstGene ) ) // probe1 is hybridized with probe2
+            // filtered = true;
+            // }
+            // if ( filtered ) continue;
             if ( link.getFirst_design_element_fk() > maximumId ) maximumId = link.getFirst_design_element_fk();
             if ( link.getSecond_design_element_fk() > maximumId ) maximumId = link.getSecond_design_element_fk();
             specificLinks.add( link );
@@ -423,7 +424,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 if ( results.size() == 0 ) break;
 
                 HibernateTemplate templ = this.getHibernateTemplate();
-                templ.setFetchSize( 10000 ); // does this do anything? probably not.
                 templ.deleteAll( results );
                 templ.flush();
                 templ.clear();
@@ -432,9 +432,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
                 totalDone += numDone;
 
-                results.clear(); // probably pointless.
-                
                 log.info( "Delete link progress: " + totalDone + " ..." );
+
+                if ( results.size() < LINK_DELETE_BATCH_SIZE ) break;
             }
 
             if ( totalDone > 0 ) {
@@ -594,8 +594,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon ) throws Exception {
-    	String tableName = getTableName( taxon, true );
-    	createTable( tableName );
+        String tableName = getTableName( taxon, true );
+        createTable( tableName );
         int i = 1;
         for ( Object ee : ees ) {
             log.info( "Filtering EE " + ( ( ExpressionExperiment ) ee ).getShortName() + "(" + i + "/" + ees.size()
