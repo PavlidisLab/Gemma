@@ -81,7 +81,7 @@ public class MgedOntologyService implements InitializingBean {
     public void saveStatement(VocabCharacteristicImpl vc, Collection<Long> bioMaterialIdList){
         
 
-        log.info( "Vocab Characteristic: " + vc );
+        log.info( "Vocab Characteristic: " + vc.getDescription() );
         log.info( "Biomaterial ID List: " + bioMaterialIdList );
     }
     

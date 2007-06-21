@@ -100,11 +100,18 @@
 <!--             DWR CONFIGURATION                 -->
 <!--  ============================================ -->
 
-<bean id="characteristicPropertyConverter" class="ubic.gemma.web.dwr.CharacteristicPropertyConverter">
-</bean>
+
 
 
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
+
+	<property name="converterTypes">
+		<map>
+			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.dwr.CharacteristicPropertyConverter">		
+			</entry>
+		</map>
+	</property>
+
 	<property name="creators">
 		<map>
 			<entry key="GeneController">
