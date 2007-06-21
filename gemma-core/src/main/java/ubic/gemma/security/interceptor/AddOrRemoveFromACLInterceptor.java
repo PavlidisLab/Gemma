@@ -48,6 +48,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import ubic.gemma.model.association.Relationship;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
+import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -79,9 +80,9 @@ import ubic.gemma.util.ReflectionUtil;
  */
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
-    private static final String ANONYMOUS = "anonymous";
+    private static final int ADMIN_OBJECT_IDENTITY = 1;
 
-    private static final String ADMINISTRATOR = "administrator";
+    private static final String ANONYMOUS = "anonymous";
 
     CrudUtils crudUtils;
 
@@ -358,10 +359,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
         String recipient = UserDetailsServiceImpl.getCurrentUsername();
 
+        Collection<UserRole> roles = UserDetailsServiceImpl.getCurrentUser().getRoles();
+
         /*
          * First, check if we are adding a new user to the system. If so, set the entry in the acl permissions table to
-         * have a recipient equal to the username of the user to be added. FIXME - you only want to do this if you are
-         * adding another user with role=admin since only admins can load data.
+         * have a recipient equal to the username of the user to be added. Also, set the object_identity=1. FIXME - you
+         * only want to do this to the acl_permission of the UserImpl if the user being added is an administrator (has
+         * role=admin) since only admins can load data.
          */
         if ( object instanceof UserImpl ) {
             UserImpl newUser = ( UserImpl ) object;
@@ -369,12 +373,14 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             simpleAclEntry.setMask( SimpleAclEntry.ADMINISTRATION );
         }
 
-        /*
-         * If we are not adding a new user to the system, check if user loading data is logged in is user=administrator.
-         * If so, set recipient=anonymous the data can be see by all.
-         */
-        else if ( StringUtils.equalsIgnoreCase( recipient, ADMINISTRATOR ) ) {
-            recipient = ANONYMOUS;
+        /* If you are an admin (any admin) and are loading data, set recipient = ANONYMOUS on the data */
+        else {
+            for ( UserRole role : roles ) {
+                if ( StringUtils.equals( role.getName(), "admin" ) ) {
+                    recipient = ANONYMOUS;
+                    break;
+                }
+            }
         }
 
         simpleAclEntry.setRecipient( recipient );
