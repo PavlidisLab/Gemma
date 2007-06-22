@@ -28,6 +28,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
+import ubic.gemma.analysis.linkAnalysis.BitMatrixUtil;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
@@ -204,9 +205,10 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             }
             System.err.println( "Finish Loading!" );
             watch.reset();
+            BitMatrixUtil bitMatrixUtil = linkFinder.getBitMatrixUtil();
             watch.start();
 
-            LinkGraphClustering clustering = new LinkGraphClustering( 6 );
+            LinkGraphClustering clustering = new LinkGraphClustering( 6, bitMatrixUtil, linkFinder);
             // clustering.testSerilizable();
             if ( this.writeClusteringTree ) {
                 clustering.run();
@@ -237,7 +239,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             LinkGraphClustering.collectTreeNodes( leafNodes, new ObjectArrayList(), testNode );
             GraphViewer gviewer1 = new GraphViewer( leafNodes, false );
             gviewer1.run();
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6 );
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6,bitMatrixUtil,linkFinder);
             freFinder.find( leafNodes );
             watch.stop();
             log.info( "Spend " + watch.getTime() / 1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );

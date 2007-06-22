@@ -183,13 +183,11 @@ public class MetaLinkFinder {
             }
         }
     }
-//    public String getLinkName( long id ) {
-//        Gene[] pairedGene = bitMatrixUtil.getPairedGenes( id );
-//        while ( geneOntologyService.isGeneOntologyLoaded() )
-//            ;
-//        return pairedGene[0].getName() + "_" + pairedGene[1].getName() + "_"
-//                + computeGOOverlap( pairedGene[0], pairedGene[1] );
-//    }
+    public String getLinkName( long id ) {
+        Gene[] pairedGene = bitMatrixUtil.getPairedGenes( id );
+        return pairedGene[0].getName() + "_" + pairedGene[1].getName() + "_"
+                + utilService.computeGOOverlap( pairedGene[0], pairedGene[1] );
+    }
 
     // rank: the number of top ranked GO terms to return
     public Map<OntologyTerm, Integer> computeGOOverlap( Collection<Long> treeIds, int rank ) {
