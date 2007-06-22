@@ -19,6 +19,7 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,11 +34,13 @@ import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 
@@ -77,6 +80,25 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             log.error( ad );
         }
 
+    }
+
+    @Override
+    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
+        }
+
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                session.update( arrayDesign );
+                arrayDesign.getMergees().clear();
+                arrayDesign.getSubsumedArrayDesigns().clear();
+                return null;
+            }
+        } );
+
+        this.getHibernateTemplate().delete( arrayDesign );
     }
 
     /**
@@ -1064,7 +1086,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                log.info( "Thawing " + arrayDesign + " ..." );
 
                 // The following are VERY important for performance.
                 FlushMode oldFlushMode = session.getFlushMode();
@@ -1073,6 +1094,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
 
                 session.lock( arrayDesign, LockMode.NONE );
+
+                log.info( "Thawing " + arrayDesign + " ..." );
+
                 arrayDesign.getLocalFiles().size();
                 for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
                     session.update( d );
@@ -1118,6 +1142,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
+                    cs.getComponentReporters().size();
                     BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
                         continue;
