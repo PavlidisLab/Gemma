@@ -542,7 +542,6 @@
 			<plugin>
 				<artifactId>xdoclet-maven-plugin</artifactId>
 				<groupId>org.codehaus.mojo</groupId>
-				<version>1.0-alpha-2</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>
@@ -583,6 +582,11 @@
 						<version>1.2.3</version>
 						<scope>compile</scope>
 						<type>jar</type>
+					</dependency>
+					<dependency>
+						<groupId>ant</groupId>
+						<artifactId>ant</artifactId>
+						<version>1.6.5</version>
 					</dependency>
 				</dependencies>
 			</plugin>
