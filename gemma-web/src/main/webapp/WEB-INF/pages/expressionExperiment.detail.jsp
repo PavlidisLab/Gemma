@@ -2,13 +2,25 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
+<head>
 <title>
 	Expression experiment <%
 	if ( expressionExperiment.getName() != null ) {
 	%>: <jsp:getProperty name="expressionExperiment" property="name" /> <%
  }
  %>
-</title>
+ </title>
+ 
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+    <script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+
+</head>
 
 <form style="float: right;" name="ExpresssionExperimentFilter"
 	action="filterExpressionExperiments.html" method="POST">
@@ -319,6 +331,14 @@ if ( expressionExperiment.getName() != null ) {
 		Biomaterials and Assays <a href="/Gemma/expressionExperiment/showBioMaterialsFromExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>">(list samples)</a>
 	</h3>
 	<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
+</authz:authorize>
+
+
+<authz:authorize ifAnyGranted="admin">
+	<h3>History</h3>
+	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
+	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 </authz:authorize>
 
 

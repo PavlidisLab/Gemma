@@ -99,19 +99,13 @@
 <!--  ============================================ -->
 <!--             DWR CONFIGURATION                 -->
 <!--  ============================================ -->
-
-
-
-
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
-
 	<property name="converterTypes">
 		<map>
-			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.dwr.CharacteristicPropertyConverter">		
+			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.dwr.CharacteristicPropertyConverter">
 			</entry>
 		</map>
 	</property>
-
 	<property name="creators">
 		<map>
 			<entry key="GeneController">
@@ -246,8 +240,8 @@
 							<value>getBioMaterialTerms</value>
 							<value>getTermIndividuals</value>
 							<value>getTermRestrictions</value>
-							<value>saveStatement</value>		
-							<value>findTerm</value>					
+							<value>saveStatement</value>
+							<value>findTerm</value>
 						</list>
 					</property>
 				</bean>
@@ -280,6 +274,20 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="AuditController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="auditController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getEvents</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 		</map>
 	</property>
 	<property name="converters">
@@ -290,6 +298,7 @@
 					<property name="includes">
 						<list>
 							<value>id</value>
+							<value>classDelegatingFor</value>
 						</list>
 					</property>
 				</bean>
@@ -314,8 +323,7 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
-						<list>							
-						</list>
+						<list></list>
 					</property>
 				</bean>
 			</entry>
@@ -323,32 +331,29 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicPropertyConverter" />
 					<property name="includes">
-						<list>	
-							<value>termUri</value>						
+						<list>
+							<value>termUri</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			
 			<entry key="ubic.gemma.model.common.description.CharacteristicPropertyImpl">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
-						<list>						
-							<value>termUri</value>												
+						<list>
+							<value>termUri</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-		
-			
 			<entry key="ubic.gemma.model.common.description.PropertyImpl">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
-						<list>						
+						<list>
 							<value>termUri</value>
-							<value>object</value>							
+							<value>object</value>
 						</list>
 					</property>
 				</bean>
@@ -357,15 +362,14 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
-						<list>							
+						<list>
 							<value>termUri</value>
 							<value>data</value>
-							<value>type</value>							
+							<value>type</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			
 			<entry key="ubic.gemma.model.genome.Taxon">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -418,10 +422,10 @@
 					<property name="includes">
 						<list>
 							<value>id</value>
-							<value>name</value>							
+							<value>name</value>
 							<value>description</value>
-						</list>						
-					</property>									
+						</list>
+					</property>
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.util.progress.ProgressData">
@@ -703,6 +707,35 @@
 			<entry key="ubic.gemma.ontology.OntologyTreeNode">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.auditAndSecurity.AuditEvent">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.common.auditAndSecurity.User">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<property name="includes">
+						<list>
+							<value>userName</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.common.auditAndSecurity.AuditEventValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>performer</value>
+							<value>date</value>
+							<value>actionName</value>
+							<value>eventTypeName</value>
+							<value>note</value>
+						</list>
+					</property>
 				</bean>
 			</entry>
 		</map>

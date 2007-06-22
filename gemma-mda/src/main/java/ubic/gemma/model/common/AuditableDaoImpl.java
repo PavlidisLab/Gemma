@@ -36,6 +36,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
      */
     @Override
     public Collection handleGetAuditEvents( final Auditable auditable ) {
+        if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
         return ( Collection ) getHibernateTemplate().execute(
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )

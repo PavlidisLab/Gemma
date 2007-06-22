@@ -6,8 +6,27 @@
 	class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
 <!DOCTYPE html PUBLIC "-//W3C//Dtd html 4.01 transitional//EN">
-<title><jsp:getProperty name="arrayDesign" property="name" />
-</title>
+<head>
+	<title><jsp:getProperty name="arrayDesign" property="name" />
+	</title>
+
+	<script
+		src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
+		type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>"
+		type="text/javascript"></script>
+	<script type="text/javascript"
+		src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript"
+		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript'
+		src='/Gemma/dwr/interface/AuditController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type="text/javascript"
+		src="<c:url value='/scripts/ajax/auditTrail.js'/>"
+		type="text/javascript"></script>
+</head>
 
 <h2>
 	Details for
@@ -269,42 +288,61 @@
 		<td>
 			<Gemma:arrayDesignGrouping subsumer="${merger }" />
 	</tr>
-
-	<table>
+	<authz:authorize ifAnyGranted="admin">
 		<tr>
 			<td colspan="2">
-				<hr />
+
+
+				<h3>
+					History
+				</h3>
+				<div id="auditTrail" class="x-grid-mso"
+					style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+				<input type="hidden" name="auditableId" id="auditableId"
+					value="${arrayDesign.id}" />
+				<input type="hidden" name="auditableClass" id="auditableClass"
+					value="${arrayDesign.class.name}" />
+
 			</td>
 		</tr>
-		<tr>
-			<td colspan="2">
+	</authz:authorize>
+</table>
+
+<table>
+	<tr>
+		<td colspan="2">
+			<hr />
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2">
+			<div align="left">
+				<input type="button"
+					onclick="location.href='showAllArrayDesigns.html'"
+					value="Show all array designs">
+			</div>
+		</td>
+		<authz:authorize ifAnyGranted="admin">
+			<td COLSPAN="2">
 				<div align="left">
 					<input type="button"
-						onclick="location.href='showAllArrayDesigns.html'"
-						value="Show all array designs">
+						onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'"
+						value="Edit">
 				</div>
 			</td>
-			<authz:authorize ifAnyGranted="admin">
-				<td COLSPAN="2">
-					<div align="left">
-						<input type="button"
-							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'"
-							value="Edit">
-					</div>
-				</td>
-			</authz:authorize>
-		</tr>
-	</table>
+		</authz:authorize>
+	</tr>
+</table>
 
 
 
-	<hr />
+<hr />
 
-	<form name="ArrayDesignFilter" action="filterArrayDesigns.html"
-		method="POST">
-		<h4>
-			Enter search criteria for finding another array design here
-		</h4>
-		<input type="text" name="filter" size="66" />
-		<input type="submit" value="Find" />
-	</form>
+<form name="ArrayDesignFilter" action="filterArrayDesigns.html"
+	method="POST">
+	<h4>
+		Enter search criteria for finding another array design here
+	</h4>
+	<input type="text" name="filter" size="66" />
+	<input type="submit" value="Find" />
+</form>

@@ -31,6 +31,16 @@ public class EntityDelegator {
 
     private Long id;
 
+    private String classDelegatingFor;
+
+    public String getClassDelegatingFor() {
+        return classDelegatingFor;
+    }
+
+    public void setClassDelegatingFor( String classDelegatingFor ) {
+        this.classDelegatingFor = classDelegatingFor;
+    }
+
     public Long getId() {
         return id;
     }
