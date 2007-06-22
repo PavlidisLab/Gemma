@@ -68,6 +68,8 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCli {
             mergingService.mergeVectors( expressionExperiment );
         }
 
+        log.info( "Finished processing " + expressionExperiment );
+
         return null;
     }
 
