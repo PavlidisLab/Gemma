@@ -223,7 +223,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
 
                 try {
                     linkAnalysisService.process( expressionExperiment, filterConfig, linkAnalysisConfig );
-                    audit( expressionExperiment, "From list in file: " + experimentListFile, LinkAnalysisEvent.Factory
+                    audit( expressionExperiment, "From item(s) given from command line", LinkAnalysisEvent.Factory
                             .newInstance() );
                 } catch ( Exception e ) {
                     e.printStackTrace();
