@@ -163,24 +163,24 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 	 * 
 	 * @param outFile
 	 */
-	private void saveGenePairs(String outFile) throws IOException {
-		int count = 0;
-		FileWriter out = new FileWriter(new File(outFile));
-		for (int i = 0; i < MetaLinkFinder.linkCount.rows(); i++)
-			for (int j = i + 1; j < MetaLinkFinder.linkCount.columns(); j++) {
-				int bitCount = MetaLinkFinder.linkCount.bitCount(i, j);
-				if (bitCount >= stringency) {
-					// linkCount.getRowName(i) and linkCount.getColName(j) will
-					// get the gene ids.
-					out.write(MetaLinkFinder.linkCount.getRowName(i) + "\t"
-							+ MetaLinkFinder.linkCount.getRowName(j) + "\t"
-							+ bitCount + "\n");
-					count++;
-				}
-			}
-		out.close();
-		System.err.println("Total Links " + count);
-	}
+//	private void saveGenePairs(String outFile) throws IOException {
+//		int count = 0;
+//		FileWriter out = new FileWriter(new File(outFile));
+//		for (int i = 0; i < MetaLinkFinder.linkCount.rows(); i++)
+//			for (int j = i + 1; j < MetaLinkFinder.linkCount.columns(); j++) {
+//				int bitCount = MetaLinkFinder.linkCount.bitCount(i, j);
+//				if (bitCount >= stringency) {
+//					// linkCount.getRowName(i) and linkCount.getColName(j) will
+//					// get the gene ids.
+//					out.write(MetaLinkFinder.linkCount.getRowName(i) + "\t"
+//							+ MetaLinkFinder.linkCount.getRowName(j) + "\t"
+//							+ bitCount + "\n");
+//					count++;
+//				}
+//			}
+//		out.close();
+//		System.err.println("Total Links " + count);
+//	}
 
 	/**
 	 * Read in gene pair IDs from the geneList (CLI specified file) into
