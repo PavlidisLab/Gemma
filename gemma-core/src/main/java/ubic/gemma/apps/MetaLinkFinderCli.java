@@ -29,6 +29,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
+import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
@@ -54,10 +55,14 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
      * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
+	private LinkAnalysisUtilService utilService = null; 
+	private GeneService geneService = null;
+	private ExpressionExperimentService eeService = null;
     private boolean writeClusteringTree = false;
     private boolean writeLinkMatrix = false;
-    private String matrixFile = null, eeMapFile = null, treeFile = null;
+    private String matrixFile = null, eeMapFile = null, treeFile = null, taxonName = null;
     private Taxon taxon = null;
+    private MetaLinkFinder linkFinder = null;
 
     @SuppressWarnings("static-access")
     @Override
@@ -111,46 +116,10 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             this.treeFile = getOptionValue( 't' );
         }
         if ( hasOption( 's' ) ) {
-            String speciesName = getOptionValue( 's' );
-            taxon = this.getTaxon( speciesName );
+            this.taxonName = getOptionValue( 's' );
         }
     }
 
-    private Taxon getTaxon( String name ) {
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( name );
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
-        taxon = taxonService.find( taxon );
-        if ( taxon == null ) {
-            log.info( "No Taxon found!" );
-        }
-        return taxon;
-    }
-
-    private void test() {
-        CompressedNamedBitMatrix matrix = new CompressedNamedBitMatrix( 21, 11, 125 );
-        for ( int i = 0; i < 21; i++ )
-            matrix.addRowName( new Long( i ) );
-        for ( int i = 0; i < 11; i++ )
-            matrix.addColumnName( new Long( i ) );
-        matrix.set( 0, 0, 0 );
-        matrix.set( 0, 0, 12 );
-        matrix.set( 0, 0, 24 );
-        matrix.set( 20, 0, 0 );
-        matrix.set( 20, 0, 12 );
-        matrix.set( 20, 0, 24 );
-        matrix.set( 0, 10, 0 );
-        matrix.set( 0, 10, 12 );
-        matrix.set( 0, 10, 24 );
-        matrix.set( 20, 10, 0 );
-        matrix.set( 20, 10, 12 );
-        matrix.set( 20, 10, 24 );
-        try {
-            matrix.toFile( "test.File" );
-        } catch ( IOException e ) {
-            System.out.println( e.getMessage() );
-        }
-    }
 
     void interactiveQuery() {
         BufferedReader bfr = new BufferedReader( new InputStreamReader( System.in ) );
@@ -169,10 +138,10 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 if ( tmp == null ) break;
                 count = Integer.valueOf( tmp.trim() ).intValue();
                 // Gene gene = geneService.load(Long.valueOf(geneName).longValue());
-                Gene gene = MetaLinkFinder.getGene( geneName, taxon );
+                Gene gene = utilService.getGene( geneName, taxon );
                 if ( gene != null ) {
                     System.out.println( "Got " + geneName + " " + count );
-                    MetaLinkFinder.output( gene, count );
+                    linkFinder.output( gene, count );
                 } else
                     System.out.println( "Gene doesn't exist" );
             }
@@ -196,18 +165,16 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             return err;
         }
         try {
-            ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                    .getBean( "expressionExperimentService" );
-            GeneService geneService = ( GeneService ) this.getBean( "geneService" );
-            GeneOntologyService geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
-            Gene2GOAssociationService gene2GoAssociationService = ( Gene2GOAssociationService ) this
-                    .getBean( "gene2GOAssociationService" );
+            eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+            geneService = ( GeneService ) this.getBean( "geneService" );
+            utilService = (LinkAnalysisUtilService) this.getBean( " linkAnalysisUtilService" );
 
-            MetaLinkFinder linkFinder = new MetaLinkFinder();
-            linkFinder.setEeService( eeService );
+            linkFinder = new MetaLinkFinder();
             linkFinder.setGeneService( geneService );
-            linkFinder.setGeneOntologyService( geneOntologyService );
-            linkFinder.setGene2GoAssociationService( gene2GoAssociationService );
+            linkFinder.setEEService(eeService);
+            linkFinder.setUtilService(utilService);
+            
+            taxon = utilService.getTaxon(taxonName);
             if ( taxon == null ) {
                 return new Exception( "The input species couldn't be found" );
             }
@@ -218,7 +185,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 watch.start();
                 linkFinder.find( taxon );
                 try {
-                    linkFinder.toFile( this.matrixFile, this.eeMapFile );
+                    linkFinder.getBitMatrixUtil().toFile( this.matrixFile, this.eeMapFile );
                 } catch ( IOException e ) {
                     log.info( "Couldn't save the results into the files " );
                     return e;
@@ -227,7 +194,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             } else {
                 watch.start();
                 try {
-                    linkFinder.fromFile( this.matrixFile, this.eeMapFile );
+                    linkFinder.getBitMatrixUtil().fromFile( this.matrixFile, this.eeMapFile, eeService, geneService );
                 } catch ( IOException e ) {
                     log.info( "Couldn't load the data from the files " );
                     return e;
