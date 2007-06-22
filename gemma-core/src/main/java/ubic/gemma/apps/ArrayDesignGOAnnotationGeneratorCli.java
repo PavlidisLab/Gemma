@@ -146,14 +146,14 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( err != null ) return err;
 
         int n = 0;
-        while ( !goService.isReady() ) {
-            n++;
-            if ( ( n % 1000 ) == 0 ) {
-                log.info( "Waiting for ontologies to load" );
-            }
-        }
-
         try {
+            while ( !goService.isReady() ) {
+                Thread.sleep( 500 );
+                if ( ( n++ % 100 ) == 0 ) {
+                    log.debug( "Waiting for ontologies to load" );
+                }
+            }
+
             if ( batchFileName == null ) {
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
                 processAD( arrayDesign, this.fileName );
