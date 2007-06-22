@@ -42,6 +42,12 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getLastSequenceUpdateDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+        // if it has been merged, put NA for 'not applicable'
+        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
+            return "NA";
+        }
+
         Date dateObject = object.getLastSequenceUpdate();
 
         if ( dateObject != null ) {
@@ -57,6 +63,11 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getLastRepeatMaskDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+        // if it has been merged, put NA for 'not applicable'
+        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
+            return "NA";
+        }
         Date dateObject = object.getLastRepeatMask();
 
         if ( dateObject != null ) {
@@ -139,7 +150,10 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getLastSequenceAnalysisDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         Date dateObject = object.getLastSequenceAnalysis();
-
+        // if it has been merged, put NA for 'not applicable'
+        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
+            return "NA";
+        }
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
@@ -154,7 +168,10 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getLastGeneMappingDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         Date dateObject = object.getLastGeneMapping();
-
+        // if it has been merged, put NA for 'not applicable'
+        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
+            return "NA";
+        }
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
