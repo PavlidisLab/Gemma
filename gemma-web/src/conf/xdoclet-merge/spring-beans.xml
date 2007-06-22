@@ -102,7 +102,7 @@
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
 	<property name="converterTypes">
 		<map>
-			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.dwr.CharacteristicPropertyConverter">
+			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.remote.CharacteristicPropertyConverter">
 			</entry>
 		</map>
 	</property>
