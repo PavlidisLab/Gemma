@@ -45,6 +45,7 @@ import org.compass.core.support.search.CompassSearchResults;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -74,6 +75,7 @@ public class SearchService {
     private GeneService geneService;
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
+    private ArrayDesignService arrayDesignService;
     private ExpressionExperimentService expressionExperimentService;
     private BioSequenceService bioSequenceService;
     private Compass geneBean;
@@ -115,12 +117,14 @@ public class SearchService {
     public Collection<ArrayDesign> arrayDesignSearch( String searchString ) throws Exception {
 
         searchString = searchString.trim();
+        ArrayDesign adQueryResult = arrayDesignService.findArrayDesignByName( searchString );
         Collection<ArrayDesign> adCompassList = compassArrayDesignSearch( searchString );
         Collection<ArrayDesign> adCsList = arrayDesignCompositeSequenceSearch( searchString );
 
         Collection<ArrayDesign> combinedList = new HashSet<ArrayDesign>();
         combinedList.addAll( adCompassList );
         combinedList.addAll( adCsList );
+        combinedList.add( adQueryResult );
 
         return combinedList;
     }
@@ -568,6 +572,10 @@ public class SearchService {
         public int compare( Describable arg0, Describable arg1 ) {
             return arg0.getName().compareTo( arg1.getName() );
         }
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
 }
