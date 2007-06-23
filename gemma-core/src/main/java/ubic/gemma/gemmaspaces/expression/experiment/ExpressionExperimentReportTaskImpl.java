@@ -20,6 +20,7 @@ package ubic.gemma.gemmaspaces.expression.experiment;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.gemmaspaces.GemmaSpacesResult;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author keshav
@@ -28,6 +29,8 @@ import ubic.gemma.gemmaspaces.GemmaSpacesResult;
 public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentReportTask {
 
     private ExpressionExperimentReportService expressionExperimentReportService = null;
+
+    private String taskId = null;
 
     public GemmaSpacesResult execute() {
 
@@ -39,6 +42,24 @@ public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentR
     public void setExpressionExperimentReportService(
             ExpressionExperimentReportService expressionExperimentReportService ) {
         this.expressionExperimentReportService = expressionExperimentReportService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
+        this.taskId = TaskRunningService.generateTaskId();
+    }
+
+    /**
+     * Returns the taskId for this task.
+     * 
+     * @return
+     */
+    public String getTaskId() {
+        return taskId;
     }
 
 }
