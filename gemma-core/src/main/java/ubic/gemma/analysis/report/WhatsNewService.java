@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.AuditableObject;
@@ -52,6 +54,8 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class WhatsNewService {
+
+    private static Log log = LogFactory.getLog( WhatsNewService.class.getName() );
 
     private String WHATS_NEW_FILE = "WhatsNew";
     private String WHATS_NEW_DIR = "WhatsNew";
@@ -87,7 +91,9 @@ public class WhatsNewService {
     public WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
         wn.setUpdatedObjects( auditEventService.getUpdatedSinceDate( date ) );
+        log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
         wn.setNewObjects( auditEventService.getNewSinceDate( date ) );
+        log.info( wn.getNewObjects().size() + " new objects since " + date );
         return wn;
     }
 
@@ -125,8 +131,10 @@ public class WhatsNewService {
         WhatsNew wn = new WhatsNew();
 
         try {
-            File newObjects = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".new" );
-            File updatedObjects = new File( HOME_DIR + "/" + WHATS_NEW_DIR + "/" + WHATS_NEW_FILE + ".updated" );
+            File newObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
+                    + WHATS_NEW_FILE + ".new" );
+            File updatedObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
+                    + WHATS_NEW_FILE + ".updated" );
             if ( !newObjects.exists() && !updatedObjects.exists() ) {
                 return null;
             }

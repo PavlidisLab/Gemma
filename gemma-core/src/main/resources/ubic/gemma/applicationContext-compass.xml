@@ -37,6 +37,9 @@
 		<property name="expressionExperimentService">
 			<ref bean="expressionExperimentService" />
 		</property>
+		<property name="arrayDesignService">
+			<ref bean="arrayDesignService" />
+		</property>
 		<property name="geneBean">
 			<ref bean="compassGene" />
 		</property>
