@@ -23,7 +23,6 @@ import net.jini.core.lease.Lease;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.context.ApplicationContext;
-import org.springframework.web.servlet.ModelAndView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTaskImpl;
@@ -32,7 +31,6 @@ import ubic.gemma.util.gemmaspaces.GemmaSpacesJobObserver;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesProgressEntry;
 import ubic.gemma.util.progress.TaskRunningService;
-import ubic.gemma.web.controller.BackgroundControllerJob;
 
 import com.j_spaces.core.client.NotifyModifiers;
 
@@ -68,7 +66,7 @@ public abstract class AbstractGemmaSpacesService {
         String taskId = null;
 
         updatedContext = addGemmaSpacesToApplicationContext();
-        BackgroundControllerJob<ModelAndView> job = null;
+        // BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
 
             taskId = ( String ) ( ( ExpressionExperimentReportTaskImpl ) updatedContext.getBean( "taskBean" ) )
