@@ -24,10 +24,10 @@ import ubic.gemma.ontology.OntologyTerm;
  * @spring.bean id="linkAnalysisUtilService"
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
- * @spring.property name="goService" ref="GeneOntologyService"
- * @spring.property name="goAssociationService" ref="Gene2GOAssociationService"
- * @spring.property name="taxonService" ref="TaxonService"
- * @spring.property name="geneService" ref="GeneService"
+ * @spring.property name="goService" ref="geneOntologyService"
+ * @spring.property name="goAssociationService" ref="gene2GOAssociationService"
+ * @spring.property name="taxonService" ref="taxonService"
+ * @spring.property name="geneService" ref="geneService"
  */
 public class LinkAnalysisUtilService {
     private ExpressionExperimentService eeService;
@@ -124,4 +124,10 @@ public class LinkAnalysisUtilService {
 	public void setTaxonService(TaxonService taxonService) {
 		this.taxonService = taxonService;
 	}
+    /**
+     * @param geneService the geneService to set
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
 }
