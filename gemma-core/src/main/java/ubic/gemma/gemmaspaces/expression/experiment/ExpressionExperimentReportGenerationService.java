@@ -25,14 +25,12 @@ import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 
 /**
  * @author keshav
- * @version $Id$
+ * @version $Id$ *
+ * @spring.bean name="expressionExperimentReportGenerationService"
+ * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
+ * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
  */
 public class ExpressionExperimentReportGenerationService extends AbstractGemmaSpacesService {
-
-    // TODO - Add xdoclet tags to class
-    // * @spring.bean name="expressionExperimentReportGenerationService"
-    // * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
-    // * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
 
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
@@ -41,7 +39,7 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
      *
      */
     public void generateSummaryObjects() {
-        startJob( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentReportTask.class.getName(), false );
+        startJob( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentReportTask.class.getName(), true );
     }
 
     /*
@@ -50,7 +48,7 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
      * @see ubic.gemma.gemmaspaces.AbstractGemmaSpacesService#runLocally(java.lang.String)
      */
     public void runLocally( String taskId ) {
-        // TODO implement me
+        expressionExperimentReportService.generateSummaryObjects();
     }
 
     /*
@@ -65,7 +63,17 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
 
         ExpressionExperimentReportService reportProxy = ( ExpressionExperimentReportService ) updatedContext
                 .getBean( "expressionExperimentReportService" );
-        // reportProxy.execute();
+        reportProxy.execute();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.gemmaspaces.AbstractGemmaSpacesService#setGemmaSpacesUtil(ubic.gemma.util.gemmaspaces.GemmaSpacesUtil)
+     */
+    @Override
+    public void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+        super.injectGemmaSpacesUtil( gemmaSpacesUtil );
     }
 
     /**
@@ -74,14 +82,6 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
     public void setExpressionExperimentReportService(
             ExpressionExperimentReportService expressionExperimentReportService ) {
         this.expressionExperimentReportService = expressionExperimentReportService;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    protected void setGemmaSpacesUtil( GemmaSpacesUtil gigaSpacesUtil ) {
-        super.injectGemmaSpacesUtil( gemmaSpacesUtil );
     }
 
 }
