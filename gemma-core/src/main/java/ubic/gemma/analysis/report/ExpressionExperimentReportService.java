@@ -34,6 +34,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.gemmaspaces.GemmaSpacesResult;
+import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -41,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author jsantos
@@ -49,7 +52,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  */
-public class ExpressionExperimentReportService {
+public class ExpressionExperimentReportService implements ExpressionExperimentReportTask {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private String EE_LINK_SUMMARY = "AllExpressionLinkSummary";
@@ -58,6 +61,7 @@ public class ExpressionExperimentReportService {
     private ExpressionExperimentService expressionExperimentService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private AuditTrailService auditTrailService;
+    private String taskId = null;
 
     /**
      * @param auditTrailService the auditTrailService to set
@@ -377,6 +381,27 @@ public class ExpressionExperimentReportService {
         if ( deleteFiles ) {
             FileTools.deleteFiles( files );
         }
+    }
+
+    // Methods needed to allow this to be used in a space.
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
+     */
+    public GemmaSpacesResult execute() {
+        this.generateSummaryObjects();
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
+        this.taskId = TaskRunningService.generateTaskId();
     }
 
 }
