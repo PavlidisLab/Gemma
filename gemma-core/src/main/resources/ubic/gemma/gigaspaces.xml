@@ -41,7 +41,9 @@
 			<ref local="taskBean" />
 		</property>
 		<property name="businessInterface">
-			<value>ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTask</value>
+			<value>
+				ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTask
+			</value>
 		</property>
 	</bean>
 	<bean id="javaSpaceInterceptor"
@@ -93,12 +95,9 @@
 			</list>
 		</property>
 	</bean>
-	
+
 	<bean id="taskBean"
 		class="ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
-		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService" />
-		</property>
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
