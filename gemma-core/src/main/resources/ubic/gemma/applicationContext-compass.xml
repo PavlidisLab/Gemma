@@ -54,7 +54,8 @@
 		</property>
 	</bean>
 	<!-- Generic compass configuration bean - for the rest see compass.xml and compasstest.xml -->
-	<bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice"
+	<bean id="hibernateGpsDevice"
+		class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice"
 		singleton="false">
 		<property name="name">
 			<value>hibernateDevice</value>
@@ -65,61 +66,71 @@
 		<property name="mirrorDataChanges">
 			<value>false</value>
 		</property>
-		 <property name="fetchCount"> 
-             <value>1</value> 
-         </property>
-		
+		<property name="fetchCount">
+			<value>1</value>
+		</property>
+
 	</bean>
-	<bean id="expressionGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	<bean id="expressionGps"
+		class="org.compass.gps.impl.SingleCompassGps" init-method="start"
+		destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassExpression" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+				<bean
+					class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
 					<property name="gpsDevice" ref="hibernateGpsDevice" />
 				</bean>
 			</list>
 		</property>
 	</bean>
-	<bean id="geneGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	<bean id="geneGps" class="org.compass.gps.impl.SingleCompassGps"
+		init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassGene" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+				<bean
+					class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
 					<property name="gpsDevice" ref="hibernateGpsDevice" />
 				</bean>
 			</list>
 		</property>
 	</bean>
-	<bean id="arrayGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	<bean id="arrayGps" class="org.compass.gps.impl.SingleCompassGps"
+		init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassArray" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+				<bean
+					class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
 					<property name="gpsDevice" ref="hibernateGpsDevice" />
 				</bean>
 			</list>
 		</property>
 	</bean>
-	<bean id="ontologyGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	<bean id="ontologyGps" class="org.compass.gps.impl.SingleCompassGps"
+		init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassOntology" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+				<bean
+					class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
 					<property name="gpsDevice" ref="hibernateGpsDevice" />
 				</bean>
 			</list>
 		</property>
 	</bean>
 	<!-- Quartz Indexing Configuration -->
-	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	<bean id="schedulerFactoryBean"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
 				<ref local="indexTrigger" />
@@ -130,7 +141,8 @@
 			</list>
 		</property>
 	</bean>
-	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<bean id="indexTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="indexJobDetail" />
 		</property>
@@ -138,7 +150,8 @@
 			<value>0 15 1 ? * *</value>
 		</property>
 	</bean>
-	<bean id="arrayDesignTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<bean id="arrayDesignTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="arrayDesignJobDetail" />
 		</property>
@@ -146,7 +159,8 @@
 			<value>0 30 1 ? * *</value>
 		</property>
 	</bean>
-	<bean id="expressionExperimentTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<bean id="expressionExperimentTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="expressionExperimentJobDetail" />
 		</property>
@@ -154,7 +168,8 @@
 			<value>0 15 0 ? * *</value>
 		</property>
 	</bean>
-	<bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<bean id="whatsNewTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="whatsNewJobDetail" />
 		</property>
@@ -162,7 +177,8 @@
 			<value>0 15 0 ? * *</value>
 		</property>
 	</bean>
-	<bean id="hibernateStatsTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	<bean id="hibernateStatsTrigger"
+		class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 		<property name="jobDetail">
 			<ref bean="hibernateStatsJobDetail" />
 		</property>
@@ -170,7 +186,8 @@
 			<value>1800000</value>
 		</property>
 	</bean>
-	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="indexJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="indexService" />
 		</property>
@@ -178,7 +195,8 @@
 			<value>indexAll</value>
 		</property>
 	</bean>
-	<bean id="arrayDesignJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="arrayDesignJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="arrayDesignReportService" />
 		</property>
@@ -189,13 +207,14 @@
 	<bean id="expressionExperimentJobDetail"
 		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="expressionExperimentReportService" />
+			<ref bean="expressionExperimentReportGenerationService" />
 		</property>
 		<property name="targetMethod">
 			<value>generateSummaryObjects</value>
 		</property>
 	</bean>
-	<bean id="whatsNewJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="whatsNewJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="whatsNewService" />
 		</property>
