@@ -30,7 +30,6 @@ import ubic.gemma.gemmaspaces.GemmaSpacesResult;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
@@ -42,7 +41,6 @@ public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implem
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
     private long counter = 0;
-    private ExpressionExperimentService expressionExperimentService = null;
     private GeoDatasetService geoDatasetService = null;
     private String taskId = null;
 
@@ -52,7 +50,8 @@ public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implem
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
     @SuppressWarnings("unchecked")
-    public GemmaSpacesResult execute( GemmaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand ) {
+    public GemmaSpacesResult execute(
+            GemmaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand ) {
 
         if ( !( javaSpacesExpressionExperimentLoadCommand instanceof GemmaSpacesExpressionExperimentLoadCommand ) ) {
             throw new RuntimeException( "Cannot handle objects of type "
@@ -78,13 +77,6 @@ public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implem
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
         return result;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
