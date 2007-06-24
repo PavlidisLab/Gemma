@@ -24,7 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 
-import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTaskImpl;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 import ubic.gemma.util.progress.TaskRunningService;
@@ -65,8 +65,9 @@ public abstract class AbstractGemmaSpacesService {
         // BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) && gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
             log.info( "Running task " + taskName + " remotely." );
-            taskId = ( String ) ( ( ExpressionExperimentReportTaskImpl ) updatedContext.getBean( "taskBean" ) )
-                    .getTaskId();
+            // FIXME use a generic interface here
+            taskId = ( String ) ( ( ExpressionExperimentReportService ) updatedContext
+                    .getBean( "expressionExperimentReportService" ) ).getTaskId();
 
             // if (!gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
             //

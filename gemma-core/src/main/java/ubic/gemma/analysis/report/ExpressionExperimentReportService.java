@@ -404,4 +404,13 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         this.taskId = TaskRunningService.generateTaskId();
     }
 
+    /**
+     * Returns the taskId for this task.
+     * 
+     * @return
+     */
+    public String getTaskId() {
+        return taskId;
+    }
+
 }
