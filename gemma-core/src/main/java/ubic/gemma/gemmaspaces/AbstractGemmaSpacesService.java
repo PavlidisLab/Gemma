@@ -18,27 +18,23 @@
  */
 package ubic.gemma.gemmaspaces;
 
-import net.jini.core.lease.Lease;
-
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
-import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTaskImpl;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesJobObserver;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
-import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesProgressEntry;
 import ubic.gemma.util.progress.TaskRunningService;
-
-import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * @author keshav
  * @version $Id$
  */
 public abstract class AbstractGemmaSpacesService {
+    private Log log = LogFactory.getLog( AbstractGemmaSpacesService.class );
 
     protected GemmaSpacesUtil gemmaSpacesUtil = null;
 
@@ -67,24 +63,22 @@ public abstract class AbstractGemmaSpacesService {
 
         updatedContext = addGemmaSpacesToApplicationContext();
         // BackgroundControllerJob<ModelAndView> job = null;
-        if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
-
+        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+            log.info( "Running task " + taskName + " remotely." );
             taskId = ( String ) ( ( ExpressionExperimentReportTaskImpl ) updatedContext.getBean( "taskBean" ) )
                     .getTaskId();
 
-            if ( !gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+            // if (!gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+            //
+            // throw new RuntimeException( "No workers are registered to service task "
+            // + taskName.getClass().getSimpleName() + " on the compute server at this time." );
+            // }
 
-                throw new RuntimeException( "No workers are registered to service task "
-                        + taskName.getClass().getSimpleName() + " on the compute server at this time." );
-            }
             /* register this "spaces client" to receive notifications */
-            GemmaSpacesJobObserver javaSpacesJobObserver = new GemmaSpacesJobObserver( taskId );
-
-            GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
-
-            template.addNotifyDelegatorListener( javaSpacesJobObserver, new GemmaSpacesProgressEntry(), null, true,
-                    Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
-
+            // GemmaSpacesJobObserver javaSpacesJobObserver = new GemmaSpacesJobObserver( taskId );
+            // GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
+            // template.addNotifyDelegatorListener( javaSpacesJobObserver, new GemmaSpacesProgressEntry(), null, true,
+            // Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
             runRemotely( taskId );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInLocalContext ) {
             throw new RuntimeException(
@@ -92,13 +86,15 @@ public abstract class AbstractGemmaSpacesService {
         }
 
         else {
+            log.info( "Running task " + taskName + " locally." );
             taskId = TaskRunningService.generateTaskId();
             runLocally( taskId );
         }
 
-        assert taskId != null;
+        // assert taskId != null;
 
         // taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
+
         return taskId;
     }
 
@@ -113,7 +109,7 @@ public abstract class AbstractGemmaSpacesService {
      * 
      * @param gemmaSpacesUtil
      */
-    abstract protected void setGemmaSpacesUtil( GemmaSpacesUtil gigaSpacesUtil );
+    abstract public void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil );
 
     /**
      * @param gemmaSpacesUtil
