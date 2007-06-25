@@ -18,18 +18,33 @@
  */
 package ubic.gemma.gemmaspaces;
 
+import java.rmi.RemoteException;
+
+import net.jini.core.event.RemoteEvent;
+import net.jini.core.event.RemoteEventListener;
+import net.jini.core.event.UnknownEventException;
+import net.jini.core.lease.Lease;
+
+import org.apache.commons.lang.math.RandomUtils;
+import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
+import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesCancellationEntry;
 import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesRegistrationEntry;
 
 import com.j_spaces.core.IJSpace;
+import com.j_spaces.core.client.EntryArrivedRemoteEvent;
+import com.j_spaces.core.client.ExternalEntry;
+import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCLI {
+public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCLI implements RemoteEventListener {
 
     protected GigaSpacesTemplate template;
 
@@ -43,17 +58,72 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
 
     protected Long workerRegistrationId = null;
 
+    protected ApplicationContext updatedContext = null;
+
+    protected GemmaSpacesUtil gemmaSpacesUtil = null;
+
     /**
-     * Initializes the spring beans.
+     * Sets the worker to be used. The worker is a {@link CustomDelegatingWorker} which is wired with a task in the bean
+     * factory.
+     */
+    protected abstract void setWorker();
+
+    /**
+     * Sets the task for the registration entry. This should be done by setting
+     * registrationEntry.message=YourTask.class.getName()
      * 
      * @throws Exception
      */
-    protected abstract void init() throws Exception;
+    protected abstract void setRegistrationEntryTask() throws Exception;
 
     /**
      * Starts the thread for this worker.
      */
     protected abstract void start();
+
+    /**
+     * Initializes beans.
+     * 
+     * @throws Exception
+     */
+    private void preInit() throws Exception {
+        gemmaSpacesUtil = ( GemmaSpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+
+        updatedContext = gemmaSpacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
+        setWorker();
+    }
+
+    /**
+     * Initializes beans, adds a shutdown hook, adds a notification listener, writes registration entry to the space.
+     * 
+     * @throws Exception
+     */
+    private void init() throws Exception {
+        /* register the shutdown hook so cleanup occurs even if VM is incorrectly terminated */
+        ShutdownHook shutdownHook = new ShutdownHook();
+        Runtime.getRuntime().addShutdownHook( shutdownHook );
+
+        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
+            throw new RuntimeException( "GemmaSpaces beans could not be loaded. Cannot start worker." );
+
+        template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
+
+        template.addNotifyDelegatorListener( this, new GemmaSpacesCancellationEntry(), null, true, Lease.FOREVER,
+                NotifyModifiers.NOTIFY_ALL );
+
+        space = ( IJSpace ) template.getSpace();
+
+        registrationEntry = new GemmaSpacesRegistrationEntry();
+        setRegistrationEntryTask();
+        workerRegistrationId = RandomUtils.nextLong();
+        registrationEntry.registrationId = workerRegistrationId;
+        worker.setGemmaSpacesRegistrationEntry( registrationEntry );
+        Lease lease = space.write( registrationEntry, null, 600000000 );
+        log.info( this.getClass().getSimpleName() + " registered with space " + template.getUrl() );
+        if ( lease == null ) log.error( "Null Lease returned" );
+
+    }
 
     /*
      * (non-Javadoc)
@@ -64,6 +134,7 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( this.getClass().getName(), args );
         try {
+            preInit();
             init();
             start();
         } catch ( Exception e ) {
@@ -79,7 +150,6 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
      * @author keshav
      */
     public class ShutdownHook extends Thread {
-        // TODO move me to a base task.
         public void run() {
             log.info( "Worker shut down.  Running shutdown hook ... cleaning up registered entries for this worker." );
             if ( space != null ) {
@@ -93,5 +163,33 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
                 }
             }
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
+     */
+    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
+        log.info( "notified ..." );
+
+        try {
+            EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
+
+            log.debug( "event: " + arrivedRemoteEvent );
+            ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
+            Object taskId = ( Object ) entry.getFieldValue( "taskId" );
+
+            if ( taskId.equals( worker.getTaskId() ) ) {
+                log.info( "Stopping execution of task: " + taskId );
+
+                log.debug( itbThread.getState() );
+                itbThread.stop();
+            }
+
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 }
