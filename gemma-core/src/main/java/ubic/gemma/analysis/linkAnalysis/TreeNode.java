@@ -29,7 +29,7 @@ public class TreeNode implements Comparable<TreeNode>, Serializable {
     	this.id = id;
     	this.child = child;
     	this.mask = mask;
-    	this.maskBits = BitMatrixUtil.countBits(this.mask);
+    	this.maskBits = LinkBitMatrixUtil.countBits(this.mask);
     }
     public int compareTo( TreeNode o ) {
     	int res = 0;    	
@@ -59,7 +59,7 @@ public class TreeNode implements Comparable<TreeNode>, Serializable {
 
     public void setClosestNode(TreeNode closestNode){
     	this.closestNode = closestNode;
-    	commonBits = BitMatrixUtil.overlapBits(mask, closestNode.mask);
+    	commonBits = LinkBitMatrixUtil.overlapBits(mask, closestNode.mask);
     }
     public void setParent(TreeNode parent){
     	this.parent = parent;

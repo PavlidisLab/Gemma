@@ -27,7 +27,6 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
 import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
-import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -772,8 +771,6 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 		if (exc != null) {
 			return exc;
 		}
-		MetaLinkFinder linkFinder = new MetaLinkFinder();
-		linkFinder.setGeneService(geneService);
 		StopWatch watch = new StopWatch();
 		watch.start();
 		// try {

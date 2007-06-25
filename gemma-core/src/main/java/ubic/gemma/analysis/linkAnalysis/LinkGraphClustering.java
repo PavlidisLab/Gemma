@@ -22,14 +22,12 @@ public class LinkGraphClustering{
     private TreeNode fake = null;
     private int order = 0;
     private int nodeUpdates = 0;
-    private BitMatrixUtil bitMatrixUtil = null;
-    private MetaLinkFinder linkFinder = null;
+    private LinkBitMatrixUtil linkMatrix = null;
     
-    public LinkGraphClustering(int threshold, BitMatrixUtil bitMatrixUtil, MetaLinkFinder linkFinder) {
+    public LinkGraphClustering(int threshold, LinkBitMatrixUtil linkMatrix) {
         Threshold = threshold;
         TreeNode.reSetSorting();
-        this.bitMatrixUtil = bitMatrixUtil;
-        this.linkFinder = linkFinder;
+        this.linkMatrix = linkMatrix;
     }
     private void findClosestOnes(TreeNode oneNode){
     	if(oneNode.closestNode != fake) return;
@@ -41,7 +39,7 @@ public class LinkGraphClustering{
     		if(pairedNode.maskBits < bits) break; //No need to iterate further
     		if(pairedNode.equals(curNode)) continue;
 
-    		int pairedBits = BitMatrixUtil.overlapBits(curNode.mask, pairedNode.mask);
+    		int pairedBits = LinkBitMatrixUtil.overlapBits(curNode.mask, pairedNode.mask);
 
     		if(pairedBits > bits|| (pairedBits == bits && pairedNode.level > closestNode.level)){
     			if( pairedBits > pairedNode.commonBits || (pairedBits == pairedNode.commonBits && pairedNode.closestNode.equals(curNode)) || (pairedBits == pairedNode.commonBits &&  curNode.level > pairedNode.closestNode.level))
@@ -61,7 +59,7 @@ public class LinkGraphClustering{
     	ObjectArrayList childNodes = new ObjectArrayList();
     	childNodes.add(nodeForMerging);
     	childNodes.add(closestNode);
-    	long mask[] = BitMatrixUtil.AND(nodeForMerging.mask, closestNode.mask);
+    	long mask[] = LinkBitMatrixUtil.AND(nodeForMerging.mask, closestNode.mask);
     	TreeNode parent = new TreeNode(0, mask, childNodes);
     	parent.setClosestNode(fake);
     	nodeForMerging.setParent(parent);
@@ -228,7 +226,7 @@ public class LinkGraphClustering{
     	long[] missingMask = new long[oneNode.mask.length];
     	for(int i = 0; i < leafNodes.size(); i++){
     		oneNode = (TreeNode)leafNodes.get(i);
-    		missingMask = BitMatrixUtil.OR(missingMask, oneNode.mask);
+    		missingMask = LinkBitMatrixUtil.OR(missingMask, oneNode.mask);
     	}
     	return missingMask;
     }
@@ -264,18 +262,18 @@ public class LinkGraphClustering{
     		//Generate cdt and gtr file
     		//write the head
     		cdtOut.write("GID"+"\t"+"YORF"+"\t"+"NAME"+"\t"+"GWEIGHT");
-    		for(int i = 0; i < bitMatrixUtil.getMatrix().getBitNum(); i++){
-    			if(BitMatrixUtil.checkBits(missingMask, i))
-    				cdtOut.write("\t"+bitMatrixUtil.getEEName(i));
+    		for(int i = 0; i < linkMatrix.getMatrix().getBitNum(); i++){
+    			if(LinkBitMatrixUtil.checkBits(missingMask, i))
+    				cdtOut.write("\t"+linkMatrix.getEEName(i));
     		}
     		cdtOut.write("\n");
     		for(int i = 0; i < leafNodes.size(); i++){
     			TreeNode child = (TreeNode)leafNodes.get(i);
-				cdtOut.write(nodeNames.get(child) + "\t" + linkFinder.getLinkName(child.id) + "\t" + linkFinder.getLinkName(child.id)+"\t"+ 1);    			
-				for(int j = 0; j < bitMatrixUtil.getMatrix().getBitNum(); j++){
-					if(BitMatrixUtil.checkBits(missingMask, j))
+				cdtOut.write(nodeNames.get(child) + "\t" + linkMatrix.getLinkName(child.id) + "\t" + linkMatrix.getLinkName(child.id)+"\t"+ 1);    			
+				for(int j = 0; j < linkMatrix.getMatrix().getBitNum(); j++){
+					if(LinkBitMatrixUtil.checkBits(missingMask, j))
 					{
-						if(bitMatrixUtil.checkEEConfirmation(child.id,j))
+						if(linkMatrix.checkEEConfirmation(child.id,j))
 							cdtOut.write("\t" + 1);
 						else
 							cdtOut.write("\t" + 0);
@@ -290,7 +288,7 @@ public class LinkGraphClustering{
     			String parent = nodeNames.get(oneNode);
     			String leftChild = nodeNames.get(oneNode.child.getQuick(0));
     			String rightChild = nodeNames.get(oneNode.child.getQuick(1));
-    			int bits = BitMatrixUtil.countBits(oneNode.mask);
+    			int bits = LinkBitMatrixUtil.countBits(oneNode.mask);
     			gtrOut.write(parent+"\t"+leftChild+"\t"+rightChild+"\t"+(double)bits/(((double)maximalCommonBits)+0.0001)+"\n");
     			/*
     			for(int childIndex = 0; childIndex < oneNode.child.length; childIndex++){
@@ -340,9 +338,9 @@ public class LinkGraphClustering{
     private void init(int rows, int cols){
         for(int i = 0; i < rows; i++)
             for(int j = i+1; j < cols; j++){
-                if(bitMatrixUtil.getMatrix().bitCount( i, j ) >= this.Threshold && !bitMatrixUtil.filter(i, j)){
-                	long[] mask = bitMatrixUtil.getMatrix().getAllBits(i, j);
-                    TreeNode oneNode = new TreeNode(BitMatrixUtil.generateId(i,j), mask, null );
+                if(linkMatrix.getMatrix().bitCount( i, j ) >= this.Threshold && !linkMatrix.filter(i, j)){
+                	long[] mask = linkMatrix.getMatrix().getAllBits(i, j);
+                    TreeNode oneNode = new TreeNode(LinkBitMatrixUtil.generateId(i,j), mask, null );
                     if(this.fake == null){
                         long[] fakeMask = new long[mask.length];
                         for(int ii = 0; ii < fakeMask.length; ii++) fakeMask[ii] = 0;
@@ -360,7 +358,7 @@ public class LinkGraphClustering{
     	}
     }
     private void init(){
-    	init(bitMatrixUtil.getMatrix().rows(), bitMatrixUtil.getMatrix().columns());
+    	init(linkMatrix.getMatrix().rows(), linkMatrix.getMatrix().columns());
     }
 
     public void run(){

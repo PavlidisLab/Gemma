@@ -14,29 +14,27 @@ public class FrequentLinkSetFinder {
     public static int nodeNum = 0;
     private int merged = 0;
     private ObjectArrayList candidatesNodes = null; // a linked list
-    private BitMatrixUtil bitMatrixUtil = null;
-    private MetaLinkFinder linkFinder = null;
+    private LinkBitMatrixUtil linkMatrix = null;
 
-    public FrequentLinkSetFinder( int threshold, BitMatrixUtil bitMatrixUtil,MetaLinkFinder linkFinder) {
+    public FrequentLinkSetFinder( int threshold, LinkBitMatrixUtil linkMatrix) {
         super();
         Threshold = threshold;
-        int num = ( int ) ( bitMatrixUtil.getMatrix().getBitNum() / CompressedNamedBitMatrix.DOUBLE_LENGTH ) + 1;
+        int num = ( int ) ( linkMatrix.getMatrix().getBitNum() / CompressedNamedBitMatrix.DOUBLE_LENGTH ) + 1;
         root = new TreeNode( 0, new long[num], null );
         root.level = 0;
         candidatesNodes = new ObjectArrayList();
-        this.bitMatrixUtil = bitMatrixUtil;
-        this.linkFinder = linkFinder;
+        this.linkMatrix = linkMatrix;
     }
 
     private void travel( TreeNode rootNode, int minExps, int minLinks ) {
         if ( rootNode.child == null
-                || ( rootNode.child != null && BitMatrixUtil.countBits( ( ( TreeNode ) rootNode.child.getQuick( 0 ) ).mask ) < minExps ) ) {
+                || ( rootNode.child != null && LinkBitMatrixUtil.countBits( ( ( TreeNode ) rootNode.child.getQuick( 0 ) ).mask ) < minExps ) ) {
             if ( rootNode.level >= minLinks ) this.insertCandidatesNode( rootNode );
             return;
         }
         for ( int i = 0; i < rootNode.child.size(); i++ ) {
             TreeNode childNode = ( TreeNode ) rootNode.child.getQuick( i );
-            if ( BitMatrixUtil.countBits( childNode.mask ) >= minExps ) {
+            if ( LinkBitMatrixUtil.countBits( childNode.mask ) >= minExps ) {
                 travel( childNode, minExps, minLinks );
             } else {
                 if ( rootNode.level >= minLinks ) this.insertCandidatesNode( rootNode );
@@ -63,7 +61,7 @@ public class FrequentLinkSetFinder {
                     mergedCondition = false;
                 }
             }
-            if ( BitMatrixUtil.countBits( childMask ) >= this.Threshold ) {
+            if ( LinkBitMatrixUtil.countBits( childMask ) >= this.Threshold ) {
                 if ( mergedCondition ) {
                     siblings.remove( index );
                     child.add( iter );
@@ -150,14 +148,14 @@ public class FrequentLinkSetFinder {
         System.err.print( "\t" );
 
         while ( iter.parent != null ) {
-            System.err.print( " (" + linkFinder.getLinkName( iter.id ) + ") " );
+            System.err.print( " (" + linkMatrix.getLinkName( iter.id ) + ") " );
             // System.err.print(oneId + " ");
             iter = iter.parent;
         }
         for ( int i = 0; i < leafNode.mask.length; i++ ) {
             for ( int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++ )
                 if ( ( leafNode.mask[i] & ( CompressedNamedBitMatrix.BIT1 << j ) ) != 0 ) {
-                    System.err.print( bitMatrixUtil.getEEName( j + i * CompressedNamedBitMatrix.DOUBLE_LENGTH ) + " " );
+                    System.err.print( linkMatrix.getEEName( j + i * CompressedNamedBitMatrix.DOUBLE_LENGTH ) + " " );
                 }
         }
         System.err.println( "" );
@@ -165,12 +163,12 @@ public class FrequentLinkSetFinder {
 
     private ObjectArrayList getValidNodes() {
         ObjectArrayList validNodes = new ObjectArrayList();
-        for ( int i = 0; i < bitMatrixUtil.getMatrix().rows(); i++ )
-            for ( int j = i + 1; j < bitMatrixUtil.getMatrix().columns(); j++ ) {
-                if ( bitMatrixUtil.getMatrix().bitCount( i, j ) >= this.Threshold ) {
-                    TreeNode oneNode = new TreeNode( bitMatrixUtil.generateId( i, j ), bitMatrixUtil.getMatrix()
+        for ( int i = 0; i < linkMatrix.getMatrix().rows(); i++ )
+            for ( int j = i + 1; j < linkMatrix.getMatrix().columns(); j++ ) {
+                if ( linkMatrix.getMatrix().bitCount( i, j ) >= this.Threshold ) {
+                    TreeNode oneNode = new TreeNode( LinkBitMatrixUtil.generateId( i, j ), linkMatrix.getMatrix()
                             .getAllBits( i, j ), null );
-                    oneNode.mask = bitMatrixUtil.getMatrix().getAllBits( i, j );
+                    oneNode.mask = linkMatrix.getMatrix().getAllBits( i, j );
                     validNodes.add( oneNode );
                 }
             }

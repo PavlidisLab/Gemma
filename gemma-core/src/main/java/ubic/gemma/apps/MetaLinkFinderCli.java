@@ -28,11 +28,11 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.analysis.linkAnalysis.BitMatrixUtil;
+import ubic.gemma.analysis.linkAnalysis.LinkBitMatrixUtil;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
-import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
+import ubic.gemma.analysis.linkAnalysis.LinkBitMatrixUtil;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -63,7 +63,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
     private boolean writeLinkMatrix = false;
     private String matrixFile = null, eeMapFile = null, treeFile = null, taxonName = null;
     private Taxon taxon = null;
-    private MetaLinkFinder linkFinder = null;
+    private LinkBitMatrixUtil linkMatrix = null;
 
     @SuppressWarnings("static-access")
     @Override
@@ -142,7 +142,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 Gene gene = utilService.getGene( geneName, taxon );
                 if ( gene != null ) {
                     System.out.println( "Got " + geneName + " " + count );
-                    linkFinder.output( gene, count );
+                    linkMatrix.output( gene, count );
                 } else
                     System.out.println( "Gene doesn't exist" );
             }
@@ -170,10 +170,10 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             geneService = ( GeneService ) this.getBean( "geneService" );
             utilService = (LinkAnalysisUtilService) this.getBean( " linkAnalysisUtilService" );
 
-            linkFinder = new MetaLinkFinder();
-            linkFinder.setGeneService( geneService );
-            linkFinder.setEEService(eeService);
-            linkFinder.setUtilService(utilService);
+            linkMatrix = new LinkBitMatrixUtil();;
+            linkMatrix.setGeneService( geneService );
+            linkMatrix.setEEService(eeService);
+            linkMatrix.setUtilService(utilService);
             
             taxon = utilService.getTaxon(taxonName);
             if ( taxon == null ) {
@@ -184,9 +184,10 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             // load the link matrix
             if ( this.writeLinkMatrix ) {
                 watch.start();
-                linkFinder.find( taxon );
+                linkMatrix.init( taxon );
+                linkMatrix.fillCountMatrix();
                 try {
-                    linkFinder.getBitMatrixUtil().toFile( this.matrixFile, this.eeMapFile );
+                    linkMatrix.toFile( this.matrixFile, this.eeMapFile );
                 } catch ( IOException e ) {
                     log.info( "Couldn't save the results into the files " );
                     return e;
@@ -195,7 +196,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             } else {
                 watch.start();
                 try {
-                    linkFinder.getBitMatrixUtil().fromFile( this.matrixFile, this.eeMapFile, eeService, geneService );
+                    linkMatrix.fromFile( this.matrixFile, this.eeMapFile, eeService, geneService );
                 } catch ( IOException e ) {
                     log.info( "Couldn't load the data from the files " );
                     return e;
@@ -205,10 +206,9 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             }
             System.err.println( "Finish Loading!" );
             watch.reset();
-            BitMatrixUtil bitMatrixUtil = linkFinder.getBitMatrixUtil();
             watch.start();
 
-            LinkGraphClustering clustering = new LinkGraphClustering( 6, bitMatrixUtil, linkFinder);
+            LinkGraphClustering clustering = new LinkGraphClustering( 6, linkMatrix);
             // clustering.testSerilizable();
             if ( this.writeClusteringTree ) {
                 clustering.run();
@@ -239,7 +239,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             LinkGraphClustering.collectTreeNodes( leafNodes, new ObjectArrayList(), testNode );
             GraphViewer gviewer1 = new GraphViewer( leafNodes, false );
             gviewer1.run();
-            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6,bitMatrixUtil,linkFinder);
+            FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6,linkMatrix);
             freFinder.find( leafNodes );
             watch.stop();
             log.info( "Spend " + watch.getTime() / 1000 + " to Generated " + FrequentLinkSetFinder.nodeNum + " nodes" );
