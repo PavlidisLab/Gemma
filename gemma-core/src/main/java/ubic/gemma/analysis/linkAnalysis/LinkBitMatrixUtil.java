@@ -187,7 +187,11 @@ public class LinkBitMatrixUtil {
             res.remove( ontologyTerm );
         return res;
     }
-
+    public int computeGOOverlap(long packedId){
+        int row = (int)(packedId/shift);
+        int col = (int)(packedId%shift);
+        return utilService.computeGOOverlap(getRowGene(row),getColGene(col));
+    }
     public void toFile( String matrixFile, String eeMapFile ) throws IOException {
         linkCountMatrix.toFile( matrixFile );
         FileWriter out = new FileWriter( new File( eeMapFile ) );
@@ -434,6 +438,10 @@ public class LinkBitMatrixUtil {
     public void setUtilService( LinkAnalysisUtilService utilService ) {
         this.utilService = utilService;
     }
+    public LinkAnalysisUtilService getUtilService() {
+        return this.utilService;
+    }
+
     public void setStringency(int stringency){
     	this.stringency = stringency;
     }

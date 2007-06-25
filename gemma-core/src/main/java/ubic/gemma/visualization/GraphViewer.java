@@ -80,8 +80,8 @@ import prefuse.visual.VisualItem;
 
 import cern.colt.list.ObjectArrayList;
 
+import ubic.gemma.analysis.linkAnalysis.LinkBitMatrixUtil;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
-import ubic.gemma.analysis.linkAnalysis.MetaLinkFinder;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyTerm;
@@ -129,13 +129,14 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
     	DECORATOR_SCHEMA.setDefault(VisualItem.FONT, FontLib.getFont("Tahoma", 10)); 
     }
     
-
-	public GraphViewer(ObjectArrayList nodes, boolean MULTIPLE_TREES ){
+    private LinkBitMatrixUtil linkMatrix = null;
+	public GraphViewer(ObjectArrayList nodes, boolean MULTIPLE_TREES, LinkBitMatrixUtil linkMatrix){
 		WINDOW_CLOSED = false;
 		if(MULTIPLE_TREES)
 			this.clusterRootNodes = nodes;
 		else
 			this.treeNodes = nodes;
+		this.linkMatrix = linkMatrix;
 		init_view();
 	}
 	private void init_buttons(JPanel buttonPanel){
@@ -274,7 +275,7 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 			TreeNode treeNode = (TreeNode)leafNodes.get(i);
 			treeIds.add(((TreeNode)treeNode).id);
 		}
-//		goTermsCounter = MetaLinkFinder.computeGOOverlap(treeIds, 20);
+		goTermsCounter = linkMatrix.computeGOOverlap(treeIds, 20);
 		for(OntologyTerm ontologyTerm:goTermsCounter.keySet()){
 			int num = goTermsCounter.get(ontologyTerm);
 			System.err.println("("+num+") " + ontologyTerm.getTerm()+":"+ ontologyTerm.getComment());
@@ -286,8 +287,7 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 		g.getEdgeTable().addColumns(EDGE_SCHEMA);
 		for(int i = 0; i < leafNodes.size(); i++){
 			Object obj = leafNodes.get(i);
-//			Gene[] pairedGene = MetaLinkFinder.getPairedGenes(((TreeNode) obj).id);
-			Gene[] pairedGene = null; 
+			Gene[] pairedGene = linkMatrix.getPairedGenes(((TreeNode) obj).id);
 			for(Gene gene:pairedGene){
 				if(!gene2Node.containsKey(gene.getId())){
 					Node node = g.addNode();
@@ -297,7 +297,7 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 					else node.setString(NODETYPE, "N");
 
 					String goTerms = "";
-					Collection<OntologyTerm> goEntries = null; //MetaLinkFinder.getGoTerms(gene);
+					Collection<OntologyTerm> goEntries = linkMatrix.getUtilService().getGoTerms(gene);
 					for(OntologyTerm ontologyTerm:goEntries){
 						goTerms = goTerms + ontologyTerm.getTerm()+";";
 					}
@@ -307,7 +307,7 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 			}
 			Node node1 = gene2Node.get(pairedGene[0].getId());
 			Node node2 = gene2Node.get(pairedGene[1].getId());
-			Integer  goOverlaped = 0; //MetaLinkFinder.computeGOOverlap(((TreeNode)obj).id);
+			Integer  goOverlaped = linkMatrix.computeGOOverlap(((TreeNode)obj).id);
 			Edge edge = g.addEdge(node1,node2);
 			//edge.setDouble(WEIGHT,goOverlaped);
 			edge.setString(EDGENAME,goOverlaped.toString());

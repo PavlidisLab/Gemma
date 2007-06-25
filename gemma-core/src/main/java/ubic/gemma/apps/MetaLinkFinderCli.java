@@ -217,7 +217,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 clustering.readTreeFromFile( this.treeFile );
             }
             ObjectArrayList savedClusters = clustering.selectClustersToSave( 20 );
-            GraphViewer gviewer = new GraphViewer( savedClusters, true );
+            GraphViewer gviewer = new GraphViewer( savedClusters, true, linkMatrix);
             gviewer.run();
 
             ObjectArrayList leafNodes = new ObjectArrayList();
@@ -237,7 +237,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             leafNodes.clear();
             // testNode = clustering.selectMaximalCluster();
             LinkGraphClustering.collectTreeNodes( leafNodes, new ObjectArrayList(), testNode );
-            GraphViewer gviewer1 = new GraphViewer( leafNodes, false );
+            GraphViewer gviewer1 = new GraphViewer( leafNodes, false, linkMatrix);
             gviewer1.run();
             FrequentLinkSetFinder freFinder = new FrequentLinkSetFinder( 6,linkMatrix);
             freFinder.find( leafNodes );
