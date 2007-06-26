@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
-import ubic.gemma.model.common.description.VocabCharacteristicImpl;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -78,7 +78,7 @@ public class MgedOntologyService implements InitializingBean {
         return term;
     }
     
-    public void saveStatement(VocabCharacteristicImpl vc, Collection<Long> bioMaterialIdList){
+    public void saveStatement(VocabCharacteristic vc, Collection<Long> bioMaterialIdList){
         
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );

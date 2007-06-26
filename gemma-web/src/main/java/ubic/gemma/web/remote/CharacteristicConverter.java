@@ -1,3 +1,22 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package ubic.gemma.web.remote;
 
 import java.util.Iterator;
@@ -19,8 +38,8 @@ import org.directwebremoting.extend.TypeHintContext;
 import org.directwebremoting.util.LocalUtil;
 import org.directwebremoting.util.Messages;
 
-public class CharacteristicPropertyConverter extends BeanConverter {
-    private static Log log = LogFactory.getLog( CharacteristicPropertyConverter.class.getName() );
+public class CharacteristicConverter extends BeanConverter {
+    private static Log log = LogFactory.getLog( CharacteristicConverter.class.getName() );
 
     public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws MarshallException {
         return new SimpleOutboundVariable( '\'' + data.toString() + '\'', outctx, true );
@@ -48,24 +67,24 @@ public class CharacteristicPropertyConverter extends BeanConverter {
         value = value.substring( 1, value.length() - 1 );
 
         try {
-            Object bean;
             Map tokens = extractInboundTokens( paramType, value );
 
+            Object bean;
             if ( instanceType != null ) {
 
                 log.info( instanceType );
 
-                if ( tokens.containsKey( "data" ) || tokens.containsKey( "type" ) )
-                    bean = ubic.gemma.model.common.description.DataProperty.Factory.newInstance();
+                if ( tokens.containsKey( "termUri" ) )
+                    bean = ubic.gemma.model.common.description.VocabCharacteristic.Factory.newInstance();
                 else
-                    bean = ubic.gemma.model.common.description.Property.Factory.newInstance();
+                    bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();
 
                 inctx.addConverted( iv, instanceType, bean );
             } else {
-                if ( tokens.containsKey( "data" ) || tokens.containsKey( "type" ) )
-                    bean = ubic.gemma.model.common.description.DataProperty.Factory.newInstance();
+                if ( tokens.containsKey( "termUri" ) )
+                    bean = ubic.gemma.model.common.description.VocabCharacteristic.Factory.newInstance();
                 else
-                    bean = ubic.gemma.model.common.description.Property.Factory.newInstance();
+                    bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();
 
                 inctx.addConverted( iv, paramType, bean );
             }
@@ -73,6 +92,7 @@ public class CharacteristicPropertyConverter extends BeanConverter {
             Map properties = getPropertyMapFromObject( bean, false, true );
 
             // Loop through the properties passed in
+
             for ( Iterator it = tokens.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry entry = ( Map.Entry ) it.next();
                 String key = ( String ) entry.getKey();

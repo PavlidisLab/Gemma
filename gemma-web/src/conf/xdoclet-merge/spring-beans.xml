@@ -102,8 +102,8 @@
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
 	<property name="converterTypes">
 		<map>
-			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.remote.CharacteristicPropertyConverter">
-			</entry>
+			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.remote.CharacteristicPropertyConverter">	</entry>
+			<entry key="characteristicConverter" value="ubic.gemma.web.remote.CharacteristicConverter"> </entry>
 		</map>
 	</property>
 	<property name="creators">
@@ -308,57 +308,59 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.common.description.VocabCharacteristicImpl">
+			<entry key="ubic.gemma.model.common.description.VocabCharacteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
 							<value>termUri</value>
 							<value>properties</value>
+							<value>value</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.common.description.CharacteristicImpl">
+	
+			<entry key="ubic.gemma.model.common.description.Characteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
+					<property name="type" value="characteristicConverter" />
 					<property name="includes">
-						<list></list>
+						<list>
+							<value>termUri</value>
+							<value>value</value>	
+							<value>properties</value>					
+						</list>
 					</property>
 				</bean>
 			</entry>
+			
 			<entry key="ubic.gemma.model.common.description.CharacteristicProperty">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicPropertyConverter" />
 					<property name="includes">
 						<list>
 							<value>termUri</value>
+							<value>data</value>
+							<value>type</value>
+							<value>object</value>
+							<value>value</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.common.description.CharacteristicPropertyImpl">
-				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
-					<property name="includes">
-						<list>
-							<value>termUri</value>
-						</list>
-					</property>
-				</bean>
-			</entry>
-			<entry key="ubic.gemma.model.common.description.PropertyImpl">
+			<entry key="ubic.gemma.model.common.description.Property">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
 							<value>termUri</value>
 							<value>object</value>
+							<value>value</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.common.description.DataPropertyImpl">
+			<entry key="ubic.gemma.model.common.description.DataProperty">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
@@ -366,6 +368,7 @@
 							<value>termUri</value>
 							<value>data</value>
 							<value>type</value>
+							<value>value</value>
 						</list>
 					</property>
 				</bean>
