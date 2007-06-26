@@ -61,8 +61,8 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
         // .getBean( "expressionExperimentReportTask" );
         // reportProxy.execute();
 
-        ExpressionExperimentReportService reportProxy = ( ExpressionExperimentReportService ) updatedContext
-                .getBean( "expressionExperimentReportService" );
+        ExpressionExperimentReportTask reportProxy = ( ExpressionExperimentReportTask ) updatedContext
+                .getBean( "proxy" );
         reportProxy.execute();
     }
 

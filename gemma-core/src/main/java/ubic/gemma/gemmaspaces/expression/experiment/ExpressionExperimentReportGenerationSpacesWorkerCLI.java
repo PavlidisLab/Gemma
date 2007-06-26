@@ -47,7 +47,7 @@ public class ExpressionExperimentReportGenerationSpacesWorkerCLI extends Abstrac
      */
     @Override
     protected void setRegistrationEntryTask() throws Exception {
-        registrationEntry.message = ExpressionExperimentReportService.class.getName();
+        registrationEntry.message = ExpressionExperimentReportTask.class.getName();
     }
 
     /*
