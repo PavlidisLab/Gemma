@@ -46,6 +46,21 @@
 			</value>
 		</property>
 	</bean>
+
+	<bean id="expressionExperimentReportGenerationWorker"
+		class="ubic.gemma.gemmaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="expressionExperimentReportService" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask
+			</value>
+		</property>
+	</bean>
+
 	<bean id="javaSpaceInterceptor"
 		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
@@ -91,6 +106,9 @@
 			<list>
 				<value>
 					ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTask
+				</value>
+				<value>
+					ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask
 				</value>
 			</list>
 		</property>
