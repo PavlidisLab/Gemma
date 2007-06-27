@@ -124,7 +124,7 @@ public class SearchService {
         Collection<ArrayDesign> combinedList = new HashSet<ArrayDesign>();
         combinedList.addAll( adCompassList );
         combinedList.addAll( adCsList );
-        combinedList.add( adQueryResult );
+        if ( adQueryResult != null ) combinedList.add( adQueryResult );
 
         return combinedList;
     }

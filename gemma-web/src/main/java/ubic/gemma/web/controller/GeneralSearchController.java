@@ -310,8 +310,10 @@ public class GeneralSearchController extends BaseFormController {
     protected Collection<Long> generateEEIdList( Collection<ExpressionExperiment> searchResults ) {
         Collection<Long> list = new ArrayList<Long>();
 
-        for ( ExpressionExperiment ee : searchResults )
+        for ( ExpressionExperiment ee : searchResults ) {
+            if ( ee == null ) continue;
             list.add( ee.getId() );
+        }
 
         return list;
     }
@@ -319,8 +321,10 @@ public class GeneralSearchController extends BaseFormController {
     protected Collection<Long> generateADIdList( Collection<ArrayDesign> searchResults ) {
         Collection<Long> list = new ArrayList<Long>();
 
-        for ( ArrayDesign ad : searchResults )
+        for ( ArrayDesign ad : searchResults ) {
+            if ( ad == null ) continue;
             list.add( ad.getId() );
+        }
 
         return list;
     }
