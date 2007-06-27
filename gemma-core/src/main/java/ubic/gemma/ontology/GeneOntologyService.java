@@ -77,6 +77,7 @@ public class GeneOntologyService implements InitializingBean {
     // map of uris to terms
     private static Map<String, OntologyTerm> terms;
     private static Map<OntologyTerm, Collection<OntologyTerm>> childrenCache = Collections.synchronizedMap (new HashMap<OntologyTerm, Collection<OntologyTerm>>());
+    private static Map<OntologyTerm, Collection<OntologyTerm>> parentsCache = Collections.synchronizedMap (new HashMap<OntologyTerm, Collection<OntologyTerm>>());
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -303,9 +304,18 @@ public class GeneOntologyService implements InitializingBean {
      * @return parents (excluding the root)
      */
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry ) {
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-        getAllParents( entry, results );
-        return results;
+        
+        
+        if (parentsCache.containsKey( entry ))
+            return parentsCache.get( entry );
+            
+        Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
+        getAllParents( entry, parents );
+        
+        parentsCache.put( entry, parents );
+        
+        return parents;
+        
     }
 
     /**
