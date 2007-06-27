@@ -21,6 +21,7 @@ package ubic.gemma.ontology;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -75,6 +76,7 @@ public class GeneOntologyService implements InitializingBean {
 
     // map of uris to terms
     private static Map<String, OntologyTerm> terms;
+    private static Map<OntologyTerm, Collection<OntologyTerm>> childrenCache = Collections.synchronizedMap (new HashMap<OntologyTerm, Collection<OntologyTerm>>());
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -340,8 +342,15 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry ) {
+        
+        if (childrenCache.containsKey( entry ))
+            return childrenCache.get( entry );
+            
         Collection<OntologyTerm> children = new HashSet<OntologyTerm>();
         getAllChildren( entry, children );
+        
+        childrenCache.put( entry, children );
+        
         return children;
     }
 
@@ -525,7 +534,10 @@ public class GeneOntologyService implements InitializingBean {
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
         for ( VocabCharacteristic c : annotations ) {
-            assert terms.containsKey( c.getTermUri() );
+            if (!terms.containsKey( c.getTermUri() )){
+                log.warn("Term " + c.getTermUri() + " not found in term list cant add to results" );
+                continue;
+            }
             allGOTermSet.add( terms.get( c.getTermUri() ) );
         }
 
