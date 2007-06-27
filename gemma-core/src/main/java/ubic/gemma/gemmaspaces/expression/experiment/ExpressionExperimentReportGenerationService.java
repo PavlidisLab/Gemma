@@ -20,6 +20,7 @@ package ubic.gemma.gemmaspaces.expression.experiment;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.gemmaspaces.AbstractGemmaSpacesService;
+import ubic.gemma.gemmaspaces.GemmaSpacesCommand;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 
@@ -63,7 +64,8 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
 
         ExpressionExperimentReportTask reportProxy = ( ExpressionExperimentReportTask ) updatedContext
                 .getBean( "proxy" );
-        reportProxy.execute();
+        GemmaSpacesCommand gemmaSpacesCommand = new GemmaSpacesCommand( taskId );
+        reportProxy.execute( gemmaSpacesCommand );
     }
 
     /*

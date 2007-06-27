@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.gemmaspaces.GemmaSpacesCommand;
 import ubic.gemma.gemmaspaces.GemmaSpacesResult;
 import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
@@ -391,7 +392,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * 
      * @see ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
-    public GemmaSpacesResult execute() {
+    public GemmaSpacesResult execute( GemmaSpacesCommand gemmaSpacesCommand ) {
         this.generateSummaryObjects();
         return null;
     }
