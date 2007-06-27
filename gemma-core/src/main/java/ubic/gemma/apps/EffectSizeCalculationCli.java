@@ -52,7 +52,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         geneService = ( GeneService ) this.getBean( "geneService" );
         effectSizeService = ( EffectSizeService ) this.getBean( "effectSizeService" );
     }
-
+    
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -142,4 +142,15 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
         return null;
     }
 
+    public static void main(String[] args) {
+        EffectSizeCalculationCli analysis = new EffectSizeCalculationCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        log.info( "Starting Effect Size Analysis" );
+        Exception exc = analysis.doWork( args );
+        if ( exc != null ) {
+            log.error( exc.getMessage() );
+        }
+        log.info( "Finished analysis in " + watch.getTime() / 1000 + " seconds" );
+    }
 }
