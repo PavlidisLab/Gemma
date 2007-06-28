@@ -172,7 +172,7 @@ public class ArrayDesignReportService {
      *
      */
     public void generateAllArrayDesignReport() {
-        log.info( "Generating report for all array designs\n" );
+        log.info( "Generating report summarizing all array designs ... " );
 
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
