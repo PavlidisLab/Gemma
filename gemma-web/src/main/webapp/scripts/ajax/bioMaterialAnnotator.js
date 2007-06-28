@@ -384,9 +384,6 @@ var createForm = function(subject, vc, divId){
                        {header: "Uri",  width: 80, dataIndex:"id"}
                        ]);
        cm.defaultSortable = true;	
-	
-//================================
-    
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
