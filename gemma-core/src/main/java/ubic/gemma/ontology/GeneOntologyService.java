@@ -76,8 +76,8 @@ public class GeneOntologyService implements InitializingBean {
 
     // map of uris to terms
     private static Map<String, OntologyTerm> terms;
-    private static Map<OntologyTerm, Collection<OntologyTerm>> childrenCache = Collections.synchronizedMap (new HashMap<OntologyTerm, Collection<OntologyTerm>>());
-    private static Map<OntologyTerm, Collection<OntologyTerm>> parentsCache = Collections.synchronizedMap (new HashMap<OntologyTerm, Collection<OntologyTerm>>());
+    private static Map<String, Collection<OntologyTerm>> childrenCache = Collections.synchronizedMap (new HashMap<String, Collection<OntologyTerm>>());
+    private static Map<String, Collection<OntologyTerm>> parentsCache = Collections.synchronizedMap (new HashMap<String, Collection<OntologyTerm>>());
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -319,16 +319,16 @@ public class GeneOntologyService implements InitializingBean {
     private void getAllParents( OntologyTerm entry, Collection<OntologyTerm> parents ) {
         if ( parents == null ) throw new IllegalArgumentException();
         
-        if (parentsCache.containsKey( entry )){
-            if (parentsCache.get( entry ) != null)
-                parents.addAll(  parentsCache.get( entry ) );
+        if (parentsCache.containsKey( entry.getUri() )){
+            if (parentsCache.get( entry.getUri() ) != null)
+                parents.addAll(  parentsCache.get( entry.getUri() ) );
             
             return;
         }
         
         Collection<OntologyTerm> immediateParents = getParents( entry );
         if ( immediateParents == null ){
-            parentsCache.put( entry, null);
+            parentsCache.put( entry.getUri(), null);
             return;
         }
         
@@ -338,7 +338,7 @@ public class GeneOntologyService implements InitializingBean {
             getAllParents( entry2, parents );
         }
         
-        parentsCache.put( entry, parents );
+        parentsCache.put( entry.getUri(), new HashSet(parents) );
         
         
     }
@@ -378,9 +378,9 @@ public class GeneOntologyService implements InitializingBean {
         
         if ( children == null ) throw new IllegalArgumentException(); 
         
-        if (childrenCache.containsKey( entry )){
-            if (childrenCache.get( entry ) != null)
-                children.addAll(  childrenCache.get( entry ) );
+        if (childrenCache.containsKey( entry.getUri() )){
+            if (childrenCache.get( entry.getUri() ) != null)
+                children.addAll(  childrenCache.get( entry.getUri() ) );
             
             return;
         }
@@ -388,7 +388,7 @@ public class GeneOntologyService implements InitializingBean {
         Collection<OntologyTerm> immediateChildren = getChildren( entry );
         
         if ( immediateChildren == null ){
-            childrenCache.put( entry, null);
+            childrenCache.put( entry.getUri(), null);
             return;
         }
         
@@ -397,7 +397,7 @@ public class GeneOntologyService implements InitializingBean {
             getAllChildren( child, children );
         }
         
-        childrenCache.put( entry, children );
+        childrenCache.put( entry.getUri(), new HashSet(children) );
         
     }
 
