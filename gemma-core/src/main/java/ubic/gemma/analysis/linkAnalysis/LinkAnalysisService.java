@@ -76,6 +76,8 @@ public class LinkAnalysisService {
 
     private static final int LINK_BATCH_SIZE = 1000;
 
+    private static final boolean useDB = true; // useful for debugging.
+
     private static Log log = LogFactory.getLog( LinkAnalysisService.class.getName() );
     QuantitationTypeService quantitationTypeService;
     ExpressionExperimentService eeService;
@@ -154,7 +156,9 @@ public class LinkAnalysisService {
      */
     private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la ) {
 
-        deleteOldLinks( la );
+        if ( useDB ) {
+            deleteOldLinks( la );
+        }
 
         log.info( "Start submitting data to database." );
         StopWatch watch = new StopWatch();
@@ -162,21 +166,46 @@ public class LinkAnalysisService {
 
         ObjectArrayList links = la.getKeep();
         /*
-         * Important implementation note: Note that the links in la are stored in 'x' coordinate order. For efficiency
-         * reason, it is important that they be stored in this order in the database: so all all links with probe=x are
-         * clustered. (the actual order of x1 vs x2 doesn't matter). This makes retrievals much faster for the most
-         * common types of queries.
+         * Important implementation note: For efficiency reason, it is important that they be stored in order of "x"
+         * (the first designelementdatavector) in the database: so all all links with probe=x are clustered. (the actual
+         * order of x1 vs x2 doesn't matter). This makes retrievals much faster for the most common types of queries.
          */
-        saveLinks( p2v, la, links, false );
+        Object[] linksar = links.elements();
+        Sorting.quickSort( linksar, 0, links.size(), new Comparator() {
+            public int compare( Object arg0, Object arg1 ) {
+                Link a = ( Link ) arg0;
+                Link b = ( Link ) arg1;
+
+                if ( a.getx() < b.getx() ) {
+                    return -1;
+                } else if ( a.getx() > b.getx() ) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        } );
+        links.elements( linksar );
+
+        if ( log.isDebugEnabled() ) {
+            for ( Object link : links.elements() ) {
+                if ( link == null ) continue;
+                log.debug( ( ( Link ) link ).getx() + " " + ( ( Link ) link ).gety() );
+            }
+        }
+
+        if ( useDB ) {
+            saveLinks( p2v, la, links, false );
+        }
 
         /*
          * now create 'reversed' links, first by sorting by the 'y' coordinate. Again, this sort is critical to keep the
          * links in an ordering that the RDBMS can use efficiently.
          */
         log.info( "Sorting links to create flipped set" );
-        Object[] linksar = links.elements();
         Sorting.quickSort( linksar, 0, links.size(), new Comparator() {
             public int compare( Object arg0, Object arg1 ) {
+                if ( arg0 == null || arg1 == null ) return 1;
                 Link a = ( Link ) arg0;
                 Link b = ( Link ) arg1;
 
@@ -189,12 +218,23 @@ public class LinkAnalysisService {
                 }
             }
         } );
+        links.elements( linksar );
 
         log.info( "Saving flipped links" );
-        saveLinks( p2v, la, links, true );
+
+        if ( log.isDebugEnabled() ) {
+            for ( Object link : links.elements() ) {
+                if ( link == null ) continue;
+                log.debug( ( ( Link ) link ).getx() + " " + ( ( Link ) link ).gety() );
+            }
+        }
+
+        if ( useDB ) {
+            saveLinks( p2v, la, links, true );
+        }
 
         watch.stop();
-        log.info( "Seconds to insert " + links.size() + " links plus flipped versions:" + ( double ) watch.getTime()
+        log.info( "Seconds to process " + links.size() + " links plus flipped versions:" + ( double ) watch.getTime()
                 / 1000.0 );
     }
 
@@ -348,7 +388,9 @@ public class LinkAnalysisService {
 
         Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.size(); i < n; i++ ) {
-            Link m = ( Link ) links.getQuick( i );
+            Object val = links.getQuick( i );
+            if ( val == null ) continue;
+            Link m = ( Link ) val;
             Double w = m.getWeight();
 
             assert w != null;
