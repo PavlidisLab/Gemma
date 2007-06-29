@@ -74,7 +74,7 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
             if ( res.isAnnotationProperty() ) {
                 com.hp.hpl.jena.ontology.AnnotationProperty p = res.asAnnotationProperty();
                 RDFNode n = state.getObject();
-                annots.add( new AnnotationPropertyImpl(p , this.sourceOntology, n ) );
+                annots.add( new AnnotationPropertyImpl( p, this.sourceOntology, n ) );
             }
         }
         return annots;
@@ -121,16 +121,18 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
         return inds;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyTerm#getIndividuals()
      */
-    public Collection<OntologyIndividual> getIndividuals() {       
+    public Collection<OntologyIndividual> getIndividuals() {
         return getIndividuals( true );
     }
-    
+
     public Collection<OntologyRestriction> getRestrictions() {
         Collection<OntologyRestriction> result = new HashSet<OntologyRestriction>();
-        ExtendedIterator iterator = ontResource.listSuperClasses( true );
+        ExtendedIterator iterator = ontResource.listSuperClasses( false );
         while ( iterator.hasNext() ) {
             OntClass c = ( OntClass ) iterator.next();
             Restriction r = null;
@@ -138,7 +140,18 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
                 r = c.asRestriction();
                 result.add( RestrictionFactory.asRestriction( r, sourceOntology ) );
             } catch ( Exception e ) {
-                // not a restriction.
+                // not a restriction, but a superclass that might have restrictions
+                ExtendedIterator supClassesIt = c.listSuperClasses( true );
+                while ( supClassesIt.hasNext() ) {
+                    OntClass sc = ( OntClass ) supClassesIt.next();
+                    Restriction sr = null;
+                    try {
+                        sr = sc.asRestriction();
+                        result.add( RestrictionFactory.asRestriction( sr, sourceOntology ) );
+                    } catch ( Exception ex ) {
+                        // superclass isn't a restriction.
+                    }
+                }
             }
 
         }
