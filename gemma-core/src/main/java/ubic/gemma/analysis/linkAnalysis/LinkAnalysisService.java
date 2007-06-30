@@ -402,9 +402,9 @@ public class LinkAnalysisService {
             DesignElementDataVector v2 = p2v.get( p2 );
 
             if ( flip ) {
-                persist( numColumns, p2plinkBatch, i, w, v1, v2, metric, c );
-            } else {
                 persist( numColumns, p2plinkBatch, i, w, v2, v1, metric, c );
+            } else {
+                persist( numColumns, p2plinkBatch, i, w, v1, v2, metric, c );
             }
 
             if ( i > 0 && i % 50000 == 0 ) {
