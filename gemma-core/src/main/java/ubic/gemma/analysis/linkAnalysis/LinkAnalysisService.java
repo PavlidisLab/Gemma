@@ -165,27 +165,14 @@ public class LinkAnalysisService {
         watch.start();
 
         ObjectArrayList links = la.getKeep();
+
         /*
          * Important implementation note: For efficiency reason, it is important that they be stored in order of "x"
          * (the first designelementdatavector) in the database: so all all links with probe=x are clustered. (the actual
          * order of x1 vs x2 doesn't matter). This makes retrievals much faster for the most common types of queries.
+         * Note that this relies on expected behavior that links.sort() will sort by the x coordinate.
          */
-        Object[] linksar = links.elements();
-        Sorting.quickSort( linksar, 0, links.size(), new Comparator() {
-            public int compare( Object arg0, Object arg1 ) {
-                Link a = ( Link ) arg0;
-                Link b = ( Link ) arg1;
-
-                if ( a.getx() < b.getx() ) {
-                    return -1;
-                } else if ( a.getx() > b.getx() ) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
-        } );
-        links.elements( linksar );
+        links.sort();
 
         if ( log.isDebugEnabled() ) {
             for ( Object link : links.elements() ) {
@@ -202,8 +189,7 @@ public class LinkAnalysisService {
          * now create 'reversed' links, first by sorting by the 'y' coordinate. Again, this sort is critical to keep the
          * links in an ordering that the RDBMS can use efficiently.
          */
-        log.info( "Sorting links to create flipped set" );
-        Sorting.quickSort( linksar, 0, links.size(), new Comparator() {
+        links.mergeSortFromTo( 0, links.size() - 1, new Comparator() {
             public int compare( Object arg0, Object arg1 ) {
                 if ( arg0 == null || arg1 == null ) return 1;
                 Link a = ( Link ) arg0;
@@ -214,11 +200,15 @@ public class LinkAnalysisService {
                 } else if ( a.gety() > b.gety() ) {
                     return 1;
                 } else {
+                    if ( a.getx() < b.getx() ) {
+                        return -1;
+                    } else if ( a.getx() > b.getx() ) {
+                        return 1;
+                    }
                     return 0;
                 }
             }
         } );
-        links.elements( linksar );
 
         log.info( "Saving flipped links" );
 
@@ -323,17 +313,15 @@ public class LinkAnalysisService {
     /**
      * @param numColumns
      * @param w
-     * @param v1
-     * @param taxon
+     * @param c helper class
+     * @param metric e.g. Pearson Correlation
      * @return
      */
     private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric ) {
         Probe2ProbeCoexpression ppCoexpression = c.create();
-
         ppCoexpression.setScore( w );
         ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
-        ppCoexpression.setMetric( metric ); // FIXME THIS is incorrect. This should be the
-        // quantitation type for the SCORE. (e.g., pearson correlation)
+        ppCoexpression.setMetric( metric );
         return ppCoexpression;
     }
 
