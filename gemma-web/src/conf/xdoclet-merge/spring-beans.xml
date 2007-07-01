@@ -102,8 +102,10 @@
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
 	<property name="converterTypes">
 		<map>
-			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.remote.CharacteristicPropertyConverter">	</entry>
-			<entry key="characteristicConverter" value="ubic.gemma.web.remote.CharacteristicConverter"> </entry>
+			<entry key="characteristicPropertyConverter"
+				value="ubic.gemma.web.remote.CharacteristicPropertyConverter">
+			</entry>
+			<entry key="characteristicConverter" value="ubic.gemma.web.remote.CharacteristicConverter"></entry>
 		</map>
 	</property>
 	<property name="creators">
@@ -316,33 +318,34 @@
 							<value>termUri</value>
 							<value>properties</value>
 							<value>value</value>
+							<value>description</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-	
 			<entry key="ubic.gemma.model.common.description.Characteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicConverter" />
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>value</value>	
-							<value>properties</value>					
+							<value>value</value>
+							<value>properties</value>
+							<value>description</value>
 						</list>
 					</property>
 				</bean>
 			</entry>
-			
 			<entry key="ubic.gemma.model.common.description.CharacteristicProperty">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicPropertyConverter" />
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>data</value>							
+							<value>data</value>
 							<value>object</value>
 							<value>value</value>
+							<value>description</value>
 						</list>
 					</property>
 				</bean>
@@ -500,7 +503,8 @@
 							<value>label</value>
 							<value>individuals</value>
 							<value>comment</value>
-							<value>annotations</value>						</list>
+							<value>annotations</value>
+						</list>
 					</property>
 				</bean>
 			</entry>
@@ -517,7 +521,8 @@
 							<value>label</value>
 							<value>individuals</value>
 							<value>comment</value>
-							<value>annotations</value>						</list>
+							<value>annotations</value>
+						</list>
 					</property>
 				</bean>
 			</entry>
@@ -525,9 +530,9 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
-						<list>													
+						<list>
 							<value>uri</value>
-							<value>label</value>						
+							<value>label</value>
 						</list>
 					</property>
 				</bean>
@@ -555,14 +560,14 @@
 						</list>
 					</property>
 				</bean>
-			</entry>			
+			</entry>
 			<entry key="ubic.gemma.ontology.OntologyIndividualImpl">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
 							<value>uri</value>
-							<value>label</value>						
+							<value>label</value>
 						</list>
 					</property>
 				</bean>
@@ -585,10 +590,9 @@
 						<list>
 							<value>comment</value>
 							<value>id</value>
-							<value>term</value>							
+							<value>term</value>
 						</list>
 					</property>
-					
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.ontology.OntologyDataList">
@@ -597,10 +601,9 @@
 					<property name="includes">
 						<list>
 							<value>data</value>
-							<value>totalSize</value>						
+							<value>totalSize</value>
 						</list>
 					</property>
-					
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.analysis.sequence.BlatResultGeneSummary">

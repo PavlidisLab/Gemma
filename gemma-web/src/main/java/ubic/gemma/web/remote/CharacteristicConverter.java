@@ -27,12 +27,9 @@ import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.convert.BeanConverter;
 import org.directwebremoting.dwrp.ParseUtil;
 import org.directwebremoting.dwrp.ProtocolConstants;
-import org.directwebremoting.dwrp.SimpleOutboundVariable;
 import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;
 import org.directwebremoting.extend.MarshallException;
-import org.directwebremoting.extend.OutboundContext;
-import org.directwebremoting.extend.OutboundVariable;
 import org.directwebremoting.extend.Property;
 import org.directwebremoting.extend.TypeHintContext;
 import org.directwebremoting.util.LocalUtil;
@@ -40,10 +37,6 @@ import org.directwebremoting.util.Messages;
 
 public class CharacteristicConverter extends BeanConverter {
     private static Log log = LogFactory.getLog( CharacteristicConverter.class.getName() );
-
-    public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws MarshallException {
-        return new SimpleOutboundVariable( '\'' + data.toString() + '\'', outctx, true );
-    }
 
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
