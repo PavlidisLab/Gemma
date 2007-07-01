@@ -105,7 +105,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * datavectors
      */
     public void generateSummaryObjects() {
-        initDirectories( true );
+        initDirectories( false );
         // first, load all expression experiment value objects
         // this will have no stats filled in
 
@@ -114,7 +114,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         getStats( vos );
 
         // save the collection
-
         saveValueObjects( vos );
     }
 
