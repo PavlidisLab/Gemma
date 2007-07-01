@@ -130,7 +130,13 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
         return getIndividuals( true );
     }
 
+    /**
+     * 
+     */
     public Collection<OntologyRestriction> getRestrictions() {
+        /*
+         * Remember that restrictions are superclasses.
+         */
         Collection<OntologyRestriction> result = new HashSet<OntologyRestriction>();
         ExtendedIterator iterator = ontResource.listSuperClasses( false );
         while ( iterator.hasNext() ) {
