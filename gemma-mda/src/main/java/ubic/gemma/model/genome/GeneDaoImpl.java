@@ -197,61 +197,72 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
+    /**
+     * @param genes
+     * @param coexpressions
+     */
     private void postProcessPredictedGenes( Map<Long, CoexpressionValueObject> genes,
             CoexpressionCollectionValueObject coexpressions ) {
 
         List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
 
+        CoexpressionTypeValueObject predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
         for ( Long geneId : genes.keySet() ) {
             CoexpressionValueObject coExValObj = genes.get( geneId );
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions
-                    .getPredictedCoexpressionType() );
+            incrementRawEEContributions( coExValObj.getExpressionExperiments(), predictedCoexpressionType );
 
             coExValObj.computeExperimentBits( allEEIds );
             if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
                 coexpressions.getPredictedCoexpressionData().add( coExValObj );
 
                 if ( coExValObj.getPositiveLinkCount() != null )
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
-                            .getPredictedCoexpressionType() );
+                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), predictedCoexpressionType );
                 else
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
-                            .getPredictedCoexpressionType() );
+                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), predictedCoexpressionType );
             }
         }
-        coexpressions.getPredictedCoexpressionType().setNumberOfGenes( genes.size() );
+        predictedCoexpressionType.setNumberOfGenes( genes.size() );
     }
 
+    /**
+     * @param genes
+     * @param coexpressions
+     */
     private void postProcessProbeAlignedRegions( Map<Long, CoexpressionValueObject> genes,
             CoexpressionCollectionValueObject coexpressions ) {
 
         int numStringencyProbeAlignedRegions = 0;
         List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
 
+        CoexpressionTypeValueObject probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
         for ( Long geneId : genes.keySet() ) {
             CoexpressionValueObject coExValObj = genes.get( geneId );
 
             coExValObj.computeExperimentBits( allEEIds );
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions
-                    .getProbeAlignedCoexpressionType() );
+            incrementRawEEContributions( coExValObj.getExpressionExperiments(), probeAlignedCoexpressionType );
 
             if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
                 numStringencyProbeAlignedRegions++;
                 coexpressions.getProbeAlignedCoexpressionData().add( coExValObj );
 
                 if ( coExValObj.getPositiveLinkCount() != null )
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
-                            .getProbeAlignedCoexpressionType() );
+                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(),
+                            probeAlignedCoexpressionType );
                 else
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
-                            .getProbeAlignedCoexpressionType() );
+                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(),
+                            probeAlignedCoexpressionType );
             }
 
         }
 
-        coexpressions.getProbeAlignedCoexpressionType().setNumberOfGenes( genes.size() );
+        probeAlignedCoexpressionType.setNumberOfGenes( genes.size() );
     }
 
+    /**
+     * @param genes
+     * @param coexpressions
+     * @throws Exception
+     */
     private void postProcessGeneImpls( Map<Long, CoexpressionValueObject> genes,
             CoexpressionCollectionValueObject coexpressions ) throws Exception {
 
@@ -457,13 +468,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
 
+        /*
+         * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the
+         * same gene are correlated.
+         */
         String query = "SELECT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM " + " GENE2CS gcIn "
                 + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
                 + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE" + " where " + eeClause
-                + " gcIn.GENE=:id ";
+                + " gcIn.GENE=:id AND geneout.ID <> :id  ";
 
         return query;
     }
@@ -1029,24 +1044,22 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
         // TODO Auto-generated method stub
         Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-        if(csIds == null || csIds.size() == 0) return cs2genes;
+        if ( csIds == null || csIds.size() == 0 ) return cs2genes;
         int count = 0;
         int CHUNK_LIMIT = 100000;
         int total = csIds.size();
         Collection<Long> idsInOneChunk = new HashSet<Long>();
         Session session = getSessionFactory().openSession();
-        
-        for(Object csId:csIds){
-            Long tmpId = (Long)csId;
-            idsInOneChunk.add(tmpId);
+
+        for ( Object csId : csIds ) {
+            Long tmpId = ( Long ) csId;
+            idsInOneChunk.add( tmpId );
             count++;
             total--;
-            if(count == CHUNK_LIMIT || total == 0){
-                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and" + 
-                " CS in (" +
-                StringUtils.join( idsInOneChunk.iterator(), "," ) + 
-                ")";
-                
+            if ( count == CHUNK_LIMIT || total == 0 ) {
+                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and"
+                        + " CS in (" + StringUtils.join( idsInOneChunk.iterator(), "," ) + ")";
+
                 org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.addScalar( "id", new LongType() );
                 queryObject.addScalar( "geneId", new LongType() );
@@ -1055,12 +1068,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 while ( scroll.next() ) {
                     Long id = scroll.getLong( 0 );
                     Long geneId = scroll.getLong( 1 );
-                    Collection<Long> geneIds = cs2genes.get(id);
-                    if(geneIds == null){
+                    Collection<Long> geneIds = cs2genes.get( id );
+                    if ( geneIds == null ) {
                         geneIds = new HashSet<Long>();
                         cs2genes.put( id, geneIds );
                     }
-                    geneIds.add(geneId);
+                    geneIds.add( geneId );
                 }
                 count = 0;
                 idsInOneChunk.clear();
