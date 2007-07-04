@@ -17,8 +17,7 @@
 </spring:bind>
 
 
-<title><fmt:message key="mainMenu.title" />
-</title>
+<title><fmt:message key="mainMenu.title" /></title>
 <table class="datasummary">
 	<tr>
 		<td colspan="2">
@@ -107,7 +106,7 @@
 			<td valign="top">
 				<b> <fmt:message key="label.species" /> </b>
 			</td>
-
+			<!--  problem here is this does not use the cookie. -->
 
 			<td>
 				<spring:bind path="coexpressionSearchCommand.taxon">
@@ -115,7 +114,7 @@
 						<c:forEach items="${taxa}" var="taxon">
 							<spring:transform value="${taxon}" var="scientificName" />
 							<option value="${taxon.scientificName}"
-								<c:if test="${previousTaxonName == taxon.scientificName}">selected </c:if>>
+								<c:if test="${status.value == taxon.scientificName}">selected </c:if>>
 								${taxon.scientificName}
 							</option>
 						</c:forEach>

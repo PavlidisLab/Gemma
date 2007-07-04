@@ -144,7 +144,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        CoexpressionSearchCommand csc = ( ( CoexpressionSearchCommand ) command );
+        CoexpressionSearchCommand commandObject = ( ( CoexpressionSearchCommand ) command );
 
         Collection<Gene> genesFound = new HashSet<Gene>();
 
@@ -154,36 +154,36 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // if exact search is on, find only by official symbol
         // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
         // none, do inexact search.
-        if ( csc.getId() != null ) {
-            Gene g = geneService.load( Long.parseLong( csc.getId() ) );
+        if ( commandObject.getId() != null ) {
+            Gene g = geneService.load( Long.parseLong( commandObject.getId() ) );
             genesFound.add( g );
-            csc.setExactSearch( g.getOfficialName() );
-        } else if ( csc.getExactSearch() == null ) {
-            genesFound.addAll( searchService.geneDbSearch( csc.getSearchString() ) );
-            genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
-        } else if ( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
-            String geneId = csc.getSearchString();
+            commandObject.setExactSearch( g.getOfficialName() );
+        } else if ( commandObject.getExactSearch() == null ) {
+            genesFound.addAll( searchService.geneDbSearch( commandObject.getSearchString() ) );
+            genesFound.addAll( searchService.compassGeneSearch( commandObject.getSearchString() ) );
+        } else if ( commandObject.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
+            String geneId = commandObject.getSearchString();
             Long id = Long.parseLong( geneId );
             Collection<Long> ids = new ArrayList<Long>();
             ids.add( id );
             genesFound.addAll( geneService.load( ids ) );
-        } else if ( csc.getExactSearch().equalsIgnoreCase( "on" ) ) {
-            genesFound.addAll( geneService.findByOfficialSymbol( csc.getSearchString() ) );
+        } else if ( commandObject.getExactSearch().equalsIgnoreCase( "on" ) ) {
+            genesFound.addAll( geneService.findByOfficialSymbol( commandObject.getSearchString() ) );
         } else {
-            genesFound.addAll( geneService.findByOfficialSymbol( csc.getSearchString() ) );
+            genesFound.addAll( geneService.findByOfficialSymbol( commandObject.getSearchString() ) );
             if ( genesFound.size() == 0 ) {
-                genesFound.addAll( searchService.geneDbSearch( csc.getSearchString() ) );
-                genesFound.addAll( searchService.compassGeneSearch( csc.getSearchString() ) );
+                genesFound.addAll( searchService.geneDbSearch( commandObject.getSearchString() ) );
+                genesFound.addAll( searchService.compassGeneSearch( commandObject.getSearchString() ) );
             }
         }
 
         // filter genes by Taxon
 
         Collection<Gene> genesToRemove = new ArrayList<Gene>();
-        if ( !( csc.getGeneIdSearch().equalsIgnoreCase( "true" ) ) && ( csc.getTaxon() != null )
-                && ( csc.getTaxon().getId() != null ) ) {
+        Taxon taxon = commandObject.getTaxon();
+        if ( !( commandObject.getGeneIdSearch().equalsIgnoreCase( "true" ) ) && taxon != null && taxon.getId() != null ) {
             for ( Gene gene : genesFound ) {
-                if ( gene.getTaxon().getId().longValue() != csc.getTaxon().getId().longValue() ) {
+                if ( gene.getTaxon().getId().longValue() != taxon.getId().longValue() ) {
                     genesToRemove.add( gene );
                 }
             }
@@ -219,7 +219,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             saveMessage( request, "Multiple genes matched. Choose which gene to use." );
 
             // set to exact search
-            csc.setExactSearch( "on" );
+            commandObject.setExactSearch( "on" );
             ModelAndView mav = super.showForm( request, errors, getFormView() );
             mav.addObject( "genes", genesFound );
             return mav;
@@ -231,8 +231,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         // find expressionExperiments via lucene if the query is eestring-constrained
         Collection<ExpressionExperiment> ees;
-        if ( StringUtils.isNotBlank( csc.getEeSearchString() ) ) {
-            ees = searchService.compassExpressionSearch( csc.getEeSearchString() );
+        if ( StringUtils.isNotBlank( commandObject.getEeSearchString() ) ) {
+            ees = searchService.compassExpressionSearch( commandObject.getEeSearchString() );
             if ( ees.size() == 0 ) {
                 saveMessage( request, "No datasets matched - defaulting to all datasets" );
             }
@@ -241,19 +241,20 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
 
         Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
-        csc.setSourceGene( sourceGene );
+        commandObject.setSourceGene( sourceGene );
 
         // set command object to reflect that only one gene has been found
-        csc.setSearchString( sourceGene.getOfficialSymbol() );
-        csc.setGeneIdSearch( "false" );
+        commandObject.setSearchString( sourceGene.getOfficialSymbol() );
+        commandObject.setGeneIdSearch( "false" );
 
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
 
         if ( ( possibleEEs == null ) || ( possibleEEs.isEmpty() ) ) {
             ModelAndView mav = super.showForm( request, errors, getFormView() );
-            saveMessage( request, "There are no " + csc.getTaxon().getScientificName()
-                    + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol() );
+            saveMessage( request, "There are no " + taxon.getScientificName()
+                    + " arrays in the system that assay for the gene "
+                    + commandObject.getSourceGene().getOfficialSymbol() );
             return mav;
         }
 
@@ -263,7 +264,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             Collection<ExpressionExperiment> eeToRemove = new HashSet<ExpressionExperiment>();
             for ( ExpressionExperiment ee : ees ) {
                 Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-                if ( t.getId().longValue() != csc.getTaxon().getId().longValue() ) eeToRemove.add( ee );
+                if ( t.getId().longValue() != taxon.getId().longValue() ) eeToRemove.add( ee );
 
                 if ( !possibleEEs.contains( ee.getId() ) ) eeToRemove.add( ee );
             }
@@ -271,33 +272,35 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
             if ( ees.isEmpty() ) {
                 ModelAndView mav = super.showForm( request, errors, getFormView() );
-                saveMessage( request, "There are no " + csc.getTaxon().getScientificName()
-                        + " arrays in the system that assay for the gene " + csc.getSourceGene().getOfficialSymbol()
-                        + " matching search criteria " + csc.getEeSearchString() );
+                saveMessage( request, "There are no " + taxon.getScientificName()
+                        + " arrays in the system that assay for the gene "
+                        + commandObject.getSourceGene().getOfficialSymbol() + " matching search criteria "
+                        + commandObject.getEeSearchString() );
                 return mav;
             }
 
         } else {
             ees = expressionExperimentService.load( possibleEEs );
         }
-        csc.setToUseEE( ees );
+        commandObject.setToUseEE( ees );
         numExpressionExperiments = ees.size();
 
         // stringency. Cannot be less than 1; set to one if it is
-        Integer stringency = csc.getStringency();
+        Integer stringency = commandObject.getStringency();
         if ( stringency == null ) {
             stringency = DEFAULT_STRINGENCY;
         } else if ( stringency < 1 ) {
             stringency = DEFAULT_STRINGENCY;
         }
-        csc.setStringency( stringency );
+        commandObject.setStringency( stringency );
 
         // ===================================================================================
         // Taking out progress for the mean time while we figure out the back button problem
         // return startJob( command, request, response, errors );
         // ===================================================================================
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
-                .getCoexpressedGenes( csc.getSourceGene(), csc.getToUseEE(), csc.getStringency() );
+                .getCoexpressedGenes( commandObject.getSourceGene(), commandObject.getToUseEE(), commandObject
+                        .getStringency() );
 
         StopWatch watch = new StopWatch();
 
@@ -335,9 +338,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         if ( coexpressedGenes.size() == 0 ) {
             this.saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
-        int numSourceGeneGoTerms = computeGoOverlap( csc, coexpressedGenes );
+        int numSourceGeneGoTerms = computeGoOverlap( commandObject, coexpressedGenes );
 
-        Cookie cookie = new CoexpressionSearchCookie( csc );
+        Cookie cookie = new CoexpressionSearchCookie( commandObject );
         response.addCookie( cookie );
 
         Long numPositiveCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType()
@@ -387,10 +390,10 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
 
         // mav.addObject( "numMatchedLinks", numMatchedLinks );
-        mav.addObject( "sourceGene", csc.getSourceGene() );
+        mav.addObject( "sourceGene", commandObject.getSourceGene() );
 
         // binding objects
-        mav.addObject( "coexpressionSearchCommand", csc );
+        mav.addObject( "coexpressionSearchCommand", commandObject );
         populateTaxonReferenceData( mav.getModel() );
         mav.addAllObjects( errors.getModel() );
 
@@ -404,6 +407,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
     }
 
+    @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> retreiveEEFromDB( Collection<Long> eeIds,
             CoexpressionTypeValueObject coexpressions ) {
 
@@ -479,7 +483,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                     csc.setEeSearchString( cookie.getString( "eeSearchString" ) );
 
                     csc.setStringency( cookie.getInt( "stringency" ) );
-                    Taxon taxon = taxonService.findByScientificName( cookie.getString( "taxonScientificName" ) );
+                    Taxon taxon = taxonService.load( Long.parseLong( cookie.getString( "taxonId" ) ) );
                     csc.setTaxon( taxon );
 
                     // save the gene name. If the gene id is on, then convert the ID to a gene first
@@ -502,6 +506,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
      * 
      * @param request
      * @param csc
+     * @see CoexpressionWrapper.extractParameters
      */
     private void loadGETParameters( HttpServletRequest request, CoexpressionSearchCommand csc ) {
         if ( request == null ) {
@@ -524,7 +529,19 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             csc.setStringency( num );
         }
         if ( params.get( "taxon" ) != null ) {
-            Taxon taxon = taxonService.findByScientificName( ( ( String[] ) params.get( "taxon" ) )[0] );
+            // can handle scientific name, common name, or id.
+            String text = ( ( String[] ) params.get( "taxon" ) )[0];
+            Taxon taxon = null;
+            try {
+                Long id = Long.parseLong( text );
+                taxon = taxonService.load( id );
+            } catch ( NumberFormatException e ) {
+                taxon = taxonService.findByScientificName( text );
+            }
+            if ( taxon == null ) {
+                taxon = taxonService.findByCommonName( text );
+            }
+
             csc.setTaxon( taxon );
         }
         if ( params.get( "searchString" ) != null ) {
@@ -772,7 +789,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
 
             this.setProperty( "stringency", command.getStringency() );
-            this.setProperty( "taxonScientificName", command.getTaxon().getScientificName() );
+            this.setProperty( "taxonId", command.getTaxon().getId() );
 
             this.setMaxAge( 100000 );
             this.setComment( "Information for coexpression search form" );

@@ -150,7 +150,7 @@ public class CoexpressionWrapper extends TableDecorator {
         }
 
         for ( String gene : nonSpecificGenes ) {
-            if ( !gene.equalsIgnoreCase( coexpressedGeneName ) )    //no point in displaying itself
+            if ( !gene.equalsIgnoreCase( coexpressedGeneName ) ) // no point in displaying itself
                 nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
         }
         if ( nonSpecificList.length() > 1 )
@@ -190,18 +190,17 @@ public class CoexpressionWrapper extends TableDecorator {
 
     public String getExperimentBitImage() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        
-        //wanted to put the EE short names in the title but sadly all the short names are null at this point.  
-        //Not worth the effort to put it in as we have to edit some hql queries. ;(
-//        String eeList = "";
-//        for(ExpressionExperimentValueObject evo : object.getExpressionExperimentValueObjects())
-//           eeList += StringUtils.abbreviate(evo.getShortName(),6) + ", ";
-//        
-//        if ( eeList.length() > 1 )
-//            eeList= eeList.substring( 0, eeList.length() - 2 ); // remove trailing ' ,'
-//        title='" + eeList + "'
 
-        
+        // wanted to put the EE short names in the title but sadly all the short names are null at this point.
+        // Not worth the effort to put it in as we have to edit some hql queries. ;(
+        // String eeList = "";
+        // for(ExpressionExperimentValueObject evo : object.getExpressionExperimentValueObjects())
+        // eeList += StringUtils.abbreviate(evo.getShortName(),6) + ", ";
+        //        
+        // if ( eeList.length() > 1 )
+        // eeList= eeList.substring( 0, eeList.length() - 2 ); // remove trailing ' ,'
+        // title='" + eeList + "'
+
         int width = object.getExperimentBitList().length() - 1; // probably okay
         return "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
                 + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
@@ -260,30 +259,10 @@ public class CoexpressionWrapper extends TableDecorator {
             if ( !isInIncludeList( excludeList, entry ) ) {
                 continue;
             }
-            String[] values = ( String[] ) entry.getValue();
-            for ( String string : values ) {
-                paramList.add( entry.getKey() + "=" + string );
-                // just use one parameter value
-                break;
-            }
+            String value = ( ( String[] ) entry.getValue() )[0];
+            paramList.add( entry.getKey() + "=" + value );
         }
     }
-
-    // /**
-    // * Helper function. Checks to see if the entry is in the given exclude list
-    // *
-    // * @param excludeList
-    // * @param entry
-    // * @return
-    // */
-    // private boolean isInExcludeList( Collection<String> excludeList, Map.Entry entry ) {
-    // for ( String exclude : excludeList ) {
-    // if ( ( ( String ) entry.getKey() ).equals( exclude ) ) {
-    // return true;
-    // }
-    // }
-    // return false;
-    // }
 
     /**
      * Helper function. Checks to see if the entry is in the given include list

@@ -27,7 +27,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 
 /**
- * Used to convert Taxon from and into strings for display in forms.
+ * Used to convert Taxon from and into strings for display in forms. Either by primary key (id), common or scientific
+ * name.
  * 
  * @author pavlidis
  * @version $Id$
@@ -50,10 +51,26 @@ public class TaxonPropertyEditor extends PropertyEditorSupport {
         return ( ( Taxon ) this.getValue() ).getScientificName();
     }
 
+    /**
+     * Allow us to convert from either an id or the scientific name.
+     * 
+     * @param txt
+     */
     @Override
     public void setAsText( String text ) throws IllegalArgumentException {
+        Object taxon = null;
         if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
-        Object ad = taxonService.findByScientificName( text );
-        this.setValue( ad ); // okay to be null
+        try {
+            Long id = Long.parseLong( text );
+            taxon = taxonService.load( id );
+        } catch ( NumberFormatException e ) {
+            taxon = taxonService.findByScientificName( text );
+        }
+
+        if ( taxon == null ) {
+            taxon = taxonService.findByCommonName( text );
+        }
+
+        this.setValue( taxon ); // okay to be null
     }
 }
