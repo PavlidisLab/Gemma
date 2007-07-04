@@ -77,7 +77,12 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Taxon> handleLoadAll() throws Exception {
-         return this.getTaxonDao().loadAll();
+        return this.getTaxonDao().loadAll();
+    }
+
+    @Override
+    protected Taxon handleLoad( Long id ) throws Exception {
+        return this.getTaxonDao().load( id );
     }
 
 }
