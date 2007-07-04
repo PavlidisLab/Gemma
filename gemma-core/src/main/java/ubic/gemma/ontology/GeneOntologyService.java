@@ -78,6 +78,7 @@ public class GeneOntologyService implements InitializingBean {
     private static Map<String, OntologyTerm> terms;
     private static Map<String, Collection<OntologyTerm>> childrenCache = Collections.synchronizedMap (new HashMap<String, Collection<OntologyTerm>>());
     private static Map<String, Collection<OntologyTerm>> parentsCache = Collections.synchronizedMap (new HashMap<String, Collection<OntologyTerm>>());
+    private static Map<Gene, Collection<OntologyTerm>> gene2GOCache = Collections.synchronizedMap (new HashMap<Gene, Collection<OntologyTerm>>());
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -335,12 +336,11 @@ public class GeneOntologyService implements InitializingBean {
         for ( OntologyTerm entry2 : immediateParents ) {
             if ( entry2.isRoot() ) continue;
             parents.add( entry2 );
-            getAllParents( entry2, parents );
+            Collection<OntologyTerm> entry2Parents = new HashSet<OntologyTerm>();
+            getAllParents( entry2, entry2Parents );
+            parents.addAll(entry2Parents);
         }
-        
-        parentsCache.put( entry.getUri(), new HashSet(parents) );
-        
-        
+        //parentsCache.put( entry.getUri(), parents );
     }
 
     /**
@@ -352,7 +352,9 @@ public class GeneOntologyService implements InitializingBean {
         if ( entries == null ) return null;
         Collection<OntologyTerm> result = new HashSet<OntologyTerm>();
         for ( OntologyTerm entry : entries ) {
-            getAllParents( entry, result );
+        	Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
+            getAllParents( entry, parents );
+            result.addAll(parents);
         }
         return result;
     }
@@ -562,7 +564,9 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private Collection<OntologyTerm> getGOTerms( Gene gene ) {
-
+    	
+    	if(gene2GOCache.containsKey(gene))
+    		return gene2GOCache.get(gene);
         Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
@@ -575,7 +579,7 @@ public class GeneOntologyService implements InitializingBean {
         }
 
         allGOTermSet = getAllParents( allGOTermSet );
-
+        gene2GOCache.put(gene, allGOTermSet);
         return allGOTermSet;
     }
 

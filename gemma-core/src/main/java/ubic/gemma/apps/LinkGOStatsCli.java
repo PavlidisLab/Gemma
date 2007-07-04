@@ -1,21 +1,28 @@
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.directwebremoting.convert.ArrayConverter;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
+import ubic.gemma.analysis.linkAnalysis.LinkBitMatrixUtil;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -30,16 +37,21 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 
 public class LinkGOStatsCli extends AbstractSpringAwareCLI {
 	
-	private final static int GO_MAXIMUM_COUNT = 100;
+	private final static int GO_MAXIMUM_COUNT = 200;
+	private final static int MAXIMUM_LINK_NUM = 100;
+	private final static int ITERATION_NUM = 100;
+	private final static int CHUNK_NUM = 20;
 	private Probe2ProbeCoexpressionService p2pService = null;
 	private LinkAnalysisUtilService linkAnalysisUtilService = null;
 	private ExpressionExperimentService eeService = null;
 	private GeneService geneService = null;
     private CompressedNamedBitMatrix linkCount = null;
-	private int[] realStats = null;
-	private int[] simulatedStats = null;
+	private int[][] realStats = null;
+	private int[][] simulatedStats = null;
 	private String taxonName = "mouse";
 	private String eeNameFile = null;
+	private Map<Long, Integer> eeIndexMap = new HashMap<Long, Integer>();
+	private int[] goTermsDistribution = null;
 	@Override
 	protected void buildOptions() {
 		// TODO Auto-generated method stub
@@ -64,8 +76,9 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         linkAnalysisUtilService = (LinkAnalysisUtilService) this.getBean( "linkAnalysisUtilService" );
         eeService = (ExpressionExperimentService) this.getBean( "expressionExperimentService" );
         geneService = (GeneService) this.getBean( "geneService" );
-        realStats= new int[GO_MAXIMUM_COUNT];
-        simulatedStats= new int[GO_MAXIMUM_COUNT];
+        realStats= new int[MAXIMUM_LINK_NUM][GO_MAXIMUM_COUNT];
+        simulatedStats= new int[ITERATION_NUM/CHUNK_NUM + 1][GO_MAXIMUM_COUNT];
+        goTermsDistribution = new int[GO_MAXIMUM_COUNT];
     }
     private Collection<ExpressionExperiment> getCandidateEE(String fileName, Collection<ExpressionExperiment> ees){
         if(fileName == null) return ees;
@@ -96,7 +109,7 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
             csIds.add(link.getSecond_design_element_fk());
         }
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
-        int eeIndex = 1;
+        int eeIndex = eeIndexMap.get(ee.getId());
         for(Link link:links){
        		Collection<Long> firstGeneIds =cs2genes.get( link.getFirst_design_element_fk() );
        		Collection<Long> secondGeneIds =cs2genes.get( link.getSecond_design_element_fk() );
@@ -116,6 +129,7 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
                     	int rowIndex = linkCount.getRowIndexByName(firstGeneId);
                     	int colIndex = linkCount.getColIndexByName(secondGeneId);
                         linkCount.set( rowIndex, colIndex, eeIndex );
+                        linkCount.set( colIndex, rowIndex, eeIndex );
                     }catch(Exception e){
                     	log.info(" No Gene Definition " + firstGeneId + "," + secondGeneId);
                     	//Aligned Region and Predicted Gene
@@ -128,22 +142,91 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
     private void counting(){
         int rows = linkCount.rows();
         int cols = linkCount.columns();
-        //The filling process only filled one item. So the matrix is not symetric
         for(int i = 0; i < rows; i++){
         	int[] bits = new int[cols];
         	bits = linkCount.getRowBits(i, bits);
-        	for(int j = 0; j < cols; j++){
+        	for(int j = i+1; j < cols; j++){
                 int bit = bits[j];
                 if(bit > 0){
                 	int goOverlap = linkAnalysisUtilService.computeGOOverlap((Long)linkCount.getRowName(i),(Long)linkCount.getColName(j));
-                    realStats[goOverlap]++;
+                    realStats[bit][goOverlap]++;
                 }
         	}
         }
 
     }
-    private void simulation(){
-    	
+    private Gene[] shuffling(Gene[] genes){
+    	Gene[] shuffledGenes = new Gene[genes.length];
+    	System.arraycopy(genes, 0, shuffledGenes, 0, genes.length);
+        Random random = new Random();
+        for(int i = genes.length - 1; i >= 0; i--){
+            int pos = random.nextInt(i+1);
+            Gene tmp = shuffledGenes[pos];
+            shuffledGenes[pos] = shuffledGenes[i];
+            shuffledGenes[i] = tmp;
+        }
+        return shuffledGenes;
+    }
+    private void counting(Gene[] genes, Gene[] shuffledGenes, int iterationIndex){
+    	for(int i = 0; i < genes.length; i++){
+    		if(genes[i].getId() == shuffledGenes[i].getId()) continue;
+        	int goOverlap = linkAnalysisUtilService.computeGOOverlap(genes[i], shuffledGenes[i]);
+            simulatedStats[iterationIndex][goOverlap]++;
+            simulatedStats[ITERATION_NUM/CHUNK_NUM][goOverlap]++;
+    	}
+    }
+    private void output(){
+        int totalSimulatedLinks[] = new int[ITERATION_NUM/CHUNK_NUM+1], totalRealLinks[] = new int[MAXIMUM_LINK_NUM];
+        for(int i = 0; i < ITERATION_NUM/CHUNK_NUM + 1; i++){
+        	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
+        	totalSimulatedLinks[i] = totalSimulatedLinks[i] + simulatedStats[i][j];
+        	}
+        }
+        for(int i = 1; i < MAXIMUM_LINK_NUM; i++){
+        	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
+        		totalRealLinks[i] = totalRealLinks[i] + realStats[i][j];
+        	}
+        }
+        try{
+            FileWriter out = new FileWriter( new File( "goSimilarity.txt" ) );
+            double culmulative = 0.0;
+            for(int i = ITERATION_NUM/CHUNK_NUM; i < ITERATION_NUM/CHUNK_NUM + 1; i++){
+            	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
+            		culmulative = culmulative + (double)simulatedStats[i][j]/(double)totalSimulatedLinks[i];
+            		out.write(culmulative+"\t");
+            	}
+            }
+            out.write("\n");
+            for(int i = 1; i < 30; i++){
+            	culmulative = 0.0;
+            	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
+            		culmulative = culmulative + (double)realStats[i][j]/(double)totalRealLinks[i];
+            		out.write(culmulative+"\t");
+            	}
+            	out.write("\n");
+            }
+            out.write("\nRandom Pair Generation Distribution:\n");
+            for(int i = 0; i < ITERATION_NUM/CHUNK_NUM + 1; i++){
+            	culmulative = 0.0;
+            	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
+            		culmulative = culmulative + (double)simulatedStats[i][j]/(double)totalSimulatedLinks[i];
+            		out.write(culmulative+"\t");
+            	}
+            	out.write("\n");
+            }
+            
+            int total = 0;
+            for(int i = 0; i < GO_MAXIMUM_COUNT; i++)
+            	total = total + goTermsDistribution[i];
+            out.write("Go Terms Distribution:\n");
+            for(int i = 0; i < GO_MAXIMUM_COUNT; i++){
+            	out.write((double)goTermsDistribution[i]/(double)total + "\t");
+            }
+            out.write("\n");
+            out.close();
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
     }
 	@Override
 	protected Exception doWork(String[] args) {
@@ -154,14 +237,44 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         }
         Taxon taxon = linkAnalysisUtilService.getTaxon( taxonName );
         Collection <ExpressionExperiment> ees = eeService.findByTaxon(taxon);
-        Collection <ExpressionExperiment> candidates = getCandidateEE(this.eeNameFile, ees);
-        for(ExpressionExperiment ee:ees){
+        Collection <ExpressionExperiment> eeCandidates = getCandidateEE(this.eeNameFile, ees);
+        Collection<Gene> allGenes = linkAnalysisUtilService.loadGenes(taxon);
+
+        
+        Gene[] genes = new Gene[allGenes.size()];
+        int index = 0;
+        for(Gene gene:allGenes){
+        	System.err.println(index + "/" + allGenes.size());
+        	genes[index++] = gene;
+        	int goTermsNum = linkAnalysisUtilService.getGoTerms(gene).size();
+        	goTermsDistribution[goTermsNum]++;
+        }
+        for(int i = 0; i < ITERATION_NUM; i++){
+        	log.info("Current Iteration: " + i);
+        	Gene[] shuffledGenes = shuffling(genes);
+        	counting(genes, shuffledGenes, (int)(i/CHUNK_NUM));
+        }
+        index = 0;
+        for(ExpressionExperiment ee:eeCandidates){
+        	eeIndexMap.put(ee.getId(), index);
+        	index++;
+        }
+        linkCount = new CompressedNamedBitMatrix(allGenes.size(), allGenes.size(), eeCandidates.size());
+        for(Gene geneIter:allGenes){
+            linkCount.addRowName(geneIter.getId());
+            linkCount.addColumnName(geneIter.getId());
+        }
+        for(ExpressionExperiment ee:eeCandidates){
         	log.info("Shuffling " + ee.getShortName() );
             Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
             if(links == null || links.size() == 0) continue;
             fillingMatrix(links,ee);
         }
+        log.info("Counting the GO terms for real links");
         counting();
+        log.info("Output");
+        output();
+
 		return null;
 	}
 

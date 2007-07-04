@@ -46,11 +46,25 @@ public class LinkAnalysisUtilService {
     public Collection<OntologyTerm> getGoTerms( Gene gene) {
     	return getGoTerms(gene, "");
     }
+    private boolean goStatus(){
+        int waiting_time = 100000;
+        try {
+        	while (  !goService.isGeneOntologyLoaded() ){
+        			Thread.sleep(500);
+        			waiting_time = waiting_time - 500;
+        			if(waiting_time <= 0) return false;
+        	}
+        }catch(Exception e){
+        	e.printStackTrace();
+        	return false;
+        }
+    	return true;
+    }
     public Collection<OntologyTerm> getGoTerms( Gene gene, String category ) {
-        while ( goService.isGeneOntologyLoaded() );
+        if(!goStatus()) return null;
+        
         Collection<OntologyTerm> annotatedGoEntries = goAssociationService.findByGene( gene );
         Collection<OntologyTerm> allGoEntriesInBP = new HashSet<OntologyTerm>();
-        Collection<OntologyTerm> useless = new HashSet<OntologyTerm>();
         for ( OntologyTerm entry : annotatedGoEntries ) {
             if ( entry.getLabel().toUpperCase().contains( category ) ) {
                 Collection<OntologyTerm> parentEntries = goService.getAllParents( entry );
@@ -69,19 +83,17 @@ public class LinkAnalysisUtilService {
     }
     public int computeGOOverlap( Gene gene1, Gene gene2 ) {
         int res = 0;
+        if(!goStatus()) return res;
         Collection<Long> geneIds = new HashSet<Long>();
         geneIds.add( gene2.getId() );
-        while ( goService.isGeneOntologyLoaded() );
-        try {
-            Map<Long, Collection<OntologyTerm>> overlapMap = goService.calculateGoTermOverlap(
-                    gene1, geneIds );
+        try{
+            Map<Long, Collection<OntologyTerm>> overlapMap = goService.calculateGoTermOverlap(gene1, geneIds );
             if ( overlapMap != null ) {
                 Collection<OntologyTerm> overlapGOTerms = overlapMap.get( gene2.getId() );
                 if ( overlapGOTerms != null ) res = overlapGOTerms.size();
             }
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            res = 0;
+        }catch(Exception e){
+        	e.printStackTrace();
         }
         return res;
     }
@@ -90,7 +102,7 @@ public class LinkAnalysisUtilService {
         Gene gene2 = geneService.load( id2 );
         return computeGOOverlap( gene1, gene2 );
     }
-    private Collection<Gene> loadGenes(Taxon taxon){
+    public Collection<Gene> loadGenes(Taxon taxon){
     	Collection <Gene> allGenes = geneService.getGenesByTaxon(taxon);
     	Collection <Gene> genes = new HashSet<Gene>();
     	for(Gene gene:allGenes){
