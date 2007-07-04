@@ -21,7 +21,7 @@ package ubic.gemma.model.association;
 
 import java.util.ArrayList;
 import java.util.Collection;
- 
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -32,10 +32,6 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
-
-
-
-
     /*
      * (non-Javadoc)
      * 
@@ -44,18 +40,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
-
-        throw new UnsupportedOperationException("not fixed yet");
-        
-//        OntologyEntry searchOnto = this.getOntologyEntryService().findByAccession( goID );
-//
-//        if ( searchOnto == null ) return new ArrayList();
-//
-//        Collection searchOntologies = this.getOntologyEntryService().getAllChildren( searchOnto );
-//        searchOntologies.add( searchOnto );
-//
-//        return this.getGene2GOAssociationDao().findByGOTerm( searchOntologies, taxon );
-
+        return this.getGene2GOAssociationDao().findByGoTerm( goID, taxon );
     }
 
     /*

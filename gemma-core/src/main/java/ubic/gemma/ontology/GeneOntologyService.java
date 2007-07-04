@@ -42,10 +42,12 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
 
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.ConfigUtils;
 
@@ -76,8 +78,10 @@ public class GeneOntologyService implements InitializingBean {
 
     // map of uris to terms
     private static Map<String, OntologyTerm> terms;
-    private static Map<String, Collection<OntologyTerm>> childrenCache = Collections.synchronizedMap (new HashMap<String, Collection<OntologyTerm>>());
-    private static Map<String, Collection<OntologyTerm>> parentsCache = Collections.synchronizedMap (new HashMap<String, Collection<OntologyTerm>>());
+    private static Map<String, Collection<OntologyTerm>> childrenCache = Collections
+            .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
+    private static Map<String, Collection<OntologyTerm>> parentsCache = Collections
+            .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -234,7 +238,8 @@ public class GeneOntologyService implements InitializingBean {
      * @throws IOException
      */
     protected void loadTermsInNameSpace( String url ) throws IOException {
-        Collection<OntologyResource> terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM ));
+        Collection<OntologyResource> terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url,
+                OntModelSpec.OWL_MEM ) );
         addTerms( terms );
     }
 
@@ -245,7 +250,8 @@ public class GeneOntologyService implements InitializingBean {
      * @throws IOException
      */
     protected void loadTermsInNameSpace( InputStream is ) throws IOException {
-        Collection<OntologyResource> terms = OntologyLoader.initialize( null, OntologyLoader.loadMemoryModel( is, null, OntModelSpec.OWL_MEM ) );   
+        Collection<OntologyResource> terms = OntologyLoader.initialize( null, OntologyLoader.loadMemoryModel( is, null,
+                OntModelSpec.OWL_MEM ) );
         addTerms( terms );
     }
 
@@ -304,12 +310,12 @@ public class GeneOntologyService implements InitializingBean {
      * @return parents (excluding the root)
      */
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry ) {
-            
+
         Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
         getAllParents( entry, parents );
-                       
+
         return parents;
-        
+
     }
 
     /**
@@ -318,20 +324,19 @@ public class GeneOntologyService implements InitializingBean {
      */
     private void getAllParents( OntologyTerm entry, Collection<OntologyTerm> parents ) {
         if ( parents == null ) throw new IllegalArgumentException();
-        
-        if (parentsCache.containsKey( entry.getUri() )){
-            if (parentsCache.get( entry.getUri() ) != null)
-                parents.addAll(  parentsCache.get( entry.getUri() ) );
-            
+
+        if ( parentsCache.containsKey( entry.getUri() ) ) {
+            if ( parentsCache.get( entry.getUri() ) != null ) parents.addAll( parentsCache.get( entry.getUri() ) );
+
             return;
         }
-        
+
         Collection<OntologyTerm> immediateParents = getParents( entry );
-        if ( immediateParents == null ){
-            parentsCache.put( entry.getUri(), null);
+        if ( immediateParents == null ) {
+            parentsCache.put( entry.getUri(), null );
             return;
         }
-        
+
         for ( OntologyTerm entry2 : immediateParents ) {
             if ( entry2.isRoot() ) continue;
             parents.add( entry2 );
@@ -339,7 +344,9 @@ public class GeneOntologyService implements InitializingBean {
             getAllParents( entry2, entry2Parents );
             parents.addAll(entry2Parents);
         }
-        parentsCache.put( entry.getUri(), parents );
+
+        parentsCache.put( entry.getUri(), new HashSet<OntologyTerm>( parents ) );
+
     }
 
     /**
@@ -363,11 +370,10 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry ) {
-                    
+
         Collection<OntologyTerm> children = new HashSet<OntologyTerm>();
         getAllChildren( entry, children );
-           
-        
+
         return children;
     }
 
@@ -376,30 +382,29 @@ public class GeneOntologyService implements InitializingBean {
      * @param children
      */
     private void getAllChildren( OntologyTerm entry, Collection<OntologyTerm> children ) {
-        
-        if ( children == null ) throw new IllegalArgumentException(); 
-        
-        if (childrenCache.containsKey( entry.getUri() )){
-            if (childrenCache.get( entry.getUri() ) != null)
-                children.addAll(  childrenCache.get( entry.getUri() ) );
-            
+
+        if ( children == null ) throw new IllegalArgumentException();
+
+        if ( childrenCache.containsKey( entry.getUri() ) ) {
+            if ( childrenCache.get( entry.getUri() ) != null ) children.addAll( childrenCache.get( entry.getUri() ) );
+
             return;
         }
-                
+
         Collection<OntologyTerm> immediateChildren = getChildren( entry );
-        
-        if ( immediateChildren == null ){
-            childrenCache.put( entry.getUri(), null);
+
+        if ( immediateChildren == null ) {
+            childrenCache.put( entry.getUri(), null );
             return;
         }
-        
+
         for ( OntologyTerm child : immediateChildren ) {
             children.add( child );
             getAllChildren( child, children );
         }
-        
-        childrenCache.put( entry.getUri(), new HashSet(children) );
-        
+
+        childrenCache.put( entry.getUri(), new HashSet<OntologyTerm>( children ) );
+
     }
 
     /**
@@ -511,31 +516,31 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
-     * @param masterGene
+     * @param queryGene
      * @param geneIds
      * @returns Map<Gene,Collection<OntologyEntries>>
      * @throws Exception
      *         <p>
-     *         Given a master Gene, and a collection of gene ids calculates the go term overlap for each pair of
-     *         masterGene and gene in the given collection. Returns a Map<Gene,Collection<OntologyEntries>>. The key
-     *         is the gene (from the [masterGene,gene] pair) and the values are a collection of the overlapping ontology
+     *         Given a query Gene, and a collection of gene ids calculates the go term overlap for each pair of
+     *         queryGene and gene in the given collection. Returns a Map<Gene,Collection<OntologyEntries>>. The key is
+     *         the gene (from the [queryGene,gene] pair) and the values are a collection of the overlapping ontology
      *         entries.
      *         </p>
      */
     @SuppressWarnings("unchecked")
-    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene masterGene, Collection geneIds )
+    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection geneIds )
             throws Exception {
 
-        if ( masterGene == null ) return null;
+        if ( queryGene == null ) return null;
         if ( geneIds.size() == 0 ) return null;
 
-        Collection<OntologyTerm> masterOntos = getGOTerms( masterGene );
+        Collection<OntologyTerm> queryGeneTerms = getGOTerms( queryGene );
 
         // nothing to do.
-        if ( ( masterOntos == null ) || ( masterOntos.isEmpty() ) ) return null;
+        if ( ( queryGeneTerms == null ) || ( queryGeneTerms.isEmpty() ) ) return null;
 
         Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
-        overlap.put( masterGene.getId(), masterOntos ); // include the master gene in the list. Clearly 100% overlap
+        overlap.put( queryGene.getId(), queryGeneTerms ); // include the query gene in the list. Clearly 100% overlap
         // with itself!
 
         if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) return overlap;
@@ -551,10 +556,35 @@ public class GeneOntologyService implements InitializingBean {
                 continue;
             }
 
-            overlap.put( gene.getId(), computerOverlap( masterOntos, comparisonOntos ) );
+            overlap.put( gene.getId(), computerOverlap( queryGeneTerms, comparisonOntos ) );
         }
 
         return overlap;
+    }
+
+    /**
+     * @param goId
+     * @param taxon
+     * @return Collection of all genes in the given taxon that are annotated with the given id, including its child
+     *         terms in the hierarchy.
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Gene> getGenes( String goId, Taxon taxon ) {
+        Collection<OntologyTerm> terms = getAllChildren( getTermForId( goId ) );
+        Collection<Gene> results = new HashSet<Gene>();
+        Collection<Gene2GOAssociation> geneassoc = this.gene2GOAssociationService.findByGOTerm( goId, taxon );
+        for ( Gene2GOAssociation association : geneassoc ) {
+            results.add( association.getGene() );
+        }
+
+        for ( OntologyTerm term : terms ) {
+            geneassoc = this.gene2GOAssociationService.findByGOTerm( asRegularGoId( term ), taxon );
+            for ( Gene2GOAssociation association : geneassoc ) {
+                results.add( association.getGene() );
+            }
+
+        }
+        return results;
     }
 
     /**
@@ -568,8 +598,8 @@ public class GeneOntologyService implements InitializingBean {
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
         for ( VocabCharacteristic c : annotations ) {
-            if (!terms.containsKey( c.getTermUri() )){
-                log.warn("Term " + c.getTermUri() + " not found in term list cant add to results" );
+            if ( !terms.containsKey( c.getTermUri() ) ) {
+                log.warn( "Term " + c.getTermUri() + " not found in term list cant add to results" );
                 continue;
             }
             allGOTermSet.add( terms.get( c.getTermUri() ) );
