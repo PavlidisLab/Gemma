@@ -63,6 +63,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGOTerm(ubic.gemma.model.genome.Gene)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByGOTerm( Collection goTerms, Taxon taxon ) throws Exception {
         Collection<String> goIDs = new HashSet<String>();
@@ -84,7 +85,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             queryObject.setParameterList( "goIDs", goIDs );
             queryObject.setParameter( "taxon", taxon );
 
-            results = queryObject.list();
+            results = queryObject.list(); 
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -139,6 +140,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return ( Gene2GOAssociation ) create( gene2GOAssociation );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByGoTerm( String goId, Taxon taxon ) throws Exception {
 

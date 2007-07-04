@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.association;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import ubic.gemma.model.genome.Gene;
