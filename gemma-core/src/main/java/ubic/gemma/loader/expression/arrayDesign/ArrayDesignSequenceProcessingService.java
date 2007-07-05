@@ -441,6 +441,8 @@ public class ArrayDesignSequenceProcessingService {
                     percent = updateProgress( total, done, percent );
                 }
             }
+            log.info( numWithNoSequence + "/" + arrayDesign.getCompositeSequences().size()
+                    + " probes could not be matched to a sequence" );
         }
 
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
