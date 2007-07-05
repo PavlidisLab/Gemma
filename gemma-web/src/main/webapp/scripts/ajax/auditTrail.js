@@ -1,7 +1,15 @@
 Ext.onReady(function() {
 		
 	var id = dwr.util.getValue("auditableId");
-		var clazz = dwr.util.getValue("auditableClass");
+	
+	// this will be the case if we're not admins.
+	if (!id) {
+		return;
+	}
+	
+	var clazz = dwr.util.getValue("auditableClass");
+	
+	// classDelegatingFor is the specific type of auditable.
 	var g = {id:id, classDelegatingFor:clazz};
 	var converttype = function(d) {
 		return d.value;
@@ -36,8 +44,8 @@ Ext.onReady(function() {
 			{header: "Comment", width: 300, dataIndex:"note"}]);
 	
 	cm.defaultSortable = false;
-
-	var grid = new Ext.grid.Grid("auditTrail", {ds:ds, cm:cm, loadMask: true });
+ 
+	vargrid = new Ext.grid.Grid("auditTrail", {ds:ds, cm:cm, loadMask: true });
 	grid.render();
 	ds.load({params:[g]});
 		
