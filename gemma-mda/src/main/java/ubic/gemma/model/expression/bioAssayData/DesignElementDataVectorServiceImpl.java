@@ -155,6 +155,11 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
+    protected DesignElementDataVector handleLoad( Long id ) throws Exception {
+        return ( DesignElementDataVector ) this.getDesignElementDataVectorDao().load( id );
+    }
+
+    @Override
     protected Collection handleCreate( Collection vectors ) throws Exception {
         return this.getDesignElementDataVectorDao().create( vectors );
     }
