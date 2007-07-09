@@ -2,8 +2,6 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -12,15 +10,10 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
 import ubic.gemma.analysis.linkAnalysis.GenePair;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -31,6 +24,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 	private String geneListFile;
+
 	private String goTerm;
 
 	private String[] geneSymbols;
@@ -42,8 +36,6 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 	private EffectSizeService effectSizeService;
 
 	private ExpressionExperimentService eeService;
-	
-	private Gene2GOAssociationService gene2GOService;
 
 	private int stringency = 3;
 
@@ -56,7 +48,9 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 	@SuppressWarnings("static-access")
 	@Override
 	protected void buildOptions() {
-		Option goOption = OptionBuilder.hasArg().withArgName("GOTerm").withDescription("GO term to pair").withLongOpt("GOTerm").create('t');
+		Option goOption = OptionBuilder.hasArg().withArgName("GOTerm")
+				.withDescription("GO term to pair").withLongOpt("GOTerm")
+				.create('t');
 		addOption(goOption);
 		Option geneOption = OptionBuilder.hasArgs().withArgName("gene")
 				.withDescription("Gene (official symbol) to pair").withLongOpt(
@@ -123,8 +117,6 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 				.getBean("effectSizeService");
 		eeService = (ExpressionExperimentService) this
 				.getBean("expressionExperimentService");
-		gene2GOService = (Gene2GOAssociationService) this
-				.getBean("gene2GOAssociationService");
 	}
 
 	@Override
@@ -137,33 +129,42 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 		watch.start();
 
 		Collection<ExpressionExperiment> EEs = eeService.findByTaxon(taxon);
+		if (EEs == null) {
+			return new Exception(
+					"Could not find expression experiments for taxon");
+		}
 
 		Collection<GenePair> genePairs;
 		if (geneSymbols != null) {
 			genePairs = effectSizeService.pairCoexpressedGenesByOfficialSymbol(
-					geneSymbols, EEs, stringency);
+					geneSymbols, taxon, EEs, stringency);
 		} else if (geneListFile != null) {
 			try {
-				genePairs = effectSizeService.pairCoexpressedGenesByOfficialSymbol(
-						geneListFile, EEs, stringency);
+				genePairs = effectSizeService
+						.pairCoexpressedGenesByOfficialSymbol(geneListFile,
+								taxon, EEs, stringency);
 			} catch (IOException e) {
 				return e;
 			}
 		} else if (goTerm == null) {
-			genePairs = effectSizeService.pairCoexpressedGenesByGOTerm(goTerm, taxon, EEs, stringency);
+			genePairs = effectSizeService.pairCoexpressedGenesByGOTerm(goTerm,
+					taxon, EEs, stringency);
 		} else {
 			return new Exception("No genes to pair");
 		}
 
+		if (genePairs.size() == 0)
+			return new Exception("No genes paired");
+
 		effectSizeService.calculateEffectSize(EEs, genePairs);
 
 		try {
-			effectSizeService.saveExprLevelToFile(outFilePrefix
-					+ ".expr_lvl.txt", genePairs, EEs);
 			effectSizeService.saveCorrelationsToFile(outFilePrefix
 					+ ".corr.txt", genePairs, EEs);
 			effectSizeService.saveCorrelationsToFigure(outFilePrefix
 					+ ".corr.png", genePairs, EEs);
+			effectSizeService.saveExprLevelToFile(outFilePrefix
+					+ ".expr_lvl.txt", genePairs, EEs);
 			effectSizeService.saveExprProfilesToFile(
 					outFilePrefix + ".eps.txt", genePairs, EEs);
 		} catch (IOException e) {

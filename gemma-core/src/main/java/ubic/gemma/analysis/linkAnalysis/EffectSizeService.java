@@ -210,13 +210,16 @@ public class EffectSizeService {
 	}
 
 	public Collection<GenePair> pairCoexpressedGenesByOfficialSymbol(
-			String[] geneSymbols, Collection<ExpressionExperiment> EEs,
+			String[] geneSymbols, Taxon taxon, Collection<ExpressionExperiment> EEs,
 			int stringency) {
 		Collection<Gene> genes = new HashSet<Gene>();
 		for (String geneSymbol : geneSymbols) {
-			Gene gene = (Gene) geneService.findByOfficialSymbol(geneSymbol)
-					.iterator().next();
-			genes.add(gene);
+			Collection<Gene> c = (Collection<Gene>) geneService.findByOfficialSymbol(geneSymbol);
+			for (Gene gene : c) {
+				if (gene.getTaxon().equals(taxon)) {
+					genes.add(gene);
+				}
+			}
 		}
 		return pairCoexpressedGenes(genes, EEs, stringency);
 	}
@@ -248,7 +251,7 @@ public class EffectSizeService {
 	}
 
 	public Collection<GenePair> pairCoexpressedGenesByOfficialSymbol(
-			String geneListFile, Collection<ExpressionExperiment> EEs,
+			String geneListFile, Taxon taxon, Collection<ExpressionExperiment> EEs,
 			int stringency) throws IOException {
 		List<String> geneSymbols = new ArrayList<String>();
 		BufferedReader in = new BufferedReader(new FileReader(geneListFile));
@@ -258,7 +261,7 @@ public class EffectSizeService {
 		}
 		String[] geneSymbolStrings = new String[geneSymbols.size()];
 		geneSymbols.toArray(geneSymbolStrings);
-		return pairCoexpressedGenesByOfficialSymbol(geneSymbolStrings, EEs,
+		return pairCoexpressedGenesByOfficialSymbol(geneSymbolStrings, taxon, EEs,
 				stringency);
 	}
 
