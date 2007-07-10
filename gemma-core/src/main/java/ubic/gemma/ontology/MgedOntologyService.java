@@ -118,7 +118,7 @@ public class MgedOntologyService implements InitializingBean {
             return null;
         
         String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        IndexLARQ index = OntologyIndexer.indexOntology( url, "mged", model );
+        IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
         
         return name;

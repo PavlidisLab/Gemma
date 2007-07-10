@@ -54,8 +54,8 @@ public class OntologyIndexer {
      * @param model
      * @return
      */
-    public static IndexLARQ indexOntology( String url, String name, OntModel model ) {
-        IndexLARQ index = index( url, name, model );
+    public static IndexLARQ indexOntology( String name, OntModel model ) {
+        IndexLARQ index = index( name, model );
         return index;
     }
 
@@ -67,18 +67,19 @@ public class OntologyIndexer {
      * @param model
      * @return
      */
-    private static IndexLARQ index( String datafile, String name, OntModel model ) {
+    private static IndexLARQ index( String name, OntModel model ) {
 
         File indexdir = getIndexPath( name );
 
         IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( indexdir );
-        model.register( larqSubjectBuilder );
-        FileManager.get().readModel( model, datafile );
 
-        larqSubjectBuilder.closeForWriting();
-        model.unregister( larqSubjectBuilder );
-
-        IndexLARQ index = larqSubjectBuilder.getIndex();
+        // -- Create an index based on existing statements
+        larqSubjectBuilder.indexStatements(model.listStatements()) ;
+        // -- Finish indexing
+        larqSubjectBuilder.closeForWriting() ;
+        // -- Create the access index  
+        IndexLARQ index = larqSubjectBuilder.getIndex() ;
+        
         return index;
     }
 
