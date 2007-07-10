@@ -55,8 +55,43 @@ public class OntologyIndexer {
      * @return
      */
     public static IndexLARQ indexOntology( String name, OntModel model ) {
-        IndexLARQ index = index( name, model );
+        try {
+            return loadLocalIndex(name);
+        } catch ( Exception e ) {
+            log.info("Error loading index from disk, re-indexing");
+            return index(name, model);
+        }
+
+        
+        /*IndexLARQ index = index( name, model );
+        return index;*/
+    }
+    
+    /*
+     * name is ontology name - for example "mged"
+     */
+    public static IndexLARQ loadLocalIndex(String name) throws Exception {
+        IndexLARQ index;
+        File indexdir = getIndexPath( name );
+        IndexReader indexReader = IndexReader.open( indexdir );
+        index = new IndexLARQ(indexReader );
         return index;
+    }
+
+    /*public static IndexLARQ loadIndex( String name, OntModel model ) {
+        try {
+            return loadLocalIndex(name);
+        } catch ( Exception e ) {
+            log.info("Error loading index from disk, re-indexing");
+            return index(name, model);
+        }
+    }*/
+    
+    public static void eraseIndex( String name ) {
+        File indexdir = getIndexPath( name );
+        for(File f : indexdir.listFiles()) {
+            f.delete();
+        }
     }
 
     /**
@@ -74,12 +109,12 @@ public class OntologyIndexer {
         IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( indexdir );
 
         // -- Create an index based on existing statements
-        larqSubjectBuilder.indexStatements(model.listStatements()) ;
+        larqSubjectBuilder.indexStatements( model.listStatements() );
         // -- Finish indexing
-        larqSubjectBuilder.closeForWriting() ;
-        // -- Create the access index  
-        IndexLARQ index = larqSubjectBuilder.getIndex() ;
-        
+        larqSubjectBuilder.closeForWriting();
+        // -- Create the access index
+        IndexLARQ index = larqSubjectBuilder.getIndex();
+
         return index;
     }
 
