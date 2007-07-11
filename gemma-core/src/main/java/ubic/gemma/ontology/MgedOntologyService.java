@@ -61,7 +61,7 @@ public class MgedOntologyService implements InitializingBean {
     private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
     
     private static OntModel model;
-    private IndexLARQ index;
+    private static IndexLARQ index;
 
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );

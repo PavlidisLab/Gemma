@@ -47,7 +47,7 @@ public class OntologyIndexer {
     private static Log log = LogFactory.getLog( OntologyIndexer.class.getName() );
 
     /**
-     * Create an index from an existing OntModel. Any existing index will be overwritten.
+     * Loads or creates an index from an existing OntModel. Any existing index will loaded.
      * 
      * @param url
      * @param name
@@ -56,36 +56,13 @@ public class OntologyIndexer {
      */
     public static IndexLARQ indexOntology( String name, OntModel model ) {
         try {
-            return loadLocalIndex(name);
+            return getSubjectIndex(name);
         } catch ( Exception e ) {
             log.info("Error loading index from disk, re-indexing");
             return index(name, model);
         }
-
-        
-        /*IndexLARQ index = index( name, model );
-        return index;*/
     }
     
-    /*
-     * name is ontology name - for example "mged"
-     */
-    public static IndexLARQ loadLocalIndex(String name) throws Exception {
-        IndexLARQ index;
-        File indexdir = getIndexPath( name );
-        IndexReader indexReader = IndexReader.open( indexdir );
-        index = new IndexLARQ(indexReader );
-        return index;
-    }
-
-    /*public static IndexLARQ loadIndex( String name, OntModel model ) {
-        try {
-            return loadLocalIndex(name);
-        } catch ( Exception e ) {
-            log.info("Error loading index from disk, re-indexing");
-            return index(name, model);
-        }
-    }*/
     
     public static void eraseIndex( String name ) {
         File indexdir = getIndexPath( name );
@@ -109,7 +86,8 @@ public class OntologyIndexer {
         IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( indexdir );
 
         // -- Create an index based on existing statements
-        larqSubjectBuilder.indexStatements( model.listStatements() );
+        log.info( "making selector" );
+        larqSubjectBuilder.indexStatements( model.listStatements(new IndexerSelector()));
         // -- Finish indexing
         larqSubjectBuilder.closeForWriting();
         // -- Create the access index
@@ -137,6 +115,8 @@ public class OntologyIndexer {
             throw new RuntimeException( e );
         }
     }
+    
+
 
     /**
      * @param name
@@ -150,4 +130,6 @@ public class OntologyIndexer {
         return indexdir;
     }
 
+    
+    
 }

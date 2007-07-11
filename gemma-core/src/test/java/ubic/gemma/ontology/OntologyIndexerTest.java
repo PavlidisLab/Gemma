@@ -37,23 +37,37 @@ public class OntologyIndexerTest extends TestCase {
 
     private static Log log = LogFactory.getLog( OntologyIndexerTest.class.getName() );
 
+    
     public final void testIndexing() throws Exception {
         String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
         OntModel model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
 
         IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
 
-        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "beddin*" );
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "bedding" );
+
         assertEquals( 1, name.size() );
         index.close();
     }
 
+    public final void testCellListings() throws Exception {
+        String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
+        OntModel model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
+        IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
+        
+        Collection<OntologyTerm> names = OntologySearch.matchClasses( model, index, "cell*" );
+        for ( OntologyTerm ot : names ) {
+            if(!ot.toString().startsWith( "Cell" )) throw new Exception(ot+ " does not start with Cell");
+        }
+        index.close();
+    }
+    
     public final void testPersistanceFail() throws Exception {
         OntologyIndexer.eraseIndex( "mged" );
         Exception result = null;
         try {
-            //so since it was erased, it should fail to load it
-            OntologyIndexer.loadLocalIndex( "mged" );
+            // so since it was erased, it should fail to load it
+            OntologyIndexer.getSubjectIndex( "mged" );
         } catch ( Exception e ) {
             result = e;
         }
@@ -68,21 +82,24 @@ public class OntologyIndexerTest extends TestCase {
         IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
         index.close();
 
-        //now load it of disk
-        index = OntologyIndexer.loadLocalIndex( "mged" );
-        
+        // now load it of disk
+        index = OntologyIndexer.getSubjectIndex( "mged" );
+
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "beddin*" );
         log.info( name.toString() );
         assertEquals( 1, name.size() );
         index.close();
     }
 
-    /*
-     * public final void testIndexingDbModel() throws Exception { // MESH must be loaded into the DB for this to work in
-     * a reasonable amount of time! String url = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl"; OntModel
-     * model = OntologyLoader.loadPersistentModel( url, false ); // should be a one-time process // log.info(
-     * "Indexing..." ); IndexLARQ index = OntologyIndexer.indexOntology( "mesh", model ); index =
-     * OntologyIndexer.getSubjectIndex( "mesh" ); log.info( "Searching ... " ); Collection<OntologyTerm> name =
-     * OntologySearch.matchClasses( model, index, "anatomy" ); assertEquals( 7, name.size() ); }
-     */
+//    public final void testIndexingDbModel() throws Exception { // MESH must be loaded into the DB for this to work in a
+//        // reasonable amount of time!
+//        String url = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
+//        OntModel model = OntologyLoader.loadPersistentModel( url, false ); // should be a one-time process
+//        log.info( "Indexing..." );
+//        IndexLARQ index = OntologyIndexer.indexOntology( "mesh", model );
+//        index = OntologyIndexer.getSubjectIndex( "mesh" );
+//        log.info( "Searching ... " );
+//        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "anatomy" );
+//        assertEquals( 7, name.size() );
+//    }
 }
