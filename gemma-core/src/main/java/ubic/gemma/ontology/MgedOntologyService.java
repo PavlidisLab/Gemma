@@ -60,7 +60,8 @@ public class MgedOntologyService implements InitializingBean {
     //private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
     private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
     
-    private OntModel model;
+    private static OntModel model;
+    private IndexLARQ index;
 
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
@@ -89,7 +90,7 @@ public class MgedOntologyService implements InitializingBean {
 
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
 
-        final String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#MGEDOntology";
+        final String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
         OntologyTerm term = terms.get( id );
 
         nodes.add( buildTreeNode( term ) );
@@ -117,7 +118,10 @@ public class MgedOntologyService implements InitializingBean {
         if (!this.ready.get())
             return null;
         
-        IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
+        //String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
+        if (index == null)
+            index = OntologyIndexer.indexOntology( "mged", model );
+        
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
         
         return name;

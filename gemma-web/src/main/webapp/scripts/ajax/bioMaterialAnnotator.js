@@ -366,8 +366,9 @@ var createForm = function(subject, vc, divId){
 //    lookUp.vocabId = divId;
 	
  var     recordType = Ext.data.Record.create([
-                       {name:"id", type:"string"},
-                       {name:"text", type:"string"},
+					   {name:"id", type:"int"},
+                       {name:"term", type:"string"},
+                       {name:"uri", type:"string"},
                ]);
 
 
@@ -380,16 +381,16 @@ var createForm = function(subject, vc, divId){
                });
 
        var cm = new Ext.grid.ColumnModel([
-                       {header: "Label", width: 50, dataIndex:"text"},
-                       {header: "Uri",  width: 80, dataIndex:"id"}
+                       {header: "term", width: 50, dataIndex:"term"},
+                       {header: "uri",  width: 80, dataIndex:"uri"}
                        ]);
        cm.defaultSortable = true;	
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
         '<div class="search-item">',
-            '<h3><span>{id}</span>{text}</h3>',
-            '{excerpt}',
+            '<h3><span>{id}</span>{term}</h3>',
+            '{uri}',
         '</div>'
     );
     
@@ -402,12 +403,31 @@ var createForm = function(subject, vc, divId){
         width: 570,
         pageSize:10,
         tpl: resultTpl,
-        hideTrigger:true,      
-        onSelect: function(record){ // override default onSelect to do redirect
-          
-        }
+        hideTrigger:true,    
+        onSelect: function(record, index){
+        	
+        	 
+            if(this.fireEvent('beforeselect', this, record, index) !== false){
+        	    this.setValue(record.data.term);
+            	this.collapse();
+            	this.fireEvent('select', this, record, index);
+
+				var newVC = {termUri : record.data.uri};
+               	if (vc.properties === undefined){
+  	                	 	vc.properties = [];    	                	 	
+               	}
+               	propertiesPush(vc, search.vocabId, newVC);             
+            }           	
+    	                	
+        },  
+        getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
+    		var p = [q]; 
+   		 	return p;
+		}
+        
     });
     search.vocabId = divId;
+
 	
 	var custom =   new Ext.form.TextField({
             fieldLabel: 'custom',
