@@ -259,11 +259,11 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
         	var divId = (Math.random() * 100000).toFixed();   
            	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});
            	dh.append(divId, {tag: 'h3', html :  "Create an instance of: " + node.term });      
-           	var simple = createForm(node,vc, divId);	
+           	var simple = createLeafForm(node,vc, divId);	
            	
            	//If there already exisit individuals display them in a drop down box so the user can select one.
             if ((node.individuals !== undefined) && (node.individuals !== null) && (node.individuals.size() > 0))
-            	simple.column({width:285},createComboBox(node, node.individuals, vc, divId)); 	   	    
+            	simple.column({width:285},createLeafComboBox(node, node.individuals, vc, divId)); 	   	    
     		
         	simple.render(divId);
         }
@@ -307,6 +307,46 @@ var createComboBox = function(subject, individuals, vc, divId){
     	                	}
     	                	propertiesPush(vc, field.vocabId, vcChild);    	                
                         
+    	                };
+    	                		
+    	                combo.on('select', comboHandler);
+					    
+					    return combo;				
+					    
+	
+};
+
+//Handling the leaf node is a little different than handaling the other nodes. 
+var createLeafComboBox = function(subject, individuals, vc, divId){
+	     	var recordType = Ext.data.Record.create([
+							{name:"label", type : "string" }, 
+							{name:"uri", type: "string" } 
+						]);
+						
+						//convert the arry of objects into an array of records
+						var records = [];
+						for(var i = 0, len = individuals.length; i < len; i++) {
+							records.push(new recordType(individuals[i]));
+						}
+                    	
+	                    var store = new Ext.data.Store({recordType : recordType} );
+						store.add(records);
+						
+					    var combo = new Ext.form.ComboBox({
+					    	fieldLabel: 'pick one',
+					        store: store,
+					        displayField:'label',
+					        typeAhead: true,
+					        mode: 'local',
+					        triggerAction: 'all',
+					        emptyText:'Select an individual',
+					        selectOnFocus:true
+					    });	
+					    
+					    combo.vocabId = divId;				    
+					    
+					    var comboHandler = function(field,record,index){
+					    	vc = { termUri : subject.uri, object : {termUri : record.data.uri}};					    	                        
     	                };
     	                		
     	                combo.on('select', comboHandler);
@@ -442,6 +482,103 @@ var createForm = function(subject, vc, divId){
     	                	 	vc.properties = [];    	                	 	
     	                	}
     	                	propertiesPush(vc, field.vocabId, newVC);             
+    	                };
+    	                		
+    	       custom.on('valid', customHandler);
+
+	var simple = new Ext.form.Form({
+		        labelWidth: 50, // label settings here cascade unless overridden
+    });
+					    
+    simple.column(
+    	{width:300},
+        search
+        );
+
+	simple.column(
+		{width:250},
+		custom								
+    );
+    	
+   
+   return simple;		
+}
+
+
+//creates the Lookup textbox and the custom textbox.  The form is just used for alignment purposes. 
+//The subject = the OntologyTerm that we are trying to create the vocabulary characteristic for
+//the vc = the vocabulary charactersit we are trying to create. 
+var createLeafForm = function(subject, vc, divId){
+
+ var     recordType = Ext.data.Record.create([
+					   {name:"id", type:"int"},
+                       {name:"term", type:"string"},
+                       {name:"uri", type:"string"},
+               ]);
+
+
+       ds = new Ext.data.Store(
+               {
+                       proxy:new Ext.data.DWRProxy(MgedOntologyService.findTerm),
+                       reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
+                       remoteSort:false,
+                       sortInfo:{field:'id'}
+               });
+
+       var cm = new Ext.grid.ColumnModel([
+                       {header: "term", width: 50, dataIndex:"term"},
+                       {header: "uri",  width: 80, dataIndex:"uri"}
+                       ]);
+       cm.defaultSortable = true;	
+    
+     // Custom rendering Template
+    var resultTpl = new Ext.Template(
+        '<div class="search-item">',
+            '<h3><span>{id}</span>{term}</h3>',
+            '{uri}',
+        '</div>'
+    );
+    
+    var search = new Ext.form.ComboBox({
+        store: ds,
+        displayField:'title',
+        fieldLabel: 'Lookup',
+        typeAhead: false,
+        loadingText: 'Searching...',
+        width: 570,
+        pageSize:10,
+        tpl: resultTpl,
+        hideTrigger:true,    
+        onSelect: function(record, index){
+        	
+        	 
+            if(this.fireEvent('beforeselect', this, record, index) !== false){
+        	    this.setValue(record.data.term);
+            	this.collapse();
+            	this.fireEvent('select', this, record, index);
+
+				var vc = {termUri : subject.uri, object : {termUri : record.data.uri}};              	      
+            }           	
+    	                	
+        },  
+        getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
+    		var p = [q]; 
+   		 	return p;
+		}
+        
+    });
+    search.vocabId = divId;
+
+	
+	var custom =   new Ext.form.TextField({
+            fieldLabel: 'custom',
+            name: 'custom',
+            width:150 });
+    
+    custom.vocabId = divId;
+
+	var customHandler = function(field){							
+							var vc = {termUri : subject.uri, object : {value: field.getValue()}};    	                	      
     	                };
     	                		
     	       custom.on('valid', customHandler);
