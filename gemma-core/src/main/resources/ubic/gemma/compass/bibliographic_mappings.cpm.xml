@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<!DOCTYPE compass-core-mapping PUBLIC
+    "-//Compass/Compass Core Mapping DTD 1.0//EN"
+    "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
+
+<!--
+	This document is a Compass mapping file, allowing the Gemma objects to be 
+	indexed and searched.  All "searchable" bibliographic reference attributes 
+	(as well as associations) should be included here.
+	
+	author: keshav
+	version: $Id$
+-->
+
+<compass-core-mapping package="ubic.gemma.model">
+
+	<class name="common.description.BibliographicReferenceImpl"
+		alias="bibliographicReference" root="true">
+
+		<id name="id" />
+
+		<property name="name">
+			<meta-data>name</meta-data>
+			<meta-data>bibliographic reference name</meta-data>
+		</property>
+
+		<property name="description">
+			<meta-data>description</meta-data>
+			<meta-data>bibliographic reference description</meta-data>
+		</property>
+
+		<property name="authorList">
+			<meta-data>authorList</meta-data>
+			<meta-data>bibliographic reference author list</meta-data>
+		</property>
+
+		<property name="title">
+			<meta-data>title</meta-data>
+			<meta-data>bibliographic reference title</meta-data>
+		</property>
+
+		<property name="publisher">
+			<meta-data>publisher</meta-data>
+			<meta-data>bibliographic reference publisher</meta-data>
+		</property>
+
+		<property name="editor">
+			<meta-data>editor</meta-data>
+			<meta-data>bibliographic reference editor</meta-data>
+		</property>
+
+		<property name="publication">
+			<meta-data>publication</meta-data>
+			<meta-data>bibliographic reference publication</meta-data>
+		</property>
+
+		<property name="fullTextURI">
+			<meta-data>fullTextURI</meta-data>
+			<meta-data>bibliographic reference full text URI</meta-data>
+		</property>
+
+		<property name="citation">
+			<meta-data>citation</meta-data>
+			<meta-data>bibliographic reference citation</meta-data>
+		</property>
+
+		<property name="volume">
+			<meta-data>volume</meta-data>
+			<meta-data>bibliographic reference volume</meta-data>
+		</property>
+
+		<property name="issue">
+			<meta-data>issue</meta-data>
+			<meta-data>bibliographic reference issue</meta-data>
+		</property>
+
+		<property name="pages">
+			<meta-data>pages</meta-data>
+			<meta-data>bibliographic reference pages</meta-data>
+		</property>
+
+		<property name="abstractText">
+			<meta-data>abstractText</meta-data>
+			<meta-data>bibliographic reference abstract text</meta-data>
+		</property>
+
+		<property name="publicationDate">
+			<meta-data>publicationDate</meta-data>
+			<meta-data>
+				bibliographic reference publication date
+			</meta-data>
+		</property>
+
+		<property name="annotatedAbstract">
+			<meta-data>annotatedAbstract</meta-data>
+			<meta-data>
+				bibliographic reference annotated abstract
+			</meta-data>
+		</property>
+
+		<component name="pubAccession" ref-alias="pubAccession" />
+
+		<component name="authors" ref-alias="authors" />
+
+	</class>
+
+	<class name="common.description.DatabaseEntry" alias="pubAccession"
+		root="false">
+
+		<id name="id" />
+
+		<property name="accession">
+			<meta-data>accession</meta-data>
+		</property>
+
+		<property name="uri">
+			<meta-data>uri</meta-data>
+			<meta-data>database entry uri</meta-data>
+		</property>
+
+	</class>
+
+	<class name="common.auditAndSecurity.PersonImpl" alias="authors"
+		root="false">
+		<id name="id" />
+
+		<property name="name">
+			<meta-data>name</meta-data>
+		</property>
+
+		<property name="lastName">
+			<meta-data>last name</meta-data>
+		</property>
+
+		<property name="address">
+			<meta-data>address</meta-data>
+		</property>
+
+		<property name="phone">
+			<meta-data>phone number</meta-data>
+		</property>
+
+		<property name="email">
+			<meta-data>email</meta-data>
+		</property>
+
+		<property name="description">
+			<meta-data>description</meta-data>
+		</property>
+	</class>
+
+</compass-core-mapping>
