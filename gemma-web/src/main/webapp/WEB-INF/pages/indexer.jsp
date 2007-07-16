@@ -19,6 +19,7 @@ defined in the compass configuration context.
     <input type="submit" name="geneIndex" value="geneIndex"/>
     <input type="submit" name="arrayIndex" value="arrayIndex"/>
     <input type="submit" name="ontologyIndex" value="ontologyIndex"/>
+    <input type="submit" name="bibliographicIndex" value="bibliographicIndex"/>
     
 </form>
 

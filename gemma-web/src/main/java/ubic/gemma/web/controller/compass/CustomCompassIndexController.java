@@ -61,6 +61,7 @@ import ubic.gemma.web.controller.MultiBackgroundProcessingController;
  * @spring.property name="expressionGps" ref="expressionGps"
  * @spring.property name="geneGps" ref="geneGps"
  * @spring.property name="ontologyGps" ref="ontologyGps"
+ * @spring.property name="bibliographicGps" ref="bibliographicGps"
  * @spring.property name="formView" value="indexer"
  * @spring.property name="successView" value="indexer"
  */
@@ -73,6 +74,7 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     private CompassGpsInterfaceDevice arrayGps;
     private CompassGpsInterfaceDevice geneGps;
     private CompassGpsInterfaceDevice ontologyGps;
+    private CompassGpsInterfaceDevice bibliographicGps;
 
     /*
      * (non-Javadoc)
@@ -91,15 +93,23 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
             index = new IndexJob( request, expressionGps, "Dataset Index" );
         } else if ( StringUtils.hasText( request.getParameter( "arrayIndex" ) ) ) {
             index = new IndexJob( request, arrayGps, "Array Index" );
-        } else if ( StringUtils.hasText( request.getParameter( "ontologyIndex" ) ) )
+        } else if ( StringUtils.hasText( request.getParameter( "ontologyIndex" ) ) ) {
             index = new IndexJob( request, ontologyGps, "Ontology Index" );
-        else
+        } else if ( StringUtils.hasText( request.getParameter( "bibliographicIndex" ) ) ) {
+            index = new IndexJob( request, bibliographicGps, "Bibliographic Index" );
+        } else
             return new ModelAndView( this.getFormView() );
 
         return startJob( request, index );
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#processFormSubmission(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     */
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
@@ -130,6 +140,9 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
         if ( request.getParameter( "ontologyIndex" ) != null ) {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
+        if ( request.getParameter( "bibliographicIndex" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
 
@@ -248,6 +261,20 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
      */
     public void setOntologyGps( CompassGpsInterfaceDevice ontologyGps ) {
         this.ontologyGps = ontologyGps;
+    }
+
+    /**
+     * @return the bibliographicGps
+     */
+    public CompassGpsInterfaceDevice getBibliographicGps() {
+        return bibliographicGps;
+    }
+
+    /**
+     * @param bibliographicGps the bibliographicGps to set
+     */
+    public void setBibliographicGps( CompassGpsInterfaceDevice bibliographicGps ) {
+        this.bibliographicGps = bibliographicGps;
     }
 
 }
