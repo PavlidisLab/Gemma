@@ -1,23 +1,17 @@
 package ubic.gemma.apps;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
-import cern.colt.list.ObjectArrayList;
-
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
 import ubic.gemma.analysis.linkAnalysis.GenePair;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -28,10 +22,9 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 
 public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 	private String geneListFile;
+	private String partnerGeneListFile;
 
-	private String outFile;
-
-	private String figureFile;
+	private String outFilePrefix;
 
 	private Taxon taxon;
 
@@ -41,8 +34,6 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 
 	private GeneService geneService;
 	
-	private Gene2GOAssociationService gene2GOService;
-
 	public NoCorrelationAnalysisCLI() {
 		super();
 	}
@@ -51,22 +42,23 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 	protected void buildOptions() {
 		Option geneFileOption = OptionBuilder.hasArg().isRequired()
 				.withArgName("geneFile").withDescription(
-						"File containing list of gene pair offical symbols")
+						"File containing list of gene offical symbols")
 				.withLongOpt("geneFile").create('g');
 		addOption(geneFileOption);
+		Option partnerFileOption = OptionBuilder.hasArg().isRequired()
+				.withArgName("partnerGeneFile").withDescription(
+						"File containing list of partner gene offical symbols")
+				.withLongOpt("partnerGeneFile").create('a');
+		addOption(partnerFileOption);
 		Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName(
 				"Taxon").withDescription("the taxon of the genes").withLongOpt(
 				"Taxon").create('t');
 		addOption(taxonOption);
 		Option outputFileOption = OptionBuilder.hasArg().isRequired()
-				.withArgName("outFile").withDescription(
-						"File for saving the correlation data").withLongOpt(
-						"outFile").create('o');
+				.withArgName("outFilePrefix").withDescription(
+						"File prefix for saving the output").withLongOpt(
+						"outFilePrefix").create('o');
 		addOption(outputFileOption);
-		Option figureFileOption = OptionBuilder.hasArg().withArgName("figureFile")
-				.withDescription("File for saving the figure").withLongOpt(
-						"figureFile").create('f');
-		addOption(figureFileOption);
 	}
 
 	@Override
@@ -74,6 +66,9 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 		super.processOptions();
 		if (hasOption('g')) {
 			this.geneListFile = getOptionValue('g');
+		}
+		if (hasOption('a')) {
+			this.partnerGeneListFile = getOptionValue('a');
 		}
 		if (hasOption('t')) {
 			String taxonName = getOptionValue('t');
@@ -87,17 +82,17 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 			}
 		}
 		if (hasOption('o')) {
-			this.outFile = getOptionValue('o');
+			this.outFilePrefix = getOptionValue('o');
 		}
-		if (hasOption('f')) {
-			this.figureFile = getOptionValue('f');
-		}
+		initBeans();
+	}
+	
+	protected void initBeans() {
 		effectSizeService = (EffectSizeService) this
 				.getBean("effectSizeService");
 		eeService = (ExpressionExperimentService) this
 				.getBean("expressionExperimentService");
 		geneService = (GeneService) this.getBean("geneService");
-		gene2GOService = (Gene2GOAssociationService) this.getBean("gene2GOAssociationService");
 	}
 
 	@Override
@@ -107,45 +102,55 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 			return exc;
 		}
 		Collection<GenePair> genePairs;
-		Gene gene = (Gene) geneService.findByOfficialSymbol("GRIN1").iterator().next();
-		gene = ((Collection<Gene>) gene2GOService.findByGOTerm("0007268", taxon)).iterator().next();
 		
-		// try {
-		// genePairs = effectSizeService.readGenesByOfficialSymbol(geneListFile,
-		// geneService.getGenesByTaxon(taxon));
-		// } catch (IOException e) {
-		// return e;
-		// }
-		Collection<ExpressionExperiment> EEs = eeService.findByTaxon(taxon);
-		genePairs = new HashSet<GenePair>();
-		for (Gene gene2 : (Collection<Gene>) geneService.getGenesByTaxon(taxon)) {
-			genePairs.add(new GenePair(gene.getId(), gene2.getId()));
-		}
-		effectSizeService.calculateEffectSize(EEs, genePairs);
-		try {
-			effectSizeService.saveExprLevelToFigure(figureFile, genePairs, EEs);
-
-			BufferedWriter out = new BufferedWriter(new FileWriter(outFile));
-			for (GenePair genePair : genePairs) {
-				String output = genePair.getFirstId() + ":"
-						+ genePair.getSecondId();
-				if (genePair.getMaxCorrelation() != null)
-					output += "\t" + genePair.getMaxCorrelation();
-				log.debug(output);
-				ObjectArrayList corrs = genePair.getCorrelations();
-				for (int i = 0; i < corrs.size(); i++) {
-					Double corr = (Double) corrs.get(i);
-					if (corr == null)
-						continue;
-					output += "\t" + corr;
-				}
-				out.write(output + "\n");
-				out.flush();
+		Collection<ExpressionExperiment> allEEs = eeService.findByTaxon(taxon);
+		Collection<ExpressionExperiment> EEs = new ArrayList<ExpressionExperiment>();
+		for (ExpressionExperiment ee : allEEs) {
+			if (ee.getShortName().equals("GSE7529")) {
+				log.info("Removing expression experiment GSE7529");
+			} else {
+				EEs.add(ee);
 			}
-			out.close();
+		}
+		Collection<Gene> partnerGenes = new ArrayList<Gene>();
+		log.info("Reading partner genes from " + partnerGeneListFile);
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(partnerGeneListFile));
+			String line;
+			while ((line = in.readLine()) != null) {
+				if (line.startsWith("#")) {
+					continue;
+				}
+				String symbol = line.trim();
+    			for (Gene gene : (Collection<Gene>) geneService.findByOfficialSymbol(symbol)) {
+    				if (gene.getTaxon().equals(taxon)) {
+    					partnerGenes.add(gene);
+    					break;
+    				}
+    			}
+			}
+			in.close();
 		} catch (IOException e) {
 			return e;
 		}
+		
+		try {
+    		genePairs = effectSizeService.pairGenesByOfficialSymbol(geneListFile, partnerGenes, taxon);
+		} catch (IOException e) {
+			return e;
+		}
+		
+		effectSizeService.calculateEffectSize(EEs, genePairs);
+		
+		try {
+			effectSizeService.saveCorrelationsToFile(outFilePrefix + ".corr.txt", genePairs, EEs, false, false);
+			effectSizeService.saveMaxCorrelationsToFile(outFilePrefix + ".max_corr.txt", genePairs, EEs, false, false);
+			effectSizeService.saveExprLevelToFile(outFilePrefix + ".expr_lvl.txt", genePairs, EEs, false, false);
+			effectSizeService.saveExprProfilesToFile(outFilePrefix + ".eps.txt", genePairs, EEs);
+		} catch (IOException e) {
+			return e;
+		}
+		
 		return null;
 	}
 
