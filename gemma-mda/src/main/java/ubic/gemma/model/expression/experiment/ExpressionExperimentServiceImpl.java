@@ -453,5 +453,20 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection handleFindByBibliographicReference( BibliographicReference bibRef ) throws Exception {
         return this.getExpressionExperimentDao().findByBibliographicReference( bibRef.getId() );
     }
+    
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE) throws Exception {
+        
+        return null;
+        
+        
+    }
+    
+    
 
 }
