@@ -20,6 +20,7 @@ public class IndexerSelector implements Selector {
     Collection<Property> badPredicates;
 
     public IndexerSelector() {
+        //these are predicates that in general should not be usefull for indexing
         badPredicates = new ArrayList<Property>();
         badPredicates.add( RDFS.comment );
         badPredicates.add( RDFS.seeAlso );

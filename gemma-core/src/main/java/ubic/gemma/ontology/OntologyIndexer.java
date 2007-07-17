@@ -86,6 +86,7 @@ public class OntologyIndexer {
         IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( indexdir );
 
         // -- Create an index based on existing statements
+        // TODO: this needs to be refactored. 
         log.info( "making selector" );
         larqSubjectBuilder.indexStatements( model.listStatements(new IndexerSelector()));
         // -- Finish indexing
