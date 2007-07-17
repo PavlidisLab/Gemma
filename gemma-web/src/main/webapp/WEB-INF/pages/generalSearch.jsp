@@ -79,7 +79,7 @@
 				Search Ontology Database
 			</option>
 			<option value="bibliographicReference">
-				Search Bibliographic Reference Database
+				Search Bibliographic Database
 			</option>
 			<option selected value="Gene">
 				Search Gene Database
@@ -277,11 +277,11 @@
 	class="list" requestURI="" id="bibliographicReferenceList"
 	pagesize="20"
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
-	<display:column property="title" sortable="true"
+	<display:column property="title" sortable="true" 
 		titleKey="pubMed.title" />
 	<display:column property="authorList" sortable="true"
 		titleKey="pubMed.authors" />
-	<%-- <display:column property="year" sortable="true" titleKey="bibliographicReference.year" />--%>
+	<%-- <display:column property="year" sortable="true" title="year" /> --%>
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
