@@ -570,19 +570,14 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<Gene> getGenes( String goId, Taxon taxon ) {
-        Collection<OntologyTerm> terms = getAllChildren( getTermForId( goId ) );
-        Collection<Gene> results = new HashSet<Gene>();
-        Collection<Gene2GOAssociation> geneassoc = this.gene2GOAssociationService.findByGOTerm( goId, taxon );
-        for ( Gene2GOAssociation association : geneassoc ) {
-            results.add( association.getGene() );
-        }
+    	OntologyTerm t = getTermForId(goId);
+    	if (t == null)
+    		return null;
+        Collection<OntologyTerm> terms = getAllChildren( t );
+        Collection<Gene> results = new HashSet<Gene>(this.gene2GOAssociationService.findByGOTerm(goId, taxon));
 
         for ( OntologyTerm term : terms ) {
-            geneassoc = this.gene2GOAssociationService.findByGOTerm( asRegularGoId( term ), taxon );
-            for ( Gene2GOAssociation association : geneassoc ) {
-                results.add( association.getGene() );
-            }
-
+            results.addAll(this.gene2GOAssociationService.findByGOTerm( asRegularGoId( term ), taxon ));
         }
         return results;
     }
