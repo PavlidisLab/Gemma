@@ -129,6 +129,10 @@ public class GenePair implements Comparable<GenePair> {
 		this.linkCount = linkCount;
 	}
 	
+	public int getNumExpressionExperiments() {
+		return eeEpMap.keys().size();
+	}
+	
 	protected class ExpressionProfileCorrelation {
 		public long dedvId1;
 		public long dedvId2;
