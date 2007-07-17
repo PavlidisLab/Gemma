@@ -214,7 +214,7 @@
 					<display:column property="name" sortable="true" href="bibliographicReferences/showBibliographicReference.html" paramId="id" paramProperty="id"
 						titleKey="bibliographicReference.name" />
 					<display:column property="authorList" sortable="true" titleKey="bibliographicReference.authorList" />	
-					<display:column property="year" sortable="true" titleKey="bibliographicReference.year" />
+					<%-- <display:column property="year" sortable="true" titleKey="bibliographicReference.year" />--%>
 					<display:setProperty name="basic.empty.showtable" value="false" />
 				</display:table>				
 				
