@@ -43,6 +43,7 @@ import org.compass.core.CompassTransaction;
 import org.compass.core.support.search.CompassSearchResults;
 
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -81,8 +82,8 @@ public class SearchService {
     private Compass geneBean;
     private Compass eeBean;
     private Compass arrayBean;
-
     private Compass ontologyBean;
+    private Compass bibliographicReferenceBean;
 
     /**
      * searchs the DB for array designs which have composite sequences whose names match the given search string
@@ -221,6 +222,30 @@ public class SearchService {
     }
 
     /**
+     * Does a compass style search on
+     * 
+     * @param query
+     * @return
+     */
+    public Collection<BibliographicReference> compassBibliographicReferenceSearch( String searchString ) {
+
+        final String query = searchString.trim();
+        CompassSearchResults searchResults;
+
+        CompassTemplate template = new CompassTemplate( bibliographicReferenceBean );
+
+        searchResults = ( CompassSearchResults ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( query, session );
+                    }
+                } );
+
+        if ( searchResults == null ) return new HashSet<BibliographicReference>();
+        return convert2BibliographicReferenceList( searchResults.getHits() );
+    }
+
+    /**
      * Search by name of the composite sequence as well as gene. TODO search by sequence.
      * 
      * @param searchString
@@ -328,6 +353,23 @@ public class SearchService {
 
         for ( int i = 0; i < anOntology.length; i++ )
             converted.add( ( Characteristic ) anOntology[i].getData() );
+
+        return converted;
+
+    }
+
+    /**
+     * @param bibliographicReferenceHits
+     * @return
+     */
+    protected Collection<BibliographicReference> convert2BibliographicReferenceList(
+            CompassHit[] bibliographicReferenceHits ) {
+
+        Collection<BibliographicReference> converted = new HashSet<BibliographicReference>(
+                bibliographicReferenceHits.length );
+
+        for ( int i = 0; i < bibliographicReferenceHits.length; i++ )
+            converted.add( ( BibliographicReference ) bibliographicReferenceHits[i].getData() );
 
         return converted;
 
@@ -563,6 +605,13 @@ public class SearchService {
      */
     public void setOntologyBean( Compass ontologyBean ) {
         this.ontologyBean = ontologyBean;
+    }
+
+    /**
+     * @param bibliographicReferenceBean the bibliographicReferenceBean to set
+     */
+    public void setBibliographicReferenceBean( Compass bibliographicReferenceBean ) {
+        this.bibliographicReferenceBean = bibliographicReferenceBean;
     }
 
     /**

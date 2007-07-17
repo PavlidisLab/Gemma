@@ -38,6 +38,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -92,6 +93,7 @@ public class GeneralSearchController extends BaseFormController {
         boolean goID = false;
         boolean ontology = false;
         boolean goArray = false;
+        boolean bibliographicReference = false;
 
         if ( ( advanced == null ) || ( advanced.length == 0 ) ) {
             dataset = true;
@@ -100,6 +102,7 @@ public class GeneralSearchController extends BaseFormController {
             goID = false;
             ontology = false;
             goArray = false;
+            bibliographicReference = false;
 
             mav.addObject( "searchDataset", "DataSet" );
             mav.addObject( "searchGene", "Gene" );
@@ -135,6 +138,10 @@ public class GeneralSearchController extends BaseFormController {
                 if ( types.equalsIgnoreCase( "ADbyGoID" ) ) {
                     goArray = true;
                     mav.addObject( "searchADbyGoID", "ADbyGoID" );
+                }
+                if ( types.equalsIgnoreCase( "bibliographicReference" ) ) {
+                    bibliographicReference = true;
+                    mav.addObject( "searchBibliographicReference", "bibliographicReference" );
                 }
             }
         }
@@ -210,6 +217,14 @@ public class GeneralSearchController extends BaseFormController {
 
             mav.addObject( "goArrayList", valueADs );
             mav.addObject( "numGoADs", valueADs.size() );
+        }
+
+        if ( bibliographicReference ) {
+            Collection<BibliographicReference> bibliographicReferences = searchService
+                    .compassBibliographicReferenceSearch( searchString );
+            mav.addObject( "bibliographicReferenceList", bibliographicReferences );
+            mav.addObject( "numBibliographicReferenceList", bibliographicReferences.size() );
+
         }
 
         return mav;

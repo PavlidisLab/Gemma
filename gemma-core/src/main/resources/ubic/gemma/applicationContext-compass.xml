@@ -52,6 +52,9 @@
 		<property name="ontologyBean">
 			<ref bean="compassOntology" />
 		</property>
+		<property name="bibliographicReferenceBean">
+			<ref bean="compassBibliographic" />
+		</property>
 	</bean>
 	<!-- Generic compass configuration bean - for the rest see compass.xml and compasstest.xml -->
 	<bean id="hibernateGpsDevice"

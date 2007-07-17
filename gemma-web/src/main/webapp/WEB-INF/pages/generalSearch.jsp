@@ -65,8 +65,9 @@
 <div class="advancedSearch" style="display:none">
 <h4>Select a search Mode:</h4>
 	<select id="advancedSelect" name="advancedSelect"  multiple size=5 disabled="true"> 
-		<option  value = "GoID">Find Genes by Gene Ontology Id </option>s		
-		<option  value = "ontology">Search Ontology Database </option>		
+		<option  value = "GoID">Find Genes by Gene Ontology Id </option>		
+		<option  value = "ontology">Search Ontology Database </option>
+		<option value = "bibliographicReference">Search Bibliographic Reference Database</option>			
 		<option selected value = "Gene"> Search Gene Database </option>
 		<option selected value = "DataSet">Search DataSet Database </option>
 		<option selected value = "Array">Search Array Database</option>	
@@ -201,6 +202,24 @@
 					</authz:authorize>
 					<display:setProperty name="basic.empty.showtable" value="false" />
 				</display:table>
+				
+	<c:if test="${numBibliographicReferenceList != null}"> 
+			<h3>
+				The Bibliographic Reference term <b> <c:out value="${SearchString}"/>  </b> is related to <b> <c:out value="${numBibliographicReferenceList}" /> </b> Bibliographic References
+			</h3> <br/>
+    </c:if>
+
+				<display:table name="bibliographicReferenceList" sort="list" class="list" requestURI="" id="bibliographicReferenceList"
+				pagesize="20" decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
+					<display:column property="name" sortable="true" href="bibliographicReferences/showBibliographicReference.html" paramId="id" paramProperty="id"
+						titleKey="bibliographicReference.name" />
+					<display:column property="authorList" sortable="true" titleKey="bibliographicReference.authorList" />	
+					<display:column property="year" sortable="true" titleKey="bibliographicReference.year" />
+					<authz:authorize ifAnyGranted="admin">
+						<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
+					</authz:authorize>
+					<display:setProperty name="basic.empty.showtable" value="false" />
+				</display:table>				
 				
 				
 				
