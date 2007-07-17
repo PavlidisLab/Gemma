@@ -277,11 +277,13 @@
 	class="list" requestURI="" id="bibliographicReferenceList"
 	pagesize="20"
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
-	<display:column property="title" sortable="true" 
-		titleKey="pubMed.title" />
+	<display:column property="title" sortable="true"
+		titleKey="pubMed.title" maxWords="10"/>
 	<display:column property="authorList" sortable="true"
-		titleKey="pubMed.authors" />
-	<%-- <display:column property="year" sortable="true" title="year" /> --%>
+		titleKey="pubMed.authors" maxWords="5"/>
+	<display:column property="publication" sortable="true"
+		titleKey="pubMed.publication" />
+	<%-- <display:column property="yearOfArticle" sortable="true" title="yearOfArticle" /> --%>
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
