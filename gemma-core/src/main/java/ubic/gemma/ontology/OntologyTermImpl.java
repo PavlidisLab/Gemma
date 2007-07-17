@@ -146,14 +146,34 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
                 r = c.asRestriction();
                 result.add( RestrictionFactory.asRestriction( r, sourceOntology ) );
             } catch ( Exception e ) {
+
+            }
+
+        }
+
+        // Check superclasses for any ADDITIONAL restrictions.
+        iterator = ontResource.listSuperClasses( false );
+        while ( iterator.hasNext() ) {
+            OntClass c = ( OntClass ) iterator.next();
+
+            try {
+                c.asRestriction(); // throw it away, we already processed it above.
+            } catch ( Exception e ) {
                 // not a restriction, but a superclass that might have restrictions
-                ExtendedIterator supClassesIt = c.listSuperClasses( true );
-                while ( supClassesIt.hasNext() ) {
+                ExtendedIterator supClassesIt = c.listSuperClasses( false );
+                loop: while ( supClassesIt.hasNext() ) {
                     OntClass sc = ( OntClass ) supClassesIt.next();
                     Restriction sr = null;
                     try {
                         sr = sc.asRestriction();
-                        result.add( RestrictionFactory.asRestriction( sr, sourceOntology ) );
+
+                        // only add it if the class doesn't already have one.
+                        OntologyRestriction candidateRestriction = RestrictionFactory.asRestriction( sr, sourceOntology );
+                        for ( OntologyRestriction restr : result ) {
+                            if ( restr.getRestrictionOn().equals( candidateRestriction.getRestrictionOn() ) ) continue loop;
+                        }
+                        result.add( candidateRestriction );
+
                     } catch ( Exception ex ) {
                         // superclass isn't a restriction.
                     }
@@ -161,6 +181,7 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
             }
 
         }
+
         return result;
     }
 
