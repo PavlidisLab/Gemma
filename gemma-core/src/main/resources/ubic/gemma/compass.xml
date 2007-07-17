@@ -204,10 +204,10 @@
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">
-					file://${gemma.appdata.home}/compass/gemma/ontology
+					file://${gemma.appdata.home}/compass/gemma/bibliographic
 				</prop>
 				<prop key="compass.engine.lockFile">
-					file://${gemma.appdata.home}/compass/gemma/ontology/ontology.lock
+					file://${gemma.appdata.home}/compass/gemma/bibliographic/bibliographic.lock
 				</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
