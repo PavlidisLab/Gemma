@@ -215,9 +215,6 @@
 						titleKey="bibliographicReference.name" />
 					<display:column property="authorList" sortable="true" titleKey="bibliographicReference.authorList" />	
 					<display:column property="year" sortable="true" titleKey="bibliographicReference.year" />
-					<authz:authorize ifAnyGranted="admin">
-						<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
-					</authz:authorize>
 					<display:setProperty name="basic.empty.showtable" value="false" />
 				</display:table>				
 				

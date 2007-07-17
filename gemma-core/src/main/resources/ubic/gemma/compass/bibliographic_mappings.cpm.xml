@@ -98,12 +98,13 @@
 			</meta-data>
 		</property>
 
-		<component name="pubAccession" ref-alias="pubAccession" />
+		<!--  <component name="pubAccession" ref-alias="pubAccession" /> -->
 
 		<component name="authors" ref-alias="authors" />
 
 	</class>
-
+	
+	<!-- 
 	<class name="common.description.DatabaseEntry" alias="pubAccession"
 		root="false">
 
@@ -113,13 +114,9 @@
 			<meta-data>accession</meta-data>
 		</property>
 
-		<property name="uri">
-			<meta-data>uri</meta-data>
-			<meta-data>database entry uri</meta-data>
-		</property>
-
 	</class>
-
+	 -->
+	 
 	<class name="common.auditAndSecurity.PersonImpl" alias="authors"
 		root="false">
 		<id name="id" />
