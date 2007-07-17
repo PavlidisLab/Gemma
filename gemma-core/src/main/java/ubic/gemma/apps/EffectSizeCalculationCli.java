@@ -9,11 +9,11 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
 import ubic.gemma.analysis.linkAnalysis.GenePair;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -37,6 +37,8 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 
 	private ExpressionExperimentService eeService;
 
+	private GeneService geneService;
+
 	private int stringency = 3;
 
 	public static final int DEFAULT_STRINGENCY = 3;
@@ -50,11 +52,11 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 	protected void buildOptions() {
 		Option goOption = OptionBuilder.hasArg().withArgName("GOTerm")
 				.withDescription("GO term to pair").withLongOpt("GOTerm")
-				.create('t');
+				.create('g');
 		addOption(goOption);
 		Option geneOption = OptionBuilder.hasArgs().withArgName("gene")
 				.withDescription("Gene (official symbol) to pair").withLongOpt(
-						"gene").create('g');
+						"gene").create('s');
 		addOption(geneOption);
 		Option geneFileOption = OptionBuilder.hasArg().withArgName("geneFile")
 				.withDescription(
@@ -73,18 +75,18 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 		Option stringencyOption = OptionBuilder.hasArg().withArgName(
 				"stringency").withDescription(
 				"Vote count stringency for link selection").withLongOpt(
-				"stringency").create('s');
+				"stringency").create('r');
 		addOption(stringencyOption);
 	}
 
 	@Override
 	protected void processOptions() {
 		super.processOptions();
-		if (hasOption('t')) {
-			this.goTerm = getOptionValue('t');
-		}
 		if (hasOption('g')) {
-			this.geneSymbols = getOptionValues('g');
+			this.goTerm = getOptionValue('g');
+		}
+		if (hasOption('s')) {
+			this.geneSymbols = getOptionValues('s');
 		}
 		if (hasOption('f')) {
 			this.geneListFile = getOptionValue('f');
@@ -103,8 +105,8 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 		if (hasOption('o')) {
 			this.outFilePrefix = getOptionValue('o');
 		}
-		if (hasOption('s')) {
-			this.stringency = Integer.parseInt(getOptionValue('s'));
+		if (hasOption('r')) {
+			this.stringency = Integer.parseInt(getOptionValue('r'));
 		} else {
 			this.stringency = DEFAULT_STRINGENCY;
 		}
@@ -117,6 +119,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 				.getBean("effectSizeService");
 		eeService = (ExpressionExperimentService) this
 				.getBean("expressionExperimentService");
+		geneService = (GeneService) this.getBean("geneService");
 	}
 
 	@Override
@@ -146,25 +149,25 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 			} catch (IOException e) {
 				return e;
 			}
-		} else if (goTerm == null) {
+		} else if (goTerm != null) {
 			genePairs = effectSizeService.pairCoexpressedGenesByGOTerm(goTerm,
 					taxon, EEs, stringency);
 		} else {
 			return new Exception("No genes to pair");
 		}
 
-		if (genePairs.size() == 0)
+		if (genePairs == null || genePairs.size() == 0)
 			return new Exception("No genes paired");
 
 		effectSizeService.calculateEffectSize(EEs, genePairs);
 
 		try {
 			effectSizeService.saveCorrelationsToFile(outFilePrefix
-					+ ".corr.txt", genePairs, EEs);
+					+ ".corr.txt", genePairs, EEs, true, true);
 			effectSizeService.saveCorrelationsToFigure(outFilePrefix
 					+ ".corr.png", genePairs, EEs);
 			effectSizeService.saveExprLevelToFile(outFilePrefix
-					+ ".expr_lvl.txt", genePairs, EEs);
+					+ ".expr_lvl.txt", genePairs, EEs, true, true);
 			effectSizeService.saveExprProfilesToFile(
 					outFilePrefix + ".eps.txt", genePairs, EEs);
 		} catch (IOException e) {
