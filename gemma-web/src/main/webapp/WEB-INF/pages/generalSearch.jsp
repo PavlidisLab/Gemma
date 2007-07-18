@@ -18,8 +18,7 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="generalSearch.title" />
-</title>
+<title><fmt:message key="generalSearch.title" /></title>
 
 <h2>
 	General search tool for searching Gemma
@@ -273,19 +272,34 @@
 	<br />
 </c:if>
 
-<display:table name="bibliographicReferenceList" sort="list"
-	class="list" requestURI="" id="bibliographicReferenceList"
-	pagesize="20"
+<display:table cellpadding="4" pagesize="20"
+	name="bibliographicReferenceList" sort="list" class="list"
+	requestURI="" id="bibliographicReferenceList"
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
+	<display:column sortable="true" href="bibRefView.html"
+		paramId="accession" paramProperty="pubAccession.accession" title="">
+		<img src="/Gemma/images/magnifier.png" />
+	</display:column>
 	<display:column property="title" sortable="true"
-		titleKey="pubMed.title" maxWords="10"/>
+		titleKey="pubMed.title" maxLength="50" />
 	<display:column property="authorList" sortable="true"
-		titleKey="pubMed.authors" maxWords="5"/>
-	<display:column property="publication" sortable="true"
-		titleKey="pubMed.publication" />
-	<%-- <display:column property="yearOfArticle" sortable="true" title="yearOfArticle" /> --%>
-	<display:setProperty name="basic.empty.showtable" value="false" />
+		titleKey="pubMed.authors" maxLength="20" />
+	<%-- <display:column property="year" titleKey="pubMed.year" />
+	<display:column property="citation" sortable="true"
+		titleKey="pubMed.cite" />--%>
+	<display:column sortable="true"
+		href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=ID&query_hl=3"
+		paramId="list_uids" paramProperty="pubAccession.accession"
+		title="PubMed">
+		<%="<img src='/Gemma/images/pubmed.gif' />"%>
+	</display:column>
+	<%-- <display:column title="Experiments" property="experiments" /> 
+	<authz:authorize ifAnyGranted="admin">
+		<display:column property="update" sortable="false"
+			title="Update from NCBI" />
+	</authz:authorize>--%>
 </display:table>
+
 
 
 
