@@ -147,7 +147,7 @@ var vocabC;
 var displayRestrictionsPanel = function(node){
 	console.log(dwr.util.toDescriptiveString(node, 10));
 
-	vocabC = { termUri : node.uri,properties : [] };		
+	vocabC = { termUri : node.uri, classUri : node.uri, properties : [] };		
 	createRestrictionGui(node, vocabC);
 	
 	var saveButton = new Ext.Button("center-div", {text : 'save'});
@@ -178,21 +178,51 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 		
 
 		dh.append(parentDivId, {html : node.term+ ": " + node.comment});
-
+		
 
       
         var res = node.restrictions;
-        if ( (res !== undefined) && (res !== null) && (res.size() > 0) ) {
+        if ( (res !== undefined) && (res !== null) && (res.size() > 0) ) {	//Has restrictions (not a leaf node)
+        	
+        	//TODO: Facotor out abstract class detection
+        	//		Grey out rest of form
+        	//		VC can get messed up quickly.  Need flag to be set so we know what mode we are in. (abstact or not mode)
+        	//		
+        	if (node.annotations !== undefined) {
+				var annots = 	node.annotations;
+				var isAbstract = false;
+				for(var i = 0, len = annots.length; i<len; i++ ) {
+			
+					var ann = annots[i];
+					if ( ann.property == "class_role" && ann.contents == "abstract") {
+					isAbstract = true;
+					break;
+					}
+				}
+		
+		        	if (isAbstract) {
+					// make a text box so an instance can be created
+						var simple = createAbstractForm(node, vc, parentDivId);
+						simple.render(parentDivId);
+					}
+        	}
+        	//End of abstract class code
         	
             for ( var i = 0, len = res.length; i < len; i++ ) {
+            	
             	var restrictedOn = res[i].restrictionOn;
             	var restrictedTo = res[i].restrictedTo;
             	//make a nested div for adding to.
             	var divId = (Math.random() * 100000).toFixed();   
-            	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});
-                dh.append(divId, {html : restrictedOn.label});
- 
-            	
+
+								
+				if (specialCase(restrictedOn)){
+					continue;	            	
+				}
+				     
+            	            	
+            	dh.append(parentDivId, {tag: 'div', id: divId, style : "border-width:thin;border-style:dotted;padding:5px;margin:5px;"});            
+       	
             	if (restrictedOn.type !== undefined ) {	//Primitive Type
  					
                     	var simple = new Ext.form.Form({
@@ -203,7 +233,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 					    var handler = createPrimitiveTypeHandler(restrictedOn, vc);
 
 					    var valueField = new Ext.form.TextField({
-					            fieldLabel: restrictedOn.label ,
+					            fieldLabel: restrictedOn.label , // remove "has_"
 					            name: 'hasValue',
 					            width:175,
 					            allowBlank:false,					           
@@ -214,7 +244,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 					   valueField.on('valid', handler);
 					        
 					   simple.add(valueField);
-                       dh.append(divId, {tag: 'h3', html : 'Value:' });
+                     //  dh.append(divId, {tag: 'h3', html : 'Value:' });
  
 					   simple.render(divId);
 					   
@@ -235,7 +265,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 	                    simple.render(divId);
                     } else{        //Not a leaf node. recurse down another level
                     	//do i need to use propertiesPush here? ie do i want a field id associated with this?
-                        var vcChild = { termUri : restrictedOn.uri, object : { termUri : restrictedTo.uri }, properties : []};
+                        var vcChild = { termUri : restrictedOn.uri, classUri : restrictedOn.uri, object : { termUri : restrictedTo.uri }, properties : []};
                         propertiesPush(vc, divId,vcChild);
                         //vc.properties.push(vcChild);
     	            	createRestrictionGui( restrictedTo, vcChild.object, indent + 3, divId );
@@ -269,93 +299,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
         }
 	};
 
-
-//subject
-var createComboBox = function(subject, individuals, vc, divId){
-	     	var recordType = Ext.data.Record.create([
-							{name:"label", type : "string" }, 
-							{name:"uri", type: "string" } 
-						]);
-						
-						//convert the arry of objects into an array of records
-						var records = [];
-						for(var i = 0, len = individuals.length; i < len; i++) {
-							records.push(new recordType(individuals[i]));
-						}
-                    	
-	                    var store = new Ext.data.Store({recordType : recordType} );
-						store.add(records);
-						
-					    var combo = new Ext.form.ComboBox({
-					    	fieldLabel: 'pick one',
-					        store: store,
-					        displayField:'label',
-					        typeAhead: true,
-					        mode: 'local',
-					        triggerAction: 'all',
-					        emptyText:'Select an individual',
-					        selectOnFocus:true
-					    });	
-					    
-					    combo.vocabId = divId;				    
-					    
-					    var comboHandler = function(field,record,index){
-					    	var vcChild = { termUri : subject.uri, object : {termUri : record.data.uri}};
-					    	
-					    	if (vc.properties === undefined){
-    	                	 	vc.properties = [];    	                	 	
-    	                	}
-    	                	propertiesPush(vc, field.vocabId, vcChild);    	                
-                        
-    	                };
-    	                		
-    	                combo.on('select', comboHandler);
-					    
-					    return combo;				
-					    
-	
-};
-
-//Handling the leaf node is a little different than handaling the other nodes. 
-var createLeafComboBox = function(subject, individuals, vc, divId){
-	     	var recordType = Ext.data.Record.create([
-							{name:"label", type : "string" }, 
-							{name:"uri", type: "string" } 
-						]);
-						
-						//convert the arry of objects into an array of records
-						var records = [];
-						for(var i = 0, len = individuals.length; i < len; i++) {
-							records.push(new recordType(individuals[i]));
-						}
-                    	
-	                    var store = new Ext.data.Store({recordType : recordType} );
-						store.add(records);
-						
-					    var combo = new Ext.form.ComboBox({
-					    	fieldLabel: 'pick one',
-					        store: store,
-					        displayField:'label',
-					        typeAhead: true,
-					        mode: 'local',
-					        triggerAction: 'all',
-					        emptyText:'Select an individual',
-					        selectOnFocus:true
-					    });	
-					    
-					    combo.vocabId = divId;				    
-					    
-					    var comboHandler = function(field,record,index){
-					    	vc = { termUri : subject.uri, object : {termUri : record.data.uri}};					    	                        
-    	                };
-    	                		
-    	                combo.on('select', comboHandler);
-					    
-					    return combo;				
-					    
-	
-};
-
+//-----------------------------------------------------------//
 //the vc is the VocabCharacteristic we would like to add to.
 //The fieldId = the div ID of the component that contains the gui component
 //Will check to make sure that the fieldId doesn't already exisit in the properties and if it does update it
@@ -391,20 +335,85 @@ var propertiesPush = function(vc, fieldId, toAdd){
 	toAdd.fieldId = fieldId;
 	vc.properties.push(toAdd);
 	
+};
+
+
+//Template for the drop down box that contains all the individuals.  Needs a handler to know how to interpret and action
+var createBaseComboBox = function(subject, individuals, vc, divId, comboHandler){
+	
+		     	var recordType = Ext.data.Record.create([
+							{name:"label", type : "string" }, 
+							{name:"uri", type: "string" } 
+						]);
+						
+						//convert the arry of objects into an array of records
+						var records = [];
+						for(var i = 0, len = individuals.length; i < len; i++) {
+							records.push(new recordType(individuals[i]));
+						}
+                    	
+	                    var store = new Ext.data.Store({recordType : recordType} );
+						store.add(records);
+						
+					    var combo = new Ext.form.ComboBox({
+					    	fieldLabel: 'pick one',
+					        store: store,
+					        displayField:'label',
+					        typeAhead: true,
+					        mode: 'local',
+					        triggerAction: 'all',
+					        emptyText:'Select an individual',
+					        selectOnFocus:true
+					    });	
+					    
+					    combo.vocabId = divId;	
+	
+				  	 	combo.on('select', comboHandler);
+					    
+					    return combo;				
 }
 
-//creates the Lookup textbox and the custom textbox.  The form is just used for alignment purposes. 
-//The subject = the OntologyTerm that we are trying to create the vocabulary characteristic for
-//the vc = the vocabulary charactersit we are trying to create. 
-var createForm = function(subject, vc, divId){
-
-//	var lookUp = 	new Ext.form.TextField({
-//            fieldLabel: 'Lookup',
-//            name: 'lookup',
-//            width:150,
-//            allowBlank:true	});
-//    lookUp.vocabId = divId;
+//subject
+var createComboBox = function(subject, individuals, vc, divId){
+			    
+					    
+					    var comboHandler = function(field,record,index){
+					    	var vcChild = { termUri : subject.uri, object : {termUri : record.data.uri}};
+					    	
+					    	if (vc.properties === undefined){
+    	                	 	vc.properties = [];    	                	 	
+    	                	}
+    	                	propertiesPush(vc, field.vocabId, vcChild);    	                
+                        
+    	                };
+    	                
+    	                return createBaseComboBox(subject, individuals, vc, divId, comboHandler);
+    	                
+    	                		
+    	              
+					    
 	
+};
+
+//Handling the leaf node is a little different than handaling the other nodes. 
+var createLeafComboBox = function(subject, individuals, vc, divId){
+					    
+					    var comboHandler = function(field,record,index){
+					    	
+					    	vc.classUri = subject.uri;
+					    	vc.termUri = record.data.uri
+					    								          						 					    	                        
+    	                };
+    	                							    
+					    return createBaseComboBox(subject, individuals, vc, divId, comboHandler);			
+};
+
+
+
+//For creating the basic forms
+//Creates the lookup field and a custom field for inputing information
+var createBaseForm = function(subject,vc, divId, searchHandler, customHandler){
+		
  var     recordType = Ext.data.Record.create([
 					   {name:"id", type:"int"},
                        {name:"term", type:"string"},
@@ -444,22 +453,7 @@ var createForm = function(subject, vc, divId){
         pageSize:10,
         tpl: resultTpl,
         hideTrigger:true,    
-        onSelect: function(record, index){
-        	
-        	 
-            if(this.fireEvent('beforeselect', this, record, index) !== false){
-        	    this.setValue(record.data.term);
-            	this.collapse();
-            	this.fireEvent('select', this, record, index);
-
-				var newVC = {termUri : record.data.uri};
-               	if (vc.properties === undefined){
-  	                	 	vc.properties = [];    	                	 	
-               	}
-               	propertiesPush(vc, search.vocabId, newVC);             
-            }           	
-    	                	
-        },  
+        onSelect: searchHandler,  
         getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
     		var p = [q]; 
    		 	return p;
@@ -475,16 +469,7 @@ var createForm = function(subject, vc, divId){
             width:150 });
     
     custom.vocabId = divId;
-
-	var customHandler = function(field){							
-							var newVC = {termUri : subject.uri, object : {value: field.getValue()}};
-    	                	if (vc.properties === undefined){
-    	                	 	vc.properties = [];    	                	 	
-    	                	}
-    	                	propertiesPush(vc, field.vocabId, newVC);             
-    	                };
-    	                		
-    	       custom.on('valid', customHandler);
+    custom.on('valid', customHandler);
 
 	var simple = new Ext.form.Form({
 		        labelWidth: 50, // label settings here cascade unless overridden
@@ -502,7 +487,46 @@ var createForm = function(subject, vc, divId){
     	
    
    return simple;		
-}
+	
+	
+	
+	
+};
+//creates the Lookup textbox and the custom textbox.  The form is just used for alignment purposes. 
+//The subject = the OntologyTerm that we are trying to create the vocabulary characteristic for
+//the vc = the vocabulary charactersit we are trying to create. 
+var createForm = function(subject, vc, divId){
+	
+	
+		var searchHandler = function(record, index){
+        	
+        	 
+            if(this.fireEvent('beforeselect', this, record, index) !== false){
+        	    this.setValue(record.data.term);
+            	this.collapse();
+            	this.fireEvent('select', this, record, index);
+
+				var newVC = { termUri : subject.uri, classUri: subject.uri,  object : {termUri : record.data.uri}};
+               	if (vc.properties === undefined){
+  	                	 	vc.properties = [];    	                	 	
+               	}
+               	propertiesPush(vc, search.vocabId, newVC);             
+            }           	
+    	                	
+        };
+        
+        var customHandler = function(field){							
+							var newVC = {termUri : subject.uri,  classUri: subject.uri, object : {value: field.getValue()}};
+    	                	if (vc.properties === undefined){
+    	                	 	vc.properties = [];    	                	 	
+    	                	}
+    	                	propertiesPush(vc, field.vocabId, newVC);             
+    	                };
+        
+        
+        return createBaseForm(subject, vc, divId, searchHandler, customHandler);
+        
+};
 
 
 //creates the Lookup textbox and the custom textbox.  The form is just used for alignment purposes. 
@@ -510,46 +534,35 @@ var createForm = function(subject, vc, divId){
 //the vc = the vocabulary charactersit we are trying to create. 
 var createLeafForm = function(subject, vc, divId){
 
- var     recordType = Ext.data.Record.create([
-					   {name:"id", type:"int"},
-                       {name:"term", type:"string"},
-                       {name:"uri", type:"string"},
-               ]);
+ var searchHandler = function(record, index){
+        	
+        	 
+            if(this.fireEvent('beforeselect', this, record, index) !== false){
+        	    this.setValue(record.data.term);
+            	this.collapse();
+            	this.fireEvent('select', this, record, index);
+				
+				vc.classUri = subject.uri;
+				vc.termUri = record.data.uri;
+            }           	
+    	                	
+        }
+
+	var customHandler = function(field){
+	
+							vc.classUri = subject.uri;
+							vc.termUri =  field.getValue()														    	                	      
+    	                };
 
 
-       ds = new Ext.data.Store(
-               {
-                       proxy:new Ext.data.DWRProxy(MgedOntologyService.findTerm),
-                       reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
-                       remoteSort:false,
-                       sortInfo:{field:'id'}
-               });
+	return createBaseForm(subject, vc, divId, searchHandler, customHandler); 
+    	                		
+};
 
-       var cm = new Ext.grid.ColumnModel([
-                       {header: "term", width: 50, dataIndex:"term"},
-                       {header: "uri",  width: 80, dataIndex:"uri"}
-                       ]);
-       cm.defaultSortable = true;	
-    
-     // Custom rendering Template
-    var resultTpl = new Ext.Template(
-        '<div class="search-item">',
-            '<h3><span>{id}</span>{term}</h3>',
-            '{uri}',
-        '</div>'
-    );
-    
-    var search = new Ext.form.ComboBox({
-        store: ds,
-        displayField:'title',
-        fieldLabel: 'Lookup',
-        typeAhead: false,
-        loadingText: 'Searching...',
-        width: 570,
-        pageSize:10,
-        tpl: resultTpl,
-        hideTrigger:true,    
-        onSelect: function(record, index){
+
+var createAbstractForm = function(subject, vc, divId){
+
+ var searchHandler = function(record, index){
         	
         	 
             if(this.fireEvent('beforeselect', this, record, index) !== false){
@@ -557,49 +570,25 @@ var createLeafForm = function(subject, vc, divId){
             	this.collapse();
             	this.fireEvent('select', this, record, index);
 
-				var vc = {termUri : subject.uri, object : {termUri : record.data.uri}};              	      
+				//var vc = {termUri : subject.uri, object : {termUri : record.data.uri}};
+				vc.classUri = subject.uri;
+				vc.termUri =  record.data.uri;            	      
             }           	
     	                	
-        },  
-        getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
-    		var p = [q]; 
-   		 	return p;
-		}
-        
-    });
-    search.vocabId = divId;
+        }
 
-	
-	var custom =   new Ext.form.TextField({
-            fieldLabel: 'custom',
-            name: 'custom',
-            width:150 });
-    
-    custom.vocabId = divId;
-
-	var customHandler = function(field){							
-							var vc = {termUri : subject.uri, object : {value: field.getValue()}};    	                	      
+	var customHandler = function(field){
+							vc.properties = [];
+							vc.classUri = subject.uri;
+							vc.termUri = field.getValue();    							    	                	      
     	                };
+
+
+	return createBaseForm(subject, vc, divId, searchHandler, customHandler); 
     	                		
-    	       custom.on('valid', customHandler);
+};
 
-	var simple = new Ext.form.Form({
-		        labelWidth: 50, // label settings here cascade unless overridden
-    });
-					    
-    simple.column(
-    	{width:300},
-        search
-        );
 
-	simple.column(
-		{width:250},
-		custom								
-    );
-    	
-   
-   return simple;		
-}
 
 //Do this for scope reasons. 
 //By creating a function on the fly the scope of the restrictions will be fixed for the handler.
@@ -607,7 +596,7 @@ var createPrimitiveTypeHandler = function(restrictedOn, vc){
 
 	return 	function(field) {
 					     	
-					     	var newVc = {termUri : restrictedOn.uri, data : field.getValue(), type : restrictedOn.type};
+					     	var newVc = {termUri : restrictedOn.uri, classUri : restrictedOn.uri,  data : field.getValue(), type : restrictedOn.type};
 					     	
 					     	if (vc.properties === undefined){
     	                	 	vc.properties = [];    	                	 	
@@ -616,6 +605,16 @@ var createPrimitiveTypeHandler = function(restrictedOn, vc){
 					     	propertiesPush(vc, field.vocabId,newVc);
 			}
 };
+
+//
+//For usablitly reasons we felt the  need to remove some ontology details. 
+//
+var specialCase = function(restrictedOn){
+	
+            	 if (restrictedOn.label == "has_ID") {
+  					return true;
+ 	 				}		
+}
 
 
 Ext.EventManager.onDocumentReady(Simple.init, Simple, true);
