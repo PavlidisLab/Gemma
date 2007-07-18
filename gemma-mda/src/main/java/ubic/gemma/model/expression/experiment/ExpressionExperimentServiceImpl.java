@@ -461,10 +461,13 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE) throws Exception {
-        
-        return null;
-        
-        
+    	Collection preferredQuantitationTypes = new HashSet();
+    	for (QuantitationType qt : EE.getQuantitationTypes()) {
+    		if (qt.getIsPreferred()) {
+    			preferredQuantitationTypes.add(qt);
+    		}
+    	}
+    	return preferredQuantitationTypes;
     }
     
     
