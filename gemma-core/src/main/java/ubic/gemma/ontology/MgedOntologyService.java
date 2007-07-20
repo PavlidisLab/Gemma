@@ -31,7 +31,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -44,6 +48,8 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  * @author klc
  * @version $Id: MgedOntologyService.java
  * @spring.bean id="mgedOntologyService"
+ * @spring.property name="bioMaterialService" ref ="bioMaterialService"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 
 public class MgedOntologyService implements InitializingBean {
@@ -63,6 +69,11 @@ public class MgedOntologyService implements InitializingBean {
     private static OntModel model;
     private static IndexLARQ index;
 
+    
+    private static PersisterHelper persisterHelper;
+    private static BioMaterialService bioMaterialService;
+    
+    
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
         if ( running.get() ) {
@@ -80,10 +91,21 @@ public class MgedOntologyService implements InitializingBean {
     }
     
     public void saveStatement(VocabCharacteristic vc, Collection<Long> bioMaterialIdList){
-        
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
         log.info( "Biomaterial ID List: " + bioMaterialIdList );
+
+        Collection<Characteristic> chars = new ArrayList<Characteristic>();
+        chars.add( vc );
+        Collection<BioMaterial> biomaterials = bioMaterialService.load( bioMaterialIdList );
+        
+        for ( BioMaterial bioM : biomaterials ) {
+            bioM.setCharacteristics( chars  );
+            persisterHelper.persist( bioM );
+
+        }
+        
+        
     }
     
     public Collection<OntologyTreeNode> getBioMaterialTerms() {
@@ -235,6 +257,20 @@ public class MgedOntologyService implements InitializingBean {
     public synchronized boolean isGeneOntologyLoaded() {
 
         return ready.get();
+    }
+
+    /**
+     * @param bioMaterialService the bioMaterialService to set
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
 }
