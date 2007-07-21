@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -515,6 +516,39 @@ public class SearchService {
 
         if ( combinedGeneList.size() == 0 ) return combinedGeneList;
         return combinedGeneList.subList( 0, Math.min( combinedGeneList.size(), MAX_SEARCH_RESULTS ) );
+    }
+
+    /**
+     * A database serach for biosequences with the given searchString.
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    public Collection<BioSequence> bioSequenceDbSearch( String searchString ) throws Exception {
+        // TODO add in search for actual sequence, not just the sequence name. Use the wildcard plumbing.
+        searchString = searchString.trim();
+
+        // search by inexact symbol
+        Set<BioSequence> bioSequenceMatch = new HashSet<BioSequence>();
+
+        // replace * with % for inexact symbol search
+        String inexactString = searchString;
+        Pattern pattern = Pattern.compile( "\\*" );
+        Matcher match = pattern.matcher( inexactString );
+        inexactString = match.replaceAll( "%" );
+
+        // geneMatch.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+        // aliasMatch.addAll( geneService.getByGeneAlias( inexactString ) );
+
+        bioSequenceMatch.addAll( bioSequenceService.findByName( inexactString ) );
+
+        List<BioSequence> bioSequenceList = new ArrayList<BioSequence>( bioSequenceMatch );
+        Comparator<Describable> comparator = new DescribableComparator();
+        Collections.sort( bioSequenceList, comparator );
+        if ( bioSequenceList.size() == 0 ) return bioSequenceList;
+        return bioSequenceList.subList( 0, Math.min( bioSequenceList.size(), MAX_SEARCH_RESULTS ) );
+
     }
 
     /**
