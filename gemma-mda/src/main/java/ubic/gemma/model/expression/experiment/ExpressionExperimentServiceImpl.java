@@ -462,6 +462,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE) throws Exception {
     	Collection preferredQuantitationTypes = new HashSet();
+    	handleThawLite(EE);
     	for (QuantitationType qt : EE.getQuantitationTypes()) {
     		if (qt.getIsPreferred()) {
     			preferredQuantitationTypes.add(qt);
