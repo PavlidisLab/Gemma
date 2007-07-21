@@ -2,99 +2,105 @@
 <!DOCTYPE compass-core-mapping PUBLIC
     "-//Compass/Compass Core Mapping DTD 1.0//EN"
     "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
-    
+
 <!--
-    This document is a Compass mapping file, allowing the Gemma objects to be 
-    indexed and searched.  All "searchable" expression experiment attributes 
-    (as well as associations) should be included here.
-    
-    author: klc
-    version: $Id$
--->    
+	This document is a Compass mapping file, allowing the Gemma objects to be 
+	indexed and searched.  All "searchable" expression experiment attributes 
+	(as well as associations) should be included here.
+	
+	author: klc
+	version: $Id$
+-->
 
 <compass-core-mapping package="ubic.gemma.model">
 
-<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="true">
+	<class name="expression.arrayDesign.ArrayDesignImpl"
+		alias="arrayDesign" root="true">
 
 
-    <id name="id" />
- 
-    <property name="name">
-      <meta-data>name</meta-data>
-      <meta-data>array design name</meta-data>
-    </property>
-    
- 
-    <property name="description">
-      <meta-data>description</meta-data>
-      <meta-data>array design description</meta-data>
-    </property>
-    
-    <property name="shortName">
-      <meta-data>shortName</meta-data>
-      <meta-data>array design short name</meta-data>
-    </property>
-      
-  <component name="designProvider" ref-alias="contact" />
+		<id name="id" />
 
-  <component name="compositeSequences" ref-alias="compositeSequence" />   
-  
-   
-</class>    
- 
- <class name="expression.designElement.CompositeSequenceImpl" alias="compositeSequence" root="false" >
+		<property name="name">
+			<meta-data>name</meta-data>
+			<meta-data>array design name</meta-data>
+		</property>
 
- 	<id name="id" />
- 	
- 	<property name="name" >
- 		<meta-data> name </meta-data>
- 	</property>
- 	
-	
- 	<property name="description">
-      <meta-data> description</meta-data>
-    </property>
-        
-   <component name="biologicalCharacteristic" ref-alias="biologicalCharacteristic" />
-        
- </class>
 
-<class name="genome.biosequence.BioSequenceImpl" alias="biologicalCharacteristic" root="false">
-	
-	<id name="id" />
- 	
- 	<property name="name" >
- 		<meta-data store="no"> name </meta-data>
- 	</property> 
- 	
- 	<property name="sequence">
- 		<meta-data store="no"> sequence </meta-data>
- 	</property>
- 
-</class>
+		<property name="description">
+			<meta-data>description</meta-data>
+			<meta-data>array design description</meta-data>
+		</property>
 
-<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
-	
-	 <id name="id" />
-	 
-    <property name="name">
-      <meta-data>name</meta-data>
-      <meta-data>username</meta-data>
-    </property>
-    
-    <property name="address">
-      <meta-data>address</meta-data>
-    </property>
-    
-    <property name="phone">
-      <meta-data>phone</meta-data> 	
-      <meta-data>telephone</meta-data>
-    </property>
-    
-    <property name="email">
-      <meta-data>email</meta-data>
-    </property>
+		<property name="shortName">
+			<meta-data>shortName</meta-data>
+			<meta-data>array design short name</meta-data>
+		</property>
 
-</class>
+		<component name="designProvider" ref-alias="contact" />
+
+		<component name="compositeSequences"
+			ref-alias="compositeSequence" />
+
+
+	</class>
+
+	<class name="expression.designElement.CompositeSequenceImpl"
+		alias="compositeSequence" root="false">
+
+		<id name="id" />
+
+		<property name="name">
+			<meta-data>name</meta-data>
+		</property>
+
+
+		<property name="description">
+			<meta-data>description</meta-data>
+		</property>
+
+		<component name="biologicalCharacteristic"
+			ref-alias="biologicalCharacteristic" />
+
+	</class>
+
+	<class name="genome.biosequence.BioSequenceImpl"
+		alias="biologicalCharacteristic" root="false">
+
+		<id name="id" />
+
+		<property name="name">
+			<meta-data>name</meta-data>
+		</property>
+
+		<property name="sequence">
+			<meta-data>sequence</meta-data>
+		</property>
+
+	</class>
+
+	<class name="common.auditAndSecurity.ContactImpl" alias="contact"
+		root="false">
+
+		<id name="id" />
+
+		<property name="name">
+			<meta-data>name</meta-data>
+			<meta-data>username</meta-data>
+		</property>
+
+		<property name="address">
+			<meta-data>address</meta-data>
+		</property>
+
+		<property name="phone">
+			<meta-data>phone</meta-data>
+			<meta-data>telephone</meta-data>
+		</property>
+
+		<property name="email">
+			<meta-data>email</meta-data>
+		</property>
+
+	</class>
 
 </compass-core-mapping>
