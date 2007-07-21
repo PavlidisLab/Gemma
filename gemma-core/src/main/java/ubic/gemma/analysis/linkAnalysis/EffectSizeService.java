@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,8 +22,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ibm.icu.text.NumberFormat.NumberFormatFactory;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMap;
@@ -37,8 +34,11 @@ import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -55,6 +55,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="dedvService" ref="designElementDataVectorService"
  * @spring.property name="goService" ref="geneOntologyService"
+ * @spring.property name="adService" ref="arrayDesignService"
  * @author Raymond
  */
 public class EffectSizeService {
@@ -66,6 +67,8 @@ public class EffectSizeService {
 
 	private CorrelationEffectMetaAnalysis metaAnalysis;
 
+	private ArrayDesignService adService;
+
 	private GeneOntologyService goService;
 
 	private ByteArrayConverter bac;
@@ -76,7 +79,7 @@ public class EffectSizeService {
 	private static final String EXPR_LEVEL = "expression level";
 
 	private static final String CORRELATION = "correlation";
-	
+
 	private static final String MAX_CORR = "max correlation";
 
 	/**
@@ -210,11 +213,13 @@ public class EffectSizeService {
 				continue;
 			}
 			String symbol = line.trim();
-			for (Gene gene1 : ((Collection<Gene>) geneService.findByOfficialSymbol(symbol))) {
+			for (Gene gene1 : ((Collection<Gene>) geneService
+					.findByOfficialSymbol(symbol))) {
 				if (taxon.equals(gene1.getTaxon())) {
-        			for (Gene gene2 : partnerGenes)
-        				genePairs.add(new GenePair(gene1.getId(), gene2.getId()));
-        			break;
+					for (Gene gene2 : partnerGenes)
+						genePairs
+								.add(new GenePair(gene1.getId(), gene2.getId()));
+					break;
 				}
 			}
 			count++;
@@ -343,13 +348,14 @@ public class EffectSizeService {
 			Taxon taxon, Collection<ExpressionExperiment> EEs, int stringency) {
 		while (!goService.isReady()) {
 			try {
-    			Thread.sleep(500);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				continue;
 			}
 		}
 		Collection<Gene> genes = goService.getGenes(goId, taxon);
-		return (genes == null)? null : pairCoexpressedGenes(genes, EEs, stringency);
+		return (genes == null) ? null : pairCoexpressedGenes(genes, EEs,
+				stringency);
 	}
 
 	/**
@@ -403,20 +409,23 @@ public class EffectSizeService {
 	}
 
 	public void saveCorrelationsToFile(String fileName,
-			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs, boolean linkCount, boolean effectSize)
-			throws IOException {
+			Collection<GenePair> genePairs,
+			Collection<ExpressionExperiment> EEs, boolean linkCount,
+			boolean effectSize) throws IOException {
 		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, CORRELATION);
 	}
-	
+
 	public void saveMaxCorrelationsToFile(String fileName,
-			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs, boolean linkCount, boolean effectSize)
-			throws IOException {
+			Collection<GenePair> genePairs,
+			Collection<ExpressionExperiment> EEs, boolean linkCount,
+			boolean effectSize) throws IOException {
 		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, MAX_CORR);
 	}
 
 	public void saveExprLevelToFile(String fileName,
-			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs, boolean linkCount, boolean effectSize)
-			throws IOException {
+			Collection<GenePair> genePairs,
+			Collection<ExpressionExperiment> EEs, boolean linkCount,
+			boolean effectSize) throws IOException {
 		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, EXPR_LEVEL);
 	}
 
@@ -502,8 +511,11 @@ public class EffectSizeService {
 		for (GenePair genePair : genePairs) {
 			Gene gene1 = geneMap.get(genePair.getFirstId());
 			Gene gene2 = geneMap.get(genePair.getSecondId());
-			String pair = gene1.getOfficialSymbol() + ":" + gene2.getOfficialSymbol();
-			if (!(pairs.contains(pair)) || gene1.getOfficialSymbol().equals(gene2.getOfficialSymbol())) {
+			String pair = gene1.getOfficialSymbol() + ":"
+					+ gene2.getOfficialSymbol();
+			if (!(pairs.contains(pair))
+					|| gene1.getOfficialSymbol().equals(
+							gene2.getOfficialSymbol())) {
 				filteredGenePairs.add(genePair);
 			}
 			pairs.add(pair);
@@ -516,8 +528,8 @@ public class EffectSizeService {
 	}
 
 	private void saveToFile(String fileName, Collection<GenePair> genePairs,
-			Collection<ExpressionExperiment> EEs, boolean linkCount, boolean effectSize, String type)
-			throws IOException {
+			Collection<ExpressionExperiment> EEs, boolean linkCount,
+			boolean effectSize, String type) throws IOException {
 		DecimalFormat formatter = new DecimalFormat("0.0000");
 		log.info("Saving " + type + " data to " + fileName);
 		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
@@ -535,8 +547,8 @@ public class EffectSizeService {
 			header += "\tMaxCorrelation";
 			header += "\tNumExpressionExpts";
 		} else {
-    		for (ExpressionExperiment EE : EEs)
-    			header += "\t" + EE.getShortName();
+			for (ExpressionExperiment EE : EEs)
+				header += "\t" + EE.getShortName();
 		}
 		header += "\n";
 		out.write(header);
@@ -547,30 +559,31 @@ public class EffectSizeService {
 			String line = gene1.getOfficialSymbol() + ":"
 					+ gene2.getOfficialSymbol();
 			if (linkCount)
-    			line += "\t" + genePair.getLinkCount();
+				line += "\t" + genePair.getLinkCount();
 			if (effectSize)
-    			line += "\t" + formatter.format(genePair.getEffectSize());
+				line += "\t" + formatter.format(genePair.getEffectSize());
 			if (type == MAX_CORR) {
 				Double maxCorr = genePair.getMaxCorrelation();
 				if (maxCorr != null) {
-    				line += "\t" + formatter.format(maxCorr);
-    				line += "\t" + genePair.getNumExpressionExperiments();
+					line += "\t" + formatter.format(maxCorr);
+					line += "\t" + genePair.getNumExpressionExperiments();
 				} else {
 					line += "\tNA\tNA";
 				}
 			} else {
-    			for (ExpressionExperiment EE : EEs) {
-    				line += "\t";
-    				Double corr = genePair.getCorrelation(EE.getId());
-    				if (type == EXPR_LEVEL) {
-    					Double exprLvl = getExpressionLevel(genePair, EE.getId());
-    					if (exprLvl != null) {
-    						line += formatter.format(exprLvl);
-    					}
-    				} else if (type == CORRELATION && corr != null) {
-    					line += formatter.format(corr);
-    				}
-    			}
+				for (ExpressionExperiment EE : EEs) {
+					line += "\t";
+					Double corr = genePair.getCorrelation(EE.getId());
+					if (type == EXPR_LEVEL) {
+						Double exprLvl = getExpressionLevel(genePair, EE
+								.getId());
+						if (exprLvl != null) {
+							line += formatter.format(exprLvl);
+						}
+					} else if (type == CORRELATION && corr != null) {
+						line += formatter.format(corr);
+					}
+				}
 			}
 			line += "\n";
 			out.write(line);
@@ -582,9 +595,13 @@ public class EffectSizeService {
 	}
 
 	/**
-	 * Load the design element data vectors required to get the expression level for the specified gene pair
-	 * @param genePair - gene pair
-	 * @param eeId - expresssion experiment ID
+	 * Load the design element data vectors required to get the expression level
+	 * for the specified gene pair
+	 * 
+	 * @param genePair -
+	 *            gene pair
+	 * @param eeId -
+	 *            expresssion experiment ID
 	 * @return (average) expression level for that gene pair
 	 */
 	private Double getExpressionLevel(GenePair genePair, long eeId) {
@@ -725,71 +742,15 @@ public class EffectSizeService {
 		return geneMap;
 	}
 
-	/**
-	 * Build and return the gene to probe (composite sequences) map
-	 * 
-	 * @param genes
-	 * @return gene to probe map
-	 */
-	private Map<Long, Collection<Long>> getGene2CSMap(Collection<Gene> genes) {
-		log.info("Loading composite sequences for " + genes.size() + " genes");
-		if (genes.size() <= CS_CHUNK_SIZE) {
-			Map<Long, Collection<Long>> gene2cs = geneService
-					.getCompositeSequenceMap(genes);
-			log.info("Loaded " + gene2cs.keySet().size()
-					+ " composite sequences");
-			return gene2cs;
-		}
-		Map<Long, Collection<Long>> gene2cs = new HashMap<Long, Collection<Long>>();
-		int count = 0;
-		Collection<Gene> genesChunk = new HashSet<Gene>();
-		for (Gene gene : genes) {
-			genesChunk.add(gene);
-			count++;
-			if (count % CS_CHUNK_SIZE == 0 || count == genes.size()) {
-				gene2cs.putAll(geneService.getCompositeSequenceMap(genesChunk));
-				genesChunk.clear();
+	private Map<Long, Collection<Long>> getSpecificCS2Gene(
+			Map<Long, Collection<Long>> cs2gene) {
+		Map<Long, Collection<Long>> specificCs2gene = new HashMap<Long, Collection<Long>>();
+		for (Long csId : cs2gene.keySet()) {
+			if (cs2gene.get(csId).size() == 1) {
+				specificCs2gene.put(csId, cs2gene.get(csId));
 			}
 		}
-		log.info("Loaded " + gene2cs.keySet().size() + " composite sequences");
-		return gene2cs;
-	}
-
-	/**
-	 * Inverts the specified gene to probe (cs) map for the specified gene to
-	 * produce a probe to gene(s) map
-	 * 
-	 * @param geneId -
-	 *            ID of gene that probes map to
-	 * @param gene2cs -
-	 *            gene to probe map
-	 * @return probe to gene map
-	 */
-	private Map<Long, Collection<Gene>> getCS2GeneMap(
-			Map<Long, Collection<Long>> gene2cs, Map<Long, Gene> geneMap, boolean specificOnly) {
-		Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-		for (Long geneId : gene2cs.keySet()) {
-			Collection<Long> csIds = gene2cs.get(geneId);
-			for (Long csId : csIds) {
-				Collection<Gene> genes = cs2gene.get(csId);
-				if (genes == null) {
-					genes = new HashSet<Gene>();
-					cs2gene.put(csId, genes);
-				}
-				genes.add(geneMap.get(geneId));
-			}
-		}
-		
-		Map<Long, Collection<Gene>> specificCs2gene = new HashMap<Long, Collection<Gene>>();
-		if (specificOnly) {
-			for (Long csId : cs2gene.keySet()) {
-				if (cs2gene.get(csId).size() == 1) {
-					specificCs2gene.put(csId, cs2gene.get(csId));
-				} 
-			}
-			cs2gene = specificCs2gene;
-		}
-		return cs2gene;
+		return specificCs2gene;
 	}
 
 	/**
@@ -804,34 +765,15 @@ public class EffectSizeService {
 	 *            the expression experiment
 	 * @return map of design element data vectors to its set of genes
 	 */
-	private Map<DesignElementDataVector, Collection<Gene>> getDesignElementDataVectors(
-			Map<Long, Collection<Gene>> cs2gene, QuantitationType qt,
+	private Map<DesignElementDataVector, Collection<Long>> getDesignElementDataVectors(
+			Map<Long, Collection<Long>> cs2gene, QuantitationType qt,
 			ExpressionExperiment ee) {
-		Map<DesignElementDataVector, Collection<Gene>> dedv2genes = eeService
+		Map<DesignElementDataVector, Collection<Long>> dedv2genes = eeService
 				.getDesignElementDataVectors(cs2gene, qt);
 		for (DesignElementDataVector dedv : dedv2genes.keySet()) {
 			dedv.setExpressionExperiment(ee);
 		}
 		return dedv2genes;
-	}
-
-	/**
-	 * Get the preferred quantitation type for the expression experiment
-	 * 
-	 * @param ee
-	 *            expression experiment
-	 * @return preferred quantitation type
-	 */
-	private QuantitationType getPreferredQT(ExpressionExperiment ee) {
-		
-		Collection<QuantitationType> qts = eeService.getQuantitationTypes(ee);
-		for (QuantitationType qt : qts) {
-			if (qt.getIsPreferred())
-				return qt;
-		}
-		log.warn("Unable to find preferred quantitation type for "
-				+ ee.getShortName());
-		return null;
 	}
 
 	/**
@@ -846,27 +788,36 @@ public class EffectSizeService {
 	 */
 	private Map<Long, Collection<ExpressionProfile>> getGeneID2EPsMap(
 			Map<Long, Gene> geneMap, ExpressionExperiment ee) {
-		QuantitationType qt = getPreferredQT(ee);
-		if (qt == null) {
+		Collection<QuantitationType> qts = (Collection<QuantitationType>) eeService
+				.getPreferredQuantitationType(ee);
+		if (qts.size() < 1) {
 			return null;
 		}
+		QuantitationType qt = qts.iterator().next();
 		log.debug("Loading expression profiles for " + ee.getShortName());
-		Map<Long, Collection<Long>> gene2cs = getGene2CSMap(geneMap.values());
-		// reverse the gene2cs map, discarding nonspecific probes
-		Map<Long, Collection<Gene>> cs2gene = getCS2GeneMap(gene2cs, geneMap, true);
+		Collection<ArrayDesign> ads = eeService.getArrayDesignsUsed(ee);
+		Collection<Long> csIds = new HashSet<Long>();
+		for (ArrayDesign ad : ads) {
+			Collection<CompositeSequence> css = adService
+					.loadCompositeSequences(ad);
+			for (CompositeSequence cs : css) {
+				csIds.add(cs.getId());
+			}
+		}
+		Map<Long, Collection<Long>> cs2gene = geneService.getCS2GeneMap(csIds);
+		cs2gene = getSpecificCS2Gene(cs2gene);
 
 		Map<Long, Collection<ExpressionProfile>> geneID2EPs = new HashMap<Long, Collection<ExpressionProfile>>();
-		Map<DesignElementDataVector, Collection<Gene>> dedv2genes = getDesignElementDataVectors(
+		Map<DesignElementDataVector, Collection<Long>> dedv2genes = getDesignElementDataVectors(
 				cs2gene, qt, ee);
 		// build genes to expression profiles map
 		for (DesignElementDataVector dedv : dedv2genes.keySet()) {
-			Collection<Gene> genes = dedv2genes.get(dedv);
-			for (Gene gene : genes) {
-				Long id = gene.getId();
-				Collection<ExpressionProfile> eps = geneID2EPs.get(id);
+			Collection<Long> geneIds = dedv2genes.get(dedv);
+			for (Long geneId : geneIds) {
+				Collection<ExpressionProfile> eps = geneID2EPs.get(geneId);
 				if (eps == null) {
 					eps = new HashSet<ExpressionProfile>();
-					geneID2EPs.put(id, eps);
+					geneID2EPs.put(geneId, eps);
 				}
 				eps.add(new ExpressionProfile(dedv));
 			}
@@ -946,7 +897,8 @@ public class EffectSizeService {
 							if (ep2.rank != null
 									&& ep2.rank > MIN_EP_RANK
 									&& ep1.val.length == ep2.val.length
-									&& ep1.val.length > GeneCoExpressionAnalysis.MINIMUM_SAMPLE) {
+									&& ep1.getNumSamples() > GeneCoExpressionAnalysis.MINIMUM_SAMPLE
+									&& ep2.getNumSamples() > GeneCoExpressionAnalysis.MINIMUM_SAMPLE) {
 								List<Long> eps = new ArrayList<Long>(2);
 								eps.add(ep1.id);
 								eps.add(ep2.id);
@@ -1017,6 +969,15 @@ public class EffectSizeService {
 			return this.id;
 		}
 
+		public int getNumSamples() {
+			int num = 0;
+			for (double d : val) {
+				if (!Double.isNaN(d))
+					num++;
+			}
+			return num;
+		}
+
 		/**
 		 * Get the relative expression level of the expression profile: k/n
 		 * where k is the rank of the expression level and n is the number of
@@ -1044,5 +1005,9 @@ public class EffectSizeService {
 
 	public void setGoService(GeneOntologyService goService) {
 		this.goService = goService;
+	}
+
+	public void setAdService(ArrayDesignService adService) {
+		this.adService = adService;
 	}
 }
