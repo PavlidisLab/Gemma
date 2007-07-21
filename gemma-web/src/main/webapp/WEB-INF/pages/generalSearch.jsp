@@ -18,7 +18,8 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="generalSearch.title" /></title>
+<title><fmt:message key="generalSearch.title" />
+</title>
 
 <h2>
 	General search tool for searching Gemma
@@ -71,15 +72,6 @@
 		</h4>
 		<select id="advancedSelect" name="advancedSelect" multiple size=5
 			disabled="true">
-			<option value="GoID">
-				Find Genes by Gene Ontology Id
-			</option>
-			<option value="ontology">
-				Search Ontology Database
-			</option>
-			<option value="bibliographicReference">
-				Search Bibliographic Database
-			</option>
 			<option selected value="Gene">
 				Search Gene Database
 			</option>
@@ -88,6 +80,18 @@
 			</option>
 			<option selected value="Array">
 				Search Array Database
+			</option>
+			<option selected value="bioSequence">
+				Search Sequence Database
+			</option>
+			<option value="bibliographicReference">
+				Search Bibliographic Database
+			</option>
+			<option value="GoID">
+				Find Genes by Gene Ontology Id
+			</option>
+			<option value="ontology">
+				Search Ontology Database
 			</option>
 		</select>
 		<br />
@@ -119,6 +123,10 @@
 		(Bookmarkable link) </a>
 
 </h4>
+
+<%-- DISPLAY LOGIC --%>
+
+<%-- Display Genes--%>
 <c:if test="${numGenes != null}">
 	<h3>
 		Your search for
@@ -141,6 +149,7 @@
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
+<%-- Display Expression Experiments--%>
 <c:if test="${numEEs != null}">
 	<h3>
 		Your search for
@@ -167,6 +176,7 @@
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
+<%-- Display Array Designs--%>
 <c:if test="${numADs != null}">
 	<h3>
 		Your search for
@@ -193,7 +203,7 @@
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
-
+<%-- Display GO--%>
 <c:if test="${numGoGenes != null}">
 	<h3>
 		The GO Term
@@ -272,6 +282,7 @@
 	<br />
 </c:if>
 
+<%-- Display Bibliographic References--%>
 <display:table cellpadding="4" pagesize="20"
 	name="bibliographicReferenceList" sort="list" class="list"
 	requestURI="" id="bibliographicReferenceList"
@@ -298,6 +309,26 @@
 		<display:column property="update" sortable="false"
 			title="Update from NCBI" />
 	</authz:authorize>--%>
+</display:table>
+
+<%-- Display Biosequences--%>
+<c:if test="${numBioSequenceList != null}">
+	<h3>
+		The BioSequence term
+		<b> <c:out value="${SearchString}" /> </b> is related to
+		<b> <c:out value="${numBioSequenceList}" /> </b> BioSequence
+	</h3>
+	<br />
+</c:if>
+
+<display:table pagesize="20" name="bioSequenceList" sort="list"
+	class="list" requestURI="" id="bioSequenceList">
+	<display:column property="name" sortable="true"
+		href="bioSequenceView.html" titleKey="bioSequence.name" maxLength="50" />
+	<display:column property="sequence" sortable="true"
+		titleKey="bioSequence.sequence" maxLength="50" />
+	<display:column property="length" sortable="true"
+		titleKey="bioSequence.length" />
 </display:table>
 
 

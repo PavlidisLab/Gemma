@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
@@ -94,11 +95,13 @@ public class GeneralSearchController extends BaseFormController {
         boolean ontology = false;
         boolean goArray = false;
         boolean bibliographicReference = false;
+        boolean bioSequence = false;
 
         if ( ( advanced == null ) || ( advanced.length == 0 ) ) {
             dataset = true;
             gene = true;
             array = true;
+            bioSequence = true;
             goID = false;
             ontology = false;
             goArray = false;
@@ -107,6 +110,7 @@ public class GeneralSearchController extends BaseFormController {
             mav.addObject( "searchDataset", "DataSet" );
             mav.addObject( "searchGene", "Gene" );
             mav.addObject( "searchArray", "Array" );
+            mav.addObject( "searchBioSequence", "bioSequence" );
 
         } else {
             for ( String types : advanced ) {
@@ -142,6 +146,10 @@ public class GeneralSearchController extends BaseFormController {
                 if ( types.equalsIgnoreCase( "bibliographicReference" ) ) {
                     bibliographicReference = true;
                     mav.addObject( "searchBibliographicReference", "bibliographicReference" );
+                }
+                if ( types.equalsIgnoreCase( "bioSequence" ) ) {
+                    bioSequence = true;
+                    mav.addObject( "searchBioSequence", "bioSequence" );
                 }
             }
         }
@@ -224,6 +232,13 @@ public class GeneralSearchController extends BaseFormController {
                     .compassBibliographicReferenceSearch( searchString );
             mav.addObject( "bibliographicReferenceList", bibliographicReferences );
             mav.addObject( "numBibliographicReferenceList", bibliographicReferences.size() );
+
+        }
+
+        if ( bioSequence ) {
+            Collection<BioSequence> bioSequences = searchService.bioSequenceDbSearch( searchString );
+            mav.addObject( "bioSequenceList", bioSequences );
+            mav.addObject( "numBioSequenceList", bioSequences.size() );
 
         }
 
