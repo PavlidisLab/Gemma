@@ -18,8 +18,7 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="generalSearch.title" />
-</title>
+<title><fmt:message key="generalSearch.title" /></title>
 
 <h2>
 	General search tool for searching Gemma
@@ -316,7 +315,7 @@
 	<h3>
 		The BioSequence term
 		<b> <c:out value="${SearchString}" /> </b> is related to
-		<b> <c:out value="${numBioSequenceList}" /> </b> BioSequence
+		<b> <c:out value="${numBioSequenceList}" /> </b> Biosequences
 	</h3>
 	<br />
 </c:if>
@@ -324,7 +323,8 @@
 <display:table pagesize="20" name="bioSequenceList" sort="list"
 	class="list" requestURI="" id="bioSequenceList">
 	<display:column property="name" sortable="true"
-		href="bioSequenceView.html" titleKey="bioSequence.name" maxLength="50" />
+		href="/Gemma/genome/bioSequence/showBioSequence.html?" paramId="id"
+		paramProperty="id" titleKey="bioSequence.name" maxLength="50" />
 	<display:column property="sequence" sortable="true"
 		titleKey="bioSequence.sequence" maxLength="50" />
 	<display:column property="length" sortable="true"
