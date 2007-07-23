@@ -35,9 +35,7 @@
 	</script>
 </head>
 <body>
-	<authz:authorize ifAnyGranted="admin">
-	compositeSequence.detail.jsp
-</authz:authorize>
+	
 	<table id="csTableList">
 		<tr>
 			<td>

@@ -219,7 +219,7 @@
 <display:table pagesize="20" name="compositeSequenceList" sort="list"
 	class="list" requestURI="" id="compositeSequenceList">
 	<display:column property="name" sortable="true"
-		href="/Gemma/arrays/showCompositeSequenceSummary.html" paramId="id"
+		href="/Gemma/compositeSequence/show.html" paramId="id"
 		paramProperty="id" titleKey="compositeSequence.name" maxLength="50" />
 	<display:column property="arrayDesign.shortName" sortable="true"
 		titleKey="arrayDesign.shortName" maxLength="50" />
