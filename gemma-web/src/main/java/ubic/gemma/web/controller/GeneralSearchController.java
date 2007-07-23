@@ -43,6 +43,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -91,6 +92,7 @@ public class GeneralSearchController extends BaseFormController {
         boolean dataset = false;
         boolean gene = false;
         boolean array = false;
+        boolean compositeSequence = false;
         boolean goID = false;
         boolean ontology = false;
         boolean goArray = false;
@@ -101,6 +103,7 @@ public class GeneralSearchController extends BaseFormController {
             dataset = true;
             gene = true;
             array = true;
+            compositeSequence = true;
             bioSequence = true;
             goID = false;
             ontology = false;
@@ -110,6 +113,7 @@ public class GeneralSearchController extends BaseFormController {
             mav.addObject( "searchDataset", "DataSet" );
             mav.addObject( "searchGene", "Gene" );
             mav.addObject( "searchArray", "Array" );
+            mav.addObject( "searchCompositeSequence", "CompositeSequence" );
             mav.addObject( "searchBioSequence", "bioSequence" );
 
         } else {
@@ -127,6 +131,11 @@ public class GeneralSearchController extends BaseFormController {
                 if ( types.equalsIgnoreCase( "Array" ) ) {
                     array = true;
                     mav.addObject( "searchArray", "Array" );
+                }
+
+                if ( types.equalsIgnoreCase( "CompositeSequence" ) ) {
+                    array = true;
+                    mav.addObject( "searchCompositeSequence", "CompositeSequence" );
                 }
 
                 if ( types.equalsIgnoreCase( "GoID" ) ) {
@@ -201,6 +210,13 @@ public class GeneralSearchController extends BaseFormController {
             mav.addObject( "numADs", valueADs.size() );
         }
 
+        if ( compositeSequence ) {
+            Collection<CompositeSequence> compositeSequences = searchService.compositeSequenceSearch( searchString,
+                    null );
+            mav.addObject( "compositeSequenceList", compositeSequences );
+            mav.addObject( "numCompositeSequenceList", compositeSequences.size() );
+        }
+
         if ( goID ) {
             Collection<Gene> ontolgyGenes = gene2GOAssociationService.findByGOTerm( searchString, csc.getTaxon() );
             mav.addObject( "goGeneList", ontolgyGenes );
@@ -239,7 +255,6 @@ public class GeneralSearchController extends BaseFormController {
             Collection<BioSequence> bioSequences = searchService.bioSequenceDbSearch( searchString );
             mav.addObject( "bioSequenceList", bioSequences );
             mav.addObject( "numBioSequenceList", bioSequences.size() );
-
         }
 
         return mav;

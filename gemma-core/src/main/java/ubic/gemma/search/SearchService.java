@@ -247,7 +247,7 @@ public class SearchService {
     }
 
     /**
-     * Search by name of the composite sequence as well as gene. TODO search by sequence.
+     * Search by name of the composite sequence as well as gene.
      * 
      * @param searchString
      * @param arrayDesign
@@ -525,6 +525,7 @@ public class SearchService {
      * @return
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public Collection<BioSequence> bioSequenceDbSearch( String searchString ) throws Exception {
         // TODO add in search for actual sequence, not just the sequence name. Use the wildcard plumbing.
         searchString = searchString.trim();
@@ -537,9 +538,6 @@ public class SearchService {
         Pattern pattern = Pattern.compile( "\\*" );
         Matcher match = pattern.matcher( inexactString );
         inexactString = match.replaceAll( "%" );
-
-        // geneMatch.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
-        // aliasMatch.addAll( geneService.getByGeneAlias( inexactString ) );
 
         bioSequenceMatch.addAll( bioSequenceService.findByName( inexactString ) );
 

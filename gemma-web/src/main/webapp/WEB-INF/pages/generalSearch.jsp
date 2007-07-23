@@ -18,7 +18,8 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="generalSearch.title" /></title>
+<title><fmt:message key="generalSearch.title" />
+</title>
 
 <h2>
 	General search tool for searching Gemma
@@ -79,6 +80,9 @@
 			</option>
 			<option selected value="Array">
 				Search Array Database
+			</option>
+			<option selected value="CompositeSequence">
+				Search Probe Database
 			</option>
 			<option selected value="bioSequence">
 				Search Sequence Database
@@ -202,6 +206,27 @@
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
+<c:if test="${numCompositeSequenceList != null}">
+	<h3>
+		Your search for
+		<b> <c:out value="${SearchString}" /> </b> found
+		<b> <c:out value="${numCompositeSequenceList}" /> </b> Composite
+		Sequences
+	</h3>
+	<br />
+</c:if>
+
+<display:table pagesize="20" name="compositeSequenceList" sort="list"
+	class="list" requestURI="" id="compositeSequenceList">
+	<display:column property="name" sortable="true"
+		href="/Gemma/arrays/showCompositeSequenceSummary.html" paramId="id"
+		paramProperty="id" titleKey="compositeSequence.name" maxLength="50" />
+	<display:column property="arrayDesign.shortName" sortable="true"
+		titleKey="arrayDesign.shortName" maxLength="50" />
+	<display:column property="description" sortable="true"
+		titleKey="compositeSequence.description" maxLength="50" />
+</display:table>
+
 <%-- Display GO--%>
 <c:if test="${numGoGenes != null}">
 	<h3>
@@ -323,7 +348,7 @@
 <display:table pagesize="20" name="bioSequenceList" sort="list"
 	class="list" requestURI="" id="bioSequenceList">
 	<display:column property="name" sortable="true"
-		href="/Gemma/genome/bioSequence/showBioSequence.html?" paramId="id"
+		href="/Gemma/genome/bioSequence/showBioSequence.html" paramId="id"
 		paramProperty="id" titleKey="bioSequence.name" maxLength="50" />
 	<display:column property="sequence" sortable="true"
 		titleKey="bioSequence.sequence" maxLength="50" />
