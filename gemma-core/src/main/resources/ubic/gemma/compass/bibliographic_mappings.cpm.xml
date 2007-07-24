@@ -109,18 +109,17 @@
 		<component name="chemicals" ref-alias="chemicals" />
 
 	</class>
-	<!-- 
-		<class name="common.description.DatabaseEntry" alias="pubAccession"
-		root="false">
-		
+
+	<class name="common.description.DatabaseEntryImpl"
+		alias="pubAccession" root="false">
+
 		<id name="id" />
-		
+
 		<property name="accession">
-		<meta-data>accession</meta-data>
+			<meta-data>accession</meta-data>
 		</property>
-		
-		</class>
-	-->
+
+	</class>
 
 	<class name="common.auditAndSecurity.PersonImpl" alias="authors"
 		root="false">
@@ -183,8 +182,8 @@
 
 	</class>
 
-	<class name="common.description.DatabaseEntry" alias="externalLIMS"
-		root="false">
+	<class name="common.description.DatabaseEntryImpl"
+		alias="externalLIMS" root="false">
 
 		<id name="id" />
 
