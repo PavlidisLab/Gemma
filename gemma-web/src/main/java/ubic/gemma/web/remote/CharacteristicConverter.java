@@ -19,6 +19,8 @@
 
 package ubic.gemma.web.remote;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -122,6 +124,16 @@ public class CharacteristicConverter extends BeanConverter {
                 TypeHintContext incc = createTypeHintContext( inctx, property );
 
                 Object output = converterManager.convertInbound( propType, nested, inctx, incc );
+
+                // TODO: Total hack. Change the properties association to be a SET instead of a Collection in the model
+                // Model think this is a collection, hibernate thinks its a set. DWR converts collections to
+                // ArrayLists... *sigh* Hibernate then dies of a class cast exception. All because of a general type of
+                // Collection
+                if ( ( key.equals( "properties" ) ) && ( output instanceof ArrayList ) ) {
+                    ArrayList propertyList = ( ArrayList ) output;
+                    output = new HashSet( propertyList );
+                }
+
                 property.setValue( bean, output );
             }
 

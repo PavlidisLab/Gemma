@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -63,17 +65,15 @@ public class MgedOntologyService implements InitializingBean {
 
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
-    //private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
+    // private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
     private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
-    
+
     private static OntModel model;
     private static IndexLARQ index;
 
-    
     private static PersisterHelper persisterHelper;
     private static BioMaterialService bioMaterialService;
-    
-    
+
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
         if ( running.get() ) {
@@ -83,31 +83,30 @@ public class MgedOntologyService implements InitializingBean {
         init();
     }
 
-    public OntologyTerm getTerm( String id ){
+    public OntologyTerm getTerm( String id ) {
 
         OntologyTerm term = terms.get( id );
-     
+
         return term;
     }
-    
-    public void saveStatement(VocabCharacteristic vc, Collection<Long> bioMaterialIdList){
+
+    public void saveStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
         log.info( "Biomaterial ID List: " + bioMaterialIdList );
 
-        Collection<Characteristic> chars = new ArrayList<Characteristic>();
-        chars.add( vc );
+        Set<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( ( Characteristic ) vc );
         Collection<BioMaterial> biomaterials = bioMaterialService.load( bioMaterialIdList );
-        
+
         for ( BioMaterial bioM : biomaterials ) {
-            bioM.setCharacteristics( chars  );
-            persisterHelper.persist( bioM );
+            bioM.setCharacteristics( chars );
+            bioMaterialService.update( bioM );
 
         }
-        
-        
+
     }
-    
+
     public Collection<OntologyTreeNode> getBioMaterialTerms() {
 
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
@@ -134,18 +133,16 @@ public class MgedOntologyService implements InitializingBean {
         return term.getIndividuals( true );
 
     }
-    
-    public Collection<OntologyTerm> findTerm(String search){
-        
-        if (!this.ready.get())
-            return null;
-        
-        //String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        if (index == null)
-            index = OntologyIndexer.indexOntology( "mged", model );
-        
+
+    public Collection<OntologyTerm> findTerm( String search ) {
+
+        if ( !this.ready.get() ) return null;
+
+        // String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
+        if ( index == null ) index = OntologyIndexer.indexOntology( "mged", model );
+
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
-        
+
         return name;
     }
 
@@ -181,8 +178,8 @@ public class MgedOntologyService implements InitializingBean {
             log.info( "Loading Mged is disabled" );
             return;
         }
-        
-        //Load the mged model for searching
+
+        // Load the mged model for searching
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
@@ -224,7 +221,7 @@ public class MgedOntologyService implements InitializingBean {
      * @param url
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( String url ) throws IOException {       
+    protected void loadTermsInNameSpace( String url ) throws IOException {
         Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
         addTerms( terms );
     }
@@ -235,11 +232,10 @@ public class MgedOntologyService implements InitializingBean {
      * @param is
      * @throws IOException
      */
-//    protected void loadTermsInNameSpace( InputStream is ) throws IOException {
-//        Collection<OntologyResource> terms = OntologyLoader.ini
-//        addTerms( terms );
-//    }
-
+    // protected void loadTermsInNameSpace( InputStream is ) throws IOException {
+    // Collection<OntologyResource> terms = OntologyLoader.ini
+    // addTerms( terms );
+    // }
     private void addTerms( Collection<OntologyResource> newTerms ) {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
         for ( OntologyResource term : newTerms ) {
