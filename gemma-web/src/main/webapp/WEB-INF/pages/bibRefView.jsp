@@ -61,7 +61,7 @@
 							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
 							<input type="hidden"  name="acc" value="${bibliographicReference.pubAccession.accession}"
 							<input type="submit"  
-										value="Delete from Gemma" /></form>
+										value="Delete" /></form>
 					</div>
 				</authz:acl>
 			</c:if>
@@ -91,7 +91,7 @@
 </table>
 
 <div align="left">
-	<a href="<c:url value="/bibRefSearch.html"/>">New Search</a>
+	<a href="<c:url value="/searcher.html"/>">New Search</a>
 </div>
 
 
