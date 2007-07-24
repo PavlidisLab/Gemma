@@ -19,6 +19,9 @@
 
 	<script type='text/javascript'
 		src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
+	
+		<script type='text/javascript'
+		src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
 
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
