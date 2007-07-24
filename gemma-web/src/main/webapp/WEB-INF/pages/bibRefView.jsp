@@ -38,7 +38,7 @@
 
 <Gemma:bibref bibliographicReference="${bibliographicReference}" />
 
-
+<br />
 <table>
 	<tr>
 		<td align="left">
@@ -52,21 +52,6 @@
 				</div>
 			</c:if>
 		</td>
-		<td>
-			<c:if test="${requestScope.existsInSystem}">
-				<authz:acl domainObject="${bibliographicReference}"
-					hasPermission="1,6">
-					<div align="right">
-						<form method="get"
-							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
-							<input type="hidden"  name="acc" value="${bibliographicReference.pubAccession.accession}"
-							<input type="submit"  
-										value="Delete" /></form>
-					</div>
-				</authz:acl>
-			</c:if>
-		</td>
-
 
 		<td>
 			<c:if test="${requestScope.existsInSystem}">
@@ -83,6 +68,21 @@
 				</authz:acl>
 			</c:if>
 		</td>
+		
+		<td>
+			<c:if test="${requestScope.existsInSystem}">
+				<authz:acl domainObject="${bibliographicReference}"
+					hasPermission="1,6">
+					<div align="right">
+						<form method="get"
+							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
+							<input type="hidden"  name="acc" value="${bibliographicReference.pubAccession.accession}"
+							<input type="submit"  
+										value="Delete" /></form>
+					</div>
+				</authz:acl>
+			</c:if>
+		</td>
 
 	</tr>
 
@@ -91,6 +91,7 @@
 </table>
 
 <div align="left">
+	<br/>
 	<a href="<c:url value="/searcher.html"/>">New Search</a>
 </div>
 
