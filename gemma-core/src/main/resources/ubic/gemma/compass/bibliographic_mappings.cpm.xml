@@ -98,7 +98,7 @@
 			</meta-data>
 		</property>
 
-		<!--  <component name="pubAccession" ref-alias="pubAccession" /> -->
+		<component name="pubAccession" ref-alias="pubAccession" />
 
 		<component name="authors" ref-alias="authors" />
 
