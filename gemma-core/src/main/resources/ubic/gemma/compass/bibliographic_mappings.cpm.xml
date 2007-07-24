@@ -102,21 +102,26 @@
 
 		<component name="authors" ref-alias="authors" />
 
+		<component name="keywords" ref-alias="keywords" />
+
+		<component name="meshTerms" ref-alias="meshTerms" />
+
+		<component name="chemicals" ref-alias="chemicals" />
+
 	</class>
-	
 	<!-- 
-	<class name="common.description.DatabaseEntry" alias="pubAccession"
+		<class name="common.description.DatabaseEntry" alias="pubAccession"
 		root="false">
-
+		
 		<id name="id" />
-
+		
 		<property name="accession">
-			<meta-data>accession</meta-data>
+		<meta-data>accession</meta-data>
 		</property>
+		
+		</class>
+	-->
 
-	</class>
-	 -->
-	 
 	<class name="common.auditAndSecurity.PersonImpl" alias="authors"
 		root="false">
 		<id name="id" />
@@ -145,5 +150,60 @@
 			<meta-data>description</meta-data>
 		</property>
 	</class>
+
+	<class name="common.description.KeywordImpl" alias="keywords"
+		root="false">
+		<id name="id" />
+
+		<property name="term">
+			<meta-data>term</meta-data>
+		</property>
+	</class>
+
+	<class name="common.description.MedicalSubjectHeadingImpl"
+		alias="meshTerms" root="false">
+		<id name="id" />
+
+		<property name="term">
+			<meta-data>term</meta-data>
+		</property>
+	</class>
+
+	<class name="expression.biomaterial.CompoundImpl" alias="chemicals"
+		root="false">
+		<id name="id" />
+
+		<property name="registryNumber">
+			<meta-data>registryNumber</meta-data>
+		</property>
+
+		<component name="externalLIMS" ref-alias="externalLIMS" />
+
+		<component name="compoundIndices" ref-alias="compoundIndices" />
+
+	</class>
+
+	<class name="common.description.DatabaseEntry" alias="externalLIMS"
+		root="false">
+
+		<id name="id" />
+
+		<property name="accession">
+			<meta-data>accession</meta-data>
+		</property>
+
+	</class>
+
+	<class name="common.description.CharacteristicImpl"
+		alias="compoundIndices" root="false">
+
+		<id name="id" />
+
+		<property name="value">
+			<meta-data>value</meta-data>
+		</property>
+
+	</class>
+
 
 </compass-core-mapping>
