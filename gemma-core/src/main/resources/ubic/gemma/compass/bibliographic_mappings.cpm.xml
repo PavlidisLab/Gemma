@@ -133,10 +133,6 @@
 			<meta-data>last name</meta-data>
 		</property>
 
-		<property name="address">
-			<meta-data>address</meta-data>
-		</property>
-
 		<property name="phone">
 			<meta-data>phone number</meta-data>
 		</property>
@@ -145,9 +141,6 @@
 			<meta-data>email</meta-data>
 		</property>
 
-		<property name="description">
-			<meta-data>description</meta-data>
-		</property>
 	</class>
 
 	<class name="common.description.KeywordImpl" alias="keywords"
