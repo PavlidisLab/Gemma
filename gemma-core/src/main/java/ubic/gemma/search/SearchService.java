@@ -247,6 +247,25 @@ public class SearchService {
     }
 
     /**
+     * A simple database search for composite sequences by name.
+     * 
+     * @param searchString
+     * @return
+     */
+    public Collection<CompositeSequence> compositeSequenceDbSearch( String searchString ) {
+
+        Collection<CompositeSequence> nameMatch = null;
+
+        if ( StringUtils.isBlank( searchString ) ) return nameMatch;
+
+        String cleanedSearchString = StringUtils.strip( searchString );
+
+        nameMatch = compositeSequenceService.findByName( cleanedSearchString );
+
+        return nameMatch;
+    }
+
+    /**
      * Search by name of the composite sequence as well as gene.
      * 
      * @param searchString

@@ -18,8 +18,7 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="generalSearch.title" />
-</title>
+<title><fmt:message key="generalSearch.title" /></title>
 
 <h2>
 	General search tool for searching Gemma
@@ -222,7 +221,7 @@
 		href="/Gemma/compositeSequence/show.html" paramId="id"
 		paramProperty="id" titleKey="compositeSequence.name" maxLength="50" />
 	<display:column property="arrayDesign.shortName" sortable="true"
-		titleKey="arrayDesign.shortName" maxLength="50" />
+		titleKey="arrayDesign" maxLength="50" />
 	<display:column property="description" sortable="true"
 		titleKey="compositeSequence.description" maxLength="50" />
 </display:table>
