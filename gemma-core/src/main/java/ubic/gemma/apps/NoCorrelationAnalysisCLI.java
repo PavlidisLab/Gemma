@@ -33,7 +33,7 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 	private ExpressionExperimentService eeService;
 
 	private GeneService geneService;
-	
+
 	public NoCorrelationAnalysisCLI() {
 		super();
 	}
@@ -86,7 +86,7 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 		}
 		initBeans();
 	}
-	
+
 	protected void initBeans() {
 		effectSizeService = (EffectSizeService) this
 				.getBean("effectSizeService");
@@ -102,7 +102,7 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 			return exc;
 		}
 		Collection<GenePair> genePairs;
-		
+
 		Collection<ExpressionExperiment> allEEs = eeService.findByTaxon(taxon);
 		Collection<ExpressionExperiment> EEs = new ArrayList<ExpressionExperiment>();
 		for (ExpressionExperiment ee : allEEs) {
@@ -112,45 +112,28 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 				EEs.add(ee);
 			}
 		}
-		Collection<Gene> partnerGenes = new ArrayList<Gene>();
-		log.info("Reading partner genes from " + partnerGeneListFile);
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(partnerGeneListFile));
-			String line;
-			while ((line = in.readLine()) != null) {
-				if (line.startsWith("#")) {
-					continue;
-				}
-				String symbol = line.trim();
-    			for (Gene gene : (Collection<Gene>) geneService.findByOfficialSymbol(symbol)) {
-    				if (gene.getTaxon().equals(taxon)) {
-    					partnerGenes.add(gene);
-    					break;
-    				}
-    			}
-			}
-			in.close();
+			genePairs = effectSizeService.pairGenesByOfficialSymbolFromFiles(
+					geneListFile, partnerGeneListFile, taxon);
 		} catch (IOException e) {
 			return e;
 		}
-		
-		try {
-    		genePairs = effectSizeService.pairGenesByOfficialSymbol(geneListFile, partnerGenes, taxon);
-		} catch (IOException e) {
-			return e;
-		}
-		
+
 		effectSizeService.calculateEffectSize(EEs, genePairs);
-		
+
 		try {
-			effectSizeService.saveCorrelationsToFile(outFilePrefix + ".corr.txt", genePairs, EEs, false, false);
-			effectSizeService.saveMaxCorrelationsToFile(outFilePrefix + ".max_corr.txt", genePairs, EEs, false, false);
-			effectSizeService.saveExprLevelToFile(outFilePrefix + ".expr_lvl.txt", genePairs, EEs, false, false);
-			effectSizeService.saveExprProfilesToFile(outFilePrefix + ".eps.txt", genePairs, EEs);
+			effectSizeService.saveCorrelationsToFile(outFilePrefix
+					+ ".corr.txt", genePairs, EEs, false, false);
+			effectSizeService.saveMaxCorrelationsToFile(outFilePrefix
+					+ ".max_corr.txt", genePairs, EEs, false, false);
+			effectSizeService.saveExprLevelToFile(outFilePrefix
+					+ ".expr_lvl.txt", genePairs, EEs, false, false);
+			effectSizeService.saveExprProfilesToFile(
+					outFilePrefix + ".eps.txt", genePairs, EEs);
 		} catch (IOException e) {
 			return e;
 		}
-		
+
 		return null;
 	}
 

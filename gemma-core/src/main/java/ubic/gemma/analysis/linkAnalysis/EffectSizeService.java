@@ -121,110 +121,58 @@ public class EffectSizeService {
 		bac = new ByteArrayConverter();
 	}
 
-	/**
-	 * Read in gene pair IDs from the geneList into genePairs if they meet the
-	 * stringency requirements, i.e. if the pairing is seen in enough other
-	 * datasets.
-	 * 
-	 * @param geneListFile -
-	 *            gene list file name
-	 * @param stringency -
-	 *            minimum stringency required for a gene pair
-	 * @return list of gene pairs
-	 */
-	public Collection<GenePair> readGenePairsByID(String geneListFile,
-			int stringency) throws IOException {
-		log.debug("Reading gene pairs by ID from " + geneListFile);
-		Collection<GenePair> genePairs = new ArrayList<GenePair>();
-		BufferedReader in = new BufferedReader(new FileReader(new File(
-				geneListFile)));
-		String row = null;
-		while ((row = in.readLine()) != null && !row.startsWith("#")) {
-			row = row.trim();
-			if (StringUtils.isBlank(row))
-				continue;
-			String[] subItems = row.split("\t");
-			long firstId = Long.valueOf(subItems[0]);
-			long secondId = Long.valueOf(subItems[1]);
-			int count = Integer.valueOf(subItems[2]);
-			if (count >= stringency) {
-				genePairs.add(new GenePair(firstId, secondId));
-			}
-		}
-		in.close();
-		log.info("Read " + genePairs.size() + " gene pairs from "
-				+ geneListFile);
-		return genePairs;
+	public Collection<GenePair> pairGenesByOfficialSymbolFromFiles(
+			String queryGeneFileName, String targetGeneFileName, Taxon taxon)
+			throws IOException {
+		Collection<Long> queryGeneIds = readGeneListFile(queryGeneFileName,
+				taxon);
+		log.info("Read " + queryGeneIds.size() + " query genes");
+		Collection<Long> targetGeneIds = readGeneListFile(targetGeneFileName,
+				taxon);
+		log.info("Read " + targetGeneIds.size() + " target genes");
+
+		return pairGenesById(queryGeneIds, targetGeneIds);
 	}
 
-	/**
-	 * Read a file containing a pair of genes (official symbols) per line
-	 * 
-	 * @param geneListFile -
-	 *            gene list file name
-	 * @return a collection (hash set) of gene pairs
-	 * @throws IOException
-	 */
-	public Collection<GenePair> readGenePairsByOfficialSymbol(
-			String geneListFile) throws IOException {
-		log.debug("Reading gene pairs by official symbol from " + geneListFile);
-		Collection<GenePair> genePairs = new ArrayList<GenePair>();
-		BufferedReader in = new BufferedReader(new FileReader(geneListFile));
-		String line = null;
-		while ((line = in.readLine()) != null) {
-			if (line.startsWith("#")) {
+	public Collection<Long> readGeneListFile(String fileName, Taxon taxon)
+			throws IOException {
+		Collection<Long> geneIds = new HashSet<Long>();
+		BufferedReader in = new BufferedReader(new FileReader(fileName));
+		while (in.ready()) {
+			String line = in.readLine();
+			if (line.startsWith("#"))
 				continue;
-			}
-			String[] symbols = line.trim().split("\t");
-			if (symbols.length < 2) {
-				continue;
-			}
-			long id1 = ((Gene) geneService.findByOfficialSymbol(symbols[0])
-					.iterator().next()).getId();
-			long id2 = ((Gene) geneService.findByOfficialSymbol(symbols[1])
-					.iterator().next()).getId();
-			genePairs.add(new GenePair(id1, id2));
-		}
-		log.info("Read " + genePairs.size() + " gene pairs from "
-				+ geneListFile);
-		return genePairs;
-	}
-
-	/**
-	 * Reads the genes (official symbols) in the specified file and pairs each
-	 * with a specified set of genes.
-	 * 
-	 * @param geneListFile -
-	 *            list of genes to read in
-	 * @param partnerGenes -
-	 *            genes to pair with
-	 * @return a collection of gene pairs
-	 * @throws IOException
-	 */
-	public Collection<GenePair> pairGenesByOfficialSymbol(String geneListFile,
-			Collection<Gene> partnerGenes, Taxon taxon) throws IOException {
-		log.debug("Reading genes by official symbol from " + geneListFile);
-		Collection<GenePair> genePairs = new ArrayList<GenePair>();
-		BufferedReader in = new BufferedReader(new FileReader(geneListFile));
-		String line = null;
-		int count = 0;
-		while ((line = in.readLine()) != null) {
-			if (line.startsWith("#")) {
-				continue;
-			}
-			String symbol = line.trim();
-			for (Gene gene1 : ((Collection<Gene>) geneService
-					.findByOfficialSymbol(symbol))) {
-				if (taxon.equals(gene1.getTaxon())) {
-					for (Gene gene2 : partnerGenes)
-						genePairs
-								.add(new GenePair(gene1.getId(), gene2.getId()));
+			String symbol = in.readLine().trim();
+			for (Gene gene : ((Collection<Gene>) geneService
+					.findByOfficialSymbolInexact(symbol))) {
+				if (taxon.equals(gene.getTaxon())) {
+					geneIds.add(gene.getId());
 					break;
 				}
 			}
-			count++;
 		}
-		log.info("Paired " + count + " genes with " + partnerGenes.size());
+		return geneIds;
+	}
+
+	public Collection<GenePair> pairGenes(Collection<Gene> queryGenes,
+			Collection<Gene> targetGenes) {
+		Collection<GenePair> genePairs = new ArrayList<GenePair>();
+		for (Gene qGene : queryGenes) {
+			for (Gene tGene : targetGenes) {
+				genePairs.add(new GenePair(qGene.getId(), tGene.getId()));
+			}
+		}
+		return genePairs;
+	}
+
+	public Collection<GenePair> pairGenesById(Collection<Long> queryGeneIds,
+			Collection<Long> targetGeneIds) {
+		Collection<GenePair> genePairs = new ArrayList<GenePair>();
+		for (Long qGeneId : queryGeneIds) {
+			for (Long tGeneId : targetGeneIds) {
+				genePairs.add(new GenePair(qGeneId, tGeneId));
+			}
+		}
 		return genePairs;
 	}
 
@@ -258,12 +206,28 @@ public class EffectSizeService {
 	}
 
 	/**
+	 * Pair specified gene IDs with coexpressed genes
+	 * 
+	 * @param genes -
+	 *            genes to pair
+	 * @param EEs -
+	 *            expression experiments
+	 * @param stringency -
+	 *            minimum support for coexpressed genes
+	 * @return - set of gene pairs
+	 */
+	public Collection<GenePair> pairCoexpressedGenesById(
+			Collection<Long> geneIds, Collection<ExpressionExperiment> EEs,
+			int stringency) {
+		Collection<Gene> genes = (Collection<Gene>) geneService.load(geneIds);
+		return pairCoexpressedGenes(genes, EEs, stringency);
+	}
+
+	/**
 	 * Pair specified genes with coexpressed genes
 	 * 
 	 * @param genes -
 	 *            genes to pair
-	 * @param taxon -
-	 *            taxon of genes
 	 * @param EEs -
 	 *            expression experiments
 	 * @param stringency -
@@ -281,7 +245,7 @@ public class EffectSizeService {
 			Set<Long> ids = new HashSet<Long>();
 			log.info("Pairing " + gene.getOfficialSymbol() + " with "
 					+ coexpressedGenes.size()
-					+ " coexpressed genes (strigency=" + stringency + ")");
+					+ " coexpressed genes (stringency=" + stringency + ")");
 			for (CoexpressionValueObject coexpressedGene : coexpressedGenes) {
 				Integer linkCount = coexpressedGene.getPositiveLinkCount();
 				long coexpressedGeneId = coexpressedGene.getGeneId();
@@ -303,7 +267,7 @@ public class EffectSizeService {
 	 * Pair the genes specified in a file (separated with new lines) with
 	 * coexpressed genes
 	 * 
-	 * @param geneListFile -
+	 * @param geneListFileName -
 	 *            list of genes to pair
 	 * @param taxon -
 	 *            taxon of genes
@@ -315,11 +279,11 @@ public class EffectSizeService {
 	 * @throws IOException
 	 */
 	public Collection<GenePair> pairCoexpressedGenesByOfficialSymbol(
-			String geneListFile, Taxon taxon,
+			String geneListFileName, Taxon taxon,
 			Collection<ExpressionExperiment> EEs, int stringency)
 			throws IOException {
 		List<String> geneSymbols = new ArrayList<String>();
-		BufferedReader in = new BufferedReader(new FileReader(geneListFile));
+		BufferedReader in = new BufferedReader(new FileReader(geneListFileName));
 		String line;
 		while ((line = in.readLine()) != null) {
 			geneSymbols.add(line.trim());
@@ -930,6 +894,26 @@ public class EffectSizeService {
 		return eeSampleSizeMap;
 	}
 
+	public void setEeService(ExpressionExperimentService eeService) {
+		this.eeService = eeService;
+	}
+
+	public void setGeneService(GeneService geneService) {
+		this.geneService = geneService;
+	}
+
+	public void setDedvService(DesignElementDataVectorService dedvService) {
+		this.dedvService = dedvService;
+	}
+
+	public void setGoService(GeneOntologyService goService) {
+		this.goService = goService;
+	}
+
+	public void setAdService(ArrayDesignService adService) {
+		this.adService = adService;
+	}
+	
 	/**
 	 * Stores the expression profile data.
 	 * 
@@ -937,13 +921,13 @@ public class EffectSizeService {
 	 * @author Raymond
 	 */
 	protected class ExpressionProfile {
-		DesignElementDataVector dedv = null;
+		private DesignElementDataVector dedv = null;
 
-		double[] val;
+		private double[] val;
 
-		Double rank;
+		private Double rank;
 
-		long id;
+		private long id;
 
 		/**
 		 * Construct an ExpressionProfile from the specified
@@ -991,23 +975,5 @@ public class EffectSizeService {
 
 	}
 
-	public void setEeService(ExpressionExperimentService eeService) {
-		this.eeService = eeService;
-	}
 
-	public void setGeneService(GeneService geneService) {
-		this.geneService = geneService;
-	}
-
-	public void setDedvService(DesignElementDataVectorService dedvService) {
-		this.dedvService = dedvService;
-	}
-
-	public void setGoService(GeneOntologyService goService) {
-		this.goService = goService;
-	}
-
-	public void setAdService(ArrayDesignService adService) {
-		this.adService = adService;
-	}
 }

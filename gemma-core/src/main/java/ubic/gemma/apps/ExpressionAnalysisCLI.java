@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -122,6 +123,7 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 
 	private void saveRanksToFile(String outFile, Collection<Gene> genes,
 			Collection<ExpressionExperiment> EEs) throws IOException {
+		DecimalFormat df = new DecimalFormat("0.0000");
 		log.info("Saving ranks to file " + outFile);
 		PrintWriter out = new PrintWriter(new FileWriter(outFile));
 		String header = "ExpressionExperiment";
@@ -131,7 +133,7 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 		out.println(header);
 		
 		int eeCount = 1;
-		EE: for (ExpressionExperiment EE : EEs) {
+		for (ExpressionExperiment EE : EEs) {
 			log.info("Processing " + EE.getShortName() + " (" + eeCount++ + " of " + EEs.size() + ")");
 			Collection<ArrayDesign> ADs = eeService.getArrayDesignsUsed(EE);
 			Collection<Long> csIDs = new HashSet<Long>();
@@ -164,7 +166,7 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 			log.info("Loaded design element data vectors");
 			
 			int rankCount = 0;
-			String line = EE.getShortName();
+			String line = EE.getName();
 			for (Gene gene : genes) {
 				line += "\t";
     			Double rank;
@@ -180,7 +182,7 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 				Collections.sort(ranks);
 				rank = ranks.get(ranks.size() / 2);
 				if (rank == null) continue;
-				line += rank;
+				line += df.format(rank);
 				rankCount++;
 			}
 			out.println(line);
@@ -189,7 +191,7 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 		}
 		out.close();
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 

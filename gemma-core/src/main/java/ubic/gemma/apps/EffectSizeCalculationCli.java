@@ -91,16 +91,14 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 		if (hasOption('f')) {
 			this.geneListFile = getOptionValue('f');
 		}
-		if (hasOption('t')) {
-			String taxonName = getOptionValue('t');
-			taxon = Taxon.Factory.newInstance();
-			taxon.setCommonName(taxonName);
-			TaxonService taxonService = (TaxonService) this
-					.getBean("taxonService");
-			taxon = taxonService.find(taxon);
-			if (taxon == null) {
-				log.info("No Taxon found!");
-			}
+		String taxonName = getOptionValue('t');
+		taxon = Taxon.Factory.newInstance();
+		taxon.setCommonName(taxonName);
+		TaxonService taxonService = (TaxonService) this
+				.getBean("taxonService");
+		taxon = taxonService.find(taxon);
+		if (taxon == null) {
+			log.info("No Taxon found!");
 		}
 		if (hasOption('o')) {
 			this.outFilePrefix = getOptionValue('o');
