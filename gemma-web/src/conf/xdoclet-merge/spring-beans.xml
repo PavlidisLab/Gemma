@@ -246,6 +246,8 @@
 							<value>getTermRestrictions</value>
 							<value>saveStatement</value>
 							<value>findTerm</value>
+							<value>loadNewOntology</value>
+							<value>isMgedOntologyLoaded</value>
 						</list>
 					</property>
 				</bean>

@@ -18,7 +18,7 @@ Simple = function() {
        init : function() {
            var mainLayout = new Ext.BorderLayout("layout", {
                north: {
-                   split: false, initialSize: 30
+                   split: false, initialSize: 80
                },
                south: {
                    split: false, initialSize: 400
@@ -50,7 +50,8 @@ Simple = function() {
            }));
            mainLayout.endUpdate();
                        mainLayout.getRegion('east').hide();
-                       mainLayout.getRegion('north').hide();
+                       //mainLayout.getRegion('north').hide();
+                       newOntologyLoader();
                        initBioMaterialGrid( );
                        initTree( );                     
                }
@@ -109,10 +110,12 @@ var initBioMaterialGrid = function(div) {
        var id = dwr.util.getValue("cslist");
        showbms(id);
 };
+var tree;
+var root;
 
 var initTree = function(div){
-
-   var tree = new Ext.tree.TreePanel("west-div", {
+	
+    tree = new Ext.tree.TreePanel("west-div", {
        animate:true,
        loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTerms})
    });
@@ -125,7 +128,7 @@ var initTree = function(div){
 
 
    // set the root node
-   var root = new Ext.tree.AsyncTreeNode({
+   root = new Ext.tree.AsyncTreeNode({
        text: 'Top of the tree',
        draggable:false,
        allowChildre:true,
@@ -614,6 +617,76 @@ var specialCase = function(restrictedOn){
             	 if (restrictedOn.label == "has_ID") {
   					return true;
  	 				}		
+}
+
+
+//Loads a new ontology for display
+var newOntologyLoader = function(div){
+	
+	var ontologyURL =   new Ext.form.TextField({
+            fieldLabel: 'Ontology URL',
+            name: 'OntologyURL',
+            width:150 });
+    
+	var ontologyStartingURL =   new Ext.form.TextField({
+            fieldLabel: 'Ontology Starting URL',
+            name: 'OntologyStartingURL',
+            width:150 });
+    
+
+var loadHandler = function(event){
+	MgedOntologyService.loadNewOntology(ontologyURL.getValue(), ontologyStartingURL.getValue());	
+
+};
+
+var displayLoaded = function(loaded){
+	
+              dialog = new Ext.BasicDialog("center-div", { 
+                        autoTabs:true,
+                        width:200,
+                        height:75,
+                        shadow:true,
+                        minWidth:200,
+                        minHeight:50,
+                        proxyDrag: true,
+                        title: "Loaded = " + loaded                        
+                });
+                          
+            dialog.show();
+                  
+};
+
+var isLoadedHandler = function(event){
+	MgedOntologyService.isMgedOntologyLoaded(displayLoaded);	
+}
+
+var refreshHandler = function(event){
+	   tree.render();
+   		root.expand();
+}
+
+
+
+	var simpleURLForm = new Ext.form.Form({
+		        labelWidth: 75, // label settings here cascade unless overridden
+    });
+					    
+    simpleURLForm.column(
+    	{width:300},
+        ontologyURL
+        );
+
+	simpleURLForm.column(
+		{width:250},
+		ontologyStartingURL
+    );
+    
+    simpleURLForm.addButton('Load', loadHandler);    	    
+    simpleURLForm.addButton('isLoaded',isLoadedHandler);	
+    simpleURLForm.addButton('refresh',refreshHandler);
+   
+    simpleURLForm.render("north-div");	
+	
 }
 
 

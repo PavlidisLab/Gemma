@@ -37,7 +37,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -51,7 +50,6 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  * @version $Id: MgedOntologyService.java
  * @spring.bean id="mgedOntologyService"
  * @spring.property name="bioMaterialService" ref ="bioMaterialService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 
 public class MgedOntologyService implements InitializingBean {
@@ -61,17 +59,17 @@ public class MgedOntologyService implements InitializingBean {
     // map of uris to terms
     private static Map<String, OntologyTerm> terms;
 
-    private static final AtomicBoolean ready = new AtomicBoolean( false );
+    private static AtomicBoolean ready = new AtomicBoolean( false );
 
-    private static final AtomicBoolean running = new AtomicBoolean( false );
+    private static AtomicBoolean running = new AtomicBoolean( false );
 
     // private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
-    private final static String MGED_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    private static String ontology_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    private static String ontology_startingPoint = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
 
     private static OntModel model;
     private static IndexLARQ index;
 
-    private static PersisterHelper persisterHelper;
     private static BioMaterialService bioMaterialService;
 
     public void afterPropertiesSet() throws Exception {
@@ -109,13 +107,28 @@ public class MgedOntologyService implements InitializingBean {
 
     public Collection<OntologyTreeNode> getBioMaterialTerms() {
 
+        if ( !ready.get() ) return null;
+
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
 
-        final String id = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
-        OntologyTerm term = terms.get( id );
+        OntologyTerm term = terms.get( ontology_startingPoint );
 
         nodes.add( buildTreeNode( term ) );
         return nodes;
+    }
+
+    public void loadNewOntology( String ontologyURL, String startingPointURL ) {
+
+        if ( running.get() ) return;
+
+        this.ontology_startingPoint = startingPointURL;
+        this.ontology_URL = ontologyURL;
+
+        this.ready = new AtomicBoolean( false );
+        this.running = new AtomicBoolean( false );
+
+        init();
+
     }
 
     public Collection<OntologyRestriction> getTermRestrictions( String id ) {
@@ -191,8 +204,8 @@ public class MgedOntologyService implements InitializingBean {
                 loadTime.start();
                 //
                 try {
-                    model = OntologyLoader.loadMemoryModel( MGED_URL, OntModelSpec.OWL_MEM );
-                    loadTermsInNameSpace( MGED_URL );
+                    model = OntologyLoader.loadMemoryModel( ontology_URL, OntModelSpec.OWL_MEM );
+                    loadTermsInNameSpace( ontology_URL );
                     log.info( "MGED Ontology loaded, total of " + terms.size() + " items in " + loadTime.getTime()
                             / 1000 + "s" );
 
@@ -250,7 +263,7 @@ public class MgedOntologyService implements InitializingBean {
      * 
      * @returns boolean
      */
-    public synchronized boolean isGeneOntologyLoaded() {
+    public synchronized boolean isMgedOntologyLoaded() {
 
         return ready.get();
     }
@@ -260,13 +273,6 @@ public class MgedOntologyService implements InitializingBean {
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
         this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
 }
