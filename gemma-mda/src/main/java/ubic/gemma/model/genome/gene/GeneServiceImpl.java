@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.coexpression.MultipleCoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -35,7 +37,7 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
-    @Override
+	@Override
     protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
         return this.getGeneDao().getCoexpressedGeneMap( stringincy, gene );
     }
@@ -196,6 +198,20 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
         return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
     }
+
+    /* (non-Javadoc)
+	 * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMultipleCoexpressionResults(java.util.Collection, java.util.Collection, java.lang.Integer)
+	 */
+	@Override
+	protected Object handleGetMultipleCoexpressionResults(Collection genes, Collection ees, Integer stringency) throws Exception {
+		MultipleCoexpressionCollectionValueObject results = new MultipleCoexpressionCollectionValueObject();
+		for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
+			Gene gene = (Gene) iter.next();
+            CoexpressionCollectionValueObject current = (CoexpressionCollectionValueObject)getCoexpressedGenes( gene, ees, stringency );
+            results.addCoexpressionCollection( current );
+		}
+		return results;
+	}
 
     @Override
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
