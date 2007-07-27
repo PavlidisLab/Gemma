@@ -60,6 +60,33 @@ import ubic.gemma.util.TaxonUtility;
  */
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadGenes(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
 
     /**

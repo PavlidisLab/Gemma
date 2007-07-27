@@ -270,9 +270,22 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     }
 
     @Override
-    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
-        // TODO Auto-generated method stub
+    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {     
         return this.getGeneDao().getCS2GeneMap( csIds );
     }
+    
+    @Override
+    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {     
+        return this.getGeneDao().loadProbeAlignedRegions(taxon);
+    }
+    
+    @Override
+    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {     
+        return this.getGeneDao().loadGenes(taxon);
+    }
 
+    @Override
+    protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {     
+        return this.getGeneDao().loadPredictedGenes(taxon);
+    }
 }
