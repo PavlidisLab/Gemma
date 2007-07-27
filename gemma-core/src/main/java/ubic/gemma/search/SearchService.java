@@ -44,6 +44,7 @@ import org.compass.core.support.search.CompassSearchResults;
 
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -78,6 +79,7 @@ public class SearchService {
     private GeneProductService geneProductService;
     private CompositeSequenceService compositeSequenceService;
     private ArrayDesignService arrayDesignService;
+    private BibliographicReferenceService bibliographicReferenceService;
     private ExpressionExperimentService expressionExperimentService;
     private BioSequenceService bioSequenceService;
     private Compass geneBean;
@@ -243,7 +245,24 @@ public class SearchService {
                 } );
 
         if ( searchResults == null ) return new HashSet<BibliographicReference>();
-        return convert2BibliographicReferenceList( searchResults.getHits() );
+
+        Collection<BibliographicReference> bibRefsFromCompass = convert2BibliographicReferenceList( searchResults
+                .getHits() );
+
+        /* if compass is not indexed properly, this db search gives us a second chance. */
+        Collection<BibliographicReference> bibliographicReferences = new HashSet<BibliographicReference>();
+
+        for ( BibliographicReference bibRef : bibRefsFromCompass ) {
+            if ( bibRef.getPubAccession() == null ) {
+                BibliographicReference bibRefFromDb = bibliographicReferenceService.findByTitle( bibRef.getTitle() );
+                bibliographicReferences.add( bibRefFromDb );
+            } else {
+                bibliographicReferences.add( bibRef );
+            }
+        }
+
+        return bibliographicReferences;
+
     }
 
     /**
@@ -676,6 +695,13 @@ public class SearchService {
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
 }
