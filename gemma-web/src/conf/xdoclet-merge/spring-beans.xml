@@ -320,7 +320,7 @@
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>classUri></value>
+							<value>classUri</value>
 							<value>properties</value>
 							<value>value</value>
 							<value>description</value>
@@ -334,7 +334,7 @@
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>classUri></value>
+							<value>classUri</value>
 							<value>value</value>
 							<value>properties</value>
 							<value>description</value>
@@ -348,7 +348,7 @@
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>classUri></value>
+							<value>classUri</value>
 							<value>data</value>
 							<value>object</value>
 							<value>value</value>
@@ -363,7 +363,7 @@
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>classUri></value>
+							<value>classUri</value>
 							<value>object</value>
 							<value>value</value>
 						</list>
@@ -376,7 +376,7 @@
 					<property name="includes">
 						<list>
 							<value>termUri</value>
-							<value>classUri></value>
+							<value>classUri</value>
 							<value>data</value>
 							<value>type</value>
 							<value>value</value>
