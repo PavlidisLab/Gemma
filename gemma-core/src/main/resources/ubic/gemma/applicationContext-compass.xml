@@ -40,6 +40,9 @@
 		<property name="arrayDesignService">
 			<ref bean="arrayDesignService" />
 		</property>
+		<property name="bibliographicReferenceService">
+			<ref bean="bibliographicReferenceService" />
+		</property>
 		<property name="geneBean">
 			<ref bean="compassGene" />
 		</property>
