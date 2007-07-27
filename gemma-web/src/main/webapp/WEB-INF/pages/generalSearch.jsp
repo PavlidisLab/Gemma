@@ -311,10 +311,15 @@
 	name="bibliographicReferenceList" sort="list" class="list"
 	requestURI="" id="bibliographicReferenceList"
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
+	
 	<display:column sortable="true" href="bibRef/bibRefView.html"
 		paramId="accession" paramProperty="pubAccession.accession" title="">
 		<img src="/Gemma/images/magnifier.png" />
 	</display:column>
+	<%-- 
+	<display:column property="accessionLink"
+		sortable="true" title="Accession" />
+	--%>
 	<display:column property="title" sortable="true"
 		titleKey="pubMed.title" maxLength="50" />
 	<display:column property="authorList" sortable="true"
