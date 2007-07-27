@@ -21,18 +21,28 @@ package ubic.gemma.web.taglib.displaytag.common.description;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject;
 
 /**
  * Decorator for displaying bibligraphic refereneces in a list view.
+ * <p>
+ * Note: To use this class, the collection of objects viewed in the table should be of type
+ * BibliographicReferenceValueObject, not BibliographicReference. A typical place to check for this is in the
+ * controller. That is, a controller should return Collection<BibliographicReferenceValueObject> and not Collection<BibliographicReference>.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class BibliographicReferenceWrapper extends TableDecorator {
+    private static final String UNAVAILABLE = "Unavailable";
+    private Log log = LogFactory.getLog( this.getClass() );
 
     // public String getAuthors() {
     // BibliographicReference ref = ( BibliographicReference ) this.getCurrentRowObject();
@@ -44,6 +54,9 @@ public class BibliographicReferenceWrapper extends TableDecorator {
     // return StringUtils.abbreviate( ref.getTitle(), 50 );
     // }
 
+    /**
+     * @return String
+     */
     public String getCitation() {
         // basically copied from the BibliographicReferenceTag.
         StringBuilder buf = new StringBuilder();
@@ -60,6 +73,9 @@ public class BibliographicReferenceWrapper extends TableDecorator {
         return buf.toString();
     }
 
+    /**
+     * @return
+     */
     public String getYear() {
         Object obj = this.getCurrentRowObject();
 
@@ -74,6 +90,9 @@ public class BibliographicReferenceWrapper extends TableDecorator {
 
     }
 
+    /**
+     * @return
+     */
     public String getExperiments() {
         BibliographicReferenceValueObject br = ( BibliographicReferenceValueObject ) this.getCurrentRowObject();
         if ( br.getExperiments().size() == 0 ) return "";
@@ -92,10 +111,49 @@ public class BibliographicReferenceWrapper extends TableDecorator {
         return buf.toString();
     }
 
+    /**
+     * @return
+     */
     public String getUpdate() {
         BibliographicReferenceValueObject br = ( BibliographicReferenceValueObject ) this.getCurrentRowObject();
         return "<input id='" + br.getId() + "' type=\"button\"  value=\"Update\" onClick='doUpdate(" + br.getId()
                 + ");' />";
     }
 
+    /**
+     * @return
+     */
+    public String getAccessionLink() {
+        BibliographicReferenceValueObject br = ( BibliographicReferenceValueObject ) this.getCurrentRowObject();
+
+        Long id = br.getId();
+
+        StringBuilder buf = new StringBuilder();
+
+        DatabaseEntry databaseEntry = br.getPubAccession();
+
+        if ( br.getPubAccession() == null ) {
+            log.warn( "No accession for bibliographic reference with id = " + id );
+            buf.append( UNAVAILABLE );
+            return buf.toString();
+        }
+
+        String accession = databaseEntry.getAccession();
+
+        if ( StringUtils.isEmpty( accession ) ) {
+            log.warn( "Pubmed accession for bibliographic reference with id = " + id
+                    + "exists, but accesion is not filled in." );
+            buf.append( UNAVAILABLE );
+            return buf.toString();
+        }
+
+        buf.append( "<a href='/Gemma/bibRef/bibRefView.html?accession=" );
+        buf.append( accession );
+        buf.append( "'>" );
+        buf.append( "<img src=\'/Gemma/images/magnifier.png\' />" );
+        buf.append( "</a>" );
+
+        log.info( buf.toString() );
+        return buf.toString();
+    }
 }
