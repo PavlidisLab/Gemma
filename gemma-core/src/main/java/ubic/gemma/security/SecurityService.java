@@ -18,7 +18,6 @@
  */
 package ubic.gemma.security;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
@@ -42,7 +41,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.common.description.LocalFileImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
-import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
@@ -103,7 +101,7 @@ public class SecurityService {
         unsecuredClasses.add( DatabaseEntryImpl.class );
         unsecuredClasses.add( LocalFileImpl.class );
         // TODO remove these
-        unsecuredClasses.add( BioAssayImpl.class );
+        // unsecuredClasses.add( BioAssayImpl.class );
         unsecuredClasses.add( ExperimentalFactorImpl.class );
     }
 
@@ -112,8 +110,10 @@ public class SecurityService {
      * 
      * @param object
      * @param mask
+     * @param visited A Collection of objects already visited. This is need so objects in a bi-directional relationship
+     *        are not processed twice.
      */
-    public void changePermission( Object object, int mask ) {
+    public void changePermission( Object object, int mask, Collection<Object> visited ) {
 
         log.debug( "Changing acl of object " + object + "." );
 
@@ -127,8 +127,12 @@ public class SecurityService {
         Object principal = authentication.getPrincipal();
 
         if ( object instanceof Securable ) {
-
-            processAssociations( object, mask, authentication, principal );
+            if ( !visited.contains( object ) ) {
+                visited.add( object );
+                processAssociations( object, mask, authentication, principal, visited );
+            } else {
+                log.debug( "Object " + object.getClass() + " already visited." );
+            }
         } else {
             throw new RuntimeException( "Object not Securable.  Cannot change permissions for object of type " + object
                     + "." );
@@ -141,13 +145,11 @@ public class SecurityService {
      * @param mask
      * @param authentication
      * @param principal
-     * @throws NoSuchMethodException
-     * @throws InvocationTargetException
-     * @throws IllegalAccessException
-     * @throws SecurityException
-     * @throws IllegalArgumentException
+     * @param visited A Collection of objects already visited. This is need so objects in a bi-directional relationship
+     *        are not processed twice.
      */
-    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal ) {
+    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal,
+            Collection<Object> visited ) {
 
         Class clazz = targetObject.getClass();
         Method[] methods = clazz.getMethods();
@@ -193,7 +195,7 @@ public class SecurityService {
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
                                 log.debug( "process " + ob );
-                                changePermission( ob, mask );// recursive
+                                changePermission( ob, mask, visited );// recursive
                             }
                         }
                     } else {
@@ -203,7 +205,7 @@ public class SecurityService {
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
                                 || ( ( Securable ) ob ).getId() == null ) continue;
-                        changePermission( ob, mask );// recursive
+                        changePermission( ob, mask, visited );// recursive
                     }
                 } catch ( Exception e ) {
                     throw new RuntimeException( "Error is: " + e );
