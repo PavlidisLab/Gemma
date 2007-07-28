@@ -243,6 +243,7 @@ public class SimpleExpressionDataLoaderService {
         ArrayDesign newDesign = null;
 
         for ( ArrayDesign design : arrayDesigns ) {
+            if ( design != null ) arrayDesignService.thaw( design );
             ArrayDesign existing = arrayDesignService.find( design );
             if ( existing != null ) {
                 log.info( "Array Design exists" );
