@@ -27,6 +27,8 @@ import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -43,6 +45,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     String arrayDesignName = "Array Design Foo";
     String compositeSequenceName1 = "Design Element Bar1";
     String compositeSequenceName2 = "Design Element Bar2";
+
+    private ExpressionExperimentService expressionExperimentService;
 
     /*
      * (non-Javadoc)
@@ -131,19 +135,39 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
     }
 
-    // /**
-    // * @throws Exception
-    // */
-    // public void testMakePrivateExpressionExperiment() throws Exception {
-    // // ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
-    // ExpressionExperiment ee = ( ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" ) )
-    // .findById( 1l );
-    //
-    // SecurityService securityService = new SecurityService();
-    // securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
-    // securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-    // securityService.changePermission( ee, 6 );
-    // setComplete();
-    //
-    // }
+    /**
+     * @throws Exception
+     */
+    public void testMakeTestExpressionExperimentPrivate() throws Exception {
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+
+        SecurityService securityService = new SecurityService();
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.changePermission( ee, 6 );
+        /*
+         * uncomment so you can see the acl permission has been changed in the database.
+         */
+        // this.setComplete();
+    }
+
+    public void testMakeExpressionExperimentPrivate() throws Exception {
+        String expName = "kottmann";
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        ExpressionExperiment ee = expressionExperimentService.findByName( expName );
+
+        if ( ee == null )
+            throw new RuntimeException( "Cannot find experiment " + expName + " in database.  Skipping test." );
+
+        SecurityService securityService = new SecurityService();
+
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.changePermission( ee, 0 );
+        /*
+         * uncomment so you can see the acl permission has been changed in the database.
+         */
+        // this.setComplete();
+    }
+
 }
