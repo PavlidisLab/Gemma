@@ -41,9 +41,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.common.description.LocalFileImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
+import ubic.gemma.model.expression.experiment.FactorValueImpl;
 import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.TaxonImpl;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
@@ -84,12 +85,10 @@ public class SecurityService {
      * are not interccepted anyway.
      */
     static {// TODO use parent classes and interfaces (like DesignElement.class)
-        // unsecuredClasses.add( DataVectorImpl.class );
         unsecuredClasses.add( DesignElementDataVectorImpl.class );
         unsecuredClasses.add( DatabaseEntryImpl.class );
         unsecuredClasses.add( BioSequenceImpl.class );
         unsecuredClasses.add( RelationshipImpl.class );
-        // unsecuredClasses.add( DesignElementImpl.class );
         unsecuredClasses.add( CompositeSequenceImpl.class );
         unsecuredClasses.add( TaxonImpl.class );
         unsecuredClasses.add( GeneImpl.class );
@@ -100,9 +99,10 @@ public class SecurityService {
         unsecuredClasses.add( AuditTrailImpl.class );
         unsecuredClasses.add( DatabaseEntryImpl.class );
         unsecuredClasses.add( LocalFileImpl.class );
+        unsecuredClasses.add( TechnologyType.class );
+        unsecuredClasses.add( FactorValueImpl.class );
         // TODO remove these
-        // unsecuredClasses.add( BioAssayImpl.class );
-        unsecuredClasses.add( ExperimentalFactorImpl.class );
+        // unsecuredClasses.add( ExperimentalFactorImpl.class );
     }
 
     /**
@@ -208,6 +208,7 @@ public class SecurityService {
                         changePermission( ob, mask, visited );// recursive
                     }
                 } catch ( Exception e ) {
+                    e.printStackTrace();
                     throw new RuntimeException( "Error is: " + e );
                 }
             }
