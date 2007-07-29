@@ -302,10 +302,10 @@ public class DesignElementDataVectorDaoImpl extends
     @Override
     protected void handleThaw( final Collection designElementDataVectors ) throws Exception {
 
-//        String query = "from DesignElementDataVectorImpl d "
-//                + "inner join fetch d.designElement inner join fetch d.bioAssayDimension dim "
-//                + "inner join fetch dim.bioAssays ba " + "inner join fetch ba.arrayDesignUsed "
-//                + "inner join fetch ba.samplesUsed " + "inner join fetch ba.derivedDataFiles where d in (:dedvs) ";
+        // String query = "from DesignElementDataVectorImpl d "
+        // + "inner join fetch d.designElement inner join fetch d.bioAssayDimension dim "
+        // + "inner join fetch dim.bioAssays ba " + "inner join fetch ba.arrayDesignUsed "
+        // + "inner join fetch ba.samplesUsed " + "inner join fetch ba.derivedDataFiles where d in (:dedvs) ";
 
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
@@ -448,7 +448,7 @@ public class DesignElementDataVectorDaoImpl extends
                     // if the key exists, push into collection
                     // if the key does not exist, create and put hashset into the map
                     if ( geneMap.containsKey( dedv ) ) {
-                        if ( !( ( Collection<Gene> ) geneMap.get( dedv ) ).add( g ) ) {
+                        if ( !geneMap.get( dedv ).add( g ) ) {
                             if ( log.isDebugEnabled() ) log.debug( "Failed to add " + g.getName() + "; Duplicate" );
                         }
                     } else {

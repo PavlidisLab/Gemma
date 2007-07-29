@@ -525,7 +525,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         while ( scroll.next() ) {
             Long dedvId = scroll.getLong( 0 );
             Blob dedvData = scroll.getBlob( 1 );
-            byte data[] = dedvData.getBytes( ( long ) 1, ( int ) dedvData.length() );
+            byte data[] = dedvData.getBytes( 1, ( int ) dedvData.length() );
             Long csId = scroll.getLong( 2 );
             Double rank = scroll.getDouble( 3 );
 
