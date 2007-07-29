@@ -19,6 +19,7 @@
 package ubic.gemma.security;
 
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +41,8 @@ import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.common.description.LocalFileImpl;
+import ubic.gemma.model.common.description.MedicalSubjectHeadingImpl;
+import ubic.gemma.model.common.description.PublicationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl;
@@ -84,7 +87,16 @@ public class SecurityService {
      * composition. In principle this shouldn't needed in most cases because the methods for the corresponding services
      * are not interccepted anyway.
      */
-    static {// TODO use parent classes and interfaces (like DesignElement.class)
+    static {
+        // these are not of type Securable
+        unsecuredClasses.add( AuditTrailImpl.class );
+        unsecuredClasses.add( DatabaseEntryImpl.class );
+        unsecuredClasses.add( LocalFileImpl.class );
+        unsecuredClasses.add( TechnologyType.class );
+        unsecuredClasses.add( FactorValueImpl.class );
+        unsecuredClasses.add( MedicalSubjectHeadingImpl.class );
+        unsecuredClasses.add( PublicationTypeImpl.class );
+        // these are securable but we don't use acls on them directly
         unsecuredClasses.add( DesignElementDataVectorImpl.class );
         unsecuredClasses.add( DatabaseEntryImpl.class );
         unsecuredClasses.add( BioSequenceImpl.class );
@@ -95,12 +107,8 @@ public class SecurityService {
         unsecuredClasses.add( GeneProductImpl.class );
         unsecuredClasses.add( GeneAliasImpl.class );
         unsecuredClasses.add( QuantitationTypeImpl.class );
-        // these are not of type Securable
-        unsecuredClasses.add( AuditTrailImpl.class );
-        unsecuredClasses.add( DatabaseEntryImpl.class );
-        unsecuredClasses.add( LocalFileImpl.class );
-        unsecuredClasses.add( TechnologyType.class );
-        unsecuredClasses.add( FactorValueImpl.class );
+        // other
+        unsecuredClasses.add( Timestamp.class );
     }
 
     /**
@@ -156,11 +164,10 @@ public class SecurityService {
             String name = method.getName();
             if ( StringUtils.startsWithIgnoreCase( name, ACCESSOR_PREFIX ) ) {
                 Class returnType = method.getReturnType();
-
-                if ( returnType.getName().equalsIgnoreCase( LazyInitializer.class.getName() ) ) {
+                if ( returnType.getName().contains( NET_SF ) ) {
                     continue;
                 }
-                if ( returnType.getName().contains( NET_SF ) ) {
+                if ( returnType.getName().equalsIgnoreCase( LazyInitializer.class.getName() ) ) {
                     continue;
                 }
                 if ( returnType.getName().equalsIgnoreCase( String.class.getName() ) ) {
