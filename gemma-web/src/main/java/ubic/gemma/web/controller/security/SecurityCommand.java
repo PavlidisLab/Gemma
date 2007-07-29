@@ -32,7 +32,7 @@ public class SecurityCommand implements Serializable {
 
     private String securableType = null;
 
-    private Long securableId = null;
+    private String shortName = null;
 
     private String mask = null;
 
@@ -51,17 +51,17 @@ public class SecurityCommand implements Serializable {
     }
 
     /**
-     * @return the securableId
+     * @return the shortName
      */
-    public Long getSecurableId() {
-        return securableId;
+    public String getShortName() {
+        return shortName;
     }
 
     /**
-     * @param securableId the securableId to set
+     * @param shortName the shortName to set
      */
-    public void setSecurableId( Long securableId ) {
-        this.securableId = securableId;
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
     }
 
     /**

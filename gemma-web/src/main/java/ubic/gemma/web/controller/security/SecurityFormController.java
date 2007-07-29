@@ -127,13 +127,13 @@ public class SecurityFormController extends BaseFormController {
         log.debug( "onSubmit" );
 
         SecurityCommand sc = ( SecurityCommand ) command;
-        Long id = sc.getSecurableId();
+        String shortName = sc.getShortName();
 
         String type = sc.getSecurableType();
 
         Object target = null;
         if ( StringUtils.equalsIgnoreCase( type, expressionExperimentType ) ) {
-            target = this.expressionExperimentService.load( id );
+            target = this.expressionExperimentService.findByShortName( shortName );
         } else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
             // target = this.arrayDesignService.findArrayDesignByName( name );//TODO no findById ... maybe use name
             return processErrors( request, response, command, errors,
@@ -141,7 +141,8 @@ public class SecurityFormController extends BaseFormController {
         }
 
         if ( target == null ) {
-            return processErrors( request, response, command, errors, "No securable object with id " + id + " found" );
+            return processErrors( request, response, command, errors, "No securable object with name " + shortName
+                    + " found." );
         }
 
         String mask = sc.getMask();

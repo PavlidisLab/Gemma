@@ -57,7 +57,7 @@ public class SecurityFormControllerTest extends BaseSpringWebTest {
         // request.setAttribute( "type", "profile" );
 
         SecurityCommand command = new SecurityCommand();
-        command.setSecurableId( 1L );
+        command.setShortName( "GSETest" );
         command.setSecurableType( "Expression Experiment" );
         command.setMask( "public" );
 

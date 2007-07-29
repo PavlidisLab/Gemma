@@ -1,10 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<jsp:useBean id="securityCommand"
-	scope="request"
+<jsp:useBean id="securityCommand" scope="request"
 	class="ubic.gemma.web.controller.security.SecurityCommand" />
-	
-<title> <fmt:message key="security.title" /> </title>
+
+<title><fmt:message key="security.title" /></title>
 
 <spring:bind path="securityCommand.*">
 	<c:if test="${not empty status.errorMessages}">
@@ -19,20 +18,21 @@
 	</c:if>
 </spring:bind>
 
-<form method="post"
-	action="<c:url value="/securityManager.html"/>">
+<form method="post" action="<c:url value="/securityManager.html"/>">
 
 	<table>
-	
-		<tr><b> Make Data Public/Private <br/><br/> </b></tr>
+
+		<tr>
+			<b> Make Data Public/Private <br />
+				<br /> </b>
+		</tr>
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="security.securableType" /> </b>
 			</td>
 			<td>
 
-				<spring:bind
-					path="securityCommand.securableType">
+				<spring:bind path="securityCommand.securableType">
 					<select name="${status.expression}">
 						<c:forEach items="${securableTypes}" var="securableType">
 							<option value="${securableType}"
@@ -45,34 +45,37 @@
 				</spring:bind>
 			</td>
 		</tr>
-		
+
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="security.securableId" /> <br /> </b>
+				<b> <fmt:message key="security.shortName" /> <br /> </b>
 			</td>
 			<td>
-				<spring:bind
-					path="securityCommand.securableId">
+				<spring:bind path="securityCommand.shortName">
 					<input type="text" size=10
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 		</tr>
-		
+
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="security.securableMask" /> <br /> </b>
 			</td>
 			<td>
 				<spring:bind path="securityCommand.mask">
-              		<input type="radio" name="mask" value="public" <c:if test='${status.value == "public"}'>checked</c:if> > Public
-              		<span class="error"><c:out value="${status.errorMessage}"/></span>
+					<input type="radio" name="mask" value="public"
+						<c:if test='${status.value == "public"}'>checked</c:if>> Public
+              		<span class="error"><c:out
+							value="${status.errorMessage}" />
+					</span>
+					<br />
+					<input type="radio" name="mask" value="private"
+						<c:if test='${status.value == "private"}'>checked</c:if>> Private
               		<br />
-              			<input type="radio" name="mask" value="private" <c:if test='${status.value == "private"}'>checked</c:if> > Private
-              		<br />
-            	</spring:bind>
-        	</td>
+				</spring:bind>
+			</td>
 		</tr>
 	</table>
 
@@ -86,20 +89,22 @@
 			</td>
 		</tr>
 	</table>
-	
+
 	<table>
 		<tr>
-			<br/><br/>
-			<b> Other Security Related Operations <br/><br/> </b>
+			<br />
+			<br />
+			<b> Other Security Related Operations <br />
+				<br /> </b>
 		</tr>
-			
+
 		<tr>
 			<ul class="glassList">
 				<li>
 					<a href="<c:url value="/signup.html"/>"> Add Another User </a>
 				</li>
 			</ul>
-		</tr>	
+		</tr>
 	</table>
-	
+
 </form>
