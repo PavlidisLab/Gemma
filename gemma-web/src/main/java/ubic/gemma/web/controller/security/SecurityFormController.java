@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.security;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -156,7 +157,7 @@ public class SecurityFormController extends BaseFormController {
                     "Supported masks are 0 (private) and 6 (public), not " + mask );
 
         // ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(), "Making data private." );
-        securityService.changePermission( target, aclMask );
+        securityService.changePermission( target, aclMask, new HashSet<Object>() );
         // ProgressManager.destroyProgressJob( job );
 
         saveMessage( request, target + " made " + mask + "." );

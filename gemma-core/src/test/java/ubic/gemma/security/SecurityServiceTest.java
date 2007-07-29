@@ -100,7 +100,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.changePermission( ad, 0 );
+        securityService.changePermission( ad, 0, new HashSet<Object>() );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
@@ -125,7 +125,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         boolean fail = false;
         try {
-            securityService.changePermission( ad, 0 );
+            securityService.changePermission( ad, 0, new HashSet<Object>() );
         } catch ( Exception e ) {
             fail = true;
             log.error( "TEST SUCCESSFULLY FAILED WITH: " );
@@ -144,30 +144,34 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         SecurityService securityService = new SecurityService();
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.changePermission( ee, 6 );
+        securityService.changePermission( ee, 6, new HashSet<Object>() );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
         // this.setComplete();
     }
 
+    /**
+     * @throws Exception
+     */
     public void testMakeExpressionExperimentPrivate() throws Exception {
-        String expName = "kottmann";
+        String expName = "kottmann";// "GSE7480";
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        ExpressionExperiment ee = expressionExperimentService.findByName( expName );
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( expName );
 
-        if ( ee == null )
-            throw new RuntimeException( "Cannot find experiment " + expName + " in database.  Skipping test." );
+        if ( ee == null ) {
+            log.error( "Cannot find experiment " + expName + " in database.  Skipping test." );
+        } else {
+            SecurityService securityService = new SecurityService();
 
-        SecurityService securityService = new SecurityService();
-
-        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
-        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.changePermission( ee, 0 );
-        /*
-         * uncomment so you can see the acl permission has been changed in the database.
-         */
-        // this.setComplete();
+            securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+            securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+            securityService.changePermission( ee, 0, new HashSet<Object>() );
+            /*
+             * uncomment so you can see the acl permission has been changed in the database.
+             */
+            // this.setComplete();
+        }
     }
 
 }
