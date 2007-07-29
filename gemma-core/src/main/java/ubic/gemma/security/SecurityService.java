@@ -101,8 +101,6 @@ public class SecurityService {
         unsecuredClasses.add( LocalFileImpl.class );
         unsecuredClasses.add( TechnologyType.class );
         unsecuredClasses.add( FactorValueImpl.class );
-        // TODO remove these
-        // unsecuredClasses.add( ExperimentalFactorImpl.class );
     }
 
     /**
