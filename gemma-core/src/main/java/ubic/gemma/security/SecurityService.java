@@ -21,7 +21,6 @@ package ubic.gemma.security;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 
 import org.acegisecurity.Authentication;
@@ -35,24 +34,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.proxy.LazyInitializer;
 import org.springframework.util.StringUtils;
 
-import ubic.gemma.model.association.RelationshipImpl;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
-import ubic.gemma.model.common.description.DatabaseEntryImpl;
-import ubic.gemma.model.common.description.LocalFileImpl;
-import ubic.gemma.model.common.description.MedicalSubjectHeadingImpl;
-import ubic.gemma.model.common.description.PublicationTypeImpl;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl;
-import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
-import ubic.gemma.model.expression.experiment.FactorValueImpl;
-import ubic.gemma.model.genome.GeneImpl;
-import ubic.gemma.model.genome.TaxonImpl;
-import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
-import ubic.gemma.model.genome.gene.GeneAliasImpl;
-import ubic.gemma.model.genome.gene.GeneProductImpl;
 import ubic.gemma.util.SecurityUtil;
 
 /**
@@ -76,40 +59,8 @@ public class SecurityService {
     private static final String ADMINISTRATOR = "administrator";
     private static final String ACCESSOR_PREFIX = "get";
 
-    /**
-     * For some types of objects, we don't put permissions on them directly, but on the containing object. Example:
-     * reporter - we secure the arrayDesign, but not the reporter.
-     */
-    private static final Collection<Class> unsecuredClasses = new HashSet<Class>();
-
-    /*
-     * Classes to skip because they aren't secured. Either these are always "public" objects, or they are secured by
-     * composition. In principle this shouldn't needed in most cases because the methods for the corresponding services
-     * are not interccepted anyway.
-     */
-    static {
-        // these are not of type Securable
-        unsecuredClasses.add( AuditTrailImpl.class );
-        unsecuredClasses.add( DatabaseEntryImpl.class );
-        unsecuredClasses.add( LocalFileImpl.class );
-        unsecuredClasses.add( TechnologyType.class );
-        unsecuredClasses.add( FactorValueImpl.class );
-        unsecuredClasses.add( MedicalSubjectHeadingImpl.class );
-        unsecuredClasses.add( PublicationTypeImpl.class );
-        // these are securable but we don't use acls on them directly
-        unsecuredClasses.add( DesignElementDataVectorImpl.class );
-        unsecuredClasses.add( DatabaseEntryImpl.class );
-        unsecuredClasses.add( BioSequenceImpl.class );
-        unsecuredClasses.add( RelationshipImpl.class );
-        unsecuredClasses.add( CompositeSequenceImpl.class );
-        unsecuredClasses.add( TaxonImpl.class );
-        unsecuredClasses.add( GeneImpl.class );
-        unsecuredClasses.add( GeneProductImpl.class );
-        unsecuredClasses.add( GeneAliasImpl.class );
-        unsecuredClasses.add( QuantitationTypeImpl.class );
-        // other
-        unsecuredClasses.add( Timestamp.class );
-    }
+    private Class[] additionalClasses = { Timestamp.class };
+    private UnsecuredSet unsecuredClasses = new UnsecuredSet( additionalClasses );
 
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
