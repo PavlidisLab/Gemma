@@ -45,7 +45,7 @@ Ext.onReady(function() {
 	
 	cm.defaultSortable = false;
  
-	vargrid = new Ext.grid.Grid("auditTrail", {ds:ds, cm:cm, loadMask: true });
+	var grid = new Ext.grid.Grid("auditTrail", {ds:ds, cm:cm, loadMask: true });
 	grid.render();
 	ds.load({params:[g]});
 		
