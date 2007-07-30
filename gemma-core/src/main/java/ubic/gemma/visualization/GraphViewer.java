@@ -297,7 +297,7 @@ public class GraphViewer implements PropertyChangeListener,ActionListener, Windo
 					else node.setString(NODETYPE, "N");
 
 					String goTerms = "";
-					Collection<OntologyTerm> goEntries = linkMatrix.getUtilService().getGoTerms(gene);
+					Collection<OntologyTerm> goEntries = linkMatrix.getUtilService().getGOTerms(gene);
 					for(OntologyTerm ontologyTerm:goEntries){
 						goTerms = goTerms + ontologyTerm.getTerm()+";";
 					}
