@@ -37,8 +37,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 
 public class LinkGOStatsCli extends AbstractSpringAwareCLI {
 	
-	private final static int GO_MAXIMUM_COUNT = 200;
-	private final static int MAXIMUM_LINK_NUM = 100;
+	private final static int GO_MAXIMUM_COUNT = 50;
+	private final static int MAXIMUM_LINK_NUM = 20;
 	private final static int ITERATION_NUM = 100;
 	private final static int CHUNK_NUM = 20;
 	private Probe2ProbeCoexpressionService p2pService = null;
@@ -51,6 +51,8 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
 	private String taxonName = "mouse";
 	private String eeNameFile = null;
 	private Map<Long, Integer> eeIndexMap = new HashMap<Long, Integer>();
+	private Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
+	private Collection<Gene> coveredGenes = new HashSet<Gene>();
 	private int[] goTermsDistribution = null;
 	@Override
 	protected void buildOptions() {
@@ -103,7 +105,7 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         return candidates;
     }
     private void fillingMatrix(Collection<Link> links, ExpressionExperiment ee){
-        Set<Long> csIds = new HashSet<Long>();
+        Collection<Long> csIds = new HashSet<Long>();
         for(Link link:links){
             csIds.add(link.getFirst_design_element_fk());
             csIds.add(link.getSecond_design_element_fk());
@@ -143,13 +145,26 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         int rows = linkCount.rows();
         int cols = linkCount.columns();
         for(int i = 0; i < rows; i++){
+        	if(i%1000 == 0) System.err.println("Current Row: " + i);
         	int[] bits = new int[cols];
         	bits = linkCount.getRowBits(i, bits);
         	for(int j = i+1; j < cols; j++){
                 int bit = bits[j];
                 if(bit > 0){
-                	int goOverlap = linkAnalysisUtilService.computeGOOverlap((Long)linkCount.getRowName(i),(Long)linkCount.getColName(j));
-                    realStats[bit][goOverlap]++;
+                	if(bit >= MAXIMUM_LINK_NUM) bit = MAXIMUM_LINK_NUM - 1;
+                	Gene gene1 = geneMap.get((Long)linkCount.getRowName(i));
+                	Gene gene2 = geneMap.get((Long)linkCount.getRowName(j));
+                	if(gene1 == null || gene2 == null){
+                		log.info("Wrong setting for gene" + (Long)linkCount.getRowName(i) + "\t" + (Long)linkCount.getRowName(j));
+                		continue;
+                	}
+                	int goOverlap = linkAnalysisUtilService.computeGOOverlap(gene1, gene2);
+                	if(!coveredGenes.contains(gene1)) coveredGenes.add(gene1);
+                	if(!coveredGenes.contains(gene2)) coveredGenes.add(gene2);
+                	if(goOverlap >= GO_MAXIMUM_COUNT)
+                		realStats[bit][GO_MAXIMUM_COUNT - 1]++;
+                	else
+                		realStats[bit][goOverlap]++;
                 }
         	}
         }
@@ -171,8 +186,14 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
     	for(int i = 0; i < genes.length; i++){
     		if(genes[i].getId() == shuffledGenes[i].getId()) continue;
         	int goOverlap = linkAnalysisUtilService.computeGOOverlap(genes[i], shuffledGenes[i]);
-            simulatedStats[iterationIndex][goOverlap]++;
-            simulatedStats[ITERATION_NUM/CHUNK_NUM][goOverlap]++;
+        	if(goOverlap >= GO_MAXIMUM_COUNT){
+        		simulatedStats[iterationIndex][GO_MAXIMUM_COUNT - 1]++;
+        		simulatedStats[ITERATION_NUM/CHUNK_NUM][GO_MAXIMUM_COUNT - 1]++;
+        	}
+        	else{
+        		simulatedStats[iterationIndex][goOverlap]++;
+        		simulatedStats[ITERATION_NUM/CHUNK_NUM][goOverlap]++;
+        	}
     	}
     }
     private void output(){
@@ -188,29 +209,37 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         	}
         }
         try{
-            FileWriter out = new FileWriter( new File( "goSimilarity.txt" ) );
-            double culmulative = 0.0;
+            FileWriter out = new FileWriter( new File( "goSimilarity.txt" ));
+            for(int j = 0; j < GO_MAXIMUM_COUNT; j++)
+            	out.write("\t"+j);
+            out.write("\n");
+            //double culmulative = 0.0;
+            int culmulative = 0;
             for(int i = ITERATION_NUM/CHUNK_NUM; i < ITERATION_NUM/CHUNK_NUM + 1; i++){
             	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
-            		culmulative = culmulative + (double)simulatedStats[i][j]/(double)totalSimulatedLinks[i];
-            		out.write(culmulative+"\t");
+            		//culmulative = culmulative + (double)simulatedStats[i][j]/(double)totalSimulatedLinks[i];
+            		culmulative = culmulative + simulatedStats[i][j];
+            		out.write("\t"+culmulative);
             	}
             }
             out.write("\n");
-            for(int i = 1; i < 30; i++){
-            	culmulative = 0.0;
+            for(int i = 1; i < MAXIMUM_LINK_NUM; i++){
+            	culmulative = 0;
+            	out.write("Link_"+i);
             	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
-            		culmulative = culmulative + (double)realStats[i][j]/(double)totalRealLinks[i];
+            		//culmulative = culmulative + (double)realStats[i][j]/(double)totalRealLinks[i];
+            		culmulative = culmulative + realStats[i][j];
             		out.write(culmulative+"\t");
             	}
             	out.write("\n");
             }
             out.write("\nRandom Pair Generation Distribution:\n");
+            double densityCulmulative = 0.0;
             for(int i = 0; i < ITERATION_NUM/CHUNK_NUM + 1; i++){
-            	culmulative = 0.0;
+            	densityCulmulative = 0.0;
             	for(int j = 0; j < GO_MAXIMUM_COUNT; j++){
-            		culmulative = culmulative + (double)simulatedStats[i][j]/(double)totalSimulatedLinks[i];
-            		out.write(culmulative+"\t");
+            		densityCulmulative = densityCulmulative + (double)simulatedStats[i][j]/(double)totalSimulatedLinks[i];
+            		out.write(densityCulmulative+"\t");
             	}
             	out.write("\n");
             }
@@ -218,7 +247,7 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
             int total = 0;
             for(int i = 0; i < GO_MAXIMUM_COUNT; i++)
             	total = total + goTermsDistribution[i];
-            out.write("Go Terms Distribution:\n");
+            out.write("Go Terms Distribution for" + coveredGenes.size() + ":\n");
             for(int i = 0; i < GO_MAXIMUM_COUNT; i++){
             	out.write((double)goTermsDistribution[i]/(double)total + "\t");
             }
@@ -240,21 +269,12 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         Collection <ExpressionExperiment> eeCandidates = getCandidateEE(this.eeNameFile, ees);
         Collection<Gene> allGenes = linkAnalysisUtilService.loadGenes(taxon);
 
+        log.info("Load " + allGenes.size() + " genes");
         
-        Gene[] genes = new Gene[allGenes.size()];
-        int index = 0;
         for(Gene gene:allGenes){
-        	System.err.println(index + "/" + allGenes.size());
-        	genes[index++] = gene;
-        	int goTermsNum = linkAnalysisUtilService.getGoTerms(gene).size();
-        	goTermsDistribution[goTermsNum]++;
+        	geneMap.put(gene.getId(), gene);
         }
-        for(int i = 0; i < ITERATION_NUM; i++){
-        	log.info("Current Iteration: " + i);
-        	Gene[] shuffledGenes = shuffling(genes);
-        	counting(genes, shuffledGenes, (int)(i/CHUNK_NUM));
-        }
-        index = 0;
+        int index = 0;
         for(ExpressionExperiment ee:eeCandidates){
         	eeIndexMap.put(ee.getId(), index);
         	index++;
@@ -272,6 +292,20 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         }
         log.info("Counting the GO terms for real links");
         counting();
+        index = 0;
+        Gene[] genes = new Gene[coveredGenes.size()];
+        for(Gene gene:coveredGenes){
+        	genes[index++] = gene;
+        	int goTermsNum = linkAnalysisUtilService.getGOTerms(gene).size();
+        	if(goTermsNum >= GO_MAXIMUM_COUNT)
+        		goTermsNum = GO_MAXIMUM_COUNT - 1;
+        	goTermsDistribution[goTermsNum]++;
+        }
+        for(int i = 0; i < ITERATION_NUM; i++){
+        	log.info("Current Iteration: " + i);
+        	Gene[] shuffledGenes = shuffling(genes);
+        	counting(genes, shuffledGenes, (int)(i/CHUNK_NUM));
+        }
         log.info("Output");
         output();
 

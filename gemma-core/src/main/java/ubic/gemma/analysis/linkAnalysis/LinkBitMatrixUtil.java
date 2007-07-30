@@ -159,7 +159,7 @@ public class LinkBitMatrixUtil {
         for ( int i = 0; i < counter.size(); i++ )
             counter.add( new Integer( 0 ) );
         for ( Gene gene : genes ) {
-            Collection<OntologyTerm> goEntries = utilService.getGoTerms( gene );
+            Collection<OntologyTerm> goEntries = utilService.getGOTerms( gene );
             for ( OntologyTerm goEntry : goEntries ) {
                 Integer goNum = new Integer( 1 );
                 if ( res.containsKey( goEntry ) ) {
