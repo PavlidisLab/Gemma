@@ -26,6 +26,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -115,5 +117,72 @@ public class GeneDaoTest extends BaseSpringContextTest {
         geneDao.remove( gene );
 
     }
+    
+    public void testLoadGenes(){
+        
+        
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
 
+        Taxon human = taxonSrv.findByCommonName( "human" );
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setName( "Ma_Gene" );
+        gene.setDescription( "Lost in space" );
+        gene.setTaxon( human );
+        geneDao.create( gene );
+
+        Collection genes = geneDao.loadGenes( human );
+        assertNotNull( genes );
+        assertTrue ( genes.contains( gene ) );
+        geneDao.remove( gene );
+        
+    }
+    
+
+    public void testLoadProbeAlignedRegions(){
+        
+        
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+
+        Taxon human = taxonSrv.findByCommonName( "human" );
+
+        Gene gene = ProbeAlignedRegion.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setName( "Ma_pal" );
+        gene.setDescription( "Lost in space" );
+        gene.setTaxon( human );
+        geneDao.create( gene );
+
+        Collection genes = geneDao.loadProbeAlignedRegions(  human );
+        assertNotNull( genes );
+        assertTrue ( genes.contains( gene ) );
+        geneDao.remove( gene );
+        
+    }
+    
+    public void testLoadPredictedGenes(){
+        
+        
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+
+        Taxon human = taxonSrv.findByCommonName( "human" );
+
+        Gene gene = PredictedGene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setName( "Ma_predictedGene" );
+        gene.setDescription( "Lost in space" );
+        gene.setTaxon( human );
+        geneDao.create( gene );
+
+        Collection genes = geneDao.loadPredictedGenes( human );
+        assertNotNull( genes );
+        assertTrue ( genes.contains( gene ) );
+        geneDao.remove( gene );
+        
+    }
+    
 }
