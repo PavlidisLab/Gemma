@@ -31,7 +31,6 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
-import ubic.gemma.analysis.linkAnalysis.EffectSizeService.ExpressionProfile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
