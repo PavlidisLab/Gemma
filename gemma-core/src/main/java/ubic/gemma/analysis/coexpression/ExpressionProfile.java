@@ -59,5 +59,8 @@ public class ExpressionProfile {
 	public Double getRank() {
 		return rank;
 	}
-
+	
+	public double[] getExpressionLevels() {
+		return val;
+	}
 }
