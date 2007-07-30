@@ -103,38 +103,8 @@ public class LinkAnalysisUtilService {
         // nothing to do.
         if ( ( queryGeneTerms1 == null ) || ( queryGeneTerms1.isEmpty() ) ) return null;
         if ( ( queryGeneTerms2 == null ) || ( queryGeneTerms2.isEmpty() ) ) return null;
-        
-
-        
-        Collection<String> termURI = new HashSet<String>();
-        for(OntologyTerm goTerm:queryGeneTerms2){
-        	termURI.add(goTerm.getUri());
-        }
-        Collection<OntologyTerm> overlap = new HashSet<OntologyTerm>();
-        for(OntologyTerm goTerm:queryGeneTerms1){
-        	if(termURI.contains(goTerm.getUri())) overlap.add(goTerm);
-        }
-        queryGeneTerms1.retainAll(queryGeneTerms2);
-        //return queryGeneTerms1;
-//        if(overlap.size() != queryGeneTerms1.size()){
-//        	System.err.print("Overlap "+"\t");
-//        	for(OntologyTerm goTerm:overlap){
-//        		System.err.print(goTerm.getUri() + "\t");
-//        	}
-//        	System.err.println();
-//        	System.err.print("RetainAll "+"\t");
-//        	for(OntologyTerm goTerm:queryGeneTerms1){
-//        		System.err.print(goTerm.getUri() + "\t");
-//        	}
-//        	System.err.println();
-//        	
-//        	System.err.print("QueryTerm2 "+"\t");
-//        	for(OntologyTerm goTerm:queryGeneTerms2){
-//        		System.err.print(goTerm.getUri() + "\t");
-//        	}
-//        	System.err.println();
-//        	System.exit(0);
-//        }
+        Collection<OntologyTerm> overlap = new HashSet<OntologyTerm>(queryGeneTerms1);
+        overlap.retainAll(queryGeneTerms2);
         return overlap;
     }
 

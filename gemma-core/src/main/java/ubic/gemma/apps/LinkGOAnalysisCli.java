@@ -113,7 +113,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
        		Collection<Long> firstGeneIds =cs2genes.get( link.getFirst_design_element_fk() );
        		Collection<Long> secondGeneIds =cs2genes.get( link.getSecond_design_element_fk() );
             if(firstGeneIds == null || secondGeneIds == null){
-            	log.info(" Preparation is not correct (get null genes) " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
+            	//log.info(" Preparation is not correct (get null genes) " + link.getFirst_design_element_fk() + "," + link.getSecond_design_element_fk());
             	continue;
             }
 //            if(firstGeneIds.size() != 1 || secondGeneIds.size() != 1){
@@ -217,7 +217,21 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
     private void output(){
         try{
             FileWriter out = new FileWriter( new File( "analysis.txt" ));
-            
+            out.write("Real GO Stats:\n");
+            for(int i = 0; i < realStats.length; i++){
+            	for(int j = 0; j < realStats[i].length; j++){
+            		out.write(realStats[i][j]+"\t");
+            	}
+            	out.write("\n");
+            }
+            out.write("Simulate GO Stats:\n");
+            for(int i = 0; i < realStats.length; i++){
+            	for(int j = 0; j < realStats[i].length; j++){
+            		out.write(realStats[i][j]+"\t");
+            	}
+            	out.write("\n");
+            }
+
             output(realStats, "realGODist.png");
             output(simulatedStats, "simulateGODist.png");
             
@@ -253,7 +267,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         
         for(ExpressionExperiment ee:eeCandidates){
         	log.info("Shuffling " + ee.getShortName() );
-        	Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
+        	Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, false );
         	coveredGenes = new HashSet<Gene>();
 //        	Collection<Link> tmpLinks = new HashSet<Link>();
 //        	int num = 0;
