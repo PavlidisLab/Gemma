@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.Format;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,23 +18,18 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import com.ibm.icu.text.NumberFormat;
-
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
-import ubic.gemma.analysis.linkAnalysis.TreeNode;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGeneImpl;
-import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
-import ubic.gemma.web.util.LinkUtils;
+
+import com.ibm.icu.text.NumberFormat;
 
 public class ShuffleLinksCli extends AbstractSpringAwareCLI {
 	
