@@ -125,6 +125,11 @@ public class SimpleExpressionDataLoaderService {
 
         QuantitationType quantitationType = convertQuantitationType( metaData );
 
+        /* set the quantitation types on the experiment */
+        Collection<QuantitationType> qTypes = new HashSet<QuantitationType>();
+        qTypes.add( quantitationType );
+        experiment.setQuantitationTypes( qTypes );
+
         Collection<ArrayDesign> arrayDesigns = convertArrayDesigns( metaData, matrix );
 
         // Divide up multiple array designs into multiple BioAssayDimensions.
