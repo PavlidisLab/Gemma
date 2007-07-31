@@ -21,6 +21,7 @@ package ubic.gemma.security;
 import java.util.HashSet;
 
 import ubic.gemma.model.association.RelationshipImpl;
+import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.common.description.LocalFileImpl;
@@ -38,10 +39,10 @@ import ubic.gemma.model.genome.gene.GeneAliasImpl;
 import ubic.gemma.model.genome.gene.GeneProductImpl;
 
 /**
- * A datastructure to hold unsecured classes. These classes either do not implement Serializable or do not have acl
+ * A datastructure to hold unsecured classes. These classes either do not implement {@link Securable} or do not have acl
  * permissions applied to them directly.
  * <p>
- * Example: reporter - we secure the ArrayDesign, but not the CompositeSequence.
+ * Example: We secure the ArrayDesign, but not the CompositeSequence.
  * 
  * @author keshav
  * @version $Id$
