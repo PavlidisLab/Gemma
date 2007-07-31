@@ -136,41 +136,41 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 		}
 
 		Collection<GenePair> genePairs;
-		if (geneSymbols != null) {
-			genePairs = effectSizeService.pairCoexpressedGenesByOfficialSymbol(
-					geneSymbols, taxon, EEs, stringency);
-		} else if (geneListFile != null) {
-			try {
-				genePairs = effectSizeService
-						.pairCoexpressedGenesByOfficialSymbol(geneListFile,
-								taxon, EEs, stringency);
-			} catch (IOException e) {
-				return e;
-			}
-		} else if (goTerm != null) {
-			genePairs = effectSizeService.pairCoexpressedGenesByGOTerm(goTerm,
-					taxon, EEs, stringency);
-		} else {
-			return new Exception("No genes to pair");
-		}
+//		if (geneSymbols != null) {
+//			genePairs = effectSizeService.pairCoexpressedGenesByOfficialSymbol(
+//					geneSymbols, taxon, EEs, stringency);
+//		} else if (geneListFile != null) {
+//			try {
+//				genePairs = effectSizeService
+//						.pairCoexpressedGenesByOfficialSymbol(geneListFile,
+//								taxon, EEs, stringency);
+//			} catch (IOException e) {
+//				return e;
+//			}
+//		} else if (goTerm != null) {
+//			genePairs = effectSizeService.pairCoexpressedGenesByGOTerm(goTerm,
+//					taxon, EEs, stringency);
+//		} else {
+//			return new Exception("No genes to pair");
+//		}
 
-		if (genePairs == null || genePairs.size() == 0)
-			return new Exception("No genes paired");
+//		if (genePairs == null || genePairs.size() == 0)
+//			return new Exception("No genes paired");
 
-		effectSizeService.calculateEffectSize(EEs, genePairs);
-
-		try {
-			effectSizeService.saveCorrelationsToFile(outFilePrefix
-					+ ".corr.txt", genePairs, EEs, true, true);
-			effectSizeService.saveCorrelationsToFigure(outFilePrefix
-					+ ".corr.png", genePairs, EEs);
-			effectSizeService.saveExprLevelToFile(outFilePrefix
-					+ ".expr_lvl.txt", genePairs, EEs, true, true);
-			effectSizeService.saveExprProfilesToFile(
-					outFilePrefix + ".eps.txt", genePairs, EEs);
-		} catch (IOException e) {
-			return e;
-		}
+//		effectSizeService.calculateEffectSize(EEs, genePairs);
+//
+//		try {
+//			effectSizeService.saveCorrelationsToFile(outFilePrefix
+//					+ ".corr.txt", genePairs, EEs, true, true);
+//			effectSizeService.saveCorrelationsToFigure(outFilePrefix
+//					+ ".corr.png", genePairs, EEs);
+//			effectSizeService.saveExprLevelToFile(outFilePrefix
+//					+ ".expr_lvl.txt", genePairs, EEs, true, true);
+//			effectSizeService.saveExprProfilesToFile(
+//					outFilePrefix + ".eps.txt", genePairs, EEs);
+//		} catch (IOException e) {
+//			return e;
+//		}
 
 		return null;
 	}

@@ -112,27 +112,27 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 				EEs.add(ee);
 			}
 		}
-		try {
-			genePairs = effectSizeService.pairGenesByOfficialSymbolFromFiles(
-					geneListFile, partnerGeneListFile, taxon);
-		} catch (IOException e) {
-			return e;
-		}
-
-		effectSizeService.calculateEffectSize(EEs, genePairs);
-
-		try {
-			effectSizeService.saveCorrelationsToFile(outFilePrefix
-					+ ".corr.txt", genePairs, EEs, false, false);
-			effectSizeService.saveMaxCorrelationsToFile(outFilePrefix
-					+ ".max_corr.txt", genePairs, EEs, false, false);
-			effectSizeService.saveExprLevelToFile(outFilePrefix
-					+ ".expr_lvl.txt", genePairs, EEs, false, false);
-			effectSizeService.saveExprProfilesToFile(
-					outFilePrefix + ".eps.txt", genePairs, EEs);
-		} catch (IOException e) {
-			return e;
-		}
+//		try {
+//			genePairs = effectSizeService.pairGenesByOfficialSymbolFromFiles(
+//					geneListFile, partnerGeneListFile, taxon);
+//		} catch (IOException e) {
+//			return e;
+//		}
+//
+//		effectSizeService.calculateEffectSize(EEs, genePairs);
+//
+//		try {
+//			effectSizeService.saveCorrelationsToFile(outFilePrefix
+//					+ ".corr.txt", genePairs, EEs, false, false);
+//			effectSizeService.saveMaxCorrelationsToFile(outFilePrefix
+//					+ ".max_corr.txt", genePairs, EEs, false, false);
+//			effectSizeService.saveExprLevelToFile(outFilePrefix
+//					+ ".expr_lvl.txt", genePairs, EEs, false, false);
+//			effectSizeService.saveExprProfilesToFile(
+//					outFilePrefix + ".eps.txt", genePairs, EEs);
+//		} catch (IOException e) {
+//			return e;
+//		}
 
 		return null;
 	}
