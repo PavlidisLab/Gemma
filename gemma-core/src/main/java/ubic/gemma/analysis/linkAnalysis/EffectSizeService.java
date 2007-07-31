@@ -2,7 +2,6 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,9 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,10 +24,10 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
-import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
+import ubic.gemma.analysis.coexpression.CorrelationMatrix;
+import ubic.gemma.analysis.coexpression.ExpressionProfile;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -71,8 +68,6 @@ public class EffectSizeService {
 
 	private GeneOntologyService goService;
 
-	private ByteArrayConverter bac;
-
 	private static Log log = LogFactory.getLog(EffectSizeService.class
 			.getName());
 
@@ -81,6 +76,8 @@ public class EffectSizeService {
 	private static final String CORRELATION = "correlation";
 
 	private static final String MAX_CORR = "max correlation";
+
+	protected static final int MIN_EP_NUM_SAMPLES = 3;
 
 	/**
 	 * Minimum number of expression experiments for calculating the correlation
@@ -118,20 +115,6 @@ public class EffectSizeService {
 	 */
 	public EffectSizeService() {
 		metaAnalysis = new CorrelationEffectMetaAnalysis(true, false);
-		bac = new ByteArrayConverter();
-	}
-
-	public Collection<GenePair> pairGenesByOfficialSymbolFromFiles(
-			String queryGeneFileName, String targetGeneFileName, Taxon taxon)
-			throws IOException {
-		Collection<Long> queryGeneIds = readGeneListFile(queryGeneFileName,
-				taxon);
-		log.info("Read " + queryGeneIds.size() + " query genes");
-		Collection<Long> targetGeneIds = readGeneListFile(targetGeneFileName,
-				taxon);
-		log.info("Read " + targetGeneIds.size() + " target genes");
-
-		return pairGenesById(queryGeneIds, targetGeneIds);
 	}
 
 	public Collection<Long> readGeneListFile(String fileName, Taxon taxon)
@@ -152,75 +135,6 @@ public class EffectSizeService {
 			}
 		}
 		return geneIds;
-	}
-
-	public Collection<GenePair> pairGenes(Collection<Gene> queryGenes,
-			Collection<Gene> targetGenes) {
-		Collection<GenePair> genePairs = new ArrayList<GenePair>();
-		for (Gene qGene : queryGenes) {
-			for (Gene tGene : targetGenes) {
-				genePairs.add(new GenePair(qGene.getId(), tGene.getId()));
-			}
-		}
-		return genePairs;
-	}
-
-	public Collection<GenePair> pairGenesById(Collection<Long> queryGeneIds,
-			Collection<Long> targetGeneIds) {
-		Collection<GenePair> genePairs = new ArrayList<GenePair>();
-		for (Long qGeneId : queryGeneIds) {
-			for (Long tGeneId : targetGeneIds) {
-				genePairs.add(new GenePair(qGeneId, tGeneId));
-			}
-		}
-		return genePairs;
-	}
-
-	/**
-	 * Pair specified genes with coexpressed genes
-	 * 
-	 * @param geneSymbols -
-	 *            official gene symbols
-	 * @param taxon -
-	 *            taxon of genes
-	 * @param EEs -
-	 *            expression experiments
-	 * @param stringency -
-	 *            minimum support for coexpressed genes
-	 * @return - set of gene pairs
-	 */
-	public Collection<GenePair> pairCoexpressedGenesByOfficialSymbol(
-			String[] geneSymbols, Taxon taxon,
-			Collection<ExpressionExperiment> EEs, int stringency) {
-		Collection<Gene> genes = new HashSet<Gene>();
-		for (String geneSymbol : geneSymbols) {
-			Collection<Gene> c = (Collection<Gene>) geneService
-					.findByOfficialSymbol(geneSymbol);
-			for (Gene gene : c) {
-				if (gene.getTaxon().equals(taxon)) {
-					genes.add(gene);
-				}
-			}
-		}
-		return pairCoexpressedGenes(genes, EEs, stringency);
-	}
-
-	/**
-	 * Pair specified gene IDs with coexpressed genes
-	 * 
-	 * @param genes -
-	 *            genes to pair
-	 * @param EEs -
-	 *            expression experiments
-	 * @param stringency -
-	 *            minimum support for coexpressed genes
-	 * @return - set of gene pairs
-	 */
-	public Collection<GenePair> pairCoexpressedGenesById(
-			Collection<Long> geneIds, Collection<ExpressionExperiment> EEs,
-			int stringency) {
-		Collection<Gene> genes = (Collection<Gene>) geneService.load(geneIds);
-		return pairCoexpressedGenes(genes, EEs, stringency);
 	}
 
 	/**
@@ -264,37 +178,6 @@ public class EffectSizeService {
 	}
 
 	/**
-	 * Pair the genes specified in a file (separated with new lines) with
-	 * coexpressed genes
-	 * 
-	 * @param geneListFileName -
-	 *            list of genes to pair
-	 * @param taxon -
-	 *            taxon of genes
-	 * @param EEs -
-	 *            expression experiments
-	 * @param stringency -
-	 *            minimum support of coexpressed genes
-	 * @return set of gene pairs
-	 * @throws IOException
-	 */
-	public Collection<GenePair> pairCoexpressedGenesByOfficialSymbol(
-			String geneListFileName, Taxon taxon,
-			Collection<ExpressionExperiment> EEs, int stringency)
-			throws IOException {
-		List<String> geneSymbols = new ArrayList<String>();
-		BufferedReader in = new BufferedReader(new FileReader(geneListFileName));
-		String line;
-		while ((line = in.readLine()) != null) {
-			geneSymbols.add(line.trim());
-		}
-		String[] geneSymbolStrings = new String[geneSymbols.size()];
-		geneSymbols.toArray(geneSymbolStrings);
-		return pairCoexpressedGenesByOfficialSymbol(geneSymbolStrings, taxon,
-				EEs, stringency);
-	}
-
-	/**
 	 * Pair the matching the GO term with coexpressed genes
 	 * 
 	 * @param geneListFile -
@@ -321,149 +204,106 @@ public class EffectSizeService {
 		return (genes == null) ? null : pairCoexpressedGenes(genes, EEs,
 				stringency);
 	}
+//
+//	public void saveCorrelationsToFigure(String figureFileName,
+//			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs)
+//			throws IOException {
+//		saveToFigure(figureFileName, genePairs, EEs, CORRELATION);
+//	}
+//
+//	public void saveExprLevelToFigure(String figureFileName,
+//			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs)
+//			throws IOException {
+//		saveToFigure(figureFileName, genePairs, EEs, EXPR_LEVEL);
+//	}
+//
+//	public void saveCorrelationsToFile(String fileName,
+//			Collection<GenePair> genePairs,
+//			Collection<ExpressionExperiment> EEs, boolean linkCount,
+//			boolean effectSize) throws IOException {
+//		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, CORRELATION);
+//	}
+//
+//	public void saveMaxCorrelationsToFile(String fileName,
+//			Collection<GenePair> genePairs,
+//			Collection<ExpressionExperiment> EEs, boolean linkCount,
+//			boolean effectSize) throws IOException {
+//		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, MAX_CORR);
+//	}
+//
+//	public void saveExprLevelToFile(String fileName,
+//			Collection<GenePair> genePairs,
+//			Collection<ExpressionExperiment> EEs, boolean linkCount,
+//			boolean effectSize) throws IOException {
+//		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, EXPR_LEVEL);
+//	}
 
-	/**
-	 * Calculate the effect size for each gene pair from the specified
-	 * expression experiments
-	 * 
-	 * @param EEs -
-	 *            expression experiments
-	 * @param genePairs -
-	 *            gene pairs
-	 */
-	public void calculateEffectSize(Collection<ExpressionExperiment> EEs,
-			Collection<GenePair> genePairs) {
-		Map<Long, Integer> eeSampleSizeMap = calculateCorrelations(EEs,
-				genePairs);
+//	/**
+//	 * Save expression profiles to the specified file. Requires reading
+//	 * expression profiles for each gene pair, which may take a while.
+//	 * 
+//	 * @param fileName -
+//	 *            file to save to
+//	 * @param genePairs -
+//	 *            gene pairs to save
+//	 * @param EEs -
+//	 *            expression experiments
+//	 * @throws IOException
+//	 */
+//	public void saveExprProfilesToFile(String fileName,
+//			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs)
+//			throws IOException {
+//		log.info("Saving expression profiles to " + fileName);
+//		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
+//		BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
+//		for (GenePair genePair : genePairs) {
+//			Gene gene1 = geneMap.get(genePair.getFirstId());
+//			Gene gene2 = geneMap.get(genePair.getSecondId());
+//			for (ExpressionExperiment EE : EEs) {
+//				long eeId = EE.getId();
+//				Long dedvId1 = genePair.getFirstDedvId(eeId);
+//				Long dedvId2 = genePair.getSecondDedvId(eeId);
+//				if (dedvId1 == null || dedvId2 == null)
+//					continue;
+//				DesignElementDataVector dedv1 = dedvService.load(dedvId1);
+//				DesignElementDataVector dedv2 = dedvService.load(dedvId2);
+//				ExpressionProfile ep1 = new ExpressionProfile(dedv1);
+//				ExpressionProfile ep2 = new ExpressionProfile(dedv2);
+//
+//				String line = gene1.getOfficialSymbol() + ":"
+//						+ gene2.getOfficialSymbol() + "\t" + EE.getShortName()
+//						+ "\t" + genePair.getCorrelation(eeId) + "\n";
+//				out.write(line);
+//				line = ep1.getId() + "";
+//				for (double d : ep1.getExpressionLevels()) {
+//					line += "\t" + d;
+//				}
+//				line += "\n";
+//				out.write(line);
+//				line = ep2.getId() + "";
+//				for (double d : ep2.getExpressionLevels()) {
+//					line += "\t" + d;
+//				}
+//				line += "\n";
+//				out.write(line);
+//				out.flush();
+//			}
+//		}
+//		out.close();
+//		log.info("Finished saving expression profiles");
+//	}
 
-		StopWatch watch = new StopWatch();
-		watch.start();
-		log.debug("Start computing effect size for " + genePairs.size()
-				+ " gene pairs");
-		for (GenePair pair : genePairs) {
-			DoubleArrayList correlations = new DoubleArrayList();
-			DoubleArrayList sampleSizes = new DoubleArrayList();
-			for (ExpressionExperiment ee : EEs) {
-				Integer sampleSize = eeSampleSizeMap.get(ee.getId());
-				Double corr = pair.getCorrelation(ee.getId());
-				if (sampleSize != null && corr != null) {
-					sampleSizes.add(sampleSize);
-					correlations.add(corr);
-				}
-			}
-			metaAnalysis.run(correlations, sampleSizes);
-			double effectSize = metaAnalysis.getE();
-			pair.setEffectSize(effectSize);
-		}
-		watch.stop();
-		log.info("Computed effect size of " + genePairs.size()
-				+ " genes pairs in " + watch.getTime() + " ms");
-	}
-
-	public void saveCorrelationsToFigure(String figureFileName,
-			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs)
-			throws IOException {
-		saveToFigure(figureFileName, genePairs, EEs, CORRELATION);
-	}
-
-	public void saveExprLevelToFigure(String figureFileName,
-			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs)
-			throws IOException {
-		saveToFigure(figureFileName, genePairs, EEs, EXPR_LEVEL);
-	}
-
-	public void saveCorrelationsToFile(String fileName,
-			Collection<GenePair> genePairs,
-			Collection<ExpressionExperiment> EEs, boolean linkCount,
-			boolean effectSize) throws IOException {
-		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, CORRELATION);
-	}
-
-	public void saveMaxCorrelationsToFile(String fileName,
-			Collection<GenePair> genePairs,
-			Collection<ExpressionExperiment> EEs, boolean linkCount,
-			boolean effectSize) throws IOException {
-		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, MAX_CORR);
-	}
-
-	public void saveExprLevelToFile(String fileName,
-			Collection<GenePair> genePairs,
-			Collection<ExpressionExperiment> EEs, boolean linkCount,
-			boolean effectSize) throws IOException {
-		saveToFile(fileName, genePairs, EEs, linkCount, effectSize, EXPR_LEVEL);
-	}
-
-	/**
-	 * Save expression profiles to the specified file. Requires reading
-	 * expression profiles for each gene pair, which may take a while.
-	 * 
-	 * @param fileName -
-	 *            file to save to
-	 * @param genePairs -
-	 *            gene pairs to save
-	 * @param EEs -
-	 *            expression experiments
-	 * @throws IOException
-	 */
-	public void saveExprProfilesToFile(String fileName,
-			Collection<GenePair> genePairs, Collection<ExpressionExperiment> EEs)
-			throws IOException {
-		log.info("Saving expression profiles to " + fileName);
-		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
-		BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
-		for (GenePair genePair : genePairs) {
-			Gene gene1 = geneMap.get(genePair.getFirstId());
-			Gene gene2 = geneMap.get(genePair.getSecondId());
-			for (ExpressionExperiment EE : EEs) {
-				long eeId = EE.getId();
-				Long dedvId1 = genePair.getFirstDedvId(eeId);
-				Long dedvId2 = genePair.getSecondDedvId(eeId);
-				if (dedvId1 == null || dedvId2 == null)
-					continue;
-				DesignElementDataVector dedv1 = dedvService.load(dedvId1);
-				DesignElementDataVector dedv2 = dedvService.load(dedvId2);
-				ExpressionProfile ep1 = new ExpressionProfile(dedv1);
-				ExpressionProfile ep2 = new ExpressionProfile(dedv2);
-
-				String line = gene1.getOfficialSymbol() + ":"
-						+ gene2.getOfficialSymbol() + "\t" + EE.getShortName()
-						+ "\t" + genePair.getCorrelation(eeId) + "\n";
-				out.write(line);
-				line = ep1.getId() + "";
-				for (double d : ep1.val) {
-					line += "\t" + d;
-				}
-				line += "\n";
-				out.write(line);
-				line = ep2.getId() + "";
-				for (double d : ep2.val) {
-					line += "\t" + d;
-				}
-				line += "\n";
-				out.write(line);
-				out.flush();
-			}
-		}
-		out.close();
-		log.info("Finished saving expression profiles");
-	}
-
-	private Collection<ExpressionExperiment> filterExpressionExperiments(
-			Collection<ExpressionExperiment> EEs, Collection<GenePair> genePairs) {
+	private Collection<Long> filterExpressionExperiments(
+			CorrelationMatrix correlationMatrix) {
 		log.info("Filtering expression experiments...");
-		Collection<ExpressionExperiment> filteredEEs = new HashSet<ExpressionExperiment>(
-				EEs.size());
-		for (ExpressionExperiment EE : EEs) {
-			for (GenePair genePair : genePairs) {
-				if (genePair.getCorrelation(EE.getId()) != null) {
-					filteredEEs.add(EE);
-					break;
-				}
-			}
+		Collection<Long> filteredEeIds = new HashSet<Long>(
+				correlationMatrix.getNumExpressionExperiments());
+		for (Long eeId : correlationMatrix.getExpressionExperimentIds()) {
+			if (correlationMatrix.hasCorrelation(eeId))
+    			filteredEeIds.add(eeId);
 		}
-		log.info("Filtered out " + (EEs.size() - filteredEEs.size())
-				+ " expression experiments");
-		return filteredEEs;
+		log.info(filteredEeIds.size() + " of " + correlationMatrix.getNumExpressionExperiments() + " passed");
+		return filteredEeIds;
 	}
 
 	private Collection<GenePair> filterGenePairs(
@@ -491,185 +331,167 @@ public class EffectSizeService {
 		return filteredGenePairs;
 	}
 
-	private void saveToFile(String fileName, Collection<GenePair> genePairs,
-			Collection<ExpressionExperiment> EEs, boolean linkCount,
-			boolean effectSize, String type) throws IOException {
-		DecimalFormat formatter = new DecimalFormat("0.0000");
-		log.info("Saving " + type + " data to " + fileName);
-		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
-		// filter output
-		EEs = filterExpressionExperiments(EEs, genePairs);
-		genePairs = filterGenePairs(genePairs, geneMap);
-
-		BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
-		String header = "GenePair";
-		if (linkCount)
-			header += "\tLinkCount";
-		if (effectSize)
-			header += "\tEffectSize";
-		if (type == MAX_CORR) {
-			header += "\tMaxCorrelation";
-			header += "\tNumExpressionExpts";
-		} else {
-			for (ExpressionExperiment EE : EEs)
-				header += "\t" + EE.getShortName();
-		}
-		header += "\n";
-		out.write(header);
-
-		for (GenePair genePair : genePairs) {
-			Gene gene1 = geneMap.get(genePair.getFirstId());
-			Gene gene2 = geneMap.get(genePair.getSecondId());
-			String line = gene1.getOfficialSymbol() + ":"
-					+ gene2.getOfficialSymbol();
-			if (linkCount)
-				line += "\t" + genePair.getLinkCount();
-			if (effectSize)
-				line += "\t" + formatter.format(genePair.getEffectSize());
-			if (type == MAX_CORR) {
-				Double maxCorr = genePair.getMaxCorrelation();
-				if (maxCorr != null) {
-					line += "\t" + formatter.format(maxCorr);
-					line += "\t" + genePair.getNumExpressionExperiments();
-				} else {
-					line += "\tNA\tNA";
-				}
-			} else {
-				for (ExpressionExperiment EE : EEs) {
-					line += "\t";
-					Double corr = genePair.getCorrelation(EE.getId());
-					if (type == EXPR_LEVEL) {
-						Double exprLvl = getExpressionLevel(genePair, EE
-								.getId());
-						if (exprLvl != null) {
-							line += formatter.format(exprLvl);
-						}
-					} else if (type == CORRELATION && corr != null) {
-						line += formatter.format(corr);
-					}
-				}
-			}
-			line += "\n";
-			out.write(line);
-			out.flush();
-		}
-		log.info("Finished saving " + type + " data");
-
-		out.close();
-	}
-
-	/**
-	 * Load the design element data vectors required to get the expression level
-	 * for the specified gene pair
-	 * 
-	 * @param genePair -
-	 *            gene pair
-	 * @param eeId -
-	 *            expresssion experiment ID
-	 * @return (average) expression level for that gene pair
-	 */
-	private Double getExpressionLevel(GenePair genePair, long eeId) {
-		Long dedvId1 = genePair.getFirstDedvId(eeId);
-		Long dedvId2 = genePair.getSecondDedvId(eeId);
-		if (dedvId1 == null || dedvId2 == null) {
-			return null;
-		}
-		DesignElementDataVector dedv1 = dedvService.load(dedvId1);
-		DesignElementDataVector dedv2 = dedvService.load(dedvId2);
-		if (dedv1.getRank() != null && dedv2.getRank() != null) {
-			Double exprLvl = (dedv1.getRank() + dedv2.getRank()) / 2;
-			return exprLvl;
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * Save the gene pairs as a figure to the specified file name
-	 * 
-	 * @param figureFileName -
-	 *            file name
-	 * @param numGenePairsToSave -
-	 *            number of gene pairs to save
-	 * @param genePairs -
-	 *            gene pair list
-	 * @param EEs -
-	 *            expression experiment list
-	 * @param figureType -
-	 *            type of figure to save
-	 * @throws IOException
-	 */
-	private void saveToFigure(String figureFileName,
-			Collection<GenePair> genePairs,
-			Collection<ExpressionExperiment> EEs, String figureType)
-			throws IOException {
-		log.info("Saving " + figureType + " image to " + figureFileName);
-		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
-		EEs = filterExpressionExperiments(EEs, genePairs);
-		genePairs = filterGenePairs(genePairs, geneMap);
-
-		ArrayList<GenePair> sortedGenePairs = new ArrayList<GenePair>(genePairs);
-		Collections.sort(sortedGenePairs);
-		double[][] data = new double[sortedGenePairs.size()][EEs.size()];
-		List<String> rowLabels = new ArrayList<String>();
-		List<String> colLabels = new ArrayList<String>();
-		for (ExpressionExperiment ee : EEs) {
-			colLabels.add(ee.getShortName());
-		}
-		for (GenePair genePair : sortedGenePairs) {
-			Gene gene1 = geneMap.get(genePair.getFirstId());
-			Gene gene2 = geneMap.get(genePair.getSecondId());
-			rowLabels.add(gene1.getOfficialSymbol() + "_"
-					+ gene2.getOfficialSymbol());
-
-		}
-		DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed(data);
-		dataMatrix.setRowNames(rowLabels);
-		dataMatrix.setColumnNames(colLabels);
-
-		for (GenePair genePair : sortedGenePairs) {
-			String rowName = geneMap.get(genePair.getFirstId())
-					.getOfficialSymbol()
-					+ "_"
-					+ geneMap.get(genePair.getSecondId()).getOfficialSymbol();
-			int rowIndex = dataMatrix.getRowIndexByName(rowName);
-			for (ExpressionExperiment ee : EEs) {
-				String colName = ee.getShortName();
-				int colIndex = dataMatrix.getColIndexByName(colName);
-				Double corr = genePair.getCorrelation(ee.getId());
-				if (figureType == CORRELATION && corr != null) {
-					dataMatrix.setQuick(rowIndex, colIndex, corr);
-				} else if (figureType == EXPR_LEVEL) {
-					Double exprLvl = getExpressionLevel(genePair, ee.getId());
-					if (exprLvl != null)
-						dataMatrix.setQuick(rowIndex, colIndex, exprLvl);
-				}
-			}
-		}
-		ColorMatrix dataColorMatrix = new ColorMatrix(dataMatrix);
-		dataColorMatrix.setColorMap(ColorMap.GREENRED_COLORMAP);
-		JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay(dataColorMatrix);
-		dataMatrixDisplay.saveImage(figureFileName, true);
-		log.info("Finished saving " + figureType + " image");
-	}
-
-	/**
-	 * Create and return a gene ID to gene map from a collection of gene pairs
-	 * 
-	 * @param genePairs -
-	 *            gene pairs
-	 * @return gene ID to gene map
-	 */
-	private Map<Long, Gene> getGeneMapFromGenePairs(
-			Collection<GenePair> genePairs) {
-		Collection<Long> geneIDs = new ArrayList<Long>();
-		for (GenePair genePair : genePairs) {
-			geneIDs.add(genePair.getFirstId());
-			geneIDs.add(genePair.getSecondId());
-		}
-		return getGeneMapFromIDs(geneIDs);
-
-	}
+//	private void saveToFile(String fileName, Collection<GenePair> genePairs,
+//			Collection<ExpressionExperiment> EEs, boolean linkCount,
+//			boolean effectSize, String type) throws IOException {
+//		DecimalFormat formatter = new DecimalFormat("0.0000");
+//		log.info("Saving " + type + " data to " + fileName);
+//		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
+//		// filter output
+//		EEs = filterExpressionExperiments(EEs, genePairs);
+//		genePairs = filterGenePairs(genePairs, geneMap);
+//
+//		BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
+//		String header = "GenePair";
+//		if (linkCount)
+//			header += "\tLinkCount";
+//		if (effectSize)
+//			header += "\tEffectSize";
+//		if (type == MAX_CORR) {
+//			header += "\tMaxCorrelation";
+//			header += "\tNumExpressionExpts";
+//		} else {
+//			for (ExpressionExperiment EE : EEs)
+//				header += "\t" + EE.getShortName();
+//		}
+//		header += "\n";
+//		out.write(header);
+//
+//		for (GenePair genePair : genePairs) {
+//			Gene gene1 = geneMap.get(genePair.getFirstId());
+//			Gene gene2 = geneMap.get(genePair.getSecondId());
+//			String line = gene1.getOfficialSymbol() + ":"
+//					+ gene2.getOfficialSymbol();
+//			if (linkCount)
+//				line += "\t" + genePair.getLinkCount();
+//			if (effectSize)
+//				line += "\t" + formatter.format(genePair.getEffectSize());
+//			if (type == MAX_CORR) {
+//				Double maxCorr = genePair.getMaxCorrelation();
+//				if (maxCorr != null) {
+//					line += "\t" + formatter.format(maxCorr);
+//					line += "\t" + genePair.getNumExpressionExperiments();
+//				} else {
+//					line += "\tNA\tNA";
+//				}
+//			} else {
+//				for (ExpressionExperiment EE : EEs) {
+//					line += "\t";
+//					Double corr = genePair.getCorrelation(EE.getId());
+//					if (type == EXPR_LEVEL) {
+//						Double exprLvl = getExpressionLevel(genePair, EE
+//								.getId());
+//						if (exprLvl != null) {
+//							line += formatter.format(exprLvl);
+//						}
+//					} else if (type == CORRELATION && corr != null) {
+//						line += formatter.format(corr);
+//					}
+//				}
+//			}
+//			line += "\n";
+//			out.write(line);
+//			out.flush();
+//		}
+//		log.info("Finished saving " + type + " data");
+//
+//		out.close();
+//	}
+//
+//	/**
+//	 * Load the design element data vectors required to get the expression level
+//	 * for the specified gene pair
+//	 * 
+//	 * @param genePair -
+//	 *            gene pair
+//	 * @param eeId -
+//	 *            expresssion experiment ID
+//	 * @return (average) expression level for that gene pair
+//	 */
+//	private Double getExpressionLevel(GenePair genePair, long eeId) {
+//		Long dedvId1 = genePair.getFirstDedvId(eeId);
+//		Long dedvId2 = genePair.getSecondDedvId(eeId);
+//		if (dedvId1 == null || dedvId2 == null) {
+//			return null;
+//		}
+//		DesignElementDataVector dedv1 = dedvService.load(dedvId1);
+//		DesignElementDataVector dedv2 = dedvService.load(dedvId2);
+//		if (dedv1.getRank() != null && dedv2.getRank() != null) {
+//			Double exprLvl = (dedv1.getRank() + dedv2.getRank()) / 2;
+//			return exprLvl;
+//		} else {
+//			return null;
+//		}
+//	}
+//
+//	/**
+//	 * Save the gene pairs as a figure to the specified file name
+//	 * 
+//	 * @param figureFileName -
+//	 *            file name
+//	 * @param numGenePairsToSave -
+//	 *            number of gene pairs to save
+//	 * @param genePairs -
+//	 *            gene pair list
+//	 * @param EEs -
+//	 *            expression experiment list
+//	 * @param figureType -
+//	 *            type of figure to save
+//	 * @throws IOException
+//	 */
+//	private void saveToFigure(String figureFileName,
+//			CorrelationMatrix correlationMatrix,
+//			Collection<ExpressionExperiment> EEs, String figureType)
+//			throws IOException {
+//		log.info("Saving " + figureType + " image to " + figureFileName);
+//		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
+//		EEs = filterExpressionExperiments(EEs, genePairs);
+//		genePairs = filterGenePairs(genePairs, geneMap);
+//
+//		ArrayList<GenePair> sortedGenePairs = new ArrayList<GenePair>(genePairs);
+//		Collections.sort(sortedGenePairs);
+//		double[][] data = new double[sortedGenePairs.size()][EEs.size()];
+//		List<String> rowLabels = new ArrayList<String>();
+//		List<String> colLabels = new ArrayList<String>();
+//		for (ExpressionExperiment ee : EEs) {
+//			colLabels.add(ee.getShortName());
+//		}
+//		for (GenePair genePair : sortedGenePairs) {
+//			Gene gene1 = geneMap.get(genePair.getFirstId());
+//			Gene gene2 = geneMap.get(genePair.getSecondId());
+//			rowLabels.add(gene1.getOfficialSymbol() + "_"
+//					+ gene2.getOfficialSymbol());
+//
+//		}
+//		DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed(data);
+//		dataMatrix.setRowNames(rowLabels);
+//		dataMatrix.setColumnNames(colLabels);
+//
+//		for (GenePair genePair : sortedGenePairs) {
+//			String rowName = geneMap.get(genePair.getFirstId())
+//					.getOfficialSymbol()
+//					+ "_"
+//					+ geneMap.get(genePair.getSecondId()).getOfficialSymbol();
+//			int rowIndex = dataMatrix.getRowIndexByName(rowName);
+//			for (ExpressionExperiment ee : EEs) {
+//				String colName = ee.getShortName();
+//				int colIndex = dataMatrix.getColIndexByName(colName);
+//				Double corr = genePair.getCorrelation(ee.getId());
+//				if (figureType == CORRELATION && corr != null) {
+//					dataMatrix.setQuick(rowIndex, colIndex, corr);
+//				} else if (figureType == EXPR_LEVEL) {
+//					Double exprLvl = getExpressionLevel(genePair, ee.getId());
+//					if (exprLvl != null)
+//						dataMatrix.setQuick(rowIndex, colIndex, exprLvl);
+//				}
+//			}
+//		}
+//		ColorMatrix dataColorMatrix = new ColorMatrix(dataMatrix);
+//		dataColorMatrix.setColorMap(ColorMap.GREENRED_COLORMAP);
+//		JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay(dataColorMatrix);
+//		dataMatrixDisplay.saveImage(figureFileName, true);
+//		log.info("Finished saving " + figureType + " image");
+//	}
 
 	/**
 	 * Create and return a gene ID to gene map
@@ -678,7 +500,11 @@ public class EffectSizeService {
 	 *            gene IDs
 	 * @return gene ID to gene map
 	 */
-	private Map<Long, Gene> getGeneMapFromIDs(Collection<Long> ids) {
+	private Map<Long, Gene> getGeneMapFromIDs(Collection<Long> queryGeneIds,
+			Collection<Long> targetGeneIds) {
+		Collection<Long> ids = new HashSet<Long>(queryGeneIds);
+		ids.addAll(targetGeneIds);
+
 		Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
 		Collection<Long> idsInOneChunk = new HashSet<Long>();
 		Collection<Gene> allGenes = new HashSet<Gene>();
@@ -791,107 +617,118 @@ public class EffectSizeService {
 		return geneID2EPs;
 	}
 
-	/**
-	 * Calculate correlations for the specified gene pairs in the specified EEs.
-	 * 
-	 * @param EEs -
-	 *            expression experiments
-	 * @param genePairs -
-	 *            gene pair list
-	 * @param geneMap -
-	 *            gene ID to gene map
-	 * @return expression experiment ID to sample size map
-	 */
-	private Map<Long, Integer> calculateCorrelations(
-			Collection<ExpressionExperiment> EEs, Collection<GenePair> genePairs) {
-		if (genePairs.size() < GENE_PAIR_CHUNK_SIZE) {
-			return calculateCorrelationsChunk(EEs, genePairs);
+	public DenseDoubleMatrix2DNamed calculateEffectSizeMatrix(
+			CorrelationMatrix correlationMatrix) {
+		DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed(
+				correlationMatrix.getNumQueryGenes(), correlationMatrix
+						.getNumTargetGenes());
+		for (Long rowName : correlationMatrix.getQueryGeneIds()) {
+			matrix.addRowName(rowName);
 		}
-		Collection<GenePair> oneChunkGenePairs = new HashSet<GenePair>();
-		Map<Long, Integer> eeSampleSizeMap = new HashMap<Long, Integer>();
-		int count = 0;
-		for (GenePair genePair : genePairs) {
-			oneChunkGenePairs.add(genePair);
-			count++;
-			if (count % GENE_PAIR_CHUNK_SIZE == 0 || count == genePairs.size()) {
-				eeSampleSizeMap.putAll(calculateCorrelationsChunk(EEs,
-						oneChunkGenePairs));
-				oneChunkGenePairs.clear();
+		for (Long colName : correlationMatrix.getTargetGeneIds()) {
+			matrix.addColumnName(colName);
+		}
+
+		for (Long rowId : correlationMatrix.getQueryGeneIds()) {
+			int rowIndex = matrix.getRowIndexByName(rowId);
+			for (Long colId : correlationMatrix.getTargetGeneIds()) {
+				int colIndex = matrix.getColIndexByName(colId);
+    			DoubleArrayList correlations = new DoubleArrayList(correlationMatrix.getCorrelations(rowId, colId));
+    			DoubleArrayList sampleSizes = new DoubleArrayList(correlationMatrix.getSampleSizes(rowId, colId));
+    			metaAnalysis.run(correlations, sampleSizes);
+    			double effectSize = metaAnalysis.getE();
+    			matrix.set(rowIndex, colIndex, effectSize);
 			}
 		}
-		return eeSampleSizeMap;
+
+		return matrix;
 	}
 
-	/**
-	 * Calculate correlations for the specified gene pairs in the specified EEs.
-	 * 
-	 * @param EEs -
-	 *            expression experiments
-	 * @param genePairs -
-	 *            gene pair list
-	 * @return expression experiment ID to sample size map
-	 */
-	private Map<Long, Integer> calculateCorrelationsChunk(
-			Collection<ExpressionExperiment> EEs, Collection<GenePair> genePairs) {
-		Map<Long, Integer> eeSampleSizeMap = new HashMap<Long, Integer>();
-		Map<Long, Gene> geneMap = getGeneMapFromGenePairs(genePairs);
+	public CorrelationMatrix calculateCorrelationMatrix(
+			Collection<ExpressionExperiment> EEs,
+			Collection<Long> queryGeneIds, Collection<Long> targetGeneIds) {
+		CorrelationMatrix matrix = new CorrelationMatrix(EEs, queryGeneIds,
+				targetGeneIds);
+		Map<Long, Gene> geneMap = getGeneMapFromIDs(queryGeneIds, targetGeneIds);
 		int count = 0;
 		int totalEEs = EEs.size();
+		StopWatch watch = new StopWatch();
 		for (ExpressionExperiment ee : EEs) {
-			long eeId = ee.getId();
-			StopWatch watch = new StopWatch();
 			watch.start();
-			Map<Long, Collection<ExpressionProfile>> geneID2EPs = getGeneID2EPsMap(
+			Map<Long, Collection<ExpressionProfile>> geneId2Eps = getGeneID2EPsMap(
 					geneMap, ee);
-			if (geneID2EPs == null) {
+			if (geneId2Eps == null)
 				continue;
-			}
 
-			for (GenePair genePair : genePairs) {
-				Collection<ExpressionProfile> source = geneID2EPs.get(genePair
-						.getFirstId());
-				Collection<ExpressionProfile> target = geneID2EPs.get(genePair
-						.getSecondId());
-				if (source == null || target == null)
-					continue;
-				Map<Double, List<Long>> corrEPMap = new TreeMap<Double, List<Long>>();
-				for (ExpressionProfile ep1 : source) {
-					if (ep1.rank != null && ep1.rank > MIN_EP_RANK) {
-						for (ExpressionProfile ep2 : target) {
-							if (ep2.rank != null
-									&& ep2.rank > MIN_EP_RANK
-									&& ep1.val.length == ep2.val.length
-									&& ep1.getNumSamples() > GeneCoExpressionAnalysis.MINIMUM_SAMPLE
-									&& ep2.getNumSamples() > GeneCoExpressionAnalysis.MINIMUM_SAMPLE) {
-								List<Long> eps = new ArrayList<Long>(2);
-								eps.add(ep1.id);
-								eps.add(ep2.id);
-								corrEPMap.put(CorrelationStats.correl(ep1.val,
-										ep2.val), eps);
-							}
+			for (Long qGeneId : queryGeneIds) {
+				for (Long tGeneId : targetGeneIds) {
+					Collection<ExpressionProfile> queryEps = geneId2Eps
+							.get(qGeneId);
+					Collection<ExpressionProfile> targetEps = geneId2Eps
+							.get(tGeneId);
+
+					List<ExpressionProfilePair> epPairs = new ArrayList<ExpressionProfilePair>();
+					for (ExpressionProfile queryEp : queryEps) {
+						for (ExpressionProfile targetEp : targetEps) {
+							if (isValidExpressionProfile(queryEp)
+									&& isValidExpressionProfile(targetEp))
+								epPairs.add(new ExpressionProfilePair(queryEp,
+										targetEp));
 						}
 					}
-				}
-				if (corrEPMap.keySet().size() > 0) {
-					Double corr = (Double) (corrEPMap.keySet().toArray())[corrEPMap
-							.keySet().size() / 2];
-					int ss = source.iterator().next().val.length;
-					if (corr != null && ss > MIN_EE_SAMPLE_SIZE) {
-						List<Long> dedvIds = corrEPMap.get(corr);
-						long dedvId1 = dedvIds.get(0);
-						long dedvId2 = dedvIds.get(1);
-						genePair.addCorrelation(eeId, dedvId1, dedvId2, corr);
-						eeSampleSizeMap.put(eeId, ss);
+					Collections.sort(epPairs);
+
+					if (epPairs.size() > 0) {
+						ExpressionProfilePair epPair = epPairs.get(epPairs
+								.size() / 2);
+						matrix.setCorrelation(ee.getId(), qGeneId, tGeneId,
+								epPair.correlation, epPair.sampleSize,
+								epPair.epId1, epPair.epId2);
 					}
 				}
 			}
+			watch.stop();
 			log.info(ee.getShortName() + " (" + count + " of " + totalEEs
 					+ "): calculated correlation of "
-					+ geneID2EPs.values().size() + " expression profiles in "
+					+ geneId2Eps.values().size() + " expression profiles in "
 					+ watch.getTime() / 1000 + " seconds");
-			count++;
+			watch.reset();
 		}
-		return eeSampleSizeMap;
+		return matrix;
+	}
+
+	private class ExpressionProfilePair implements
+			Comparable<ExpressionProfilePair> {
+		long epId1;
+		long epId2;
+		double correlation;
+		int sampleSize;
+
+		public ExpressionProfilePair(long epId1, long epId2,
+				double correlation, int sampleSize) {
+			this.epId1 = epId1;
+			this.epId2 = epId2;
+			this.correlation = correlation;
+			this.sampleSize = sampleSize;
+		}
+
+		public ExpressionProfilePair(ExpressionProfile ep1,
+				ExpressionProfile ep2) {
+			this.epId1 = ep1.getId();
+			this.epId2 = ep2.getId();
+			this.correlation = CorrelationStats.correl(ep1
+					.getExpressionLevels(), ep2.getExpressionLevels());
+			this.sampleSize = ep1.getExpressionLevels().length;
+		}
+
+		public int compareTo(ExpressionProfilePair epPair) {
+			return correlation > epPair.correlation ? 1 : -1;
+		}
+	}
+
+	private boolean isValidExpressionProfile(ExpressionProfile ep) {
+		return ep.getRank() != null && ep.getRank() > MIN_EP_RANK
+				&& ep.getNumValidSamples() > MIN_EP_NUM_SAMPLES;
 	}
 
 	public void setEeService(ExpressionExperimentService eeService) {
@@ -913,67 +750,5 @@ public class EffectSizeService {
 	public void setAdService(ArrayDesignService adService) {
 		this.adService = adService;
 	}
-	
-	/**
-	 * Stores the expression profile data.
-	 * 
-	 * @author xwan
-	 * @author Raymond
-	 */
-	protected class ExpressionProfile {
-		private DesignElementDataVector dedv = null;
-
-		private double[] val;
-
-		private Double rank;
-
-		private long id;
-
-		/**
-		 * Construct an ExpressionProfile from the specified
-		 * DesignElementDataVector
-		 * 
-		 * @param dedv -
-		 *            vector to convert
-		 */
-		public ExpressionProfile(DesignElementDataVector dedv) {
-			this.dedv = dedv;
-			this.id = dedv.getId();
-			byte[] bytes = dedv.getData();
-			val = bac.byteArrayToDoubles(bytes);
-			rank = dedv.getRank();
-		}
-
-		/**
-		 * Get the ID of the vector
-		 * 
-		 * @return the vector ID
-		 */
-		public long getId() {
-			return this.id;
-		}
-
-		public int getNumSamples() {
-			int num = 0;
-			for (double d : val) {
-				if (!Double.isNaN(d))
-					num++;
-			}
-			return num;
-		}
-
-		/**
-		 * Get the relative expression level of the expression profile: k/n
-		 * where k is the rank of the expression level and n is the number of
-		 * expression profiles for that quantitation type
-		 * 
-		 * @return relative expression level
-		 */
-		public Double getRank() {
-			return rank;
-		}
-
-	}
-
 
 }
