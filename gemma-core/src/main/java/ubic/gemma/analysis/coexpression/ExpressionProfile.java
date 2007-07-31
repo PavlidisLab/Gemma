@@ -40,13 +40,17 @@ public class ExpressionProfile {
 		return this.id;
 	}
 
-	public int getNumSamples() {
+	public int getNumValidSamples() {
 		int num = 0;
 		for (double d : val) {
 			if (!Double.isNaN(d))
 				num++;
 		}
 		return num;
+	}
+	
+	public int getNumSamples() {
+		return val.length;
 	}
 
 	/**
