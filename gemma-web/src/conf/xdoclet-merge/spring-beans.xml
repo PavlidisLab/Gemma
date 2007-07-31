@@ -247,7 +247,7 @@
 							<value>saveStatement</value>
 							<value>findTerm</value>
 							<value>loadNewOntology</value>
-							<value>isMgedOntologyLoaded</value>
+							<value>isOntologyLoaded</value>
 						</list>
 					</property>
 				</bean>

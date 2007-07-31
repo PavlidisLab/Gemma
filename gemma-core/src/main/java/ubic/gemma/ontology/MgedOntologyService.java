@@ -22,29 +22,22 @@ package ubic.gemma.ontology;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
+
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.util.ConfigUtils;
-
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.larq.IndexLARQ;
 
 /**
- * Holds a complete copy of the GeneOntology. This gets loaded on startup.
+ * Holds a complete copy of the MgedOntology in memory. This gets loaded on startup.
  * 
  * @author klc
  * @version $Id: MgedOntologyService.java
@@ -52,41 +45,11 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  * @spring.property name="bioMaterialService" ref ="bioMaterialService"
  */
 
-public class MgedOntologyService implements InitializingBean {
+public class MgedOntologyService extends AbstractOntologyService {
 
     protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
 
-    // map of uris to terms
-    private static Map<String, OntologyTerm> terms;
-
-    private static AtomicBoolean ready = new AtomicBoolean( false );
-
-    private static AtomicBoolean running = new AtomicBoolean( false );
-
-    // private static final String BASE_MGED_URI = "http://purl.org/obo/owl/GO#";
-    private static String ontology_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
-    private static String ontology_startingPoint = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
-
-    private static OntModel model;
-    private static IndexLARQ index;
-
     private static BioMaterialService bioMaterialService;
-
-    public void afterPropertiesSet() throws Exception {
-        log.debug( "entering AfterpropertiesSet" );
-        if ( running.get() ) {
-            log.warn( "MGED initialization is already running" );
-            return;
-        }
-        init();
-    }
-
-    public OntologyTerm getTerm( String id ) {
-
-        OntologyTerm term = terms.get( id );
-
-        return term;
-    }
 
     public void saveStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
 
@@ -117,48 +80,6 @@ public class MgedOntologyService implements InitializingBean {
         return nodes;
     }
 
-    public void loadNewOntology( String ontologyURL, String startingPointURL ) {
-
-        if ( running.get() ) return;
-
-        this.ontology_startingPoint = startingPointURL;
-        this.ontology_URL = ontologyURL;
-
-        this.ready = new AtomicBoolean( false );
-        this.running = new AtomicBoolean( false );
-
-        init();
-
-    }
-
-    public Collection<OntologyRestriction> getTermRestrictions( String id ) {
-
-        OntologyTerm term = terms.get( id );
-
-        return term.getRestrictions();
-
-    }
-
-    public Collection<OntologyIndividual> getTermIndividuals( String id ) {
-
-        OntologyTerm term = terms.get( id );
-
-        return term.getIndividuals( true );
-
-    }
-
-    public Collection<OntologyTerm> findTerm( String search ) {
-
-        if ( !this.ready.get() ) return null;
-
-        // String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        if ( index == null ) index = OntologyIndexer.indexOntology( "mged", model );
-
-        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
-
-        return name;
-    }
-
     /**
      * @param node Recursivly builds the tree node structure that is needed by the ext tree
      */
@@ -182,97 +103,16 @@ public class MgedOntologyService implements InitializingBean {
 
     }
 
-    protected synchronized void init() {
-
-        boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
-
-        // if loading ontologies is disabled in the configuration, return
-        if ( !loadOntology ) {
-            log.info( "Loading Mged is disabled" );
-            return;
-        }
-
-        // Load the mged model for searching
-
-        Thread loadThread = new Thread( new Runnable() {
-            public void run() {
-
-                running.set( true );
-                terms = new HashMap<String, OntologyTerm>();
-                log.info( "Loading mged Ontology..." );
-                StopWatch loadTime = new StopWatch();
-                loadTime.start();
-                //
-                try {
-                    model = OntologyLoader.loadMemoryModel( ontology_URL, OntModelSpec.OWL_MEM );
-                    loadTermsInNameSpace( ontology_URL );
-                    log.info( "MGED Ontology loaded, total of " + terms.size() + " items in " + loadTime.getTime()
-                            / 1000 + "s" );
-
-                    ready.set( true );
-                    running.set( false );
-
-                    log.info( "Done loading MGED Ontology" );
-                    loadTime.stop();
-                } catch ( Exception e ) {
-                    log.error( e, e );
-                    ready.set( false );
-                    running.set( false );
-                }
-            }
-
-        } );
-
-        synchronized ( running ) {
-            if ( running.get() ) return;
-            loadThread.start();
-        }
-
-    }
-
-    /**
-     * @param url
-     * @throws IOException
-     */
-    protected void loadTermsInNameSpace( String url ) throws IOException {
-        Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
-        addTerms( terms );
-    }
-
-    /**
-     * Primarily here for testing.
-     * 
-     * @param is
-     * @throws IOException
-     */
-    // protected void loadTermsInNameSpace( InputStream is ) throws IOException {
-    // Collection<OntologyResource> terms = OntologyLoader.ini
-    // addTerms( terms );
-    // }
-    private void addTerms( Collection<OntologyResource> newTerms ) {
-        if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
-        for ( OntologyResource term : newTerms ) {
-            if ( term.getUri() == null ) continue;
-            if ( term instanceof OntologyTerm ) terms.put( term.getUri(), ( OntologyTerm ) term );
-        }
-    }
-
-    /**
-     * Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
-     * getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
-     * 
-     * @returns boolean
-     */
-    public synchronized boolean isMgedOntologyLoaded() {
-
-        return ready.get();
-    }
-
     /**
      * @param bioMaterialService the bioMaterialService to set
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
+        MgedOntologyService.bioMaterialService = bioMaterialService;
+    }
+
+    @Override
+    protected  OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
+       return OntologyLoader.loadMemoryModel( url, spec );
     }
 
 }

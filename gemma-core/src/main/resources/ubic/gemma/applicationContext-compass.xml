@@ -153,8 +153,7 @@
 	<bean id="schedulerFactoryBean"
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
-			<list>
-				<ref local="indexTrigger" />
+			<list>			
 				<ref local="arrayDesignTrigger" />
 				<ref local="expressionExperimentTrigger" />
 				<ref local="whatsNewTrigger" />

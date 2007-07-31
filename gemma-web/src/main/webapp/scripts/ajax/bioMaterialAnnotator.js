@@ -657,7 +657,7 @@ var displayLoaded = function(loaded){
 };
 
 var isLoadedHandler = function(event){
-	MgedOntologyService.isMgedOntologyLoaded(displayLoaded);	
+	MgedOntologyService.isOntologyLoaded(displayLoaded);	
 }
 
 var refreshHandler = function(event){
