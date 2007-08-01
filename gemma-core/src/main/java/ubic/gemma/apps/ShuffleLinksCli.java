@@ -196,10 +196,8 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         int cols = linkCount.columns();
         //The filling process only filled one item. So the matrix is not symetric
         for(int i = 0; i < rows; i++){
-        	int[] positiveBits = new int[cols];
-        	positiveBits = linkCount.getRowBits(i, positiveBits);
-        	int[] negativeBits = new int[cols];
-        	negativeBits = negativeLinkCount.getRowBits(i, negativeBits);
+        	int[] positiveBits = linkCount.getRowBitCount(i);
+        	int[] negativeBits = negativeLinkCount.getRowBitCount(i);
         	for(int j = 0; j < cols; j++){
                 int positiveBit = positiveBits[j];
                 int negativeBit = negativeBits[j];
@@ -239,10 +237,8 @@ public class ShuffleLinksCli extends AbstractSpringAwareCLI {
         int cols = linkCount.columns();
         //The filling process only filled one item. So the matrix is not symetric
         for(int i = 0; i < rows; i++){
-        	int[] positiveBits = new int[cols];
-        	positiveBits = linkCount.getRowBits(i, positiveBits);
-        	int[] negativeBits = new int[cols];
-        	negativeBits = negativeLinkCount.getRowBits(i, negativeBits);
+        	int[] positiveBits = linkCount.getRowBitCount(i);
+        	int[] negativeBits = negativeLinkCount.getRowBitCount(i);
         	
         	for(int j = 0; j < cols; j++){
                 int positiveBit = positiveBits[j];
