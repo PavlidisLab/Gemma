@@ -146,8 +146,7 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         int cols = linkCount.columns();
         for(int i = 0; i < rows; i++){
         	if(i%1000 == 0) System.err.println("Current Row: " + i);
-        	int[] bits = new int[cols];
-        	bits = linkCount.getRowBits(i, bits);
+        	int[] bits = linkCount.getRowBitCount(i);
         	for(int j = i+1; j < cols; j++){
                 int bit = bits[j];
                 if(bit > 0){
