@@ -38,12 +38,7 @@ public class BirnLexOntologyService extends AbstractOntologyService {
     @Override
     protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
         return OntologyLoader.loadPersistentModel( url, false );
-    }
-
-    @Override
-    protected String getOntologyStartingPoint() {       
-        return "http://www.nbirn.net/2006/birnlex/birn_main/0.5/birnlex-main.owl";
-    }
+    }  
 
     @Override
     protected String getOntologyUrl() {       

@@ -40,17 +40,12 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
     
-    //FIXME:  if the following variable aren't static they end up being null at runtime. 
-    //I think, spring creates its own instance of this class, and the initializingBean also has its own instance
-    //of this class but the one that gets used is the spring copy which then doesn't have any attributes set if 
-    //the attributes are not static.  Ie the two instances can only share info if the attributes are static.
-    protected static Map<String, OntologyTerm> terms;    
-    protected static AtomicBoolean ready = new AtomicBoolean( false );
-    private static AtomicBoolean running = new AtomicBoolean( false );
-    private static String ontology_URL;
-    protected static String ontology_startingPoint;
-    private static OntModel model;
-    private static IndexLARQ index;
+    protected  Map<String, OntologyTerm> terms;    
+    protected  AtomicBoolean ready = new AtomicBoolean( false );
+    protected  AtomicBoolean running = new AtomicBoolean( false );
+    protected  String ontology_URL;
+    protected  OntModel model;
+    protected  IndexLARQ index;
 
     
     /**
@@ -71,18 +66,10 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     protected abstract String getOntologyUrl();
     
-    /**
-     * Defines the starting point of the given ontology
-     * eg: "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage"
-     * @return
-     */
-    protected abstract String getOntologyStartingPoint();
-    
     
     public AbstractOntologyService() {
         super();        
-        ontology_URL = getOntologyUrl();
-        ontology_startingPoint = getOntologyStartingPoint();        
+        ontology_URL = getOntologyUrl();         
     }
     
 
@@ -102,19 +89,6 @@ public abstract class AbstractOntologyService implements InitializingBean {
         return term;
     }
 
-    public void loadNewOntology( String ontologyURL, String startingPointURL ) {
-
-        if ( running.get() ) return;
-
-        AbstractOntologyService.ontology_startingPoint = startingPointURL;
-        AbstractOntologyService.ontology_URL = ontologyURL;
-
-        AbstractOntologyService.ready = new AtomicBoolean( false );
-        AbstractOntologyService.running = new AtomicBoolean( false );
-
-        init();
-
-    }
 
     public Collection<OntologyRestriction> getTermRestrictions( String id ) {
 
@@ -134,7 +108,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     public Collection<OntologyTerm> findTerm( String search ) {
 
-        if ( !AbstractOntologyService.ready.get() ) return null;
+        if ( !ready.get() ) return null;
 
         if ( index == null ) index = OntologyIndexer.indexOntology( "mged", model );
 

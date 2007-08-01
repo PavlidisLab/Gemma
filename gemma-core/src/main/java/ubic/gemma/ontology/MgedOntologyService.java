@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,6 +39,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 
 /**
  * Holds a complete copy of the MgedOntology in memory. This gets loaded on startup.
+ * As the MgedOntology is the framework ontology i've added a feature so that the Ontology can be changed dynamically
+ * via the web front end. 
  * 
  * @author klc
  * @version $Id: MgedOntologyService.java
@@ -49,8 +52,14 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
 
+    protected static String ontology_startingPoint;
     private static BioMaterialService bioMaterialService;
 
+    public MgedOntologyService() {
+        super();
+        ontology_startingPoint = getOntologyStartingPoint();
+    }
+    
     public void saveStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
@@ -79,6 +88,29 @@ public class MgedOntologyService extends AbstractOntologyService {
         nodes.add( buildTreeNode( term ) );
         return nodes;
     }
+    
+    
+    
+    /**
+     * 
+     * Will attempt to load a different ontology into the MGED ontology service
+     * @param ontologyURL
+     * @param startingPointURL
+     */
+    public void loadNewOntology( String ontologyURL, String startingPointURL ) {
+
+        if ( running.get() ) return;
+
+        
+        ontology_URL = ontologyURL;
+        MgedOntologyService.ontology_startingPoint = startingPointURL;
+
+        ready = new AtomicBoolean( false );
+        running = new AtomicBoolean( false );
+
+        init();
+
+    }
 
     /**
      * @param node Recursivly builds the tree node structure that is needed by the ext tree
@@ -103,6 +135,8 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     }
 
+    
+    
     /**
      * @param bioMaterialService the bioMaterialService to set
      */
@@ -115,7 +149,6 @@ public class MgedOntologyService extends AbstractOntologyService {
        return OntologyLoader.loadMemoryModel( url, spec );
     }
 
-    @Override
     protected String getOntologyStartingPoint() {
         return "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
     }

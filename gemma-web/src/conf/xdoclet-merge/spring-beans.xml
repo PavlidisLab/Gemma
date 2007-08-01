@@ -235,14 +235,14 @@
 			<entry key="MgedOntologyService">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
-						<bean class="org.directwebremoting.create.NewCreator">
-							<property name="className" value="ubic.gemma.ontology.MgedOntologyService" />
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="mgedOntologyService" />
 						</bean>
 					</property>
 					<property name="includes">
-						<list>
-							<value>getTerm</value>
+						<list>							
 							<value>getBioMaterialTerms</value>
+							<value>getTerm</value>
 							<value>getTermIndividuals</value>
 							<value>getTermRestrictions</value>
 							<value>saveStatement</value>
