@@ -98,11 +98,11 @@ public class ExpressionAnalysisManager {
             }
         }
 
-        List sortedList = Arrays.asList( results.toArray() );
+        List resultsAsList = Arrays.asList( results.toArray() );
         // FIXME use a GeneAnalysisResultValueObject that implements Comparator and compare by rank
-        Collections.sort( sortedList );
+        Collections.sort( resultsAsList );
 
-        return sortedList;
+        return resultsAsList;
     }
 
     /**
