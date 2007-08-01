@@ -20,7 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DenseMatrix3DNamed;
+import ubic.basecode.dataStructure.matrix.DenseObjectMatrix3DNamed;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
 import ubic.gemma.analysis.coexpression.ExpressionProfile;
@@ -259,7 +259,7 @@ public class EffectSizeService {
 	// }
 
 	private Collection<Long> filterExpressionExperiments(
-			DenseMatrix3DNamed<ExpressionProfilePair> matrix) {
+			DenseObjectMatrix3DNamed matrix) {
 		log.info("Filtering expression experiments...");
 		Collection<Long> filteredEeIds = new HashSet<Long>(matrix.slices());
 		EE: for (Object eeId : matrix.getSliceNames()) {
@@ -301,7 +301,7 @@ public class EffectSizeService {
 	}
 
 	private void saveToFile(String fileName,
-			DenseMatrix3DNamed<ExpressionProfilePair> matrix, String type,
+			DenseObjectMatrix3DNamed matrix, String type,
 			boolean geneSymbol) throws IOException {
 		DecimalFormat formatter = new DecimalFormat("0.0000");
 		Map<Long, Gene> geneMap = getGeneMapFromIDs(matrix.getRowNames(),
@@ -337,7 +337,7 @@ public class EffectSizeService {
 				for (Long eeId : filteredEEs) {
 					int slice = matrix.getSliceIndexByName(eeId);
 					line += "\t";
-					ExpressionProfilePair epPair = matrix.get(slice, row, col);
+					ExpressionProfilePair epPair = (ExpressionProfilePair) matrix.get(slice, row, col);
 					if (epPair != null) {
 						if (type == CORRELATION)
 							line += formatter.format(epPair.correlation);
@@ -353,13 +353,13 @@ public class EffectSizeService {
 	}
 
 	public void saveExpressionLevelsToFile(String fileName,
-			DenseMatrix3DNamed<ExpressionProfilePair> matrix, boolean geneSymbol)
+			DenseObjectMatrix3DNamed matrix, boolean geneSymbol)
 			throws IOException {
 		saveToFile(fileName, matrix, EXPR_LEVEL, geneSymbol);
 	}
 
 	public void saveCorrelationsToFile(String fileName,
-			DenseMatrix3DNamed<ExpressionProfilePair> matrix, boolean geneSymbol)
+			DenseObjectMatrix3DNamed matrix, boolean geneSymbol)
 			throws IOException {
 		saveToFile(fileName, matrix, CORRELATION, geneSymbol);
 	}
@@ -567,7 +567,7 @@ public class EffectSizeService {
 	}
 
 	public DenseDoubleMatrix2DNamed calculateEffectSizeMatrix(
-			DenseMatrix3DNamed<ExpressionProfilePair> epMatrix) {
+			DenseObjectMatrix3DNamed epMatrix) {
 		DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed(epMatrix
 				.rows(), epMatrix.columns());
 		matrix.setRowNames(epMatrix.getRowNames());
@@ -583,7 +583,7 @@ public class EffectSizeService {
 						.slices());
 				for (Object sliceId : epMatrix.getSliceNames()) {
 					int sliceIndex = epMatrix.getSliceIndexByName(sliceId);
-					ExpressionProfilePair epPair = epMatrix.get(sliceIndex,
+					ExpressionProfilePair epPair = (ExpressionProfilePair) epMatrix.get(sliceIndex,
 							rowIndex, colIndex);
 					if (epPair != null) {
 						correlations.add(epPair.correlation);
@@ -598,13 +598,13 @@ public class EffectSizeService {
 		return matrix;
 	}
 
-	public DenseMatrix3DNamed<ExpressionProfilePair> calculateCorrelationMatrix(
+	public DenseObjectMatrix3DNamed calculateCorrelationMatrix(
 			Collection<ExpressionExperiment> EEs, List<Long> queryGeneIds,
 			List<Long> targetGeneIds) {
 		List<Long> eeIds = new ArrayList<Long>(EEs.size());
 		for (ExpressionExperiment ee : EEs)
 			eeIds.add(ee.getId());
-		DenseMatrix3DNamed<ExpressionProfilePair> matrix = new DenseMatrix3DNamed<ExpressionProfilePair>(
+		DenseObjectMatrix3DNamed matrix = new DenseObjectMatrix3DNamed(
 				eeIds, queryGeneIds, targetGeneIds);
 		Map<Long, Gene> geneMap = getGeneMapFromIDs(queryGeneIds, targetGeneIds);
 		int count = 0;
