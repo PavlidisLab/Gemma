@@ -70,6 +70,7 @@
 			<prop key="/indexer.html">indexController</prop>
 			<prop key="/searcher.html">generalSearchController</prop>
 			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+			<prop key="/searchCoexpressionMultiple.html">multipleCoexpressionSearchController</prop>
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>

@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
+
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.MultipleCoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -204,12 +206,21 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 	 */
 	@Override
 	protected Object handleGetMultipleCoexpressionResults(Collection genes, Collection ees, Integer stringency) throws Exception {
-		MultipleCoexpressionCollectionValueObject results = new MultipleCoexpressionCollectionValueObject();
+		
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+        
+        MultipleCoexpressionCollectionValueObject results = new MultipleCoexpressionCollectionValueObject();
 		for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
 			Gene gene = (Gene) iter.next();
             CoexpressionCollectionValueObject current = (CoexpressionCollectionValueObject)getCoexpressedGenes( gene, ees, stringency );
             results.addCoexpressionCollection( current );
+            current = null;
 		}
+        
+        overallWatch.stop();
+        results.setElapsedWallTimeElapsed( overallWatch.getTime() );
+        
 		return results;
 	}
 

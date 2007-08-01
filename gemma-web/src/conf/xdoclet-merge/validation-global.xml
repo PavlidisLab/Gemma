@@ -74,6 +74,21 @@
             </field>
         </form>
         
+        <form name="multipleCoexpressionSearchCommand">
+            <field property="geneListString" depends="required,minlength">
+                <arg0 key="multipleCoexpressionSearchCommand.geneListString"/>
+                <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+                <var>
+                    <var-name>minlength</var-name>
+                    <var-value>3</var-value>
+                </var>
+                
+            </field>
+            <field property="stringency" depends="required">
+                <arg0 key="multipleCoexpressionSearchCommand.stringency"/>
+            </field>
+        </form>
+        
         <form name="arrayDesign">
             <field property="name" depends="required">
                 <arg0 key="arrayDesign.name"/>
