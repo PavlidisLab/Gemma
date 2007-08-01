@@ -43,6 +43,7 @@ import org.compass.core.CompassTransaction;
 import org.compass.core.support.search.CompassSearchResults;
 
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -66,6 +67,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * 
  * @author klc
  * @author paul
+ * @author keshav
  * @version $Id$
  */
 public class SearchService {
@@ -87,6 +89,99 @@ public class SearchService {
     private Compass arrayBean;
     private Compass ontologyBean;
     private Compass bibliographicReferenceBean;
+
+    /* EXPRESSION EXPERIMENT SEARCHES */
+
+    /**
+     * A general search for expression experiments. This search does both an database search and a compass search.
+     * 
+     * @param query
+     * @return {@link Collection}
+     */
+    public Collection<ExpressionExperiment> expressionExperimentSearch( final String query ) {
+
+        String tq = StringUtils.strip( query );
+
+        Collection<ExpressionExperiment> results = expressionExperimentDbSearch( tq );
+
+        results.addAll( compassExpressionSearch( tq ) );
+
+        return results;
+    }
+
+    /**
+     * A compass search on expressionExperiments.
+     * <p>
+     * The compass search is backed by a database search so the returned collection is filtered based on access
+     * permissions to the objects in the collection.
+     * 
+     * @param query
+     * @return {@link Collection}
+     */
+    public Collection<ExpressionExperiment> compassExpressionSearch( String query ) {
+
+        CompassSearchResults searchResults;
+
+        CompassTemplate template = new CompassTemplate( eeBean );
+        final String tq = StringUtils.strip( query );
+        searchResults = ( CompassSearchResults ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( tq, session );
+                    }
+                } );
+        if ( searchResults == null ) return new HashSet<ExpressionExperiment>();
+
+        Collection<Long> eeIds = convert2IdList( searchResults.getHits() );
+
+        return this.expressionExperimentDbSearch( eeIds );
+    }
+
+    /**
+     * Does search on exact string by: id, name and short name.
+     * <p>
+     * The compass search is backed by a database search so the returned collection is filtered based on access
+     * permissions to the objects in the collection.
+     * 
+     * @param query
+     * @return {@link Collection}
+     */
+    public Collection<ExpressionExperiment> expressionExperimentDbSearch( final String query ) {
+        String tq = StringUtils.strip( query );
+        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
+        ExpressionExperiment ee = expressionExperimentService.findByName( tq );
+        if ( ee != null ) results.add( ee );
+        ee = expressionExperimentService.findByShortName( tq );
+        if ( ee != null ) results.add( ee );
+        try {
+            ee = expressionExperimentService.load( new Long( tq ) );
+            if ( ee != null ) results.add( ee );
+        } catch ( NumberFormatException e ) {
+            // noop
+        }
+        return results;
+    }
+
+    /**
+     * Database search by ids.
+     * <p>
+     * The compass search is backed by a database search so the returned collection is filtered based on access
+     * permissions to the objects in the collection.
+     * 
+     * @param ids
+     * @return {@link Collection}
+     */
+    private Collection<ExpressionExperiment> expressionExperimentDbSearch( Collection<Long> ids ) {
+        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
+        for ( Long id : ids ) {
+            ExpressionExperiment ee = expressionExperimentService.load( id );
+            if ( ee != null ) results.add( ee );
+        }
+
+        return results;
+    }
+
+    /* ARRAY DESIGN SEARCHES */
 
     /**
      * searchs the DB for array designs which have composite sequences whose names match the given search string
@@ -137,7 +232,7 @@ public class SearchService {
      * Does a compass style search on ArrayDesigns
      * 
      * @param query
-     * @return
+     * @return {@link Collection}
      */
     public Collection<ArrayDesign> compassArrayDesignSearch( String searchString ) {
 
@@ -155,28 +250,6 @@ public class SearchService {
 
         if ( searchResults == null ) return new HashSet<ArrayDesign>();
         return convert2ArrayDesignList( searchResults.getHits() );
-    }
-
-    /**
-     * does a compass style search on expressionExperiments
-     * 
-     * @param query
-     * @return
-     */
-    public Collection<ExpressionExperiment> compassExpressionSearch( String query ) {
-
-        CompassSearchResults searchResults;
-
-        CompassTemplate template = new CompassTemplate( eeBean );
-        final String tq = StringUtils.strip( query );
-        searchResults = ( CompassSearchResults ) template.execute(
-                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
-                    public Object doInCompass( CompassSession session ) throws CompassException {
-                        return performSearch( tq, session );
-                    }
-                } );
-        if ( searchResults == null ) return new HashSet<ExpressionExperiment>();
-        return convert2ExpressionList( searchResults.getHits() );
     }
 
     /**
@@ -356,21 +429,6 @@ public class SearchService {
      * @param anArray
      * @return
      */
-    protected Collection<ExpressionExperiment> convert2ExpressionList( CompassHit[] anArray ) {
-
-        Collection<ExpressionExperiment> converted = new HashSet<ExpressionExperiment>( anArray.length );
-
-        for ( int i = 0; i < anArray.length; i++ )
-            converted.add( ( ExpressionExperiment ) anArray[i].getData() );
-
-        return converted;
-
-    }
-
-    /**
-     * @param anArray
-     * @return
-     */
     protected Collection<Gene> convert2GeneList( CompassHit[] anArray ) {
 
         Collection<Gene> converted = new HashSet<Gene>( anArray.length );
@@ -412,43 +470,6 @@ public class SearchService {
 
         return converted;
 
-    }
-
-    /**
-     * Does search on exact string by: id, name and short name.
-     * 
-     * @param query
-     * @return
-     */
-    public Collection<ExpressionExperiment> expressionExperimentDbSearch( final String query ) {
-        String tq = StringUtils.strip( query );
-        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
-        ExpressionExperiment ee = expressionExperimentService.findByName( tq );
-        if ( ee != null ) results.add( ee );
-        ee = expressionExperimentService.findByShortName( tq );
-        if ( ee != null ) results.add( ee );
-        try {
-            ee = expressionExperimentService.load( new Long( tq ) );
-            if ( ee != null ) results.add( ee );
-        } catch ( NumberFormatException e ) {
-            // noop
-        }
-        return results;
-    }
-
-    /**
-     * @param query
-     * @return
-     */
-    public Collection<ExpressionExperiment> expressionExperimentSearch( final String query ) {
-
-        String tq = StringUtils.strip( query );
-
-        Collection<ExpressionExperiment> results = expressionExperimentDbSearch( tq );
-
-        results.addAll( compassExpressionSearch( tq ) );
-
-        return results;
     }
 
     /**
@@ -615,6 +636,23 @@ public class SearchService {
                 .getHits().length );
 
         return searchResults;
+    }
+
+    /**
+     * Accepts compass hits and returns a collection of ids.
+     * 
+     * @param anArray
+     * @return {@link Collection}
+     */
+    protected Collection<Long> convert2IdList( CompassHit[] anArray ) {
+
+        Collection<Long> converted = new HashSet<Long>( anArray.length );
+
+        for ( int i = 0; i < anArray.length; i++ )
+            converted.add( ( ( Securable ) anArray[i].getData() ).getId() );
+
+        return converted;
+
     }
 
     /**
