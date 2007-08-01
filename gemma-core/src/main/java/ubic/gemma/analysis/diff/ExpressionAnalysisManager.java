@@ -45,7 +45,7 @@ public class ExpressionAnalysisManager {
     // TODO consolidate with methods from ExpressionDataManager. Move methods from there to a
     // SimpleExpressionAnalysisManager for reading in files with p-values and probe/gene names.
 
-    protected static final Log log = LogFactory.getLog( ExpressionDataManager.class );
+    protected static final Log log = LogFactory.getLog( ExpressionAnalysisManager.class );
 
     private AnalysisService analysisService = null;
 
