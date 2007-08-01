@@ -47,14 +47,44 @@ public abstract class AbstractOntologyService implements InitializingBean {
     protected static Map<String, OntologyTerm> terms;    
     protected static AtomicBoolean ready = new AtomicBoolean( false );
     private static AtomicBoolean running = new AtomicBoolean( false );
-    private static String ontology_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
-    protected static String ontology_startingPoint = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
+    private static String ontology_URL;
+    protected static String ontology_startingPoint;
     private static OntModel model;
     private static IndexLARQ index;
 
+    
+    /**
+     * Delegates the call as to load the model into memory or leave it on disk. Simply delegates to either
+     * OntologyLoader.loadMemoryModel( url, spec ); OR OntologyLoader.loadPersistentModel( url, spec );
+     * 
+     * @param url
+     * @param spec
+     * @return
+     * @throws IOException
+     */
+    protected abstract OntModel loadModel( String url, OntModelSpec spec ) throws IOException;
+    
+    /**
+     * Defines the location of the ontology
+     * eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
+     * @return
+     */
+    protected abstract String getOntologyUrl();
+    
+    /**
+     * Defines the starting point of the given ontology
+     * eg: "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage"
+     * @return
+     */
+    protected abstract String getOntologyStartingPoint();
+    
+    
     public AbstractOntologyService() {
-        super();
+        super();        
+        ontology_URL = getOntologyUrl();
+        ontology_startingPoint = getOntologyStartingPoint();        
     }
+    
 
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
@@ -113,17 +143,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
         return name;
     }
 
-    /**
-     * Delegates the call as to load the model into memory or leave it on disk. Simply delegates to either
-     * OntologyLoader.loadMemoryModel( url, spec ); OR OntologyLoader.loadPersistentModel( url, spec );
-     * 
-     * @param url
-     * @param spec
-     * @return
-     * @throws IOException
-     */
-    protected abstract OntModel loadModel( String url, OntModelSpec spec ) throws IOException;
-
+  
     protected synchronized void init() {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );

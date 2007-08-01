@@ -115,4 +115,14 @@ public class MgedOntologyService extends AbstractOntologyService {
        return OntologyLoader.loadMemoryModel( url, spec );
     }
 
+    @Override
+    protected String getOntologyStartingPoint() {
+        return "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
+    }
+
+    @Override
+    protected String getOntologyUrl() {       
+        return "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    }
+
 }
