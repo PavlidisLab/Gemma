@@ -81,7 +81,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
 
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
-    AuditTrailService auditTrailService;
+    private AuditTrailService auditTrailService;
 
     /**
      * @param arrayDesign
@@ -96,6 +96,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
+        super.buildOptions();
 
         super.addDateOption();
 
