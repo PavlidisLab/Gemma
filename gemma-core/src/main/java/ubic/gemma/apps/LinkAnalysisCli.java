@@ -87,8 +87,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
      * @param arrayDesign
      */
     private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
-        expressionExperimentReportService.generateSummaryObject( ee.getId() );
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+        if (linkAnalysisConfig.isUseDb()) {
+            expressionExperimentReportService.generateSummaryObject( ee.getId() );
+            auditTrailService.addUpdateEvent( ee, eventType, note );
+        }
     }
 
     @SuppressWarnings("static-access")
@@ -148,6 +150,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
 
         if ( this.getExperimentShortName() == null ) {
             if ( this.experimentListFile == null ) {
+                // run on all experiments
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
@@ -167,6 +170,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
                     }
                 }
             } else {
+                // read short names from specified experiment list file
                 try {
                     InputStream is = new FileInputStream( this.experimentListFile );
                     BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
