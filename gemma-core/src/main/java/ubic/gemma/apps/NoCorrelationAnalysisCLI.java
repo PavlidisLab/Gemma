@@ -1,8 +1,5 @@
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -11,10 +8,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
-import ubic.gemma.analysis.linkAnalysis.GenePair;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -101,7 +96,6 @@ public class NoCorrelationAnalysisCLI extends AbstractSpringAwareCLI {
 		if (exc != null) {
 			return exc;
 		}
-		Collection<GenePair> genePairs;
 
 		Collection<ExpressionExperiment> allEEs = eeService.findByTaxon(taxon);
 		Collection<ExpressionExperiment> EEs = new ArrayList<ExpressionExperiment>();

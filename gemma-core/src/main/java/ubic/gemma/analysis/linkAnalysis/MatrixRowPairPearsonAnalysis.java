@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.NamedMatrix;
+import ubic.basecode.dataStructure.matrix.NamedMatrix2D;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
@@ -243,7 +243,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     /**
      * @return baseCode.dataStructure.NamedMatrix
      */
-    public NamedMatrix getMatrix() {
+    public NamedMatrix2D getMatrix() {
         return C;
     }
 

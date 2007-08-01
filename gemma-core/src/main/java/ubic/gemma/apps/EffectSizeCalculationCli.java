@@ -1,6 +1,5 @@
 package ubic.gemma.apps;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.cli.Option;
@@ -8,7 +7,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
-import ubic.gemma.analysis.linkAnalysis.GenePair;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
@@ -135,7 +133,7 @@ public class EffectSizeCalculationCli extends AbstractSpringAwareCLI {
 					"Could not find expression experiments for taxon");
 		}
 
-		Collection<GenePair> genePairs;
+//		Collection<GenePair> genePairs;
 //		if (geneSymbols != null) {
 //			genePairs = effectSizeService.pairCoexpressedGenesByOfficialSymbol(
 //					geneSymbols, taxon, EEs, stringency);
