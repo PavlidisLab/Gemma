@@ -259,9 +259,13 @@ if ( expressionExperiment.getName() != null ) {
 
 	<Gemma:eeDesign
 		experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
+	<Gemma:eeDesignMatrix
+		expressionExperiment="${expressionExperiment}"></Gemma:eeDesignMatrix>
 	<%
 	}
 	%>
+	
+	<%--
 	<authz:authorize ifAnyGranted="admin">
 	<%
 	if ( expressionExperiment.getSubsets().size() > 0 ) {
@@ -289,7 +293,8 @@ if ( expressionExperiment.getName() != null ) {
 	<%
 	}
 	%>
-</authz:authorize>
+	</authz:authorize>
+	--%>
 
 <h3>
 	Quantitation Types
