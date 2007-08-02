@@ -40,7 +40,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author raymond
  * 
  */
-public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
+public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
 	private String outFile;
 
 	private String inFile;
@@ -102,23 +102,6 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 		eeService = (ExpressionExperimentService) getBean("expressionExperimentService");
 		geneService = (GeneService) getBean("geneService");
 		adService = (ArrayDesignService) getBean("arrayDesignService");
-	}
-
-	private Collection<Gene> readInFile(String inFile) throws IOException {
-		Collection<Gene> genes = new ArrayList<Gene>();
-		BufferedReader in = new BufferedReader(new FileReader(inFile));
-		String line;
-		while ((line = in.readLine()) != null) {
-			if (line.startsWith("#"))
-				continue;
-			String geneSymbol = line.trim();
-			for (Gene gene : (Collection<Gene>) geneService
-					.findByOfficialSymbol(geneSymbol)) {
-				if (taxon.equals(gene.getTaxon()))
-					genes.add(gene);
-			}
-		}
-		return genes;
 	}
 
 	private void saveRanksToFile(String outFile, Collection<Gene> genes,
@@ -206,7 +189,7 @@ public class ExpressionAnalysisCLI extends AbstractSpringAwareCLI {
 		Collection<Gene> genes;
 		if (inFile != null) {
 			try {
-				genes = readInFile(inFile);
+				genes = readInGeneListFile( inFile, taxon, OFFICIAL_SYMBOL );
 			} catch (IOException exc) {
 				return exc;
 			}
