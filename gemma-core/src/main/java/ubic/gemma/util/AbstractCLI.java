@@ -75,7 +75,7 @@ public abstract class AbstractCLI {
 
     private static final char VERBOSITY_OPTION = 'v';
     private static final String HEADER = "Options:";
-    private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia.";
+    private static final String FOOTER = "The Gemma project, Copyright (c) 2007 University of British Columbia.";
     private static final int DEFAULT_PORT = 3306;
     private static int DEFAULT_VERBOSITY = 2;
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
@@ -85,16 +85,14 @@ public abstract class AbstractCLI {
     private CommandLine commandLine;
 
     /* support for convenience options */
-
     private String DEFAULT_HOST = "localhost";
     private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
     private Map<Logger, Level> originalLoggingLevels = new HashMap<Logger, Level>();
+
     protected String host = DEFAULT_HOST;
     protected int port = DEFAULT_PORT;
     protected String username;
-
     protected String password;
-
     protected String mDate = null;
 
     protected Collection<Object> errorObjects = new HashSet<Object>();
@@ -408,8 +406,7 @@ public abstract class AbstractCLI {
                 .create( "logger" );
         Option compassOnOpt = new Option( "compassOn", false,
                 "Turn on compass indexing (Does not turn on index mirroring)" );
-        Option gigaspacesOnOpt = new Option( "gigaspacesOn", false,
-                "All use of the gigaspaces compute-server for large jobs." );
+        Option gigaspacesOnOpt = new Option( "gigaspacesOn", false, "Use the gigaspaces compute-server for large jobs." );
 
         options.addOption( otherLogOpt );
         options.addOption( logOpt );
