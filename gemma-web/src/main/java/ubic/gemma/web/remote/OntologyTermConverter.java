@@ -50,8 +50,8 @@ public class OntologyTermConverter extends BeanConverter {
 
                             OntologyClassRestriction restriction = ( OntologyClassRestriction ) o;
                             OntologyTerm restrictedTo = restriction.getRestrictedTo();
-
-                            if ( restrictedTo.equals( term ) ) { // is it a self referential loop?
+                            
+                            if ((restrictedTo != null) && (term != null) && restrictedTo.equals( term ) ) { // is it a self referential loop?
                                 log.info( "Loop detected" );
                                 // todo: put something special in the returned object so that the java scrip gui knows
                                 // and displays the loop correctly

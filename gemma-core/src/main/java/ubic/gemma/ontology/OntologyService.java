@@ -30,12 +30,24 @@ import com.hp.hpl.jena.rdf.model.ModelMaker;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
+ * Has a static method for finding out which ontologies are loaded into the system
+ * and a general purpose find method that delegates to the many ontology services
+ * 
  * @author pavlidis
  * @version $Id$
+ * 
+ * @spring.bean id="ontologyService"
+ * @spring.property name="birnLexOntologyService" ref ="birnLexOntologyService"
+ * @spring.property name="mgedOntologyService" ref ="mgedOntologyService"
  */
 public class OntologyService {
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
+
+    private BirnLexOntologyService birnLexOntologyService;
+    private MgedOntologyService mgedOntologyService;
+    
+ 
 
     /**
      * List the ontologies that are available locally.
@@ -55,6 +67,30 @@ public class OntologyService {
         }
         return ontologies;
 
+    }
+    
+    public Collection<OntologyTerm> findTerm(String search){
+        
+        Collection<OntologyTerm> terms =  birnLexOntologyService.findTerm( search );
+        terms.addAll( mgedOntologyService.findTerm( search ) );
+        
+        return terms;
+    }
+    
+    
+    
+    /**
+     * @param birnLexOntologyService the birnLexOntologyService to set
+     */
+    public void setBirnLexOntologyService( BirnLexOntologyService birnLexOntologyService ) {
+        this.birnLexOntologyService = birnLexOntologyService;
+    }
+
+    /**
+     * @param mgedOntologyService the mgedOntologyService to set
+     */
+    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
+        this.mgedOntologyService = mgedOntologyService;
     }
 
 }
