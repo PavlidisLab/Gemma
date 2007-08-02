@@ -54,7 +54,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
 
         addOption( geneOption );
 
-        Option eeOption = OptionBuilder.hasArg().withArgName( "Expression Experiments" ).withDescription(
+        Option eeOption = OptionBuilder.withArgName( "Expression Experiments" ).withDescription(
                 "Use this option for indexing Expression Experiments" ).withLongOpt( "ExpressionExperiments" ).create(
                 'e' );
         addOption( eeOption );
