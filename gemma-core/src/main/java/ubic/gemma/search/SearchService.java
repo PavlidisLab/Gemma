@@ -182,7 +182,13 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperiment> expressionExperimentDbSearch( Collection<Long> ids ) {
 
-        Collection<ExpressionExperiment> results = expressionExperimentService.load( ids );
+        Collection<ExpressionExperiment> results = null;
+
+        if ( ids != null && !ids.isEmpty() ) {
+            results = expressionExperimentService.load( ids );
+        } else {
+            results = new HashSet<ExpressionExperiment>();
+        }
 
         return results;
     }
