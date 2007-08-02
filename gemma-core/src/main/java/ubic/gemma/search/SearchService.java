@@ -73,10 +73,13 @@ import ubic.gemma.model.genome.gene.GeneService;
  * environment, such as ACEGI {@link http://acegisecurity.org/}.
  * <p>
  * 
+
  * @author klc
  * @author paul
  * @author keshav
  * @version $Id$
+ * 
+ * @spring.bean id="searchService"
  */
 public class SearchService {
 
