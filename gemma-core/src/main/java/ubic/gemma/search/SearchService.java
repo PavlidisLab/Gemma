@@ -78,8 +78,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @author paul
  * @author keshav
  * @version $Id$
- * 
- * @spring.bean id="searchService"
  */
 public class SearchService {
 
