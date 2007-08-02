@@ -49,7 +49,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option geneOption = OptionBuilder.hasArg().withArgName( "Index Genes" ).withDescription(
+        Option geneOption = OptionBuilder.withArgName( "Index Genes" ).withDescription(
                 "Use this option for indexing Genes" ).withLongOpt( "genes" ).create( 'g' );
 
         addOption( geneOption );
