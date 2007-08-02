@@ -172,11 +172,8 @@ public class SearchService {
      * @return {@link Collection}
      */
     private Collection<ExpressionExperiment> expressionExperimentDbSearch( Collection<Long> ids ) {
-        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
-        for ( Long id : ids ) {
-            ExpressionExperiment ee = expressionExperimentService.load( id );
-            if ( ee != null ) results.add( ee );
-        }
+
+        Collection<ExpressionExperiment> results = expressionExperimentService.load( ids );
 
         return results;
     }

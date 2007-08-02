@@ -8,159 +8,180 @@
 -->
 
 <beans>
-    
-    <!--
-    ======================== FILTER CHAIN ======================= 
-    The order of filters is as described at http://www.acegisecurity.org/docbook/acegi.html#filters
-    -->
-    <bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">
-        <property name="filterInvocationDefinitionSource">
-            <value><!--  CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON  -->
-            	<!-- Put "channelProcessingFilter," first in this list to turn on SSL switching -->
-                <![CDATA[
+
+	<!--
+		======================== FILTER CHAIN ======================= 
+		The order of filters is as described at http://www.acegisecurity.org/docbook/acegi.html#filters
+	-->
+	<bean id="filterChainProxy"
+		class="org.acegisecurity.util.FilterChainProxy">
+		<property name="filterInvocationDefinitionSource">
+			<value><!--  CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON  -->
+				<!-- Put "channelProcessingFilter," first in this list to turn on SSL switching -->
+				<![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
                   /**=httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,remoteUserFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
             ]]>
-            </value>
-        </property>
-    </bean>
-    
-    <!-- ======================== FILTERS ======================= -->
-    
-    <!--   Populates the SecurityContextHolder with information obtained from the HttpSession. -->
-    <bean id="httpSessionContextIntegrationFilter" class="org.acegisecurity.context.HttpSessionContextIntegrationFilter">
-        <property name="context">
-            <value>org.acegisecurity.context.SecurityContextImpl</value>
-        </property>
-    </bean>
-    
-    <bean id="logoutFilter" class="org.acegisecurity.ui.logout.LogoutFilter">
-        <constructor-arg value="/index.jsp"/><!-- URL redirected to after logout -->
-        <constructor-arg>
-            <list>
-                <ref bean="rememberMeServices"/>
-                <bean class="org.acegisecurity.ui.logout.SecurityContextLogoutHandler"/>
-            </list>
-        </constructor-arg>
-        <property name="filterProcessesUrl" value="/logout.html"/>
-    </bean>
-    
-    <bean id="remoteUserFilter" class="org.acegisecurity.wrapper.SecurityContextHolderAwareRequestFilter"/>
-    
-    <bean id="anonymousProcessingFilter" class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
-        <property name="key">
-            <value>anonymous</value>
-        </property>
-        <property name="userAttribute">
-            <value>anonymous,ROLE_ANONYMOUS</value>
-        </property>
-    </bean>
-    
-    <!-- ======================== AUTHENTICATION FILTER ======================= -->
-    
-    <bean id="authenticationProcessingFilter" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
-        <property name="authenticationManager">
-            <ref local="authenticationManager"/>
-        </property>
-        <property name="authenticationFailureUrl">
-            <value>/login.jsp?error=true</value>
-        </property>
-        <property name="defaultTargetUrl">
-            <value>/</value>
-        </property>
-        <property name="filterProcessesUrl">
-            <value>/j_security_check</value>
-        </property>
-        <property name="rememberMeServices" ref="rememberMeServices"/>
-    </bean>
-    
-    <bean id="manualAuthenticationProcessing" class="ubic.gemma.security.authentication.ManualAuthenticationProcessing">
-        <property name="authenticationManager">
-            <ref bean="authenticationManager"/>
-        </property>
-        
-    </bean>
-    
-    <bean id="authenticationManager" class="org.acegisecurity.providers.ProviderManager">
-        <property name="providers">
-            <list>
-                <ref local="daoAuthenticationProvider"/>
-                <ref local="anonymousAuthenticationProvider"/>
-                <ref local="rememberMeAuthenticationProvider"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
-    <bean id="loggerListener" class="org.acegisecurity.event.authentication.LoggerListener"/>
-    
-    <bean id="daoAuthenticationProvider" class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
-        <property name="userDetailsService" ref="userDetailsService"/>
-        <property name="saltSource" ref="saltSource"/>
-        <property name="passwordEncoder" ref="passwordEncoder"/>
-    </bean>
-    
-    <!-- This bean definition must be available to ApplicationContext.getBean() so StartupListener
-    can look for it and detect if password encryption is turned on or not -->
-    <bean id="passwordEncoder" class="org.acegisecurity.providers.encoding.ShaPasswordEncoder"/>
-    
-    <!-- Declare a stable source of salt for passwords. The parameter used must not change for the given user. -->
-    <bean id="saltSource" class="org.acegisecurity.providers.dao.salt.SystemWideSaltSource">
-        <property name="systemWideSalt">
-            <value>${gemma.salt}</value>
-        </property>
-    </bean>
-    
-    <!-- Read users from database -->
-    <bean id="userDetailsService" class="ubic.gemma.security.principal.UserDetailsServiceImpl">
-        <property name="userService" ref="userService"/>
-    </bean>
-    
-   
-    
-    <bean id="anonymousAuthenticationProvider" class="org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
-        <property name="key">
-            <value>anonymous</value>
-        </property>
-    </bean>
-    
-    <!-- ===================== REMEMBER ME ==================== -->
-    <bean id="rememberMeProcessingFilter" class="org.acegisecurity.ui.rememberme.RememberMeProcessingFilter">
-        <property name="rememberMeServices" ref="rememberMeServices"/>
-        <property name="authenticationManager" ref="authenticationManager"/>
-    </bean>
-    
-    <bean id="rememberMeServices" class="org.acegisecurity.ui.rememberme.TokenBasedRememberMeServices">
-        <property name="userDetailsService" ref="userDetailsService"/>
-        <property name="key" value="gemmapleaserememberme"/>
-        <property name="parameter" value="rememberMe"/>
-    </bean>
-    
-    <bean id="rememberMeAuthenticationProvider" class="org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider">
-        <property name="key" value="gemmapleaserememberme"/>
-    </bean>
-    
-    <!-- ===================== HTTP REQUEST SECURITY ==================== -->
-    
-    <bean id="exceptionTranslationFilter" class="org.acegisecurity.ui.ExceptionTranslationFilter">
-        <property name="authenticationEntryPoint">
-            <ref local="authenticationProcessingFilterEntryPoint"/>
-        </property>
-    </bean>
-    
-    <!-- Note the order that entries are placed against the objectDefinitionSource is critical.
-    The FilterSecurityInterceptor will work from the top of the list down to the FIRST pattern that matches the request URL.
-    Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
-    <bean id="filterInvocationInterceptor" class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
-        <property name="authenticationManager">
-            <ref local="authenticationManager"/>
-        </property>
-        <property name="accessDecisionManager">
-            <ref local="roleAccessDecisionManager"/>
-        </property>
-        <property name="objectDefinitionSource">
-            <value>
-                <![CDATA[
+			</value>
+		</property>
+	</bean>
+
+	<!-- ======================== FILTERS ======================= -->
+
+	<!--   Populates the SecurityContextHolder with information obtained from the HttpSession. -->
+	<bean id="httpSessionContextIntegrationFilter"
+		class="org.acegisecurity.context.HttpSessionContextIntegrationFilter">
+		<property name="context">
+			<value>org.acegisecurity.context.SecurityContextImpl</value>
+		</property>
+	</bean>
+
+	<bean id="logoutFilter"
+		class="org.acegisecurity.ui.logout.LogoutFilter">
+		<constructor-arg value="/index.jsp" /><!-- URL redirected to after logout -->
+		<constructor-arg>
+			<list>
+				<ref bean="rememberMeServices" />
+				<bean
+					class="org.acegisecurity.ui.logout.SecurityContextLogoutHandler" />
+			</list>
+		</constructor-arg>
+		<property name="filterProcessesUrl" value="/logout.html" />
+	</bean>
+
+	<bean id="remoteUserFilter"
+		class="org.acegisecurity.wrapper.SecurityContextHolderAwareRequestFilter" />
+
+	<bean id="anonymousProcessingFilter"
+		class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
+		<property name="key">
+			<value>anonymous</value>
+		</property>
+		<property name="userAttribute">
+			<value>anonymous,ROLE_ANONYMOUS</value>
+		</property>
+	</bean>
+
+	<!-- ======================== AUTHENTICATION FILTER ======================= -->
+
+	<bean id="authenticationProcessingFilter"
+		class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
+		<property name="authenticationManager">
+			<ref local="authenticationManager" />
+		</property>
+		<property name="authenticationFailureUrl">
+			<value>/login.jsp?error=true</value>
+		</property>
+		<property name="defaultTargetUrl">
+			<value>/</value>
+		</property>
+		<property name="filterProcessesUrl">
+			<value>/j_security_check</value>
+		</property>
+		<property name="rememberMeServices" ref="rememberMeServices" />
+	</bean>
+
+	<bean id="manualAuthenticationProcessing"
+		class="ubic.gemma.security.authentication.ManualAuthenticationProcessing">
+		<property name="authenticationManager">
+			<ref bean="authenticationManager" />
+		</property>
+
+	</bean>
+
+	<bean id="authenticationManager"
+		class="org.acegisecurity.providers.ProviderManager">
+		<property name="providers">
+			<list>
+				<ref local="daoAuthenticationProvider" />
+				<ref local="anonymousAuthenticationProvider" />
+				<ref local="rememberMeAuthenticationProvider" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
+	<bean id="loggerListener"
+		class="org.acegisecurity.event.authentication.LoggerListener" />
+
+	<bean id="daoAuthenticationProvider"
+		class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
+		<property name="userDetailsService" ref="userDetailsService" />
+		<property name="saltSource" ref="saltSource" />
+		<property name="passwordEncoder" ref="passwordEncoder" />
+	</bean>
+
+	<!-- This bean definition must be available to ApplicationContext.getBean() so StartupListener
+		can look for it and detect if password encryption is turned on or not -->
+	<bean id="passwordEncoder"
+		class="org.acegisecurity.providers.encoding.ShaPasswordEncoder" />
+
+	<!-- Declare a stable source of salt for passwords. The parameter used must not change for the given user. -->
+	<bean id="saltSource"
+		class="org.acegisecurity.providers.dao.salt.SystemWideSaltSource">
+		<property name="systemWideSalt">
+			<value>${gemma.salt}</value>
+		</property>
+	</bean>
+
+	<!-- Read users from database -->
+	<bean id="userDetailsService"
+		class="ubic.gemma.security.principal.UserDetailsServiceImpl">
+		<property name="userService" ref="userService" />
+	</bean>
+
+
+
+	<bean id="anonymousAuthenticationProvider"
+		class="org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
+		<property name="key">
+			<value>anonymous</value>
+		</property>
+	</bean>
+
+	<!-- ===================== REMEMBER ME ==================== -->
+	<bean id="rememberMeProcessingFilter"
+		class="org.acegisecurity.ui.rememberme.RememberMeProcessingFilter">
+		<property name="rememberMeServices" ref="rememberMeServices" />
+		<property name="authenticationManager"
+			ref="authenticationManager" />
+	</bean>
+
+	<bean id="rememberMeServices"
+		class="org.acegisecurity.ui.rememberme.TokenBasedRememberMeServices">
+		<property name="userDetailsService" ref="userDetailsService" />
+		<property name="key" value="gemmapleaserememberme" />
+		<property name="parameter" value="rememberMe" />
+	</bean>
+
+	<bean id="rememberMeAuthenticationProvider"
+		class="org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider">
+		<property name="key" value="gemmapleaserememberme" />
+	</bean>
+
+	<!-- ===================== HTTP REQUEST SECURITY ==================== -->
+
+	<bean id="exceptionTranslationFilter"
+		class="org.acegisecurity.ui.ExceptionTranslationFilter">
+		<property name="authenticationEntryPoint">
+			<ref local="authenticationProcessingFilterEntryPoint" />
+		</property>
+	</bean>
+
+	<!-- Note the order that entries are placed against the objectDefinitionSource is critical.
+		The FilterSecurityInterceptor will work from the top of the list down to the FIRST pattern that matches the request URL.
+		Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
+	<bean id="filterInvocationInterceptor"
+		class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
+		<property name="authenticationManager">
+			<ref local="authenticationManager" />
+		</property>
+		<property name="accessDecisionManager">
+			<ref local="roleAccessDecisionManager" />
+		</property>
+		<property name="objectDefinitionSource">
+			<value>
+				<![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=admin,user,ROLE_ANONYMOUS
                 /passwordHint.html*=admin,user
@@ -173,26 +194,29 @@
                 /dwr/**/*.dwr =admin,user,ROLE_ANONYMOUS
                 /**/*.html*=admin,user,ROLE_ANONYMOUS
              ]]>
-            </value>
-        </property>
-    </bean>
-    
-    <!-- if user requests a secure Http resource but has not been authenticated, they will be presented this login form -->
-    <bean id="authenticationProcessingFilterEntryPoint" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
-        <property name="loginFormUrl">
-            <value>/login.jsp</value>
-        </property>
-        <property name="forceHttps">
-            <value>false</value>
-        </property>
-    </bean>
-    
-    <!-- ===================== SSL SWITCHING - add to filterchainproxy to turn on ==================== -->
-    <bean id="channelProcessingFilter" class="org.acegisecurity.securechannel.ChannelProcessingFilter">
-        <property name="channelDecisionManager" ref="channelDecisionManager"/>
-        <property name="filterInvocationDefinitionSource">
-            <value>
-                <![CDATA[
+			</value>
+		</property>
+	</bean>
+
+	<!-- if user requests a secure Http resource but has not been authenticated, they will be presented this login form -->
+	<bean id="authenticationProcessingFilterEntryPoint"
+		class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
+		<property name="loginFormUrl">
+			<value>/login.jsp</value>
+		</property>
+		<property name="forceHttps">
+			<value>false</value>
+		</property>
+	</bean>
+
+	<!-- ===================== SSL SWITCHING - add to filterchainproxy to turn on ==================== -->
+	<bean id="channelProcessingFilter"
+		class="org.acegisecurity.securechannel.ChannelProcessingFilter">
+		<property name="channelDecisionManager"
+			ref="channelDecisionManager" />
+		<property name="filterInvocationDefinitionSource">
+			<value>
+				<![CDATA[
                 PATTERN_TYPE_APACHE_ANT
                 /admin/**=REQUIRES_SECURE_CHANNEL
                 /login*=REQUIRES_SECURE_CHANNEL
@@ -204,39 +228,43 @@
                 /saveUser.html*=REQUIRES_SECURE_CHANNEL
                 /**=REQUIRES_INSECURE_CHANNEL
              ]]>
-            </value>
-        </property>
-    </bean>
-    
-    <bean id="channelDecisionManager" class="org.acegisecurity.securechannel.ChannelDecisionManagerImpl">
-        <property name="channelProcessors">
-            <list>
-                <bean class="org.acegisecurity.securechannel.SecureChannelProcessor"/>
-                <bean class="org.acegisecurity.securechannel.InsecureChannelProcessor"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- ===================== AUTHORIZATION ==================== -->
-    
-    <!-- acegi serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. -->
-    <!--  <bean id="serviceSecurityInterceptor" class="org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor"> -->
-    <bean id="serviceSecurityInterceptor" class="ubic.gemma.security.interceptor.method.aopalliance.CustomMethodSecurityInterceptor">
-    	<property name="userDetailsService">
-            <ref bean="userDetailsService"/>
-        </property>
-        <property name="authenticationManager">
-            <ref bean="authenticationManager"/>
-        </property>
-        <property name="accessDecisionManager">
-            <ref bean="httpRequestAccessDecisionManager"/>
-        </property>
-        <property name="afterInvocationManager">
-            <ref bean="afterInvocationManager"/>
-        </property>
-        <property name="objectDefinitionSource">
-            <value>
-                <![CDATA[
+			</value>
+		</property>
+	</bean>
+
+	<bean id="channelDecisionManager"
+		class="org.acegisecurity.securechannel.ChannelDecisionManagerImpl">
+		<property name="channelProcessors">
+			<list>
+				<bean
+					class="org.acegisecurity.securechannel.SecureChannelProcessor" />
+				<bean
+					class="org.acegisecurity.securechannel.InsecureChannelProcessor" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- ===================== AUTHORIZATION ==================== -->
+
+	<!-- acegi serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. -->
+	<!--  <bean id="serviceSecurityInterceptor" class="org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor"> -->
+	<bean id="serviceSecurityInterceptor"
+		class="ubic.gemma.security.interceptor.method.aopalliance.CustomMethodSecurityInterceptor">
+		<property name="userDetailsService">
+			<ref bean="userDetailsService" />
+		</property>
+		<property name="authenticationManager">
+			<ref bean="authenticationManager" />
+		</property>
+		<property name="accessDecisionManager">
+			<ref bean="httpRequestAccessDecisionManager" />
+		</property>
+		<property name="afterInvocationManager">
+			<ref bean="afterInvocationManager" />
+		</property>
+		<property name="objectDefinitionSource">
+			<value>
+				<![CDATA[
                 ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.create=user,admin
                 ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.findOrCreate=user,admin
@@ -254,7 +282,6 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.delete=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByAccession=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
@@ -430,234 +457,266 @@
                 ubic.gemma.model.genome.TaxonService.findByScientificName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByCommonName=user,admin,ROLE_ANONYMOUS
            ]]>
-            </value>
-        </property>
-    </bean>
-    
-    <!-- An access decision manager used by the serviceSecurityInterceptor, which uses method interception (as well as the role voter). -->
-    <bean id="httpRequestAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
-        <property name="allowIfAllAbstainDecisions">
-            <value>false</value>
-        </property>
-        <property name="decisionVoters">
-            <list>
-                <ref local="roleVoter"/>
-                <ref bean="securableVoter"/>
-                <ref bean="localFileEditVoter"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!--  An access decision manager used by filterInvocationInterceptor, which is incompatible with BasicAclVoter (inherits from AbstractAclVoter) -->
-    <bean id="roleAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
-        <property name="allowIfAllAbstainDecisions">
-            <value>false</value>
-        </property>
-        <property name="decisionVoters">
-            <list>
-                <ref bean="roleVoter"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- ===================== VOTING ==================== -->
-    
-    <!-- role-based voting -->
-    <bean id="roleVoter" class="org.acegisecurity.vote.RoleVoter">
-        <property name="rolePrefix">
-            <value/>
-        </property>
-    </bean>
-    
-    <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
-    
-    <!-- An access decision voters that read processConfigAttribute settings -->
-    
-    <!--  voter that can be applied to any operation on a securable -->
-    <bean id="securableVoter" class="org.acegisecurity.vote.BasicAclEntryVoter">
-        <property name="aclManager">
-            <ref bean="aclManager"/>
-        </property>
-        <property name="processConfigAttribute">
-            <value>ACL_SECURABLE_EDIT</value>
-        </property>
-        <property name="processDomainObjectClass">
-            <value>ubic.gemma.model.common.Securable</value>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION"/>
-                <ref local="SimpleAclEntry.READ_WRITE"/>
-            </list>
-        </property>
-    </bean>
-    
-    <bean id="localFileEditVoter" class="org.acegisecurity.vote.BasicAclEntryVoter">
-        <property name="aclManager">
-            <ref bean="aclManager"/>
-        </property>
-        <property name="processConfigAttribute">
-            <value>ACL_LOCALFILE_EDIT</value>
-        </property>
-        <property name="processDomainObjectClass">
-            <value>ubic.gemma.model.common.description.LocalFile</value>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION"/>
-                <ref local="SimpleAclEntry.READ_WRITE"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
-    
-    <bean id="afterInvocationManager" class="org.acegisecurity.afterinvocation.AfterInvocationProviderManager">
-        <property name="providers">
-            <list>
-                <ref local="afterAclRead"/>
-                <ref local="afterAclCollectionRead"/>
-                <ref local="afterAclArrayDesignCollectionRead"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- Processes AFTER_ACL_READ configuration settings -->
-    <bean id="afterAclRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
-        <property name="aclManager">
-            <ref local="aclManager"/>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
-                <ref bean="SimpleAclEntry.READ_WRITE"/>
-                <ref bean="SimpleAclEntry.READ"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- Processes AFTER_ACL_COLLECTION_READ configuration settings (removes objects from the collection if you do not 
-    have authorization priviliges based on -->
-    <bean id="afterAclCollectionRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
-        <property name="aclManager">
-            <ref local="aclManager"/>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
-                <ref bean="SimpleAclEntry.READ_WRITE"/>
-                <ref bean="SimpleAclEntry.READ"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- Process AFTER_ACL_ARRAYDESIGN_COLLECTION_READ -->
-    <bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.afterInvocation.AclAfterCollectionCompSeqByArrayDesignFilter">
-        <property name="aclManager">
-            <ref local="aclManager"/>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
-                <ref bean="SimpleAclEntry.READ_WRITE"/>
-                <ref bean="SimpleAclEntry.READ"/>
-            </list>
-        </property>
-    </bean>
-    
-    <!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
-    
-    <bean id="aclManager" class="org.acegisecurity.acl.AclProviderManager">
-        <property name="providers">
-            <list>
-                <ref local="basicAclProvider"/>
-            </list>
-        </property>
-    </bean>
-    
-    <bean id="basicAclProvider" class="org.acegisecurity.acl.basic.BasicAclProvider">
-        <property name="basicAclDao">
-            <ref local="basicAclExtendedDao"/>
-        </property>
-    </bean>
-    
-    <bean id="basicAclExtendedDao" class="org.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl">
-        <property name="dataSource">
-            <ref bean="dataSource"/>
-        </property>
-    </bean>
-   
-    <bean id="customAclDao" class="ubic.gemma.security.acl.basic.jdbc.CustomAclDao">
-        <property name="dataSource">
-            <ref bean="dataSource"/>
-        </property>
-    </bean>
-     
-    <!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~~~~ -->
-    
-    <!-- ACL permission masks -->
-    
-    <bean id="SimpleAclEntry.ADMINISTRATION" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>org.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
-        </property>
-    </bean>
-    
-    <bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>org.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
-        </property>
-    </bean>
-    
-    <bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>org.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
-        </property>
-    </bean>
-    
-    <bean id="SimpleAclEntry.CREATE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>org.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
-        </property>
-    </bean>
-    
-    <bean id="SimpleAclEntry.DELETE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>org.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
-        </property>
-    </bean>
-    
-    <!-- ================================================================== -->
-    
-    <!--  Interceptor to persist ACL objects -->
-    <bean id="addOrRemoveFromACLInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
-        <property name="advice">
-            <ref bean="aclAdvice"/> <!-- defined elsewhere -->
-        </property>
-        <property name="pointcut">
-            <bean class="ubic.gemma.security.interceptor.AclPointcut"/>
-        </property>
-    </bean>
-     
-    
-    <!--  pointcut that identifies crud operations -->
-    <bean id="crudPointcut" class="ubic.gemma.security.interceptor.CrudPointcut"/>
-    
-    <bean id="auditInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
-        <property name="advice">
-            <ref bean="auditAdvice"/> <!-- defined elsewhere -->
-        </property>
-        <property name="pointcut">
-            <ref bean="crudPointcut"/>
-        </property>
-    </bean>
-    
-    <!-- This interceptor insures that that users can only update themselves, not other users -->
-    <bean id="userSecurityInterceptor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
-        <property name="advice" ref="userSecurityAdvice"/>
-        <property name="patterns" value=".*saveUser"/>
-    </bean>
-    
-    <bean id="userSecurityAdvice" class="ubic.gemma.security.interceptor.UserSecurityAdvice"/>
-    
+			</value>
+		</property>
+	</bean>
+
+	<!-- An access decision manager used by the serviceSecurityInterceptor, which uses method interception (as well as the role voter). -->
+	<bean id="httpRequestAccessDecisionManager"
+		class="org.acegisecurity.vote.AffirmativeBased">
+		<property name="allowIfAllAbstainDecisions">
+			<value>false</value>
+		</property>
+		<property name="decisionVoters">
+			<list>
+				<ref local="roleVoter" />
+				<ref bean="securableVoter" />
+				<ref bean="localFileEditVoter" />
+			</list>
+		</property>
+	</bean>
+
+	<!--  An access decision manager used by filterInvocationInterceptor, which is incompatible with BasicAclVoter (inherits from AbstractAclVoter) -->
+	<bean id="roleAccessDecisionManager"
+		class="org.acegisecurity.vote.AffirmativeBased">
+		<property name="allowIfAllAbstainDecisions">
+			<value>false</value>
+		</property>
+		<property name="decisionVoters">
+			<list>
+				<ref bean="roleVoter" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- ===================== VOTING ==================== -->
+
+	<!-- role-based voting -->
+	<bean id="roleVoter" class="org.acegisecurity.vote.RoleVoter">
+		<property name="rolePrefix">
+			<value />
+		</property>
+	</bean>
+
+	<!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
+
+	<!-- An access decision voters that read processConfigAttribute settings -->
+
+	<!--  voter that can be applied to any operation on a securable -->
+	<bean id="securableVoter"
+		class="org.acegisecurity.vote.BasicAclEntryVoter">
+		<property name="aclManager">
+			<ref bean="aclManager" />
+		</property>
+		<property name="processConfigAttribute">
+			<value>ACL_SECURABLE_EDIT</value>
+		</property>
+		<property name="processDomainObjectClass">
+			<value>ubic.gemma.model.common.Securable</value>
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref local="SimpleAclEntry.ADMINISTRATION" />
+				<ref local="SimpleAclEntry.READ_WRITE" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="localFileEditVoter"
+		class="org.acegisecurity.vote.BasicAclEntryVoter">
+		<property name="aclManager">
+			<ref bean="aclManager" />
+		</property>
+		<property name="processConfigAttribute">
+			<value>ACL_LOCALFILE_EDIT</value>
+		</property>
+		<property name="processDomainObjectClass">
+			<value>ubic.gemma.model.common.description.LocalFile</value>
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref local="SimpleAclEntry.ADMINISTRATION" />
+				<ref local="SimpleAclEntry.READ_WRITE" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
+
+	<bean id="afterInvocationManager"
+		class="org.acegisecurity.afterinvocation.AfterInvocationProviderManager">
+		<property name="providers">
+			<list>
+				<ref local="afterAclRead" />
+				<ref local="afterAclCollectionRead" />
+				<ref local="afterAclArrayDesignCollectionRead" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- Processes AFTER_ACL_READ configuration settings -->
+	<bean id="afterAclRead"
+		class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
+		<property name="aclManager">
+			<ref local="aclManager" />
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref bean="SimpleAclEntry.ADMINISTRATION" />
+				<ref bean="SimpleAclEntry.READ_WRITE" />
+				<ref bean="SimpleAclEntry.READ" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- Processes AFTER_ACL_COLLECTION_READ configuration settings (removes objects from the collection if you do not 
+		have authorization priviliges based on -->
+	<bean id="afterAclCollectionRead"
+		class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
+		<property name="aclManager">
+			<ref local="aclManager" />
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref bean="SimpleAclEntry.ADMINISTRATION" />
+				<ref bean="SimpleAclEntry.READ_WRITE" />
+				<ref bean="SimpleAclEntry.READ" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- Process AFTER_ACL_ARRAYDESIGN_COLLECTION_READ -->
+	<bean id="afterAclArrayDesignCollectionRead"
+		class="ubic.gemma.security.afterInvocation.AclAfterCollectionCompSeqByArrayDesignFilter">
+		<property name="aclManager">
+			<ref local="aclManager" />
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref bean="SimpleAclEntry.ADMINISTRATION" />
+				<ref bean="SimpleAclEntry.READ_WRITE" />
+				<ref bean="SimpleAclEntry.READ" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
+
+	<bean id="aclManager"
+		class="org.acegisecurity.acl.AclProviderManager">
+		<property name="providers">
+			<list>
+				<ref local="basicAclProvider" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="basicAclProvider"
+		class="org.acegisecurity.acl.basic.BasicAclProvider">
+		<property name="basicAclDao">
+			<ref local="basicAclExtendedDao" />
+		</property>
+	</bean>
+
+	<bean id="basicAclExtendedDao"
+		class="org.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+	</bean>
+
+	<bean id="customAclDao"
+		class="ubic.gemma.security.acl.basic.jdbc.CustomAclDao">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+	</bean>
+
+	<!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~~~~ -->
+
+	<!-- ACL permission masks -->
+
+	<bean id="SimpleAclEntry.ADMINISTRATION"
+		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+		<property name="staticField">
+			<value>
+				org.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION
+			</value>
+		</property>
+	</bean>
+
+	<bean id="SimpleAclEntry.READ_WRITE"
+		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+		<property name="staticField">
+			<value>
+				org.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE
+			</value>
+		</property>
+	</bean>
+
+	<bean id="SimpleAclEntry.READ"
+		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+		<property name="staticField">
+			<value>
+				org.acegisecurity.acl.basic.SimpleAclEntry.READ
+			</value>
+		</property>
+	</bean>
+
+	<bean id="SimpleAclEntry.CREATE"
+		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+		<property name="staticField">
+			<value>
+				org.acegisecurity.acl.basic.SimpleAclEntry.CREATE
+			</value>
+		</property>
+	</bean>
+
+	<bean id="SimpleAclEntry.DELETE"
+		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+		<property name="staticField">
+			<value>
+				org.acegisecurity.acl.basic.SimpleAclEntry.DELETE
+			</value>
+		</property>
+	</bean>
+
+	<!-- ================================================================== -->
+
+	<!--  Interceptor to persist ACL objects -->
+	<bean id="addOrRemoveFromACLInterceptor"
+		class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice">
+			<ref bean="aclAdvice" /><!-- defined elsewhere -->
+		</property>
+		<property name="pointcut">
+			<bean class="ubic.gemma.security.interceptor.AclPointcut" />
+		</property>
+	</bean>
+
+
+	<!--  pointcut that identifies crud operations -->
+	<bean id="crudPointcut"
+		class="ubic.gemma.security.interceptor.CrudPointcut" />
+
+	<bean id="auditInterceptor"
+		class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice">
+			<ref bean="auditAdvice" /><!-- defined elsewhere -->
+		</property>
+		<property name="pointcut">
+			<ref bean="crudPointcut" />
+		</property>
+	</bean>
+
+	<!-- This interceptor insures that that users can only update themselves, not other users -->
+	<bean id="userSecurityInterceptor"
+		class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+		<property name="advice" ref="userSecurityAdvice" />
+		<property name="patterns" value=".*saveUser" />
+	</bean>
+
+	<bean id="userSecurityAdvice"
+		class="ubic.gemma.security.interceptor.UserSecurityAdvice" />
+
 </beans>
