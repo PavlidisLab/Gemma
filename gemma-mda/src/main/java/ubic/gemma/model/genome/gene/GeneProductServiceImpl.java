@@ -107,11 +107,13 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
         return this.getGeneProductDao().find( gProduct );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoad(java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getGeneProductDao().load( ids );
     }
 

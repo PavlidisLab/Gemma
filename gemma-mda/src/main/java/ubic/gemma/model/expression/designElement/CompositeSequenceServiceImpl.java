@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  * @see ubic.gemma.model.expression.designElement.CompositeSequenceService
  */
-public class CompositeSequenceServiceImpl extends 
+public class CompositeSequenceServiceImpl extends
         ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase {
 
     Log log = LogFactory.getLog( this.getClass() );
@@ -52,7 +52,7 @@ public class CompositeSequenceServiceImpl extends
      */
     @Override
     protected Collection handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
-        return this.getCompositeSequenceDao().getRawSummary( arrayDesign,  numResults );
+        return this.getCompositeSequenceDao().getRawSummary( arrayDesign, numResults );
     }
 
     /**
@@ -197,20 +197,21 @@ public class CompositeSequenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoad(java.util.Collection)
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getCompositeSequenceDao().load( ids );
     }
 
     @Override
-    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) throws Exception {
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
+            throws Exception {
         return this.getCompositeSequenceDao().getRawSummary( compositeSequence, numResults );
     }
 
     @Override
-    protected Collection handleGetRawSummary( Collection compositeSequences,  Integer numResults) throws Exception {
+    protected Collection handleGetRawSummary( Collection compositeSequences, Integer numResults ) throws Exception {
         return this.getCompositeSequenceDao().getRawSummary( compositeSequences, numResults );
     }
 
@@ -258,18 +259,20 @@ public class CompositeSequenceServiceImpl extends
     protected Collection handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
         return this.getCompositeSequenceDao().getGenes( compositeSequence );
     }
-    
+
     @Override
     protected Map handleGetGenes( Collection sequences ) throws Exception {
         return this.getCompositeSequenceDao().getGenes( sequences );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoad(java.lang.Long)
      */
     @Override
     protected CompositeSequence handleLoad( Long id ) throws Exception {
-     return ( CompositeSequence ) this.getCompositeSequenceDao().load( id );
+        return ( CompositeSequence ) this.getCompositeSequenceDao().load( id );
     }
 
 }

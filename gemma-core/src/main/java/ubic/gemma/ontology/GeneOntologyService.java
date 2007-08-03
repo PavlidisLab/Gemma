@@ -81,7 +81,7 @@ public class GeneOntologyService implements InitializingBean {
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
     private static Map<String, Collection<OntologyTerm>> parentsCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
-    
+
     private static Map<Long, Collection<OntologyTerm>> goTerms = new HashMap<Long, Collection<OntologyTerm>>();
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
@@ -343,7 +343,7 @@ public class GeneOntologyService implements InitializingBean {
             parents.add( entry2 );
             Collection<OntologyTerm> entry2Parents = new HashSet<OntologyTerm>();
             getAllParents( entry2, entry2Parents );
-            parents.addAll(entry2Parents);
+            parents.addAll( entry2Parents );
         }
 
         parentsCache.put( entry.getUri(), new HashSet<OntologyTerm>( parents ) );
@@ -359,9 +359,9 @@ public class GeneOntologyService implements InitializingBean {
         if ( entries == null ) return null;
         Collection<OntologyTerm> result = new HashSet<OntologyTerm>();
         for ( OntologyTerm entry : entries ) {
-        	Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
+            Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
             getAllParents( entry, parents );
-            result.addAll(parents);
+            result.addAll( parents );
         }
         return result;
     }
@@ -546,7 +546,7 @@ public class GeneOntologyService implements InitializingBean {
 
         if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) return overlap;
 
-        Collection<Gene> genes = this.geneService.load( geneIds );
+        Collection<Gene> genes = this.geneService.loadMultiple( geneIds );
 
         for ( Object obj : genes ) {
             Gene gene = ( Gene ) obj;
@@ -562,31 +562,27 @@ public class GeneOntologyService implements InitializingBean {
 
         return overlap;
     }
-    
+
     /**
      * @param queryGene1
      * @param queryGene2
      * @returns Collection<OntologyEntries>
      * @throws Exception
-    
      */
     @SuppressWarnings("unchecked")
-    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 )
-            throws Exception {
+    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) throws Exception {
 
-        if ( queryGene1 == null  || queryGene2 == null) return null;
-        
+        if ( queryGene1 == null || queryGene2 == null ) return null;
+
         Collection<OntologyTerm> queryGeneTerms1 = getGOTerms( queryGene1 );
         Collection<OntologyTerm> queryGeneTerms2 = getGOTerms( queryGene2 );
 
         // nothing to do.
         if ( ( queryGeneTerms1 == null ) || ( queryGeneTerms1.isEmpty() ) ) return null;
         if ( ( queryGeneTerms2 == null ) || ( queryGeneTerms2.isEmpty() ) ) return null;
-        queryGeneTerms1.retainAll(queryGeneTerms2);
+        queryGeneTerms1.retainAll( queryGeneTerms2 );
         return queryGeneTerms1;
     }
-
-
 
     /**
      * @param goId
@@ -596,14 +592,13 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<Gene> getGenes( String goId, Taxon taxon ) {
-    	OntologyTerm t = getTermForId(goId);
-    	if (t == null)
-    		return null;
+        OntologyTerm t = getTermForId( goId );
+        if ( t == null ) return null;
         Collection<OntologyTerm> terms = getAllChildren( t );
-        Collection<Gene> results = new HashSet<Gene>(this.gene2GOAssociationService.findByGOTerm(goId, taxon));
+        Collection<Gene> results = new HashSet<Gene>( this.gene2GOAssociationService.findByGOTerm( goId, taxon ) );
 
         for ( OntologyTerm term : terms ) {
-            results.addAll(this.gene2GOAssociationService.findByGOTerm( asRegularGoId( term ), taxon ));
+            results.addAll( this.gene2GOAssociationService.findByGOTerm( asRegularGoId( term ), taxon ) );
         }
         return results;
     }
@@ -614,10 +609,10 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
-    	
-    	if(goTerms.containsKey(gene.getId())){
-    		return goTerms.get(gene.getId());
-    	}
+
+        if ( goTerms.containsKey( gene.getId() ) ) {
+            return goTerms.get( gene.getId() );
+        }
         Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
@@ -630,8 +625,8 @@ public class GeneOntologyService implements InitializingBean {
         }
 
         allGOTermSet = getAllParents( allGOTermSet );
-        
-        goTerms.put(gene.getId(), allGOTermSet);
+
+        goTerms.put( gene.getId(), allGOTermSet );
         return allGOTermSet;
     }
 

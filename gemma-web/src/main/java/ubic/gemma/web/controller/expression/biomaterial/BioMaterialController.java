@@ -150,7 +150,7 @@ public class BioMaterialController extends BaseMultiActionController {
     }
 
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
-        return bioMaterialService.load( ids );
+        return bioMaterialService.loadMultiple( ids );
     }
 
     /**

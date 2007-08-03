@@ -39,7 +39,7 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
-	@Override
+    @Override
     protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
         return this.getGeneDao().getCoexpressedGeneMap( stringincy, gene );
     }
@@ -201,28 +201,33 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
     }
 
-    /* (non-Javadoc)
-	 * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMultipleCoexpressionResults(java.util.Collection, java.util.Collection, java.lang.Integer)
-	 */
-	@Override
-	protected Object handleGetMultipleCoexpressionResults(Collection genes, Collection ees, Integer stringency) throws Exception {
-		
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMultipleCoexpressionResults(java.util.Collection,
+     *      java.util.Collection, java.lang.Integer)
+     */
+    @Override
+    protected Object handleGetMultipleCoexpressionResults( Collection genes, Collection ees, Integer stringency )
+            throws Exception {
+
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
-        
+
         MultipleCoexpressionCollectionValueObject results = new MultipleCoexpressionCollectionValueObject();
-		for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
-			Gene gene = (Gene) iter.next();
-            CoexpressionCollectionValueObject current = (CoexpressionCollectionValueObject)getCoexpressedGenes( gene, ees, stringency );
+        for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
+            Gene gene = ( Gene ) iter.next();
+            CoexpressionCollectionValueObject current = ( CoexpressionCollectionValueObject ) getCoexpressedGenes(
+                    gene, ees, stringency );
             results.addCoexpressionCollection( current );
             current = null;
-		}
-        
+        }
+
         overallWatch.stop();
         results.setElapsedWallTimeElapsed( overallWatch.getTime() );
-        
-		return results;
-	}
+
+        return results;
+    }
 
     @Override
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
@@ -232,10 +237,10 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleLoad(java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getGeneDao().load( ids );
     }
 
@@ -281,22 +286,22 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     }
 
     @Override
-    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {     
+    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
         return this.getGeneDao().getCS2GeneMap( csIds );
-    }
-    
-    @Override
-    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {     
-        return this.getGeneDao().loadProbeAlignedRegions(taxon);
-    }
-    
-    @Override
-    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {     
-        return this.getGeneDao().loadGenes(taxon);
     }
 
     @Override
-    protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {     
-        return this.getGeneDao().loadPredictedGenes(taxon);
+    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+        return this.getGeneDao().loadProbeAlignedRegions( taxon );
+    }
+
+    @Override
+    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {
+        return this.getGeneDao().loadGenes( taxon );
+    }
+
+    @Override
+    protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
+        return this.getGeneDao().loadPredictedGenes( taxon );
     }
 }

@@ -45,7 +45,7 @@ public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI
                 Long geneId = Long.parseLong( line );
                 geneIds.add( geneId );
             }
-            genes = geneService.load( geneIds );
+            genes = geneService.loadMultiple( geneIds );
         } else {
             while ( ( line = in.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) ) continue;
@@ -54,7 +54,7 @@ public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI
                 if ( type == OFFICIAL_NAME )
                     c = geneService.findByOfficialName( s );
                 else if ( type == OFFICIAL_SYMBOL ) {
-                    c = geneService.findByOfficialSymbol( s);
+                    c = geneService.findByOfficialSymbol( s );
                 } else
                     continue;
                 if ( c == null || c.size() == 0 ) {

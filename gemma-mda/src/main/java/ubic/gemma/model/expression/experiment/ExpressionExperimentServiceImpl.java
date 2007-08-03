@@ -122,7 +122,6 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByName( name );
     }
 
-  
     /*
      * (non-Javadoc)
      * 
@@ -315,10 +314,10 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoad(java.util.Collection)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getExpressionExperimentDao().load( ids );
     }
 
@@ -453,24 +452,21 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection handleFindByBibliographicReference( BibliographicReference bibRef ) throws Exception {
         return this.getExpressionExperimentDao().findByBibliographicReference( bibRef.getId() );
     }
-    
-    
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
-    protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE) throws Exception {
-    	Collection preferredQuantitationTypes = new HashSet();
-    	handleThawLite(EE);
-    	for (QuantitationType qt : EE.getQuantitationTypes()) {
-    		if (qt.getIsPreferred()) {
-    			preferredQuantitationTypes.add(qt);
-    		}
-    	}
-    	return preferredQuantitationTypes;
+    protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE ) throws Exception {
+        Collection preferredQuantitationTypes = new HashSet();
+        handleThawLite( EE );
+        for ( QuantitationType qt : EE.getQuantitationTypes() ) {
+            if ( qt.getIsPreferred() ) {
+                preferredQuantitationTypes.add( qt );
+            }
+        }
+        return preferredQuantitationTypes;
     }
-    
-    
 
 }

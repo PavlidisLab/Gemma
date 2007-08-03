@@ -126,7 +126,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
      */
     @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
-        Collection compositeSequences = compositeSequenceService.load( ids );
+        Collection compositeSequences = compositeSequenceService.loadMultiple( ids );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
@@ -232,7 +232,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
                 Long id = Long.parseLong( idList[i] );
                 ids.add( id );
             }
-            compositeSequences.addAll( compositeSequenceService.load( ids ) );
+            compositeSequences.addAll( compositeSequenceService.loadMultiple( ids ) );
         }
         return new ModelAndView( "compositeSequences" ).addObject( "compositeSequences", compositeSequences );
 

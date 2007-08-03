@@ -123,7 +123,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                     ids.add( Long.parseLong( id ) );
                 }
 
-                Collection bioSequences = bss.load( ids );
+                Collection bioSequences = bss.loadMultiple( ids );
                 bss.thaw( bioSequences );
                 processSequences( bioSequences );
                 return null;

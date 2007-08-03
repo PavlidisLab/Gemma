@@ -29,18 +29,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+
 /**
- * Holds a complete copy of the MgedOntology in memory. This gets loaded on startup.
- * As the MgedOntology is the framework ontology i've added a feature so that the Ontology can be changed dynamically
- * via the web front end. 
+ * Holds a complete copy of the MgedOntology in memory. This gets loaded on startup. As the MgedOntology is the
+ * framework ontology i've added a feature so that the Ontology can be changed dynamically via the web front end.
  * 
  * @author klc
  * @version $Id: MgedOntologyService.java
@@ -59,7 +58,7 @@ public class MgedOntologyService extends AbstractOntologyService {
         super();
         ontology_startingPoint = getOntologyStartingPoint();
     }
-    
+
     public void saveStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
@@ -67,7 +66,7 @@ public class MgedOntologyService extends AbstractOntologyService {
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( ( Characteristic ) vc );
-        Collection<BioMaterial> biomaterials = bioMaterialService.load( bioMaterialIdList );
+        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
 
         for ( BioMaterial bioM : biomaterials ) {
             bioM.setCharacteristics( chars );
@@ -88,12 +87,10 @@ public class MgedOntologyService extends AbstractOntologyService {
         nodes.add( buildTreeNode( term ) );
         return nodes;
     }
-    
-    
-    
+
     /**
-     * 
      * Will attempt to load a different ontology into the MGED ontology service
+     * 
      * @param ontologyURL
      * @param startingPointURL
      */
@@ -101,7 +98,6 @@ public class MgedOntologyService extends AbstractOntologyService {
 
         if ( running.get() ) return;
 
-        
         ontology_URL = ontologyURL;
         MgedOntologyService.ontology_startingPoint = startingPointURL;
 
@@ -135,8 +131,6 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     }
 
-    
-    
     /**
      * @param bioMaterialService the bioMaterialService to set
      */
@@ -145,8 +139,8 @@ public class MgedOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected  OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
-       return OntologyLoader.loadMemoryModel( url, spec );
+    protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
+        return OntologyLoader.loadMemoryModel( url, spec );
     }
 
     protected String getOntologyStartingPoint() {
@@ -154,7 +148,7 @@ public class MgedOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected String getOntologyUrl() {       
+    protected String getOntologyUrl() {
         return "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
     }
 

@@ -166,7 +166,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             Long id = Long.parseLong( geneId );
             Collection<Long> ids = new ArrayList<Long>();
             ids.add( id );
-            genesFound.addAll( geneService.load( ids ) );
+            genesFound.addAll( geneService.loadMultiple( ids ) );
         } else if ( commandObject.getExactSearch().equalsIgnoreCase( "on" ) ) {
             genesFound.addAll( geneService.findByOfficialSymbol( commandObject.getSearchString() ) );
         } else {
@@ -280,7 +280,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
 
         } else {
-            ees = expressionExperimentService.load( possibleEEs );
+            ees = expressionExperimentService.loadMultiple( possibleEEs );
         }
         commandObject.setToUseEE( ees );
         numExpressionExperiments = ees.size();

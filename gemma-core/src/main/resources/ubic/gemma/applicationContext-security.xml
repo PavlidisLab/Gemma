@@ -272,7 +272,8 @@
                 ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.create=user,admin
                 ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin

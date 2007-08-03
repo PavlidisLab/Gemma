@@ -73,7 +73,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * environment, such as ACEGI {@link http://acegisecurity.org/}.
  * <p>
  * 
-
  * @author klc
  * @author paul
  * @author keshav
@@ -186,7 +185,7 @@ public class SearchService {
         Collection<ExpressionExperiment> results = null;
 
         if ( ids != null && !ids.isEmpty() ) {
-            results = expressionExperimentService.load( ids );
+            results = expressionExperimentService.loadMultiple( ids );
         } else {
             results = new HashSet<ExpressionExperiment>();
         }

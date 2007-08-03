@@ -158,10 +158,10 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(java.util.Collection)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getBioSequenceDao().load( ids );
     }
 

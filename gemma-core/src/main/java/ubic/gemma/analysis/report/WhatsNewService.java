@@ -156,7 +156,7 @@ public class WhatsNewService {
                     }
                 }
                 if ( newEeIds.size() > 0 ) {
-                    wn.addNewObjects( expressionExperimentService.load( newEeIds ) );
+                    wn.addNewObjects( expressionExperimentService.loadMultiple( newEeIds ) );
                 }
 
             }
@@ -179,7 +179,7 @@ public class WhatsNewService {
                     }
                 }
                 if ( updatedEeIds.size() > 0 ) {
-                    wn.addUpdatedObjects( expressionExperimentService.load( updatedEeIds ) );
+                    wn.addUpdatedObjects( expressionExperimentService.loadMultiple( updatedEeIds ) );
                 }
             }
         } catch ( Throwable e ) {

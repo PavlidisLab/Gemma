@@ -315,8 +315,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             this.saveMessage( request, "Displaying all Datasets" );
             // TODO refactor this and make more generic (that is, turning securable objects into value objects).
             // I did this because I need to go through security.
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
-         
+            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
+                    .getFilteredExpressionExperimentValueObjects( null );
+
             expressionExperiments.addAll( eeValObjectCol );
         }
         // if ids are specified, then display only those expressionExperiments
@@ -544,7 +545,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         log.debug( "Filtered EEs: " + ids.toString() );
 
         Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentService.loadValueObjects( ids );
-        
+
         return valueObjs;
     }
 
@@ -566,7 +567,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( eeIds == null ) {
             securedEEs = expressionExperimentService.loadAll();
         } else {
-            securedEEs = expressionExperimentService.load( eeIds );
+            securedEEs = expressionExperimentService.loadMultiple( eeIds );
         }
         return getExpressionExperimentValueObjects( securedEEs );
     }

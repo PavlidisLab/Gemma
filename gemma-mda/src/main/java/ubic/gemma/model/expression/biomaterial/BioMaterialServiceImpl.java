@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- 
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -110,19 +109,23 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         return ( BioMaterial ) this.getBioMaterialDao().create( bioMaterial );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleCopy(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     protected BioMaterial handleCopy( BioMaterial bioMaterial ) throws Exception {
-        return (BioMaterial) this.getBioMaterialDao().copy( bioMaterial );
+        return ( BioMaterial ) this.getBioMaterialDao().copy( bioMaterial );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoad(java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getBioMaterialDao().load( ids );
     }
 

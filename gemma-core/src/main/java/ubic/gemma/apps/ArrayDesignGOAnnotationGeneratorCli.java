@@ -331,7 +331,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 geneIds.add( g.getId() );
             }
 
-            genes = geneService.load( geneIds );
+            genes = geneService.loadMultiple( geneIds );
 
             String geneNames = null;
             String geneDescriptions = null;
