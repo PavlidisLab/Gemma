@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -90,7 +91,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
         StringBuilder buf = new StringBuilder();
 
         List<ExperimentalFactor> experimentalFactors = new ArrayList<ExperimentalFactor>( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
-        Collections.sort( experimentalFactors, factorComparator );
+        Collections.sort( experimentalFactors, DescribableComparator.getInstance() );
         
         for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
             for ( BioMaterial sample : assay.getSamplesUsed() ) {
@@ -142,29 +143,13 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
         }
     }
     
-    static Comparator<ExperimentalFactor> factorComparator = new Comparator() {
-        public int compare( Object o1, Object o2 ) {
-            String o1Name = ( (ExperimentalFactor)o1 ).getName();
-            String o2Name = ( (ExperimentalFactor)o2 ).getName();
-            return o1Name.compareTo( o2Name );
-        }
-    };
-    
-    static Comparator<FactorValue> factorValueComparator = new Comparator() {
-        public int compare( Object o1, Object o2 ) {
-            String o1Name = ( (FactorValue)o1 ).toString();
-            String o2Name = ( (FactorValue)o2 ).toString();
-            return o1Name.compareTo( o2Name );
-        }
-    };
-    
     class FactorValueVector {
         private String key;
         private List<FactorValue> values;
         
         public FactorValueVector( Collection<FactorValue> values ) {
             this.values = new ArrayList<FactorValue>( values );
-            Collections.sort( this.values, factorValueComparator );
+            Collections.sort( this.values, FactorValueComparator.getInstance() );
             key = new String ( StringUtils.join( values, ":" ) );
         }
         
@@ -210,6 +195,50 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
                 return compare;
             else
                 return compare( o1, o2, ++i );
+        }
+    }
+}
+
+class DescribableComparator implements Comparator<Describable> {
+    private static DescribableComparator _instance = new DescribableComparator();
+    
+    public static DescribableComparator getInstance() { return _instance; }
+    
+    public int compare( Describable d1, Describable d2 ) {
+        String s1 = d1.getName();
+        String s2 = d2.getName();
+        if (s1 != null) {
+            if (s2 != null)
+                    return s1.compareTo( s2 );
+            else
+                return 1;
+        } else {
+            if (s2 != null)
+                return -1;
+            else
+                return 0;
+        }
+    }
+}
+
+class FactorValueComparator implements Comparator<FactorValue> {
+    private static FactorValueComparator _instance = new FactorValueComparator();
+    
+    public static FactorValueComparator getInstance() { return _instance; }
+    
+    public int compare( FactorValue v1, FactorValue v2 ) {
+        String s1 = v1.toString();
+        String s2 = v2.toString();
+        if (s1 != null) {
+            if (s2 != null)
+                    return s1.compareTo( s2 );
+            else
+                return 1;
+        } else {
+            if (s2 != null)
+                return -1;
+            else
+                return 0;
         }
     }
 }
