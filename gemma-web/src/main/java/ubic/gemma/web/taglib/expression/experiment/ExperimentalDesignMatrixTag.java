@@ -54,7 +54,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
     private static final long serialVersionUID = 1L;
     private ExpressionExperiment expressionExperiment;
 
-    private Map<FactorValueVector, Collection<BioAssay>> assayCount = new HashMap<FactorValueVector, Collection<BioAssay>>();
+    private Map<FactorValueVector, Collection<BioAssay>> assayCount;
     
     /**
      * @param design
@@ -62,6 +62,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
      */
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+        assayCount = new HashMap<FactorValueVector, Collection<BioAssay>>();
     }
 
     @Override
