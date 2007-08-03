@@ -426,7 +426,7 @@ var createBaseForm = function(subject,vc, divId, searchHandler, customHandler){
 
        ds = new Ext.data.Store(
                {
-                       proxy:new Ext.data.DWRProxy(MgedOntologyService.findTerm),
+                       proxy:new Ext.data.DWRProxy(OntologyService.findTerm),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
                        remoteSort:false,
                        sortInfo:{field:'id'}

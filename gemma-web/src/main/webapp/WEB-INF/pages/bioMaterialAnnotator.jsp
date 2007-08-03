@@ -23,6 +23,8 @@
 		<script type="text/javascript"
 			src="<c:url value='/scripts/ajax/bioMaterialAnnotator.js'/>"></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>	
+		<script type='text/javascript' src='/Gemma/dwr/interface/OntologyService.js'></script>	
+		
 	</head>
 
 	<body>

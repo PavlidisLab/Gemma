@@ -39,15 +39,15 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
 public abstract class AbstractOntologyService implements InitializingBean {
 
     protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
-    
-    protected  Map<String, OntologyTerm> terms;    
-    protected  AtomicBoolean ready = new AtomicBoolean( false );
-    protected  AtomicBoolean running = new AtomicBoolean( false );
-    protected  String ontology_URL;
-    protected  OntModel model;
-    protected  IndexLARQ index;
 
-    
+    protected Map<String, OntologyTerm> terms;
+    protected AtomicBoolean ready = new AtomicBoolean( false );
+    protected AtomicBoolean running = new AtomicBoolean( false );
+    protected String ontology_URL;
+    protected String ontology_name;
+    protected OntModel model;
+    protected IndexLARQ index;
+
     /**
      * Delegates the call as to load the model into memory or leave it on disk. Simply delegates to either
      * OntologyLoader.loadMemoryModel( url, spec ); OR OntologyLoader.loadPersistentModel( url, spec );
@@ -58,20 +58,27 @@ public abstract class AbstractOntologyService implements InitializingBean {
      * @throws IOException
      */
     protected abstract OntModel loadModel( String url, OntModelSpec spec ) throws IOException;
-    
+
     /**
-     * Defines the location of the ontology
-     * eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
+     * Defines the location of the ontology eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
+     * 
      * @return
      */
     protected abstract String getOntologyUrl();
-    
-    
+
+    /**
+     * The simple name of the ontology. Used for indexing purposes. (ie this will determine the name of the underlying
+     * index for searching the ontology)
+     * 
+     * @return
+     */
+    protected abstract String getOntologyName();
+
     public AbstractOntologyService() {
-        super();        
-        ontology_URL = getOntologyUrl();         
+        super();
+        ontology_URL = getOntologyUrl();
+        ontology_name = getOntologyName();
     }
-    
 
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
@@ -88,7 +95,6 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
         return term;
     }
-
 
     public Collection<OntologyRestriction> getTermRestrictions( String id ) {
 
@@ -110,21 +116,20 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
         if ( !ready.get() ) return null;
 
-        if ( index == null ) index = OntologyIndexer.indexOntology( "mged", model );
+        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
 
         return name;
     }
 
-  
     protected synchronized void init() {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
 
         // if loading ontologies is disabled in the configuration, return
         if ( !loadOntology ) {
-            log.info( "Loading Mged is disabled" );
+            log.info( "Loading " + ontology_name + " is disabled" );
             return;
         }
 
@@ -135,7 +140,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
                 running.set( true );
                 terms = new HashMap<String, OntologyTerm>();
-                log.debug( "Loading " + ontology_URL + " Ontology..." );
+                log.debug( "Loading " + ontology_name + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
                 //
@@ -150,7 +155,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
                     ready.set( true );
                     running.set( false );
 
-                    log.info( "Done loading " + ontology_URL + " Ontology" );
+                    log.info( "Done loading " + ontology_name + " Ontology" );
 
                     loadTime.stop();
                 } catch ( Exception e ) {

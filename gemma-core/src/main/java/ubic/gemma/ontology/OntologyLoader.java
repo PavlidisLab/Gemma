@@ -77,7 +77,7 @@ public class OntologyLoader {
         ExternalDatabase ontology = ExternalDatabase.Factory.newInstance();
         ontology.setType( DatabaseType.ONTOLOGY );
         ontology.setWebUri( url );
-        Ontology ont = getOntology( url );
+        //Ontology ont = getOntology( url );
 
         // if ( ont != null ) {
         // log.info( "Getting information about " + ont );
@@ -87,7 +87,7 @@ public class OntologyLoader {
         return ontology;
     }
 
-    private static void jenaOntToExternalDatabase( ExternalDatabase ontology, Ontology ont ) {
+    protected static void jenaOntToExternalDatabase( ExternalDatabase ontology, Ontology ont ) {
         StmtIterator iterator = ont.listProperties();
         ontology.setType( DatabaseType.ONTOLOGY );
 
@@ -174,7 +174,7 @@ public class OntologyLoader {
      * Deletes all cached ontologies from the system. Use with care!
      */
     protected static void wipePersistentStore() {
-        PersistentOntology po = new PersistentOntology();
+        //PersistentOntology po = new PersistentOntology();
         String dbUrl = ConfigUtils.getString( "gemma.jena.db.url" );
         String user = ConfigUtils.getString( "gemma.jena.db.user" );
         String pwd = ConfigUtils.getString( "gemma.jena.db.password" );

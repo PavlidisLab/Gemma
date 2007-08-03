@@ -38,14 +38,16 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * 
  * @spring.bean id="ontologyService"
  * @spring.property name="birnLexOntologyService" ref ="birnLexOntologyService"
- * @spring.property name="mgedOntologyService" ref ="mgedOntologyService"
+ * @spring.property name="fmaOntologyService" ref ="fmaOntologyService"
+ * @spring.property name="oboDiseaseOntologyService" ref ="oboDiseaseOntologyService"
  */
 public class OntologyService {
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
     private BirnLexOntologyService birnLexOntologyService;
-    private MgedOntologyService mgedOntologyService;
+    private OBODiseaseOntologyService oboDiseaseOntologyService;
+    private FMAOntologyService  fmaOntologyService;
     
  
 
@@ -71,9 +73,10 @@ public class OntologyService {
     
     public Collection<OntologyTerm> findTerm(String search){
         
-        Collection<OntologyTerm> terms =  birnLexOntologyService.findTerm( search );
-        terms.addAll( mgedOntologyService.findTerm( search ) );
-        
+        Collection<OntologyTerm> terms = new HashSet<OntologyTerm>(); 
+        terms.addAll( birnLexOntologyService.findTerm( search ));
+        terms.addAll( oboDiseaseOntologyService.findTerm( search ) );
+        terms.addAll( fmaOntologyService.findTerm( search ) );
         return terms;
     }
     
@@ -87,10 +90,18 @@ public class OntologyService {
     }
 
     /**
-     * @param mgedOntologyService the mgedOntologyService to set
+     * @param fmaOntologyService the fmaOntologyService to set
      */
-    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
-        this.mgedOntologyService = mgedOntologyService;
+    public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
+        this.fmaOntologyService = fmaOntologyService;
     }
+
+    /**
+     * @param oboDiseaseOntologyService the oboDiseaseOntologyService to set
+     */
+    public void setOboDiseaseOntologyService( OBODiseaseOntologyService oboDiseaseOntologyService ) {
+        this.oboDiseaseOntologyService = oboDiseaseOntologyService;
+    }
+
 
 }

@@ -49,6 +49,14 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 
 public class MgedOntologyService extends AbstractOntologyService {
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
+     */
+    @Override
+    protected String getOntologyName() {
+        return "mgedOntology";
+    }
+
     protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
 
     protected static String ontology_startingPoint;

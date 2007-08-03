@@ -1,5 +1,5 @@
 /*
- * The Gemma project
+ * The Gemma21 project
  * 
  * Copyright (c) 2007 University of British Columbia
  * 
@@ -17,6 +17,7 @@
  *
  */
 
+
 package ubic.gemma.ontology;
 
 import java.io.IOException;
@@ -24,35 +25,33 @@ import java.io.IOException;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 
-
 /**
- * Holds a complete copy of the BirnLex Ontology on disk. This gets loaded on startup.
+ * Holds a  copy of the OBO Disese Ontology on disk. This gets loaded on startup.
  * 
  * @author klc
- * @version $Id: BirnLexOntologyService.java
- * @spring.bean id="birnLexOntologyService"
+ * @version $Id: OBODiseaseOntologyService.java
+ * @spring.bean id="oboDiseaseOntologyService"
  */
 
-public class BirnLexOntologyService extends AbstractOntologyService {
+public class OBODiseaseOntologyService extends AbstractOntologyService {
 
     /* (non-Javadoc)
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override
     protected String getOntologyName() {
-        return "birnlexOntology";
+        return "oboDiseaseOntology";
+    }
+
+    @Override
+    protected String getOntologyUrl() {        
+        return "http://www.berkeleybop.org/ontologies/obo-all/disease_ontology/disease_ontology.owl";
     }
 
     @Override
     protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
-        return OntologyLoader.loadPersistentModel( url, false );
-    }  
-
-    @Override
-    protected String getOntologyUrl() {       
-        return "http://fireball.drexelmed.edu/birnlex/";
+        
+        return OntologyLoader.loadPersistentModel( url,  false);
     }
-    
-    
 
 }
