@@ -30,37 +30,6 @@
 	<input type="submit" value="Find a dataset" />
 </form>
 
-<!--
-<div style="float: right; width: 380px;">
-	<form name="ExpresssionExperimentFilter"
-		action="filterExpressionExperiments.html" method="POST">
-		<a class="helpLink" href="?"
-			onclick="showHelpTip(event, 'Search for another experiment'); return false"><img
-				src="<c:url value="/images/help.png"/>" alt="help"> </a>
-		<input type="text" name="filter" size="38" />
-		<input type="submit" value="Find a dataset" />
-	</form>
-	<h3>
-		Annotation
-	</h3>
-	<c:choose>
-		<c:when test="${empty expressionExperiment.characteristics}">
-			<p>No annotation found.</p>
-		</c:when>
-		<c:otherwise>
-				<ul>
-					<c:forEach var="characteristic"
-						items="${expressionExperiment.characteristics}">
-						<li>
-							<Gemma:characteristic characteristic="${characteristic}" />
-						</li>
-					</c:forEach>
-				</ul>
-			</c:otherwise>
-	</c:choose>
-</div>
--->
-
 <content tag="heading">
 Experiment detail view for
 <%
