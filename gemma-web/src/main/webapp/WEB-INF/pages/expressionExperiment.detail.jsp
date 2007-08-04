@@ -263,7 +263,8 @@ if ( expressionExperiment.getName() != null ) {
 		<c:otherwise>
 			<display:table name="characteristics" class="scrollTable"
 			 requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
-			 id="annotationTable" pagesize="5">
+			 id="annotationTable" pagesize="5"
+			 decorator="ubic.gemma.web.taglib.displaytag.common.description.CharacteristicWrapper">
 			<display:column property="value" sortable="false" title="" />
 			</display:table>
 		</c:otherwise>
