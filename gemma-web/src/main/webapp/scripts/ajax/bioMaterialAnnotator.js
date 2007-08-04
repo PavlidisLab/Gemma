@@ -117,7 +117,7 @@ var initTree = function(div){
 	
     tree = new Ext.tree.TreePanel("west-div", {
        animate:true,
-       loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTerms})
+       loader: new Ext.tree.DwrTreeLoader({dataUrl:MgedOntologyService.getBioMaterialTreeNodeTerms})
    });
 
 
@@ -160,7 +160,7 @@ var displayRestrictionsPanel = function(node){
 
 var saveHandler = function(event){
 	console.log(dwr.util.toDescriptiveString(vocabC,10))
-	MgedOntologyService.saveStatement(vocabC, bioMaterialList);
+	OntologyService.saveBioMaterialStatement(vocabC, bioMaterialList);
 		
 }
 

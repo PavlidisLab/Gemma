@@ -20,26 +20,34 @@ package ubic.gemma.ontology;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 import com.hp.hpl.jena.rdf.model.ModelMaker;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
- * Has a static method for finding out which ontologies are loaded into the system
- * and a general purpose find method that delegates to the many ontology services
+ * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
+ * that delegates to the many ontology services
  * 
  * @author pavlidis
  * @version $Id$
- * 
  * @spring.bean id="ontologyService"
  * @spring.property name="birnLexOntologyService" ref ="birnLexOntologyService"
  * @spring.property name="fmaOntologyService" ref ="fmaOntologyService"
  * @spring.property name="oboDiseaseOntologyService" ref ="oboDiseaseOntologyService"
+ * @spring.property name="bioMaterialService" ref ="bioMaterialService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  */
 public class OntologyService {
 
@@ -47,9 +55,9 @@ public class OntologyService {
 
     private BirnLexOntologyService birnLexOntologyService;
     private OBODiseaseOntologyService oboDiseaseOntologyService;
-    private FMAOntologyService  fmaOntologyService;
-    
- 
+    private FMAOntologyService fmaOntologyService;
+    private BioMaterialService bioMaterialService;
+    private ExpressionExperimentService eeService;
 
     /**
      * List the ontologies that are available locally.
@@ -70,18 +78,76 @@ public class OntologyService {
         return ontologies;
 
     }
-    
-    public Collection<OntologyTerm> findTerm(String search){
-        
-        Collection<OntologyTerm> terms = new HashSet<OntologyTerm>(); 
-        terms.addAll( birnLexOntologyService.findTerm( search ));
-        terms.addAll( oboDiseaseOntologyService.findTerm( search ) );
-        terms.addAll( fmaOntologyService.findTerm( search ) );
+
+    /**
+     * Given a search string will look through the birnlex, obo Disease Ontology and FMA Ontology for terms that match
+     * the search strin this a lucene backed search
+     * 
+     * @param search
+     * @return
+     */
+    public Collection<OntologyTerm> findTerm( String search ) {
+
+        Collection<OntologyTerm> terms = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> results;
+
+        results = birnLexOntologyService.findTerm( search );
+        if ( results != null ) terms.addAll( results );
+
+        results = oboDiseaseOntologyService.findTerm( search );
+        if ( results != null ) terms.addAll( results );
+
+        results = fmaOntologyService.findTerm( search );
+        if ( results != null ) terms.addAll( results );
+
         return terms;
     }
-    
-    
-    
+
+    /**
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list
+     * 
+     * @param vc
+     * @param bioMaterialIdList
+     */
+    public void saveBioMaterialStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
+
+        log.debug( "Vocab Characteristic: " + vc.getDescription() );
+        log.debug( "Biomaterial ID List: " + bioMaterialIdList );
+
+        Set<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( ( Characteristic ) vc );
+        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
+
+        for ( BioMaterial bioM : biomaterials ) {
+            bioM.setCharacteristics( chars );
+            bioMaterialService.update( bioM );
+
+        }
+
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list
+     * 
+     * @param vc
+     * @param eeIdList
+     */
+    public void saveExpressionExperimentStatment( VocabCharacteristic vc, Collection<Long> eeIdList ) {
+
+        log.info( "Vocab Characteristic: " + vc.getDescription() );
+        log.info( "Expression Experiment ID List: " + eeIdList );
+
+        Set<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( ( Characteristic ) vc );
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
+
+        for ( ExpressionExperiment ee : ees ) {
+            ee.setCharacteristics( chars );
+            eeService.update( ee );
+
+        }
+    }
+
     /**
      * @param birnLexOntologyService the birnLexOntologyService to set
      */
@@ -103,5 +169,18 @@ public class OntologyService {
         this.oboDiseaseOntologyService = oboDiseaseOntologyService;
     }
 
+    /**
+     * @param bioMaterialService the bioMaterialService to set
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.eeService = expressionExperimentService;
+    }
 
 }

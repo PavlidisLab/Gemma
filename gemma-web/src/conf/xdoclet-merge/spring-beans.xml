@@ -242,10 +242,10 @@
 					<property name="includes">
 						<list>							
 							<value>getBioMaterialTerms</value>
+							<value>getBioMaterialTreeNodeTerms</value>
 							<value>getTerm</value>
 							<value>getTermIndividuals</value>
 							<value>getTermRestrictions</value>
-							<value>saveStatement</value>							
 							<value>loadNewOntology</value>
 							<value>isOntologyLoaded</value>
 						</list>
@@ -262,6 +262,8 @@
 					<property name="includes">
 						<list>							
 							<value>findTerm</value>
+							<value>saveBioMaterialStatement</value>							
+							<value>saveExpressionExperimentStatment</value>
 						</list>
 					</property>
 				</bean>

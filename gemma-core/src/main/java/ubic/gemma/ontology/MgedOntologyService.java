@@ -23,16 +23,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -44,7 +38,6 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
  * @author klc
  * @version $Id: MgedOntologyService.java
  * @spring.bean id="mgedOntologyService"
- * @spring.property name="bioMaterialService" ref ="bioMaterialService"
  */
 
 public class MgedOntologyService extends AbstractOntologyService {
@@ -59,32 +52,15 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
 
-    protected static String ontology_startingPoint;
-    private static BioMaterialService bioMaterialService;
+    protected  String ontology_startingPoint;
 
     public MgedOntologyService() {
         super();
         ontology_startingPoint = getOntologyStartingPoint();
     }
 
-    public void saveStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
 
-        log.info( "Vocab Characteristic: " + vc.getDescription() );
-        log.info( "Biomaterial ID List: " + bioMaterialIdList );
-
-        Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( ( Characteristic ) vc );
-        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
-
-        for ( BioMaterial bioM : biomaterials ) {
-            bioM.setCharacteristics( chars );
-            bioMaterialService.update( bioM );
-
-        }
-
-    }
-
-    public Collection<OntologyTreeNode> getBioMaterialTerms() {
+    public Collection<OntologyTreeNode> getBioMaterialTreeNodeTerms() {
 
         if ( !ready.get() ) return null;
 
@@ -94,6 +70,18 @@ public class MgedOntologyService extends AbstractOntologyService {
 
         nodes.add( buildTreeNode( term ) );
         return nodes;
+    }
+    
+    public Collection<OntologyTerm> getBioMaterialTerms(){
+        
+        if ( !ready.get() ) return null;
+                
+        OntologyTerm term = terms.get( ontology_startingPoint );
+        Collection<OntologyTerm> results = getAllTerms( term );
+        results.add( term );
+        
+        return results; 
+        
     }
 
     /**
@@ -107,13 +95,31 @@ public class MgedOntologyService extends AbstractOntologyService {
         if ( running.get() ) return;
 
         ontology_URL = ontologyURL;
-        MgedOntologyService.ontology_startingPoint = startingPointURL;
+        ontology_startingPoint = startingPointURL;
 
         ready = new AtomicBoolean( false );
         running = new AtomicBoolean( false );
 
         init();
 
+    }
+    
+    protected Collection<OntologyTerm> getAllTerms(OntologyTerm term){
+        
+        Collection<OntologyTerm> children = term.getChildren( true );
+
+        if ( ( children == null ) || ( children.isEmpty() ) ) 
+            return new HashSet<OntologyTerm>();
+            
+        Collection<OntologyTerm> grandChildren = new HashSet<OntologyTerm>();
+            for ( OntologyTerm child : children ) {
+                 grandChildren.addAll( getAllTerms( child ) );
+            }
+            
+        
+         children.addAll( grandChildren );           
+         return children;
+        
     }
 
     /**
@@ -139,12 +145,7 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     }
 
-    /**
-     * @param bioMaterialService the bioMaterialService to set
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        MgedOntologyService.bioMaterialService = bioMaterialService;
-    }
+ 
 
     @Override
     protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
