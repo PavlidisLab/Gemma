@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.taglib.displaytag.common.description;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,12 +40,18 @@ public class CharacteristicWrapper extends TableDecorator {
     
     private Log log = LogFactory.getLog( this.getClass() );
 
+    private Pattern humanReadableUriPortionPattern =
+        Pattern.compile( ".*#(.*)" );
+    
     public String getDescriptionString() {
-        Characteristic c = (Characteristic)getCurrentRowObject();
-        
-        if ( !StringUtils.isEmpty( c.getValue() ) )
-            return c.getValue();
-        
+        return getDescriptionString( (Characteristic)getCurrentRowObject() );
+    }
+    
+    // to facilitate testing
+    public Pattern getHumanReadableUriPortionPattern() {
+        return humanReadableUriPortionPattern;
+    }
+    public String getDescriptionString(Characteristic c) {
         StringBuilder buf = new StringBuilder();
         if ( !StringUtils.isEmpty( c.getName() ) ) {
             buf.append( c.getName() );
@@ -50,20 +59,33 @@ public class CharacteristicWrapper extends TableDecorator {
         }
         if (c instanceof VocabCharacteristic) {
             VocabCharacteristic vc = (VocabCharacteristic)c;
-            buf.append( vc.getClassUri() );
+            if ( StringUtils.isEmpty( vc.getClassUri() ) ) {
+                buf.append( "unknown class" );
+            } else {
+                Matcher classMatcher =
+                    humanReadableUriPortionPattern.matcher( vc.getClassUri() );
+                if ( classMatcher.matches() ) {
+                    buf.append( classMatcher.group(1) );
+                } else {
+                    buf.append( vc.getClassUri() );
+                }
+            }
             if ( vc.getTermUri() != null && !vc.getTermUri().equals( vc.getClassUri() ) ) {
-                buf.append( " = " );
-                buf.append( vc.getTermUri() );
-                if ( vc.getValue() != null && vc.getValue().length() > 0 ) {
-                    buf.append( "; " );
-                    buf.append( vc.getValue() );
-                }        
+                buf.append( " : " );
+                Matcher termMatcher = humanReadableUriPortionPattern.matcher( vc.getTermUri() );
+                if ( termMatcher.matches() ) {
+                    buf.append( termMatcher.group(1) );
+                } else {
+                    buf.append( vc.getTermUri() );
+                }      
             } else if ( !StringUtils.isEmpty( vc.getValue() ) ) {
-                buf.append( "; " );
+                buf.append( " : " );
                 buf.append( vc.getValue() );
             }
+        } else if ( !StringUtils.isEmpty( c.getValue() ) ) {
+            buf.append( c.getValue() );
         } else {
-            return "unknown characteristic type with no value";
+            buf.append( "unknown characteristic type with no value" );
         }
         return buf.toString();
     }

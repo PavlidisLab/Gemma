@@ -265,7 +265,7 @@ if ( expressionExperiment.getName() != null ) {
 			 requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
 			 id="annotationTable" pagesize="5"
 			 decorator="ubic.gemma.web.taglib.displaytag.common.description.CharacteristicWrapper">
-			<display:column property="value" sortable="false" title="" />
+			<display:column property="descriptionString" sortable="false" title="" />
 			</display:table>
 		</c:otherwise>
 	</c:choose>
