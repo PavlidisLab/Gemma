@@ -243,7 +243,7 @@ if ( expressionExperiment.getName() != null ) {
 <authz:authorize ifAnyGranted="admin">
 
 <!-- This is for the EE annotator  -->
-		<div id="eeAnnotator" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:90px;"></div>
+		<div id="eeAnnotator" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:30px;"></div>
 		  <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>" type="text/javascript"></script>
 		  <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		  <script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>	
