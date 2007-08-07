@@ -25,9 +25,9 @@ var createMgedComboBox = function(terms){
                
 				ds.load();
 						
-					    var combo = new Ext.form.ComboBox({
-					    	fieldLabel: 'pick one',
+					    var combo = new Ext.form.ComboBox({					    	
 					        store: ds,
+					        fieldLabel: 'Mged',
 					        displayField:'term',
 					        typeAhead: true,
 					        mode: 'local',
@@ -103,7 +103,7 @@ var createSearchComponent = function(){
         fieldLabel: 'Lookup',
         typeAhead: false,
         loadingText: 'Searching...',
-        width: 570,
+        width: 270,
         pageSize:10,
         tpl: resultTpl,
         hideTrigger:true,    
@@ -143,25 +143,27 @@ Ext.onReady(function() {
 	var mgedComboBox = createMgedComboBox();   
 	
 	//the lookup combobox
-	var lookup = createSearchComponent();
+	var lookup = createSearchComponent();			
+
 	
 	var simpleForm = new Ext.form.Form({
-		        labelWidth: 60, // label settings here cascade unless overridden
+		labelWidth: 50, // label settings here cascade unless overridden
     });
-			
-					    
-    simpleForm.column(
-    	{width:300},
-        mgedComboBox
-        );
+								
+    simpleForm.column({width:220, labelWidth: 30}, mgedComboBox );
 
-	simpleForm.column(
-		{width:250},
-		lookup
-    );
+	simpleForm.column( {width:360},lookup );
     
-    simpleForm.addButton('Save', saveHandler);    	    
-    
+    var saveColumn = simpleForm.column({width: 50});
+    //The save button
+	var save = new 	Ext.Button	(saveColumn.getEl(),{text: 'save',
+								  tooltip: 'Saves the desired annotation',
+								  minWidth: 50,
+								  handler: saveHandler
+								});
+
+	simpleForm.column(save);
+								   
     simpleForm.render("eeAnnotator");	
 	
 });
