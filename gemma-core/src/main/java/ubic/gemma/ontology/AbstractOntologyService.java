@@ -114,7 +114,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     public Collection<OntologyTerm> findTerm( String search ) {
 
-        if ( !ready.get() ) return null;
+        if ( !isOntologyLoaded() ) return null;
 
         if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
@@ -143,7 +143,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 log.debug( "Loading " + ontology_name + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
-                //
+                
                 try {
 
                     model = loadModel( ontology_URL, OntModelSpec.OWL_MEM );
@@ -151,13 +151,22 @@ public abstract class AbstractOntologyService implements InitializingBean {
                     loadTermsInNameSpace( ontology_URL );
                     log.debug( ontology_URL + "  loaded, total of " + terms.size() + " items in " + loadTime.getTime()
                             / 1000 + "s" );
-
+                                    
+                    
+                    log.info( "Loading Index for " + ontology_name + " Ontology" );
+                    index = OntologyIndexer.indexOntology( ontology_name, model );
+                    log.info( "Done Loading Index for " + ontology_name + " Ontology in " + loadTime.getTime()
+                            / 1000 + "s"  );
+                    
                     ready.set( true );
                     running.set( false );
-
-                    log.info( "Done loading " + ontology_name + " Ontology" );
-
                     loadTime.stop();
+                    
+                    log.info( "Finished loading ontology " + ontology_name + " in " + loadTime.getTime()
+                            / 1000 + "s" );
+                    
+
+                    
                 } catch ( Exception e ) {
                     log.error( e, e );
                     ready.set( false );
