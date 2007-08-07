@@ -60,7 +60,7 @@ public class OntologyService {
     private ExpressionExperimentService eeService;
 
     /**
-     * List the ontologies that are available locally.
+     * List the ontologies that are available in the jena database.
      * 
      * @return
      */
@@ -142,7 +142,14 @@ public class OntologyService {
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
 
         for ( ExpressionExperiment ee : ees ) {
-            ee.setCharacteristics( chars );
+
+            Collection<Characteristic> current = ee.getCharacteristics();
+            if ( current == null )
+                current = new HashSet<Characteristic>( chars );
+            else
+                current.addAll( chars );
+
+            ee.setCharacteristics( current );
             eeService.update( ee );
 
         }
