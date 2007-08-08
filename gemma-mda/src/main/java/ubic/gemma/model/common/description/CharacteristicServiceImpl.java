@@ -25,18 +25,13 @@ package ubic.gemma.model.common.description;
 /**
  * @see ubic.gemma.model.common.description.CharacteristicService
  */
-public class CharacteristicServiceImpl
-    extends ubic.gemma.model.common.description.CharacteristicServiceBase
-{
+public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
-    protected  java.util.Collection handleFindByValue(java.lang.String search)
-        throws java.lang.Exception
-    {
-        // @todo implement protected  java.util.Collection handleFindByValue(java.lang.String search)
-        throw new java.lang.UnsupportedOperationException("ubic.gemma.model.common.description.CharacteristicService.handleFindByValue(java.lang.String search) Not implemented!");
+    protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
+        return this.getCharacteristicDao().findByvalue( search );
     }
 
 }
