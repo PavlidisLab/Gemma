@@ -22,21 +22,21 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.Collection;
-
 /**
- * @see ubic.gemma.model.common.description.Characteristic
+ * @see ubic.gemma.model.common.description.CharacteristicService
  */
-public class CharacteristicDaoImpl
-    extends ubic.gemma.model.common.description.CharacteristicDaoBase
+public class CharacteristicServiceImpl
+    extends ubic.gemma.model.common.description.CharacteristicServiceBase
 {
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
-    @Override
-    protected Collection handleFindByvalue( String search ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+    protected  java.util.Collection handleFindByValue(java.lang.String search)
+        throws java.lang.Exception
+    {
+        // @todo implement protected  java.util.Collection handleFindByValue(java.lang.String search)
+        throw new java.lang.UnsupportedOperationException("ubic.gemma.model.common.description.CharacteristicService.handleFindByValue(java.lang.String search) Not implemented!");
     }
+
 }

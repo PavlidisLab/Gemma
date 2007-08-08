@@ -304,4 +304,13 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
         return this.getGeneDao().loadPredictedGenes( taxon );
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedKnownGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer)
+     */
+    @Override
+    protected Collection handleGetCoexpressedKnownGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
