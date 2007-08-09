@@ -168,13 +168,23 @@ public class OntologyService {
      * @param search
      * @return
      */
-    public Collection<VocabCharacteristic> findExactTerm( String search ) {
+    public Collection<Characteristic> findExactTerm( String search ) {
 
-        Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();        
+        Collection<Characteristic> terms = new HashSet<Characteristic>();        
         
-        Collection<VocabCharacteristic> foundChars= characteristicService.findByValue( search );
+        Collection<String> foundValues = new HashSet<String>();       
+        Collection<Characteristic> foundChars= characteristicService.findByValue( search );
         
-        if (foundChars != null) terms.addAll( foundChars );
+        //remove duplicates, don't want to redefine == operator for Characteristics 
+        //for this use consider if the value = then its a duplicate.
+        if (foundChars != null) {
+            for ( Characteristic characteristic : foundChars ) {
+                if (!foundValues.contains(characteristic.getValue().toLowerCase())){
+                    terms.add( characteristic );
+                    foundValues.add( characteristic.getValue().toLowerCase() );
+                }
+            }
+        }
         
         Collection<OntologyTerm> results;
        
