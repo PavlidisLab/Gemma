@@ -362,7 +362,7 @@ public class EffectSizeService {
             idsInOneChunk.add( geneID );
             count++;
             if ( count % GENE_LOAD_CHUNK_SIZE == 0 || count == ids.size() ) {
-                allGenes.addAll( geneService.load( idsInOneChunk ) );
+                allGenes.addAll( geneService.loadMultiple(  idsInOneChunk ) );
                 idsInOneChunk.clear();
             }
         }
@@ -379,7 +379,7 @@ public class EffectSizeService {
 
     private Map<Long, ExpressionExperiment> getEeMap( Collection<Long> eeIds ) {
         Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) eeService.load( eeIds ) ) {
+        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) eeService.loadMultiple( eeIds ) ) {
             eeMap.put( ee.getId(), ee );
         }
         return eeMap;

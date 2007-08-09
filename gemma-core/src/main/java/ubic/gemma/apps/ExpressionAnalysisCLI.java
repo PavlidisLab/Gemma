@@ -170,7 +170,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
     private void saveRankMatrixToFile( String outFile, DenseDoubleMatrix2DNamed matrix ) throws IOException {
         Collection<Long> eeIds = matrix.getColNames();
         Collection<Long> geneIds = matrix.getRowNames();
-        Collection<Gene> genes = geneService.load( geneIds );
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
         log.info( "Saving ranks to file " + outFile );
         PrintWriter out = new PrintWriter( new FileWriter( outFile ) );

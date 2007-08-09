@@ -29,7 +29,7 @@ public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI
             Long geneId = Long.parseLong( line );
             geneIds.add( geneId );
         }
-        return geneService.load( geneIds );
+        return geneService.loadMultiple( geneIds );
     }
 
     /**
