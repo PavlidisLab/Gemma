@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
@@ -33,7 +33,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 public class QuantileNormalizerTest extends TestCase {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
-    DoubleMatrixNamed tester;
+    DoubleMatrixNamed2D tester;
     QuantileNormalizer qn;
 
     private boolean connected = false;
@@ -41,7 +41,7 @@ public class QuantileNormalizerTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        tester = ( DoubleMatrixNamed ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
+        tester = ( DoubleMatrixNamed2D ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
         assert tester != null;
 
         try {
@@ -69,7 +69,7 @@ public class QuantileNormalizerTest extends TestCase {
             log.warn( "Could not connect to RServe, skipping test." );
             return;
         }
-        DoubleMatrixNamed result = qn.normalize( tester );
+        DoubleMatrixNamed2D result = qn.normalize( tester );
 
         // d<-read.table("testdata.txt", header=T, row.names=1)
         // normalize.quantiles(as.matrix(d))[1,10]

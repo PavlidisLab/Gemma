@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.gemma.analysis.util.RCommander;
 
 /**
@@ -47,7 +47,7 @@ public class QuantileNormalizer extends RCommander implements Normalizer {
      * 
      * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed)
      */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed dataMatrix ) {
+    public DoubleMatrixNamed2D normalize( DoubleMatrixNamed2D dataMatrix ) {
         log.debug( "Normalizing..." );
         String matrixvar = rc.assignMatrix( dataMatrix );
         rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );

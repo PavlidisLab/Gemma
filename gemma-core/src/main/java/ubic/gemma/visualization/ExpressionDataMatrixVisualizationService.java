@@ -38,7 +38,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.math.DescriptiveWithMissing;
@@ -170,7 +170,7 @@ public class ExpressionDataMatrixVisualizationService {
             colLabels.add( ba.getName() );
         }
 
-        DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
+        DoubleMatrixNamed2D matrix = new DenseDoubleMatrix2DNamed( data );
 
         matrix.setRowNames( rowLabels );
 

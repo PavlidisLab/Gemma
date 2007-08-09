@@ -21,7 +21,7 @@ package ubic.gemma.loader.expression.geo.service;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -702,7 +702,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * @param matrix
      */
     @SuppressWarnings( { "unchecked", "unused" })
-    private void printMatrix( DoubleMatrixNamed matrix ) {
+    private void printMatrix( DoubleMatrixNamed2D matrix ) {
         StringBuilder buf = new StringBuilder();
         buf.append( "probe" );
         for ( Object columnName : ( Collection<Object> ) matrix.getColNames() ) {

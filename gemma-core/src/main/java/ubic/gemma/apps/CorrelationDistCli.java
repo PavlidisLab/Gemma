@@ -23,7 +23,7 @@ import org.apache.commons.lang.time.StopWatch;
 import cern.colt.list.DoubleArrayList;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
@@ -237,7 +237,7 @@ public class CorrelationDistCli extends AbstractSpringAwareCLI {
             	log.info(ee.getShortName() + "---->" + culmulatives[eeIndex]);
             	dataIndex++;
             }
-            DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
+            DoubleMatrixNamed2D dataMatrix = new DenseDoubleMatrix2DNamed( data );
             dataMatrix.setRowNames( rowLabels );
             dataMatrix.setColumnNames( colLabels );
             

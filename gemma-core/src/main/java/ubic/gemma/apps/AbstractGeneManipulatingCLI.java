@@ -9,6 +9,7 @@ import java.util.Collection;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -18,9 +19,18 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI {
 
-    public static final String OFFICIAL_NAME = "official name";
-    public static final String OFFICIAL_SYMBOL = "official symbol";
-    public static final String GENE_ID = "gene ID";
+    protected Collection<Gene> readGeneIdListFile(String inFile) throws IOException {
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        Collection<Long> geneIds = new ArrayList<Long>();
+        BufferedReader in = new BufferedReader( new FileReader( inFile ) );
+        String line;
+        while ( ( line = in.readLine() ) != null ) {
+            if ( line.startsWith( "#" ) ) continue;
+            Long geneId = Long.parseLong( line );
+            geneIds.add( geneId );
+        }
+        return geneService.load( geneIds );
+    }
 
     /**
      * Read in a list of genes
@@ -31,38 +41,25 @@ public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI
      * @return collection of genes
      * @throws IOException
      */
-    protected Collection<Gene> readInGeneListFile( String inFile, Taxon taxon, String type ) throws IOException {
+    protected Collection<Gene> readGeneListFile( String inFile, Taxon taxon) throws IOException {
         log.info( "Reading " + inFile );
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
+//        SearchService searchService = (SearchService) getBean("searchService");
+        GeneService geneService = (GeneService) getBean("geneService");
 
         Collection<Gene> genes = new ArrayList<Gene>();
         BufferedReader in = new BufferedReader( new FileReader( inFile ) );
         String line;
-        if ( type == GENE_ID ) {
-            Collection<Long> geneIds = new ArrayList<Long>();
-            while ( ( line = in.readLine() ) != null ) {
-                if ( line.startsWith( "#" ) ) continue;
-                Long geneId = Long.parseLong( line );
-                geneIds.add( geneId );
+        while ( ( line = in.readLine() ) != null ) {
+            if ( line.startsWith( "#" ) ) continue;
+            String s = line.trim();
+            Collection<Gene> c = null;
+//            c = searchService.compassGeneSearch( s );
+            c = geneService.findByOfficialSymbolInexact( s );
+            if ( c == null || c.size() == 0 ) {
+                log.error( "ERROR: Cannot find genes for " + s );
             }
-            genes = geneService.loadMultiple( geneIds );
-        } else {
-            while ( ( line = in.readLine() ) != null ) {
-                if ( line.startsWith( "#" ) ) continue;
-                String s = line.trim();
-                Collection<Gene> c = null;
-                if ( type == OFFICIAL_NAME )
-                    c = geneService.findByOfficialName( s );
-                else if ( type == OFFICIAL_SYMBOL ) {
-                    c = geneService.findByOfficialSymbol( s );
-                } else
-                    continue;
-                if ( c == null || c.size() == 0 ) {
-                    log.error( "ERROR: Cannot find genes for " + s );
-                }
-                for ( Gene gene : c ) {
-                    if ( taxon.equals( gene.getTaxon() ) ) genes.add( gene );
-                }
+            for ( Gene gene : c ) {
+                if ( taxon.equals( gene.getTaxon() ) ) genes.add( gene );
             }
         }
         return genes;
@@ -77,9 +74,9 @@ public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI
      * @return a list of gene IDs
      * @throws IOException
      */
-    protected Collection<Long> readInGeneListFileToIds( String inFile, Taxon taxon, String type ) throws IOException {
+    protected Collection<Long> readGeneListFileToIds( String inFile, Taxon taxon) throws IOException {
         Collection<Long> ids = new ArrayList<Long>();
-        for ( Gene gene : readInGeneListFile( inFile, taxon, type ) )
+        for ( Gene gene : readGeneListFile( inFile, taxon) )
             ids.add( gene.getId() );
         return ids;
     }

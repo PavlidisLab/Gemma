@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.preprocess;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 
 /**
  * Implements simplest background subtraction, with the option to set small values to a preset value.
@@ -45,17 +45,17 @@ public class SimpleBackgroundSubtraction implements BackgroundAdjuster {
      * The values of the background matrix are subtracted from the signal, element-wise, subject to any constraint
      * supplied by the lowerlimit.
      * 
-     * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrixNamed,
-     *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
+     * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrixNamed2D,
+     *      baseCode.dataStructure.matrix.DoubleMatrixNamed2D)
      * @see #setLowerLimit(double)
      */
-    public DoubleMatrixNamed adjust( DoubleMatrixNamed signal, DoubleMatrixNamed background ) {
+    public DoubleMatrixNamed2D adjust( DoubleMatrixNamed2D signal, DoubleMatrixNamed2D background ) {
         int rows = signal.rows();
         int cols = signal.columns();
         if ( rows != background.rows() ) throw new IllegalArgumentException();
         if ( cols != background.columns() ) throw new IllegalArgumentException();
 
-        DoubleMatrixNamed result = DoubleMatrix2DNamedFactory.fastrow( rows, cols );
+        DoubleMatrixNamed2D result = DoubleMatrix2DNamedFactory.fastrow( rows, cols );
 
         for ( int i = 0; i < rows; i++ ) {
             for ( int j = 0; j < rows; j++ ) {

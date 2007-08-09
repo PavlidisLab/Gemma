@@ -41,7 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.dataStructure.matrix.StringMatrix2DNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
@@ -424,10 +424,10 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Process cluster = rt.exec( clusterCmd + " -f " + this.outputFile + " " + commonOptions );
         cluster.waitFor();
 
-        DoubleMatrixNamed dataMatrix = getClusteredMatrix();
+		DoubleMatrixNamed2D dataMatrix = getClusteredMatrix();
 
-        // Get the rank Matrix
-        DoubleMatrixNamed rankMatrix = coExpression.getRankMatrix( dataMatrix );
+		// Get the rank Matrix
+		DoubleMatrixNamed2D rankMatrix = coExpression.getRankMatrix(dataMatrix);
 
         // generate the png figures
         ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
@@ -442,16 +442,17 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         rankMatrixDisplay.saveImage( "rankMatrix.png", true );
     }
 
-    /**
-     * @return
-     * @throws IOException
-     */
-    private DoubleMatrixNamed getClusteredMatrix() throws IOException {
-        // Read the generated file into a String Matrix
-        StringMatrixReader mReader = new StringMatrixReader();
-        int dotIndex = this.outputFile.lastIndexOf( '.' );
-        String CDTMatrixFile = this.outputFile.substring( 0, dotIndex );
-        StringMatrix2DNamed cdtMatrix = ( StringMatrix2DNamed ) mReader.read( CDTMatrixFile + ".cdt" );
+	/**
+	 * @return
+	 * @throws IOException
+	 */
+	private DoubleMatrixNamed2D getClusteredMatrix() throws IOException {
+		// Read the generated file into a String Matrix
+		StringMatrixReader mReader = new StringMatrixReader();
+		int dotIndex = this.outputFile.lastIndexOf('.');
+		String CDTMatrixFile = this.outputFile.substring(0, dotIndex);
+		StringMatrix2DNamed cdtMatrix = (StringMatrix2DNamed) mReader
+				.read(CDTMatrixFile + ".cdt");
 
         // Read String Matrix and convert into DenseDoubleMatrix
         int extra_rows = 2, extra_cols = 3;
@@ -463,25 +464,26 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         for ( int i = extra_cols; i < colNames.size(); i++ )
             colLabels.add( ( String ) colNames.get( i ) );
 
-        int rowIndex = 0;
-        for ( int i = extra_rows; i < cdtMatrix.rows(); i++ ) {
-            Object row[] = cdtMatrix.getRow( i );
-            rowLabels.add( ( String ) row[0] );
-            data[rowIndex] = new double[row.length - extra_cols];
-            for ( int j = extra_cols; j < row.length; j++ )
-                try {
-                    data[rowIndex][j - extra_cols] = Double.valueOf( ( String ) row[j] );
-                } catch ( Exception e ) {
-                    data[rowIndex][j - extra_cols] = Double.NaN;
-                    continue;
-                }
-            rowIndex++;
-        }
-        DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
-        dataMatrix.setRowNames( rowLabels );
-        dataMatrix.setColumnNames( colLabels );
-        return dataMatrix;
-    }
+		int rowIndex = 0;
+		for (int i = extra_rows; i < cdtMatrix.rows(); i++) {
+			Object row[] = cdtMatrix.getRow(i);
+			rowLabels.add((String) row[0]);
+			data[rowIndex] = new double[row.length - extra_cols];
+			for (int j = extra_cols; j < row.length; j++)
+				try {
+					data[rowIndex][j - extra_cols] = Double
+							.valueOf((String) row[j]);
+				} catch (Exception e) {
+					data[rowIndex][j - extra_cols] = Double.NaN;
+					continue;
+				}
+			rowIndex++;
+		}
+		DoubleMatrixNamed2D dataMatrix = new DenseDoubleMatrix2DNamed(data);
+		dataMatrix.setRowNames(rowLabels);
+		dataMatrix.setColumnNames(colLabels);
+		return dataMatrix;
+	}
 
     /**
      * @param args

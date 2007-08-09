@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
@@ -39,7 +39,7 @@ public class RMATest extends TestCase {
 
     private static Log log = LogFactory.getLog( RMATest.class.getName() );
     RMA aa;
-    DoubleMatrixNamed celmatrix;
+    DoubleMatrixNamed2D celmatrix;
     ArrayDesign arrayDesign;
     InputStream is;
 
@@ -55,7 +55,7 @@ public class RMATest extends TestCase {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
         if ( is == null ) throw new IOException();
-        celmatrix = ( DoubleMatrixNamed ) reader.read( is );
+        celmatrix = ( DoubleMatrixNamed2D ) reader.read( is );
         is.close();
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "cdfenv.example" );
@@ -77,7 +77,7 @@ public class RMATest extends TestCase {
             return;
         }
         aa.setArrayDesign( arrayDesign );
-        DoubleMatrixNamed result = aa.summarize( celmatrix );
+        DoubleMatrixNamed2D result = aa.summarize( celmatrix );
         assertTrue( result != null );
         assertEquals( 150, result.rows() );
         assertEquals( 3, result.columns() );

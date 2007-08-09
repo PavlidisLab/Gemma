@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 
 /**
  * @author pavlidis
@@ -31,5 +31,5 @@ public interface BackgroundAdjuster {
      * @param background
      * @return
      */
-    public DoubleMatrixNamed adjust( DoubleMatrixNamed signal, DoubleMatrixNamed background );
+    public DoubleMatrixNamed2D adjust( DoubleMatrixNamed2D signal, DoubleMatrixNamed2D background );
 }

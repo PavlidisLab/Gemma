@@ -32,7 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -79,9 +79,9 @@ public class SimpleExpressionDataLoaderService {
      * @return DoubleMatrixNamed
      * @throws IOException
      */
-    public DoubleMatrixNamed parse( InputStream data ) throws IOException {
+    public DoubleMatrixNamed2D parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        return ( DoubleMatrixNamed ) reader.read( data );
+        return ( DoubleMatrixNamed2D ) reader.read( data );
     }
 
     /**
@@ -89,7 +89,7 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @return ExpressionExperiment
      */
-    public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
+    public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed2D matrix ) {
         if ( matrix == null || metaData == null ) {
             throw new IllegalArgumentException( "One or all of method arguments was null" );
         }
@@ -138,7 +138,7 @@ public class SimpleExpressionDataLoaderService {
         Collection<Object> usedDesignElements = new HashSet<Object>();
         for ( ArrayDesign design : arrayDesigns ) {
             log.info( "Processing " + design );
-            DoubleMatrixNamed subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
+            DoubleMatrixNamed2D subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
             BioAssayDimension bad = convertBioAssayDimension( experiment, design, taxon, subMatrix );
             Collection<DesignElementDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
                     quantitationType, subMatrix );
@@ -164,7 +164,7 @@ public class SimpleExpressionDataLoaderService {
      * @param design
      * @return
      */
-    private DoubleMatrixNamed getSubMatrixForArrayDesign( DoubleMatrixNamed matrix,
+    private DoubleMatrixNamed2D getSubMatrixForArrayDesign( DoubleMatrixNamed2D matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
         List<Object> designElements = new ArrayList<Object>();
         List<Object> columnNames = new ArrayList<Object>();
@@ -202,7 +202,7 @@ public class SimpleExpressionDataLoaderService {
         double[][] allSubMatrixRows = new double[rows.size()][rows.iterator().next().length];
         rows.toArray( allSubMatrixRows );
 
-        DoubleMatrixNamed subMatrix = DoubleMatrix2DNamedFactory.fastrow( allSubMatrixRows );
+        DoubleMatrixNamed2D subMatrix = DoubleMatrix2DNamedFactory.fastrow( allSubMatrixRows );
         subMatrix.setRowNames( designElements );
         subMatrix.setColumnNames( columnNames );
         return subMatrix;
@@ -220,7 +220,7 @@ public class SimpleExpressionDataLoaderService {
     public ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData, InputStream data )
             throws IOException {
 
-        DoubleMatrixNamed matrix = parse( data );
+        DoubleMatrixNamed2D matrix = parse( data );
 
         ExpressionExperiment experiment = convert( metaData, matrix );
 
@@ -241,7 +241,7 @@ public class SimpleExpressionDataLoaderService {
      * @return
      */
     private Collection<ArrayDesign> convertArrayDesigns( SimpleExpressionExperimentMetaData metaData,
-            DoubleMatrixNamed matrix ) {
+            DoubleMatrixNamed2D matrix ) {
         Collection<ArrayDesign> arrayDesigns = metaData.getArrayDesigns();
 
         Collection<ArrayDesign> existingDesigns = new HashSet<ArrayDesign>();
@@ -277,7 +277,7 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @param newDesign
      */
-    private void newArrayDesign( DoubleMatrixNamed matrix, ArrayDesign newDesign, boolean probeNamesAreImageClones,
+    private void newArrayDesign( DoubleMatrixNamed2D matrix, ArrayDesign newDesign, boolean probeNamesAreImageClones,
             Taxon taxon ) {
         log.info( "Creating new ArrayDesign " + newDesign );
 
@@ -342,7 +342,7 @@ public class SimpleExpressionDataLoaderService {
      * @return BioAssayDimension
      */
     private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
-            DoubleMatrixNamed matrix ) {
+            DoubleMatrixNamed2D matrix ) {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         bad.setName( "For " + ee.getName() );
@@ -383,7 +383,7 @@ public class SimpleExpressionDataLoaderService {
      */
     private Collection<DesignElementDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
-            QuantitationType quantitationType, DoubleMatrixNamed matrix ) {
+            QuantitationType quantitationType, DoubleMatrixNamed2D matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -54,9 +54,9 @@ public class RMA extends RCommander implements ProbeSummarizer {
      * <code>exprs(expresso(affybatch, bg.correct=FALSE, normalize=FALSE, pmcorrect.method="pmonly", summary.method="medianpolish"))</code>
      * 
      * @param dataMatrix The CEL value matrix
-     * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrixNamed)
+     * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrixNamed2D)
      */
-    public DoubleMatrixNamed summarize( DoubleMatrixNamed dataMatrix ) {
+    public DoubleMatrixNamed2D summarize( DoubleMatrixNamed2D dataMatrix ) {
         log.debug( "Summarizing..." );
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
@@ -66,7 +66,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
 
         log.info( "Done with RMA" );
 
-        DoubleMatrixNamed resultObject = rc.retrieveMatrix( "m" );
+        DoubleMatrixNamed2D resultObject = rc.retrieveMatrix( "m" );
 
         // clean up.
         rc.voidEval( "rm(m)" );

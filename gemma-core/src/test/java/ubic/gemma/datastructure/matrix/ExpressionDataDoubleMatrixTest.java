@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -62,7 +62,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     SimpleExpressionExperimentMetaData metaData = null;
 
-    DoubleMatrixNamed matrix = null;
+    DoubleMatrixNamed2D matrix = null;
 
     ExpressionExperiment ee = null;
     ExpressionExperiment newee = null;
