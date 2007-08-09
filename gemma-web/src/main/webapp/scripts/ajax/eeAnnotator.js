@@ -57,12 +57,12 @@ var createSearchComponent = function(){
         	
         	 
             if(this.fireEvent('beforeselect', this, record, index) !== false){
-        	    this.setValue(record.data.term);
+        	    this.setValue(record.data.value);
             	this.collapse();
             	this.fireEvent('select', this, record, index);
 							
-				vocabC.termUri = record.data.uri;
-				vocabC.value = record.data.term;
+				vocabC.termUri = record.data.termUri;
+				vocabC.value = record.data.value;
             }           	
     	                	
         }
@@ -70,30 +70,31 @@ var createSearchComponent = function(){
         
 	var     recordType = Ext.data.Record.create([
 					   {name:"id", type:"int"},
-                       {name:"term", type:"string"},
-                       {name:"uri", type:"string"},
+                       {name:"value", type:"string"},
+                       {name:"termUri", type:"string"},
+                       {name:"description", type:"string"}
                ]);
 
 
        ds = new Ext.data.Store(
                {
-                       proxy:new Ext.data.DWRProxy(OntologyService.findTerm),
+                       proxy:new Ext.data.DWRProxy(OntologyService.findExactTerm),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
                        remoteSort:false,
                        sortInfo:{field:'id'}
                });
 
        var cm = new Ext.grid.ColumnModel([
-                       {header: "term", width: 50, dataIndex:"term"},
-                       {header: "uri",  width: 80, dataIndex:"uri"}
+                       {header: "term", width: 50, dataIndex:"value"},
+                       {header: "uri",  width: 80, dataIndex:"termUri"}                       
                        ]);
        cm.defaultSortable = true;	
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
         '<div class="search-item">',
-            '<h3><span>{id}</span>{term}</h3>',
-            '{uri}',
+            '<h3><span tooltip={description}>{id}</span>{value}</h3>',
+            '{termUri}',
         '</div>'
     );
     
@@ -150,9 +151,9 @@ Ext.onReady(function() {
 		labelWidth: 50, // label settings here cascade unless overridden
     });
 								
-    simpleForm.column({width:220, labelWidth: 30}, mgedComboBox );
+    simpleForm.column({width:225, labelWidth: 30}, mgedComboBox );
 
-	simpleForm.column( {width:360},lookup );
+	simpleForm.column( {width:355},lookup );
     
     var saveColumn = simpleForm.column({width: 50});
     //The save button

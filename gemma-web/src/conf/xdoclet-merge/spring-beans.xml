@@ -262,6 +262,7 @@
 					<property name="includes">
 						<list>							
 							<value>findTerm</value>
+							<value>findExactTerm</value>
 							<value>saveBioMaterialStatement</value>							
 							<value>saveExpressionExperimentStatment</value>
 						</list>

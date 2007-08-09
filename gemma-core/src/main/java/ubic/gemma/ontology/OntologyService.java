@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -48,7 +49,10 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @spring.property name="oboDiseaseOntologyService" ref ="oboDiseaseOntologyService"
  * @spring.property name="bioMaterialService" ref ="bioMaterialService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="characteristicService" ref="characteristicService"
+ * 
  */
+
 public class OntologyService {
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
@@ -58,6 +62,7 @@ public class OntologyService {
     private FMAOntologyService fmaOntologyService;
     private BioMaterialService bioMaterialService;
     private ExpressionExperimentService eeService;
+    private CharacteristicService characteristicService;
 
     /**
      * List the ontologies that are available in the jena database.
@@ -78,27 +83,111 @@ public class OntologyService {
         return ontologies;
 
     }
+    
+    /**
+     * Given a collection of ontology terms converts them to a collection of VocabCharacteristics
+     * 
+     * @param terms
+     * @param filterTerm
+     * @return
+     */
+    private Collection<VocabCharacteristic> convert( final Collection<OntologyTerm> terms ) {
+
+        Collection<VocabCharacteristic> converted = new HashSet<VocabCharacteristic>();
+
+        if ( ( terms == null ) || ( terms.isEmpty() ) ) return converted;
+
+        for ( OntologyTerm term : terms ) {
+                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+                vc.setClassUri(term.getUri());
+                vc.setValue( term.getTerm() );
+                vc.setTermUri( term.getUri() );    
+                vc.setDescription( term.getComment() );
+                converted.add( vc );           
+        }
+
+        return converted;
+    }
 
     /**
      * Given a search string will look through the birnlex, obo Disease Ontology and FMA Ontology for terms that match
-     * the search strin this a lucene backed search
+     * the search term.  this a lucene backed search, is inexact and for general terms can return alot of results. 
      * 
      * @param search
      * @return
      */
-    public Collection<OntologyTerm> findTerm( String search ) {
+    public Collection<VocabCharacteristic> findTerm( String search ) {
 
-        Collection<OntologyTerm> terms = new HashSet<OntologyTerm>();
+        Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
         Collection<OntologyTerm> results;
 
         results = birnLexOntologyService.findTerm( search );
-        if ( results != null ) terms.addAll( results );
+        if ( results != null ) terms.addAll( convert(results) );
 
         results = oboDiseaseOntologyService.findTerm( search );
-        if ( results != null ) terms.addAll( results );
+        if ( results != null ) terms.addAll( convert(results) );
 
         results = fmaOntologyService.findTerm( search );
-        if ( results != null ) terms.addAll( results );
+        if ( results != null ) terms.addAll( convert(results) );
+
+        return terms;
+    }
+
+    /**
+     * Given a collection of ontology terms will filter out all the terms that don't have the filter term in their
+     * label.
+     * 
+     * @param terms
+     * @param filterTerm
+     * @return
+     */
+    private Collection<VocabCharacteristic> filter( final Collection<OntologyTerm> terms, final String filter ) {
+
+        Collection<VocabCharacteristic> filtered = new HashSet<VocabCharacteristic>();
+
+        if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
+
+        for ( OntologyTerm term : terms ) {
+            if ( term.getLabel().contains( filter ) ){
+                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+                vc.getClassUri();
+                vc.setValue( term.getTerm() );
+                vc.setTermUri( term.getUri() );    
+                vc.setDescription( term.getComment() );
+                filtered.add( vc );
+            }
+        }
+
+        return filtered;
+    }
+
+    /**
+     * Given a search string will first look through the characterisc database for any entries that have a match. Then
+     * will search the birnlex, obo Disease Ontology and FMA Ontology for terms that match the search term exactly
+     * 
+     * @param search
+     * @return
+     */
+    public Collection<VocabCharacteristic> findExactTerm( String search ) {
+
+        Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();        
+        
+        Collection<VocabCharacteristic> foundChars= characteristicService.findByValue( search );
+        
+        if (foundChars != null) terms.addAll( foundChars );
+        
+        Collection<OntologyTerm> results;
+       
+        
+
+        results = birnLexOntologyService.findTerm( search );
+        if ( results != null ) terms.addAll( filter( results, search ) );
+
+        results = oboDiseaseOntologyService.findTerm( search );
+        if ( results != null ) terms.addAll( filter( results, search ) );
+
+        results = fmaOntologyService.findTerm( search );
+        if ( results != null ) terms.addAll( filter( results, search ) );
 
         return terms;
     }
@@ -188,6 +277,13 @@ public class OntologyService {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.eeService = expressionExperimentService;
+    }
+
+    /**
+     * @param characteristicService the characteristicService to set
+     */
+    public void setCharacteristicService( CharacteristicService characteristicService ) {
+        this.characteristicService = characteristicService;
     }
 
 }
