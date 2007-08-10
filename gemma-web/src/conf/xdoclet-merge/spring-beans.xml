@@ -341,6 +341,7 @@
 							<value>properties</value>
 							<value>value</value>
 							<value>description</value>
+							<value>category</value>
 						</list>
 					</property>
 				</bean>
@@ -355,6 +356,7 @@
 							<value>value</value>
 							<value>properties</value>
 							<value>description</value>
+							<value>category</value>
 						</list>
 					</property>
 				</bean>
