@@ -151,8 +151,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            saveMessage( request, "Id was not a number" );
-            throw new IllegalArgumentException( "Id was not a number" );
+            saveMessage( request, "Id was not a number " + id );
+            throw new IllegalArgumentException( "Id was not a number " + id );
         }
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -348,14 +348,16 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         if ( bMats.size() > 1 ) {
                             // log.warn("");
                         }
+                       
                         BioMaterial oldBioMaterial = bMats.iterator().next();
-                        newMaterial = BioMaterial.Factory.newInstance();
-                        newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
-                        newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
-                        newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
-                        newMaterial.setTreatments( oldBioMaterial.getTreatments() );
-                        newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
-                        newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
+                        //newMaterial = BioMaterial.Factory.newInstance();
+                        newMaterial =  bioMaterialService.copy( oldBioMaterial );
+//                        newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
+//                        newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
+//                        newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
+//                        newMaterial.setTreatments( oldBioMaterial.getTreatments() );
+//                        newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
+//                        newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
                         newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
                         newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                     } else {
