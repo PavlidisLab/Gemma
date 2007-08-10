@@ -41,6 +41,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
     protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
 
     protected Map<String, OntologyTerm> terms;
+    protected Map<String, OntologyIndividual> individuals;
     protected AtomicBoolean ready = new AtomicBoolean( false );
     protected AtomicBoolean running = new AtomicBoolean( false );
     protected String ontology_URL;
@@ -89,11 +90,52 @@ public abstract class AbstractOntologyService implements InitializingBean {
         init();
     }
 
-    public OntologyTerm getTerm( String id ) {
+    /**
+     * Looks for a OntologyTerm that has the matchine URI given
+     * 
+     * @param uri
+     * @return
+     */
+    public OntologyTerm getTerm( String uri ) {
 
-        OntologyTerm term = terms.get( id );
+        if ( uri == null ) return null;
+
+        OntologyTerm term = terms.get( uri );
 
         return term;
+    }
+
+    /**
+     * Looks for a OntologyIndividual that has the matcing URI given
+     * 
+     * @param uri
+     * @return
+     */
+    public OntologyIndividual getIndividual( String uri ) {
+
+        if ( uri == null ) return null;
+
+        OntologyIndividual indi = individuals.get( uri );
+
+        return indi;
+    }
+
+    /**
+     * Looks through both Terms and Individuls for a OntologyResource that has a uri matching the uri given If no
+     * OntologyTerm is found only then will ontologyIndividuals be searched. returns null if nothing is found.
+     * 
+     * @param uri
+     * @return
+     */
+    public OntologyResource getResource( String uri ) {
+
+        if ( uri == null ) return null;
+
+        OntologyResource resource = terms.get( uri );
+
+        if ( resource == null ) resource = individuals.get( uri );
+
+        return resource;
     }
 
     public Collection<OntologyRestriction> getTermRestrictions( String id ) {
@@ -139,11 +181,14 @@ public abstract class AbstractOntologyService implements InitializingBean {
             public void run() {
 
                 running.set( true );
+
                 terms = new HashMap<String, OntologyTerm>();
+                individuals = new HashMap<String, OntologyIndividual>();
+
                 log.debug( "Loading " + ontology_name + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
-                
+
                 try {
 
                     model = loadModel( ontology_URL, OntModelSpec.OWL_MEM );
@@ -151,22 +196,18 @@ public abstract class AbstractOntologyService implements InitializingBean {
                     loadTermsInNameSpace( ontology_URL );
                     log.debug( ontology_URL + "  loaded, total of " + terms.size() + " items in " + loadTime.getTime()
                             / 1000 + "s" );
-                                    
-                    
+
                     log.info( "Loading Index for " + ontology_name + " Ontology" );
                     index = OntologyIndexer.indexOntology( ontology_name, model );
-                    log.info( "Done Loading Index for " + ontology_name + " Ontology in " + loadTime.getTime()
-                            / 1000 + "s"  );
-                    
+                    log.info( "Done Loading Index for " + ontology_name + " Ontology in " + loadTime.getTime() / 1000
+                            + "s" );
+
                     ready.set( true );
                     running.set( false );
                     loadTime.stop();
-                    
-                    log.info( "Finished loading ontology " + ontology_name + " in " + loadTime.getTime()
-                            / 1000 + "s" );
-                    
 
-                    
+                    log.info( "Finished loading ontology " + ontology_name + " in " + loadTime.getTime() / 1000 + "s" );
+
                 } catch ( Exception e ) {
                     log.error( e, e );
                     ready.set( false );
@@ -192,17 +233,14 @@ public abstract class AbstractOntologyService implements InitializingBean {
         addTerms( terms );
     }
 
-    /**
-     * Primarily here for testing.
-     * 
-     * @param is
-     * @throws IOException
-     */
     private void addTerms( Collection<OntologyResource> newTerms ) {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
+        if ( individuals == null ) individuals = new HashMap<String, OntologyIndividual>();
+
         for ( OntologyResource term : newTerms ) {
             if ( term.getUri() == null ) continue;
             if ( term instanceof OntologyTerm ) terms.put( term.getUri(), ( OntologyTerm ) term );
+            if ( term instanceof OntologyIndividual ) individuals.put( term.getUri(), ( OntologyIndividual ) term );
         }
     }
 
