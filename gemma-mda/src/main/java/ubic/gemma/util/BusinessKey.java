@@ -230,7 +230,7 @@ public class BusinessKey {
      * @param ontologyEntry
      */
     public static void addRestrictions( Criteria queryObject, VocabCharacteristic ontologyEntry ) {
-        queryObject.add( Restrictions.eq( "termUri", ontologyEntry.getTermUri() ) );
+        queryObject.add( Restrictions.eq( "valueUri", ontologyEntry.getValueUri() ) );
 
     }
 
@@ -405,7 +405,7 @@ public class BusinessKey {
     public static void checkKey( Characteristic ontologyEntry ) {
 
         if ( ontologyEntry instanceof VocabCharacteristic ) {
-            if ( ( ( VocabCharacteristic ) ontologyEntry ).getTermUri() == null ) throw new IllegalArgumentException();
+            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null ) throw new IllegalArgumentException();
         } else {
             if ( ontologyEntry.getValue() == null ) throw new IllegalArgumentException();
         }

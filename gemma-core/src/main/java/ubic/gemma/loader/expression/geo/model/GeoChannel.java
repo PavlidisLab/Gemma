@@ -178,27 +178,27 @@ public class GeoChannel {
         switch ( this.molecule ) {
             case cytoplasmicRNA:
                 result.setValue( "cytoplasmic_RNA" );
-                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "cytoplasmic_RNA" );
+                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "cytoplasmic_RNA" );
                 break;
             case polyARNA:
                 result.setValue( "polyA_RNA" );
-                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "polyA_RNA" );
+                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "polyA_RNA" );
                 break;
             case genomicDNA:
                 result.setValue( "genomic_DNA" );
-                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "genomic_DNA" );
+                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "genomic_DNA" );
                 break;
             case totalRNA:
                 result.setValue( "total_RNA" );
-                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "total_RNA" );
+                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "total_RNA" );
                 break;
             case nuclearRNA:
                 result.setValue( "nuclear_RNA" );
-                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "nuclear_RNA" );
+                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "nuclear_RNA" );
                 break;
             case protein:
                 result.setValue( "protein" );
-                result.setTermUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "protein" );
+                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "protein" );
                 break;
             case other:
                 Characteristic c = Characteristic.Factory.newInstance();

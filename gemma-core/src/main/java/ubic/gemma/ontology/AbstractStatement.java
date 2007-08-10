@@ -59,13 +59,13 @@ public abstract class AbstractStatement implements CharacteristicStatement {
     private VocabCharacteristic initVocabCharacteristic() {
         VocabCharacteristic v = VocabCharacteristic.Factory.newInstance();
 
-        v.setTermUri( this.getSubject().getUri() );
+        v.setValueUri( this.getSubject().getUri() );
         v.setValue( this.getSubject().getTerm() );
         return v;
     }
 
     public void addToCharacteristic( VocabCharacteristic v ) {
-        if ( !v.getTermUri().equals( this.getSubject().getUri() ) ) {
+        if ( !v.getValueUri().equals( this.getSubject().getUri() ) ) {
             throw new IllegalArgumentException( "Cannot add " + this.getSubject() + " statement to " + v );
         }
         CharacteristicProperty p = makeProperty();

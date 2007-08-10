@@ -147,10 +147,9 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
         gene.setTaxon( t );
         VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
-        oe.setTermUri( GO_BASE_URI + value );
+        oe.setValueUri( GO_BASE_URI + value );
         oe.setValue( value );
-        oe.setSource( goDb );
-
+        
         g2GOAss.setSource( ncbiGeneDb );
 
         g2GOAss.setGene( gene );

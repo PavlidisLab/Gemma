@@ -43,7 +43,7 @@ public class DataStatementImpl extends AbstractStatement implements DataStatemen
 
         prop.setData( data );
         prop.setValue( this.getProperty().getLabel() );
-        prop.setTermUri( this.getProperty().getUri() );
+        prop.setValueUri( this.getProperty().getUri() );
         prop.setType( ( ( DatatypeProperty ) this.getProperty() ).getType() );
         return prop;
     }

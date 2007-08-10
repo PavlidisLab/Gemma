@@ -99,9 +99,9 @@ public class OntologyService {
 
         for ( OntologyTerm term : terms ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-                vc.setClassUri(term.getUri());
+                vc.setCategoryUri(term.getUri());
                 vc.setValue( term.getTerm() );
-                vc.setTermUri( term.getUri() );    
+                vc.setValueUri( term.getUri() );    
                 vc.setDescription( term.getComment() );
                 converted.add( vc );           
         }
@@ -150,9 +150,9 @@ public class OntologyService {
         for ( OntologyTerm term : terms ) {
             if ( term.getLabel().contains( filter ) ){
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-                vc.getClassUri();
+                vc.getCategoryUri();
                 vc.setValue( term.getTerm() );
-                vc.setTermUri( term.getUri() );    
+                vc.setValueUri( term.getUri() );    
                 vc.setDescription( term.getComment() );
                 filtered.add( vc );
             }

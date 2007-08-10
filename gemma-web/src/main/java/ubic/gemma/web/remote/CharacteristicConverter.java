@@ -69,14 +69,14 @@ public class CharacteristicConverter extends BeanConverter {
 
                 log.info( instanceType );
 
-                if ( tokens.containsKey( "termUri" ) )
+                if ( tokens.containsKey( "valueUri" ) )
                     bean = ubic.gemma.model.common.description.VocabCharacteristic.Factory.newInstance();
                 else
                     bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();
 
                 inctx.addConverted( iv, instanceType, bean );
             } else {
-                if ( tokens.containsKey( "termUri" ) )
+                if ( tokens.containsKey( "valueUri" ) )
                     bean = ubic.gemma.model.common.description.VocabCharacteristic.Factory.newInstance();
                 else
                     bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();

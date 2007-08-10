@@ -504,9 +504,9 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     public Characteristic persistCharacteristicAssociations( Characteristic ontologyEntry ) {
 
-        if ( ontologyEntry instanceof VocabCharacteristic )
-            ( ( VocabCharacteristic ) ontologyEntry ).setSource( this
-                    .persistExternalDatabase( ( ( VocabCharacteristic ) ontologyEntry ).getSource() ) );
+//        if ( ontologyEntry instanceof VocabCharacteristic )
+//            ( ( VocabCharacteristic ) ontologyEntry ).setSource( this
+//                    .persistExternalDatabase( ( ( VocabCharacteristic ) ontologyEntry ).getSource() ) );
 
         return ontologyEntry;
     }

@@ -617,11 +617,11 @@ public class GeneOntologyService implements InitializingBean {
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
         for ( VocabCharacteristic c : annotations ) {
-            if ( !terms.containsKey( c.getTermUri() ) ) {
-                log.warn( "Term " + c.getTermUri() + " not found in term list cant add to results" );
+            if ( !terms.containsKey( c.getValueUri() ) ) {
+                log.warn( "Term " + c.getValueUri() + " not found in term list cant add to results" );
                 continue;
             }
-            allGOTermSet.add( terms.get( c.getTermUri() ) );
+            allGOTermSet.add( terms.get( c.getValueUri() ) );
         }
 
         allGOTermSet = getAllParents( allGOTermSet );

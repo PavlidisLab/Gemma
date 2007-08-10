@@ -140,7 +140,7 @@ public class OntologyTools {
      * @return
      */
     public static OntologyTerm getOntologyTerm( VocabCharacteristic characteristic ) {
-        String uri = characteristic.getTermUri();
+        String uri = characteristic.getValueUri();
         return getOntologyTerm( uri );
     }
 

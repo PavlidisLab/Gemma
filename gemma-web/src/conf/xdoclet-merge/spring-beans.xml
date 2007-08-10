@@ -336,8 +336,8 @@
 					<property name="type" value="characteristicConverter" />
 					<property name="includes">
 						<list>
-							<value>termUri</value>
-							<value>classUri</value>
+							<value>valueUri</value>
+							<value>categoryUri</value>
 							<value>properties</value>
 							<value>value</value>
 							<value>description</value>
@@ -351,8 +351,8 @@
 					<property name="type" value="characteristicConverter" />
 					<property name="includes">
 						<list>
-							<value>termUri</value>
-							<value>classUri</value>
+							<value>valueUri</value>
+							<value>categoryUri</value>
 							<value>value</value>
 							<value>properties</value>
 							<value>description</value>
@@ -366,8 +366,8 @@
 					<property name="type" value="characteristicPropertyConverter" />
 					<property name="includes">
 						<list>
-							<value>termUri</value>
-							<value>classUri</value>
+							<value>valueUri</value>
+							<value>categoryUri</value>
 							<value>data</value>
 							<value>object</value>
 							<value>value</value>
@@ -381,8 +381,8 @@
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
-							<value>termUri</value>
-							<value>classUri</value>
+							<value>valueUri</value>
+							<value>categoryUri</value>
 							<value>object</value>
 							<value>value</value>
 						</list>
@@ -394,8 +394,8 @@
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
-							<value>termUri</value>
-							<value>classUri</value>
+							<value>valueUri</value>
+							<value>categoryUri</value>
 							<value>data</value>
 							<value>type</value>
 							<value>value</value>

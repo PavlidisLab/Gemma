@@ -43,10 +43,10 @@ public class ClassStatementImpl extends AbstractStatement implements ClassStatem
     protected CharacteristicProperty makeProperty() {
         assert object != null;
         Property p = Property.Factory.newInstance();
-        p.setTermUri( this.getProperty().getUri() );
+        p.setValueUri( this.getProperty().getUri() );
         p.setValue( this.getProperty().getLabel() );
         VocabCharacteristic o = VocabCharacteristic.Factory.newInstance();
-        o.setTermUri( object.getUri() );
+        o.setValueUri( object.getUri() );
         o.setValue( object.getLabel() );
         p.setObject( o );
         return p;

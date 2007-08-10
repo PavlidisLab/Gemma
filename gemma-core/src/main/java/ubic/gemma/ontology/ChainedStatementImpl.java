@@ -46,7 +46,7 @@ public class ChainedStatementImpl extends AbstractStatement implements ChainedSt
         
         Property p = Property.Factory.newInstance();
         p.setValue( this.getProperty().getLabel() );
-        p.setTermUri( this.getProperty().getUri() );
+        p.setValueUri( this.getProperty().getUri() );
         p.setObject( object.toVocabCharacteristic() );
         return p;
     }

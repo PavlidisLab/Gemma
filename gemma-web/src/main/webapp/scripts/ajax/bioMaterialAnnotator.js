@@ -150,7 +150,7 @@ var vocabC;
 var displayRestrictionsPanel = function(node){
 	console.log(dwr.util.toDescriptiveString(node, 10));
 
-	vocabC = { termUri : node.uri, classUri : node.uri, properties : [] };		
+	vocabC = { valueUri : node.uri, categoryUri : node.uri, properties : [] };		
 	createRestrictionGui(node, vocabC);
 	
 	var saveButton = new Ext.Button("center-div", {text : 'save'});
@@ -268,7 +268,7 @@ var createRestrictionGui = function(node, vc, indent, parentDivId) {
 	                    simple.render(divId);
                     } else{        //Not a leaf node. recurse down another level
                     	//do i need to use propertiesPush here? ie do i want a field id associated with this?
-                        var vcChild = { termUri : restrictedOn.uri, classUri : restrictedOn.uri, object : { termUri : restrictedTo.uri }, properties : []};
+                        var vcChild = { valueUri : restrictedOn.uri, categoryUri : restrictedOn.uri, object : { valueUri : restrictedTo.uri }, properties : []};
                         propertiesPush(vc, divId,vcChild);
                         //vc.properties.push(vcChild);
     	            	createRestrictionGui( restrictedTo, vcChild.object, indent + 3, divId );
@@ -381,7 +381,7 @@ var createComboBox = function(subject, individuals, vc, divId){
 			    
 					    
 					    var comboHandler = function(field,record,index){
-					    	var vcChild = { termUri : subject.uri, object : {termUri : record.data.uri}};
+					    	var vcChild = { valueUri : subject.uri, object : {valueUri : record.data.uri}};
 					    	
 					    	if (vc.properties === undefined){
     	                	 	vc.properties = [];    	                	 	
@@ -403,8 +403,8 @@ var createLeafComboBox = function(subject, individuals, vc, divId){
 					    
 					    var comboHandler = function(field,record,index){
 					    	
-					    	vc.classUri = subject.uri;
-					    	vc.termUri = record.data.uri
+					    	vc.categoryUri = subject.uri;
+					    	vc.valueUri = record.data.uri
 					    								          						 					    	                        
     	                };
     	                							    
@@ -509,7 +509,7 @@ var createForm = function(subject, vc, divId){
             	this.collapse();
             	this.fireEvent('select', this, record, index);
 
-				var newVC = { termUri : subject.uri, classUri: subject.uri,  object : {termUri : record.data.uri}};
+				var newVC = { valueUri : subject.uri, categoryUri: subject.uri,  object : {valueUri : record.data.uri}};
                	if (vc.properties === undefined){
   	                	 	vc.properties = [];    	                	 	
                	}
@@ -519,7 +519,7 @@ var createForm = function(subject, vc, divId){
         };
         
         var customHandler = function(field){							
-							var newVC = {termUri : subject.uri,  classUri: subject.uri, object : {value: field.getValue()}};
+							var newVC = {valueUri : subject.uri,  categoryUri: subject.uri, object : {value: field.getValue()}};
     	                	if (vc.properties === undefined){
     	                	 	vc.properties = [];    	                	 	
     	                	}
@@ -545,16 +545,16 @@ var createLeafForm = function(subject, vc, divId){
             	this.collapse();
             	this.fireEvent('select', this, record, index);
 				
-				vc.classUri = subject.uri;
-				vc.termUri = record.data.uri;
+				vc.categoryUri = subject.uri;
+				vc.valueUri = record.data.uri;
             }           	
     	                	
         }
 
 	var customHandler = function(field){
 	
-							vc.classUri = subject.uri;
-							vc.termUri =  field.getValue()														    	                	      
+							vc.categoryUri = subject.uri;
+							vc.valueUri =  field.getValue()														    	                	      
     	                };
 
 
@@ -573,17 +573,17 @@ var createAbstractForm = function(subject, vc, divId){
             	this.collapse();
             	this.fireEvent('select', this, record, index);
 
-				//var vc = {termUri : subject.uri, object : {termUri : record.data.uri}};
-				vc.classUri = subject.uri;
-				vc.termUri =  record.data.uri;            	      
+				//var vc = {valueUri : subject.uri, object : {valueUri : record.data.uri}};
+				vc.categoryUri = subject.uri;
+				vc.valueUri =  record.data.uri;            	      
             }           	
     	                	
         }
 
 	var customHandler = function(field){
 							vc.properties = [];
-							vc.classUri = subject.uri;
-							vc.termUri = field.getValue();    							    	                	      
+							vc.categoryUri = subject.uri;
+							vc.valueUri = field.getValue();    							    	                	      
     	                };
 
 
@@ -599,7 +599,7 @@ var createPrimitiveTypeHandler = function(restrictedOn, vc){
 
 	return 	function(field) {
 					     	
-					     	var newVc = {termUri : restrictedOn.uri, classUri : restrictedOn.uri,  data : field.getValue(), type : restrictedOn.type};
+					     	var newVc = {valueUri : restrictedOn.uri, categoryUri : restrictedOn.uri,  data : field.getValue(), type : restrictedOn.type};
 					     	
 					     	if (vc.properties === undefined){
     	                	 	vc.properties = [];    	                	 	

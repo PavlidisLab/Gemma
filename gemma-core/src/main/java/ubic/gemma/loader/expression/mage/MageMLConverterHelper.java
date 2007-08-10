@@ -1255,7 +1255,7 @@ public class MageMLConverterHelper {
             List<OntologyEntry> annotations = description.getAnnotations();
             for ( OntologyEntry element : annotations ) {
                 ubic.gemma.model.common.description.VocabCharacteristic ontologyEntry = convertOntologyEntry( element );
-                log.debug( "Got association for describable: " + ontologyEntry.getTermUri() );
+                log.debug( "Got association for describable: " + ontologyEntry.getValueUri() );
                 // gemmaObj.addAnnotation( ontologyEntry );
             }
 
@@ -1807,16 +1807,7 @@ public class MageMLConverterHelper {
         // result.setDescription( mageObj.getDescription() );
         // result.setValue( mageObj.getValue() );
         convertAssociations( mageObj, result );
-        if ( result.getSource() == null ) { // Maybe its in MO (often the case)
-            if ( mgedOntologyHelper.classExists( StringUtils.capitalize( mageObj.getCategory() ) ) ) {
-                result.setSource( this.getMAGEOntologyDatabaseObject() );
-                log.debug( "Automatically identified MO as database for " + result );
-            } else {
-                log.warn( "Using 'unknown' for source of OntologyEntry " + result + " (Converted from MAGE "
-                        + mageObj.getCategory() + " " + mageObj.getValue() + ")" );
-                result.setSource( this.getUnknownDatabaseObject() );
-            }
-        }
+
         return result;
     }
 
@@ -3502,8 +3493,8 @@ public class MageMLConverterHelper {
             VocabCharacteristic gemmaObj ) {
         ExternalDatabase ed = convertDatabase( databaseEntry.getDatabase() );
         assert ed != null : "Null externalDatabase for MAGE version of " + gemmaObj;
-        gemmaObj.setSource( ed );
-        gemmaObj.setTermUri( databaseEntry.getAccession() ); // FIXME make sure this is the URI.
+        //gemmaObj.setSource( ed );
+        gemmaObj.setValueUri( databaseEntry.getAccession() ); // FIXME make sure this is the URI.
     }
 
     /**

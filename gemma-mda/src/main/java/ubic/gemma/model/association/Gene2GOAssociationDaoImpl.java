@@ -69,13 +69,13 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         Collection<String> goIDs = new HashSet<String>();
         if ( goTerms.size() == 0 ) return goIDs;
 
-        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.termUri in (:goIDs) and geneAss.gene.taxon = :taxon";
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.valueUri in (:goIDs) and geneAss.gene.taxon = :taxon";
 
         // need to turn the collection of goTerms into a collection of GOId's
 
         for ( Object obj : goTerms ) {
             VocabCharacteristic oe = ( VocabCharacteristic ) obj;
-            goIDs.add( oe.getTermUri() );
+            goIDs.add( oe.getValueUri() );
         }
 
         Collection<Gene> results;

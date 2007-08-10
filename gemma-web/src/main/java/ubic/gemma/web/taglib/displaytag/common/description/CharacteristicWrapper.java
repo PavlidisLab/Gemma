@@ -59,24 +59,24 @@ public class CharacteristicWrapper extends TableDecorator {
         }
         if (c instanceof VocabCharacteristic) {
             VocabCharacteristic vc = (VocabCharacteristic)c;
-            if ( StringUtils.isEmpty( vc.getClassUri() ) ) {
+            if ( StringUtils.isEmpty( vc.getCategoryUri() ) ) {
                 buf.append( "unknown class" );
             } else {
                 Matcher classMatcher =
-                    humanReadableUriPortionPattern.matcher( vc.getClassUri() );
+                    humanReadableUriPortionPattern.matcher( vc.getCategoryUri() );
                 if ( classMatcher.matches() ) {
                     buf.append( classMatcher.group(1) );
                 } else {
-                    buf.append( vc.getClassUri() );
+                    buf.append( vc.getCategoryUri() );
                 }
             }
-            if ( vc.getTermUri() != null && !vc.getTermUri().equals( vc.getClassUri() ) ) {
+            if ( vc.getValueUri() != null && !vc.getValueUri().equals( vc.getCategoryUri() ) ) {
                 buf.append( " : " );
-                Matcher termMatcher = humanReadableUriPortionPattern.matcher( vc.getTermUri() );
+                Matcher termMatcher = humanReadableUriPortionPattern.matcher( vc.getValueUri() );
                 if ( termMatcher.matches() ) {
                     buf.append( termMatcher.group(1) );
                 } else {
-                    buf.append( vc.getTermUri() );
+                    buf.append( vc.getValueUri() );
                 }      
             } else if ( !StringUtils.isEmpty( vc.getValue() ) ) {
                 buf.append( " : " );

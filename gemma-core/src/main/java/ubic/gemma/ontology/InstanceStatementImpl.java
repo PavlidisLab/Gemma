@@ -42,10 +42,10 @@ public class InstanceStatementImpl extends AbstractStatement implements Instance
     @Override
     public CharacteristicProperty makeProperty() {
         Property p = Property.Factory.newInstance();
-        p.setTermUri( this.getProperty().getUri() );
+        p.setValueUri( this.getProperty().getUri() );
         p.setValue( this.getProperty().getLabel() );
         VocabCharacteristic o = VocabCharacteristic.Factory.newInstance();
-        o.setTermUri( individual.getUri() );
+        o.setValueUri( individual.getUri() );
         o.setValue( individual.getLabel() );
         p.setObject( o );
         return p;

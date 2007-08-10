@@ -1052,19 +1052,18 @@ public class GeoConverter implements Converter {
 
         if ( !repType.equals( VariableType.other ) ) {
             mged.setName( "MGED Ontology" );
-            mged.setType( DatabaseType.ONTOLOGY );
-            result.setSource( mged );
+            mged.setType( DatabaseType.ONTOLOGY );            
         }
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
             result.setValue( "biological_replicate" );
-            result.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "biological_replicate" );
+            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "biological_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" );
+            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateLabeledExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have a
+            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have a
             // term to distinguish
             // these.
         } else {
@@ -1819,82 +1818,81 @@ public class GeoConverter implements Converter {
 
         if ( !varType.equals( VariableType.other ) ) {
             mged.setName( "MGED Ontology" );
-            mged.setType( DatabaseType.ONTOLOGY );
-            categoryTerm.setSource( mged );
+            mged.setType( DatabaseType.ONTOLOGY );            
         }
 
         if ( varType.equals( VariableType.age ) ) {
             categoryTerm.setValue( "Age" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
         } else if ( varType.equals( VariableType.agent ) ) {
             categoryTerm.setValue( "Agent" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Agent" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Agent" );
         } else if ( varType.equals( VariableType.cellLine ) ) {
             categoryTerm.setValue( "CellLine" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellLine" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellLine" );
         } else if ( varType.equals( VariableType.cellType ) ) {
             categoryTerm.setValue( "CellType" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellType" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellType" );
         } else if ( varType.equals( VariableType.developmentStage ) ) {
             categoryTerm.setValue( "DevelopmentalStage" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DevelopmentalStage" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DevelopmentalStage" );
         } else if ( varType.equals( VariableType.diseaseState ) ) {
             categoryTerm.setValue( "DiseaseState" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DiseaseState" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DiseaseState" );
         } else if ( varType.equals( VariableType.dose ) ) {
             categoryTerm.setValue( "Dose" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Dose" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Dose" );
         } else if ( varType.equals( VariableType.gender ) ) {
             categoryTerm.setValue( "Sex" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Sex" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Sex" );
         } else if ( varType.equals( VariableType.genotypeOrVariation ) ) {
             categoryTerm.setValue( "IndividualGeneticCharacteristics" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "IndividualGeneticCharacteristics" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "IndividualGeneticCharacteristics" );
         } else if ( varType.equals( VariableType.growthProtocol ) ) {
             categoryTerm.setValue( "GrowthCondition" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "GrowthCondition" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "GrowthCondition" );
         } else if ( varType.equals( VariableType.individual ) ) {
             categoryTerm.setValue( "Individiual" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Individiual" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Individiual" );
         } else if ( varType.equals( VariableType.infection ) ) {
             categoryTerm.setValue( "Phenotype" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Phenotype" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Phenotype" );
         } else if ( varType.equals( VariableType.isolate ) ) {
             categoryTerm.setValue( "Age" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
         } else if ( varType.equals( VariableType.metabolism ) ) {
             categoryTerm.setValue( "Metabolism" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Metabolism" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Metabolism" );
         } else if ( varType.equals( VariableType.other ) ) {
             categoryTerm.setValue( "Other" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Other" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Other" );
         } else if ( varType.equals( VariableType.protocol ) ) {
             categoryTerm.setValue( "Protocol" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Protocol" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Protocol" );
         } else if ( varType.equals( VariableType.shock ) ) {
             categoryTerm.setValue( "EnvironmentalStress" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
         } else if ( varType.equals( VariableType.species ) ) {
             categoryTerm.setValue( "Organism" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Organism" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Organism" );
         } else if ( varType.equals( VariableType.specimen ) ) {
             categoryTerm.setValue( "BioSample" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "BioSample" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "BioSample" );
         } else if ( varType.equals( VariableType.strain ) ) {
             categoryTerm.setValue( "StrainOrLine" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "StrainOrLine" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "StrainOrLine" );
         } else if ( varType.equals( VariableType.stress ) ) {
             categoryTerm.setValue( "EnvironmentalStress" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
         } else if ( varType.equals( VariableType.temperature ) ) {
             categoryTerm.setValue( "Temperature" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Temperature" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Temperature" );
         } else if ( varType.equals( VariableType.time ) ) {
             categoryTerm.setValue( "Time" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Time" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Time" );
         } else if ( varType.equals( VariableType.tissue ) ) {
             categoryTerm.setValue( "OrganismPart" );
-            categoryTerm.setTermUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "OrganismPart" );
+            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "OrganismPart" );
         } else {
             throw new IllegalStateException();
         }

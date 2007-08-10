@@ -41,7 +41,7 @@ public class VocabCharacteristicBuilder {
     public static VocabCharacteristic makeInstance( OntologyTerm term ) {
         VocabCharacteristic v = VocabCharacteristic.Factory.newInstance();
         v.setValue( term.getTerm() );
-        v.setTermUri( term.getUri() );
+        v.setValueUri( term.getUri() );
         return v;
     }
 

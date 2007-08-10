@@ -39,7 +39,7 @@ var createMgedComboBox = function(terms){
 	
 		    			var comboHandler = function(field,record,index){
 					    	
-					    	vocabC.classUri = record.data.uri;
+					    	vocabC.categoryUri = record.data.uri;
 							vocabC.category = record.data.term;				    	
 					    								      						 					    	                        
     	                };
@@ -62,7 +62,7 @@ var createSearchComponent = function(){
             	this.collapse();
             	this.fireEvent('select', this, record, index);
 							
-				vocabC.termUri = record.data.termUri;
+				vocabC.valueUri = record.data.valueUri;
 				vocabC.value = record.data.value;
             }           	
     	                	
@@ -72,7 +72,9 @@ var createSearchComponent = function(){
 	var     recordType = Ext.data.Record.create([
 					   {name:"id", type:"int"},
                        {name:"value", type:"string"},
-                       {name:"termUri", type:"string"},
+                       {name:"valueUri", type:"string"},
+                       {name:"categoryUri",type:"string"},
+                       {name:"category", type:"string"},                       
                        {name:"description", type:"string"}
                ]);
 
@@ -87,7 +89,7 @@ var createSearchComponent = function(){
 
        var cm = new Ext.grid.ColumnModel([
                        {header: "term", width: 50, dataIndex:"value"},
-                       {header: "uri",  width: 80, dataIndex:"termUri"}                       
+                       {header: "uri",  width: 80, dataIndex:"valueUri"}                       
                        ]);
        cm.defaultSortable = true;	
     
@@ -95,7 +97,7 @@ var createSearchComponent = function(){
     var resultTpl = new Ext.Template(
         '<div class="search-item" title={description}>',
             '<h4><span>{id}</span>{value}</h4>',
-            '{termUri}',
+            '{valueUri}',
         '</div>'
     );
     

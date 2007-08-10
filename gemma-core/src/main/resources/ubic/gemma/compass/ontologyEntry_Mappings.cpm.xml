@@ -25,8 +25,8 @@
       <meta-data>description</meta-data>
     </property>
     
-    <property name="termUri">
-      <meta-data>termUri</meta-data>      
+    <property name="valueUri">
+      <meta-data>valueUri</meta-data>      
     </property>
     
     
