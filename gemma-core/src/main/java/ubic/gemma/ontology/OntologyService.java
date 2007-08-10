@@ -47,6 +47,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @spring.property name="birnLexOntologyService" ref ="birnLexOntologyService"
  * @spring.property name="fmaOntologyService" ref ="fmaOntologyService"
  * @spring.property name="oboDiseaseOntologyService" ref ="oboDiseaseOntologyService"
+ * @spring.property name="mgedOntologyService" ref ="mgedOntologyService"
  * @spring.property name="bioMaterialService" ref ="bioMaterialService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="characteristicService" ref="characteristicService"
@@ -60,8 +61,11 @@ public class OntologyService {
     private BirnLexOntologyService birnLexOntologyService;
     private OBODiseaseOntologyService oboDiseaseOntologyService;
     private FMAOntologyService fmaOntologyService;
+    private MgedOntologyService mgedOntologyService;
     private BioMaterialService bioMaterialService;
     private ExpressionExperimentService eeService;
+    private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
+    
     private CharacteristicService characteristicService;
 
     /**
@@ -82,6 +86,30 @@ public class OntologyService {
         }
         return ontologies;
 
+    }
+    
+    /**
+     * @return the OntologyTerm for the specified URI
+     */
+    public OntologyTerm getTerm( String uri ) {
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            OntologyTerm term = ontology.getTerm( uri );
+            if ( term != null )
+                return term;
+        }
+        return null;
+    }
+    
+    /**
+     * @return the OntologyResource for the specified URI
+     */
+    public OntologyResource getResource( String uri ) {
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            OntologyResource resource = ontology.getResource( uri );
+            if ( resource != null )
+                return resource;
+        }
+        return null;
     }
     
     /**
@@ -121,14 +149,11 @@ public class OntologyService {
         Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
         Collection<OntologyTerm> results;
 
-        results = birnLexOntologyService.findTerm( search );
-        if ( results != null ) terms.addAll( convert(results) );
-
-        results = oboDiseaseOntologyService.findTerm( search );
-        if ( results != null ) terms.addAll( convert(results) );
-
-        results = fmaOntologyService.findTerm( search );
-        if ( results != null ) terms.addAll( convert(results) );
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            results = ontology.findTerm( search );
+            if ( results != null )
+                terms.addAll( convert( results ) );
+        }
 
         return terms;
     }
@@ -259,6 +284,7 @@ public class OntologyService {
      */
     public void setBirnLexOntologyService( BirnLexOntologyService birnLexOntologyService ) {
         this.birnLexOntologyService = birnLexOntologyService;
+        ontologyServices.add( birnLexOntologyService );
     }
 
     /**
@@ -266,6 +292,7 @@ public class OntologyService {
      */
     public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
         this.fmaOntologyService = fmaOntologyService;
+        ontologyServices.add( fmaOntologyService );
     }
 
     /**
@@ -273,6 +300,15 @@ public class OntologyService {
      */
     public void setOboDiseaseOntologyService( OBODiseaseOntologyService oboDiseaseOntologyService ) {
         this.oboDiseaseOntologyService = oboDiseaseOntologyService;
+        ontologyServices.add( oboDiseaseOntologyService );
+    }
+
+    /**
+     * @param mgedDiseaseOntologyService the mgedDiseaseOntologyService to set
+     */
+    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
+        this.mgedOntologyService = mgedOntologyService;
+        ontologyServices.add( mgedOntologyService );
     }
 
     /**
