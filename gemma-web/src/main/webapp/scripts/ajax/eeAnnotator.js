@@ -39,7 +39,8 @@ var createMgedComboBox = function(terms){
 	
 		    			var comboHandler = function(field,record,index){
 					    	
-					    	vocabC.classUri = record.data.uri;					    	
+					    	vocabC.classUri = record.data.uri;
+							vocabC.category = record.data.term;				    	
 					    								      						 					    	                        
     	                };
     	                	
@@ -92,8 +93,8 @@ var createSearchComponent = function(){
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
-        '<div class="search-item">',
-            '<h3><span tooltip={description}>{id}</span>{value}</h3>',
+        '<div class="search-item" title={description}>',
+            '<h4><span>{id}</span>{value}</h4>',
             '{termUri}',
         '</div>'
     );
