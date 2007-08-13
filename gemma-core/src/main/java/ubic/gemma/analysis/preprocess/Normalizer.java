@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Represents the process of normalizing arrays.
@@ -32,5 +32,5 @@ public interface Normalizer {
      * @param dataMatrix
      * @return
      */
-    public DoubleMatrixNamed2D normalize( DoubleMatrixNamed2D dataMatrix );
+    public DoubleMatrixNamed normalize( DoubleMatrixNamed dataMatrix );
 }

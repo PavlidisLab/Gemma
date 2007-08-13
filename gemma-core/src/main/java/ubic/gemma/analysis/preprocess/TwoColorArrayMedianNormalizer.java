@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.util.RCommand;
 
 /**
@@ -42,10 +42,10 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer implements T
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed2D normalize( DoubleMatrixNamed2D channelOneSignal, DoubleMatrixNamed2D channelTwoSignal,
-            DoubleMatrixNamed2D channelOneBackground, DoubleMatrixNamed2D channelTwoBackground, DoubleMatrixNamed2D weights ) {
+    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
+            DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed2D resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
+        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights, "median" );
         return resultObject;
     }
@@ -56,9 +56,9 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer implements T
      * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed2D normalize( DoubleMatrixNamed2D channelOneSignal, DoubleMatrixNamed2D channelTwoSignal ) {
+    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed2D resultObject = normalize( channelOneSignal, channelTwoSignal, "median" );
+        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, "median" );
         return resultObject;
     }
 

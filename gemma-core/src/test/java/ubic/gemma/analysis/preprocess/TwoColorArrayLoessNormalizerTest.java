@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
@@ -71,16 +71,16 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
             return;
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        DoubleMatrixNamed2D maGb = ( DoubleMatrixNamed2D ) reader.read( new GZIPInputStream( this.getClass()
+        DoubleMatrixNamed maGb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maGb.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed2D maGf = ( DoubleMatrixNamed2D ) reader.read( new GZIPInputStream( this.getClass()
+        DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed2D maRb = ( DoubleMatrixNamed2D ) reader.read( new GZIPInputStream( this.getClass()
+        DoubleMatrixNamed maRb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maRb.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed2D maRf = ( DoubleMatrixNamed2D ) reader.read( new GZIPInputStream( this.getClass()
+        DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
         assert maRf != null && maGf != null && maRb != null && maGb != null;
-        DoubleMatrixNamed2D result = normalizer.normalize( maRf, maGf, maRb, maGb, null );
+        DoubleMatrixNamed result = normalizer.normalize( maRf, maGf, maRb, maGb, null );
 
         assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
@@ -94,14 +94,14 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
             return;
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        DoubleMatrixNamed2D maRf = ( DoubleMatrixNamed2D ) reader.read( new GZIPInputStream( this.getClass()
+        DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed2D maGf = ( DoubleMatrixNamed2D ) reader.read( new GZIPInputStream( this.getClass()
+        DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
 
         assert maRf != null && maGf != null;
 
-        DoubleMatrixNamed2D result = normalizer.normalize( maRf, maGf );
+        DoubleMatrixNamed result = normalizer.normalize( maRf, maGf );
 
         assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );

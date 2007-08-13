@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.util;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.util.RCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -63,7 +63,7 @@ public class AffyBatch extends RCommander {
      * @param arrayDesign An arraydesign object which will be used to determine the CDF file to use, based on the array
      *        name.
      */
-    public String makeAffyBatch( DoubleMatrixNamed2D celMatrix, ArrayDesign arrayDesign ) {
+    public String makeAffyBatch( DoubleMatrixNamed celMatrix, ArrayDesign arrayDesign ) {
 
         if ( celMatrix == null ) throw new IllegalArgumentException( "Null matrix" );
 

@@ -45,7 +45,7 @@ import org.jfree.data.xy.MatrixSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
@@ -266,7 +266,7 @@ public class VisualizeDataSetApp {
 
         ExpressionDataMatrixVisualizationService visualizationService = new ExpressionDataMatrixVisualizationService();
 
-        DoubleMatrixNamed2D m = new FastRowAccessDoubleMatrix2DNamed( rawData );
+        DoubleMatrixNamed m = new FastRowAccessDoubleMatrix2DNamed( rawData );
         m.setRowNames( Arrays.asList( visualizeDataSet.converter.getRowNames() ) );
         m.setColumnNames( Arrays.asList( visualizeDataSet.converter.getHeader() ) );
         ColorMatrix colorMatrix = new ColorMatrix( m );

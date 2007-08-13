@@ -20,7 +20,7 @@ package ubic.gemma.analysis.util;
 
 import java.util.List;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.util.RCommand;
 
 /**
@@ -51,7 +51,7 @@ public class MArrayRaw extends RCommander {
      * @param green Matrix of green channel intensities
      * @return
      */
-    public String makeMArrayRaw( DoubleMatrixNamed2D red, DoubleMatrixNamed2D green ) {
+    public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green ) {
         return this.makeMArrayRaw( red, green, null, null, null );
     }
 
@@ -64,8 +64,8 @@ public class MArrayRaw extends RCommander {
      * @return The name of the variable in the R context.
      */
     @SuppressWarnings("unchecked")
-    public String makeMArrayRaw( DoubleMatrixNamed2D red, DoubleMatrixNamed2D green, DoubleMatrixNamed2D redBg,
-            DoubleMatrixNamed2D greenBg, DoubleMatrixNamed2D weights ) {
+    public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green, DoubleMatrixNamed redBg,
+            DoubleMatrixNamed greenBg, DoubleMatrixNamed weights ) {
 
         if ( red == null || green == null ) throw new IllegalArgumentException( "Signal matrices must not be null" );
 

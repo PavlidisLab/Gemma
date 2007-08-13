@@ -41,7 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.StringMatrix2DNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
@@ -424,10 +424,10 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Process cluster = rt.exec( clusterCmd + " -f " + this.outputFile + " " + commonOptions );
         cluster.waitFor();
 
-		DoubleMatrixNamed2D dataMatrix = getClusteredMatrix();
+		DoubleMatrixNamed dataMatrix = getClusteredMatrix();
 
 		// Get the rank Matrix
-		DoubleMatrixNamed2D rankMatrix = coExpression.getRankMatrix(dataMatrix);
+		DoubleMatrixNamed rankMatrix = coExpression.getRankMatrix(dataMatrix);
 
         // generate the png figures
         ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
@@ -446,7 +446,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 	 * @return
 	 * @throws IOException
 	 */
-	private DoubleMatrixNamed2D getClusteredMatrix() throws IOException {
+	private DoubleMatrixNamed getClusteredMatrix() throws IOException {
 		// Read the generated file into a String Matrix
 		StringMatrixReader mReader = new StringMatrixReader();
 		int dotIndex = this.outputFile.lastIndexOf('.');
@@ -479,7 +479,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 				}
 			rowIndex++;
 		}
-		DoubleMatrixNamed2D dataMatrix = new DenseDoubleMatrix2DNamed(data);
+		DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed(data);
 		dataMatrix.setRowNames(rowLabels);
 		dataMatrix.setColumnNames(colLabels);
 		return dataMatrix;

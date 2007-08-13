@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -46,11 +46,11 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
      * 
      * @param signal The CEL matrix. The MM values are not changed by this algorithm.
      * @param background - not used by this method.
-     * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrixNamed2D,
-     *      baseCode.dataStructure.matrix.DoubleMatrixNamed2D)
+     * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrixNamed,
+     *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
     @SuppressWarnings("unused")
-    public DoubleMatrixNamed2D adjust( DoubleMatrixNamed2D signal, DoubleMatrixNamed2D background ) {
+    public DoubleMatrixNamed adjust( DoubleMatrixNamed signal, DoubleMatrixNamed background ) {
         log.debug( "Background correcting..." );
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
@@ -59,7 +59,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
 
         log.info( "Done with background correction" );
 
-        DoubleMatrixNamed2D resultObject = rc.retrieveMatrix( "m" );
+        DoubleMatrixNamed resultObject = rc.retrieveMatrix( "m" );
 
         // clean up.
         rc.remove( abName );

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * @author pavlidis
@@ -37,10 +37,10 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed2D normalize( DoubleMatrixNamed2D channelOneSignal, DoubleMatrixNamed2D channelTwoSignal,
-            DoubleMatrixNamed2D channelOneBackground, DoubleMatrixNamed2D channelTwoBackground, DoubleMatrixNamed2D weights ) {
+    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
+            DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed2D resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
+        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights, "loess" );
         return resultObject;
     }
@@ -51,9 +51,9 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed2D normalize( DoubleMatrixNamed2D channelOneSignal, DoubleMatrixNamed2D channelTwoSignal ) {
+    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed2D resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
+        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
         return resultObject;
     }
 }

@@ -1,6 +1,7 @@
 package ubic.gemma.apps;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -9,7 +10,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
+import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService.CoexpressionMatrices;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -111,11 +114,28 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneManipulatingCLI {
         }
 
         CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( EEs, queryGeneIds, targetGeneIds );
-        DenseDoubleMatrix3DNamed coexpressionMatrix = matrices.getCorrelationMatrix();
-        DenseDoubleMatrix3DNamed randCoexpressionMatrix = effectSizeService.calculateRandomCorrelationMatrix( EEs, coexpressionMatrix);
+        DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
+        DenseDoubleMatrix3DNamed randCorrelationMatrix = effectSizeService.calculateRandomCorrelationMatrix( correlationMatrix);
+        DenseDoubleMatrix2DNamed foldedCorrelationMatrix = effectSizeService.foldCoexpressionMatrix(correlationMatrix);
+        DenseDoubleMatrix2DNamed foldedRandCorrelationMatrix = effectSizeService.foldCoexpressionMatrix(randCorrelationMatrix);
+        DenseDoubleMatrix2DNamed maxCorrelationMatrix = effectSizeService.getMaxCorrelationMatrix(correlationMatrix, 0);
+        DenseDoubleMatrix2DNamed maxRandCorrelationMatrix = effectSizeService.getMaxCorrelationMatrix(randCorrelationMatrix, 0);
         try {
-            effectSizeService.saveToFile( outFilePrefix + ".corr.txt", coexpressionMatrix, true);
-            effectSizeService.saveToFile( outFilePrefix + ".rand_corr.txt", randCoexpressionMatrix, true);
+        	String topLeft = "GenePair";
+        	DecimalFormat formatter = new DecimalFormat("0.0000");
+        	MatrixWriter out = new MatrixWriter(outFilePrefix + ".corr.txt", formatter);
+        	out.writeMatrix(foldedCorrelationMatrix, topLeft);
+        	out.close();
+        	out = new MatrixWriter(outFilePrefix + ".rand_corr.txt", formatter);
+        	out.writeMatrix(foldedRandCorrelationMatrix, topLeft);
+        	out.close();
+        	
+        	out = new MatrixWriter(outFilePrefix + ".max_corr.txt", formatter);
+        	out.writeMatrix(maxCorrelationMatrix);
+        	out.close();
+        	out = new MatrixWriter(outFilePrefix + ".max_rand_corr.txt", formatter);
+        	out.writeMatrix(maxRandCorrelationMatrix);
+        	out.close();
         } catch ( IOException e ) {
             return e;
         }

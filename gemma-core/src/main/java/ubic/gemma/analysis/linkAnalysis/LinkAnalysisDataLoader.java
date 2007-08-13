@@ -9,7 +9,7 @@ import java.util.List;
 
 import ubic.basecode.bio.geneset.GeneAnnotations;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.datafilter.AffymetrixProbeNameFilter;
 import ubic.basecode.datafilter.Filter;
 import ubic.basecode.io.ByteArrayConverter;
@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class LinkAnalysisDataLoader extends ExpressionDataLoader {
 
-    private DoubleMatrixNamed2D dataMatrix = null;
+    private DoubleMatrixNamed dataMatrix = null;
 
     public LinkAnalysisDataLoader( ExpressionExperiment paraExpressionExperiment, String goFile ) {
         super( paraExpressionExperiment, goFile );
@@ -35,7 +35,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
 
     private void filter() {
         Filter x = new AffymetrixProbeNameFilter();
-        DoubleMatrixNamed2D r = ( DoubleMatrixNamed2D ) x.filter( this.dataMatrix );
+        DoubleMatrixNamed r = ( DoubleMatrixNamed ) x.filter( this.dataMatrix );
         this.dataMatrix = r;
         System.err.println( this.dataMatrix );
         this.uniqueItems = this.dataMatrix.rows();
@@ -69,7 +69,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
         }
     }
 
-    private DoubleMatrixNamed2D vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
+    private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             return null;
         }
@@ -80,7 +80,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
 
         assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
 
-        DoubleMatrixNamed2D matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
+        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
 
         // Use BioMaterial names to represent the column in the matrix (as it can span multiple BioAssays)
         for ( BioAssay assay : bioAssays ) {
@@ -109,7 +109,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
         return matrix;
     }
 
-    public DoubleMatrixNamed2D getDataMatrix() {
+    public DoubleMatrixNamed getDataMatrix() {
         return this.dataMatrix;
     }
 

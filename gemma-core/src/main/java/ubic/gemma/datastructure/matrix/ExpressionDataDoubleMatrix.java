@@ -29,7 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -52,7 +52,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
     private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
-    private DoubleMatrixNamed2D matrix;
+    private DoubleMatrixNamed matrix;
 
     /**
      * To comply with bean specifications. Not to be instantiated.
@@ -338,11 +338,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrixNamed2D createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+    private DoubleMatrixNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        DoubleMatrixNamed2D matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
+        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );

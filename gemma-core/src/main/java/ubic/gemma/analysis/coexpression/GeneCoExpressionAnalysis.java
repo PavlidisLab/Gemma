@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import cern.colt.list.DoubleArrayList;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed2D;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
@@ -489,9 +489,9 @@ public class GeneCoExpressionAnalysis {
      * @param dataMatrix
      * @return
      */
-    public DoubleMatrixNamed2D getRankMatrix( DoubleMatrixNamed2D dataMatrix ) {
+    public DoubleMatrixNamed getRankMatrix( DoubleMatrixNamed dataMatrix ) {
         double[][] rank = new double[dataMatrix.rows()][dataMatrix.columns()];
-        DoubleMatrixNamed2D rankMatrix = new DenseDoubleMatrix2DNamed( rank );
+        DoubleMatrixNamed rankMatrix = new DenseDoubleMatrix2DNamed( rank );
         rankMatrix.setRowNames( dataMatrix.getRowNames() );
         rankMatrix.setColumnNames( dataMatrix.getColNames() );
         
