@@ -48,7 +48,6 @@ import cern.colt.list.DoubleArrayList;
  * @spring.bean id="effectSizeService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="eeService" ref="expressionExperimentService"
- * @spring.property name="dedvService" ref="designElementDataVectorService"
  * @spring.property name="adService" ref="arrayDesignService"
  * @author Raymond
  */
