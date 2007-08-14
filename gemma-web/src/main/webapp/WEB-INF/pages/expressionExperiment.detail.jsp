@@ -15,9 +15,11 @@
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type='text/javascript' src='/scripts/ajax/eeAnnotations.js'></script>
 
 </head>
 
@@ -240,36 +242,19 @@ if ( expressionExperiment.getName() != null ) {
 	</authz:authorize>
 </table>
 
+<h3>Annotation</h3>
 <authz:authorize ifAnyGranted="admin">
-
 <!-- This is for the EE annotator  -->
-		<div id="eeAnnotator" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:30px;"></div>
+		<div id="eeAnnotator" class="x-grid-mso" style="padding: 2px; overflow: hidden; width:650px; height:30px;"></div>
 		  <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>" type="text/javascript"></script>
 		  <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		  <script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>	
-	
 </authz:authorize>
 
-<div id="annotationTableContainer" class="tableContainer">
-	<h3>
-		Annotation
-	</h3>
-	<c:choose>
-		<c:when test="${empty expressionExperiment.characteristics}">
-			<p>
-				No annotation found.
-			</p>
-		</c:when>
-		<c:otherwise>
-			<display:table name="characteristics" class="scrollTable"
-			 requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
-			 id="annotationTable" pagesize="5"
-			 decorator="ubic.gemma.web.taglib.displaytag.common.description.CharacteristicWrapper">
-			<display:column property="descriptionString" sortable="false" title="" />
-			</display:table>
-		</c:otherwise>
-	</c:choose>
-</div>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotations.js'/>" type="text/javascript"></script>
+	<div id="eeAnnotations" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
+	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
+	<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
 
 <%
 	if ( expressionExperiment.getExperimentalDesign() != null ) {

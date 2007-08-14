@@ -293,6 +293,7 @@
 					<property name="includes">
 						<list>
 							<value>deleteById</value>
+							<value>getAnnotation</value>
 						</list>
 					</property>
 				</bean>
@@ -812,6 +813,17 @@
 							<value>actionName</value>
 							<value>eventTypeName</value>
 							<value>note</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.expression.experiment.AnnotationValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>className</value>
+							<value>termName</value>
 						</list>
 					</property>
 				</bean>

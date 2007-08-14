@@ -34,6 +34,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -43,12 +45,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyResource;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
+import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -60,6 +65,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "expressionExperimentReportService" ref="expressionExperimentReportService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
+ * @spring.property name="ontologyService" ref="ontologyService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
@@ -71,6 +77,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
     private SearchService searchService;
+    private OntologyService ontologyService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -222,6 +229,52 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
+    }
+
+    /**
+     * @return the ontologyService
+     */
+    public OntologyService getOntologyService() {
+        return ontologyService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setOntologyService( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
+    }
+    
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
+        if ( e == null || e.getId() == null )
+            return null;
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( e.getId() );
+        
+        Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
+        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = (VocabCharacteristic)c;
+                String className = getLabelFromUri( vc.getCategoryUri() );
+                if ( className != null )
+                    annotationValue.setClassName( className );
+                String termName = getLabelFromUri( vc.getValueUri() );
+                if ( termName != null )
+                    annotationValue.setTermName( termName );
+            }
+            annotation.add( annotationValue );
+        }
+        return annotation;
+    }
+    
+    private String getLabelFromUri( String uri ) {
+        OntologyResource resource = ontologyService.getResource( uri );
+        if ( resource != null )
+            return resource.getLabel();
+        else
+            return null;
     }
 
     /**

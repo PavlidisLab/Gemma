@@ -131,8 +131,7 @@ var createSearchComponent = function(){
 var saveHandler = function(){
 	
 	console.log(dwr.util.toDescriptiveString(vocabC,10))
-	OntologyService.saveExpressionExperimentStatment(vocabC, [eeid]);
-	
+	OntologyService.saveExpressionExperimentStatment(vocabC, [eeid], refreshEEAnnotations);
 	
 }
 
@@ -173,6 +172,7 @@ Ext.onReady(function() {
 
 	simpleForm.column(save);
 								   
-    simpleForm.render("eeAnnotator");	
+    //simpleForm.render(eeGrid.getView().getHeaderPanel(true));
+    simpleForm.render("eeAnnotator");		
 	
 });
