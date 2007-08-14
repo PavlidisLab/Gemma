@@ -504,12 +504,22 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
+    /*
+     * (non-Javadoc) @param cs2gene Map of CS Ids to Genes
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(java.util.Map,
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt ) throws Exception {
+    protected Map handleGetDesignElementDataVectors( /* Map<Long, Collection<Gene>> */Map cs2gene, QuantitationType qt )
+            throws Exception {
 
-        Map<DesignElementDataVector, Object> dedv2genes = new HashMap<DesignElementDataVector, Object>();
+        // FIXME move this method to the DesignElementDataVectorDao/Service.
 
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+
+        // Native query - faster? Fetches all data for that QT and throws away unneeded portion
         String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE "
                 + " QUANTITATION_TYPE_FK = " + qt.getId();
         Session session = getSessionFactory().openSession();
@@ -521,15 +531,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         queryObject.addScalar( "dedvRank", new DoubleType() );
 
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        Collection<Long> csIds = cs2gene.keySet();
+        Collection<Long> desiredCsIds = cs2gene.keySet();
         while ( scroll.next() ) {
             Long dedvId = scroll.getLong( 0 );
             Blob dedvData = scroll.getBlob( 1 );
             byte data[] = dedvData.getBytes( 1, ( int ) dedvData.length() );
-            Long csId = scroll.getLong( 2 );
+            Long fetchedCsId = scroll.getLong( 2 );
             Double rank = scroll.getDouble( 3 );
 
-            if ( csIds.contains( csId ) ) {
+            if ( desiredCsIds.contains( fetchedCsId ) ) {
                 DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
                 vector.setId( dedvId );
                 vector.setData( data );
@@ -538,7 +548,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 vector.setRank( rank );
                 // vector.setExpressionExperiment( expressionExperiment );
                 // vector.setBioAssayDimension( bioAssayDimension );
-                dedv2genes.put( vector, cs2gene.get( csId ) );
+                dedv2genes.put( vector, ( Collection<Gene> ) cs2gene.get( fetchedCsId ) );
             }
 
         }

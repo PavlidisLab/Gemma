@@ -195,40 +195,17 @@ public class DesignElementDataVectorDaoImpl extends
     }
 
     /**
+     * @param ees
      * @param genes
-     * @param expressionExperimentService
-     * @param qt
      * @return
      */
     protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
-        // first get the composite sequences
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene in (:genes)";
-
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
-
         StopWatch watch = new StopWatch();
         watch.start();
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( csQueryString );
-            queryObject.setParameterList( "genes", genes );
-            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( results.next() ) {
-                CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
-                Gene g = ( Gene ) results.get( 1 );
-                if ( !cs2gene.containsKey( cs ) ) {
-                    cs2gene.put( cs, new HashSet<Gene>() );
-                }
 
-                cs2gene.get( cs ).add( g );
-            }
-            results.close();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        Map<CompositeSequence, Collection<Gene>> cs2gene = getCs2GeneMap( genes );
         watch.stop();
 
         if ( cs2gene.keySet().size() == 0 ) {
@@ -285,6 +262,38 @@ public class DesignElementDataVectorDaoImpl extends
                 + " composite sequences in " + watch.getTime() + "ms" );
 
         return dedv2genes;
+    }
+
+    /**
+     * @param genes
+     * @return
+     */
+    private Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection genes ) {
+
+        // first get the composite sequences - FIXME could be done with GENE2CS native query
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene in (:genes)";
+
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( csQueryString );
+            queryObject.setParameterList( "genes", genes );
+            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            while ( results.next() ) {
+                CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+                Gene g = ( Gene ) results.get( 1 );
+                if ( !cs2gene.containsKey( cs ) ) {
+                    cs2gene.put( cs, new HashSet<Gene>() );
+                }
+
+                cs2gene.get( cs ).add( g );
+            }
+            results.close();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return cs2gene;
     }
 
     @Override

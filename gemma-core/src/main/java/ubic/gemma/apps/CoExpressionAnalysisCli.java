@@ -188,65 +188,16 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * Retrieve all the expression data for a bunch of genes in a bunch of expression experiments.
-     * 
-     * @param allEE
-     * @param queryGenes
+     * @param cs2gene
+     * @param qt
+     * @param ee FIXME not needed?
      * @return
      */
-    Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMapOldVersion( Collection<Gene> queryGenes,
-            Collection<Gene> coExpressedGenes, Collection<ExpressionExperiment> allEEs ) {
-        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
-        int count = 0;
-        int CHUNK_LIMIT = 30;
-        int total = coExpressedGenes.size();
-        Collection<Gene> genesInOneChunk = new HashSet<Gene>();
-        log.info( "Start the Query for " + queryGenes.size() + " query genes" );
-        dedv2genes.putAll( dedvService.getVectors( allEEs, queryGenes ) );
-        // get the EEs which don't have the query gene measurement and remove
-        // them from the allEEs
-        // The reason of using eeIds to filter is the lazy loading problem for
-        // getting EE from dedv
-        Collection<Long> eeIds = new HashSet<Long>();
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
-            ExpressionExperiment ee = dedv.getExpressionExperiment();
-            eeIds.add( ee.getId() );
-        }
-        for ( ExpressionExperiment ee : allEEs ) {
-            if ( eeIds.contains( ee.getId() ) ) {
-                ees.add( ee );
-            }
-        }
-        allEEs.clear();
-        allEEs.addAll( ees );
-        log.info( "Get " + allEEs.size() + " expression experiments for analysis" );
-        log.info( "Start the Query for " + coExpressedGenes.size() + " coexpressed genes" );
-        StopWatch qWatch = new StopWatch();
-        qWatch.start();
-        for ( Gene gene : coExpressedGenes ) {
-            genesInOneChunk.add( gene );
-            count++;
-            total--;
-            if ( count == CHUNK_LIMIT || total == 0 ) {
-                dedv2genes.putAll( dedvService.getVectors( allEEs, genesInOneChunk ) );
-                count = 0;
-                genesInOneChunk.clear();
-                System.out.print( "." );
-            }
-        }
-        qWatch.stop();
-        log.info( "\nQuery takes " + qWatch.getTime() + " to get " + dedv2genes.size() + " DEDVs for "
-                + coExpressedGenes.size() + " genes" );
-
-        return dedv2genes;
-    }
-
-    Map<DesignElementDataVector, Collection<Gene>> getDesignElementDataVector( Map<Long, Collection<Gene>> cs2gene,
-            QuantitationType qt, ExpressionExperiment ee ) {
+    private Map<DesignElementDataVector, Collection<Gene>> getDesignElementDataVector(
+            Map<Long, Collection<Gene>> cs2gene, QuantitationType qt, ExpressionExperiment ee ) {
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = eeService.getDesignElementDataVectors( cs2gene, qt );
         for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
-            dedv.setExpressionExperiment( ee );
+            dedv.setExpressionExperiment( ee ); // FIXME why do we need this?
         }
         return dedv2genes;
     }
@@ -262,23 +213,8 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         log.info( "Start the Query for " + queryGenes.size() + " query genes" );
         dedv2queryGenes.putAll( dedvService.getVectors( allEEs, queryGenes ) );
 
-        Collection<Gene> allGenes = new HashSet<Gene>();
-        allGenes.addAll( queryGenes );
-        allGenes.addAll( coExpressedGenes );
-        Map<Long, Collection<Long>> gene2cs = geneService.getCompositeSequenceMap( allGenes );
-        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-        for ( Gene gene : allGenes ) {
-            Collection<Long> csIds = gene2cs.get( gene.getId() );
-            for ( Long csId : csIds ) {
-                Collection<Gene> genes = cs2gene.get( csId );
-                if ( genes == null ) {
-                    genes = new HashSet<Gene>();
-                    cs2gene.put( csId, genes );
-                }
-                genes.add( gene );
-            }
-        }
-        log.info( "Got " + cs2gene.keySet().size() + " composite sequences" );
+        Map<Long, Collection<Gene>> cs2gene = getCsId2GeneMap( queryGenes, coExpressedGenes );
+
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         Collection<Long> eeIds = new HashSet<Long>();
         log.info( "loading designElementDataVector from expression experiments" );
@@ -307,6 +243,33 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         log.info( "Query takes " + qWatch.getTime() + " to get " + dedv2coExpressedGenes.keySet().size() + ":" + count
                 + " DEDVs for " + ( coExpressedGenes.size() + queryGenes.size() ) + " genes" );
         return dedv2coExpressedGenes;
+    }
+
+    /**
+     * @param queryGenes
+     * @param coExpressedGenes
+     * @return Map of CS Ids to Genes.
+     */
+    private Map<Long, Collection<Gene>> getCsId2GeneMap( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes ) {
+        Collection<Gene> allGenes = new HashSet<Gene>();
+        allGenes.addAll( queryGenes );
+        allGenes.addAll( coExpressedGenes );
+        Map<Long, Collection<Long>> gene2cs = geneService.getCompositeSequenceMap( allGenes );
+        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
+        // invert map
+        for ( Gene gene : allGenes ) {
+            Collection<Long> csIds = gene2cs.get( gene.getId() );
+            for ( Long csId : csIds ) {
+                Collection<Gene> genes = cs2gene.get( csId );
+                if ( genes == null ) {
+                    genes = new HashSet<Gene>();
+                    cs2gene.put( csId, genes );
+                }
+                genes.add( gene );
+            }
+        }
+        log.info( "Got " + cs2gene.keySet().size() + " composite sequences" );
+        return cs2gene;
     }
 
     /*
