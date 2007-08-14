@@ -18,6 +18,13 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author Raymond
  */
 public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI {
+    protected GeneService geneService;
+    protected SearchService searchService;
+    
+    protected void initBeans() {
+        geneService = (GeneService) getBean("geneService");
+        searchService = (SearchService) getBean("searchService");
+    }
 
     protected Collection<Gene> readGeneIdListFile(String inFile) throws IOException {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
@@ -43,8 +50,6 @@ public abstract class AbstractGeneManipulatingCLI extends AbstractSpringAwareCLI
      */
     protected Collection<Gene> readGeneListFile( String inFile, Taxon taxon) throws IOException {
         log.info( "Reading " + inFile );
-//        SearchService searchService = (SearchService) getBean("searchService");
-        GeneService geneService = (GeneService) getBean("geneService");
 
         Collection<Gene> genes = new ArrayList<Gene>();
         BufferedReader in = new BufferedReader( new FileReader( inFile ) );

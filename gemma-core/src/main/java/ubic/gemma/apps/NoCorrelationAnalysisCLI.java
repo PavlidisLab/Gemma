@@ -33,8 +33,6 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneManipulatingCLI {
 
     private ExpressionExperimentService eeService;
 
-    private GeneService geneService;
-
     public NoCorrelationAnalysisCLI() {
         super();
     }
@@ -82,9 +80,9 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneManipulatingCLI {
     }
 
     protected void initBeans() {
+        super.initBeans();
         effectSizeService = ( EffectSizeService ) this.getBean( "effectSizeService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        geneService = ( GeneService ) this.getBean( "geneService" );
     }
 
     @Override

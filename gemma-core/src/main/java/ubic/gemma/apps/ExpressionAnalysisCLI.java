@@ -20,6 +20,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -46,9 +47,11 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
 
     private ExpressionExperimentService eeService;
 
-    private GeneService geneService;
-
     private ArrayDesignService adService;
+
+    private double filterThreshold;
+
+    public static final double DEFAULT_FILTER_THRESHOLD = 0.8;
 
     /*
      * (non-Javadoc)
@@ -68,6 +71,10 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
         Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
                 "the taxon of the genes" ).withLongOpt( "Taxon" ).create( 't' );
         addOption( taxonOption );
+
+        Option filterOption = OptionBuilder.hasArg().withArgName( "filterThreshold" ).withDescription(
+                "Fraction of data sets with ranks threshold" ).withLongOpt( "filterThreshold" ).create( 'f' );
+        addOption( filterOption );
     }
 
     protected void processOptions() {
@@ -78,6 +85,11 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
 
         if ( hasOption( 'o' ) ) {
             outFile = getOptionValue( 'o' );
+        }
+        if ( hasOption( 'f' ) ) {
+            filterThreshold = Double.parseDouble( getOptionValue( 'f' ) );
+        } else {
+            filterThreshold = DEFAULT_FILTER_THRESHOLD;
         }
 
         String taxonName = getOptionValue( 't' );
@@ -91,9 +103,9 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
         initBeans();
     }
 
-    private void initBeans() {
+    protected void initBeans() {
+        super.initBeans();
         eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-        geneService = ( GeneService ) getBean( "geneService" );
         adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
     }
 
@@ -167,35 +179,51 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
         return matrix;
     }
 
-    private void saveRankMatrixToFile( String outFile, DenseDoubleMatrix2DNamed matrix ) throws IOException {
-        Collection<Long> eeIds = matrix.getColNames();
-        Collection<Long> geneIds = matrix.getRowNames();
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-        log.info( "Saving ranks to file " + outFile );
-        PrintWriter out = new PrintWriter( new FileWriter( outFile ) );
-        String header = "Gene";
-        for ( Object colName : matrix.getColNames() ) {
-            header += "\t" + colName;
-        }
-        out.println( header );
-
-        DecimalFormat df = new DecimalFormat( "0.0000" );
-        for ( Gene gene : genes ) {
-            int row = matrix.getRowIndexByName( gene.getId() );
-            String line = gene.getOfficialSymbol();
-            if ( line == null ) line = gene.getId().toString();
-            for ( long eeId : eeIds ) {
-                int col = matrix.getColIndexByName( eeId );
-                line += "\t";
-                double val = matrix.get( row, col );
-                if ( !Double.isNaN( val ) ) line += df.format( matrix.get( row, col ) );
+    private DenseDoubleMatrix2DNamed filterRankmatrix( DenseDoubleMatrix2DNamed matrix ) {
+        // filter out genes with less than filterThreshold fraction of ranks
+        List fRowNames = new ArrayList();
+        for ( Object rowName : matrix.getRowNames() ) {
+            int row = matrix.getRowIndexByName( rowName );
+            int count = 0;
+            int total = matrix.columns();
+            for ( Object colName : matrix.getColNames() ) {
+                int col = matrix.getColIndexByName( colName );
+                if ( !Double.isNaN( matrix.get( row, col ) ) ) count++;
             }
-            out.println( line );
-            out.flush();
+            if ( count / total > filterThreshold ) fRowNames.add( rowName );
         }
 
-        out.close();
+        // filter out data sets with no ranks
+        List fColNames = new ArrayList();
+        for ( Object colName : matrix.getColNames() ) {
+            int col = matrix.getColIndexByName( colName );
+            boolean found = false;
+            for ( Object rowName : fRowNames ) {
+                int row = matrix.getRowIndexByName( rowName );
+                if ( !Double.isNaN( matrix.get( row, col ) ) ) {
+                    found = true;
+                    break;
+                }
+            }
+            if ( found ) fColNames.add( colName );
+        }
+
+        // fill matrix
+        DenseDoubleMatrix2DNamed fMatrix = new DenseDoubleMatrix2DNamed( fRowNames.size(), fColNames.size() );
+        fMatrix.setRowNames( fRowNames );
+        fMatrix.setColumnNames( fColNames );
+        for ( Object rowName : fRowNames ) {
+            int fRow = fMatrix.getRowIndexByName( rowName );
+            int row = matrix.getRowIndexByName( rowName );
+            for ( Object colName : fColNames ) {
+                int fCol = fMatrix.getColIndexByName( colName );
+                int col = matrix.getColIndexByName( colName );
+                double val = matrix.get( row, col );
+                fMatrix.set( fRow, fCol, val );
+            }
+        }
+
+        return fMatrix;
     }
 
     /*
@@ -222,8 +250,10 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
         Collection<ExpressionExperiment> EEs = eeService.findByTaxon( taxon );
 
         DenseDoubleMatrix2DNamed rankMatrix = getRankMatrix( genes, EEs );
+        rankMatrix = filterRankmatrix( rankMatrix );
         try {
-            saveRankMatrixToFile( outFile, rankMatrix );
+            MatrixWriter out = new MatrixWriter( outFile, new DecimalFormat( "0.0000" ) );
+            out.writeMatrix( rankMatrix, "Gene" );
         } catch ( IOException exc ) {
             return exc;
         }
