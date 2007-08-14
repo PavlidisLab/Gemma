@@ -108,12 +108,17 @@ var createSearchComponent = function(){
         typeAhead: false,
         loadingText: 'Searching...',
         width: 270,
-        pageSize:10,
+        pageSize:0,
+        minChars: 2,
         tpl: resultTpl,
         hideTrigger:true,    
         onSelect: searchHandler,  
         getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
     		var p = [q]; 
+    		
+    		if (vocabC.categoryUri)
+   		 		p.push(vocabC.categoryUri);
+   		 		
    		 	return p;
 		}
         

@@ -154,6 +154,11 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     }
 
+    /**
+     * Looks for any ontologyTerms that match the given search string
+     * @param search
+     * @return
+     */
     public Collection<OntologyTerm> findTerm( String search ) {
 
         if ( !isOntologyLoaded() ) return null;
@@ -163,6 +168,38 @@ public abstract class AbstractOntologyService implements InitializingBean {
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
 
         return name;
+    }
+    
+    /**
+     * Looks for any OntologyIndividuals or ontologyTerms that match the given search string
+     * @param search
+     * @return
+     */
+    public Collection<OntologyResource> findResources( String search){
+        
+        if ( !isOntologyLoaded() ) return null;
+
+        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+
+        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search );
+
+        return res;
+    }
+    
+    /**
+     * Looks for any OntologyIndividuals that match the given search string
+     * @param search
+     * @return
+     */
+    public Collection<OntologyIndividual> findIndividuals( String search){
+        
+        if ( !isOntologyLoaded() ) return null;
+
+        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+
+        Collection<OntologyIndividual> indis = OntologySearch.matchIndividuals( model, index, search );
+
+        return indis;
     }
 
     protected synchronized void init() {
