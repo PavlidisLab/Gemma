@@ -26,7 +26,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -224,7 +223,7 @@ public class OntologyService {
         Collection<OntologyResource> results;
 
         // Add the matching individuals 1st
-        if ( categoryUri != null ) {
+        if ( categoryUri != null && !categoryUri.equals("{}") )  {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
             if ( results != null ) terms.addAll( convert( results ) );
         }

@@ -95,7 +95,7 @@ var createSearchComponent = function(){
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
-        '<div class="search-item" title={description}>',
+        '<div class="search-item" title="{description}">',
             '<h4><span>{id}</span>{value}</h4>',
             '{valueUri}',
         '</div>'
@@ -116,6 +116,7 @@ var createSearchComponent = function(){
         getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
     		var p = [q]; 
     		
+    		vocabC.value = q;	//if the user doesn't select a provided ontolgy term this will set it to be the free text. 
     		if (vocabC.categoryUri)
    		 		p.push(vocabC.categoryUri);
    		 		
@@ -142,7 +143,7 @@ Ext.onReady(function() {
 	eeid = dwr.util.getValue("auditableId"); // turns out to be the EE id
 	
 	// this will be the case if we're not admins.
-	if (!id) {
+	if (!eeid) {
 		return;
 	}
 
