@@ -58,7 +58,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         addOption( justTestingOption );
 
         Option sequenceNameList = OptionBuilder.hasArg().withArgName( "file" ).withDescription(
-                "File with list of biosequence names to check." ).create( 'b' );
+                "File with list of biosequence ids to check." ).create( 'b' );
         addOption( sequenceNameList );
     }
 
@@ -203,6 +203,9 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
     }
 
+    /**
+     * @param bioSequences
+     */
     private void processSequences( Collection<BioSequence> bioSequences ) {
         // ///////////////////////////////
         // First stage: fix biosequences that lack database entries, when there is one for another essentially
