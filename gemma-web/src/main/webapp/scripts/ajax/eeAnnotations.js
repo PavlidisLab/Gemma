@@ -26,7 +26,7 @@ Ext.onReady(function() {
 		reader:new Ext.data.ListRangeReader({id:"id"}, eeRecordType), 
 		remoteSort:false
 		});
-	eeDs.setDefaultSort('classLabel');
+	eeDs.setDefaultSort('className');
 	
 	var cm = new Ext.grid.ColumnModel([
 			{header: "Class",  width: 150, dataIndex:"className"}, 
