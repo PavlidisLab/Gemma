@@ -54,6 +54,9 @@ public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequ
         if ( this.getSequence() != null && that.getSequence() != null
                 && !this.getSequence().equals( that.getSequence() ) ) return false;
 
+        if ( this.getLength() != null && that.getLength() != null && !this.getLength().equals( that.getLength() ) )
+            return false;
+
         return true;
     }
 
@@ -67,8 +70,9 @@ public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequ
             int nameHash = this.getName() == null ? 0 : getName().hashCode();
             int seqHash = this.getSequence() == null ? 0 : getSequence().hashCode();
             int taxonHash = this.getTaxon() == null ? 0 : getTaxon().hashCode();
+            int lengthHash = this.getLength() == null ? 0 : getLength().hashCode();
             int dbHash = this.getSequenceDatabaseEntry() == null ? 0 : getSequenceDatabaseEntry().hashCode();
-            hashCode = 29 * nameHash + seqHash + dbHash + taxonHash;
+            hashCode = 29 * nameHash + seqHash + dbHash + taxonHash + lengthHash;
         }
         return hashCode;
     }

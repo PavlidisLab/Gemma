@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -49,6 +50,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public BioSequence find( BioSequence bioSequence ) {
 
@@ -63,9 +65,22 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + BioSequence.class.getName()
-                                    + "' was found when executing query for " + bioSequence );
+
+                    // Try to find the best match. See BusinessKey for more explanation of why this is needed.
+                    BioSequence match = null;
+                    for ( BioSequence res : ( Collection<BioSequence> ) results ) {
+                        if ( res.equals( bioSequence ) ) {
+                            if ( match != null ) {
+                                log.warn( "More than one sequence in the database matches " + bioSequence );
+                                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                                        "More than one instance of '" + BioSequence.class.getName()
+                                                + "' was found when executing query for " + bioSequence );
+                            }
+                            match = res;
+                        }
+                    }
+
+                    return match;
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();

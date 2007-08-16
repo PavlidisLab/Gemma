@@ -125,13 +125,15 @@ public class BusinessKey {
         }
 
         attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
-
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-            queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
-                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-        } else if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-        }
+        // The finder now does the additional checking for equality of sequence and/or database entry.
+        // if ( bioSequence.getSequenceDatabaseEntry() != null ) {
+        // // this is problematic - sometimes the old entry doesn't have the database entry.
+        // queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
+        // Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
+        // } else if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
+        // // this is also problematic - sometimes the old entry doesn't have the sequence.
+        // queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
+        // }
 
     }
 
@@ -405,7 +407,8 @@ public class BusinessKey {
     public static void checkKey( Characteristic ontologyEntry ) {
 
         if ( ontologyEntry instanceof VocabCharacteristic ) {
-            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null ) throw new IllegalArgumentException();
+            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null )
+                throw new IllegalArgumentException();
         } else {
             if ( ontologyEntry.getValue() == null ) throw new IllegalArgumentException();
         }
