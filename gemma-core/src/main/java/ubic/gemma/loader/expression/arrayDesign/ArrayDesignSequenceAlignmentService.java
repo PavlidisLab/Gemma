@@ -136,12 +136,35 @@ public class ArrayDesignSequenceAlignmentService {
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
         bioSequenceService.thawLite( sequencesToBlat );
 
+        // if the blat results were loaded from a file, we have to replace the querysequences with the actual ones
+        // attached to the array design. We have to do this by name because the sequence name is what the files contain.
+        // Note that if there is ambiguity there will be problems!
+        Map<String, BioSequence> seqMap = new HashMap<String, BioSequence>();
+        for ( BioSequence bioSequence : sequencesToBlat ) {
+            seqMap.put( bioSequence.getName(), bioSequence );
+        }
+
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
 
         ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
 
         for ( BlatResult result : rawBlatResults ) {
-            result.getQuerySequence().setTaxon( taxon );
+
+            /*
+             * If the sequences don't have ids, replace them with the actual sequences associated with the array design.
+             */
+            if ( result.getQuerySequence().getId() == null ) {
+                String querySeqName = result.getQuerySequence().getName();
+                BioSequence actualSequence = seqMap.get( querySeqName );
+                if ( actualSequence == null ) {
+                    log.warn( "Array design does not contain a sequence with name " + querySeqName );
+                    continue;
+                }
+                result.setQuerySequence( actualSequence );
+            } else {
+                result.getQuerySequence().setTaxon( taxon );
+            }
+
             result.setSearchedDatabase( searchedDatabase );
             result.getTargetChromosome().setTaxon( taxon );
             result.getTargetChromosome().getSequence().setTaxon( taxon );
