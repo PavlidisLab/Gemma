@@ -579,7 +579,7 @@ public class DesignElementDataVectorDaoImpl extends
                 + " CHROMOSOME_FEATURE.OFFICIAL_NAME as officialName, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL as officialSymbol FROM DESIGN_ELEMENT_DATA_VECTOR, GENE2CS, CHROMOSOME_FEATURE WHERE "
                 + " QUANTITATION_TYPE_FK = "
                 + qt.getId()
-                + " AND GENE2CS.CS=csid AND geneId = featureID AND dedvId in (" + dedvIdList + ")";
+                + " AND GENE2CS.CS=DESIGN_ELEMENT_FK AND GENE2CS.GENE=CHROMOSOME_FEATURE.ID AND DESIGN_ELEMENT_DATA_VECTOR.ID in (" + dedvIdList + ")";
 
         Session session = getSessionFactory().openSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
