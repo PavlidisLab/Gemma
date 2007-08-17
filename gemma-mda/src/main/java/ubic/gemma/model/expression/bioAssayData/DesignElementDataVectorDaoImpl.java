@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,7 +33,11 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.BlobType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -550,5 +555,83 @@ public class DesignElementDataVectorDaoImpl extends
             }
         } );
 
+    }
+
+    @Override
+    protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+
+        StringBuffer dedvIdList = new StringBuffer();
+        ;
+
+        for ( Object object : dedvs ) {
+            if ( object instanceof DesignElementDataVector ) {
+                DesignElementDataVector dedv = ( DesignElementDataVector ) object;
+                dedvIdList.append( dedv.getId() );
+                dedvIdList.append( ',' );
+            }
+        }
+        
+        dedvIdList.deleteCharAt( dedvIdList.length() - 1 );
+
+        // Native query - faster? Fetches all data for that QT and throws away unneeded portion
+        String queryString = "SELECT DESIGN_ELEMENT_DATA_VECTOR.ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank, GENE as geneId, CHROMOSOME_FEATURE.ID as featureID, "
+                + " CHROMOSOME_FEATURE.OFFICIAL_NAME as officialName, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL as officialSymbol FROM DESIGN_ELEMENT_DATA_VECTOR, GENE2CS, CHROMOSOME_FEATURE WHERE "
+                + " QUANTITATION_TYPE_FK = "
+                + qt.getId()
+                + " AND GENE2CS.CS=csid AND geneId = featureID AND dedvId in (" + dedvIdList + ")";
+
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+
+        queryObject.addScalar( "dedvId", new LongType() );
+        queryObject.addScalar( "dedvData", new BlobType() );
+        queryObject.addScalar( "csId", new LongType() );
+        queryObject.addScalar( "dedvRank", new DoubleType() );
+        queryObject.addScalar( "geneId", new LongType() );
+        queryObject.addScalar( "featureID", new LongType() );
+        queryObject.addScalar( "officialName", new LongType() );
+        queryObject.addScalar( "officialSymbol", new LongType() );
+
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+        while ( scroll.next() ) {
+
+            // get the data returned from the query
+            Long dedvId = scroll.getLong( 0 );
+            Blob dedvData = scroll.getBlob( 1 );
+            byte data[] = dedvData.getBytes( 1, ( int ) dedvData.length() );
+            Long fetchedCsId = scroll.getLong( 2 );
+            Double rank = scroll.getDouble( 3 );
+            Long geneId = scroll.getLong( 4 );
+            Long featureId = scroll.getLong( 5 );
+            String officialName = scroll.getString( 6 );
+            String officialSymbol = scroll.getString( 7 );
+
+            // Create the objects we want to put in the hashmap
+            Gene gene = Gene.Factory.newInstance();
+            gene.setOfficialName( officialName );
+            gene.setOfficialSymbol( officialSymbol );
+            gene.setId( geneId );
+
+            DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
+            dedv.setId( dedvId );
+            dedv.setData( data );
+            dedv.setRank( rank );
+
+            // Test to see if we can just add or if we have to make a collection
+            // TODO: this might be problomatic due to the == operator and the hash function for DEDV
+            if ( dedv2genes.containsKey( dedv ) ) {
+                dedv2genes.get( dedv ).add( gene );
+            } else {
+                Collection<Gene> genes = new HashSet<Gene>();
+                genes.add( gene );
+                dedv2genes.put( dedv, genes );
+            }
+
+        }
+        session.clear();
+        session.close();
+        return dedv2genes;
     }
 }

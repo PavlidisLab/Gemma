@@ -173,4 +173,9 @@ public class DesignElementDataVectorServiceImpl extends
     protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
         return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
     }
+
+    @Override
+    protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
+           return this.getDesignElementDataVectorDao().getDedv2GenesMap( dedvs, qt );
+    }
 }
