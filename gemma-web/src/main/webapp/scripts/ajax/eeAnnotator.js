@@ -117,8 +117,10 @@ var createSearchComponent = function(){
     		var p = [q]; 
     		
     		vocabC.value = q;	//if the user doesn't select a provided ontolgy term this will set it to be the free text. 
-    		if (vocabC.categoryUri)
-   		 		p.push(vocabC.categoryUri);
+    		if (!vocabC.categoryUri)
+    			vocabC.categoryUri="{}";
+    			
+   		 	p.push(vocabC.categoryUri);
    		 		
    		 	return p;
 		}

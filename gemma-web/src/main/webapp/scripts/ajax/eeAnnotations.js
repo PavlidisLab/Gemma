@@ -7,8 +7,7 @@ function refreshEEAnnotations() {
 }
 
 Ext.onReady(function() {
-	
-	var admin = dwr.util.getValue("auditableId");  // will only be present for admin user	
+		
 	var id = dwr.util.getValue("eeId");
 	var clazz = dwr.util.getValue("eeClass");
 	
