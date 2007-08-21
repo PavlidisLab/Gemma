@@ -46,6 +46,18 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public abstract class UserAuthenticatingController extends BaseFormController {
 
+    /**
+     * 
+     *
+     */
+    public UserAuthenticatingController() {
+        super();
+    }
+
+    /**
+     * @param user
+     * @param request
+     */
     protected void encryptPassword( UserUpdateCommand user, HttpServletRequest request ) {
         ProviderManager authenticationManager = getProviderManager( request );
 
@@ -53,6 +65,11 @@ public abstract class UserAuthenticatingController extends BaseFormController {
 
     }
 
+    /**
+     * @param password
+     * @param request
+     * @return
+     */
     protected String encryptPassword( String password, HttpServletRequest request ) {
         ProviderManager authenticationManager = getProviderManager( request );
 
@@ -142,6 +159,11 @@ public abstract class UserAuthenticatingController extends BaseFormController {
         SecurityContextHolder.getContext().setAuthentication( authentication );
     }
 
+    /**
+     * @param request
+     * @param user
+     * @param locale
+     */
     protected void sendConfirmationEmail( HttpServletRequest request, User user, Locale locale ) {
         // Send user an e-mail
         if ( log.isDebugEnabled() ) {

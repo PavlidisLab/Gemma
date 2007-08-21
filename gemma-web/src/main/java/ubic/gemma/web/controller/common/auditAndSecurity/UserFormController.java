@@ -13,6 +13,7 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -46,6 +47,14 @@ import ubic.gemma.util.UserConstants;
  * @spring.property name="templateName" value="accountCreated.vm"
  */
 public class UserFormController extends UserAuthenticatingController {
+
+    /**
+     * 
+     *
+     */
+    public UserFormController() {
+        super();
+    }
 
     @Override
     public String getCancelView( HttpServletRequest request ) {
@@ -95,7 +104,7 @@ public class UserFormController extends UserAuthenticatingController {
             try {
                 log.debug( "Creating new " + user );
                 user = new UserUpdateCommand( this.getUserService().create( user.asUser() ) );
-            } catch (  UserExistsException e ) {
+            } catch ( UserExistsException e ) {
                 log.warn( e.getMessage() );
 
                 errors.rejectValue( "userName", "errors.existing.user", new Object[] { user.getUserName(),
@@ -161,8 +170,9 @@ public class UserFormController extends UserAuthenticatingController {
                 request.getSession().setAttribute( "cookieLogin", "true" );
 
                 // add warning message
-                saveMessage( request, "Remember me is active, so password cannot be changed");
-                //saveMessage( request, "userProfile.cookieLogin", "Remember me is active, so password cannot be changed" );
+                saveMessage( request, "Remember me is active, so password cannot be changed" );
+                // saveMessage( request, "userProfile.cookieLogin", "Remember me is active, so password cannot be
+                // changed" );
             }
         }
     }
@@ -208,7 +218,8 @@ public class UserFormController extends UserAuthenticatingController {
         if ( !isFormSubmission( request ) ) {
 
             /* this is passed in if we are using editUser from form */
-            String username = request.getParameter( "userName" );
+            // String username = request.getParameter( "userName" );
+            String username = ServletRequestUtils.getStringParameter( request, "userName" );
 
             checkForCookieLogin( request );
 

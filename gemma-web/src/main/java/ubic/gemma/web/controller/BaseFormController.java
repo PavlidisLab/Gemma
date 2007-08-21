@@ -70,6 +70,14 @@ public abstract class BaseFormController extends SimpleFormController {
     protected String cancelView;
 
     /**
+     * 
+     *
+     */
+    public BaseFormController() {
+        super();
+    }
+
+    /**
      * Convenience method to get the Configuration HashMap from the servlet context.
      * 
      * @return the user's populated form from the session
