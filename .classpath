@@ -121,7 +121,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jetty/org.mortbay.jetty/5.1.10/org.mortbay.jetty-5.1.10.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-el/commons-el/1.0/commons-el-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-mock/2.0.5/spring-mock-2.0.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-mock/2.0.5/spring-mock-2.0.5.jar" sourcepath="/JAR_SOURCE/spring-framework-2.0.5/mock"/>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp-api/2.0/jsp-api-2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.7.1/xercesImpl-2.7.1.jar"/>
