@@ -704,8 +704,13 @@ public class GeoConverter implements Converter {
             log.debug( blob.length + " bytes for " + dataVector.size() + " raw elements" );
         }
 
-        CompositeSequence compositeSequence = platformDesignElementMap.get(
-                convertPlatform( geoPlatform ).getShortName() ).get( designElementName );
+        ArrayDesign p = convertPlatform( geoPlatform );
+        assert p != null;
+
+        Map<String, CompositeSequence> designMap = platformDesignElementMap.get( p.getShortName() );
+        assert designMap != null;
+
+        CompositeSequence compositeSequence = designMap.get( designElementName );
 
         if ( compositeSequence == null ) {
             assert compositeSequence != null : "No composite sequence " + designElementName;
@@ -1052,7 +1057,7 @@ public class GeoConverter implements Converter {
 
         if ( !repType.equals( VariableType.other ) ) {
             mged.setName( "MGED Ontology" );
-            mged.setType( DatabaseType.ONTOLOGY );            
+            mged.setType( DatabaseType.ONTOLOGY );
         }
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
@@ -1063,7 +1068,8 @@ public class GeoConverter implements Converter {
             result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateLabeledExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have a
+            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have
+            // a
             // term to distinguish
             // these.
         } else {
@@ -1628,8 +1634,10 @@ public class GeoConverter implements Converter {
     /**
      * @param expExp
      * @param geoSubSet
+     * @deprecated We turn GeoSubsets into ExperimentalFactors only.
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     private ExpressionExperimentSubSet convertSubset( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
         ExpressionExperimentSubSet subSet = getExistingOrNewSubSet( expExp, geoSubSet );
         for ( GeoSample sample : geoSubSet.getSamples() ) {
@@ -1651,7 +1659,9 @@ public class GeoConverter implements Converter {
      * @param expExp
      * @param geoSubSet
      * @return
+     * @deprecated We turn GeoSubsets into ExperimentalFactors only.
      */
+    @Deprecated
     private ExpressionExperimentSubSet getExistingOrNewSubSet( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
 
         ExpressionExperimentSubSet subSet = null;
@@ -1719,6 +1729,11 @@ public class GeoConverter implements Converter {
         addFactorValueToBioMaterial( expExp, geoSubSet, factorValue );
     }
 
+    /**
+     * @param geoSubSet
+     * @param experimentalFactor
+     * @return
+     */
     private FactorValue convertSubsetDescriptionToFactorValue( GeoSubset geoSubSet,
             ExperimentalFactor experimentalFactor ) {
         // By definition each subset defines a new factor value.
@@ -1728,6 +1743,11 @@ public class GeoConverter implements Converter {
         return factorValue;
     }
 
+    /**
+     * @param expExp
+     * @param geoSubSet
+     * @param factorValue
+     */
     private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet, FactorValue factorValue ) {
         // fill in biomaterial-->factorvalue.
         for ( GeoSample sample : geoSubSet.getSamples() ) {
@@ -1760,9 +1780,9 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
         for ( GeoSubset subset : geoDataset.getSubsets() ) {
-            if ( log.isDebugEnabled() ) log.debug( "Converting subset: " + subset.getType() );
-            ExpressionExperimentSubSet ees = convertSubset( result, subset );
-            result.getSubsets().add( ees );
+            if ( log.isDebugEnabled() ) log.debug( "Converting subset to experimentalFactor" + subset.getType() );
+            // ExpressionExperimentSubSet ees = convertSubset( result, subset );
+            // result.getSubsets().add( ees );
 
             convertSubsetToExperimentalFactor( result, subset );
         }
@@ -1818,7 +1838,7 @@ public class GeoConverter implements Converter {
 
         if ( !varType.equals( VariableType.other ) ) {
             mged.setName( "MGED Ontology" );
-            mged.setType( DatabaseType.ONTOLOGY );            
+            mged.setType( DatabaseType.ONTOLOGY );
         }
 
         if ( varType.equals( VariableType.age ) ) {
