@@ -218,7 +218,6 @@ public class UserFormController extends UserAuthenticatingController {
         if ( !isFormSubmission( request ) ) {
 
             /* this is passed in if we are using editUser from form */
-            // String username = request.getParameter( "userName" );
             String username = ServletRequestUtils.getStringParameter( request, "userName" );
 
             checkForCookieLogin( request );
