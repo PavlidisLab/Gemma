@@ -72,8 +72,8 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed randCorrelationMatrix = effectSizeService
                 .calculateRandomCorrelationMatrix( correlationMatrix );
-        DenseDoubleMatrix2DNamed foldedCorrelationMatrix = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
-        DenseDoubleMatrix2DNamed foldedRandCorrelationMatrix = effectSizeService
+        DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
+        DenseDoubleMatrix2DNamed randCorrelationMatrix2D = effectSizeService
                 .foldCoexpressionMatrix( randCorrelationMatrix );
         DenseDoubleMatrix2DNamed maxCorrelationMatrix = effectSizeService
                 .getMaxCorrelationMatrix( correlationMatrix, 0 );
@@ -89,19 +89,19 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
         String topLeft = "GenePair";
         DecimalFormat formatter = new DecimalFormat( "0.0000" );
         try {
-            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter, eeId2nameMap, geneIdPair2nameMap);
-            out.writeMatrix( foldedCorrelationMatrix, topLeft );
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter, geneIdPair2nameMap, eeId2nameMap);
+            out.writeMatrix( correlationMatrix2D, topLeft );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".rand_corr.txt", formatter, eeId2nameMap, geneIdPair2nameMap );
-            out.writeMatrix( foldedRandCorrelationMatrix, topLeft );
+            out = new MatrixWriter( outFilePrefix + ".rand_corr.txt", formatter, geneIdPair2nameMap, eeId2nameMap);
+            out.writeMatrix( randCorrelationMatrix2D, topLeft );
             out.close();
 
-            out = new MatrixWriter( outFilePrefix + ".max_corr.txt", formatter , eeId2nameMap, geneIdPair2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".max_corr.txt", formatter ,  geneIdPair2nameMap, eeId2nameMap);
             out.writeMatrix( maxCorrelationMatrix );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".max_rand_corr.txt", formatter , eeId2nameMap, geneIdPair2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".max_rand_corr.txt", formatter ,  geneIdPair2nameMap, eeId2nameMap);
             out.writeMatrix( maxRandCorrelationMatrix );
             out.close();
         } catch ( IOException e ) {

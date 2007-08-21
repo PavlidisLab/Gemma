@@ -58,6 +58,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
+    	super.buildOptions();
         Option goOption = OptionBuilder.hasArg().withArgName( "GOTerm" ).withDescription( "Target GO term" )
                 .withLongOpt( "GOTerm" ).create( 'g' );
         addOption( goOption );
@@ -157,11 +158,11 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         Format formatter = new DecimalFormat("0.0000");
         String topLeft = "GenePair";
         try {
-            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter, eeId2nameMap, geneIdPair2nameMap);
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter,  geneIdPair2nameMap, eeId2nameMap);
             out.writeMatrix( correlationMatrix2D, topLeft );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter, eeId2nameMap, geneIdPair2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter, geneIdPair2nameMap, eeId2nameMap);
             out.writeMatrix( effectSizeMatrix, topLeft );
             out.close();
             

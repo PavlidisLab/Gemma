@@ -38,6 +38,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -603,8 +604,8 @@ public class DesignElementDataVectorDaoImpl extends
         queryObject.addScalar( "dedvRank", new DoubleType() );
         queryObject.addScalar( "geneId", new LongType() );
         queryObject.addScalar( "featureID", new LongType() );
-        queryObject.addScalar( "officialName", new LongType() );
-        queryObject.addScalar( "officialSymbol", new LongType() );
+        queryObject.addScalar( "officialName", new StringType());
+        queryObject.addScalar( "officialSymbol", new StringType() );
 
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 

@@ -126,8 +126,10 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends Ab
                continue;
            }
             ExpressionExperiment ee = eeService.findByShortName(eeName) ;
-            if (ee == null)
+            if (ee == null) {
                 log.error("No experiment " + eeName + " found");
+                continue;
+            }
             ees.add(ee);
        }
        return ees;
