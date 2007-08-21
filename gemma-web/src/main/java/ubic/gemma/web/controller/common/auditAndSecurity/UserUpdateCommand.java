@@ -41,6 +41,7 @@ public class UserUpdateCommand {
     private String newPassword = null;
     private String confirmNewPassword = null;
     private Boolean adminUser = false;
+    private Collection roles = null;
 
     // stored so this can be used to modify a persistent instance.
     private User user;
@@ -186,7 +187,8 @@ public class UserUpdateCommand {
      * @see ubic.gemma.model.common.auditAndSecurity.User#setRoles(java.util.Collection)
      */
     public void setRoles( Collection<UserRole> roles ) {
-        this.user.setRoles( roles );
+        this.roles = roles;
+        this.user.setRoles( this.roles );
     }
 
     /**
@@ -443,7 +445,8 @@ public class UserUpdateCommand {
      * @see ubic.gemma.model.common.auditAndSecurity.User#getRoles()
      */
     public Collection<UserRole> getRoles() {
-        return this.user.getRoles();
+        roles = this.user.getRoles();
+        return roles;
     }
 
     /**
