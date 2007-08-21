@@ -1,5 +1,6 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -23,6 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.util.UserConstants;
+import ubic.gemma.web.propertyeditor.UserRolesPropertyEditor;
 
 /**
  * For editing users, or showing lists of users (for admins). Regular users clicking on "edit profile" get to here as do
@@ -127,7 +130,9 @@ public class UserFormController extends UserAuthenticatingController {
             // user is editing their profile
             HttpSession session = request.getSession();
             session.setAttribute( Constants.USER_KEY, user );
-            saveMessage( request, "user.updated", user.getUserName(), "User saved" );
+            // FIXME not using saveMessage with the user.update key because locale cannot be found. See bug 805.
+            // saveMessage( request, "user.updated", user.getUserName(), "User saved" );
+            saveMessage( request, "User saved" );
 
             /* note difference here from signup: we don't log the user in -- unless the user changed their own password */
             if ( passwordChange && request.getRemoteUser().equals( user.getUserName() ) ) {
@@ -247,6 +252,16 @@ public class UserFormController extends UserAuthenticatingController {
             return user;
         }
         return super.formBackingObject( request );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
+     *      org.springframework.web.bind.ServletRequestDataBinder)
+     */
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        binder.registerCustomEditor( Collection.class, new UserRolesPropertyEditor() );
     }
 
     @Override
