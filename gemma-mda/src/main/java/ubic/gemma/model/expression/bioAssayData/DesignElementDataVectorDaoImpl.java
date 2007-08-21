@@ -556,13 +556,26 @@ public class DesignElementDataVectorDaoImpl extends
         } );
 
     }
+    
+//    protected Map handleGetGene2DedvsMap(Collection genes, QuantitationType qt) {
+//        Map<Gene, Collection<DesignElementDataVector>> gene2dedvs = new HashMap<Gene, Collection<DesignElementDataVector>>();
+//        StringBuffer geneIdList = new StringBuffer();
+//        for (Object obj : genes) {
+//            if (obj instanceof Gene) {
+//                Gene gene = (Gene) obj;
+//                geneIdList.append( gene.getId() );
+//                geneIdList.append( ',' );
+//            }
+//        }
+//        geneIdList.deleteCharAt( geneIdList.length() - 1 );
+//        String queryString = "SELECT "
+//    }
 
     @Override
     protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
         StringBuffer dedvIdList = new StringBuffer();
-        ;
 
         for ( Object object : dedvs ) {
             if ( object instanceof DesignElementDataVector ) {

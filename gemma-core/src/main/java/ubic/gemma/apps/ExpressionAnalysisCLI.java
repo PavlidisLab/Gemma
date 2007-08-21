@@ -3,9 +3,7 @@
  */
 package ubic.gemma.apps;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,17 +29,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Create a relative expression level (dedv rank) matrix for a list of genes
  * 
  * @author raymond
  */
-public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
+public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingCLI {
     private String outFile;
-
-    private String inFile;
 
     private Taxon taxon;
 
@@ -60,18 +55,12 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
      */
     @Override
     protected void buildOptions() {
-        Option inFileOption = OptionBuilder.hasArg().withArgName( "inFile" ).withDescription(
-                "File containing list of genes in offical symbols" ).withLongOpt( "inFile" ).create( 'i' );
-        addOption( inFileOption );
+        super.buildOptions();
 
         Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
                 "File to save rank matrix to" ).withLongOpt( "outFile" ).create( 'o' );
         addOption( outFileOption );
-
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
-                "the taxon of the genes" ).withLongOpt( "Taxon" ).create( 't' );
-        addOption( taxonOption );
-
+        
         Option filterOption = OptionBuilder.hasArg().withArgName( "filterThreshold" ).withDescription(
                 "Fraction of data sets with ranks threshold" ).withLongOpt( "filterThreshold" ).create( 'f' );
         addOption( filterOption );
@@ -79,10 +68,6 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
 
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'i' ) ) {
-            inFile = getOptionValue( 'i' );
-        }
-
         if ( hasOption( 'o' ) ) {
             outFile = getOptionValue( 'o' );
         }
@@ -104,47 +89,43 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
     }
 
     protected void initBeans() {
-        super.initBeans();
         eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
     }
 
-    private DenseDoubleMatrix2DNamed getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> EEs ) {
-        DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed( genes.size(), EEs.size() );
+    private DenseDoubleMatrix2DNamed getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
+        DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed( genes.size(), ees.size() );
+        // name rows + cols
         for ( Gene gene : genes ) {
-            String name = gene.getId().toString();
-            matrix.addRowName( name );
+            matrix.addRowName( gene.getId() );
         }
-        for ( ExpressionExperiment EE : EEs ) {
-            String name = EE.getShortName();
-            matrix.addColumnName( name );
+        for ( ExpressionExperiment ee : ees ) {
+            matrix.addColumnName( ee.getId() );
         }
 
         int eeCount = 1;
-        for ( ExpressionExperiment EE : EEs ) {
-            int col = matrix.getColIndexByName( EE.getShortName() );
-            log.info( "Processing " + EE.getShortName() + " (" + eeCount++ + " of " + EEs.size() + ")" );
-            Collection<ArrayDesign> ADs = eeService.getArrayDesignsUsed( EE );
-            Collection<Long> csIDs = new HashSet<Long>();
-            for ( ArrayDesign ad : ADs ) {
-                for ( CompositeSequence cs : ( Collection<CompositeSequence> ) adService.loadCompositeSequences( ad ) ) {
-                    csIDs.add( cs.getId() );
-                }
+        for ( ExpressionExperiment ee : ees ) {
+            int col = matrix.getColIndexByName( ee.getId() );
+            log.info( "Processing " + ee.getShortName() + " (" + eeCount++ + " of " + ees.size() + ")" );
+            Collection<ArrayDesign> ads = eeService.getArrayDesignsUsed( ee );
+            Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
+            for ( ArrayDesign ad : ads ) {
+                css.addAll( adService.loadCompositeSequences( ad ) );
             }
-            Map<Long, Collection<Long>> cs2geneMap = geneService.getCS2GeneMap( csIDs );
-            QuantitationType qt = ( QuantitationType ) eeService.getPreferredQuantitationType( EE ).iterator().next();
-            Map<DesignElementDataVector, Collection<Long>> dedv2geneMap = eeService.getDesignElementDataVectors(
-                    cs2geneMap, qt );
+            Map<CompositeSequence, Collection<Gene>> cs2geneMap = geneService.getCS2GeneMap( css );
+            QuantitationType qt = ( QuantitationType ) eeService.getPreferredQuantitationType( ee ).iterator().next();
+            Map<DesignElementDataVector, Collection<Gene>> dedv2geneMap = eeService.getDesignElementDataVectors(
+                    cs2geneMap, qt ); // FIXME
 
             // invert dedv2geneMap
-            Map<Long, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Long, Collection<DesignElementDataVector>>();
+            Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Gene, Collection<DesignElementDataVector>>();
             for ( DesignElementDataVector dedv : dedv2geneMap.keySet() ) {
-                Collection<Long> geneIds = dedv2geneMap.get( dedv );
-                for ( Long geneId : geneIds ) {
+                Collection<Gene> c = dedv2geneMap.get( dedv );
+                for ( Gene gene : c ) {
                     Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( dedv );
                     if ( dedvs == null ) {
                         dedvs = new HashSet<DesignElementDataVector>();
-                        gene2dedvMap.put( geneId, dedvs );
+                        gene2dedvMap.put( gene, dedvs );
                     }
                     dedvs.add( dedv );
                 }
@@ -153,7 +134,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
             log.info( "Loaded design element data vectors" );
 
             int rankCount = 0;
-            String line = EE.getShortName();
+            String line = ee.getShortName();
             for ( Gene gene : genes ) {
                 int row = matrix.getRowIndexByName( gene.getId() );
                 line += "\t";
@@ -237,22 +218,31 @@ public class ExpressionAnalysisCLI extends AbstractGeneManipulatingCLI {
         if ( e != null ) return e;
 
         Collection<Gene> genes;
-        if ( inFile != null ) {
-            try {
-                genes = readGeneListFile( inFile, taxon );
-            } catch ( IOException exc ) {
-                return exc;
-            }
-        } else {
-            genes = geneService.getGenesByTaxon( taxon );
+        Collection<ExpressionExperiment> ees;
+        try {
+            ees = getExpressionExperiments( taxon );
+            genes = getTargetGenes();
+        } catch ( IOException exc ) {
+            return exc;
         }
 
-        Collection<ExpressionExperiment> EEs = eeService.findByTaxon( taxon );
+        // create row/col name maps for matrix output
+        Map<Long, String> geneId2nameMap = new HashMap<Long, String>();
+        for ( Gene gene : genes ) {
+            if (gene != null && gene.getOfficialSymbol() != null)
+                geneId2nameMap.put( gene.getId(), gene.getOfficialSymbol() );
+        }
+        Map<Long, String> eeId2nameMap = new HashMap<Long, String>();
+        for ( ExpressionExperiment ee : ees ) {
+            eeId2nameMap.put( ee.getId(), ee.getShortName() );
+        }
 
-        DenseDoubleMatrix2DNamed rankMatrix = getRankMatrix( genes, EEs );
+        DenseDoubleMatrix2DNamed rankMatrix = getRankMatrix( genes, ees );
         rankMatrix = filterRankmatrix( rankMatrix );
         try {
             MatrixWriter out = new MatrixWriter( outFile, new DecimalFormat( "0.0000" ) );
+            out.setRowNameMap( geneId2nameMap );
+            out.setColNameMap( eeId2nameMap );
             out.writeMatrix( rankMatrix, "Gene" );
         } catch ( IOException exc ) {
             return exc;

@@ -1,16 +1,22 @@
 package ubic.gemma.apps;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.text.DecimalFormat;
+import java.text.Format;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
+import ubic.basecode.gui.ColorMap;
+import ubic.basecode.gui.ColorMatrix;
+import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
 import ubic.gemma.analysis.linkAnalysis.EffectSizeService.CoexpressionMatrices;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -27,10 +33,7 @@ import ubic.gemma.ontology.GeneOntologyService;
  * @author xwan
  * @author raymond
  */
-public class EffectSizeCalculationCli extends AbstractGeneManipulatingCLI {
-    private String[] geneSymbols;
-    private String queryGeneFile;
-    private String targetGeneListFile;
+public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulatingCLI {
     private String goTerm;
 
     private String outFilePrefix;
@@ -58,18 +61,6 @@ public class EffectSizeCalculationCli extends AbstractGeneManipulatingCLI {
         Option goOption = OptionBuilder.hasArg().withArgName( "GOTerm" ).withDescription( "Target GO term" )
                 .withLongOpt( "GOTerm" ).create( 'g' );
         addOption( goOption );
-        Option geneOption = OptionBuilder.hasArgs().withArgName( "queryGene" ).withDescription(
-                "Query gene(s) (official symbol)" ).withLongOpt( "queryGene" ).create( 's' );
-        addOption( geneOption );
-        Option queryGeneFileOption = OptionBuilder.hasArgs().withArgName( "queryGeneFile" ).withDescription(
-                "Query gene file" ).withLongOpt( "queryGeneFile" ).create( 'q' );
-        addOption( queryGeneFileOption );
-        Option targetGeneFileOption = OptionBuilder.hasArg().withArgName( "targetGeneFile" ).withDescription(
-                "File containing list of target genes" ).withLongOpt( "targetGeneFile" ).create( 'f' );
-        addOption( targetGeneFileOption );
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
-                "the taxon of the genes" ).withLongOpt( "Taxon" ).create( 't' );
-        addOption( taxonOption );
         Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" ).withDescription(
                 "File prefix for saving the correlation data" ).withLongOpt( "outFilePrefix" ).create( 'o' );
         addOption( outputFileOption );
@@ -83,15 +74,6 @@ public class EffectSizeCalculationCli extends AbstractGeneManipulatingCLI {
         super.processOptions();
         if ( hasOption( 'g' ) ) {
             this.goTerm = getOptionValue( 'g' );
-        }
-        if ( hasOption( 's' ) ) {
-            this.geneSymbols = getOptionValues( 's' );
-        }
-        if ( hasOption( 'q' ) ) {
-            this.queryGeneFile = getOptionValue( 'q' );
-        }
-        if ( hasOption( 'f' ) ) {
-            this.targetGeneListFile = getOptionValue( 'f' );
         }
         if ( hasOption( 'g' ) ) {
             this.goTerm = getOptionValue( 'g' );
@@ -122,15 +104,6 @@ public class EffectSizeCalculationCli extends AbstractGeneManipulatingCLI {
         geneService = ( GeneService ) this.getBean( "geneService" );
     }
 
-    private Collection<Long> getGoTermIds( String goTerm ) {
-        Collection<Gene> genes = goService.getGenes( goTerm, taxon );
-        Collection<Long> geneIds = new HashSet<Long>();
-        for ( Gene gene : genes ) {
-            geneIds.add( gene.getId() );
-        }
-        return geneIds;
-    }
-
     @Override
     protected Exception doWork( String[] args ) {
         Exception exc = processCommandLine( "EffectSizeCalculation ", args );
@@ -140,50 +113,60 @@ public class EffectSizeCalculationCli extends AbstractGeneManipulatingCLI {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<ExpressionExperiment> EEs = eeService.findByTaxon( taxon );
-        if ( EEs == null ) {
-            return new Exception( "Could not find expression experiments for taxon" );
-        }
-
-        List<Long> queryGeneIds = new ArrayList<Long>();
-        List<Long> targetGeneIds = new ArrayList<Long>();
-        if ( geneSymbols != null ) {
-            for ( String symbol : geneSymbols ) {
-                for ( Gene gene : ( Collection<Gene> ) geneService.findByOfficialSymbol( symbol ) ) {
-                    if ( gene.getTaxon().equals( taxon ) ) queryGeneIds.add( gene.getId() );
-                }
-            }
-        }
-        if ( queryGeneFile != null ) {
-            try {
-                queryGeneIds.addAll( readGeneListFileToIds( queryGeneFile, taxon ) );
-            } catch ( IOException e ) {
-                return e;
-            }
-        }
-
-        if ( targetGeneListFile != null ) {
-            try {
-                targetGeneIds.addAll( readGeneListFileToIds( targetGeneListFile, taxon ) );
-            } catch ( IOException e ) {
-                return e;
-            }
+        Collection<ExpressionExperiment> ees;
+        Collection<Gene> queryGenes, targetGenes;
+        try {
+            ees = getExpressionExperiments( taxon );
+            queryGenes = getQueryGenes();
+            targetGenes = getTargetGenes();
+        } catch ( IOException e ) {
+            return e;
         }
         if ( goTerm != null ) {
-            targetGeneIds.addAll( getGoTermIds( goTerm ) );
+            while ( !goService.isReady() ) {
+                try {
+                    Thread.sleep( 1000 );
+                } catch ( InterruptedException e ) {
+                }
+            }
+            targetGenes.addAll( goService.getGenes( goTerm, taxon ) );
         }
 
-        if ( targetGeneIds.size() == 0 || queryGeneIds.size() == 0 ) {
+        if ( targetGenes.size() == 0 || queryGenes.size() == 0 ) {
             return new Exception( "No genes in query/target" );
         }
 
-        CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( EEs, queryGeneIds,
-                targetGeneIds );
+        CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes );
+        DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
+        DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
+        DenseDoubleMatrix2DNamed effectSizeMatrix = effectSizeService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
+        DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
+        
+        // create 2D correlation heat map
+        ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
+        dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
+        JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
+        String figureFileName = outFilePrefix + ".corr.png";
+        
+        // create row/col name maps
+        Map<String, String> geneIdPair2nameMap = getGeneIdPair2nameMap( queryGenes, targetGenes );
+        Map<Long, String> eeId2nameMap = new HashMap<Long, String>();
+        for ( ExpressionExperiment ee : ees )
+            eeId2nameMap.put( ee.getId(), ee.getShortName() );
 
+        Format formatter = new DecimalFormat("0.0000");
+        String topLeft = "GenePair";
         try {
-            effectSizeService.saveToFile( outFilePrefix + ".corr.txt", matrices.getCorrelationMatrix(), true );
-            effectSizeService.saveToFile( outFilePrefix + ".expr_lvl.txt", matrices.getExprLvlMatrix(), true );
-            effectSizeService.saveToFigure( outFilePrefix + ".corr.png", matrices.getCorrelationMatrix() );
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter, eeId2nameMap, geneIdPair2nameMap);
+            out.writeMatrix( correlationMatrix2D, topLeft );
+            out.close();
+            
+            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter, eeId2nameMap, geneIdPair2nameMap);
+            out.writeMatrix( effectSizeMatrix, topLeft );
+            out.close();
+            
+            dataMatrixDisplay.saveImage( figureFileName, true );
+            log.info( "Saved correlation image to " + figureFileName );
         } catch ( IOException e ) {
             return e;
         }

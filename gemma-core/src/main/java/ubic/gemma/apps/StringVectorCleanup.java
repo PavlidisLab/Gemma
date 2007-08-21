@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class StringVectorCleanup extends ExpressionExperimentManipulatingCli {
+public class StringVectorCleanup extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("static-access")
     @Override
@@ -80,7 +80,7 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCli {
         if ( this.getExperimentShortName() != null ) {
             ExpressionExperiment ee = this.locateExpressionExperiment( this.getExperimentShortName() );
             if ( ee == null ) return null;
-            types = this.expressionExperimentService.getQuantitationTypes( ee );
+            types = this.eeService.getQuantitationTypes( ee );
         } else {
             types = qts.loadAll();
         }
@@ -132,7 +132,7 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCli {
                     int numBioAssays = vector.getBioAssayDimension().getBioAssays().size();
                     if ( vec.size() != numBioAssays ) {
                         dedvs.thaw( vector );
-                        expressionExperimentService.thawLite( vector.getExpressionExperiment() );
+                        eeService.thawLite( vector.getExpressionExperiment() );
                         log.error( "Vector " + vector.getId() + " did not have right number of values  " + type
                                 + "; expected " + numBioAssays + " got " + vec.size() + "; "
                                 + vector.getExpressionExperiment() );

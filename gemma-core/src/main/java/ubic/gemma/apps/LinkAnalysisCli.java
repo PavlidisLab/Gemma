@@ -50,7 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author paul (refactoring)
  * @version $Id$
  */
-public class LinkAnalysisCli extends ExpressionExperimentManipulatingCli {
+public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     /**
      * @param args

@@ -47,7 +47,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author Paul
  * @version $Id$
  */
-public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingCli {
+public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     /**
      * 
@@ -101,7 +101,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         if ( doAll ) {
 
-            Collection<ExpressionExperiment> ees = this.getExpressionExperimentService().loadAll();
+            Collection<ExpressionExperiment> ees = eeService.loadAll();
             for ( ExpressionExperiment ee : ees ) {
                 try {
                     processExperiment( ee );
@@ -145,7 +145,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
      */
     @SuppressWarnings("unchecked")
     private void processExperiment( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = this.getExpressionExperimentService().getArrayDesignsUsed( ee );
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
 
         boolean wasProcessed = false;
         for ( ArrayDesign design : arrayDesignsUsed ) {
@@ -179,7 +179,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     @SuppressWarnings("unchecked")
     private void processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
-        Collection<QuantitationType> types = this.getExpressionExperimentService().getQuantitationTypes( ee );
+        Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );
 
         eeService.thawLite( ee );
 

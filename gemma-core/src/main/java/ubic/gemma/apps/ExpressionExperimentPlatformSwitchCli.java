@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCli {
+public class ExpressionExperimentPlatformSwitchCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
@@ -47,7 +47,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
         if ( ee == null ) return null;
 
-        this.expressionExperimentService.thawLite( ee );
+        this.eeService.thawLite( ee );
 
         serv.assignArrayDesignTo( ee );
 

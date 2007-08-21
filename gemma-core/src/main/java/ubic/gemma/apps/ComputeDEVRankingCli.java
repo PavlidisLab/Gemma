@@ -47,7 +47,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @version $Id$
  * @see ubic.gemma.analysis.preprocess.DedvRankService
  */
-public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCli {
+public class ComputeDEVRankingCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     private static Log log = LogFactory.getLog( ComputeDEVRankingCli.class.getName() );
 

@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class VectorMergingCli extends ExpressionExperimentManipulatingCli {
+public class VectorMergingCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     DesignElementDataVectorService vectorService;
 
@@ -56,7 +56,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCli {
         }
 
         ExpressionExperiment expressionExperiment = locateExpressionExperiment( this.getExperimentShortName() );
-        expressionExperimentService.thawLite( expressionExperiment );
+        eeService.thawLite( expressionExperiment );
 
         vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
 
