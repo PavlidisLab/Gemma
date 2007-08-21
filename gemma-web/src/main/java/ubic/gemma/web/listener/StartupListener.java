@@ -42,7 +42,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.model.common.auditAndSecurity.UserRoleDao;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.LabelValue;
@@ -184,11 +184,11 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
 
         // mimic the functionality of the LookupManager in Appfuse.
-        UserRoleDao mgr = ( UserRoleDao ) ctx.getBean( "userRoleDao" );
+        UserService mgr = ( UserService ) ctx.getBean( "userService" );
         Set<LabelValue> roleList = new HashSet<LabelValue>();
 
         // get list of possible roles, used to populate admin tool where roles can be altered.
-        Collection<UserRole> roles = mgr.loadAll();
+        Collection<UserRole> roles = mgr.loadAllRoles();
         for ( UserRole role : roles ) {
             roleList.add( new LabelValue( role.getName(), role.getName() ) );
         }

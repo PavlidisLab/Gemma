@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="$xmlEncoding"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<!--
+	Added by Luke McCarthy to allow certain methods to use a read-only database
+	(i.e.: the slave database in the case of replication)
+	$Id$
+-->
+
+<beans>
+
+    <!-- ========================= GENERAL DEFINITIONS ========================= -->
+
+    <!-- Message source for this context, loaded from localized "${messageBundlePath}_xx" files -->
+    <bean id="$messageSourceBeanName" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basename"><value>$messageBundlePath</value></property>
+    </bean>
+
+    <!-- applicationContext merge-point -->
+#set ($daoRefsEnabled = !$entities.empty)
+#set ($daosEnabled = $daosEnabled && !$entities.empty)
+## only generate this stuff if 'daos' has been defined in a namespace
+#if ($daosEnabled)
+    <!-- Hibernate SessionFactory -->
+    <bean id="sessionFactory" class="$sessionFactory">
+        <property name="dataSource"><ref bean="dataSource"/></property>
+        <property name="mappingLocations">
+            <list>
+                <!-- applicationContext hibernateMappingLocations merge-point --> 
+#foreach($entity in $entities)
+#if ($entity.requiresHibernateMapping)
+                <value>classpath:${entity.packagePath}/${entity.entityName}.hbm.xml</value>
+#end
+#end
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+#if ($stringUtils.isNotBlank($hibernatePoolSize))
+                <prop key="hibernate.pool.size">$hibernatePoolSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateTransactionManagerStrategy))
+                <prop key="hibernate.transaction.manager.strategy">$hibernateTransactionManagerStrategy</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateUserTransactionName))
+                <prop key="hibernate.jta.UserTransaction">$hibernateUserTransactionName</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateTransactionManagerLookup))
+                <prop key="hibernate.transaction.manager_lookup_class">$hibernateTransactionManagerLookup</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateUseOuterJoin))
+                <prop key="hibernate.use_outer_join">$hibernateUseOuterJoin</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateShowSql))
+                <prop key="hibernate.show_sql">$hibernateShowSql</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJndiName))
+                <prop key="hibernate.session_factory_name">$hibernateJndiName</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateDialect))
+                <prop key="hibernate.dialect">$hibernateDialect</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateDefaultSchema))
+                <prop key="hibernate.default_schema">$hibernateDefaultSchema</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateMaxFetchDepth))
+                <prop key="hibernate.max_fetch_depth">$hibernateMaxFetchDepth</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcFetchSize))
+                <prop key="hibernate.jdbc.fetch_size">$hibernateJdbcFetchSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateDefaultBatchFetchSize))
+                <prop key="hibernate.default_batch_fetch_size">$hibernateDefaultBatchFetchSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcBatchSize))
+                <prop key="hibernate.jdbc.batch_size">$hibernateJdbcBatchSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcUseScrollableResultSet))
+                <prop key="hibernate.jdbc.use_scrollable_resultset">$hibernateJdbcUseScrollableResultSet</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcUseStreamsForBinary))
+                <prop key="hibernate.use_streams_for_binary">$hibernateJdbcUseStreamsForBinary</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateHbm2DDLAuto))
+                <prop key="hibernate.hbm2ddl.auto">$hibernateHbm2DDLAuto</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateQuerySubstitutions))
+                <prop key="hibernate.query.substitutions">$hibernateQuerySubstitutions</prop>
+#end
+#if ($enableCaching)
+                <prop key="hibernate.cache.use_query_cache">$hibernateEnableCache</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateCacheProvider))
+                <prop key="hibernate.cache.provider_class">$hibernateCacheProvider</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateQueryCacheFactory))
+                <prop key="hibernate.cache.query_cache_factory">$hibernateQueryCacheFactory</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateConnectionReleaseMode))
+                <prop key="hibernate.connection.release_mode">$hibernateConnectionReleaseMode</prop>
+#end
+                <!-- applicationContext hibernateProperties merge-point -->
+            </props>
+        </property>
+    </bean>
+
+    <!-- The Hibernate interceptor -->
+    <bean id="hibernateInterceptor" class="${hibernateUtils.springHibernatePackage}.HibernateInterceptor">
+        <property name="sessionFactory"><ref bean="sessionFactory"/></property>
+    </bean>
+
+#foreach($entity in $entities)
+    <!-- $entity.name Entity Proxy with inner $entity.name Entity implementation -->
+    <bean id="$entity.getBeanName(false)" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target">
+            <bean class="$entity.fullyQualifiedDaoImplementationName">
+                <property name="sessionFactory"><ref local="sessionFactory"/></property>
+## Because of a bug in Spring with circular references (and using AOP proxies),
+## we need to use the lookup-method as a work-a-round for dependencies
+## which represent circular references
+#if(!$daoInheritanceEnabled)
+#foreach($entityRef in $entity.entityReferences)
+#if (!$entityRef.circularReference)
+                <property name="$entityRef.daoName"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+#end
+#foreach($entityRef in $entity.entityReferences)
+#if ($entityRef.circularReference)
+                <lookup-method name="$entityRef.daoGetterName" bean="$entityRef.targetElement.getBeanName(false)"/>
+#end
+#end
+#else
+#foreach($entityRef in $entity.allEntityReferences)
+#if (!$entityRef.circularReference)
+                <property name="$entityRef.daoName"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+#end
+#foreach($entityRef in $entity.allEntityReferences)
+#if ($entityRef.circularReference)
+                <lookup-method name="$entityRef.daoGetterName" bean="$entityRef.targetElement.getBeanName(false)"/>
+#end
+#end
+#end
+            </bean>
+        </property>
+        <property name="proxyInterfaces">
+            <value>$entity.fullyQualifiedDaoName</value>
+        </property>
+        <property name="interceptorNames">
+            <list>
+                <value>hibernateInterceptor</value>
+            </list>
+        </property>
+    </bean>
+
+#end
+#end
+    <!-- ========================= Start of SERVICE DEFINITIONS ========================= -->
+	<!--
+		Wildcards don't work at the class level, so we have to specify
+		the pattern for each service class...
+		It also doesn't work if we specify a pattern that doesn't actually match any
+		methods of the class (i.e.: UserService.is*), so we have to check each method
+		individually and do the logic in the template...
+	-->
+#set ($enableSpringTransactions = ($enableSpringTransactionsWhenEjbsEnabled.equalsIgnoreCase("true") || !$ejbsEnabled) && !$services.empty)
+#if ($enableSpringTransactions)
+    <!-- Service Transactional Interceptor -->
+    <bean id="serviceTransactionInterceptor" class="org.springframework.transaction.interceptor.TransactionInterceptor">
+        <property name="transactionManager"><ref bean="transactionManager"/></property>
+        <property name="transactionAttributeSource">
+            <value>
+#foreach ($service in $services)
+#foreach ($operation in $springUtils.filterUniqueByName($service.implementationOperations))
+#if ($operation.name.startsWith("get"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.startsWith("load"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.startsWith("is"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.startsWith("num"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.startsWith("count"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.startsWith("findBy"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.equals("find"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.equals("thaw"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#else
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType}
+#end
+#end
+#end
+            </value>
+        </property>
+    </bean>
+
+#end
+#foreach($service in $services)
+    <!-- $service.name Service Proxy with inner $service.name Service Implementation -->
+    <bean id="$service.getBeanName(false)" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target">
+            <bean class="$service.fullyQualifiedImplementationName">
+#if ($daoRefsEnabled)
+#foreach($entityRef in $service.allEntityReferences)
+                <property name="$entityRef.daoName"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+#end
+## Because of a bug in Spring with circular references (and using AOP proxies),
+## we need to use the lookup-method as a work-a-round for dependencies
+## which represent circular references
+#foreach($serviceRef in $service.allServiceReferences)
+#if (!$serviceRef.circularReference)
+                <property name="$serviceRef.name"><ref bean="$serviceRef.targetElement.beanName"/></property>
+#end
+#end
+#foreach($serviceRef in $service.allServiceReferences)
+#if ($serviceRef.circularReference)
+                <lookup-method name="$serviceRef.getterName" bean="$serviceRef.targetElement.beanName"/>
+#end
+#end
+#foreach($destination in $service.allMessagingDestinations)
+                <property name="$destination.templateBeanName">
+                    <ref bean="$destination.templateBeanName"/>
+                </property>
+#end
+#foreach ($operation in $service.operations)
+#if ($operation.incomingMessageOperation)
+## Set this as lookup methods (otherwise we'll have a circular refrence back to the container listener)
+                <lookup-method name="get$stringUtils.capitalize($operation.messageListenerContainerReferenceName)" bean="$operation.messageListenerContainerBeanName"/>
+#end
+#end
+            </bean>
+        </property>
+        <property name="proxyInterfaces">
+            <value>$service.fullyQualifiedName</value>
+        </property>
+        <property name="interceptorNames">
+            <list>
+#if ($acegiServiceSecurity)
+                <value>serviceSecurityInterceptor</value>
+#end
+#if ($enableSpringTransactions)
+                <value>serviceTransactionInterceptor</value>
+#end
+#if ($daosEnabled && $service.hibernateInterceptorEnabled)
+                <value>hibernateInterceptor</value>
+#end
+#foreach($interceptor in $service.interceptors)
+                <value>$interceptor</value>
+#end
+            </list>
+        </property>
+    </bean>
+
+#end
+    <!-- ========================= End of SERVICE DEFINITIONS ========================= -->
+
+#if ($acegiServiceSecurity)
+    <!-- ================= Start of ACEGI SERVICE SECURITY DEFINITIONS ================ -->
+
+    <bean id="serviceSecurityInterceptor" class="$acegiServiceSecurityInterceptor">
+        <property name="accessDecisionManager"><ref bean="serviceAccessDecisionManager"/></property>
+#if ($stringUtils.isNotBlank($acegiAuthenticationManager))
+        <property name="authenticationManager"><ref bean="$acegiAuthenticationManager"/></property>
+#end
+#if ($stringUtils.isNotBlank($acegiRunAsManager))
+        <property name="runAsManager"><ref bean="$acegiRunAsManager"/></property>
+#end
+        <property name="objectDefinitionSource">
+            <value>
+#foreach($service in $services)
+#foreach ($operation in $springUtils.filterUniqueByName($service.operations))
+#if (!$operation.roles.empty)
+                ${service.fullyQualifiedName}.${operation.name}=#foreach($role in $operation.roles)#if($acegiRolePrefix && !$role.name.startsWith("$acegiRolePrefix"))$acegiRolePrefix#end$role.name#if($velocityCount != $operation.roles.size()), #end#end
+
+#end
+#end
+#end
+            </value>
+        </property>
+    </bean>
+
+    <bean id="serviceAccessDecisionManager" class="$acegiServiceAccessDecisionManager">
+        <property name="allowIfAllAbstainDecisions">
+            <value>false</value>
+        </property>
+        <property name="decisionVoters">
+            <list>
+                <ref local="serviceDecisionVoter"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="serviceDecisionVoter" class="$acegiServiceDecisionVoter">
+        <property name="rolePrefix"><value>$acegiRolePrefix</value></property>
+    </bean>
+
+    <!-- ================== End of ACEGI SERVICE SECURITY DEFINITIONS ================= -->
+
+#end
+</beans>
