@@ -1,11 +1,25 @@
 var eeDS;
 var eeGrid;
+var characteristicIdList;
 
 function refreshEEAnnotations() {
 	eeDs.reload();
 	eeGrid.render();
 }
 
+
+ var gridClickHandler = function(grid, rowIndex, event){
+       		//Get the ids of the selected characteritics and put them in characteriticIdList
+	       	var selected = eeGrid.getSelectionModel().getSelections();	
+	   
+	    	characteristicIdList = [];
+	    	for(var index=0; index<selected.length; index++) {	    		
+	    		characteristicIdList.push(selected[index].id);
+	    	}  	
+       	
+       }
+       
+ 
 Ext.onReady(function() {
 		
 	var id = dwr.util.getValue("eeId");
@@ -38,6 +52,9 @@ Ext.onReady(function() {
 		loadMask: true,
 		autoExpandColumn: 1
 	});
+
+    eeGrid.on("rowclick", gridClickHandler);
+
 	eeGrid.render();
 	
 	eeDs.load({params:[g]});

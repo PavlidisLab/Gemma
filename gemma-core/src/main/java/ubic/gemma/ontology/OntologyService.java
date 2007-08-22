@@ -283,7 +283,7 @@ public class OntologyService {
      * @param vc
      * @param eeIdList
      */
-    public void saveExpressionExperimentStatment( VocabCharacteristic vc, Collection<Long> eeIdList ) {
+    public void saveExpressionExperimentStatment( Characteristic vc, Collection<Long> eeIdList ) {
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
         log.info( "Expression Experiment ID List: " + eeIdList );
@@ -305,6 +305,43 @@ public class OntologyService {
 
         }
     }
+    
+    /**
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list
+     * 
+     * @param vc
+     * @param eeIdList
+     */
+    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
+
+        log.info( "Vocab Characteristic: " + characterIds );
+        log.info( "Expression Experiment ID List: " + eeIdList );
+
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
+
+        for ( ExpressionExperiment ee : ees ) {
+
+            Collection<Characteristic> current = ee.getCharacteristics();
+            if ( current == null )
+               continue;
+            
+            Collection<Characteristic> found = new HashSet<Characteristic>(); 
+            
+            for ( Characteristic characteristic : current ) {
+                if (characterIds.contains( characteristic.getId()))
+                  found.add( characteristic );
+                
+            }
+            if (found == null)
+                continue;
+          
+            current.removeAll( found );            
+            ee.setCharacteristics( current );
+            eeService.update( ee );
+
+        }
+    }
+    
 
     /**
      * @param birnLexOntologyService the birnLexOntologyService to set

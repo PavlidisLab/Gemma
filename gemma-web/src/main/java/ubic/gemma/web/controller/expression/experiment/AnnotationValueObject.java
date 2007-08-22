@@ -24,8 +24,10 @@ package ubic.gemma.web.controller.expression.experiment;
  */
 public class AnnotationValueObject  {
 
-  private String className;
+    private long   id;
+    private String className;
     private String termName;
+    
     
     public AnnotationValueObject() {
     }
@@ -40,5 +42,19 @@ public class AnnotationValueObject  {
     
     public void setTermName( String ontologyTerm ) {
         this.termName = ontologyTerm;
+    }
+
+    /**
+     * @return the id
+     */
+    public long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( long id ) {
+        this.id = id;
     }
 }

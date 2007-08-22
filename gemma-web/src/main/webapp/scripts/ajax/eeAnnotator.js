@@ -25,7 +25,8 @@ var createMgedComboBox = function(terms){
                
 				ds.load();
 						
-					    var combo = new Ext.form.ComboBox({					    	
+					    var combo = new Ext.form.ComboBox({	
+					    	width: 200,				    	
 					        store: ds,
 					        fieldLabel: 'Mged',
 					        displayField:'term',
@@ -102,12 +103,12 @@ var createSearchComponent = function(){
     );
     
     var search = new Ext.form.ComboBox({
+    	width: 300,
         store: ds,
         displayField:'title',
         fieldLabel: 'Lookup',
         typeAhead: false,
-        loadingText: 'Searching...',
-        width: 270,
+        loadingText: 'Searching...',     
         pageSize:0,
         minChars: 2,
         tpl: resultTpl,
@@ -132,9 +133,28 @@ var createSearchComponent = function(){
 }
 
 var saveHandler = function(){
+
+	//Use for debugging. 
+	//console.log(dwr.util.toDescriptiveString(vocabC,10))
+	//Make a copy, then send it over the wire. 
+	//If there is no valueUri then it is plain text and we don't want dwr to instantiate a
+	//VocabCharacteritic but a Characteritic. 
+	var newVocabC = {};
+	newVocabC.value = vocabC.value;
+	newVocabC.category = vocabC.category;
 	
-	console.log(dwr.util.toDescriptiveString(vocabC,10))
-	OntologyService.saveExpressionExperimentStatment(vocabC, [eeid], refreshEEAnnotations);
+	if (vocabC.valueUri){
+		newVocabC.categoryUri = vocabC.categoryUri ;
+		newVocabC.valueUri = vocabC.valueUri;
+	}
+	
+	OntologyService.saveExpressionExperimentStatment(newVocabC, [eeid], refreshEEAnnotations);
+	
+}
+
+var deleteHandler = function(){
+		
+	OntologyService.removeExpressionExperimentStatement(characteristicIdList, [eeid], refreshEEAnnotations)		
 	
 }
 
@@ -157,25 +177,20 @@ Ext.onReady(function() {
 	var lookup = createSearchComponent();			
 
 	
-	var simpleForm = new Ext.form.Form({
-		labelWidth: 50, // label settings here cascade unless overridden
-    });
-								
-    simpleForm.column({width:225, labelWidth: 30}, mgedComboBox );
-
-	simpleForm.column( {width:355},lookup );
-    
-    var saveColumn = simpleForm.column({width: 50});
-    //The save button
-	var save = new 	Ext.Button	(saveColumn.getEl(),{text: 'save',
-								  tooltip: 'Saves the desired annotation',
-								  minWidth: 50,
-								  handler: saveHandler
-								});
-
-	simpleForm.column(save);
-								   
-    //simpleForm.render(eeGrid.getView().getHeaderPanel(true));
-    simpleForm.render("eeAnnotator");		
+	var simpleTB = new Ext.Toolbar("eeAnnotator");
+	
+	simpleTB.addField(mgedComboBox);
+	simpleTB.addSpacer();
+	simpleTB.addField(lookup);
+	simpleTB.addSpacer();
+	simpleTB.addButton({text: 'save',
+						tooltip: 'Saves the desired annotation',								  
+						handler: saveHandler
+					});
+	simpleTB.addSeparator();
+	simpleTB.addButton({text: 'delete',
+						tooltip: 'Removes the desired annotation',								
+						handler: deleteHandler
+					});
 	
 });

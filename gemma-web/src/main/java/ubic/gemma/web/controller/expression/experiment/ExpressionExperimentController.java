@@ -253,6 +253,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setTermName( c.getValue() );
             if ( c instanceof VocabCharacteristic ) {
