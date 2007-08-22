@@ -32,9 +32,12 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleImpl;
 
 /**
  * A custom property editor to make spring binding on roles easier to deal with. The roles (actually, the role names)
- * for a given user are displayed as a comma delimited string. When this string value is bound to a form (for example,
- * when editing the user profile and clicking submit), the comma delimited string of role names are converted to a
- * collection of roles.
+ * for a given user are displayed as a comma delimited string.
+ * <p>
+ * When using the spring bind funtionality on a {@link UserRole} in a form, the method getAsText is called on form entry
+ * (ie. in a GET) and displays the roles (actually, role names) as a comma separated list of roles. On a POST (for
+ * example, when editing the user profile and clicking submit), the comma delimited string of role names are converted
+ * to a collection of roles.
  * 
  * @author keshav
  * @version $Id$
