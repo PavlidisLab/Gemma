@@ -263,6 +263,8 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @return double
      */
     private double correlFast( double[] ival, double[] jval, int i, int j ) {
+        if (rowSumSquaresSqrt[i] == 0 || rowSumSquaresSqrt[j] == 0)
+            return Double.NaN;
         double sxy = 0.0;
         for ( int k = 0, n = ival.length; k < n; k++ ) {
             sxy += ( ival[k] - rowMeans[i] ) * ( jval[k] - rowMeans[j] );
@@ -335,7 +337,8 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     continue;
                 }
 
-                setCorrel( i, j, correlFast( vectorA, data[j], i, j ), numcols );
+                double[] vectorB = data[j];
+                setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
                 ++numComputed;
             }
             if ( ++count % 2000 == 0 ) {
@@ -433,12 +436,17 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     }
                 }
 
-                double denom = correlationNorm( numused, sxx, sx, syy, sy );
-                if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
-                    setCorrel( i, j, 0.0, numused );
-                } else {
-                    double correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
-                    setCorrel( i, j, correl, numused );
+                // avoid -1 correlations
+                if ( numused < 3 )
+                    setCorrel( i, j, Double.NaN, 0 );
+                else {
+                    double denom = correlationNorm( numused, sxx, sx, syy, sy );
+                    if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
+                        setCorrel( i, j, 0.0, numused );
+                    } else {
+                        double correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
+                        setCorrel( i, j, correl, numused );
+                    }
                 }
                 ++numComputed;
 
@@ -558,6 +566,9 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         if ( keepers == null ) {
             return false;
         }
+        
+        if (Double.isNaN( correl ))
+            return false;
 
         double acorrel = Math.abs( correl );
 
@@ -597,6 +608,8 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param numused int
      */
     private void setCorrel( int i, int j, double correl, int numused ) {
+        if (Double.isNaN(correl))
+            return;
         double acorrel = Math.abs( correl );
 
         // it is possible, due to roundoff, to overflow the bins.
