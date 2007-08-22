@@ -40,13 +40,12 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleImpl;
  * @version $Id$
  */
 public class UserRolesPropertyEditor extends PropertyEditorSupport {
-    // TODO use generics here for the collections
 
     private static final String COMMA_DELIM = ",";
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    Collection roles = null;
+    Collection<UserRole> roles = null;
 
     /*
      * (non-Javadoc)
@@ -57,7 +56,7 @@ public class UserRolesPropertyEditor extends PropertyEditorSupport {
         if ( !StringUtils.hasText( text ) ) {
             setValue( null );
         } else {
-            roles = new HashSet();
+            roles = new HashSet<UserRole>();
             String trim = text.trim();
             String[] roleNames = null;
             if ( trim.contains( COMMA_DELIM ) )
