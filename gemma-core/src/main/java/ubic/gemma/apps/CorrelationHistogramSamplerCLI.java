@@ -26,6 +26,7 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
     private Taxon taxon;
     private int numSamples;
     private String outFileName;
+    private String excludeEeFileName;
     private int kMax;
     public static final int DEFAULT_NUM_SAMPLES = 10000;
 
@@ -50,6 +51,11 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
                 "Select the kth largest sample from the correlation histogram samples" ).withLongOpt( "kMax" ).create(
                 'k' );
         addOption( kMaxOption );
+
+        Option excludeEeOption = OptionBuilder.hasArg().withArgName( "Experiments to exclude" ).withDescription(
+                "File containing list of expression experiments to exclude" ).withLongOpt( "excludeEEFile" ).create(
+                'x' );
+        addOption( excludeEeOption );
     }
 
     @Override
@@ -71,6 +77,9 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
         } else {
             kMax = DEFAULT_K_MAX;
         }
+        if ( hasOption( 'x' ) ) {
+            excludeEeFileName = getOptionValue( 'x' );
+        }
         outFileName = getOptionValue( 'o' );
 
     }
@@ -80,11 +89,20 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
         Exception exc = processCommandLine( "CorrelationHistogramSampling", args );
         if ( exc != null ) return exc;
         Collection<ExpressionExperiment> ees;
+        Collection<ExpressionExperiment> excludedEes = null;
         try {
             ees = getExpressionExperiments( taxon );
+            if ( excludeEeFileName != null ) { 
+                excludedEes = readExpressionExperimentListFile( excludeEeFileName );
+            }
         } catch ( IOException e ) {
             return e;
         }
+        if (excludedEes != null && excludedEes.size() > 0)
+            for (ExpressionExperiment ee : excludedEes) {
+                ees.remove(ee);
+            }
+
         Map<ExpressionExperiment, HistogramSampler> ee2SamplerMap = getHistogramSamplerMap( ees );
 
         log.info( "Sampling " + ee2SamplerMap.keySet().size() + " expression experiments" );
@@ -102,7 +120,7 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
             samples[i] = eeSamples.get( eeSamples.size() - 1 - kMax );
         }
         watch.stop();
-        log.info("Finished sampling in " + watch);
+        log.info( "Finished sampling in " + watch );
         
         String header = "# ";
         for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
@@ -111,7 +129,7 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
 
         try {
             PrintWriter out = new PrintWriter( new FileWriter( outFileName ) );
-            out.println( header);
+       		out.println( header);
             for (double d : samples)
                 out.println( d );
             out.close();
