@@ -90,8 +90,7 @@ var createSearchComponent = function(){
                {
                        proxy:new Ext.data.DWRProxy(OntologyService.findExactTerm),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
-                       remoteSort:false,
-                       sortInfo:{field:'value'}
+                       remoteSort:false                     
                });
 
        var cm = new Ext.grid.ColumnModel([

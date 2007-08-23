@@ -18,8 +18,12 @@
  */
 package ubic.gemma.ontology;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -187,11 +191,11 @@ public class OntologyService {
                     && ( res.getLabel().startsWith( filter ) ) ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
-                    OntologyTerm term = ( OntologyTerm ) res;                  
+                    OntologyTerm term = ( OntologyTerm ) res;
                     vc.setValue( term.getTerm() );
                     vc.setValueUri( term.getUri() );
                     vc.setDescription( term.getComment() );
-                    
+
                 }
                 if ( res instanceof OntologyIndividual ) {
                     OntologyIndividual indi = ( OntologyIndividual ) res;
@@ -221,17 +225,18 @@ public class OntologyService {
         if ( search == null ) return null;
 
         // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
-        Collection<Characteristic> terms = new HashSet<Characteristic>();
 
         Collection<OntologyResource> results;
+        List<Characteristic> individualResults = new ArrayList<Characteristic>();
 
         // Add the matching individuals 1st
-        if ( categoryUri != null && !categoryUri.equals("{}") )  {
+        if ( categoryUri != null && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
-            if ( results != null ) terms.addAll( convert( results ) );
+            if ( results != null ) individualResults.addAll( convert( results ) );
         }
-        
+
         Collection<String> foundValues = new HashSet<String>();
+        List<Characteristic> characteristicResults = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( search );
 
         // remove duplicates, don't want to redefine == operator for Characteristics
@@ -239,22 +244,117 @@ public class OntologyService {
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
                 if ( !foundValues.contains( characteristic.getValue().toLowerCase() ) ) {
-                    terms.add( characteristic );
+                    characteristicResults.add( characteristic );
                     foundValues.add( characteristic.getValue().toLowerCase() );
                 }
             }
         }
 
+        List<Characteristic> searchResults = new ArrayList<Characteristic>();
+
         results = birnLexOntologyService.findResources( search );
-        if ( results != null ) terms.addAll( filter( results, search ) );
+        if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = oboDiseaseOntologyService.findResources( search );
-        if ( results != null ) terms.addAll( filter( results, search ) );
+        if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = fmaOntologyService.findResources( search );
-        if ( results != null ) terms.addAll( filter( results, search ) );
+        if ( results != null ) searchResults.addAll( filter( results, search ) );
 
-        return terms;
+        // Sort the individual results.
+        
+       return sort(individualResults, characteristicResults, searchResults, search);
+               
+    }
+    
+    private Collection<Characteristic> sort( List<Characteristic> individualResults,  List<Characteristic> characteristicResults,  List<Characteristic> searchResults, String searchTerm){
+        
+        Comparator compare = new TermComparator( searchTerm );
+        Collections.sort( individualResults, compare );
+        Collections.sort( characteristicResults, compare );
+        Collections.sort( searchResults, compare );
+
+        // Organize the list into 2 halfs.
+        // Want to get the exact match showing up ontop
+        // But close matching individualResults and characteristicResults should get
+        // priority over jena's search results.
+        // Each reasults shoulds order should be preserved.
+
+        List<Characteristic> sortedResultsTop = new ArrayList<Characteristic>();
+        List<Characteristic> sortedResultsMiddle = new ArrayList<Characteristic>();
+        List<Characteristic> sortedResultsBottem = new ArrayList<Characteristic>();
+
+        for ( Characteristic characteristic : individualResults ) {
+            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
+                sortedResultsTop.add( characteristic );
+            else if ( characteristic.getValue().startsWith( searchTerm ) )
+                sortedResultsMiddle.add( characteristic );
+            else
+                sortedResultsBottem.add( characteristic );
+        }
+
+        for ( Characteristic characteristic : characteristicResults ) {
+            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
+                sortedResultsTop.add( characteristic );
+            else if ( characteristic.getValue().startsWith( searchTerm ) )
+                sortedResultsMiddle.add( characteristic );
+            else
+                sortedResultsBottem.add( characteristic );
+        }
+
+        for ( Characteristic characteristic : searchResults ) {
+            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
+                sortedResultsTop.add( characteristic );
+            else if ( characteristic.getValue().startsWith( searchTerm ) )
+                sortedResultsMiddle.add( characteristic );
+            else
+                sortedResultsBottem.add( characteristic );
+        }
+
+        Collections.sort( sortedResultsTop, compare );
+        Collections.reverse( sortedResultsTop );
+
+        Collection<Characteristic> sortedTerms = new HashSet<Characteristic>();
+        sortedTerms.addAll( sortedResultsBottem );
+        sortedTerms.addAll( sortedResultsMiddle );
+        sortedTerms.addAll( sortedResultsTop );
+
+        
+        return sortedTerms;
+    }
+
+    // Private class for sorting Characteristics
+    class TermComparator implements Comparator {
+
+        String comparator;
+
+        public TermComparator( String comparator ) {
+            super();
+            this.comparator = comparator;
+        }
+
+        public int compare( Object o1, Object o2 ) {
+            String term1 = ( ( Characteristic ) o1 ).getValue();
+            String term2 = ( ( Characteristic ) o2 ).getValue();
+
+            if ( term1.equals( term2 ) ) return 0;
+
+            if ( term1.equals( comparator ) ) return 1;
+
+            if ( term2.equals( comparator ) ) return -1;
+
+            if ( term1.startsWith( comparator ) ) {
+                if ( term2.startsWith( comparator ) )
+                    return 0;
+                else
+                    return 1;
+            } else if ( term2.startsWith( comparator ) ) {
+                return -1;
+            }
+
+            return 0;
+
+        }
     }
 
     /**
@@ -308,7 +408,7 @@ public class OntologyService {
 
         }
     }
-    
+
     /**
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list
      * 
@@ -325,26 +425,22 @@ public class OntologyService {
         for ( ExpressionExperiment ee : ees ) {
 
             Collection<Characteristic> current = ee.getCharacteristics();
-            if ( current == null )
-               continue;
-            
-            Collection<Characteristic> found = new HashSet<Characteristic>(); 
-            
+            if ( current == null ) continue;
+
+            Collection<Characteristic> found = new HashSet<Characteristic>();
+
             for ( Characteristic characteristic : current ) {
-                if (characterIds.contains( characteristic.getId()))
-                  found.add( characteristic );
-                
+                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
+
             }
-            if (found == null)
-                continue;
-          
-            current.removeAll( found );            
+            if ( found == null ) continue;
+
+            current.removeAll( found );
             ee.setCharacteristics( current );
             eeService.update( ee );
 
         }
     }
-    
 
     /**
      * @param birnLexOntologyService the birnLexOntologyService to set
