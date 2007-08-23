@@ -27,9 +27,9 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
     private int numSamples;
     private String outFileName;
     private int kMax;
-    public static final int DEFAULT_NUM_SAMPLES = 1000;
+    public static final int DEFAULT_NUM_SAMPLES = 10000;
 
-    public static final int DEFAULT_K_MAX = 0;
+    public static final int DEFAULT_K_MAX = 5;
 
     @Override
     protected void buildOptions() {
@@ -104,14 +104,14 @@ public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperi
         watch.stop();
         log.info("Finished sampling in " + watch);
         
-        String header = new String();
+        String header = "# ";
         for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
-            header += "# " + ee.getShortName() + "\n";
+            header += ee.getShortName() + " ";
         }
 
         try {
             PrintWriter out = new PrintWriter( new FileWriter( outFileName ) );
-            out.print( header);
+            out.println( header);
             for (double d : samples)
                 out.println( d );
             out.close();
