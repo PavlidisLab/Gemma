@@ -264,7 +264,8 @@
 						<list>							
 							<value>findTerm</value>
 							<value>findExactTerm</value>
-							<value>saveBioMaterialStatement</value>							
+							<value>saveBioMaterialStatement</value>		
+							<value>saveExpressionExperimentStatement</value>					
 							<value>removeExpressionExperimentStatement</value>			
 						</list>
 					</property>

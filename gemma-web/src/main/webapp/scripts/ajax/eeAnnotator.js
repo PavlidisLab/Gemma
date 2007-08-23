@@ -3,7 +3,8 @@
 //member variables
 var vocabC = {};
 var eeid;
-
+var deleteButton;
+var saveButton;
 
 var createMgedComboBox = function(terms){				
 				
@@ -20,7 +21,7 @@ var createMgedComboBox = function(terms){
                        proxy:new Ext.data.DWRProxy(MgedOntologyService.getBioMaterialTerms),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
                        remoteSort:false,
-                       sortInfo:{field:'id'}
+                       sortInfo:{field:'term'}
                });
                
 				ds.load();
@@ -42,6 +43,11 @@ var createMgedComboBox = function(terms){
 					    	
 					    	vocabC.categoryUri = record.data.uri;
 							vocabC.category = record.data.term;				    	
+							
+							if (vocabC.category == null)	//need to check if we should enable the save button.
+								saveButton.disable();
+							else
+								saveButton.enable();
 					    								      						 					    	                        
     	                };
     	                	
@@ -85,7 +91,7 @@ var createSearchComponent = function(){
                        proxy:new Ext.data.DWRProxy(OntologyService.findExactTerm),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
                        remoteSort:false,
-                       sortInfo:{field:'id'}
+                       sortInfo:{field:'value'}
                });
 
        var cm = new Ext.grid.ColumnModel([
@@ -96,9 +102,8 @@ var createSearchComponent = function(){
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
-        '<div class="search-item" title="{description}">',
-            '<h4><span>{id}</span>{value}</h4>',
-            '{valueUri}',
+        '<div class="search-item" title="{description} : {valueUri}">',
+            '{value}',          
         '</div>'
     );
     
@@ -140,6 +145,7 @@ var saveHandler = function(){
 	//If there is no valueUri then it is plain text and we don't want dwr to instantiate a
 	//VocabCharacteritic but a Characteritic. 
 	var newVocabC = {};
+	
 	newVocabC.value = vocabC.value;
 	newVocabC.category = vocabC.category;
 	
@@ -148,7 +154,7 @@ var saveHandler = function(){
 		newVocabC.valueUri = vocabC.valueUri;
 	}
 	
-	OntologyService.saveExpressionExperimentStatment(newVocabC, [eeid], refreshEEAnnotations);
+	OntologyService.saveExpressionExperimentStatement(newVocabC, [eeid], refreshEEAnnotations);
 	
 }
 
@@ -183,14 +189,16 @@ Ext.onReady(function() {
 	simpleTB.addSpacer();
 	simpleTB.addField(lookup);
 	simpleTB.addSpacer();
-	simpleTB.addButton({text: 'save',
+	saveButton = simpleTB.addButton({text: 'save',
 						tooltip: 'Saves the desired annotation',								  
-						handler: saveHandler
+						handler: saveHandler,
+						disabled: true
 					});
 	simpleTB.addSeparator();
-	simpleTB.addButton({text: 'delete',
+	deleteButton = simpleTB.addButton({text: 'delete',
 						tooltip: 'Removes the desired annotation',								
-						handler: deleteHandler
+						handler: deleteHandler,
+						disabled: true						
 					});
 	
 });

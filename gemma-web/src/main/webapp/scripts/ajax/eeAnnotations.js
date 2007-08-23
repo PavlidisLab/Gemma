@@ -16,6 +16,13 @@ function refreshEEAnnotations() {
 	    	for(var index=0; index<selected.length; index++) {	    		
 	    		characteristicIdList.push(selected[index].id);
 	    	}  	
+	    	
+	    	if (deleteButton !== undefined) {
+	    		if (characteristicIdList.length == 0)
+	    			deleteButton.disable();
+	    		else
+	    			deleteButton.enable();
+	    	}
        	
        }
        

@@ -139,6 +139,7 @@ public class OntologyService {
                 OntologyIndividual indi = ( OntologyIndividual ) res;
                 vc.setValue( indi.getLabel() );
                 vc.setValueUri( indi.getUri() );
+                vc.setDescription( "Individual" );
             }
 
             converted.add( vc );
@@ -186,15 +187,17 @@ public class OntologyService {
                     && ( res.getLabel().startsWith( filter ) ) ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
-                    OntologyTerm term = ( OntologyTerm ) res;
+                    OntologyTerm term = ( OntologyTerm ) res;                  
                     vc.setValue( term.getTerm() );
                     vc.setValueUri( term.getUri() );
                     vc.setDescription( term.getComment() );
+                    
                 }
                 if ( res instanceof OntologyIndividual ) {
                     OntologyIndividual indi = ( OntologyIndividual ) res;
                     vc.setValue( indi.getLabel() );
                     vc.setValueUri( indi.getUri() );
+                    vc.setDescription( "Individual" );
                 }
 
                 filtered.add( vc );
@@ -283,7 +286,7 @@ public class OntologyService {
      * @param vc
      * @param eeIdList
      */
-    public void saveExpressionExperimentStatment( Characteristic vc, Collection<Long> eeIdList ) {
+    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIdList ) {
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
         log.info( "Expression Experiment ID List: " + eeIdList );
