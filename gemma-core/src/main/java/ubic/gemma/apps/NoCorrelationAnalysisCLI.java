@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
@@ -72,36 +73,47 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed randCorrelationMatrix = effectSizeService
                 .calculateRandomCorrelationMatrix( correlationMatrix );
-        DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
-        DenseDoubleMatrix2DNamed randCorrelationMatrix2D = effectSizeService
-                .foldCoexpressionMatrix( randCorrelationMatrix );
+        
         DenseDoubleMatrix2DNamed maxCorrelationMatrix = effectSizeService
                 .getMaxCorrelationMatrix( correlationMatrix, 0 );
         DenseDoubleMatrix2DNamed maxRandCorrelationMatrix = effectSizeService.getMaxCorrelationMatrix(
                 randCorrelationMatrix, 0 );
         
+        DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
+        DenseDoubleMatrix2DNamed randCorrelationMatrix2D = effectSizeService
+                .foldCoexpressionMatrix( randCorrelationMatrix );
+        
         // create row/col name maps
-        Map<String, String> geneIdPair2nameMap = getGeneIdPair2nameMap( queryGenes, targetGenes );
-        Map<Long, String> eeId2nameMap = new HashMap<Long, String>();
+        Map<String, String> geneIdPair2NameMap = getGeneIdPair2NameMap( queryGenes, targetGenes );
+        Map<Long, String> qGeneId2NameMap = new HashMap<Long, String>();
+        for (Gene gene : queryGenes)
+        	qGeneId2NameMap.put(gene.getId(), gene.getOfficialSymbol());
+        Map<Long, String> tGeneId2NameMap = new HashMap<Long, String>();
+        for (Gene gene : targetGenes)
+        	tGeneId2NameMap.put(gene.getId(), gene.getOfficialSymbol());
+        Map<Long, String> eeId2NameMap = new HashMap<Long, String>();
         for ( ExpressionExperiment ee : ees )
-            eeId2nameMap.put( ee.getId(), ee.getShortName() );
-
+            eeId2NameMap.put( ee.getId(), ee.getShortName() );
+        
         String topLeft = "GenePair";
-        DecimalFormat formatter = new DecimalFormat( "0.0000" );
+        DecimalFormat formatter = (DecimalFormat) DecimalFormat.getNumberInstance(Locale.US);
+        formatter.applyPattern("0.0000");
+        Map<String, String> valMap = new HashMap<String, String>();
+        valMap.put(formatter.format(Double.NaN), "");
         try {
-            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter, geneIdPair2nameMap, eeId2nameMap);
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter, geneIdPair2NameMap, eeId2NameMap, valMap);
             out.writeMatrix( correlationMatrix2D, topLeft );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".rand_corr.txt", formatter, geneIdPair2nameMap, eeId2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".rand_corr.txt", formatter, geneIdPair2NameMap, eeId2NameMap, valMap);
             out.writeMatrix( randCorrelationMatrix2D, topLeft );
             out.close();
 
-            out = new MatrixWriter( outFilePrefix + ".max_corr.txt", formatter ,  geneIdPair2nameMap, eeId2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".max_corr.txt", formatter ,  qGeneId2NameMap, tGeneId2NameMap, valMap);
             out.writeMatrix( maxCorrelationMatrix );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".max_rand_corr.txt", formatter ,  geneIdPair2nameMap, eeId2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".max_rand_corr.txt", formatter ,  qGeneId2NameMap, tGeneId2NameMap, valMap);
             out.writeMatrix( maxRandCorrelationMatrix );
             out.close();
         } catch ( IOException e ) {

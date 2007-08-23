@@ -150,19 +150,22 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         String figureFileName = outFilePrefix + ".corr.png";
         
         // create row/col name maps
-        Map<String, String> geneIdPair2nameMap = getGeneIdPair2nameMap( queryGenes, targetGenes );
+        Map<String, String> geneIdPair2nameMap = getGeneIdPair2NameMap( queryGenes, targetGenes );
         Map<Long, String> eeId2nameMap = new HashMap<Long, String>();
         for ( ExpressionExperiment ee : ees )
             eeId2nameMap.put( ee.getId(), ee.getShortName() );
 
-        Format formatter = new DecimalFormat("0.0000");
+        DecimalFormat formatter = (DecimalFormat) DecimalFormat.getNumberInstance();
+        formatter.applyPattern("0.0000");
+        Map<String, String> valMap = new HashMap<String, String>();
+        valMap.put(formatter.format(Double.NaN), "");
         String topLeft = "GenePair";
         try {
-            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter,  geneIdPair2nameMap, eeId2nameMap);
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter,  geneIdPair2nameMap, eeId2nameMap, valMap);
             out.writeMatrix( correlationMatrix2D, topLeft );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter, geneIdPair2nameMap, eeId2nameMap);
+            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter, geneIdPair2nameMap, eeId2nameMap, valMap);
             out.writeMatrix( effectSizeMatrix, topLeft );
             out.close();
             

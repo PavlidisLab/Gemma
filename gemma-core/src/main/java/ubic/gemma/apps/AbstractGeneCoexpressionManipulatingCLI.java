@@ -105,7 +105,7 @@ public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGe
         return genes;
     }
     
-    protected Map<String, String> getGeneIdPair2nameMap( Collection<Gene> queryGenes, Collection<Gene> targetGenes ) {
+    protected Map<String, String> getGeneIdPair2NameMap( Collection<Gene> queryGenes, Collection<Gene> targetGenes ) {
         Map<String, String> map = new HashMap<String, String>();
         for ( Gene qGene : queryGenes ) {
             String qName = ( qGene.getOfficialSymbol() != null ) ? qGene.getOfficialSymbol() : qGene.getId().toString();

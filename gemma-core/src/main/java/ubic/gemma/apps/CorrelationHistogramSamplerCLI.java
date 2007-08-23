@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -22,178 +24,207 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.ConfigUtils;
 import cern.colt.list.DoubleArrayList;
 
-public class CorrelationHistogramSamplerCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
-    private Taxon taxon;
-    private int numSamples;
-    private String outFileName;
-    private String excludeEeFileName;
-    private int kMax;
-    public static final int DEFAULT_NUM_SAMPLES = 10000;
+public class CorrelationHistogramSamplerCLI extends
+		AbstractGeneExpressionExperimentManipulatingCLI {
+	private Taxon taxon;
+	private int numSamples;
+	private String outFileName;
+	private String excludeEeFileName;
+	private int kMax;
+	public static final int DEFAULT_NUM_SAMPLES = 10000;
 
-    public static final int DEFAULT_K_MAX = 5;
+	public static final int DEFAULT_K_MAX = 5;
 
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "taxon" ).withDescription(
-                "The taxon of the genes" ).withLongOpt( "taxon" ).create( 't' );
-        addOption( taxonOption );
-        Option numSamplesOption = OptionBuilder.hasArg().withArgName( "Number of samples" ).withDescription(
-                "Number of times to sample each correlation histogram" ).withLongOpt( "numSamples" ).withType(
-                Integer.class ).create( 'n' );
-        addOption( numSamplesOption );
+	@Override
+	protected void buildOptions() {
+		super.buildOptions();
+		Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName(
+				"taxon").withDescription("The taxon of the genes").withLongOpt(
+				"taxon").create('t');
+		addOption(taxonOption);
+		Option numSamplesOption = OptionBuilder.hasArg().withArgName(
+				"Number of samples").withDescription(
+				"Number of times to sample each correlation histogram")
+				.withLongOpt("numSamples").withType(Integer.class).create('n');
+		addOption(numSamplesOption);
 
-        Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Output file" ).withDescription(
-                "File to write samples to" ).withLongOpt( "out" ).create( 'o' );
-        addOption( outFileOption );
+		Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName(
+				"Output file").withDescription("File to write samples to")
+				.withLongOpt("out").create('o');
+		addOption(outFileOption);
 
-        Option kMaxOption = OptionBuilder.hasArg().withArgName( "kth largest value" ).withDescription(
-                "Select the kth largest sample from the correlation histogram samples" ).withLongOpt( "kMax" ).create(
-                'k' );
-        addOption( kMaxOption );
+		Option kMaxOption = OptionBuilder
+				.hasArg()
+				.withArgName("kth largest value")
+				.withDescription(
+						"Select the kth largest sample from the correlation histogram samples")
+				.withLongOpt("kMax").create('k');
+		addOption(kMaxOption);
 
-        Option excludeEeOption = OptionBuilder.hasArg().withArgName( "Experiments to exclude" ).withDescription(
-                "File containing list of expression experiments to exclude" ).withLongOpt( "excludeEEFile" ).create(
-                'x' );
-        addOption( excludeEeOption );
-    }
+		Option excludeEeOption = OptionBuilder.hasArg().withArgName(
+				"Experiments to exclude").withDescription(
+				"File containing list of expression experiments to exclude")
+				.withLongOpt("excludeEEFile").create('x');
+		addOption(excludeEeOption);
+	}
 
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
-        String taxonName = getOptionValue( 't' );
-        taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( taxonName );
-        taxon = taxonService.find( taxon );
+	@Override
+	protected void processOptions() {
+		super.processOptions();
+		TaxonService taxonService = (TaxonService) getBean("taxonService");
+		String taxonName = getOptionValue('t');
+		taxon = Taxon.Factory.newInstance();
+		taxon.setCommonName(taxonName);
+		taxon = taxonService.find(taxon);
 
-        if ( hasOption( 'n' ) ) {
-            numSamples = getIntegerOptionValue( 'n' );
-        } else {
-            numSamples = DEFAULT_NUM_SAMPLES;
-        }
-        if ( hasOption( 'k' ) ) {
-            kMax = getIntegerOptionValue( 'k' );
-        } else {
-            kMax = DEFAULT_K_MAX;
-        }
-        if ( hasOption( 'x' ) ) {
-            excludeEeFileName = getOptionValue( 'x' );
-        }
-        outFileName = getOptionValue( 'o' );
+		if (hasOption('n')) {
+			numSamples = getIntegerOptionValue('n');
+		} else {
+			numSamples = DEFAULT_NUM_SAMPLES;
+		}
+		if (hasOption('k')) {
+			kMax = getIntegerOptionValue('k');
+		} else {
+			kMax = DEFAULT_K_MAX;
+		}
+		if (hasOption('x')) {
+			excludeEeFileName = getOptionValue('x');
+		}
+		outFileName = getOptionValue('o');
 
-    }
+	}
 
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception exc = processCommandLine( "CorrelationHistogramSampling", args );
-        if ( exc != null ) return exc;
-        Collection<ExpressionExperiment> ees;
-        Collection<ExpressionExperiment> excludedEes = null;
-        try {
-            ees = getExpressionExperiments( taxon );
-            if ( excludeEeFileName != null ) { 
-                excludedEes = readExpressionExperimentListFile( excludeEeFileName );
-            }
-        } catch ( IOException e ) {
-            return e;
-        }
-        if (excludedEes != null && excludedEes.size() > 0)
-            for (ExpressionExperiment ee : excludedEes) {
-                ees.remove(ee);
-            }
+	@Override
+	protected Exception doWork(String[] args) {
+		Exception exc = processCommandLine("CorrelationHistogramSampling", args);
+		if (exc != null)
+			return exc;
+		Collection<ExpressionExperiment> ees;
+		try {
+			ees = getExpressionExperiments(taxon);
+			if (excludeEeFileName != null) {
+				Collection<String> names = new HashSet<String>();
+				BufferedReader in = new BufferedReader(new FileReader(
+						excludeEeFileName));
+				while (in.ready()) {
+					String line = in.readLine();
+					if (!line.startsWith("#"))
+    					names.add(line.trim());
+				}
+				int count = 0;
+				for (Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext();) {
+					ExpressionExperiment ee = it.next();
+					if (names.contains(ee.getShortName())) {
+						it.remove();
+						count++;
+					}
+				}
+				log.info("Excluded " + count + " expression experiments");
+			}
+		} catch (IOException e) {
+			return e;
+		}
 
-        Map<ExpressionExperiment, HistogramSampler> ee2SamplerMap = getHistogramSamplerMap( ees );
+		Map<ExpressionExperiment, HistogramSampler> ee2SamplerMap = getHistogramSamplerMap(ees);
 
-        log.info( "Sampling " + ee2SamplerMap.keySet().size() + " expression experiments" );
-        log.info( "Taking the " + kMax + "th largest value " + numSamples + " times" );
-        StopWatch watch = new StopWatch();
-        watch.start();
-        double[] samples = new double[numSamples];
-        for ( int i = 0; i < numSamples; i++ ) {
-            DoubleArrayList eeSamples = new DoubleArrayList( ees.size() );
-            for ( ExpressionExperiment ee : ee2SamplerMap.keySet() ) {
-                HistogramSampler sampler = ee2SamplerMap.get( ee );
-                eeSamples.add( sampler.nextSample() );
-            }
-            eeSamples.sort();
-            samples[i] = eeSamples.get( eeSamples.size() - 1 - kMax );
-        }
-        watch.stop();
-        log.info( "Finished sampling in " + watch );
-        
-        String header = "# ";
-        for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
-            header += ee.getShortName() + " ";
-        }
+		log.info("Sampling " + ee2SamplerMap.keySet().size()
+				+ " expression experiments");
+		log.info("Taking the " + kMax + "th largest value " + numSamples
+				+ " times");
+		StopWatch watch = new StopWatch();
+		watch.start();
+		double[] samples = new double[numSamples];
+		for (int i = 0; i < numSamples; i++) {
+			DoubleArrayList eeSamples = new DoubleArrayList(ees.size());
+			for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
+				HistogramSampler sampler = ee2SamplerMap.get(ee);
+				eeSamples.add(sampler.nextSample());
+			}
+			eeSamples.sort();
+			samples[i] = eeSamples.get(eeSamples.size() - 1 - kMax);
+		}
+		watch.stop();
+		log.info("Finished sampling in " + watch);
 
-        try {
-            PrintWriter out = new PrintWriter( new FileWriter( outFileName ) );
-       		out.println( header);
-            for (double d : samples)
-                out.println( d );
-            out.close();
-        } catch ( IOException e ) {
-            return e;
-        }
-        log.info( "Wrote samples to " + outFileName );
+		String header = "# ";
+		for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
+			header += ee.getShortName() + " ";
+		}
 
-        return null;
-    }
+		try {
+			PrintWriter out = new PrintWriter(new FileWriter(outFileName));
+			out.println(header);
+			for (double d : samples)
+				out.println(d);
+			out.close();
+		} catch (IOException e) {
+			return e;
+		}
+		log.info("Wrote samples to " + outFileName);
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        CorrelationHistogramSamplerCLI analysis = new CorrelationHistogramSamplerCLI();
-        Exception exc = analysis.doWork( args );
-        if ( exc != null ) log.error( exc.getMessage() );
-    }
+		return null;
+	}
 
-    private Map<ExpressionExperiment, HistogramSampler> getHistogramSamplerMap( Collection<ExpressionExperiment> ees ) {
-        Map<ExpressionExperiment, HistogramSampler> histSamplers = new HashMap<ExpressionExperiment, HistogramSampler>();
-        for ( ExpressionExperiment ee : ees ) {
-            String fileName = ConfigUtils.getAnalysisStoragePath() + ee.getShortName() + ".correlDist.txt";
-            try {
-                HistogramSampler sampler = readHistogramFile( fileName );
-                histSamplers.put( ee, sampler );
-            } catch ( IOException e ) {
-                log.error( e.getMessage() );
-                log.error( "ERROR: Unable to read correlation distribution file for " + ee.getShortName() );
-            }
-        }
-        return histSamplers;
-    }
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		CorrelationHistogramSamplerCLI analysis = new CorrelationHistogramSamplerCLI();
+		Exception exc = analysis.doWork(args);
+		if (exc != null)
+			log.error(exc.getMessage());
+	}
 
-    /**
-     * Read a correlation distribution
-     * 
-     * @param fileName
-     * @return a histogram sampler for the read distribution
-     * @throws IOException
-     */
-    public HistogramSampler readHistogramFile( String fileName ) throws IOException {
-        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
-        int numHeaderLines = 1;
-        LinkedList<Double> bins = new LinkedList<Double>();
-        List<Integer> countList = new LinkedList<Integer>();
-        while ( in.ready() ) {
-            String line = in.readLine();
-            if ( line.startsWith( "#" ) || numHeaderLines-- > 0 ) continue;
-            String fields[] = line.split( "\t" );
-            Double bin = Double.valueOf( fields[0] );
-            bins.add( bin );
-            Integer count = Integer.valueOf( fields[1] );
-            countList.add( count );
-        }
+	private Map<ExpressionExperiment, HistogramSampler> getHistogramSamplerMap(
+			Collection<ExpressionExperiment> ees) {
+		Map<ExpressionExperiment, HistogramSampler> histSamplers = new HashMap<ExpressionExperiment, HistogramSampler>();
+		for (ExpressionExperiment ee : ees) {
+			String fileName = ConfigUtils.getAnalysisStoragePath()
+					+ ee.getShortName() + ".correlDist.txt";
+			try {
+				HistogramSampler sampler = readHistogramFile(fileName);
+				histSamplers.put(ee, sampler);
+			} catch (IOException e) {
+				log.error(e.getMessage());
+				log
+						.error("ERROR: Unable to read correlation distribution file for "
+								+ ee.getShortName());
+			}
+		}
+		return histSamplers;
+	}
 
-        double min = bins.getFirst().doubleValue();
-        double max = bins.getLast().doubleValue();
-        int[] counts = new int[countList.size()];
-        for ( int i = 0; i < counts.length; i++ ) {
-            counts[i] = countList.get( i );
-        }
-        return new HistogramSampler( counts, min, max );
-    }
+	/**
+	 * Read a correlation distribution
+	 * 
+	 * @param fileName
+	 * @return a histogram sampler for the read distribution
+	 * @throws IOException
+	 */
+	public HistogramSampler readHistogramFile(String fileName)
+			throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(fileName));
+		int numHeaderLines = 1;
+		LinkedList<Double> bins = new LinkedList<Double>();
+		List<Integer> countList = new LinkedList<Integer>();
+		while (in.ready()) {
+			String line = in.readLine();
+			if (line.startsWith("#") || numHeaderLines-- > 0)
+				continue;
+			String fields[] = line.split("\t");
+			Double bin = Double.valueOf(fields[0]);
+			bins.add(bin);
+			Integer count = Integer.valueOf(fields[1]);
+			countList.add(count);
+		}
+
+		double min = bins.getFirst().doubleValue();
+		double max = bins.getLast().doubleValue();
+		int[] counts = new int[countList.size()];
+		for (int i = 0; i < counts.length; i++) {
+			counts[i] = countList.get(i);
+		}
+		return new HistogramSampler(counts, min, max);
+	}
 
 }

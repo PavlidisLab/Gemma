@@ -298,16 +298,25 @@ public class EffectSizeService {
 		for (Long eeId : eeIds) {
 			int slice = correlationMatrix.getSliceIndexByName(eeId);
 			HistogramSampler sampler = histSamplerMap.get(eeMap.get(eeId));
-			if (sampler == null)
-				continue;
-			for (int row = 0; row < correlationMatrix.rows(); row++) {
-				for (int col = 0; col < correlationMatrix.columns(); col++) {
-					double correlation = correlationMatrix.get(slice, row, col);
-					if (!Double.isNaN(correlation)) {
-						double randCorrelation = sampler.nextSample();
-						randCorrMatrix.set(slice, row, col, randCorrelation);
-					}
+			if (sampler != null) {
+				for (int row = 0; row < correlationMatrix.rows(); row++) {
+					for (int col = 0; col < correlationMatrix.columns(); col++) {
+						double correlation = correlationMatrix.get(slice, row,
+								col);
+						if (!Double.isNaN(correlation)) {
+							double randCorrelation = sampler.nextSample();
+							randCorrMatrix
+									.set(slice, row, col, randCorrelation);
+						} else {
+							randCorrMatrix.set(slice, row, col, Double.NaN);
+						}
 
+					}
+				}
+			} else {
+				for (int row = 0; row < randCorrMatrix.rows(); row++) {
+					for (int col = 0; col < randCorrMatrix.columns(); col++)
+						randCorrMatrix.set(slice, row, col, Double.NaN);
 				}
 			}
 		}
@@ -327,15 +336,22 @@ public class EffectSizeService {
 			DenseDoubleMatrix3DNamed matrix, int n) {
 		DenseDoubleMatrix2DNamed maxMatrix = new DenseDoubleMatrix2DNamed(
 				matrix.rows(), matrix.columns());
+		maxMatrix.setRowNames(matrix.getRowNames());
+		maxMatrix.setColumnNames(matrix.getColNames());
 		for (int i = 0; i < matrix.rows(); i++) {
 			for (int j = 0; j < matrix.columns(); j++) {
 				DoubleArrayList list = new DoubleArrayList();
 				for (int k = 0; k < matrix.slices(); k++) {
-					list.add(matrix.get(k, i, j));
+					double val = matrix.get(k, i, j);
+					if (!Double.isNaN(val)) {
+						list.add(val);
+					}
 				}
 				list.sort();
 				if (list.size() > 0)
 					maxMatrix.set(i, j, list.get(list.size() - 1 - n));
+				else
+					maxMatrix.set(i, j, Double.NaN);
 			}
 		}
 		return maxMatrix;
@@ -431,21 +447,21 @@ public class EffectSizeService {
 							.get(qGene);
 					Collection<ExpressionProfile> targetEps = gene2eps
 							.get(tGene);
-					if (queryEps == null || targetEps == null)
-						continue;
 
 					List<ExpressionProfilePair> epPairs = new ArrayList<ExpressionProfilePair>();
-					for (ExpressionProfile queryEp : queryEps) {
-						for (ExpressionProfile targetEp : targetEps) {
-							if (isValidExpressionProfile(queryEp)
-									&& isValidExpressionProfile(targetEp)
-									&& queryEp.getNumSamples() == targetEp
-											.getNumSamples())
-								epPairs.add(new ExpressionProfilePair(queryEp,
-										targetEp));
+					if (queryEps != null && targetEps != null) {
+						for (ExpressionProfile queryEp : queryEps) {
+							for (ExpressionProfile targetEp : targetEps) {
+								if (isValidExpressionProfile(queryEp)
+										&& isValidExpressionProfile(targetEp)
+										&& queryEp.getNumSamples() == targetEp
+												.getNumSamples())
+									epPairs.add(new ExpressionProfilePair(
+											queryEp, targetEp));
+							}
 						}
+						Collections.sort(epPairs);
 					}
-					Collections.sort(epPairs);
 
 					if (epPairs.size() > 0) {
 						ExpressionProfilePair epPair = epPairs.get(epPairs
@@ -456,6 +472,10 @@ public class EffectSizeService {
 								epPair.expressionLevel);
 						sampleSizeMatrix
 								.set(slice, row, col, epPair.sampleSize);
+					} else {
+						correlationMatrix.set(slice, row, col, Double.NaN);
+						exprLvlMatrix.set(slice, row, col, Double.NaN);
+						sampleSizeMatrix.set(slice, row, col, Double.NaN);
 					}
 				}
 			}
