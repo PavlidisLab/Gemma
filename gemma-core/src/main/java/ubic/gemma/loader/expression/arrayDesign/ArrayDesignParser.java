@@ -21,10 +21,10 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -52,7 +52,7 @@ public class ArrayDesignParser extends BasicLineParser {
 
     public Object parseOneLine( String line ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         ad.setName( fields[0] );
         ad.setDescription( fields[5] );
 
