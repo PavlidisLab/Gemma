@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -95,6 +94,7 @@ public class ArrayExpressLoadService {
         Collection<Object> result = mageMLConverter.convert( parseResult );
 
         ExpressionExperiment ee = locateExpressionExperimentInMageResults( result );
+        ee.setShortName( accession );
         assert ee != null;
         Collection<BioAssay> bioAssays = ee.getBioAssays();
         assert bioAssays != null && bioAssays.size() > 0;
@@ -114,12 +114,9 @@ public class ArrayExpressLoadService {
         if ( qts.size() == 0 ) {
             throw new IllegalStateException( "No quantitation types found" );
         }
-        for ( QuantitationType type : qts ) {
-            log.info( type );
-        }
+
         pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
 
-        log.info( "Persisting ExpressionExperiment" );
         return ( ExpressionExperiment ) persisterHelper.persist( ee );
 
     }
@@ -163,6 +160,9 @@ public class ArrayExpressLoadService {
                 adParser.parse( fileToParse.getLocalURL().getPath() );
                 Collection<CompositeSequence> results = adParser.getResults();
                 design.setCompositeSequences( results );
+                for ( CompositeSequence sequence : results ) {
+                    sequence.setArrayDesign( design );
+                }
 
                 // replace so they are all pointing at the same instance.
                 for ( BioAssay assay : bioAssays ) {

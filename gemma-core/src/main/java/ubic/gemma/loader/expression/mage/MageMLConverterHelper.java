@@ -31,7 +31,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set; 
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -84,7 +84,7 @@ import org.biomage.DesignElement.FeatureReporterMap;
 import org.biomage.DesignElement.ReporterCompositeMap;
 import org.biomage.DesignElement.ReporterPosition;
 import org.biomage.Experiment.Experiment;
-import org.biomage.Experiment.ExperimentDesign; 
+import org.biomage.Experiment.ExperimentDesign;
 import org.biomage.Measurement.Unit;
 import org.biomage.Measurement.Measurement.KindCV;
 import org.biomage.Measurement.Measurement.Type;
@@ -609,7 +609,10 @@ public class MageMLConverterHelper {
 
             resultBioAssayDimension.getBioAssays().add( resultBioAssay );
         }
-        log.info( resultBioAssayDimension.getBioAssays().size() + " bioassays in dimension " + bad.getIdentifier() );
+        if ( log.isDebugEnabled() )
+            log
+                    .debug( resultBioAssayDimension.getBioAssays().size() + " bioassays in dimension "
+                            + bad.getIdentifier() );
         return resultBioAssayDimension;
     }
 

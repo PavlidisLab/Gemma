@@ -129,12 +129,12 @@ public class ProcessedDataMerger {
 
             }
 
-            if ( ++count % 1000 == 0 ) {
+            if ( ++count % 5000 == 0 ) {
                 log.info( "Processed data for " + count + " composite sequences" );
             }
 
         }
-
+        log.info( "Processed data for " + count + " composite sequences" );
     }
 
     /**

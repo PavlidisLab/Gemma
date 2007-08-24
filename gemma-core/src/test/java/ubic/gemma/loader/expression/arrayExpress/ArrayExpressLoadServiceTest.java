@@ -28,6 +28,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ArrayExpressLoadServiceTest extends BaseSpringContextTest {
 
     final public void testLoad() throws Exception {
+        endTransaction();
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment experiment = svc.load( "E-MEXP-955" );
         assertNotNull( experiment );
