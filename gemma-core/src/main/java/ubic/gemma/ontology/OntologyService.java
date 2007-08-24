@@ -363,7 +363,7 @@ public class OntologyService {
      * @param vc
      * @param bioMaterialIdList
      */
-    public void saveBioMaterialStatement( VocabCharacteristic vc, Collection<Long> bioMaterialIdList ) {
+    public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
 
         log.debug( "Vocab Characteristic: " + vc.getDescription() );
         log.debug( "Biomaterial ID List: " + bioMaterialIdList );

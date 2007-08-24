@@ -182,7 +182,9 @@ public class AssayViewTag extends TagSupport {
             } else {
                 buf.append( "<tr class='odd' align=justify>" );
             }
-            buf.append( "<td>" + material.getName() + "</td>" );
+            
+            String bmLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material.getName() + "</a>";
+            buf.append( "<td>" + bmLink + "</td>" );
 
             Map<ArrayDesign, Collection<BioAssay>> assayMap = bioAssayMap.get( material );
 

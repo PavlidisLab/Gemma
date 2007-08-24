@@ -171,6 +171,7 @@ public class BioMaterialController extends BaseMultiActionController {
         
         for ( Characteristic c : bioM.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setTermName( c.getValue() );
             if ( c instanceof VocabCharacteristic ) {
