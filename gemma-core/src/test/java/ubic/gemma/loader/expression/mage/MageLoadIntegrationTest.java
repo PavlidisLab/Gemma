@@ -90,7 +90,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
                 + "E-AFMX-13/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
-        getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
+        // getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
         Collection<Object> result = getMageMLConverter().convert( parseResult );
 
         log.info( result.size() + " Objects parsed from the MAGE file." );
@@ -137,7 +137,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
 
-        getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
+        // getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
 
         Collection<Object> result = getMageMLConverter().convert( parseResult );
         log.info( result.size() + " Objects parsed from the MAGE file." );

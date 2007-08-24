@@ -24,11 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.dom4j.Document;
-
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects SDO.
@@ -43,15 +41,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
     private boolean isConverted = false;
 
     private MageMLConverterHelper mageConverterHelper;
-
-    /**
-     * @param simplifiedXml The simplifiedXml to set.
-     */
-    public void setSimplifiedXml( Document simplifiedXml ) {
-        assert mageConverterHelper != null;
-        this.simplifiedXml = simplifiedXml;
-        mageConverterHelper.setSimplifiedXml( this.simplifiedXml );
-    }
 
     /**
      * default constructor
@@ -112,16 +101,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayDesignElementDimension(org.biomage.BioAssay.BioAssay)
-     */
-    public List<DesignElement> getBioAssayDesignElementDimension( BioAssay bioAssay ) {
-        assert isConverted;
-        return this.mageConverterHelper.getBioAssayDesignElementDimension( bioAssay );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay)
      */
     public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
@@ -134,7 +113,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
      * @return all the converted BioAssay objects.
      */
     public List<BioAssay> getConvertedBioAssays() {
-        assert isConverted;
         List<BioAssay> result = new ArrayList<BioAssay>();
         for ( Object object : convertedResult ) {
             if ( object instanceof BioAssay ) {
@@ -180,7 +158,13 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
             if ( !( element.getClass().isAssignableFrom( type ) ) ) continue;
 
             Object converted = convert( element );
-            if ( converted != null ) localResult.add( mageConverterHelper.convert( element ) );
+            if ( converted != null ) {
+                if ( converted instanceof Collection<?> ) {
+                    localResult.addAll( ( Collection<?> ) converted );
+                } else {
+                    localResult.add( converted );
+                }
+            }
         }
         return localResult;
     }
@@ -204,4 +188,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         return this.mageConverterHelper.getBioAssayDimensions();
     }
 
+    public Collection<BioAssay> getQuantitationTypeBioAssays() {
+        return this.mageConverterHelper.getQuantitationTypeBioAssays();
+    }
 }

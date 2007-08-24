@@ -30,7 +30,6 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dom4j.Document;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -100,7 +99,7 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
         /* create the simplified xml file using the mageMLParser */
         InputStream ist2MageExamples = MageMLPreprocessorIntegrationTest.class
                 .getResourceAsStream( MAGE_DATA_RESOURCE_PATH + "E-AFMX-13/E-AFMX-13.xml" );
-        mageMLParser.createSimplifiedXml( ist2MageExamples );
+        // mageMLParser.createSimplifiedXml( ist2MageExamples );
 
         /* get results from parsing step */
         log.info( "Tally:\n" + mageMLParser );
@@ -108,9 +107,8 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
         log.debug( "number of SDOs: " + mageObjects.size() );
 
         /* get xsl transformed xml file */
-        Document simplifiedXml = mageMLParser.getSimplifiedXml();
-        log.debug( "simplified xml document: " + simplifiedXml );
-
+        // Document simplifiedXml = mageMLParser.getSimplifiedXml();
+        // log.debug( "simplified xml document: " + simplifiedXml );
         /* close input streams */
         istMageExamples.close();
         ist2MageExamples.close();
@@ -119,15 +117,14 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
         log.info( "***** CONVERTING ***** " );
 
         /* create input stream from xsl file. */
-        if ( simplifiedXml == null ) {
-            throw new IllegalStateException( "Simplfied xml file is null.  Exiting test ..." );
-        }
-
+        // if ( simplifiedXml == null ) {
+        // throw new IllegalStateException( "Simplfied xml file is null. Exiting test ..." );
+        // }
         /*
          * on Spring initialization, simplifiedXml is still null because it has not been passed a document. Therefore,
-         * set it.
+         * set it. CURRENTLY NOT USING THIS
          */
-        mageMLConverter.setSimplifiedXml( simplifiedXml );
+        // mageMLConverter.setSimplifiedXml( simplifiedXml );
 
         mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
                 + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-AFMX-13" );

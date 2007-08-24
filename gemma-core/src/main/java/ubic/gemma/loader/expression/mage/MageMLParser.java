@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.mage;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -47,6 +48,7 @@ import org.dom4j.io.DocumentSource;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -85,14 +87,33 @@ public class MageMLParser extends AbstractMageTool implements Parser {
         super();
         try {
             parser = XMLReaderFactory.createXMLReader( XMLREADER );
-            // parser.setProperty( "http://xml.org/sax/features/validation", Boolean.FALSE );
-        } catch ( SAXException e ) {
-            log.error( e, e );
-        }
 
+            // This is needed to avoid the missing DTD problem
+            parser.setEntityResolver( mageDtdResolver() );
+            // parser.setProperty( "http://xml.org/sax/features/validation", Boolean.FALSE );
+            // parser.setProperty( "http://xml.org/sax/features/external-parameter-entities", Boolean.FALSE );
+        } catch ( SAXException e ) {
+            throw new RuntimeException( e );
+        }
         cHandler = new MAGEContentHandler();
         assert parser != null : "Parser was null, likely " + XMLREADER + " jar is not present";
         parser.setContentHandler( cHandler );
+    }
+
+    /**
+     * Avoids the problem with the DTD being in an 'unknown' location
+     * 
+     * @return
+     */
+    private EntityResolver mageDtdResolver() {
+        return new EntityResolver() {
+            public InputSource resolveEntity( String publicId, String systemId ) throws SAXException, IOException {
+                InputStream dtd = this.getClass()
+                        .getResourceAsStream( "/ubic/gemma/loader/expression/mage/MAGE-ML.dtd" );
+                assert dtd != null;
+                return new InputSource( dtd );
+            }
+        };
     }
 
     /*
@@ -145,11 +166,10 @@ public class MageMLParser extends AbstractMageTool implements Parser {
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
         try {
             parser.parse( new InputSource( is ) );
-            createSimplifiedXml( fileName );
+
+            // We no longer need to do this.
+            // createSimplifiedXml( fileName );
         } catch ( SAXException e ) {
-            log.error( e, e );
-            throw new IOException( e.getMessage() );
-        } catch ( TransformerException e ) {
             log.error( e, e );
             throw new IOException( e.getMessage() );
         }
@@ -180,6 +200,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
     /**
      * @param istMageXml Input MAGE-ML
      * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
+     * @deprecated We no longer need to do this.
      */
     private void createSimplifiedXml( InputStream istMageXml, InputStream istXsl ) throws IOException,
             TransformerException {
@@ -195,6 +216,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
         }
 
         SAXReader reader = new SAXReader();
+        reader.setEntityResolver( mageDtdResolver() );
         Document xml;
         try {
             xml = reader.read( istMageXml );
@@ -228,6 +250,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
      * @param fileName
      * @throws IOException
      * @throws FileNotFoundException
+     * @deprecated We no longer need to do this.
      */
     private void createSimplifiedXml( String fileName ) throws IOException, FileNotFoundException, TransformerException {
         InputStream is;

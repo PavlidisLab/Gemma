@@ -18,26 +18,33 @@
  */
 package ubic.gemma.loader.expression.mage;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+
 /**
  * Class to hold information on the dimension data extracted from MAGE-ML files.
- * <p>
- * Implementation note: We have to store things as Maps of Strings to the objects of interest, rather than using the
- * object itself as a key, because hashCode() for our entities looks just at the primary key (the id), which is not
- * filled in in many cases (when working with non-persistent objects).
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class BioAssayDimensions {
-    private Map<String, LinkedHashMap<String, ubic.gemma.model.common.quantitationtype.QuantitationType>> quantitationTypeDimensions = new HashMap<String, LinkedHashMap<String, ubic.gemma.model.common.quantitationtype.QuantitationType>>();
 
-    private Map<String, LinkedHashMap<String, ubic.gemma.model.expression.designElement.DesignElement>> designElementDimensions = new HashMap<String, LinkedHashMap<String, ubic.gemma.model.expression.designElement.DesignElement>>();
+    private static Log log = LogFactory.getLog( BioAssayDimensions.class.getName() );
+
+    private Map<BioAssay, List<ubic.gemma.model.common.quantitationtype.QuantitationType>> quantitationTypeDimensions = new HashMap<BioAssay, List<ubic.gemma.model.common.quantitationtype.QuantitationType>>();
+
+    private Map<BioAssay, List<ubic.gemma.model.expression.designElement.DesignElement>> designElementDimensions = new HashMap<BioAssay, List<ubic.gemma.model.expression.designElement.DesignElement>>();
+
+    public Collection<BioAssay> getQuantitationTypeBioAssays() {
+        return quantitationTypeDimensions.keySet();
+    }
 
     /**
      * @param ba
@@ -45,13 +52,11 @@ public class BioAssayDimensions {
      */
     public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getQuantitationTypeDimension(
             ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
-        List<ubic.gemma.model.common.quantitationtype.QuantitationType> result = new ArrayList<ubic.gemma.model.common.quantitationtype.QuantitationType>();
-        Map<String, ubic.gemma.model.common.quantitationtype.QuantitationType> qts = quantitationTypeDimensions.get( ba
-                .getName() );
-        for ( String key : qts.keySet() ) {
-            result.add( qts.get( key ) );
+        List<ubic.gemma.model.common.quantitationtype.QuantitationType> qts = quantitationTypeDimensions.get( ba );
+        if ( qts == null ) {
+            log.debug( "No quantitation types for " + ba.getName() );
         }
-        return result;
+        return qts;
     }
 
     /**
@@ -59,8 +64,8 @@ public class BioAssayDimensions {
      * @param convertedQuantitationTypes
      */
     public void addQuantitationTypeDimension( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            LinkedHashMap<String, ubic.gemma.model.common.quantitationtype.QuantitationType> quantitationTypes ) {
-        quantitationTypeDimensions.put( bioAssay.getName(), quantitationTypes );
+            List<ubic.gemma.model.common.quantitationtype.QuantitationType> quantitationTypes ) {
+        quantitationTypeDimensions.put( bioAssay, quantitationTypes );
     }
 
     /**
@@ -68,8 +73,8 @@ public class BioAssayDimensions {
      * @param designElements
      */
     public void addDesignElementDimension( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            LinkedHashMap<String, ubic.gemma.model.expression.designElement.DesignElement> designElements ) {
-        designElementDimensions.put( bioAssay.getName(), designElements );
+            List<ubic.gemma.model.expression.designElement.DesignElement> designElements ) {
+        designElementDimensions.put( bioAssay, designElements );
 
     }
 
@@ -79,19 +84,14 @@ public class BioAssayDimensions {
      */
     public List<ubic.gemma.model.expression.designElement.DesignElement> getDesignElementDimension(
             ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
-        List<ubic.gemma.model.expression.designElement.DesignElement> result = new ArrayList<ubic.gemma.model.expression.designElement.DesignElement>();
-        Map<String, ubic.gemma.model.expression.designElement.DesignElement> dts = designElementDimensions.get( ba
-                .getName() );
+        List<ubic.gemma.model.expression.designElement.DesignElement> dts = designElementDimensions.get( ba );
 
         if ( dts == null ) {
             throw new RuntimeException( ba.getName() + " was not found in designElementDimensions ("
                     + designElementDimensions.size() + " dimensions available)" );
         }
 
-        for ( String key : dts.keySet() ) {
-            result.add( dts.get( key ) );
-        }
-        return result;
+        return dts;
     }
 
 }

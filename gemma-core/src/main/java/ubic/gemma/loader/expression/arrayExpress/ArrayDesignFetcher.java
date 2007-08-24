@@ -54,7 +54,8 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ArrayDesignFetcher extends FtpFetcher {
 
-    private static final String[] suffixes = { "compositesequences", "features", "reporters" };
+    // private static final String[] suffixes = { "compositesequences", "features", "reporters" };
+    private static final String[] suffixes = { "compositesequences.txt", "reporters.txt" };
 
     /*
      * (non-Javadoc)
@@ -175,7 +176,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
      * @return
      */
     protected String formLocalFilePath( String identifier, File newDir, String suffix ) {
-        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + "." + suffix + ".txt";
+        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + "." + suffix;
         log.info( "Download to " + outputFileName );
         return outputFileName;
     }
@@ -187,7 +188,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
      */
     protected String formRemoteFilePath( String identifier, String suffix ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" ).replaceFirst( "A-", "" );
-        String seekFile = remoteBaseDir + dirName + "/" + identifier + "/" + identifier + "." + suffix + ".txt";
+        String seekFile = remoteBaseDir + dirName + "/" + identifier + "/" + identifier + "." + suffix;
         return seekFile;
     }
 

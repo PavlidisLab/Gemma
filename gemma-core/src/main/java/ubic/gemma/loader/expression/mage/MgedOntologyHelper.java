@@ -43,19 +43,18 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * <p>
  * Limitation: some properties point to classes that are external to the ontology. those are not parsed properly,
  * therefore, they are not included in the tree
- * <hr>
+ * <p>
  * 
  * @author Stathis Sideris 5/12/2003 email: sideris at biochem.ucl.ac.uk
  * @author pavlidis (modifications, tidying )
  * @version $Id$
+ * @deprecated We are still using the OntologyHelper, this class isn't necessary. In addition, functionality we need in
+ *             this class could be merged with our own MgedOntologyService.
  */
 public class MgedOntologyHelper {
 
-    
     public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#";
-    
-    // FIXME this is really no longer valid because the DAML is not supported. Use OWL instead.
-    
+
     private static int enumID = 0;
 
     private static Log log = LogFactory.getLog( MgedOntologyHelper.class.getName() );

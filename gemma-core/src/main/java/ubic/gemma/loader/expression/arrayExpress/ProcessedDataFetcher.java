@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,44 +29,39 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * ArrayExpress stores files in an FTP site as tarred-gzipped archives. Each tar file contains the MAGE file and the
- * datacube external files. This class can download an experiment, unpack the tar file, and put the resulting files onto
- * a local filesystem.
+ * Fetches the "processed data" for an ArrayExpress experiment.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcher extends FtpArchiveFetcher {
+public class ProcessedDataFetcher extends FtpArchiveFetcher {
 
-    private static final String MAGE_ML_SUFFIX = ".mageml.tar.gz";
-
-    public DataFileFetcher() {
+    public ProcessedDataFetcher() {
         super();
-        this.setExcludePattern( MAGE_ML_SUFFIX );
-        initArchiveHandler( "gzip" );
+        initArchiveHandler( "zip" );
     }
 
     /**
      * @param files
      * @return
      */
-    public LocalFile getMageMlFile( Collection<LocalFile> files ) {
+    public LocalFile getProcessedDataFile( Collection<LocalFile> files ) {
         for ( LocalFile file : files ) {
-            if ( file.getLocalURL().toString().endsWith( ".xml" ) ) {
+            if ( file.getLocalURL().toString().contains( "processed-data" ) ) {
                 return file;
             }
         }
         return null;
     }
 
-    /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
     @Override
-    public String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + MAGE_ML_SUFFIX;
+    public void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new ArrayExpressUtil();
+    }
+
+    @Override
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + ".processed.zip";
         return outputFileName;
     }
 
@@ -78,15 +73,12 @@ public class DataFileFetcher extends FtpArchiveFetcher {
     public String formRemoteFilePath( String identifier ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
         dirName = dirName.replace( "E-", "" );
-        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + MAGE_ML_SUFFIX;
+        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + ".processed.zip";
         return seekFile;
     }
 
-    /**
-     * @throws ConfigurationException
-     */
     @Override
-    public void initConfig() {
+    protected void initConfig() {
 
         localBasePath = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
         remoteBaseDir = ConfigUtils.getString( "arrayExpress.experiments.baseDir" );
@@ -98,14 +90,4 @@ public class DataFileFetcher extends FtpArchiveFetcher {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
-     */
-    @Override
-    public void setNetDataSourceUtil() {
-        this.netDataSourceUtil = new ArrayExpressUtil();
-
-    }
 }

@@ -146,6 +146,10 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistSoftware( ( Software ) entity );
         } else if ( entity instanceof Protocol ) {
             return null;
+        } else if ( entity instanceof VocabCharacteristic ) {
+            return null; // cascade
+        } else if ( entity instanceof Characteristic ) {
+            return null; // cascade
         } else if ( entity instanceof Collection ) {
             return super.persist( ( Collection ) entity );
         } else if ( entity instanceof BibliographicReference ) {
@@ -504,9 +508,9 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     public Characteristic persistCharacteristicAssociations( Characteristic ontologyEntry ) {
 
-//        if ( ontologyEntry instanceof VocabCharacteristic )
-//            ( ( VocabCharacteristic ) ontologyEntry ).setSource( this
-//                    .persistExternalDatabase( ( ( VocabCharacteristic ) ontologyEntry ).getSource() ) );
+        // if ( ontologyEntry instanceof VocabCharacteristic )
+        // ( ( VocabCharacteristic ) ontologyEntry ).setSource( this
+        // .persistExternalDatabase( ( ( VocabCharacteristic ) ontologyEntry ).getSource() ) );
 
         return ontologyEntry;
     }
