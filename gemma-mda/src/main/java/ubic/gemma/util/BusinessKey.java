@@ -381,9 +381,9 @@ public class BusinessKey {
      */
     public static void checkKey( FactorValue factorValue ) {
         if ( factorValue.getValue() == null && factorValue.getMeasurement() == null
-                && factorValue.getOntologyEntry() == null ) {
+                && factorValue.getCharacteristics().size() == 0 ) {
             throw new IllegalArgumentException(
-                    "FactorValue must have a value (or associated measurement or ontology entry)." );
+                    "FactorValue must have a value (or associated measurement or characteristics)." );
         }
     }
 
@@ -551,8 +551,10 @@ public class BusinessKey {
     public static void createQueryObject( Criteria queryObject, FactorValue factorValue ) {
         if ( factorValue.getValue() != null ) {
             queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
-        } else if ( factorValue.getOntologyEntry() != null ) {
-            BusinessKey.attachCriteria( queryObject, factorValue.getOntologyEntry(), "ontologyEntry" );
+        } else if ( factorValue.getCharacteristics().size() > 0 ) {
+            // FIXME ITERATE
+            
+         //   BusinessKey.attachCriteria( queryObject, factorValue.getOntologyEntry(), "ontologyEntry" );
         } else if ( factorValue.getMeasurement() != null ) {
             queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
         }

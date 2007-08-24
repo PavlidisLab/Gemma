@@ -20,7 +20,6 @@ package ubic.gemma.persistence;
 
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 /**
  * Persist objects like Gene2GOAssociation.
@@ -59,7 +58,6 @@ public class RelationshipPersister extends ExpressionPersister {
 
         association.setSource( persistExternalDatabase( association.getSource() ) );
         association.setGene( persistGene( association.getGene() ) );
-        association.setOntologyEntry( ( VocabCharacteristic ) persistCharacteristicAssociations(  association.getOntologyEntry() ) );
         return gene2GOAssociationService.findOrCreate( association );
     }
 

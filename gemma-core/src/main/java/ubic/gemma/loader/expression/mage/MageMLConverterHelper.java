@@ -456,7 +456,8 @@ public class MageMLConverterHelper {
      * @see specialConvertBioAssayBioAssayDataAssociations
      */
     public LocalFile convertBioAssayData( BioAssayData mageObj ) {
-        // convertBioAssayDataAssociations( mageObj ); // FIXME this is now not needed so long as we are using processed data.
+        // convertBioAssayDataAssociations( mageObj ); // FIXME this is now not needed so long as we are using processed
+        // data.
         BioDataValues data = mageObj.getBioDataValues();
         LocalFile result = LocalFile.Factory.newInstance();
         result.setRemoteURL( null );
@@ -1528,7 +1529,9 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Measurement" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
         } else if ( associationName.equals( "Value" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "OntologyEntry", Characteristic.class );
+            List tmp = new ArrayList();
+            tmp.add( gemmaObj );
+            simpleFillIn( ( List ) tmp, gemmaObj, getter, "Chacteristics" );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }

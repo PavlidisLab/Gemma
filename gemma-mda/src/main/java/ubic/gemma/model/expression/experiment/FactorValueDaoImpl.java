@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -77,8 +78,11 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             FactorValue fv = ( FactorValue ) object;
             sb.append( "\tID=" + fv.getId() + " Value=" + fv.getValue() );
             if ( fv.getMeasurement() != null ) sb.append( " Measurement=" + fv.getMeasurement().getValue() );
-            if ( fv.getOntologyEntry() != null ) sb.append( fv.getOntologyEntry() );
-            sb.append( "\n" );
+            for(Characteristic c : fv.getCharacteristics()) {
+                sb.append( c);
+                sb.append( "\n" );
+            }
+          
         }
         log.error( sb.toString() );
     }

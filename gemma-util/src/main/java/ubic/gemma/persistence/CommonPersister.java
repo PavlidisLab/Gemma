@@ -298,10 +298,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return;
         }
 
-        Characteristic type = protocol.getType();
-        type = persistCharacteristicAssociations( type );
-        protocol.setType( type );
-
         for ( Software software : protocol.getSoftwareUsed() ) {
             software = persistSoftware( software );
         }
@@ -340,10 +336,6 @@ abstract public class CommonPersister extends AbstractPersister {
             if ( software == null )
                 throw new IllegalStateException( "Must have software associated with SoftwareApplication" );
 
-            Characteristic type = software.getType();
-            type = persistCharacteristicAssociations( type );
-            software.setType( type );
-
             softwareApplication.setSoftware( softwareService.findOrCreate( software ) );
 
         }
@@ -352,10 +344,6 @@ abstract public class CommonPersister extends AbstractPersister {
             Hardware hardware = HardwareApplication.getHardware();
             if ( hardware == null )
                 throw new IllegalStateException( "Must have hardware associated with HardwareApplication" );
-
-            Characteristic type = hardware.getType();
-            type = persistCharacteristicAssociations( type );
-            hardware.setType( type );
 
             HardwareApplication.setHardware( hardwareService.findOrCreate( hardware ) );
         }
@@ -471,8 +459,6 @@ abstract public class CommonPersister extends AbstractPersister {
             }
         }
 
-        hardware.setType( persistCharacteristicAssociations( hardware.getType() ) );
-
         if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
             for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
                 manufacturer = persistContact( manufacturer );
@@ -499,20 +485,6 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Measurement persistMeasurement( Measurement measurement ) {
         return measurementService.create( measurement );
-    }
-
-    /**
-     * Ontology entr
-     * 
-     * @param ontologyEntry
-     */
-    public Characteristic persistCharacteristicAssociations( Characteristic ontologyEntry ) {
-
-        // if ( ontologyEntry instanceof VocabCharacteristic )
-        // ( ( VocabCharacteristic ) ontologyEntry ).setSource( this
-        // .persistExternalDatabase( ( ( VocabCharacteristic ) ontologyEntry ).getSource() ) );
-
-        return ontologyEntry;
     }
 
     /**

@@ -549,8 +549,10 @@ class FactorValueComparator implements Comparator<FactorValue> {
     public int compare( FactorValue arg0, FactorValue arg1 ) {
         if ( arg0.getMeasurement() != null && arg1.getMeasurement() != null ) {
             return ( new MeasurementComparator() ).compare( arg0.getMeasurement(), arg1.getMeasurement() );
-        } else if ( arg0.getOntologyEntry() != null && arg1.getOntologyEntry() != null ) {
-            return CharacteristicUtils.compare( arg0.getOntologyEntry(), arg1.getOntologyEntry() );
+        } else if ( arg0.getCharacteristics().size() > 0 && arg1.getCharacteristics().size() > 0 ) {
+            // FIXME implement real comparison.
+        //    return CharacteristicUtils.compare( arg0.getCharacteristics().size(), arg1.getCharacteristics().size() );
+            return -1;
         } else if ( arg0.getValue() != null && arg1.getValue() != null ) {
             return arg0.getValue().compareTo( arg1.getValue() );
         } else {

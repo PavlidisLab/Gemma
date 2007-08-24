@@ -24,6 +24,8 @@ package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.model.common.description.Characteristic;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -46,8 +48,10 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
         } else {
             buf.append( " " );
         }
-        if ( this.getOntologyEntry() != null ) {
-            buf.append( this.getOntologyEntry() );
+        if ( this.getCharacteristics().size() > 0 ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                buf.append( c );
+            }
         } else if ( this.getMeasurement() != null ) {
             buf.append( this.getMeasurement() );
         } else if ( StringUtils.isNotBlank( this.getValue() ) ) {

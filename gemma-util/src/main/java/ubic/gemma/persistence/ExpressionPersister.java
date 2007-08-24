@@ -193,10 +193,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         persistCollectionElements( experimentalFactor.getAnnotations() );
 
-        Characteristic category = experimentalFactor.getCategory();
-        if ( category != null ) {
-            experimentalFactor.setCategory( persistCharacteristicAssociations( category ) );
-        }
         return experimentalFactor;
     }
 
@@ -236,15 +232,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         factorValue.setExperimentalFactor( persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
 
-        if ( factorValue.getOntologyEntry() != null ) {
+        if ( factorValue.getCharacteristics().size() > 0 ) {
             if ( factorValue.getMeasurement() != null ) {
                 throw new IllegalStateException(
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
-            Characteristic ontologyEntry = factorValue.getOntologyEntry();
-            factorValue.setOntologyEntry( persistCharacteristicAssociations( ontologyEntry ) );
         } else if ( factorValue.getValue() != null ) {
-            if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
+            if ( factorValue.getMeasurement() != null || factorValue.getCharacteristics().size() > 0 ) {
                 throw new IllegalStateException(
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
@@ -331,13 +325,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         assert entity.getSourceTaxon() != null;
 
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
-        entity.setMaterialType( persistCharacteristicAssociations( entity.getMaterialType() ) );
         entity.setSourceTaxon( persistTaxon( entity.getSourceTaxon() ) );
 
         for ( Treatment treatment : entity.getTreatments() ) {
 
             Characteristic action = treatment.getAction();
-            treatment.setAction( persistCharacteristicAssociations( action ) );
             log.debug( treatment + " action: " + action );
 
             for ( ProtocolApplication protocolApplication : treatment.getProtocolApplications() ) {
@@ -356,7 +348,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private Compound persistCompound( Compound compound ) {
         if ( compound == null ) return null;
-        compound.setCompoundIndices( persistCharacteristicAssociations( compound.getCompoundIndices() ) );
         if ( compound.getIsSolvent() == null )
             throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
         return compoundService.findOrCreate( compound );
