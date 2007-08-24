@@ -1,3 +1,12 @@
+<!--
+
+This XSL can be used to transform a MAGE-ML document containing OntologyEntry instances into something easier to deal with. 
+However, this is only necessary if the 'full' MGED Ontology is used (Age has_measurement Measurement has_unit etc). 
+ArrayExpress no longer uses that and annotates experiment only with the "no sub-element case". As of 8/2007 this transformation is
+not being used by Gemma's MageMLConverter.
+
+-->
+
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<!-- $Id$ -->
 	<xsl:output method="xml" indent="yes"/>
