@@ -78,6 +78,7 @@ public class HttpFetcher extends AbstractFetcher {
             File newDir = mkdir( host );
             final String outputFileName = formLocalFilePath( filePath, newDir );
 
+            // FIXME if the file doesn't exist, we still get a response with a 404.
             FutureTask<Boolean> future = this.defineTask( outputFileName, identifier );
             return this.doTask( future, identifier, outputFileName );
         } catch ( IOException e ) {

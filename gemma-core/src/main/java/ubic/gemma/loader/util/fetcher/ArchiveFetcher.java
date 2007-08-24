@@ -20,9 +20,6 @@ package ubic.gemma.loader.util.fetcher;
 
 /**
  * Interface defining a class that downloads archives and unpacks them.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

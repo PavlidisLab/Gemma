@@ -101,6 +101,8 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 UntarCompressionMethod method = new UntarCompressionMethod();
                 method.setValue( "gzip" );
                 ( ( Untar ) expander ).setCompression( method );
+            } else if ( methodName.equals( "zip" ) ) {
+                expander = null;
             } else {
                 expander = new Untar();
                 expander.setProject( new Project() );
@@ -120,9 +122,10 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    protected Collection<LocalFile> listFiles( String remoteFile, File newDir ) throws IOException {
+    protected Collection<LocalFile> listFiles( String remoteFile, File newDir, Collection<LocalFile> result )
+            throws IOException {
 
-        Collection<LocalFile> result = new HashSet<LocalFile>();
+        if ( result == null ) result = new HashSet<LocalFile>();
         for ( File file : ( Collection<File> ) FileTools.listDirectoryFiles( newDir ) ) {
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;
             log.info( "\t" + file.getCanonicalPath() );
@@ -131,6 +134,11 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             newFile.setRemoteURL( new File( remoteFile ).toURI().toURL() );
             newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
             result.add( newFile );
+        }
+
+        // recurse into subdirectories.
+        for ( File file : ( Collection<File> ) FileTools.listSubDirectories( newDir ) ) {
+            listFiles( remoteFile, file, result );
         }
         return result;
     }
@@ -150,9 +158,9 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFile );
                 unPack( outputFile );
                 cleanUp( outputFile );
-                if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile );
+                if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile, null );
 
-                return listFiles( seekFileName, outputFile.getParentFile() );
+                return listFiles( seekFileName, outputFile.getParentFile(), null );
             }
         } catch ( ExecutionException e ) {
             throw new RuntimeException( "Couldn't fetch " + seekFileName + " from "
@@ -180,6 +188,12 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                     expander.setSrc( outputFile );
                     expander.setDest( outputFile.getParentFile() );
                     expander.perform();
+                } else if ( outputFile.getAbsolutePath().endsWith( "zip" ) ) {
+                    try {
+                        FileTools.unZipFiles( outputFile.getAbsolutePath() );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
                 } else { // gzip.
                     try {
                         FileTools.unGzipFile( outputFile.getAbsolutePath() );
