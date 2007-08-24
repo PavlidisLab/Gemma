@@ -385,6 +385,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor ) {
         if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
         fillInExperimentalFactorAssociations( experimentalFactor );
+        assert ( !isTransient( experimentalFactor.getExperimentalDesign() ) );
         return experimentalFactorService.create( experimentalFactor );
     }
 
@@ -553,13 +554,19 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             experimentalFactor.setExperimentalDesign( experimentalDesign );
 
+            // override casade like above.
+            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+            experimentalFactor.setFactorValues( null );
             experimentalFactor = persistExperimentalFactor( experimentalFactor );
 
-            // factorvalue is cascaded.
-            for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
+            for ( FactorValue factorValue : factorValues ) {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 fillInFactorValueAssociations( factorValue );
             }
+
+            // factorvalue is cascaded.
+            experimentalFactor.setFactorValues( factorValues );
+            experimentalFactorService.update( experimentalFactor );
         }
     }
 
