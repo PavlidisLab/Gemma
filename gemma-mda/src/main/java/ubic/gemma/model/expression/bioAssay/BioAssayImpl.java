@@ -27,9 +27,40 @@ package ubic.gemma.model.expression.bioAssay;
 /**
  * @see ubic.gemma.model.expression.bioAssay.BioAssay
  */
-public class BioAssayImpl
-    extends ubic.gemma.model.expression.bioAssay.BioAssay
-{
+public class BioAssayImpl extends ubic.gemma.model.expression.bioAssay.BioAssay {
+
+    @Override
+    public boolean equals( Object object ) {
+
+        if ( !( object instanceof BioAssay ) ) {
+            return false;
+        }
+        final BioAssay that = ( BioAssay ) object;
+        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
+
+        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
+            return false;
+
+        if ( this.getDescription() != null && that.getDescription() != null
+                && !this.getDescription().equals( that.getDescription() ) ) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+
+        if ( this.getId() != null ) {
+            return 29 * getId().hashCode();
+        } else {
+            int nameHash = this.getName() == null ? 0 : getName().hashCode();
+
+            int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
+            hashCode = 29 * nameHash + descHash;
+        }
+        return hashCode;
+    }
 
     /**
      * 

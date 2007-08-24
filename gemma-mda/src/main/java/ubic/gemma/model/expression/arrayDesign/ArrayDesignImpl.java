@@ -30,4 +30,23 @@ public class ArrayDesignImpl extends ubic.gemma.model.expression.arrayDesign.Arr
      */
     private static final long serialVersionUID = -3705444380575919171L;
 
+    @Override
+    public boolean equals( Object object ) {
+        ArrayDesign that = ( ArrayDesign ) object;
+        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
+
+        if ( this.getName() != null && that.getName() != null ) {
+            return this.getName().equals( that.getName() );
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null ) return 29 * getId().hashCode();
+        if ( this.getName() != null ) return 29 * getName().hashCode();
+        return super.hashCode();
+    }
+
 }

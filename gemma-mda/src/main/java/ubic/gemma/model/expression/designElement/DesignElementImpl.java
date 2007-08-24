@@ -27,6 +27,43 @@ package ubic.gemma.model.expression.designElement;
  */
 public abstract class DesignElementImpl extends ubic.gemma.model.expression.designElement.DesignElement {
 
+    @Override
+    public boolean equals( Object object ) {
+
+        if ( !( object instanceof DesignElement ) ) {
+            return false;
+        }
+        final DesignElement that = ( DesignElement ) object;
+        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
+
+        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
+            return false;
+
+        if ( this.getDescription() != null && that.getDescription() != null
+                && !this.getDescription().equals( that.getDescription() ) ) return false;
+
+        if ( this.getArrayDesign() != null && that.getArrayDesign() != null
+                && !this.getArrayDesign().equals( that.getArrayDesign() ) ) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+
+        if ( this.getId() != null ) {
+            return 29 * getId().hashCode();
+        } else {
+            int nameHash = this.getName() == null ? 0 : getName().hashCode();
+
+            int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
+            int adHash = this.getArrayDesign() == null ? 0 : getArrayDesign().hashCode();
+            hashCode = 29 * nameHash + descHash + adHash;
+        }
+        return hashCode;
+    }
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
