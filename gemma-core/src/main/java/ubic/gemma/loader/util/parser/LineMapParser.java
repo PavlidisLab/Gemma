@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,33 +19,29 @@
 package ubic.gemma.loader.util.parser;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.util.FileTools;
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressManager;
 
 /**
- * A simple LineParser implementation that doesn't do anything. Subclass this and implement the "parseOneLine" method.
+ * The difference between this class and BasicLineMapParser is more flexibility in how keys are provided. The
+ * parseOneLine method that is implemented must handle adding the data to the Map.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public abstract class BasicLineParser implements LineParser {
+public abstract class LineMapParser extends BasicLineMapParser {
 
-    protected static final String COMMENTMARK = "#";
+    public final Object getKey( Object o ) {
+        throw new UnsupportedOperationException( "The subclass must handle adding to the map" );
+    }
 
-    protected Log log = LogFactory.getLog( getClass() );
-
-    int linesParsed = 0;
+    protected final void put( Object key, Object value ) {
+        throw new UnsupportedOperationException( "The subclass must handle adding to the map" );
+    }
 
     /*
      * (non-Javadoc)
@@ -62,7 +58,7 @@ public abstract class BasicLineParser implements LineParser {
             throw new IOException( "No bytes available to read from inputStream" );
         }
 
-        linesParsed = 0;
+        int linesParsed = 0;
         int nullLines = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
@@ -74,12 +70,11 @@ public abstract class BasicLineParser implements LineParser {
                 continue;
             }
 
+            // The returned object is just used to check if the was data in the line. Storing the data has to be taken
+            // care of by the subclass.
             Object newItem = parseOneLine( line );
 
-            if ( newItem != null ) {
-                addResult( newItem );
-            } else {
-                // if ( log.isDebugEnabled() ) log.debug( "Got null parse from " + line );
+            if ( newItem == null ) {
                 nullLines++;
             }
 
@@ -96,48 +91,5 @@ public abstract class BasicLineParser implements LineParser {
         }
         if ( nullLines > 0 ) log.info( nullLines + " yielded no parse result (they may have been filtered)." );
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.LineParser#parse(java.io.File)
-     */
-    public void parse( File file ) throws IOException {
-        if ( file == null ) {
-            throw new IllegalArgumentException( "File cannot be null" );
-        }
-        if ( !file.exists() || !file.canRead() ) {
-            throw new IOException( "Could not read from file " + file.getPath() );
-        }
-        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-        parse( stream );
-        stream.close();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
-     */
-    public void parse( String filename ) throws IOException {
-        if ( StringUtils.isBlank( filename ) ) {
-            throw new IllegalArgumentException( "No filename provided" );
-        }
-        log.info( "Parsing " + filename );
-        File infile = new File( filename );
-        parse( infile );
-    }
-
-    /**
-     * Add an object to the results collection.
-     * 
-     * @param obj
-     */
-    protected abstract void addResult( Object obj );
-
-    /**
-     * 
-     */
-    public abstract Collection getResults();
 
 }

@@ -34,7 +34,9 @@ import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressManager;
 
 /**
- * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys.
+ * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys, which
+ * is generated from the values. A typical use case of this is when the keys are also known to another class that needs
+ * the data provided by the parser; to locate the data it uses the key.
  * 
  * @author pavlidis
  * @version $Id$
@@ -44,7 +46,7 @@ public abstract class BasicLineMapParser implements LineParser {
     /**
      * Lines starting with this will be ignored.
      */
-    private static final String COMMENTMARK = "#";
+    static final String COMMENTMARK = "#";
 
     protected Log log = LogFactory.getLog( getClass() );
 
@@ -155,6 +157,8 @@ public abstract class BasicLineMapParser implements LineParser {
      * @return
      */
     protected abstract Object getKey( Object newItem );
+
+    public abstract Collection getKeySet();
 
     /**
      * 
