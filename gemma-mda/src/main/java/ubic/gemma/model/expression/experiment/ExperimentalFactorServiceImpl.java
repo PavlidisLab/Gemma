@@ -75,4 +75,14 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
         return this.getExperimentalFactorDao().find( experimentalFactor );
     }
 
+    @Override
+    protected void handleDelete( ExperimentalFactor experimentalFactor ) throws Exception {
+        this.getExperimentalFactorDao().remove( experimentalFactor );
+    }
+
+    @Override
+    protected void handleUpdate( ExperimentalFactor experimentalFactor ) throws Exception {
+        this.getExperimentalFactorDao().update( experimentalFactor );
+    }
+
 }
