@@ -28,12 +28,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.ontology.OntologyResource;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
+import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -43,12 +49,15 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "bioMaterialService" ref="bioMaterialService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="methodNameResolver" ref="bioMaterialActions"
+ * @spring.property name="ontologyService" ref="ontologyService"
  */
+
 public class BioMaterialController extends BaseMultiActionController {
 
     private static Log log = LogFactory.getLog( BioMaterialController.class.getName() );
 
     private BioMaterialService bioMaterialService = null;
+    private OntologyService ontologyService = null;
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -152,6 +161,39 @@ public class BioMaterialController extends BaseMultiActionController {
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
         return bioMaterialService.loadMultiple( ids );
     }
+    
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator bm ) {
+        if ( bm == null || bm.getId() == null )
+            return null;
+        BioMaterial bioM = bioMaterialService.load( bm.getId() );
+        
+        Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
+        
+        for ( Characteristic c : bioM.getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = (VocabCharacteristic)c;
+                String className = getLabelFromUri( vc.getCategoryUri() );
+                if ( className != null )
+                    annotationValue.setClassName( className );
+                String termName = getLabelFromUri( vc.getValueUri() );
+                if ( termName != null )
+                    annotationValue.setTermName( termName );
+            }
+            annotation.add( annotationValue );
+        }
+        return annotation;
+    }
+    
+    private String getLabelFromUri( String uri ) {
+        OntologyResource resource = ontologyService.getResource( uri );
+        if ( resource != null )
+            return resource.getLabel();
+        else
+            return null;
+    }
 
     /**
      * @param request
@@ -161,6 +203,13 @@ public class BioMaterialController extends BaseMultiActionController {
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "bioMaterials" ).addObject( "bioMaterials", bioMaterialService.loadAll() );
+    }
+    
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setOntologyService( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
     }
 
 }

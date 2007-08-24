@@ -5,6 +5,15 @@
 
 <title> <fmt:message key="bioMaterial.details" /> </title>
 
+
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/bmAnnotations.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
         <h2>
             <fmt:message key="bioMaterial.details" />
         </h2>
@@ -80,7 +89,24 @@
             <display:column sortable="true"  property="orderApplied" maxWords="100" />
         </display:table>
         
-        <h3>
+
+<h3>Annotations</h3>
+<authz:authorize ifAnyGranted="admin">
+<!-- This is for the bm annotator  -->
+		<div id="bmAnnotator" class="x-grid-mso" style="padding-left: 2px; padding-right: 2px; overflow: hidden; width:650px; height:30px;"></div>
+		  <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
+		  <script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+		  <script type="text/javascript" src="<c:url value='/scripts/ajax/bmAnnotator.js'/>"></script>
+</authz:authorize>
+
+	<div id="bmAnnotations" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
+	<input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
+	<input type="hidden" name="bmClass" id="bmClass" value="${bioMaterial.class.name}" />
+
+
+<%--
+Not needed anymore
+    <h3>
             <fmt:message key="characteristics.title" />
         </h3>
         <display:table name="bioMaterial.characteristics" defaultsort="1" class="list" requestURI="" id="characteristicList"
@@ -88,7 +114,7 @@
             <display:column sortable="true" property="description" maxWords="100" />
             <display:column sortable="true"  property="value" maxWords="100" />
         </display:table>
-	    		
+--%>	    		
     
     <table>
     <tr>

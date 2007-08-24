@@ -373,7 +373,14 @@ public class OntologyService {
         Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
 
         for ( BioMaterial bioM : biomaterials ) {
-            bioM.setCharacteristics( chars );
+            
+            Collection<Characteristic> current = bioM.getCharacteristics();
+            if ( current == null )
+                current = new HashSet<Characteristic>( chars );
+            else
+                current.addAll( chars );
+            
+            bioM.setCharacteristics( current );
             bioMaterialService.update( bioM );
 
         }
@@ -384,16 +391,16 @@ public class OntologyService {
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list
      * 
      * @param vc
-     * @param eeIdList
+     * @param bmIdList
      */
-    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIdList ) {
+    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> bmIdList ) {
 
         log.info( "Vocab Characteristic: " + vc.getDescription() );
-        log.info( "Expression Experiment ID List: " + eeIdList );
+        log.info( "Expression Experiment ID List: " + bmIdList );
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( ( Characteristic ) vc );
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
 
         for ( ExpressionExperiment ee : ees ) {
 
@@ -413,14 +420,14 @@ public class OntologyService {
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list
      * 
      * @param vc
-     * @param eeIdList
+     * @param bmIdList
      */
-    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
+    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
 
         log.info( "Vocab Characteristic: " + characterIds );
-        log.info( "Expression Experiment ID List: " + eeIdList );
+        log.info( "Expression Experiment ID List: " + bmIdList );
 
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
 
         for ( ExpressionExperiment ee : ees ) {
 
@@ -442,6 +449,40 @@ public class OntologyService {
         }
     }
 
+    /**
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list
+     * 
+     * @param vc
+     * @param bmIdList
+     */
+    public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
+
+        log.info( "Vocab Characteristic: " + characterIds );
+        log.info( "biomaterial ID List: " + bmIdList );
+
+        Collection<BioMaterial> bms = bioMaterialService.loadMultiple( bmIdList );
+
+        for ( BioMaterial bm : bms ) {
+
+            Collection<Characteristic> current = bm.getCharacteristics();
+            if ( current == null ) continue;
+
+            Collection<Characteristic> found = new HashSet<Characteristic>();
+
+            for ( Characteristic characteristic : current ) {
+                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
+
+            }
+            if ( found == null ) continue;
+
+            current.removeAll( found );
+            bm.setCharacteristics( current );
+            bioMaterialService.update( bm );
+
+        }
+    }
+    
+    
     /**
      * @param birnLexOntologyService the birnLexOntologyService to set
      */

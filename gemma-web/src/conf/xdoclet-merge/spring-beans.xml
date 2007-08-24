@@ -266,7 +266,8 @@
 							<value>findExactTerm</value>
 							<value>saveBioMaterialStatement</value>		
 							<value>saveExpressionExperimentStatement</value>					
-							<value>removeExpressionExperimentStatement</value>			
+							<value>removeExpressionExperimentStatement</value>
+							<value>removeBioMaterialStatement</value>			
 						</list>
 					</property>
 				</bean>
