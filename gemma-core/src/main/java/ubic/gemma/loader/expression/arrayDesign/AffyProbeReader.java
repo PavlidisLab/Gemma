@@ -161,4 +161,9 @@ public class AffyProbeReader extends BasicLineMapParser {
         return results.containsKey( key );
     }
 
+    @Override
+    public Collection getKeySet() {
+        return results.keySet();
+    }
+
 }

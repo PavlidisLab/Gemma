@@ -181,5 +181,10 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements
 		this.resultsKeys = queue;
 		this.parse(inputStream);
 	}
+    
+    @Override
+    public Collection getKeySet() {
+        return results.keySet();
+    }
 
 }

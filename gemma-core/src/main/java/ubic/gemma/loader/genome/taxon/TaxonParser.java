@@ -85,5 +85,10 @@ public class TaxonParser extends BasicLineMapParser {
     protected void put( Object key, Object value ) {
         results.put( ( Integer ) key, ( Taxon ) value );
     }
+    
+    @Override
+    public Collection getKeySet() {
+        return results.keySet();
+    }
 
 }

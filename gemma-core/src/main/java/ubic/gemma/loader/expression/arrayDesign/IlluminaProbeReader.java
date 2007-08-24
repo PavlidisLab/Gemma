@@ -101,4 +101,9 @@ public class IlluminaProbeReader extends BasicLineMapParser {
     public boolean containsKey( Object key ) {
         return results.containsKey( key );
     }
+
+    @Override
+    public Collection getKeySet() {
+        return results.keySet();
+    }
 }
