@@ -63,6 +63,7 @@
 	<property name="locations">
 		<list>
 			<value>classpath:mail.properties</value>
+			<value>classpath:db.properties</value>
 		</list>
 	</property>
 	<property name="ignoreUnresolvablePlaceholders" value="false" />
@@ -101,16 +102,16 @@
 <bean id="dataSourceGoldenPathHuman"
 	class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 	<property name="driverClassName">
-		<value>com.mysql.jdbc.Driver</value>
+		<value>${gemma.goldenpath.db.driver}</value>
 	</property>
 	<property name="username">
-		<value>${gemma.db.user}</value>
+		<value>${gemma.goldenpath.db.user}</value>
 	</property>
 	<property name="password">
-		<value>${gemma.db.password}</value>
+		<value>${gemma.goldenpath.db.password}</value>
 	</property>
 	<property name="url">
-		<value>jdbc:mysql://${gemma.db.host}:3306/hg18</value>
+		<value>jdbc:mysql://${gemma.goldenpath.db.host}:${gemma.goldenpath.db.port}/${gemma.goldenpath.db.human}</value>
 	</property>
 </bean>
 

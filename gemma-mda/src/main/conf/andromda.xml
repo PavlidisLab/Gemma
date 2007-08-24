@@ -88,7 +88,7 @@
 				<property name="springPresentationTypesPackage">ubic.gemma.spring.presentation</property>
 				<property name="mergeLocation">${maven.andromda.spring.merge.custom}</property>
 				<property name="mergeMappingsUri">file:${maven.andromda.merge.mappings}</property>
-				<property name="driver">com.mysql.jdbc.Driver</property>
+				<property name="driver">${gemma.db.driver}</property>
 				<property name="username">${gemma.db.user}</property>
 				<property name="password">${gemma.db.password}</property>
 				<property name="connectionUrl">${gemma.db.url}</property>

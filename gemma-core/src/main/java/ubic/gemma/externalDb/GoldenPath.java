@@ -137,7 +137,7 @@ public class GoldenPath {
         log.info( "Connecting to " + databaseName );
         log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
-        dataSource.setDriverClassName( "com.mysql.jdbc.Driver" );
+        dataSource.setDriverClassName( ConfigUtils.getString( "gemma.goldenpath.db.driver" ) );
         dataSource.setUrl( url );
         dataSource.setUsername( user );
         dataSource.setPassword( password );
@@ -146,7 +146,7 @@ public class GoldenPath {
         jt.setDataSource( dataSource );
 
         try {
-            Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
+            Class.forName( dataSource.getDriverClassName() ).newInstance();
             conn = DriverManager.getConnection( url, user, password );
         } catch ( InstantiationException e ) {
             throw new RuntimeException( e );
@@ -162,24 +162,25 @@ public class GoldenPath {
     private void init() throws SQLException {
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
-            databaseName = "mm8"; // FIXME get these names from an external source - e.g., the taxon service.
+            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an external source - e.g., the taxon service.
         } else if ( commonName.equals( "human" ) ) {
-            databaseName = "hg18";
+            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.human" );
         } else if ( commonName.equals( "rat" ) ) {
-            databaseName = "rn4";
+            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.rat" );
         } else {
             throw new IllegalArgumentException( "No GoldenPath database for  " + taxon );
         }
 
-        String databaseHost = ConfigUtils.getString( "gemma.db.host" );
-        String databaseUser = ConfigUtils.getString( "gemma.db.user" );
-        String databasePassword = ConfigUtils.getString( "gemma.db.password" );
-
+        String databaseHost = ConfigUtils.getString( "gemma.goldenpath.db.host" );
+        int databasePort = Integer.valueOf( ConfigUtils.getString( "gemma.goldpenpath.db.port" ) );
+        String databaseUser = ConfigUtils.getString( "gemma.goldenpath.db.user" );
+        String databasePassword = ConfigUtils.getString( "gemma.goldenpath.db.password" );
+        
         searchedDatabase = ExternalDatabase.Factory.newInstance();
         searchedDatabase.setName( databaseName );
         searchedDatabase.setType( DatabaseType.SEQUENCE );
 
-        this.init( 3306, databaseHost, databaseUser, databasePassword );
+        this.init( databasePort, databaseHost, databaseUser, databasePassword );
     }
 
     /**
