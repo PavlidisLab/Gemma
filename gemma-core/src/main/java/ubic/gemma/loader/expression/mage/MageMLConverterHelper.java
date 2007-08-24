@@ -456,7 +456,7 @@ public class MageMLConverterHelper {
      * @see specialConvertBioAssayBioAssayDataAssociations
      */
     public LocalFile convertBioAssayData( BioAssayData mageObj ) {
-        // convertBioAssayDataAssociations( mageObj );
+        // convertBioAssayDataAssociations( mageObj ); // FIXME this is now not needed so long as we are using processed data.
         BioDataValues data = mageObj.getBioDataValues();
         LocalFile result = LocalFile.Factory.newInstance();
         result.setRemoteURL( null );
@@ -496,8 +496,6 @@ public class MageMLConverterHelper {
 
         return result;
     }
-
-    private Set doneBioAssayData = new HashSet<BioAssayData>();
 
     /**
      * In a typical MAGE file, we have the following associations:
