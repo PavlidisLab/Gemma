@@ -1095,7 +1095,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                 session.lock( arrayDesign, LockMode.NONE );
 
-                log.info( "Thawing " + arrayDesign + " ..." );
+                if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
 
                 arrayDesign.getLocalFiles().size();
                 for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
@@ -1178,7 +1178,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     }
                 }
 
-                log.info( "CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
+                if ( timer.getTime() > 2000 )
+                    log.info( "CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
 
                 // session.update( arrayDesign );
 
