@@ -51,9 +51,9 @@ import com.j_spaces.core.client.NotifyModifiers;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
+public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesMasterCLI.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentLoadSpacesMasterCLI.class );
 
     private GemmaSpacesUtil gemmaSpacesUtil = null;
 
@@ -79,7 +79,7 @@ public class ExpressionExperimentGemmaSpacesMasterCLI extends LoadExpressionData
      */
     public static void main( String[] args ) {
         log.info( "Running GemmaSpaces Master ... \n" );
-        ExpressionExperimentGemmaSpacesMasterCLI p = new ExpressionExperimentGemmaSpacesMasterCLI();
+        ExpressionExperimentLoadSpacesMasterCLI p = new ExpressionExperimentLoadSpacesMasterCLI();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
