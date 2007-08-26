@@ -85,6 +85,13 @@ public class CustomDelegatingWorker implements Runnable {
     }
 
     /**
+     * @return
+     */
+    public Class getBusinessInterface() {
+        return businessInterface;
+    }
+
+    /**
      * Set a delegate if we are using the "service seeking" approach. For RunnableMethodCallEntries, there is no need
      * for a service to be hosted.
      * 
@@ -92,6 +99,10 @@ public class CustomDelegatingWorker implements Runnable {
      */
     public void setDelegate( Object delegate ) {
         this.delegate = delegate;
+    }
+
+    public Object getDelegate() {
+        return delegate;
     }
 
     public void setJavaSpaceTemplate( JavaSpaceTemplate jsTemplate ) {
