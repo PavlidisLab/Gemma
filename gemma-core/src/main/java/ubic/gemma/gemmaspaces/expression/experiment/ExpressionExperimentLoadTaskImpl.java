@@ -103,10 +103,10 @@ public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implem
         this.taskId = TaskRunningService.generateTaskId();
     }
 
-    /**
-     * Returns the taskId for this task.
+    /*
+     * (non-Javadoc)
      * 
-     * @return
+     * @see ubic.gemma.gemmaspaces.GemmaSpacesTask#getTaskId()
      */
     public String getTaskId() {
         return taskId;

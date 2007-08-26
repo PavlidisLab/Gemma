@@ -18,8 +18,9 @@
  */
 package ubic.gemma.gemmaspaces.expression.experiment;
 
-import ubic.gemma.gemmaspaces.GemmaSpacesResult;
 import net.jini.space.JavaSpace;
+import ubic.gemma.gemmaspaces.GemmaSpacesResult;
+import ubic.gemma.gemmaspaces.GemmaSpacesTask;
 
 /**
  * A task interface to wrap {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} type jobs. Tasks of this
@@ -29,7 +30,13 @@ import net.jini.space.JavaSpace;
  * @author keshav
  * @version $Id$
  */
-public interface ExpressionExperimentLoadTask {
-    public GemmaSpacesResult execute( GemmaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand );
+public interface ExpressionExperimentLoadTask extends GemmaSpacesTask {
+
+    /**
+     * @param javaSpacesExpressionExperimentLoadCommand
+     * @return
+     */
+    public GemmaSpacesResult execute(
+            GemmaSpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand );
 
 }

@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,19 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.gemmaspaces.expression.experiment;
-
-import ubic.gemma.gemmaspaces.GemmaSpacesCommand;
-import ubic.gemma.gemmaspaces.GemmaSpacesResult;
-import ubic.gemma.gemmaspaces.GemmaSpacesTask;
+package ubic.gemma.gemmaspaces;
 
 /**
+ * The parent of the spaces interface task hierarchy. All task interfaces should extend this.
+ * 
  * @author keshav
  * @version $Id$
  */
-public interface ExpressionExperimentReportTask extends GemmaSpacesTask {
+public interface GemmaSpacesTask {
 
     /**
-     * @param gemmaSpacesCommand
-     * @return
+     * @return The task Id.
      */
-    public GemmaSpacesResult execute( GemmaSpacesCommand gemmaSpacesCommand );
+    public String getTaskId();
 
 }

@@ -124,9 +124,8 @@ public abstract class AbstractGemmaSpacesFormController extends BackgroundProces
         updatedContext = addGemmaSpacesToApplicationContext();
         BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
-            // FIXME use a generic interface here
-            taskId = ( String ) ( ( ExpressionExperimentLoadTaskImpl ) updatedContext.getBean( "taskBean" ) )
-                    .getTaskId();
+
+            taskId = GemmaSpacesUtil.getTaskIdFromTask( updatedContext, taskName );
 
             if ( !gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
                 // TODO Add sending of email to user.

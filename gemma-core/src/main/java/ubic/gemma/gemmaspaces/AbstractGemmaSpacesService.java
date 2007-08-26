@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 import ubic.gemma.util.progress.TaskRunningService;
@@ -54,32 +53,15 @@ public abstract class AbstractGemmaSpacesService {
     }
 
     protected String run( String spaceUrl, String taskName, boolean runInLocalContext ) {
-        /*
-         * all new threads need this to acccess protected resources (like services)
-         */
-        SecurityContext context = SecurityContextHolder.getContext();
 
         String taskId = null;
 
         updatedContext = addGemmaSpacesToApplicationContext();
-        // BackgroundControllerJob<ModelAndView> job = null;
+
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) && gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
             log.info( "Running task " + taskName + " remotely." );
-            // FIXME use a generic interface here
-            taskId = ( String ) ( ( ExpressionExperimentReportService ) updatedContext
-                    .getBean( "expressionExperimentReportService" ) ).getTaskId();
 
-            // if (!gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
-            //
-            // throw new RuntimeException( "No workers are registered to service task "
-            // + taskName.getClass().getSimpleName() + " on the compute server at this time." );
-            // }
-
-            /* register this "spaces client" to receive notifications */
-            // GemmaSpacesJobObserver javaSpacesJobObserver = new GemmaSpacesJobObserver( taskId );
-            // GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
-            // template.addNotifyDelegatorListener( javaSpacesJobObserver, new GemmaSpacesProgressEntry(), null, true,
-            // Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
+            taskId = GemmaSpacesUtil.getTaskIdFromTask( updatedContext, taskName );
             runRemotely( taskId );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInLocalContext ) {
             throw new RuntimeException(
@@ -91,10 +73,6 @@ public abstract class AbstractGemmaSpacesService {
             taskId = TaskRunningService.generateTaskId();
             runLocally( taskId );
         }
-
-        // assert taskId != null;
-
-        // taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
 
         return taskId;
     }
