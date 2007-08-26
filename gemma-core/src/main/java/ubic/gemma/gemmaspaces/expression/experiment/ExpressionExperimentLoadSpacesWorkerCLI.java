@@ -35,9 +35,9 @@ import ubic.gemma.util.SecurityUtil;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpacesWorkerCLI {
+public class ExpressionExperimentLoadSpacesWorkerCLI extends AbstractGemmaSpacesWorkerCLI {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentGemmaSpacesWorkerCLI.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentLoadSpacesWorkerCLI.class );
 
     /*
      * (non-Javadoc)
@@ -96,7 +96,7 @@ public class ExpressionExperimentGemmaSpacesWorkerCLI extends AbstractGemmaSpace
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        ExpressionExperimentGemmaSpacesWorkerCLI p = new ExpressionExperimentGemmaSpacesWorkerCLI();
+        ExpressionExperimentLoadSpacesWorkerCLI p = new ExpressionExperimentLoadSpacesWorkerCLI();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
