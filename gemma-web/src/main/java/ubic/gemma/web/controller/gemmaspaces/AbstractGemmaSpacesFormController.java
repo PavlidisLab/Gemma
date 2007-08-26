@@ -30,7 +30,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesJobObserver;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
@@ -134,8 +133,8 @@ public abstract class AbstractGemmaSpacesFormController extends BackgroundProces
                 // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
                 // "http://www.bioinformatics.ubc.ca/Gemma/" );
 
-                throw new RuntimeException( "No workers are registered to service task "
-                        + taskName.getClass().getSimpleName() + " on the compute server at this time." );
+                throw new RuntimeException( "No workers are registered to service task " + taskName
+                        + " on the compute server at this time." );
             }
             /* register this "spaces client" to receive notifications */
             GemmaSpacesJobObserver javaSpacesJobObserver = new GemmaSpacesJobObserver( taskId );
