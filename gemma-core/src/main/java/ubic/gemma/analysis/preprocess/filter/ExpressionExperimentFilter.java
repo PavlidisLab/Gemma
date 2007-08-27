@@ -62,7 +62,8 @@ public class ExpressionExperimentFilter {
      * @param dataMatrix
      * @param eeDoubleMatrix
      * @param ee
-     * @return
+     * @return A data matrix in which filters have been applied and missing values (in the PRESENTABSENT quantitation
+     *         type, if present) are masked
      */
     private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix,
             ExpressionDataMatrixBuilder builder ) {
@@ -74,6 +75,7 @@ public class ExpressionExperimentFilter {
             /* Apply two color missing value filter */
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
             filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
+            builder.maskMissingValues( filteredMatrix, null );
         }
 
         if ( !twoColor ) {

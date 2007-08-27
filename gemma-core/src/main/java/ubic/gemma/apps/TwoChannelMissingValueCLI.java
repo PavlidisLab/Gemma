@@ -35,6 +35,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -86,7 +87,8 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
         addOption( force );
 
         Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" ).withDescription(
-                "Additional numeric values (comma delimited) to be considered missing values." ).create( MISSING_VALUE_OPTION );
+                "Additional numeric values (comma delimited) to be considered missing values." ).create(
+                MISSING_VALUE_OPTION );
 
         addOption( extraMissingIndicators );
 
@@ -196,6 +198,9 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
         QuantitationType previousMissingValueQt = null;
         for ( QuantitationType qType : types ) {
             if ( qType.getType() == StandardQuantitationType.PRESENTABSENT ) {
+                if ( previousMissingValueQt != null ) {
+                    log.warn( "More than one present/absent quantitationtype!" );
+                }
                 previousMissingValueQt = qType;
             }
         }
@@ -208,6 +213,7 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
         if ( force && previousMissingValueQt != null ) {
             log.info( "Removing old present/absent data" );
             dedvs.removeDataForQuantitationType( ee, previousMissingValueQt );
+            quantitationTypeService.remove( previousMissingValueQt );
         }
 
         log.info( "Got " + ee + ", thawing..." );
@@ -236,6 +242,7 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
     TwoChannelMissingValues tcmv;
     DesignElementDataVectorService dedvs;
     ExpressionExperimentService eeService;
+    private QuantitationTypeService quantitationTypeService;
 
     @Override
     protected void processOptions() {
@@ -265,5 +272,6 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
         dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        quantitationTypeService = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
     }
 }

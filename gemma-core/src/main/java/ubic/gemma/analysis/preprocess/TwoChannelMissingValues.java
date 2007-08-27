@@ -138,6 +138,7 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix bkgDataB = builder.getBackgroundChannelB( ades );
             ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA( ades );
             ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB( ades );
+
             Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
                     preferredData, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
                     extraMissingValueIndicators );

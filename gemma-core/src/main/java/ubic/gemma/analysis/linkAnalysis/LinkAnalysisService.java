@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.biomage.QuantitationType.SpecializedQuantitationType;
 
 import cern.colt.Sorting;
 import cern.colt.list.ObjectArrayList;
@@ -48,6 +49,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -96,6 +98,7 @@ public class LinkAnalysisService {
     @SuppressWarnings("unchecked")
     public void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig )
             throws Exception {
+
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         la.clear();
 
@@ -147,6 +150,31 @@ public class LinkAnalysisService {
         la.setProbeToGeneMap( probeToGeneMap );
         return p2v;
     }
+//
+//    /**
+//     * @param ee
+//     * @return true if the data set has the missing values computed correctly, or if computing missing values isn't
+//     *         necessary (e.g., Affymetrix), or if computing missing values isn't possible (no intensity data present)
+//     */
+//    @SuppressWarnings("unchecked")
+    // private boolean hasMissingValuesComputedIfPossible( ExpressionExperiment ee ) {
+//
+//        // First make sure the data set is in a state that makes it ready to be processed: the rank analyses and the
+//        // missing data analyses should have been run, if possible.
+//        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+//        for ( ArrayDesign design : arrayDesignsUsed ) {
+//            TechnologyType tt = design.getTechnologyType();
+//            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+//                // see if we have missing values computed.
+//                Collection<QuantitationType> qts = ee.getQuantitationTypes();
+//                for ( QuantitationType qt : qts ) {
+//                    if ( qt.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) return true;
+//                }
+//            }
+//        }
+//
+//        return true;
+//    }
 
     /**
      * Persist the links to the database. This takes care of saving a 'flipped' version of the links.
