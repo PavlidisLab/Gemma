@@ -25,7 +25,6 @@
 	<classpathentry excluding="**/empty.file" kind="src" output="build/Gemma/" path="gemma-web/src/main/webapp"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="com.genuitec.eclipse.j2eedt.core.J2EE14_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-binding/1.0.3/spring-binding-1.0.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbutils/commons-dbutils/1.0/commons-dbutils-1.0.jar"/>
@@ -208,5 +207,6 @@
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib/2.1_3/cglib-2.1_3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/asm/asm/1.5.3/asm-1.5.3.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.4/servlet-api-2.4.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
