@@ -18,8 +18,6 @@
  */
 package ubic.gemma.gemmaspaces;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
@@ -61,7 +59,7 @@ public abstract class AbstractGemmaSpacesService {
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) && gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
             log.info( "Running task " + taskName + " remotely." );
 
-            taskId = GemmaSpacesUtil.getTaskIdFromTask( updatedContext, taskName );
+            taskId = GemmaSpacesHelper.getTaskIdFromTask( updatedContext, taskName );
             runRemotely( taskId );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInLocalContext ) {
             throw new RuntimeException(

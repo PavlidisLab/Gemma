@@ -33,8 +33,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.gemmaspaces.CustomDelegatingWorker;
-import ubic.gemma.gemmaspaces.GemmaSpacesTask;
 import ubic.gemma.util.SpringContextUtil;
 import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesCancellationEntry;
 import ubic.gemma.util.gemmaspaces.entry.GemmaSpacesGenericEntry;
@@ -368,31 +366,6 @@ public class GemmaSpacesUtil implements ApplicationContextAware {
         } catch ( Exception e ) {
             throw new RuntimeException( "Cannot cancel task " + taskId + ".  Exception is: " + e );
         }
-    }
-
-    /**
-     * @param updatedContext ApplicationContext that has previously been updated to include gigaspaces beans.
-     * @param taskName The task name.
-     * @return
-     */
-    public static String getTaskIdFromTask( ApplicationContext updatedContext, String taskName ) {
-        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
-            throw new RuntimeException(
-                    "Incorrect usage.  ApplicationContext must contain \"spaces\" beans.  Update the context to contain these beans before invoking." );
-
-        String[] customDelegatingWorkerBeanNames = updatedContext.getBeanNamesForType( CustomDelegatingWorker.class );
-
-        for ( String customDelegatingWorkerBeanName : customDelegatingWorkerBeanNames ) {
-            CustomDelegatingWorker customDelegatingWorker = ( CustomDelegatingWorker ) updatedContext
-                    .getBean( customDelegatingWorkerBeanName );
-
-            Class businessInterface = customDelegatingWorker.getBusinessInterface();
-            if ( taskName == businessInterface.getName() ) {
-                GemmaSpacesTask task = ( GemmaSpacesTask ) customDelegatingWorker.getDelegate();
-                return task.getTaskId();
-            }
-        }
-        return null;
     }
 
     /*

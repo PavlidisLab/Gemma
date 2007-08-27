@@ -30,6 +30,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.gemmaspaces.GemmaSpacesHelper;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesJobObserver;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
@@ -124,7 +125,7 @@ public abstract class AbstractGemmaSpacesFormController extends BackgroundProces
         BackgroundControllerJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
 
-            taskId = GemmaSpacesUtil.getTaskIdFromTask( updatedContext, taskName );
+            taskId = GemmaSpacesHelper.getTaskIdFromTask( updatedContext, taskName );
 
             if ( !gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
                 // TODO Add sending of email to user.
