@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.preprocess;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
@@ -77,7 +78,8 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
+                new ArrayList<Double>() );
 
         /*
          * There is one array design and it has 10 rows.
@@ -98,7 +100,8 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
+                new ArrayList<Double>() );
 
         /*
          * The expected number of rows is 30, because there are two platforms, one with 20 features and one with 10 (in
@@ -121,10 +124,11 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
-        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
 
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0 );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
+                new ArrayList<Double>() );
 
         assertEquals( 500, calls.size() );
 

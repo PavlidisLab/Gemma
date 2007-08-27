@@ -96,11 +96,13 @@ public class TwoChannelMissingValues {
      * @param signalToNoiseThreshold A value such as 1.5 or 2.0; only spots for which at least ONE of the channel signal
      *        is more than signalToNoiseThreshold*background (and the preferred data are not missing) will be considered
      *        present.
+     * @param extraMissingValueIndicators Values that should be considered missing. For example, some data sets use '0'
+     *        (foolish, but true)
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
     @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp, ArrayDesign ad,
-            double signalToNoiseThreshold ) {
+            double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
         expressionExperimentService.thawLite( expExp );
         Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors( expExp,
@@ -125,6 +127,11 @@ public class TwoChannelMissingValues {
             if ( ads.size() > 1 ) {
                 throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
             }
+
+            if ( extraMissingValueIndicators.size() > 0 ) {
+                log.info( "There are " + extraMissingValueIndicators.size() + " manually set missing value indicators" );
+            }
+
             ArrayDesign ades = bioAssayDimension.getBioAssays().iterator().next().getArrayDesignUsed();
             ExpressionDataDoubleMatrix preferredData = builder.getPreferredData( ades );
             ExpressionDataDoubleMatrix bkgDataA = builder.getBackgroundChannelA( ades );
@@ -132,7 +139,8 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA( ades );
             ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB( ades );
             Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
-                    preferredData, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold );
+                    preferredData, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
+                    extraMissingValueIndicators );
 
             finalResults.addAll( dimRes );
         }
@@ -148,6 +156,7 @@ public class TwoChannelMissingValues {
      * @param bkgChannelA
      * @param bkgChannelB
      * @param signalToNoiseThreshold
+     * @param extraMissingValueIndicators
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the design elements and
      *         biomaterial dimension represented in the inputs.
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )
@@ -157,7 +166,7 @@ public class TwoChannelMissingValues {
             BioAssayDimension bioAssayDimension, ExpressionDataDoubleMatrix preferred,
             ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
             ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
-            double signalToNoiseThreshold ) {
+            double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
         validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
 
@@ -195,9 +204,9 @@ public class TwoChannelMissingValues {
 
             for ( int col = 0; col < numCols; col++ ) {
 
-                // If the "preferred" value is already missing, we retain that.
+                // If the "preferred" value is already missing, we retain that, or if it is a special value
                 Double pref = prefRow == null ? Double.NaN : prefRow[col];
-                if ( pref == null || pref.isNaN() ) {
+                if ( pref == null || pref.isNaN() || extraMissingValueIndicators.contains( pref ) ) {
                     detectionCalls[col] = false;
                     continue;
                 }

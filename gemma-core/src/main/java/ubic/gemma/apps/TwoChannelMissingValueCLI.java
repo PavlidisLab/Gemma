@@ -22,6 +22,7 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -49,6 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  */
 public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
 
+    private static final String MISSING_VALUE_OPTION = "mvind";
     /**
      * 
      */
@@ -56,6 +58,7 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
     private double s2n = DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
     private boolean doAll = false;
     private boolean force = false;
+    private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
 
     /*
      * (non-Javadoc)
@@ -81,6 +84,11 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
                 "Replace existing missing value data (two-color experiments only)" ).create( "force" );
 
         addOption( force );
+
+        Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" ).withDescription(
+                "Additional numeric values (comma delimited) to be considered missing values." ).create( MISSING_VALUE_OPTION );
+
+        addOption( extraMissingIndicators );
 
         addDateOption();
     }
@@ -206,10 +214,13 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
 
         log.info( "Computing missing value data.." );
 
-        tcmv.computeMissingValues( ee, ad, s2n );
+        tcmv.computeMissingValues( ee, ad, s2n, this.extraMissingValueIndicators );
 
     }
 
+    /**
+     * @param args
+     */
     public static void main( String[] args ) {
         TwoChannelMissingValueCLI p = new TwoChannelMissingValueCLI();
         try {
@@ -237,6 +248,18 @@ public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentM
         }
         if ( hasOption( "force" ) ) {
             this.force = true;
+        }
+        if ( hasOption( MISSING_VALUE_OPTION ) ) {
+            String o = this.getOptionValue( MISSING_VALUE_OPTION );
+            String[] vals = StringUtils.split( o, ',' );
+            try {
+                for ( String string : vals ) {
+                    this.extraMissingValueIndicators.add( new Double( string ) );
+                }
+            } catch ( NumberFormatException e ) {
+                log.error( "Arguments to mvind must be numbers" );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
         }
         auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
